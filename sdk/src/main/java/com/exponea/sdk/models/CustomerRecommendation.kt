@@ -7,5 +7,5 @@ data class CustomerRecommendation(
         var strategy: String?,
         var knowItems: Boolean?,
         var anti: Boolean?,
-        var items: MutableList<KeyValueModel>?
+        var items: HashMap<String, String>?
 )

@@ -23,10 +23,13 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Database
     implementation 'io.paperdb:paperdb:2.6'
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    // Deserialization
+    implementation 'com.google.code.gson:gson:2.8.2'
 
     // Base Test
     testImplementation 'junit:junit:4.12'
@@ -35,7 +38,6 @@ dependencies {
 
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 repositories {
     mavenCentral()

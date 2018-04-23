@@ -1,5 +1,5 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
+# You can control the set of applied exponeaConfiguration files using the
 # proguardFiles setting in build.gradle.
 #
 # For more details, see

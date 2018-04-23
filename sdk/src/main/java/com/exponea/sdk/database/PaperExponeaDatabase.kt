@@ -1,6 +1,6 @@
 package com.exponea.sdk.database
 
-import com.exponea.sdk.DatabaseItem
+import com.exponea.sdk.models.DatabaseItem
 import io.paperdb.Paper
 
 class PaperExponeaDatabase<T : DatabaseItem>(private val databaseName: String) : ExponeaDatabase<T> {

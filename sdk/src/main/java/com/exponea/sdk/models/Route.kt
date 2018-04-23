@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-enum class Routes {
+enum class Route {
     TRACK_CUSTOMERS,
     TRACK_EVENTS,
     TOKEN_ROTATE,
@@ -15,5 +15,5 @@ enum class Routes {
     CUSTOMERS_EVENTS,
     CUSTOMERS_ANONYMIZE,
     CUSTOMERS_EXPORT_ALL_PROPERTIES,
-    CIUSTOMERS_EXPORT_ALL
+    CUSTOMERS_EXPORT_ALL
 }

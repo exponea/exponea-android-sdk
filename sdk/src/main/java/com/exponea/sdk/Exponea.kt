@@ -7,6 +7,7 @@ import com.exponea.sdk.util.Logger
 @SuppressLint("StaticFieldLeak")
 object Exponea {
     private var context: Context? = null
+
     /**
      * Set which level the debugger should output log messages
      */

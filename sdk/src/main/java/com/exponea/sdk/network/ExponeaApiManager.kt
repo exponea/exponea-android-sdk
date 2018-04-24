@@ -10,7 +10,7 @@ class ExponeaApiManager(
         private val networkManager: NetworkManager
 ) {
     fun postEvent(projectToken: String, event: ExportedEventType): Call {
-        val endpoint = ApiEndPoint.trackCustomers.replace(ApiEndPoint.splitterToken, projectToken)
+        val endpoint = ApiEndPoint(ApiEndPoint.EndPointName.TRACK_CUSTOMERS, projectToken).toString()
         val jsonBody = gson.toJson(event)
         return networkManager.post(endpoint, jsonBody)
     }

@@ -1,7 +1,8 @@
-package com.exponea.example
+package com.exponea.example.view
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.exponea.example.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

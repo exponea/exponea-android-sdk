@@ -2,7 +2,7 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.exponea.sdk.manager.DeviceManager
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.util.Logger
@@ -44,7 +44,7 @@ object Exponea {
     fun trackEvent(
             eventType: String,
             timestamp: Double,
-            customerId: HashMap<String, String>,
+            customerId: CustomerIds,
             properties: HashMap<String, String>
     ) {
         val event = ExportedEventType(

@@ -2,22 +2,19 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import com.exponea.sdk.util.Logger
 
-class DeviceManager(
-        private val context: Context
-) {
+class DeviceManager(private val context: Context) {
     fun isTablet(): Boolean {
-        val device_large = context.resources.configuration.screenLayout and
-                Configuration.SCREENLAYOUT_SIZE_MASK >= Configuration.SCREENLAYOUT_SIZE_LARGE
+        val deviceSize = context.resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
+        val isDeviceLarge = deviceSize >= Configuration.SCREENLAYOUT_SIZE_LARGE
 
-        if (device_large) {
+        return if (isDeviceLarge) {
             Logger.d(this, "Detect tablet")
-            return true
+            true
         } else {
             Logger.d(this, "Detect mobile")
-            return false
+            false
         }
     }
 }

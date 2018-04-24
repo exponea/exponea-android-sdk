@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class CustomerRecommendation(
         @SerializedName("customer_ids")
-        var customerIds: HashMap<String, String>? = hashMapOf()
+        var customerIds: CustomerIds = CustomerIds(),
         var type: String? = null,
         var id: String? = null,
         var size: Int? = null,

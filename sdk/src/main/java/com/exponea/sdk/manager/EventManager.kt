@@ -1,7 +1,9 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaApiManager
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
@@ -14,8 +16,23 @@ class EventManager(
         private val apiManager: ExponeaApiManager
 ) {
     fun addEventToQueue(event: ExportedEventType) {
-        Logger.d(this, "addEventToQueue: ${event.id}")
-        eventRepository.add(event)
+        Logger.d(this, "addEventToQueue")
+
+        // Get our default token
+        val defaultToken = configuration.projectToken
+        // Load our token map
+        var routeTokenMap = configuration.projectTokenRouteMap[Route.TRACK_EVENTS] ?: arrayListOf()
+        // Add our default token to our token map
+        routeTokenMap.add(defaultToken)
+        // Remove all non unique ids
+        routeTokenMap = routeTokenMap.distinct().toMutableList()
+
+        for (projectId in routeTokenMap) {
+            val databaseStorageObject = DatabaseStorageObject(projectId = projectId, item = event)
+            Logger.d(this, "Added Event To Queue: ${databaseStorageObject.id}")
+            eventRepository.add(databaseStorageObject)
+        }
+
     }
 
     fun flushEvents() {
@@ -24,38 +41,48 @@ class EventManager(
 
         if (firstEvent != null) {
             Logger.i(this, "Flushing Event: ${firstEvent.id}")
-
+            trySendingEvent(firstEvent)
         } else {
             Logger.i(this, "No events left to flush: ${allEvents.size}")
         }
     }
 
-    private fun trySendingEvent(projectToken: String, event: ExportedEventType) {
+    private fun trySendingEvent(
+            databaseObject: DatabaseStorageObject<ExportedEventType>
+    ) {
         apiManager
-                .postEvent(projectToken, event)
+                .postEvent(databaseObject.projectId, databaseObject.item)
                 .enqueue(
                         { _, response ->
-                            onEventSentSuccess(response.isSuccessful, event)
+                            onEventSentSuccess(response.isSuccessful, databaseObject)
                         },
                         { _, ioException ->
-                            onEventSentError(ioException, event)
+                            onEventSentError(ioException, databaseObject)
                         }
                 )
     }
 
-    private fun onEventSentSuccess(isSuccessful: Boolean, event: ExportedEventType) {
-        Logger.d(this, "onEventSentSuccess: $isSuccessful -> ${event.id}")
+    private fun onEventSentSuccess(
+            isSuccessful: Boolean,
+            databaseObject: DatabaseStorageObject<ExportedEventType>
+    ) {
+        Logger.d(this, "onEventSentSuccess: $isSuccessful -> ${databaseObject.id}")
         if (isSuccessful) {
-            eventRepository.remove(event.id)
+            eventRepository.remove(databaseObject.id)
+            // Once done continue and try to flush the rest of events
+            flushEvents()
         } else {
             // Do nothing?
         }
     }
 
-    private fun onEventSentError(exception: IOException, event: ExportedEventType) {
+    private fun onEventSentError(
+            exception: IOException,
+            databaseObject: DatabaseStorageObject<ExportedEventType>
+    ) {
         Logger.e(
                 this@EventManager,
-                "Sending Event Failed (Event: ${event.id}) Sending back to queue",
+                "Sending Event Failed (Event: ${databaseObject.id}) Sending back to queue",
                 exception
         )
     }

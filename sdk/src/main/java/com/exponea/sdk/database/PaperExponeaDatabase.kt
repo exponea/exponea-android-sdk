@@ -1,34 +1,34 @@
 package com.exponea.sdk.database
 
-import com.exponea.sdk.models.DatabaseItem
+import com.exponea.sdk.models.DatabaseStorageObject
 import io.paperdb.Paper
 
-class PaperExponeaDatabase<T : DatabaseItem>(private val databaseName: String) : ExponeaDatabase<T> {
+class PaperExponeaDatabase<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
     val book = Paper.book(databaseName)
 
-    override fun all(): ArrayList<T> {
-        val list = arrayListOf<T>()
+    override fun all(): ArrayList<DatabaseStorageObject<T>> {
+        val list = arrayListOf<DatabaseStorageObject<T>>()
         val keys = book.allKeys
 
         for (key in keys) {
-            val value = book.read<T>(key)
+            val value = book.read<DatabaseStorageObject<T>>(key)
             list.add(value)
         }
 
         return list
     }
 
-    override fun add(item: T): Boolean {
+    override fun add(item: DatabaseStorageObject<T>): Boolean {
         book.write(item.id, item)
         return true
     }
 
-    override fun update(item: T): Boolean {
+    override fun update(item: DatabaseStorageObject<T>): Boolean {
         book.write(item.id, item)
         return true
     }
 
-    override fun get(id: String): T {
+    override fun get(id: String): DatabaseStorageObject<T> {
         return book.read(id)
     }
 

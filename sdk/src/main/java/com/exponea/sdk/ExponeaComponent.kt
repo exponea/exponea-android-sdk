@@ -17,6 +17,6 @@ class ExponeaComponent(exponeaConfiguration: ExponeaConfiguration,
     //Managers
     var networkManager: NetworkManager = NetworkManager(exponeaConfiguration)
     var exponeaApiManager: ExponeaApiManager = ExponeaApiManager(gson, networkManager)
-    var eventManager: EventManager = EventManager(eventRepository, exponeaApiManager)
+    var eventManager: EventManager = EventManager(exponeaConfiguration,eventRepository, exponeaApiManager)
     var deviceManager: DeviceManager = DeviceManager(context)
 }

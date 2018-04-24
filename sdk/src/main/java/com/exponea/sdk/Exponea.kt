@@ -2,18 +2,20 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.*
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
+
+    var flushMode: FlushMode = FlushMode.PERIOD
+    var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
 
     /**
      * Check if our library has been properly initialized
@@ -44,6 +46,9 @@ object Exponea {
         this.component = ExponeaComponent(configuration, context)
     }
 
+    /**
+     * Send a tracking event to Exponea
+     */
     fun trackEvent(
             eventType: String,
             timestamp: Double,
@@ -59,5 +64,12 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event)
+    }
+
+    /**
+     * Manually push all events to Exponea
+     */
+    fun flush() {
+        component.eventManager.flushEvents()
     }
 }

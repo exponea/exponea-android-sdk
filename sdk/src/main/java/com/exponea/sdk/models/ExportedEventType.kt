@@ -18,11 +18,11 @@ Example Payload
 
  */
 data class ExportedEventType(
-        override var id: String = UUID.randomUUID().toString(),
+        var projectId: String? = null,
         var type: String?,
         var timestamp: Double?,
         @SerializedName("customer_ids")
         var customerIds: CustomerIds = CustomerIds(),
         var properties: HashMap<String, String>? = null,
         var errors: HashMap<String, String>? = null
-) : DatabaseItem
+)

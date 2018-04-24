@@ -1,7 +1,7 @@
 package com.exponea.sdk.models
 
 data class ExponeaConfiguration(
-        var projectToken: String? = null,
+        var projectToken: String = "",
         var projectTokenRouteMap: HashMap<Route, MutableList<String>> = hashMapOf(),
         var authorization: String? = null,
         var baseURL: String = Constants.Repository.baseURL,

@@ -1,20 +1,36 @@
 package com.exponea.example
 
 import android.app.Application
+import com.exponea.example.managers.UserIdManager
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 
 class App : Application() {
+    companion object {
+        lateinit var instance: App
+    }
+
+    lateinit var userIdManager: UserIdManager
+
     override fun onCreate() {
         super.onCreate()
 
+        // Assign our instance to this
+        instance = this
+
+        // Create our UserIDManager for getting our unique ID
+        userIdManager = UserIdManager(this)
+
+        // Start our exponea configuration
         val configuration = ExponeaConfiguration()
 
         configuration.authorization = BuildConfig.AuthorizationToken
         configuration.projectToken = BuildConfig.DefaultProjectToken
 
+        // Start our SDK
         Exponea.init(this, configuration)
+        // Set our debug level to debug
         Exponea.loggerLevel = Logger.Level.DEBUG
     }
 }

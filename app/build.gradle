@@ -14,6 +14,8 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        vectorDrawables.useSupportLibrary = true
+
         buildConfigField "String", "AuthorizationToken", "\"enN5dTh1bnBreG80dXE0OTVhZWc4Y2E2MzdtbTF1Y3NmeXRram1sdDd4bzBjeXh1bnU5eWpiYjU3MHE1aGlsdDpkN2w3aGEzNGV6cWNjMmRzbnV3Zm9tZnl3ZTU1a2J0NHRhNG1pcjhsanYwbHhuZHFiODk2eGoxaGJnN3A5b2p0\""
         buildConfigField "String", "DefaultProjectToken", "\"0aef3a96-3804-11e8-b710-141877340e97\""
     }
@@ -28,6 +30,7 @@ android {
 dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.android.support:design:27.1.1"
 
     testImplementation 'junit:junit:4.12'
 

@@ -2,10 +2,11 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.exponea.sdk.manager.DeviceManager
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.util.Logger
+import io.paperdb.Paper
 import java.util.*
 
 @SuppressLint("StaticFieldLeak")
@@ -34,6 +35,8 @@ object Exponea {
     fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
 
+        Paper.init(context)
+
         this.context = context
         this.configuration = configuration
 
@@ -44,7 +47,7 @@ object Exponea {
     fun trackEvent(
             eventType: String,
             timestamp: Double,
-            customerId: HashMap<String, String>,
+            customerId: CustomerIds,
             properties: HashMap<String, String>
     ) {
         val event = ExportedEventType(

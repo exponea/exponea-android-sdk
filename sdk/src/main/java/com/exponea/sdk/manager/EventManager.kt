@@ -14,6 +14,7 @@ class EventManager(
         private val apiManager: ExponeaApiManager
 ) {
     fun addEventToQueue(event: ExportedEventType) {
+        Logger.d(this, "addEventToQueue: ${event.id}")
         eventRepository.add(event)
     }
 

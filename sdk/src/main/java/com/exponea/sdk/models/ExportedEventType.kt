@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.google.gson.annotations.SerializedName
 import java.util.*
 
 /*
@@ -20,7 +21,8 @@ data class ExportedEventType(
         override var id: String = UUID.randomUUID().toString(),
         var type: String?,
         var timestamp: Double?,
-        var customer_ids: HashMap<String, String>? = null,
+        @SerializedName("customer_ids")
+        var customerIds: CustomerIds = CustomerIds(),
         var properties: HashMap<String, String>? = null,
         var errors: HashMap<String, String>? = null
 ) : DatabaseItem

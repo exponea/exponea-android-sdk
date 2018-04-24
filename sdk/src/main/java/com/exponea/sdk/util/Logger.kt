@@ -4,6 +4,7 @@ import android.util.Log
 
 object Logger {
     enum class Level(var value: Int) {
+        OFF(5),
         ERROR(4),
         WARN(3),
         INFO(2),

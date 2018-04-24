@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaApiManager
 import com.exponea.sdk.repository.EventRepository
@@ -8,6 +9,7 @@ import com.exponea.sdk.util.enqueue
 import java.io.IOException
 
 class EventManager(
+        private val configuration: ExponeaConfiguration,
         private val eventRepository: EventRepository,
         private val apiManager: ExponeaApiManager
 ) {
@@ -17,10 +19,17 @@ class EventManager(
 
     fun flushEvents() {
         val allEvents = eventRepository.all()
-        
+        val firstEvent = allEvents.firstOrNull()
+
+        if (firstEvent != null) {
+            Logger.i(this, "Flushing Event: ${firstEvent.id}")
+
+        } else {
+            Logger.i(this, "No events left to flush: ${allEvents.size}")
+        }
     }
 
-    fun trySendingEvent(projectToken: String, event: ExportedEventType) {
+    private fun trySendingEvent(projectToken: String, event: ExportedEventType) {
         apiManager
                 .postEvent(projectToken, event)
                 .enqueue(

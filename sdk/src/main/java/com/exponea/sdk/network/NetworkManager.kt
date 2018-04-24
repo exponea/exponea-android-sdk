@@ -34,21 +34,13 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
     }
 
     fun post(endpoint: String, body: String?): Call {
-        var request: Request
+        var requestBuilder = Request.Builder()
+                .url(endpoint)
+
         if (body != null) {
-            request = Request.Builder()
-                    .url(endpoint)
-                    .post(
-                            RequestBody.create(mediaTypeJson, body)
-                    )
-                    .build()
-        }
-        else {
-            request = Request.Builder()
-                    .url(endpoint)
-                    .build()
+            requestBuilder.post(RequestBody.create(mediaTypeJson, body))
         }
 
-        return networkClient.newCall(request)
+        return networkClient.newCall(requestBuilder.build())
     }
 }

@@ -26,11 +26,10 @@ object Constants {
 
     /// SDK Info
     object DeviceInfo {
-        val osName: String = "iOS"
-        val osVersion: String = "osVersion" // get system version
-        val sdk: String = "iOS SDK"
+        val osName: String = "Android"
+        val osVersion: String = "1.0.0" // get system version
+        val sdk: String = "AndroidSDK"
         val sdkVersion: String = "1.0.0"
-        val deviceModel: String = "DeviceModel" // get device model
     }
 
     /// Type of customer events

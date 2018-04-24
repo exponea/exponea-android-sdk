@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.exponea.sdk.manager.DeviceManager
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.util.Logger
@@ -37,7 +38,7 @@ object Exponea {
         this.configuration = configuration
 
         // Start Network Manager
-        this.component = ExponeaComponent(configuration)
+        this.component = ExponeaComponent(configuration, context)
     }
 
     fun trackEvent(

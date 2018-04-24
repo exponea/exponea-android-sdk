@@ -16,7 +16,7 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
             var request = it.request()
 
             request = request.newBuilder()
-                    .addHeader("Authorization", "Bearer ${exponeaConfiguration.authorization}")
+                    .addHeader("Authorization", "${exponeaConfiguration.authorization}")
                     .build()
 
             return@Interceptor it.proceed(request)

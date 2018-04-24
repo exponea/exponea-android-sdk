@@ -11,7 +11,4 @@ class EventManager(
     fun addEventToQueue(event: ExportedEventType) {
         eventRepository.add(event)
     }
-
-    fun flushEvents() {
-    }
 }

@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.sdk.Exponea
+import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : BaseFragment() {
     override fun onCreateView(
@@ -17,8 +19,13 @@ class SettingsFragment : BaseFragment() {
         return layoutInflater.inflate(R.layout.fragment_settings, container, false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         trackPage(Constants.ScreenNames.settingsScreen)
+
+        settingsBtnFlush.setOnClickListener {
+            Exponea.flush()
+        }
     }
 }

@@ -33,7 +33,7 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
 
     fun post(endpoint: String, body: String): Call {
         val request = Request.Builder()
-                .url(endpoint)
+                .url(exponeaConfiguration.baseURL + endpoint)
                 .post(
                         RequestBody.create(mediaTypeJson, body)
                 )

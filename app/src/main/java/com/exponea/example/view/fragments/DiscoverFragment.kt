@@ -17,8 +17,8 @@ class DiscoverFragment : BaseFragment() {
         return layoutInflater.inflate(R.layout.fragment_discover, container, false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         trackPage(Constants.ScreenNames.discoverScreen)
     }
 }

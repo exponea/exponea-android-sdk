@@ -18,7 +18,9 @@ Example Payload
 
  */
 data class ExportedEventType(
+        @SerializedName("project_id")
         var projectId: String? = null,
+        @SerializedName("event_type")
         var type: String?,
         var timestamp: Double?,
         @SerializedName("customer_ids")

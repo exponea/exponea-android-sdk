@@ -13,11 +13,11 @@ open class BaseFragment : Fragment() {
         val userID = App.instance.userIdManager.uniqueUserID
 
         Exponea.trackEvent(
-                "PageView",
+                "page_view",
                 timestamp,
                 CustomerIds(cookie = userID),
                 hashMapOf(
-                        Pair("Name", pageName)
+                        Pair("name", pageName)
                 )
         )
     }

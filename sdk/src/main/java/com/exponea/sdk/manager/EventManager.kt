@@ -17,7 +17,6 @@ class EventManager(
 
     fun flushEvents() {
         val allEvents = eventRepository.all()
-
         
     }
 

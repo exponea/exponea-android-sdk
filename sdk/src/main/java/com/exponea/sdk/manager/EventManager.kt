@@ -3,6 +3,9 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaApiManager
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.enqueue
+import java.io.IOException
 
 class EventManager(
         private val eventRepository: EventRepository,
@@ -13,5 +16,38 @@ class EventManager(
     }
 
     fun flushEvents() {
+        val allEvents = eventRepository.all()
+
+        
+    }
+
+    fun trySendingEvent(projectToken: String, event: ExportedEventType) {
+        apiManager
+                .postEvent(projectToken, event)
+                .enqueue(
+                        { _, response ->
+                            onEventSentSuccess(response.isSuccessful, event)
+                        },
+                        { _, ioException ->
+                            onEventSentError(ioException, event)
+                        }
+                )
+    }
+
+    private fun onEventSentSuccess(isSuccessful: Boolean, event: ExportedEventType) {
+        Logger.d(this, "onEventSentSuccess: $isSuccessful -> ${event.id}")
+        if (isSuccessful) {
+            eventRepository.remove(event.id)
+        } else {
+            // Do nothing?
+        }
+    }
+
+    private fun onEventSentError(exception: IOException, event: ExportedEventType) {
+        Logger.e(
+                this@EventManager,
+                "Sending Event Failed (Event: ${event.id}) Sending back to queue",
+                exception
+        )
     }
 }

@@ -1,5 +1,6 @@
 package com.exponea.sdk.network
 
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import okhttp3.*
 
@@ -16,6 +17,7 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
             var request = it.request()
 
             request = request.newBuilder()
+                    .addHeader("Content-Type", Constants.Repository.contentType)
                     .addHeader("Authorization", "${exponeaConfiguration.authorization}")
                     .build()
 
@@ -31,13 +33,21 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
                 .build()
     }
 
-    fun post(endpoint: String, body: String): Call {
-        val request = Request.Builder()
-                .url(endpoint)
-                .post(
-                        RequestBody.create(mediaTypeJson, body)
-                )
-                .build()
+    fun post(endpoint: String, body: String?): Call {
+        var request: Request
+        if (body != null) {
+            request = Request.Builder()
+                    .url(endpoint)
+                    .post(
+                            RequestBody.create(mediaTypeJson, body)
+                    )
+                    .build()
+        }
+        else {
+            request = Request.Builder()
+                    .url(endpoint)
+                    .build()
+        }
 
         return networkClient.newCall(request)
     }

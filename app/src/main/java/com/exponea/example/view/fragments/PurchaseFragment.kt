@@ -17,8 +17,8 @@ class PurchaseFragment : BaseFragment() {
         return layoutInflater.inflate(R.layout.fragment_purchase, container, false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         trackPage(Constants.ScreenNames.purchaseScreen)
     }
 }

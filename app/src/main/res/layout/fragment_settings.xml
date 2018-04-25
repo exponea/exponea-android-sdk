@@ -5,11 +5,11 @@
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
 
-    <TextView
+    <Button
+        android:id="@+id/settingsBtnFlush"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:gravity="center"
-        android:text="Settings" />
+        android:text="Manual Flush" />
 
 </FrameLayout>

@@ -173,7 +173,7 @@ object Exponea {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
             PERIOD -> startService()
-        // APP_CLOSE -> //TODO somehow implement this
+            // APP_CLOSE -> // TODO somehow implement this
             MANUAL -> stopService()
         }
     }

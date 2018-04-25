@@ -62,7 +62,12 @@ class ServiceManagerImpl(context: Context) : ServiceManager {
                         this,
                         "Pending Job: ${jobInfo.intervalMillis} -> Current ${Exponea.flushPeriod.timeInMillis}"
                 )
-                return jobInfo.intervalMillis == Exponea.flushPeriod.timeInMillis
+
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    jobInfo.minLatencyMillis == Exponea.flushPeriod.timeInMillis
+                } else {
+                    jobInfo.intervalMillis == Exponea.flushPeriod.timeInMillis
+                }
             }
         }
 

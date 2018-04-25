@@ -22,7 +22,7 @@ data class ExportedEventType(
         var type: String?,
         var timestamp: Double?,
         @SerializedName("customer_ids")
-        var customerIds: CustomerIds = CustomerIds(),
+        var customerIds: CustomerIds? = CustomerIds(),
         var properties: HashMap<String, String>? = null,
         var errors: HashMap<String, String>? = null
 ) : DatabaseItem

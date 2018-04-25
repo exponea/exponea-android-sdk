@@ -5,6 +5,7 @@ import android.content.Context
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.services.ExponeaJobService
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
@@ -99,14 +100,44 @@ object Exponea {
         component.eventManager.addEventToQueue(event)
     }
 
+    fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
+        trackEvent(null, null, customerIds, properties.toHashMap())
+    }
+
     /**
      * Manually push all events to Exponea
      */
     fun flush() {
+        if (ExponeaJobService.isRunning) {
+            Logger.w(this, "Cannot flush, Job service is already in progress")
+            return
+        }
+
         component.eventManager.flushEvents()
     }
 
     // Private Helpers
+
+    private fun trackInstall() {
+        val hasInstalled = component.deviceInitiatedRepository.get()
+
+        if (hasInstalled) {
+            return
+        }
+
+        val device = DeviceProperties(deviceType = component.deviceManager.getDeviceType())
+        val timestamp = System.currentTimeMillis().toDouble()
+
+        trackEvent(
+                "installation",
+                timestamp,
+                null,
+                device.toHashMap()
+        )
+
+        component.deviceInitiatedRepository.set(true)
+    }
+
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
         startService()
@@ -129,29 +160,5 @@ object Exponea {
     private fun stopService() {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
-    }
-
-    private fun trackInstall() {
-        val hasInstalled = component.deviceInitiatedRepository.get()
-
-        if (hasInstalled) {
-            return
-        }
-
-        val device = DeviceProperties(deviceType = component.deviceManager.getDeviceType())
-        val timestamp = System.currentTimeMillis().toDouble()
-
-        trackEvent(
-                "installation",
-                timestamp,
-                null,
-                device.toHashMap()
-        )
-
-        component.deviceInitiatedRepository.set(true)
-    }
-
-    fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
-        trackEvent(null, null, customerIds, properties.toHashMap())
     }
 }

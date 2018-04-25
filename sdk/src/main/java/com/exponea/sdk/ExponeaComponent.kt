@@ -10,6 +10,7 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepository
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.repository.EventRepositoryImpl
 import com.google.gson.Gson
 
 class ExponeaComponent(
@@ -22,15 +23,11 @@ class ExponeaComponent(
     val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
     val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
-    val eventRepository: EventRepository = EventRepository()
+    val eventRepository: EventRepository = EventRepositoryImpl()
     //Managers
     val serviceManager: ServiceManager = ServiceManagerImpl(context)
     val networkManager: NetworkManager = NetworkManager(exponeaConfiguration)
     val exponeaApiManager: ExponeaApiManager = ExponeaApiManager(gson, networkManager)
-    val eventManager: EventManager = EventManager(
-            exponeaConfiguration,
-            eventRepository,
-            exponeaApiManager
-    )
+    val eventManager: EventManager = EventManager(exponeaConfiguration, eventRepository, exponeaApiManager)
     val deviceManager: DeviceManager = DeviceManagerImpl(context)
 }

@@ -2,6 +2,8 @@ package com.exponea.sdk.network
 
 import com.exponea.sdk.models.*
 import okhttp3.Call
+import okhttp3.Response
+import java.io.IOException
 
 interface ExponeaService {
     fun postEvent(projectToken: String, event: ExportedEventType): Call

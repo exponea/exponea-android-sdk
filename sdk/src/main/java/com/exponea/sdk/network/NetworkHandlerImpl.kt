@@ -17,6 +17,8 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
         return Interceptor {
             var request = it.request()
 
+            println("Server Address: ${exponeaConfiguration.baseURL}")
+
             request = request.newBuilder()
                     .addHeader("Content-Type", Constants.Repository.contentType)
                     .addHeader("Authorization", "${exponeaConfiguration.authorization}")
@@ -45,7 +47,7 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
 
     override fun post(endpoint: String, body: String?): Call {
         val requestBuilder = Request.Builder()
-                .url(exponeaConfiguration.baseURL+  endpoint)
+                .url(exponeaConfiguration.baseURL + endpoint)
 
         if (body != null) {
             requestBuilder.post(RequestBody.create(mediaTypeJson, body))

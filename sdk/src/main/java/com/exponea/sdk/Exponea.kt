@@ -180,6 +180,11 @@ object Exponea {
 
     private fun startService() {
         Logger.d(this, "startService")
+
+        if (flushMode == MANUAL) {
+            Logger.w(this, "Flush mode manual set -> Skipping job service")
+            return
+        }
         component.serviceManager.start()
     }
 

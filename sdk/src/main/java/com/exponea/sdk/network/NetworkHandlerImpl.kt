@@ -45,7 +45,7 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
 
     override fun post(endpoint: String, body: String?): Call {
         val requestBuilder = Request.Builder()
-                .url(endpoint)
+                .url(exponeaConfiguration.baseURL+  endpoint)
 
         if (body != null) {
             requestBuilder.post(RequestBody.create(mediaTypeJson, body))

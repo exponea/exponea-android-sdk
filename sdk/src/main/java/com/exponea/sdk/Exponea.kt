@@ -5,7 +5,6 @@ import android.content.Context
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.services.ExponeaJobService
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit
 object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
-    private lateinit var component: ExponeaComponent
+    lateinit var component: ExponeaComponent
 
     /**
      * Defines which mode the library should flush out events
@@ -69,6 +68,9 @@ object Exponea {
 
         // Alarm Manager Starter
         startService()
+
+        // Track our install
+        trackInstall()
     }
 
 
@@ -77,38 +79,30 @@ object Exponea {
      */
 
     fun trackEvent(
-            eventType: String?,
-            timestamp: Double?,
-            customerId: CustomerIds?,
-            properties: HashMap<String, Any>
+            eventType: String? = null,
+            timestamp: Long = Date().time,
+            customerId: CustomerIds? = null,
+            properties: HashMap<String, Any> = hashMapOf()
     ) {
-
-        val time: Double = if (timestamp == null) {
-            System.currentTimeMillis().toDouble()
-        } else {
-            timestamp
-        }
-
         val event = ExportedEventType(
-                UUID.randomUUID().toString(),
-                eventType,
-                time,
-                customerId,
-                properties
+                type = eventType,
+                timestamp = timestamp,
+                customerIds = customerId,
+                properties = properties
         )
 
         component.eventManager.addEventToQueue(event)
     }
 
     fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
-        trackEvent(null, null, customerIds, properties.toHashMap())
+        trackEvent(customerId = customerIds, properties = properties.toHashMap())
     }
 
     /**
      * Manually push all events to Exponea
      */
     fun flush() {
-        if (ExponeaJobService.isRunning) {
+        if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
             return
         }
@@ -126,13 +120,10 @@ object Exponea {
         }
 
         val device = DeviceProperties(deviceType = component.deviceManager.getDeviceType())
-        val timestamp = System.currentTimeMillis().toDouble()
 
         trackEvent(
-                "installation",
-                timestamp,
-                null,
-                device.toHashMap()
+                eventType = "installation",
+                properties = device.toHashMap()
         )
 
         component.deviceInitiatedRepository.set(true)

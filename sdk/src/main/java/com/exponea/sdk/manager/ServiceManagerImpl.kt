@@ -33,6 +33,11 @@ class ServiceManagerImpl(context: Context) : ServiceManager {
                 .setPeriodic(period)
                 .build()
 
+        if (hasPendingJob()) {
+            Logger.d(this, "Job already scheduled")
+            return
+        }
+
         jobScheduler.schedule(job)
     }
 
@@ -41,4 +46,17 @@ class ServiceManagerImpl(context: Context) : ServiceManager {
         jobScheduler.cancel(jobID)
     }
 
+    private fun hasPendingJob(): Boolean {
+        for (jobInfo in jobScheduler.allPendingJobs) {
+            if (jobInfo.id == jobID) {
+                Logger.d(
+                        this,
+                        "Pending Job: ${jobInfo.intervalMillis} -> Current ${Exponea.flushPeriod.timeInMillis}"
+                )
+                return jobInfo.intervalMillis == Exponea.flushPeriod.timeInMillis
+            }
+        }
+
+        return false
+    }
 }

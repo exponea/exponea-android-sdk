@@ -13,6 +13,9 @@ class FlushManagerImpl(
         private val eventRepository: EventRepository,
         private val exponeaService: ExponeaService
 ) : FlushManager {
+    override var onFlushFinishListener: (() -> Unit)? = null
+    override var isRunning: Boolean = false
+
     override fun flush() {
         val allEvents = eventRepository.all()
 
@@ -21,10 +24,13 @@ class FlushManagerImpl(
         val firstEvent = allEvents.firstOrNull()
 
         if (firstEvent != null) {
+            isRunning = true
             Logger.i(this, "Flushing Event: ${firstEvent.id}")
             trySendingEvent(firstEvent)
         } else {
+            isRunning = false
             Logger.i(this, "No events left to flush: ${allEvents.size}")
+            onFlushFinishListener?.invoke()
         }
     }
 

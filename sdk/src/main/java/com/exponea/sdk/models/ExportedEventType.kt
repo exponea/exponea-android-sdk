@@ -21,10 +21,10 @@ data class ExportedEventType(
         @SerializedName("project_id")
         var projectId: String? = null,
         @SerializedName("event_type")
-        var type: String?,
-        var timestamp: Double?,
+        var type: String? = null,
+        var timestamp: Long? = Date().time,
         @SerializedName("customer_ids")
-        var customerIds: CustomerIds? = CustomerIds(),
+        var customerIds: CustomerIds? = null,
         var properties: HashMap<String, Any>? = null,
         var errors: HashMap<String, String>? = null
 )

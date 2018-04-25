@@ -5,6 +5,8 @@ import com.exponea.sdk.manager.*
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaApiManager
 import com.exponea.sdk.network.NetworkManager
+import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.EventRepository
 import com.google.gson.Gson
 

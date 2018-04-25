@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
 data class CustomerExportAttributes(
-        var type: String,
-        var list: MutableList<CustomerAttributes>
+        var type: String? = null,
+        var list: MutableList<CustomerAttributes>? = null
 )

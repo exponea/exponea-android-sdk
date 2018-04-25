@@ -1,8 +1,10 @@
 package com.exponea.sdk.models
 
+import com.google.gson.annotations.SerializedName
+
 data class CustomerAttributes(
-        var typeKey: String,
-        var typeValue: String,
-        var identificationKey: String,
-        var identificationValue: String
+        @SerializedName("customer_id")
+        var customerId: CustomerIds = CustomerIds(),
+        @SerializedName("attributes")
+        var attributes: MutableList<HashMap<String, String>>? = null
 )

@@ -1,5 +1,6 @@
 package com.exponea.sdk.network
 
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
@@ -17,6 +18,7 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
             var request = it.request()
 
             request = request.newBuilder()
+                    .addHeader("Content-Type", Constants.Repository.contentType)
                     .addHeader("Authorization", "${exponeaConfiguration.authorization}")
                     .build()
 
@@ -40,15 +42,15 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
                 .addInterceptor(networkInterceptor)
                 .build()
     }
+  
+    fun post(endpoint: String, body: String?): Call {
+        var requestBuilder = Request.Builder()
+                .url(endpoint)
 
-    fun post(endpoint: String, body: String): Call {
-        val request = Request.Builder()
-                .url(exponeaConfiguration.baseURL + endpoint)
-                .post(
-                        RequestBody.create(mediaTypeJson, body)
-                )
-                .build()
+        if (body != null) {
+            requestBuilder.post(RequestBody.create(mediaTypeJson, body))
+        }
 
-        return networkClient.newCall(request)
+        return networkClient.newCall(requestBuilder.build())
     }
 }

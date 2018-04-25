@@ -10,16 +10,17 @@ import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
 @SuppressLint("StaticFieldLeak")
 object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
+    private lateinit var deviceManager: DeviceManager
 
     /**
      * Defines which mode the library should flush out events
      */
+  
     var flushMode: FlushMode = PERIOD
         set(value) {
             field = value
@@ -29,6 +30,7 @@ object Exponea {
     /**
      * Defines the period at which the library should flush events
      */
+  
     var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
         set(value) {
             field = value
@@ -38,6 +40,7 @@ object Exponea {
     /**
      * Check if our library has been properly initialized
      */
+  
     private var isInitialized: Boolean? = null
         get() {
             return this::configuration.isInitialized
@@ -46,6 +49,7 @@ object Exponea {
     /**
      * Set which level the debugger should output log messages
      */
+  
     var loggerLevel: Logger.Level
         get () = Logger.level
         set(value) {
@@ -71,23 +75,31 @@ object Exponea {
     /**
      * Send a tracking event to Exponea
      */
+  
     fun trackEvent(
-            eventType: String,
-            timestamp: Double,
-            customerId: CustomerIds,
-            properties: HashMap<String, String>
+            eventType: String?,
+            timestamp: Double?,
+            customerId: CustomerIds?,
+            properties: HashMap<String, Any>
     ) {
+
+        val time: Double = if (timestamp == null) {
+            System.currentTimeMillis().toDouble()
+        } else {
+            timestamp
+        }
+
         val event = ExportedEventType(
                 UUID.randomUUID().toString(),
                 eventType,
-                timestamp,
+                time,
                 customerId,
                 properties
         )
 
         component.eventManager.addEventToQueue(event)
     }
-
+  
     /**
      * Manually push all events to Exponea
      */
@@ -118,5 +130,27 @@ object Exponea {
     private fun stopService() {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
+    }
+  
+    private fun trackInstall() {
+        val hasInstalled = component.preferences.getBoolean("install", false)
+
+        if (hasInstalled) {
+            return
+        }
+
+        val device: DeviceProperties = DeviceProperties(deviceType = deviceManager.getDeviceType())
+        val timestamp = System.currentTimeMillis()
+
+        trackEvent("installation",
+                null,
+                null,
+                device.toHashMap())
+
+        component.preferences.setBoolean("install", true);
+    }
+
+    fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
+        trackEvent(null, null, customerIds, properties.toHashMap())
     }
 }

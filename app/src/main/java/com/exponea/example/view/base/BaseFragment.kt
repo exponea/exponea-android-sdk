@@ -9,7 +9,7 @@ import java.util.*
 open class BaseFragment : Fragment() {
 
     fun trackPage(pageName: String) {
-        val timestamp = (Date().time / 1000).toDouble()
+        val timestamp = (Date().time / 1000)
         val userID = App.instance.userIdManager.uniqueUserID
 
         Exponea.trackEvent(

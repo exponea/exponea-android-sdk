@@ -4,6 +4,7 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.services.ExponeaJobService
 import com.exponea.sdk.util.Logger
@@ -28,15 +29,23 @@ class ServiceManagerImpl(context: Context) : ServiceManager {
 
         val period = Exponea.flushPeriod.timeInMillis
 
-        val job = JobInfo.Builder(jobID, componentName)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(period)
-                .build()
+        val job = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            JobInfo.Builder(jobID, componentName)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setMinimumLatency(period)
+                    .build()
+        } else {
+            JobInfo.Builder(jobID, componentName)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setPeriodic(period)
+                    .build()
+        }
 
         if (hasPendingJob()) {
             Logger.d(this, "Job already scheduled")
             return
         }
+
 
         jobScheduler.schedule(job)
     }

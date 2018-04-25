@@ -1,11 +1,11 @@
 package com.exponea.sdk.repository
 
-import com.exponea.sdk.database.PaperExponeaDatabase
+import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExportedEventType
 
 class EventRepositoryImpl : EventRepository {
-    private val database = PaperExponeaDatabase<ExportedEventType>("EventDatabase")
+    private val database = ExponeaDatabaseImpl<ExportedEventType>("EventDatabase")
 
     override fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>> {
         return database.all()

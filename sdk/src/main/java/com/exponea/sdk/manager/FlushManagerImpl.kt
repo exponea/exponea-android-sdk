@@ -3,7 +3,7 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.network.ExponeaApiManager
+import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
@@ -11,7 +11,7 @@ import com.exponea.sdk.util.enqueue
 class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
         private val eventRepository: EventRepository,
-        private val apiManager: ExponeaApiManager
+        private val exponeaService: ExponeaService
 ) : FlushManager {
     override fun flush() {
         val allEvents = eventRepository.all()
@@ -31,7 +31,7 @@ class FlushManagerImpl(
     private fun trySendingEvent(
             databaseObject: DatabaseStorageObject<ExportedEventType>
     ) {
-        apiManager
+        exponeaService
                 .postEvent(databaseObject.projectId, databaseObject.item)
                 .enqueue(
                         { _, response ->

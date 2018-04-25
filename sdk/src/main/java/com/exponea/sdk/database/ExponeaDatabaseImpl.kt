@@ -3,7 +3,7 @@ package com.exponea.sdk.database
 import com.exponea.sdk.models.DatabaseStorageObject
 import io.paperdb.Paper
 
-class PaperExponeaDatabase<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
+class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
     val book = Paper.book(databaseName)
 
     override fun all(): ArrayList<DatabaseStorageObject<T>> {

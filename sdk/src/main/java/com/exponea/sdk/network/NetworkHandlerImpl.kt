@@ -5,7 +5,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 
-class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
+class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
     private val mediaTypeJson: MediaType = MediaType.parse("application/json")!!
     private lateinit var networkClient: OkHttpClient
 
@@ -42,9 +42,9 @@ class NetworkManager(private var exponeaConfiguration: ExponeaConfiguration) {
                 .addInterceptor(networkInterceptor)
                 .build()
     }
-  
-    fun post(endpoint: String, body: String?): Call {
-        var requestBuilder = Request.Builder()
+
+    override fun post(endpoint: String, body: String?): Call {
+        val requestBuilder = Request.Builder()
                 .url(endpoint)
 
         if (body != null) {

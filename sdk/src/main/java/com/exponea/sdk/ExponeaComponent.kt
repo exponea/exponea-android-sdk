@@ -3,8 +3,10 @@ package com.exponea.sdk
 import android.content.Context
 import com.exponea.sdk.manager.*
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.network.ExponeaApiManager
-import com.exponea.sdk.network.NetworkManager
+import com.exponea.sdk.network.ExponeaService
+import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.network.NetworkHandler
+import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepository
@@ -24,13 +26,14 @@ class ExponeaComponent(
     // Repositories
     val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
     val eventRepository: EventRepository = EventRepositoryImpl()
+    // Network Handler
+    val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
+    // Api Service
+    val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
     //Managers
     val serviceManager: ServiceManager = ServiceManagerImpl(context)
-    val networkManager: NetworkManager = NetworkManager(exponeaConfiguration)
-    val exponeaApiManager: ExponeaApiManager = ExponeaApiManager(gson, networkManager)
-
     val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
-    val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaApiManager)
+    val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
 
     val deviceManager: DeviceManager = DeviceManagerImpl(context)
 }

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.sdk.Exponea
 
 class DiscoverFragment : BaseFragment() {
     override fun onCreateView(

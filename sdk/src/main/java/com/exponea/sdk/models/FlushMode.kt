@@ -10,8 +10,8 @@ enum class FlushMode {
 }
 
 class FlushPeriod(private val amount: Long, private val timeUnit: TimeUnit) {
-    var timeInSeconds: Long = 0
+    var timeInMillis: Long = 0
         get() {
-            return timeUnit.toSeconds(amount)
+            return timeUnit.toMillis(amount)
         }
 }

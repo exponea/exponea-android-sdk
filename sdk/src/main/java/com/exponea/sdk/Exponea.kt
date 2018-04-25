@@ -113,7 +113,7 @@ object Exponea {
             return
         }
 
-        component.eventManager.flushEvents()
+        component.flushManager.flush()
     }
 
     // Private Helpers

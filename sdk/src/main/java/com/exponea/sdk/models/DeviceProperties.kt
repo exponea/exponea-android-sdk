@@ -10,7 +10,7 @@ data class DeviceProperties(
         var deviceModel: String = Build.MODEL,
         var deviceType: String
 ) {
-    fun toHashMap(): HashMap<String, String> {
+    fun toHashMap(): HashMap<String, Any> {
         return hashMapOf(
                 Pair("os_name", osName),
                 Pair("os_version", osVersion),

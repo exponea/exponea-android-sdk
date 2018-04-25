@@ -3,13 +3,11 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.manager.DeviceManager
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.*
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
+import java.util.Properties
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -49,15 +47,22 @@ object Exponea {
     }
 
     fun trackEvent(
-            eventType: String,
-            timestamp: Double,
+            eventType: String?,
+            timestamp: Double?,
             customerId: CustomerIds?,
-            properties: HashMap<String, String>
+            properties: HashMap<String, Any>
     ) {
+
+        val time: Double = if (timestamp == null) {
+            System.currentTimeMillis().toDouble()
+        } else {
+            timestamp
+        }
+
         val event = ExportedEventType(
                 UUID.randomUUID().toString(),
                 eventType,
-                timestamp,
+                time,
                 customerId,
                 properties
         )
@@ -72,14 +77,18 @@ object Exponea {
             return
         }
 
-        val timestamp = System.currentTimeMillis()
         val device: DeviceProperties = DeviceProperties(deviceType = deviceManager.getDeviceType())
+        val timestamp = System.currentTimeMillis()
 
         trackEvent("installation",
-                timestamp.toDouble(),
+                null,
                 null,
                 device.toHashMap())
 
         component.preferences.setBoolean("install", true);
+    }
+
+    fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
+        trackEvent(null, null, customerIds, properties.toHashMap())
     }
 }

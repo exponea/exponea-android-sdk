@@ -17,6 +17,7 @@ class ExponeaJobService : JobService() {
         }
 
         Exponea.component.flushManager.onFlushFinishListener = {
+            Logger.d(this, "onStartJob -> Finished")
             // Once our flushing is done we want to tell the system that we finished and we should reschedule
             jobFinished(params, true)
         }
@@ -24,6 +25,7 @@ class ExponeaJobService : JobService() {
         Exponea.component.flushManager.flush()
 
         // Return true to let the job know we aren't finished with our work
+
         return true
     }
 

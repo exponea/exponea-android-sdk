@@ -68,9 +68,6 @@ object Exponea {
 
         // Alarm Manager Starter
         startService()
-
-        // Track our install
-        trackInstall()
     }
 
 
@@ -95,6 +92,29 @@ object Exponea {
         component.eventManager.addEventToQueue(event, route)
     }
 
+    fun trackInstall(campaign: String? = null, campaignId: String? = null, link: String? = null) {
+        val hasInstalled = component.deviceInitiatedRepository.get()
+
+        if (hasInstalled) {
+            return
+        }
+
+        val device = DeviceProperties(
+                campaign = campaign,
+                campaignId = campaignId,
+                link = link,
+                deviceType = component.deviceManager.getDeviceType()
+        )
+
+        trackEvent(
+                eventType = "installation",
+                properties = device.toHashMap(),
+                route = Route.TRACK_EVENTS
+        )
+
+        component.deviceInitiatedRepository.set(true)
+    }
+
     /**
      * Update the informed properties to a specific customer.
      * All properties will be stored into coredata until it will be
@@ -102,7 +122,11 @@ object Exponea {
      */
 
     fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
-        trackEvent(customerId = customerIds, properties = properties.toHashMap(), route = Route.TRACK_CUSTOMERS)
+        trackEvent(
+                customerId = customerIds,
+                properties = properties.toHashMap(),
+                route = Route.TRACK_CUSTOMERS
+        )
     }
 
     /**
@@ -111,13 +135,19 @@ object Exponea {
      * flushed (send it to api).
      */
 
-    fun trackCustomerEvent(customerIds: CustomerIds, properties: PropertiesList, timestamp: Long?, eventType: String?) {
+    fun trackCustomerEvent(
+            customerIds: CustomerIds,
+            properties: PropertiesList,
+            timestamp: Long?,
+            eventType: String?
+    ) {
         trackEvent(
                 customerId = customerIds,
                 properties = properties.toHashMap(),
                 timestamp = timestamp,
                 eventType = eventType,
-                route = Route.TRACK_EVENTS)
+                route = Route.TRACK_EVENTS
+        )
     }
 
     /**
@@ -133,24 +163,6 @@ object Exponea {
     }
 
     // Private Helpers
-
-    private fun trackInstall() {
-        val hasInstalled = component.deviceInitiatedRepository.get()
-
-        if (hasInstalled) {
-            return
-        }
-
-        val device = DeviceProperties(deviceType = component.deviceManager.getDeviceType())
-
-        trackEvent(
-                eventType = "installation",
-                properties = device.toHashMap(),
-                route = Route.TRACK_EVENTS
-        )
-
-        component.deviceInitiatedRepository.set(true)
-    }
 
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")

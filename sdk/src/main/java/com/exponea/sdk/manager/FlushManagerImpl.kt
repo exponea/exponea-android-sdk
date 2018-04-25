@@ -41,8 +41,10 @@ class FlushManagerImpl(
                 .postEvent(databaseObject.projectId, databaseObject.item)
                 .enqueue(
                         { _, response ->
-                            Logger.d(this, "Response Code: ${response.code()}")
-                            if (response.isSuccessful) {
+                            val responseCode = response.code()
+                            Logger.d(this, "Response Code: $responseCode")
+                            // I love kotlin
+                            if (responseCode in 200..299) {
                                 onEventSentSuccess(databaseObject)
                             } else {
                                 onEventSentFailed(databaseObject)

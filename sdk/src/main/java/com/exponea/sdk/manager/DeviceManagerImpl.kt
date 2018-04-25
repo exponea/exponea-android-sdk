@@ -17,4 +17,12 @@ class DeviceManagerImpl(private val context: Context) : DeviceManager {
             false
         }
     }
+
+    override fun getDeviceType(): String {
+        return if (isTablet()) {
+            "tablet"
+        } else {
+            "mobile"
+        }
+    }
 }

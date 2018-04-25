@@ -15,12 +15,11 @@ object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
-    private lateinit var deviceManager: DeviceManager
 
     /**
      * Defines which mode the library should flush out events
      */
-  
+
     var flushMode: FlushMode = PERIOD
         set(value) {
             field = value
@@ -30,7 +29,7 @@ object Exponea {
     /**
      * Defines the period at which the library should flush events
      */
-  
+
     var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
         set(value) {
             field = value
@@ -40,7 +39,7 @@ object Exponea {
     /**
      * Check if our library has been properly initialized
      */
-  
+
     private var isInitialized: Boolean? = null
         get() {
             return this::configuration.isInitialized
@@ -49,7 +48,7 @@ object Exponea {
     /**
      * Set which level the debugger should output log messages
      */
-  
+
     var loggerLevel: Logger.Level
         get () = Logger.level
         set(value) {
@@ -75,7 +74,7 @@ object Exponea {
     /**
      * Send a tracking event to Exponea
      */
-  
+
     fun trackEvent(
             eventType: String?,
             timestamp: Double?,
@@ -99,7 +98,7 @@ object Exponea {
 
         component.eventManager.addEventToQueue(event)
     }
-  
+
     /**
      * Manually push all events to Exponea
      */
@@ -131,23 +130,25 @@ object Exponea {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
     }
-  
+
     private fun trackInstall() {
-        val hasInstalled = component.preferences.getBoolean("install", false)
+        val hasInstalled = component.deviceInitiatedRepository.get()
 
         if (hasInstalled) {
             return
         }
 
-        val device: DeviceProperties = DeviceProperties(deviceType = deviceManager.getDeviceType())
-        val timestamp = System.currentTimeMillis()
+        val device = DeviceProperties(deviceType = component.deviceManager.getDeviceType())
+        val timestamp = System.currentTimeMillis().toDouble()
 
-        trackEvent("installation",
+        trackEvent(
+                "installation",
+                timestamp,
                 null,
-                null,
-                device.toHashMap())
+                device.toHashMap()
+        )
 
-        component.preferences.setBoolean("install", true);
+        component.deviceInitiatedRepository.set(true)
     }
 
     fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {

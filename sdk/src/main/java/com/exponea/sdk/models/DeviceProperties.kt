@@ -9,4 +9,15 @@ data class DeviceProperties(
         var sdkVersion: String = Constants.DeviceInfo.sdkVersion,
         var deviceModel: String = Build.MODEL,
         var deviceType: String
-)
+) {
+    fun toHashMap(): HashMap<String, String> {
+        return hashMapOf(
+                Pair("os_name", osName),
+                Pair("os_version", osVersion),
+                Pair("sdk", sdk),
+                Pair("sdk_version", sdkVersion),
+                Pair("device_model", deviceModel),
+                Pair("device_type", deviceType)
+        )
+    }
+}

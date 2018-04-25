@@ -2,7 +2,9 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.exponea.sdk.manager.DeviceManager
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.util.Logger
@@ -14,6 +16,7 @@ object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
+    private lateinit var deviceManager: DeviceManager
 
     /**
      * Check if our library has been properly initialized
@@ -42,12 +45,13 @@ object Exponea {
 
         // Start Network Manager
         this.component = ExponeaComponent(configuration, context)
+
     }
 
     fun trackEvent(
             eventType: String,
             timestamp: Double,
-            customerId: CustomerIds,
+            customerId: CustomerIds?,
             properties: HashMap<String, String>
     ) {
         val event = ExportedEventType(
@@ -59,5 +63,23 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event)
+    }
+
+    private fun trackInstall() {
+        val hasInstalled = component.preferences.getBoolean("install", false)
+
+        if (hasInstalled) {
+            return
+        }
+
+        val timestamp = System.currentTimeMillis()
+        val device: DeviceProperties = DeviceProperties(deviceType = deviceManager.getDeviceType())
+
+        trackEvent("installation",
+                timestamp.toDouble(),
+                null,
+                device.toHashMap())
+
+        component.preferences.setBoolean("install", true);
     }
 }

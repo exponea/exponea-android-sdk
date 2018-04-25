@@ -17,4 +17,12 @@ class DeviceManager(private val context: Context) {
             false
         }
     }
+
+    fun getDeviceType(): String {
+        return if (isTablet()) {
+            "tablet"
+        } else {
+            "mobile"
+        }
+    }
 }

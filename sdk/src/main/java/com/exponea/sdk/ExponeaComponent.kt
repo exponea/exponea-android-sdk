@@ -6,6 +6,8 @@ import com.exponea.sdk.manager.EventManager
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaApiManager
 import com.exponea.sdk.network.NetworkManager
+import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.EventRepository
 import com.google.gson.Gson
 
@@ -14,7 +16,9 @@ class ExponeaComponent(exponeaConfiguration: ExponeaConfiguration,
     // Repositories
     var eventRepository: EventRepository = EventRepository()
     var gson = Gson()
-    //Managers
+    // Preferences
+    val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
+    // Managers
     var networkManager: NetworkManager = NetworkManager(exponeaConfiguration)
     var exponeaApiManager: ExponeaApiManager = ExponeaApiManager(gson, networkManager)
     var eventManager: EventManager = EventManager(eventRepository, exponeaApiManager)

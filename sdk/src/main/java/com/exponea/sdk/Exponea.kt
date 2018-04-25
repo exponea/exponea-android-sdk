@@ -80,9 +80,10 @@ object Exponea {
 
     fun trackEvent(
             eventType: String? = null,
-            timestamp: Long = Date().time,
+            timestamp: Long? = Date().time,
             customerId: CustomerIds? = null,
-            properties: HashMap<String, Any> = hashMapOf()
+            properties: HashMap<String, Any> = hashMapOf(),
+            route: Route
     ) {
         val event = ExportedEventType(
                 type = eventType,
@@ -91,11 +92,32 @@ object Exponea {
                 properties = properties
         )
 
-        component.eventManager.addEventToQueue(event)
+        component.eventManager.addEventToQueue(event, route)
     }
 
-    fun trackCustomer(customerIds: CustomerIds, properties: PropertiesList) {
-        trackEvent(customerId = customerIds, properties = properties.toHashMap())
+    /**
+     * Update the informed properties to a specific customer.
+     * All properties will be stored into coredata until it will be
+     * flushed (send it to api).
+     */
+
+    fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
+        trackEvent(customerId = customerIds, properties = properties.toHashMap(), route = Route.TRACK_CUSTOMERS)
+    }
+
+    /**
+     * Track customer event add new events to a specific customer.
+     * All events will be stored into coredata until it will be
+     * flushed (send it to api).
+     */
+
+    fun trackCustomerEvent(customerIds: CustomerIds, properties: PropertiesList, timestamp: Long?, eventType: String?) {
+        trackEvent(
+                customerId = customerIds,
+                properties = properties.toHashMap(),
+                timestamp = timestamp,
+                eventType = eventType,
+                route = Route.TRACK_EVENTS)
     }
 
     /**
@@ -123,7 +145,8 @@ object Exponea {
 
         trackEvent(
                 eventType = "installation",
-                properties = device.toHashMap()
+                properties = device.toHashMap(),
+                route = Route.TRACK_EVENTS
         )
 
         component.deviceInitiatedRepository.set(true)

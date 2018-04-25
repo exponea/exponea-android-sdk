@@ -4,21 +4,19 @@ import android.support.v4.app.Fragment
 import com.exponea.example.App
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.Route
 import java.util.*
 
 open class BaseFragment : Fragment() {
 
     fun trackPage(pageName: String) {
-        val timestamp = (Date().time / 1000).toDouble()
         val userID = App.instance.userIdManager.uniqueUserID
 
         Exponea.trackEvent(
-                "page_view",
-                timestamp,
-                CustomerIds(cookie = userID),
-                hashMapOf(
-                        Pair("name", pageName)
-                )
+                eventType =  "page_view",
+                customerId = CustomerIds(cookie = userID),
+                properties = hashMapOf( Pair("name", pageName)),
+                route = Route.TRACK_EVENTS
         )
     }
 }

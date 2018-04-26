@@ -23,7 +23,7 @@ object Exponea {
     var flushMode: FlushMode = PERIOD
         set(value) {
             field = value
-            onFlushPeriodChanged()
+            onFlushModeChanged()
         }
 
     /**
@@ -33,14 +33,14 @@ object Exponea {
     var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
         set(value) {
             field = value
-            onFlushModeChanged()
+            onFlushPeriodChanged()
         }
 
     /**
      * Check if our library has been properly initialized
      */
 
-    private var isInitialized: Boolean? = null
+    internal var isInitialized: Boolean = false
         get() {
             return this::configuration.isInitialized
         }
@@ -55,21 +55,40 @@ object Exponea {
             Logger.level = value
         }
 
-    fun init(context: Context, configuration: ExponeaConfiguration) {
+    fun init(context: Context, configuration: ExponeaConfiguration?, jsonFile: String?) {
         Logger.i(this, "Init")
 
         Paper.init(context)
 
         this.context = context
-        this.configuration = configuration
+
+        if (configuration == null && jsonFile == null) {
+            Logger.e(this, "Please inform at least one kind of configuration")
+        }
+
+        if (configuration != null) {
+            this.configuration = configuration
+        } else {
+            val config = jsonFile?.let { this.component.fileManager.getConfigurationOfFile(it) }
+            if (config != null) {
+                this.configuration = config
+            }
+        }
+
+        if (isInitialized == false) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
 
         // Start Network Manager
-        this.component = ExponeaComponent(configuration, context)
+        this.component = ExponeaComponent(this.configuration, context)
 
         // Alarm Manager Starter
         startService()
-    }
 
+        // Track Install Event
+        trackInstall()
+    }
 
     /**
      * Send a tracking event to Exponea
@@ -82,6 +101,12 @@ object Exponea {
             properties: HashMap<String, Any> = hashMapOf(),
             route: Route
     ) {
+
+        if (isInitialized == false) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
+
         val event = ExportedEventType(
                 type = eventType,
                 timestamp = timestamp,
@@ -90,29 +115,6 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event, route)
-    }
-
-    fun trackInstall(campaign: String? = null, campaignId: String? = null, link: String? = null) {
-        val hasInstalled = component.deviceInitiatedRepository.get()
-
-        if (hasInstalled) {
-            return
-        }
-
-        val device = DeviceProperties(
-                campaign = campaign,
-                campaignId = campaignId,
-                link = link,
-                deviceType = component.deviceManager.getDeviceType()
-        )
-
-        trackEvent(
-                eventType = "installation",
-                properties = device.toHashMap(),
-                route = Route.TRACK_EVENTS
-        )
-
-        component.deviceInitiatedRepository.set(true)
     }
 
     /**
@@ -191,5 +193,33 @@ object Exponea {
     private fun stopService() {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
+    }
+
+    /**
+     * Installation event is fired only once for the whole lifetime of the app on one
+     * device when the app is launched for the first time.
+     */
+
+    internal fun trackInstall(campaign: String? = null, campaignId: String? = null, link: String? = null) {
+        val hasInstalled = component.deviceInitiatedRepository.get()
+
+        if (hasInstalled) {
+            return
+        }
+
+        val device = DeviceProperties(
+                campaign = campaign,
+                campaignId = campaignId,
+                link = link,
+                deviceType = component.deviceManager.getDeviceType()
+        )
+
+        trackEvent(
+                eventType = "installation",
+                properties = device.toHashMap(),
+                route = Route.TRACK_EVENTS
+        )
+
+        component.deviceInitiatedRepository.set(true)
     }
 }

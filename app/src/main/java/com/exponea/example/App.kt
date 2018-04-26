@@ -32,7 +32,7 @@ class App : Application() {
         configuration.projectToken = BuildConfig.DefaultProjectToken
 
         // Start our SDK
-        Exponea.init(this, configuration)
+        Exponea.init(this, configuration, null)
         // Set our debug level to debug
         Exponea.loggerLevel = Logger.Level.DEBUG
         // Set up our flushing

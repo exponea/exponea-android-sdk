@@ -36,7 +36,7 @@ class InstallEventTest {
 
         Exponea.flushMode = FlushMode.MANUAL
 
-        Exponea.init(context, configuration)
+        Exponea.init(context, configuration, null)
 
         hasSetup = true
     }

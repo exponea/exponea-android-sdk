@@ -35,4 +35,5 @@ class ExponeaComponent(
     val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
     val deviceManager: DeviceManager = DeviceManagerImpl(context)
+    val iapManager: IapManager = IapManagerImpl(context)
 }

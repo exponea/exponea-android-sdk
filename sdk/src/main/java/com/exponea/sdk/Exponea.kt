@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 @SuppressLint("StaticFieldLeak")
 object Exponea {
     private lateinit var context: Context
-    private lateinit var configuration: ExponeaConfiguration
+    internal lateinit var configuration: ExponeaConfiguration
     lateinit var component: ExponeaComponent
 
     /**
@@ -90,6 +90,9 @@ object Exponea {
 
         // Track Install Event
         trackInstall()
+
+        // Track In-App purchase
+        trackInAppPurchase()
     }
 
     /**
@@ -195,6 +198,17 @@ object Exponea {
     private fun stopService() {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
+    }
+
+    private fun trackInAppPurchase() {
+        if (this.configuration.automaticSessionTracking) {
+            // Add the observers when the automatic session tracking is true.
+            this.component.iapManager.configure()
+            this.component.iapManager.startObservingPayments()
+        } else {
+            // Remove the observers when the automatic session tracking is false.
+            this.component.iapManager.stopObservingPayments()
+        }
     }
 
     /**

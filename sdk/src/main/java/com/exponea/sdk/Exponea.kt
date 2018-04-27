@@ -5,6 +5,7 @@ import android.content.Context
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
@@ -55,21 +56,22 @@ object Exponea {
             Logger.level = value
         }
 
-    fun init(context: Context, configuration: ExponeaConfiguration?, jsonFile: String?) {
+    fun init(context: Context, configuration: ExponeaConfiguration?, configFile: String?) {
         Logger.i(this, "Init")
 
         Paper.init(context)
 
         this.context = context
 
-        if (configuration == null && jsonFile == null) {
+        if (configuration == null && configFile == null) {
             Logger.e(this, "Please inform at least one kind of configuration")
+            return
         }
 
         if (configuration != null) {
             this.configuration = configuration
         } else {
-            val config = jsonFile?.let { this.component.fileManager.getConfigurationOfFile(it) }
+            val config = configFile?.let { FileManager.getConfigurationOfFile(it) }
             if (config != null) {
                 this.configuration = config
             }

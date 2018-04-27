@@ -34,9 +34,9 @@ class InstallEventTest {
         configuration.projectToken = "projectToken"
         configuration.authorization = "projectAuthorization"
 
-        Exponea.flushMode = FlushMode.MANUAL
-
         Exponea.init(context, configuration, null)
+
+        Exponea.flushMode = FlushMode.MANUAL
 
         hasSetup = true
     }

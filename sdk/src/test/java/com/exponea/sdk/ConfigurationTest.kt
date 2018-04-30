@@ -1,8 +1,6 @@
 package com.exponea.sdk
 
 import com.exponea.sdk.models.ExponeaConfiguration
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -14,7 +12,11 @@ class ConfigurationTest {
 
     private fun initializeExponeaWithoutConfig() {
         val context = RuntimeEnvironment.application
-        Exponea.init(context, null, null)
+        try {
+            Exponea.init(context, "")
+        } catch (e: Exception) {
+
+        }
     }
 
     private fun setupConfigurationWithStruct() {
@@ -22,12 +24,12 @@ class ConfigurationTest {
         val configuration = ExponeaConfiguration()
         configuration.projectToken = "projectToken"
         configuration.authorization = "projectAuthorization"
-        Exponea.init(context, configuration, null)
+        Exponea.init(context, configuration)
     }
 
     private fun setupConfigurationWithFile() {
         val context = RuntimeEnvironment.application
-        Exponea.init(context, null, "config_valid.xml")
+        Exponea.init(context, "config_valid.xml")
     }
 
     @Test

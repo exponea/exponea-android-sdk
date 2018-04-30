@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit
 @SuppressLint("StaticFieldLeak")
 object Exponea {
     private lateinit var context: Context
-    internal lateinit var configuration: ExponeaConfiguration
+    private lateinit var configuration: ExponeaConfiguration
     lateinit var component: ExponeaComponent
 
     /**
@@ -56,28 +57,28 @@ object Exponea {
             Logger.level = value
         }
 
-    fun init(context: Context, configuration: ExponeaConfiguration?, configFile: String?) {
+    @Throws(InvalidConfigurationException::class)
+    fun init(context: Context, configFile: String) {
+        // Try to parse our file
+        val configuration = FileManager.getConfigurationOfFile(configFile)
+
+        // If our file isn't null then try initiating normally
+        if (configuration != null) {
+            init(context, configuration)
+        } else {
+            throw InvalidConfigurationException()
+        }
+    }
+
+    fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
 
         Paper.init(context)
 
         this.context = context
+        this.configuration = configuration
 
-        if (configuration == null && configFile == null) {
-            Logger.e(this, "Please inform at least one kind of configuration")
-            return
-        }
-
-        if (configuration != null) {
-            this.configuration = configuration
-        } else {
-            val config = configFile?.let { FileManager.getConfigurationOfFile(it) }
-            if (config != null) {
-                this.configuration = config
-            }
-        }
-
-        if (isInitialized == false) {
+        if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
@@ -107,7 +108,7 @@ object Exponea {
             route: Route
     ) {
 
-        if (isInitialized == false) {
+        if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
@@ -180,7 +181,7 @@ object Exponea {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
             PERIOD -> startService()
-            // APP_CLOSE -> // TODO somehow implement this
+        // APP_CLOSE -> // TODO somehow implement this
             MANUAL -> stopService()
         }
     }
@@ -216,7 +217,11 @@ object Exponea {
      * device when the app is launched for the first time.
      */
 
-    internal fun trackInstall(campaign: String? = null, campaignId: String? = null, link: String? = null) {
+    internal fun trackInstall(
+            campaign: String? = null,
+            campaignId: String? = null,
+            link: String? = null
+    ) {
         val hasInstalled = component.deviceInitiatedRepository.get()
 
         if (hasInstalled) {

@@ -20,7 +20,7 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient = BillingClient.newBuilder(context).setListener(this).build()
     private val device = DeviceProperties()
-    private val skuList: ArrayList<SkuDetails> = ArrayList<SkuDetails>()
+    private val skuList: ArrayList<SkuDetails> = ArrayList()
 
     /**
      * Starts the connection and implement the billing listener.
@@ -88,7 +88,7 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
         if (responseCode == BillingResponse.OK && purchases != null) {
             for (purchase in purchases) {
 
-                var sku = skuList.find { it.sku == purchase.sku }
+                val sku = skuList.find { it.sku == purchase.sku }
 
                 sku?.let {
                     val product = PurchasedItem(

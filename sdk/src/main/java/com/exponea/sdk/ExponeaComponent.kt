@@ -21,6 +21,10 @@ class ExponeaComponent(
 ) {
     // Gson Deserializer
     val gson = Gson()
+    // In App Purchase Manager
+    val iapManager: IapManager = IapManagerImpl(context)
+    // Device Manager
+    val deviceManager: DeviceManager = DeviceManagerImpl(context)
     // Preferences
     val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
@@ -34,6 +38,4 @@ class ExponeaComponent(
     val serviceManager: ServiceManager = ServiceManagerImpl(context)
     val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
-    val deviceManager: DeviceManager = DeviceManagerImpl(context)
-    val iapManager: IapManager = IapManagerImpl(context)
 }

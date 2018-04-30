@@ -92,20 +92,20 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
 
                 sku?.let {
                     val product = PurchasedItem(
-                        value = 0.0,
-                        currency = it.price,
-                        paymentSystem = Constants.General.GooglePlay,
-                        productId = it.sku,
-                        productTitle = it.title,
-                        receipt = null,
-                        deviceModel = device.deviceModel,
-                        deviceType = device.deviceType,
-                        ip = null,
-                        osName = device.osName,
-                        osVersion = device.osVersion,
-                        sdk = device.sdk,
-                        sdkVersion = device.sdkVersion
-                )
+                            value = 0.0,
+                            currency = it.price,
+                            paymentSystem = Constants.General.GooglePlay,
+                            productId = it.sku,
+                            productTitle = it.title,
+                            receipt = null,
+                            deviceModel = device.deviceModel,
+                            deviceType = device.deviceType,
+                            ip = null,
+                            osName = device.osName,
+                            osVersion = device.osVersion,
+                            sdk = device.sdk,
+                            sdkVersion = device.sdkVersion
+                    )
                     trackPurchase(product.toHashMap())
                 }
 

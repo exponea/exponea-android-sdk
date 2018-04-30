@@ -83,17 +83,7 @@ object Exponea {
             return
         }
 
-        // Start Network Manager
-        this.component = ExponeaComponent(this.configuration, context)
-
-        // Alarm Manager Starter
-        startService()
-
-        // Track Install Event
-        trackInstall()
-
-        // Track In-App purchase
-        trackInAppPurchase()
+        initializeSdk()
     }
 
     /**
@@ -125,7 +115,7 @@ object Exponea {
 
     /**
      * Update the informed properties to a specific customer.
-     * All properties will be stored into coredata until it will be
+     * All properties will be stored into database until it will be
      * flushed (send it to api).
      */
 
@@ -139,7 +129,7 @@ object Exponea {
 
     /**
      * Track customer event add new events to a specific customer.
-     * All events will be stored into coredata until it will be
+     * All events will be stored into database until it will be
      * flushed (send it to api).
      */
 
@@ -170,7 +160,34 @@ object Exponea {
         component.flushManager.flush()
     }
 
+    /**
+     * Manually track FCM Token to Exponea API
+     */
+    fun trackFcmToken() {
+        component.fcmManager.trackFcmToken()
+    }
+
     // Private Helpers
+
+
+    /**
+     * Initialize and start all services and automatic configurations.
+     */
+
+    private fun initializeSdk() {
+        // Start Network Manager
+        this.component = ExponeaComponent(this.configuration, context)
+
+        // Alarm Manager Starter
+        startService()
+
+        // Track Install Event
+        trackInstall()
+
+        // Track In-App purchase
+        trackInAppPurchase()
+
+    }
 
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
@@ -222,9 +239,8 @@ object Exponea {
             campaignId: String? = null,
             link: String? = null
     ) {
-        val hasInstalled = component.deviceInitiatedRepository.get()
 
-        if (hasInstalled) {
+        if (component.deviceInitiatedRepository.get()) {
             return
         }
 

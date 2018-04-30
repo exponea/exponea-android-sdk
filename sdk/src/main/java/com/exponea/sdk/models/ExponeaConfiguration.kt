@@ -8,6 +8,8 @@ data class ExponeaConfiguration(
         var contentType: String = Constants.Repository.contentType,
         var maxTries: Int = 10,
         var sessionTimeout: Int = 20,
-        var automaticSessionTracking: Boolean = true
+        var automaticSessionTracking: Boolean = true,
+        var automaticPushNotification: Boolean = true,
+        var pushIcon: Int? = null
 ) {
 }

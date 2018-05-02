@@ -11,6 +11,10 @@ class ExponeaFirebaseMessageService: FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)
 
+        if (!Exponea.isAutoPushNotification) {
+            return
+        }
+
         Logger.d(this, "Push Notification received.")
 
         val title = message?.data?.get("title")?.also {
@@ -31,8 +35,8 @@ class ExponeaFirebaseMessageService: FirebaseMessagingService() {
             0
         }
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        Exponea.component.fcmManager.showNotification(title, body, notificationId, manager)
+        Exponea.component.fcmManager.showNotification(title, body, notificationId, notificationManager)
     }
 }

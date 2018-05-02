@@ -6,9 +6,7 @@ import android.content.Intent
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
-import com.exponea.sdk.util.Logger
 import com.google.firebase.iid.FirebaseInstanceId
-import com.google.firebase.messaging.FirebaseMessagingService
 import android.app.NotificationManager
 import android.support.v4.app.NotificationCompat;
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -16,7 +14,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 class FcmManagerImpl (
         val context: Context,
         val configuration: ExponeaConfiguration
-): FcmManager, FirebaseMessagingService() {
+): FcmManager {
 
     private val REQUEST_CODE = 1
 
@@ -37,13 +35,14 @@ class FcmManagerImpl (
         i.addCategory(Intent.CATEGORY_HOME)
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        val pendingIntent = PendingIntent.getActivity(this, REQUEST_CODE,
+        val pendingIntent = PendingIntent.getActivity(context, REQUEST_CODE,
                 i, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val notification = NotificationCompat.Builder(this)
+        val notification = NotificationCompat.Builder(context)
                 .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)
+
         configuration.pushIcon?.let {
             notification
                     .setSmallIcon(it)

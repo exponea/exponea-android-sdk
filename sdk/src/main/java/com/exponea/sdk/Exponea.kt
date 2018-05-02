@@ -48,6 +48,15 @@ object Exponea {
         }
 
     /**
+     * Check if the push notification listener is set to automatically
+     */
+
+    internal var isAutoPushNotification: Boolean = true
+        get() {
+            return configuration.automaticPushNotification
+        }
+
+    /**
      * Set which level the debugger should output log messages
      */
 

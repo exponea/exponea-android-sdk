@@ -8,5 +8,4 @@ interface FcmManager {
     fun trackFcmToken()
     fun showNotification(title: String, message: String, id: Int, manager: NotificationManager)
     fun createNotificationChannel(manager: NotificationManager)
-
 }

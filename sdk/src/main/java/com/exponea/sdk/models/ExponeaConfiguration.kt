@@ -29,7 +29,7 @@ data class ExponeaConfiguration(
         var pushChannelDescription: String = "Notifications",
         // Channel ID for push notifications. Only for API level 26+.
         var pushChannelId: String = "0",
-        // Notification importance for the notification channel.
+        // Notification importance for the notification channel. Only for API level 26+.
         var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
 ) {
 }

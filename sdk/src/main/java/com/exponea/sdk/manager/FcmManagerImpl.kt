@@ -11,6 +11,8 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.google.firebase.iid.FirebaseInstanceId
+import android.app.NotificationChannel
+import android.os.Build
 
 class FcmManagerImpl(
         private val context: Context,
@@ -56,5 +58,23 @@ class FcmManagerImpl(
         }
 
         manager.notify(id, notification.build())
+    }
+
+    override fun createNotificationChannel(
+            manager: NotificationManager
+    ) {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = configuration.pushChannelName
+            val description = configuration.pushChannelDescription
+            val importance = configuration.pushNotificationImportance
+            val channel = NotificationChannel(configuration.pushChannelId, name, importance)
+
+            channel.description = description
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            manager.createNotificationChannel(channel)
+        }
     }
 }

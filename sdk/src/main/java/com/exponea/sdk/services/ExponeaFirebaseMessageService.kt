@@ -37,6 +37,13 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             0
         }
 
+        // Configure the notification channel for push notifications on API 26+
+        // This configuration runs only once.
+        if (!Exponea.component.pushNotificationRepository.get()) {
+            Exponea.component.fcmManager.createNotificationChannel(notificationManager)
+            Exponea.component.pushNotificationRepository.set(true)
+        }
+
         Exponea.component.fcmManager.showNotification(
                 title,
                 body,

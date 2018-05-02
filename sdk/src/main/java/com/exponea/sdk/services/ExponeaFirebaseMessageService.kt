@@ -7,7 +7,9 @@ import com.exponea.sdk.util.Logger
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-class ExponeaFirebaseMessageService: FirebaseMessagingService() {
+class ExponeaFirebaseMessageService : FirebaseMessagingService() {
+    private val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)
 
@@ -35,8 +37,11 @@ class ExponeaFirebaseMessageService: FirebaseMessagingService() {
             0
         }
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        Exponea.component.fcmManager.showNotification(title, body, notificationId, notificationManager)
+        Exponea.component.fcmManager.showNotification(
+                title,
+                body,
+                notificationId,
+                notificationManager
+        )
     }
 }

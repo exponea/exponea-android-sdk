@@ -6,4 +6,6 @@ interface ExponeaPreferences {
 
     fun getString(key: String, default: String): String
     fun getBoolean(key: String, default: Boolean): Boolean
+
+    fun remove(key: String): Boolean
 }

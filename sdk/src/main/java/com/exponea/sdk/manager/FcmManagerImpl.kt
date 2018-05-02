@@ -9,7 +9,6 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.util.Logger
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
 import android.app.NotificationManager
 import android.support.v4.app.NotificationCompat;
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -32,51 +31,24 @@ class FcmManagerImpl (
         Exponea.updateCustomerProperties(customerIds, properties)
     }
 
-    override fun onMessageReceived(message: RemoteMessage?) {
-        super.onMessageReceived(message)
+    override fun showNotification(title: String, message: String, id: Int, manager: NotificationManager) {
+        val i = Intent(Intent.ACTION_MAIN)
 
-        Logger.d(this, "Push Notification received.")
-
-        val title = message?.data?.get("title")?.also {
-            it
-        } ?: run {
-           ""
-        }
-
-        val body = message?.data?.get("body")?.also {
-            it
-        } ?: run {
-            ""
-        }
-
-        val notificationId = message?.data?.get("notification_id")?.toInt().also {
-            it
-        } ?: run {
-            0
-        }
-
-        showNotifications(title, body, notificationId);
-
-    }
-
-    private fun showNotifications(title: String, msg: String, notificationId: Int) {
-        val i = Intent(this, context::class.java)
+        i.addCategory(Intent.CATEGORY_HOME)
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         val pendingIntent = PendingIntent.getActivity(this, REQUEST_CODE,
                 i, PendingIntent.FLAG_UPDATE_CURRENT)
 
-
         val notification = NotificationCompat.Builder(this)
-                .setContentText(msg)
+                .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)
-
         configuration.pushIcon?.let {
             notification
                     .setSmallIcon(it)
         }
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(notificationId, notification.build())
+        manager.notify(id, notification.build())
     }
 }

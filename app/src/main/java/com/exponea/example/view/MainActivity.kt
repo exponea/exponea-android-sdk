@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.view.fragments.*
+import com.exponea.sdk.Exponea
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -12,10 +13,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        startActivity(Intent(this, AuthenticationActivity::class.java))
+        if (!Exponea.isInitialized) {
+            startActivity(Intent(this, AuthenticationActivity::class.java))
+            finish()
+        } else   {
+            setupListeners()
+            showFragment(0)
+        }
 
-        setupListeners()
-        showFragment(0)
     }
 
     private fun setupListeners() {

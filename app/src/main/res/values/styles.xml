@@ -1,20 +1,18 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:colorPrimary">@color/colorPrimary</item>
         <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:colorAccent">@color/colorAccent</item>
         <item name="android:color">@color/white</item>
         <item name="android:windowBackground">@color/colorPrimaryDark</item>
-        <item name="android:navigationBarColor">@color/colorPrimary</item>
-        <item name="android:actionBarStyle">@color/colorPrimary</item>
-
+        <item name="android:colorBackground">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:textColorHint">@color/white</item>
         <item name="colorControlNormal">@color/colorAccent</item>
         <item name="colorControlActivated">@color/colorAccent</item>
-
     </style>
 
 </resources>

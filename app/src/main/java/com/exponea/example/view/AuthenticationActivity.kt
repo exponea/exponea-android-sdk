@@ -28,7 +28,7 @@ class AuthenticationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
-
+        setSupportActionBar(toolbar)
         editTextAuthCode.onTextChanged { authorizationToken = it  }
         editTextCustomersIds.onTextChanged { customerIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }

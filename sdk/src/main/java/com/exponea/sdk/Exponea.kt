@@ -48,6 +48,15 @@ object Exponea {
         }
 
     /**
+     * Check if the push notification listener is set to automatically
+     */
+
+    internal var isAutoPushNotification: Boolean = true
+        get() {
+            return configuration.automaticPushNotification
+        }
+
+    /**
      * Set which level the debugger should output log messages
      */
 
@@ -83,17 +92,7 @@ object Exponea {
             return
         }
 
-        // Start Network Manager
-        this.component = ExponeaComponent(this.configuration, context)
-
-        // Alarm Manager Starter
-        startService()
-
-        // Track Install Event
-        trackInstall()
-
-        // Track In-App purchase
-        trackInAppPurchase()
+        initializeSdk()
     }
 
     /**
@@ -125,7 +124,7 @@ object Exponea {
 
     /**
      * Update the informed properties to a specific customer.
-     * All properties will be stored into coredata until it will be
+     * All properties will be stored into database until it will be
      * flushed (send it to api).
      */
 
@@ -139,7 +138,7 @@ object Exponea {
 
     /**
      * Track customer event add new events to a specific customer.
-     * All events will be stored into coredata until it will be
+     * All events will be stored into database until it will be
      * flushed (send it to api).
      */
 
@@ -161,6 +160,7 @@ object Exponea {
     /**
      * Manually push all events to Exponea
      */
+
     fun flush() {
         if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
@@ -170,7 +170,61 @@ object Exponea {
         component.flushManager.flush()
     }
 
+    /**
+     * Manually track FCM Token to Exponea API
+     */
+
+    fun trackFcmToken(customerIds: CustomerIds, fcmToken: String) {
+        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        updateCustomerProperties(customerIds, properties)
+    }
+
+    /**
+     * Manually track delivered push notification to Exponea API
+     */
+
+    fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        Exponea.trackCustomerEvent(
+                customerIds = customerIds,
+                properties = properties,
+                eventType = "push_delivered",
+                timestamp = timestamp)
+    }
+
+    /**
+     * Manually track clicked push notification to Exponea API
+     */
+
+    fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        Exponea.trackCustomerEvent(
+                customerIds = customerIds,
+                properties = properties,
+                eventType = "push_clicked",
+                timestamp = timestamp)
+    }
+
     // Private Helpers
+
+    /**
+     * Initialize and start all services and automatic configurations.
+     */
+
+    private fun initializeSdk() {
+        // Start Network Manager
+        this.component = ExponeaComponent(this.configuration, context)
+
+        // Alarm Manager Starter
+        startService()
+
+        // Track Install Event
+        trackInstall()
+
+        // Track In-App purchase
+        trackInAppPurchase()
+
+    }
 
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
@@ -222,9 +276,8 @@ object Exponea {
             campaignId: String? = null,
             link: String? = null
     ) {
-        val hasInstalled = component.deviceInitiatedRepository.get()
 
-        if (hasInstalled) {
+        if (component.deviceInitiatedRepository.get()) {
             return
         }
 

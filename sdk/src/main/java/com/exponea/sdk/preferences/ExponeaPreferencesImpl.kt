@@ -15,10 +15,15 @@ class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
     }
 
     override fun getString(key: String, default: String): String {
-       return  sharedPreferences.getString(key, default)
+        return sharedPreferences.getString(key, default)
     }
 
     override fun getBoolean(key: String, default: Boolean): Boolean {
         return sharedPreferences.getBoolean(key, default)
+    }
+
+    override fun remove(key: String): Boolean {
+        sharedPreferences.edit().remove(key).apply()
+        return true
     }
 }

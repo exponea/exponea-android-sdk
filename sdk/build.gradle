@@ -39,6 +39,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
     // Google Play In-App Purchase
     implementation 'com.android.billingclient:billing:1.0'
+    // Google Firebase Cloud Message
+    implementation 'com.google.firebase:firebase-messaging:15.0.0'
 
     // Base Test
     testImplementation 'junit:junit:4.12'

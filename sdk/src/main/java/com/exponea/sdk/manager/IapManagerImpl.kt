@@ -92,8 +92,8 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
 
                 sku?.let {
                     val product = PurchasedItem(
-                            value = 0.0,
-                            currency = it.price,
+                            value = it.price.toDouble(),
+                            currency = it.priceCurrencyCode,
                             paymentSystem = Constants.General.GooglePlay,
                             productId = it.sku,
                             productTitle = it.title,

@@ -9,10 +9,7 @@ import com.exponea.sdk.network.NetworkHandler
 import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
-import com.exponea.sdk.repository.DeviceInitiatedRepository
-import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
-import com.exponea.sdk.repository.EventRepository
-import com.exponea.sdk.repository.EventRepositoryImpl
+import com.exponea.sdk.repository.*
 import com.google.gson.Gson
 
 class ExponeaComponent(
@@ -29,6 +26,8 @@ class ExponeaComponent(
     val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
     val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
+    val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
+    val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(preferences)
     val eventRepository: EventRepository = EventRepositoryImpl()
     // Network Handler
     val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
@@ -38,4 +37,6 @@ class ExponeaComponent(
     val serviceManager: ServiceManager = ServiceManagerImpl(context)
     val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
+    val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
+    val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
 }

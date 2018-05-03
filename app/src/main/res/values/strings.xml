@@ -5,4 +5,9 @@
     <string name="purchase">Purchase</string>
     <string name="search">Search</string>
     <string name="discover">Discover</string>
+
+    <string name="hint_custids">Customer Id</string>
+    <string name="hint_auth_code">Authentication Code</string>
+    <string name="hint_project_token">Project Token</string>
+    <string name="action_authenticate">Authenticate</string>
 </resources>

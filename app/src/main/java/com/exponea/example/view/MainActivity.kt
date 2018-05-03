@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         if (!Exponea.isInitialized) {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
-        } else   {
+        } else {
             setupListeners()
             showFragment(0)
         }

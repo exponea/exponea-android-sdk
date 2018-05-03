@@ -10,4 +10,5 @@
     <string name="hint_auth_code">Authentication Code</string>
     <string name="hint_project_token">Project Token</string>
     <string name="action_authenticate">Authenticate</string>
+    <string name="action_fill_fields">Fill fields</string>
 </resources>

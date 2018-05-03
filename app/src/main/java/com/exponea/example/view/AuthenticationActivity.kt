@@ -3,6 +3,8 @@ package com.exponea.example.view
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import com.exponea.example.App
 import com.exponea.example.BuildConfig
@@ -19,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 class AuthenticationActivity : AppCompatActivity() {
 
-    var authCode = ""
+    var authorizationToken = ""
     var projectToken = ""
     var customerIds = ""
 
@@ -27,19 +29,34 @@ class AuthenticationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
 
-        editTextAuthCode.onTextChanged { authCode = it  }
+        editTextAuthCode.onTextChanged { authorizationToken = it  }
         editTextCustomersIds.onTextChanged { customerIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }
 
         button.setOnClickListener {
-            if (!editTextProjectToken.isValid() || !editTextCustomersIds.isValid()
-                    || !editTextAuthCode.isValid()) {
+            if (!editTextProjectToken.isValid() || !editTextAuthCode.isValid()) {
                 Toast.makeText(this, "Empty field", Toast.LENGTH_SHORT).show()
             } else {
                 initSdk()
             }
         }
 
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.auth_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+       return when(item?.itemId) {
+            R.id.button_fill_fields -> {
+               editTextAuthCode.setText(BuildConfig.AuthorizationToken)
+               editTextProjectToken.setText(BuildConfig.DefaultProjectToken)
+               true
+            }
+           else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun initSdk() {
@@ -56,6 +73,7 @@ class AuthenticationActivity : AppCompatActivity() {
         Exponea.flushMode = FlushMode.PERIOD
         Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
         startActivity(Intent(this, MainActivity::class.java))
+        finish()
     }
 
 }

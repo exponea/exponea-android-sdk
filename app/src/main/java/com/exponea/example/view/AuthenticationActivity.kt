@@ -62,8 +62,8 @@ class AuthenticationActivity : AppCompatActivity() {
     private fun initSdk() {
         // Start our exponea configuration
         val configuration = ExponeaConfiguration()
-        configuration.authorization = BuildConfig.AuthorizationToken
-        configuration.projectToken = BuildConfig.DefaultProjectToken
+        configuration.authorization = authorizationToken
+        configuration.projectToken = projectToken
 
         // Start our SDK
         Exponea.init(App.instance, configuration)
@@ -72,6 +72,7 @@ class AuthenticationActivity : AppCompatActivity() {
         // Set up our flushing
         Exponea.flushMode = FlushMode.PERIOD
         Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
+
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

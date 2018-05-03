@@ -19,6 +19,7 @@ class FcmManagerImpl(
         private val configuration: ExponeaConfiguration,
         private val uniqueIdentifierRepository: UniqueIdentifierRepository
 ) : FcmManager {
+
     private val REQUEST_CODE = 1
 
     override val fcmToken: String
@@ -30,6 +31,19 @@ class FcmManagerImpl(
         val customerIds = CustomerIds(cookie = uniqueToken)
         Exponea.updateCustomerProperties(customerIds, properties)
     }
+
+    override fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String) {
+        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fmcToken)))
+        Exponea.trackCustomerEvent(
+                customerIds = customerIds,
+                properties = properties,
+                eventType = "push_notification")
+    }
+
+    override fun trackClickedPush(customerIds: CustomerIds, fcmToken: String) {
+
+    }
+
 
     override fun showNotification(
             title: String,

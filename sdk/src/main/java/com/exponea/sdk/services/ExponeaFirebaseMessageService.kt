@@ -44,6 +44,10 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             Exponea.component.pushNotificationRepository.set(true)
         }
 
+        // Track the delivered push event to Exponea API.
+        Exponea.component.pushManager.trackDeliveredPush()
+
+        // Show push notification.
         Exponea.component.fcmManager.showNotification(
                 title,
                 body,

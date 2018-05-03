@@ -160,6 +160,7 @@ object Exponea {
     /**
      * Manually push all events to Exponea
      */
+
     fun flush() {
         if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
@@ -172,12 +173,39 @@ object Exponea {
     /**
      * Manually track FCM Token to Exponea API
      */
-    fun trackFcmToken() {
-        component.fcmManager.trackFcmToken()
+
+    fun trackFcmToken(customerIds: CustomerIds, fcmToken: String) {
+        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        updateCustomerProperties(customerIds, properties)
+    }
+
+    /**
+     * Manually track delivered push notification to Exponea API
+     */
+
+    fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        Exponea.trackCustomerEvent(
+                customerIds = customerIds,
+                properties = properties,
+                eventType = "push_delivered",
+                timestamp = timestamp)
+    }
+
+    /**
+     * Manually track clicked push notification to Exponea API
+     */
+
+    fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        Exponea.trackCustomerEvent(
+                customerIds = customerIds,
+                properties = properties,
+                eventType = "push_clicked",
+                timestamp = timestamp)
     }
 
     // Private Helpers
-
 
     /**
      * Initialize and start all services and automatic configurations.

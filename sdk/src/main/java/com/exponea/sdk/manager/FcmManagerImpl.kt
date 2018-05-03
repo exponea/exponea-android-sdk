@@ -5,45 +5,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.support.v4.app.NotificationCompat
-import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.PropertiesList
-import com.exponea.sdk.repository.UniqueIdentifierRepository
-import com.google.firebase.iid.FirebaseInstanceId
 import android.app.NotificationChannel
 import android.os.Build
 
 class FcmManagerImpl(
         private val context: Context,
-        private val configuration: ExponeaConfiguration,
-        private val uniqueIdentifierRepository: UniqueIdentifierRepository
+        private val configuration: ExponeaConfiguration
 ) : FcmManager {
 
     private val REQUEST_CODE = 1
-
-    override val fcmToken: String
-        get() = FirebaseInstanceId.getInstance().token.toString()
-
-    override fun trackFcmToken() {
-        val uniqueToken = uniqueIdentifierRepository.get()
-        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
-        val customerIds = CustomerIds(cookie = uniqueToken)
-        Exponea.updateCustomerProperties(customerIds, properties)
-    }
-
-    override fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String) {
-        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fmcToken)))
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
-                properties = properties,
-                eventType = "push_notification")
-    }
-
-    override fun trackClickedPush(customerIds: CustomerIds, fcmToken: String) {
-
-    }
-
 
     override fun showNotification(
             title: String,
@@ -51,7 +22,7 @@ class FcmManagerImpl(
             id: Int,
             manager: NotificationManager
     ) {
-        val i = Intent(Intent.ACTION_MAIN)
+        val i = Intent(context, PushManager::class.java)
 
         i.addCategory(Intent.CATEGORY_HOME)
         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK

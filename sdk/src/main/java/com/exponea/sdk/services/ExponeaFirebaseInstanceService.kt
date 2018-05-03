@@ -6,7 +6,11 @@ import com.google.firebase.iid.FirebaseInstanceIdService
 
 class ExponeaFirebaseInstanceService: FirebaseInstanceIdService() {
     override fun onTokenRefresh() {
+        if (!Exponea.isAutoPushNotification) {
+            return
+        }
+
         Logger.d(this,"Firebase Token Refreshed")
-        Exponea.component.fcmManager.trackFcmToken()
+        Exponea.component.pushManager.trackFcmToken()
     }
 }

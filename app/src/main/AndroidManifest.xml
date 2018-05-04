@@ -20,7 +20,10 @@
         <activity
             android:name=".view.EventTrackingActivity"
             android:label="@string/title_activity_event_tracking"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
+
+        <activity android:name=".view.AuthenticationActivity"/>
+
     </application>
 
 </manifest>

@@ -1,17 +1,26 @@
 package com.exponea.example.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.view.fragments.*
+import com.exponea.sdk.Exponea
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setupListeners()
-        showFragment(0)
+
+        if (!Exponea.isInitialized) {
+            startActivity(Intent(this, AuthenticationActivity::class.java))
+            finish()
+        } else {
+            setupListeners()
+            showFragment(0)
+        }
+
     }
 
     private fun setupListeners() {

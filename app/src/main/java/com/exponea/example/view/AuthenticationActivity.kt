@@ -65,6 +65,11 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.authorization = authorizationToken
         configuration.projectToken = projectToken
 
+        // Set our coustomer id
+        if (editTextCustomersIds.isValid()) {
+            App.instance.userIdManager.uniqueUserID = customerIds
+        }
+
         // Start our SDK
         Exponea.init(App.instance, configuration)
         // Set our debug level to debug

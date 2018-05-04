@@ -39,4 +39,5 @@ class ExponeaComponent(
     val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
     val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
     val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
+    val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(exponeaService)
 }

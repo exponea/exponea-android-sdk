@@ -3,10 +3,12 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
+import java.util.*
 
 class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
@@ -37,13 +39,51 @@ class FlushManagerImpl(
     private fun trySendingEvent(
             databaseObject: DatabaseStorageObject<ExportedEventType>
     ) {
+        when(databaseObject.route) {
+            Route.TRACK_EVENTS -> trackEvent(databaseObject.projectId, databaseObject)
+            Route.TRACK_CUSTOMERS -> trackCustomer(databaseObject.projectId, databaseObject)
+            else -> return
+        }
+    }
+
+    private fun trackEvent(
+            projectToken: String,
+            databaseObject: DatabaseStorageObject<ExportedEventType>
+    ) {
         exponeaService
-                .postEvent(databaseObject.projectId, databaseObject.item)
+                .postEvent(projectToken, databaseObject.item)
                 .enqueue(
                         { _, response ->
                             val responseCode = response.code()
                             Logger.d(this, "Response Code: $responseCode")
-                            // I love kotlin
+                            if (responseCode in 200..299) {
+                                onEventSentSuccess(databaseObject)
+                            } else {
+                                onEventSentFailed(databaseObject)
+                            }
+                        },
+                        { _, ioException ->
+                            Logger.e(
+                                    this@FlushManagerImpl,
+                                    "Sending Event Failed ${databaseObject.id}",
+                                    ioException
+                            )
+                            ioException.printStackTrace()
+                            onEventSentFailed(databaseObject)
+                        }
+                )
+    }
+
+    private fun trackCustomer(
+            projectToken: String,
+            databaseObject: DatabaseStorageObject<ExportedEventType>
+    ) {
+        exponeaService
+                .postCustomer(projectToken, databaseObject.item)
+                .enqueue(
+                        { _, response ->
+                            val responseCode = response.code()
+                            Logger.d(this, "Response Code: $responseCode")
                             if (responseCode in 200..299) {
                                 onEventSentSuccess(databaseObject)
                             } else {

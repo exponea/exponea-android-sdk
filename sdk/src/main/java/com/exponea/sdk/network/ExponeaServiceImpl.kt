@@ -8,6 +8,7 @@ class ExponeaServiceImpl(
         private val gson: Gson,
         private val networkManager: NetworkHandler
 ) : ExponeaService {
+
     override fun postEvent(projectToken: String, event: ExportedEventType): Call {
         val endpoint = ApiEndPoint(ApiEndPoint.EndPointName.TRACK_EVENTS, projectToken).toString()
         val jsonBody = gson.toJson(event)
@@ -129,6 +130,23 @@ class ExponeaServiceImpl(
                 projectToken
         ).toString()
         val jsonBody = gson.toJson(customerIds)
+        return networkManager.post(endPoint, jsonBody)
+    }
+
+    override fun getBannerConfiguration(projectToken: String): Call {
+        val endPoint = ApiEndPoint(
+                ApiEndPoint.EndPointName.CONFIGURE_BANNER,
+                projectToken
+        ).toString()
+        return networkManager.get(endPoint, null)
+    }
+
+    override fun postFetchBanner(projectToken: String, banner: Banner): Call {
+        val endPoint = ApiEndPoint(
+                ApiEndPoint.EndPointName.SHOW_BANNER,
+                projectToken
+        ).toString()
+        val jsonBody = gson.toJson(banner)
         return networkManager.post(endPoint, jsonBody)
     }
 }

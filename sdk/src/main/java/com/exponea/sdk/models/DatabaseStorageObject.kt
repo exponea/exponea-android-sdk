@@ -6,5 +6,6 @@ data class DatabaseStorageObject<T>(
         var id: String = UUID.randomUUID().toString(),
         var tries: Int = 0,
         var projectId: String,
-        var item: T
+        var item: T,
+        var route: Route
 )

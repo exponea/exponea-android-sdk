@@ -96,33 +96,6 @@ object Exponea {
     }
 
     /**
-     * Send a tracking event to Exponea
-     */
-
-    fun trackEvent(
-            eventType: String? = null,
-            timestamp: Long? = Date().time,
-            customerId: CustomerIds? = null,
-            properties: HashMap<String, Any> = hashMapOf(),
-            route: Route
-    ) {
-
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
-
-        val event = ExportedEventType(
-                type = eventType,
-                timestamp = timestamp,
-                customerIds = customerId,
-                properties = properties
-        )
-
-        component.eventManager.addEventToQueue(event, route)
-    }
-
-    /**
      * Update the informed properties to a specific customer.
      * All properties will be stored into database until it will be
      * flushed (send it to api).
@@ -264,6 +237,33 @@ object Exponea {
             // Remove the observers when the automatic session tracking is false.
             this.component.iapManager.stopObservingPayments()
         }
+    }
+
+    /**
+     * Send a tracking event to Exponea
+     */
+
+    internal fun trackEvent(
+            eventType: String? = null,
+            timestamp: Long? = Date().time,
+            customerId: CustomerIds? = null,
+            properties: HashMap<String, Any> = hashMapOf(),
+            route: Route
+    ) {
+
+        if (!isInitialized) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
+
+        val event = ExportedEventType(
+                type = eventType,
+                timestamp = timestamp,
+                customerIds = customerId,
+                properties = properties
+        )
+
+        component.eventManager.addEventToQueue(event, route)
     }
 
     /**

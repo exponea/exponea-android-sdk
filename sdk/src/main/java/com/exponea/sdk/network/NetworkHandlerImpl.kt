@@ -2,6 +2,7 @@ package com.exponea.sdk.network
 
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.util.Logger
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 
@@ -17,7 +18,7 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
         return Interceptor {
             var request = it.request()
 
-            println("Server Address: ${exponeaConfiguration.baseURL}")
+            Logger.d(this, "Server address: ${exponeaConfiguration.baseURL}")
 
             request = request.newBuilder()
                     .addHeader("Content-Type", Constants.Repository.contentType)
@@ -51,6 +52,17 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
 
         if (body != null) {
             requestBuilder.post(RequestBody.create(mediaTypeJson, body))
+        }
+
+        return networkClient.newCall(requestBuilder.build())
+    }
+
+    override fun get(endpoint: String, body: String?): Call {
+        val requestBuilder = Request.Builder()
+                .url(exponeaConfiguration.baseURL + endpoint)
+
+        if (body != null) {
+            requestBuilder.method("GET", RequestBody.create(mediaTypeJson, body))
         }
 
         return networkClient.newCall(requestBuilder.build())

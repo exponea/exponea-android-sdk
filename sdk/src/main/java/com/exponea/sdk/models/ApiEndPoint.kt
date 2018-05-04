@@ -19,7 +19,9 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
         CUSTOMERS_EVENTS,
         CUSTOMERS_ANONYMIZE,
         CUSTOMERS_EXPORT_ALL_PROPERTIES,
-        CUSTOMERS_EXPORT_ALL
+        CUSTOMERS_EXPORT_ALL,
+        CONFIGURE_BANNER,
+        SHOW_BANNER
     }
 
     init {
@@ -39,6 +41,8 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
             EndPointName.CUSTOMERS_ANONYMIZE             -> "/data/v2/$splitterToken/customers/anonymize"
             EndPointName.CUSTOMERS_EXPORT_ALL_PROPERTIES -> "/data/v2/$splitterToken/customers/export-one"
             EndPointName.CUSTOMERS_EXPORT_ALL            -> "/data/v2/$splitterToken/customers/export"
+            EndPointName.CONFIGURE_BANNER                -> "/data/v2/projects/$splitterToken/configuration/banners"
+            EndPointName.SHOW_BANNER                     -> "/data/v2/projects/$splitterToken/customers/personalisation/show-banners"
         }
 
         this.url = this.url.replace(splitterToken, token)

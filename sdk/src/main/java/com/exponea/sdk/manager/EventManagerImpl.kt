@@ -24,7 +24,7 @@ class EventManagerImpl(
         routeTokenMap = routeTokenMap.distinct().toMutableList()
 
         for (projectId in routeTokenMap) {
-            val databaseStorageObject = DatabaseStorageObject(projectId = projectId, item = event)
+            val databaseStorageObject = DatabaseStorageObject(projectId = projectId, item = event, route = route)
             Logger.d(this, "Added Event To Queue: ${databaseStorageObject.id}")
             eventRepository.add(databaseStorageObject)
         }

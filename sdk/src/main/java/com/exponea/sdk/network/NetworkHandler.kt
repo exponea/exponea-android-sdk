@@ -4,4 +4,5 @@ import okhttp3.Call
 
 interface NetworkHandler {
     fun post(endpoint: String, body: String?): Call
+    fun get(endpoint: String, body: String?): Call
 }

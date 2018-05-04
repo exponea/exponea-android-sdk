@@ -1,10 +1,14 @@
 package com.exponea.sdk
 
 import com.exponea.sdk.models.ExponeaConfiguration
+import org.bouncycastle.util.Times
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.sql.Timestamp
+import java.text.DateFormat
+import java.util.*
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -42,6 +46,22 @@ class ConfigurationTest {
     fun InstantiateSDKWithConfig_ShouldPass() {
         setupConfigurationWithStruct()
         assertEquals(Exponea.isInitialized, true)
+    }
+
+    @Test
+    fun TestData() {
+        val timestamp = Date().time
+        println("Timestamp: ${timestamp}")
+        println("Timestamp: ${Calendar.getInstance().timeInMillis}")
+
+        //val cal =
+        println("Timestamp to Date: ${Date(timestamp.toLong() * 1000)}")
+
+        println("Timestamp to Date 2: ${ Date(timestamp) }")
+
+        val newStamp = 424515600000
+        println("New timestamp to Date 2: ${ Date(newStamp.toLong()) }")
+
     }
 
 //    @Test

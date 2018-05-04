@@ -16,4 +16,5 @@
     <string name="hint_project_token">Project Token</string>
     <string name="action_authenticate">Authenticate</string>
     <string name="action_fill_fields">Fill fields</string>
+    <string name="action_manual_flush">Manual Flush</string>
 </resources>

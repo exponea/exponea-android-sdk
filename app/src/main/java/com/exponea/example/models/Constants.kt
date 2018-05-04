@@ -12,10 +12,8 @@ class Constants {
     }
     class Events {
         companion object {
-            const val EVENT_PURCHASE = "Purchase"
-            const val EVENT_TRACK = "Track"
-            const val EVENT_TRACK_CUSTOMER = "TrackCustomer"
-            const val EVENT_INSTALL = "Install"
+            const val EVENT_TRACK = "Event"
+            const val EVENT_TRACK_CUSTOMER = "CustomerEvent"
 
         }
     }

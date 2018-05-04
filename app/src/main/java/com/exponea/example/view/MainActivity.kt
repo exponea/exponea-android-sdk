@@ -32,13 +32,6 @@ class MainActivity : AppCompatActivity() {
             EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_TRACK)
         }
 
-        buttonTrackInstall.setOnClickListener {
-            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_INSTALL)
-        }
-
-        buttonTrackPurchase.setOnClickListener {
-            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_PURCHASE)
-        }
 
     }
 

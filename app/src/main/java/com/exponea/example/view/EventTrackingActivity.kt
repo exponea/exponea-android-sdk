@@ -17,7 +17,7 @@ class EventTrackingActivity : AppCompatActivity() {
 
         fun startAsIntent(context: Context, event: String) {
             val intent = Intent(context, EventTrackingActivity::class.java)
-            intent.extras.putString(ARG_EVENT, event)
+            intent.putExtra(ARG_EVENT, event)
             context.startActivity(intent)
         }
     }

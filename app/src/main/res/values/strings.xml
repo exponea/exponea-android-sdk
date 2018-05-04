@@ -5,4 +5,9 @@
     <string name="purchase">Purchase</string>
     <string name="search">Search</string>
     <string name="discover">Discover</string>
+    <string name="title_activity_event_tracking">EventTrackingActivity</string>
+    <string name="action_track_customer_event">Track Customer Event</string>
+    <string name="action_track_event">Track Event</string>
+    <string name="action_track_purchase">Track Purchase</string>
+    <string name="action_track_install">Track Install</string>
 </resources>

@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonTrackEvent.setOnClickListener{
-            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_TRACK)
+            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_UPDATE_CUSTOMER)
         }
 
 

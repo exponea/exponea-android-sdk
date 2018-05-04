@@ -21,4 +21,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
+    <ImageView
+        android:layout_width="@dimen/logo_width"
+        android:layout_height="@dimen/logo_height"
+        android:layout_marginBottom="@dimen/content_margin"
+        android:layout_marginEnd="@dimen/content_margin"
+        android:src="@drawable/logo"
+        android:tint="@color/colorAccent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
 </android.support.constraint.ConstraintLayout>

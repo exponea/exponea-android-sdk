@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.*
@@ -8,6 +9,7 @@ import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.addSessionObserver
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -224,6 +226,9 @@ object Exponea {
         // Track In-App purchase
         trackInAppPurchase()
 
+        // Initialize session observer
+        trackSession()
+
     }
 
     private fun onFlushPeriodChanged() {
@@ -253,6 +258,13 @@ object Exponea {
     private fun stopService() {
         Logger.d(this, "stopService")
         component.serviceManager.stop()
+    }
+
+    private fun trackSession() {
+        (context as Application).addSessionObserver(
+                onStart = { component.sessionManager.onSessionStart() },
+                onStop  = { component.sessionManager.onSessionEnd() }
+        )
     }
 
     private fun trackInAppPurchase() {

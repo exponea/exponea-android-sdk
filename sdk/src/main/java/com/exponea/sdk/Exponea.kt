@@ -41,6 +41,16 @@ object Exponea {
         }
 
     /**
+     * Defines session timeout considered for app usage
+     */
+
+    var sessionTimeout: Double
+        get() = configuration.sessionTimeout
+        set(value) {
+            configuration.sessionTimeout = value
+        }
+
+    /**
      * Check if our library has been properly initialized
      */
 

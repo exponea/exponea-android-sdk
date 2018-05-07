@@ -1,5 +1,7 @@
 package com.exponea.sdk.manager
 
+import android.app.Application
+import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
@@ -9,7 +11,9 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import java.util.*
 
-class SessionManagerImpl(private val prefs: ExponeaPreferences) : SessionManager {
+class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences) : SessionManager() {
+    var isListenerActive = false
+    var application = context as Application
 
     companion object {
         const val PREF_SESSION_END = "SessionEndTime"
@@ -22,11 +26,36 @@ class SessionManagerImpl(private val prefs: ExponeaPreferences) : SessionManager
     private fun getSessionLengthInSeconds() : Long {
         val start = prefs.getLong(PREF_SESSION_START, Date().time)
         val end = prefs.getLong(PREF_SESSION_END, Date().time)
+        Logger.d(this, "Session Info: \n " +
+                "\t From: ${Date(start)}\n" +
+                "\t To: ${Date(end)}")
 
         return (end - start) / 1000
     }
 
+    /**
+     * Starts session listener by enabling activityLifecycleCallbacks
+     */
+    override fun startSessionListener() {
+        if (!isListenerActive) {
+            application.registerActivityLifecycleCallbacks(this)
+            isListenerActive = true
+        }
+    }
 
+    /**
+     * Stops session listener
+     */
+    override fun stopSessionListener() {
+        if (isListenerActive) {
+            application.unregisterActivityLifecycleCallbacks(this)
+            isListenerActive = false
+        }
+    }
+
+    /**
+     *  Method called when app is in foreground
+     */
     override fun onSessionStart() {
         val now = Date().time
         Logger.d(this, "Session start ${Date(now)}")
@@ -51,13 +80,18 @@ class SessionManagerImpl(private val prefs: ExponeaPreferences) : SessionManager
 
     }
 
-
+    /**
+     * Method called when app goes to background
+     */
     override fun onSessionEnd() {
         val now = Date().time
         Logger.d(this, "Session end ${Date(now)}")
         prefs.setLong(PREF_SESSION_END, now)
     }
 
+    /**
+     * Tracking Session Start
+     */
     private fun trackStart(timestamp: Long) {
         val properties = DeviceProperties().toHashMap()
         properties["app_version"] = BuildConfig.VERSION_CODE
@@ -69,6 +103,9 @@ class SessionManagerImpl(private val prefs: ExponeaPreferences) : SessionManager
         )
     }
 
+    /**
+     * Tracking Session End
+     */
     private fun trackEnd(timestamp: Long) {
         val properties = DeviceProperties().toHashMap()
         properties["app_version"] = BuildConfig.VERSION_CODE

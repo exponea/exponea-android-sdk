@@ -1,8 +1,5 @@
 package com.exponea.sdk.util
 
-import android.app.Activity
-import android.app.Application
-import android.os.Bundle
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response

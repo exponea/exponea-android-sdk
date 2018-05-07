@@ -1,9 +1,30 @@
 package com.exponea.sdk.manager
 
-interface SessionManager {
+import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 
-    fun onSessionStart()
+abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
-    fun onSessionEnd()
+    abstract fun onSessionStart()
 
+    abstract fun onSessionEnd()
+
+    abstract fun startSessionListener()
+
+    abstract fun stopSessionListener()
+
+    override fun onActivityPaused(activity: Activity?) {
+        onSessionEnd()
+    }
+
+    override fun onActivityResumed(activity: Activity?) {
+        onSessionStart()
+    }
+
+    override fun onActivityStarted(activity: Activity?) {}
+    override fun onActivityDestroyed(activity: Activity?) {}
+    override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
+    override fun onActivityStopped(activity: Activity?) {}
+    override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
 }

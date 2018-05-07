@@ -1,7 +1,6 @@
 package com.exponea.sdk
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.*
@@ -51,11 +50,8 @@ object Exponea {
     var isAutomaticSessionTracking: Boolean
         get() = configuration.automaticSessionTracking
         set(value) {
-            val isActive = configuration.automaticSessionTracking
             configuration.automaticSessionTracking = value
-
-            // Not start observing since there's already an observer
-            if (!isActive) startSessionTracking(value)
+            startSessionTracking(value)
         }
 
     /**
@@ -78,9 +74,6 @@ object Exponea {
     /**
      * Set which level the debugger should output log messages
      */
-
-    private var sessionListener: SessionListener? = null
-
     var loggerLevel: Logger.Level
         get () = Logger.level
         set(value) {
@@ -281,28 +274,13 @@ object Exponea {
 
     /**
      * Initializes session listener
-     * @param enableSessionTracking - determines if sdk tracking session's state
+     * @param enableSessionTracking - determines sdk tracking session's state
      */
     private fun startSessionTracking(enableSessionTracking: Boolean) {
-        val application = context as Application
-
-        // Initialize session listener
-        if (sessionListener == null) {
-            sessionListener = object  : SessionListener(){
-                override fun onSessionStarted() {
-                    component.sessionManager.onSessionStart()
-                }
-
-                override fun onSessionEnded() {
-                    component.sessionManager.onSessionEnd()
-                }
-            }
-        }
-
         if (enableSessionTracking) {
-            application.registerActivityLifecycleCallbacks(sessionListener)
+            component.sessionManager.startSessionListener()
         } else {
-            application.unregisterActivityLifecycleCallbacks(sessionListener)
+            component.sessionManager.stopSessionListener()
         }
 
     }

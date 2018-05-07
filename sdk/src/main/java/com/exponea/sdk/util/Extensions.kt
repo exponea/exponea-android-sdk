@@ -23,11 +23,11 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
 fun Application.addSessionObserver(onStart: () -> Unit, onStop: () -> Unit) {
     registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
         override fun onActivityPaused(activity: Activity?) {
-            onStart()
+            onStop()
         }
 
         override fun onActivityResumed(activity: Activity?) {
-            onStop()
+            onStart()
         }
 
         override fun onActivityStarted(activity: Activity?) {}

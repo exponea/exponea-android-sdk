@@ -1,11 +1,10 @@
 package com.exponea.sdk.manager
 
-import android.app.Activity
-import android.app.Application
-import android.content.ComponentCallbacks
-import android.content.Context
-import android.os.Bundle
+import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import java.util.*
@@ -25,6 +24,7 @@ class SessionManagerImpl(val prefs: ExponeaPreferences) : SessionManager {
         val timestamp = Date().time
         Logger.d(this, "Now Started: ${Date(timestamp)}")
         prefs.setLong(PREF_SESSION_START,timestamp)
+        trackStart(timestamp)
     }
 
     override fun onSessionEnd() {
@@ -35,6 +35,18 @@ class SessionManagerImpl(val prefs: ExponeaPreferences) : SessionManager {
         Logger.d(this, "Now Ended: ${Date(timestamp)}")
         prefs.setLong(PREF_SESSION_END, timestamp)
 
+    }
+
+    private fun trackStart(timestamp: Long) {
+
+        val properties = DeviceProperties().toHashMap()
+        properties["app_version"] = BuildConfig.VERSION_CODE
+        Exponea.trackEvent(
+                eventType = Constants.EventTypes.installation,
+                timestamp = timestamp,
+                properties = properties,
+                route = Route.TRACK_EVENTS
+        )
     }
 
 }

@@ -19,21 +19,3 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
         }
     })
 }
-
-fun Application.addSessionObserver(onStart: () -> Unit, onStop: () -> Unit) {
-    registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
-        override fun onActivityPaused(activity: Activity?) {
-            onStop()
-        }
-
-        override fun onActivityResumed(activity: Activity?) {
-            onStart()
-        }
-
-        override fun onActivityStarted(activity: Activity?) {}
-        override fun onActivityDestroyed(activity: Activity?) {}
-        override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
-        override fun onActivityStopped(activity: Activity?) {}
-        override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
-    })
-}

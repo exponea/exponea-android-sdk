@@ -7,9 +7,7 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.util.FileManager
-import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.addSessionObserver
+import com.exponea.sdk.util.*
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -50,6 +48,16 @@ object Exponea {
             configuration.sessionTimeout = value
         }
 
+    var isAutomaticSessionTracking: Boolean
+        get() = configuration.automaticSessionTracking
+        set(value) {
+            val isActive = configuration.automaticSessionTracking
+            configuration.automaticSessionTracking = value
+
+            // Not start observing since there's already an observer
+            if (!isActive) startSessionTracking(value)
+        }
+
     /**
      * Check if our library has been properly initialized
      */
@@ -67,10 +75,11 @@ object Exponea {
         get() {
             return configuration.automaticPushNotification
         }
-
     /**
      * Set which level the debugger should output log messages
      */
+
+    private var sessionListener: SessionListener? = null
 
     var loggerLevel: Logger.Level
         get () = Logger.level
@@ -237,7 +246,7 @@ object Exponea {
         trackInAppPurchase()
 
         // Initialize session observer
-        trackSession()
+        startSessionTracking(configuration.automaticSessionTracking)
 
     }
 
@@ -270,13 +279,33 @@ object Exponea {
         component.serviceManager.stop()
     }
 
-    private fun trackSession() {
-        (context as Application).addSessionObserver(
-                onStart = { component.sessionManager.onSessionStart() },
-                onStop  = { component.sessionManager.onSessionEnd() }
-        )
-    }
+    /**
+     * Initializes session listener
+     * @param enableSessionTracking - determines if sdk tracking session's state
+     */
+    private fun startSessionTracking(enableSessionTracking: Boolean) {
+        val application = context as Application
 
+        // Initialize session listener
+        if (sessionListener == null) {
+            sessionListener = object  : SessionListener(){
+                override fun onSessionStarted() {
+                    component.sessionManager.onSessionStart()
+                }
+
+                override fun onSessionEnded() {
+                    component.sessionManager.onSessionEnd()
+                }
+            }
+        }
+
+        if (enableSessionTracking) {
+            application.registerActivityLifecycleCallbacks(sessionListener)
+        } else {
+            application.unregisterActivityLifecycleCallbacks(sessionListener)
+        }
+
+    }
     private fun trackInAppPurchase() {
         if (this.configuration.automaticSessionTracking) {
             // Add the observers when the automatic session tracking is true.

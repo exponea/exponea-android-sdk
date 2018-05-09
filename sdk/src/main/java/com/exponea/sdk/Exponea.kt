@@ -8,9 +8,13 @@ import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.enqueue
 import io.paperdb.Paper
+import okhttp3.Response
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -169,6 +173,24 @@ object Exponea {
 
         component.flushManager.flush()
     }
+
+
+    fun fetchCustomerAttributes(customerIds: CustomerIds,
+                                attributes: MutableList<HashMap<String, String>>,
+                                onSuccess: (List<Pair<Boolean, String?>>) -> Unit,
+                                onError: (String) -> Unit) {
+
+        val attrs = CustomerAttributes(customerIds, attributes)
+
+        component.exponeaService.postFetchAttributes(
+                projectToken = configuration.projectToken,
+                attributes = attrs
+        ).enqueue(
+                onResponse = {_, response: Response -> Logger.d(this, response.body()?.string()!!) },
+                onFailure = {_, exception: IOException -> Logger.d(this, exception.toString())}
+        )
+    }
+
 
     /**
      * Manually track FCM Token to Exponea API

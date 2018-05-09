@@ -6,7 +6,6 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
@@ -69,7 +68,7 @@ object Exponea {
     @Throws(InvalidConfigurationException::class)
     fun init(context: Context, configFile: String) {
         // Try to parse our file
-        val configuration = FileManager.getConfigurationOfFile(configFile)
+        val configuration = Exponea.component.fileManager.getConfigurationFromFile(configFile)
 
         // If our file isn't null then try initiating normally
         if (configuration != null) {
@@ -176,6 +175,19 @@ object Exponea {
                 properties = properties,
                 eventType = "push_clicked",
                 timestamp = timestamp)
+    }
+
+
+    /**
+     * Opens a WebView showing the personalized page with the
+     * banners for a specific customer.
+     */
+
+    fun showBanners(customerIds: CustomerIds) {
+        Exponea.component.personalizationManager.showBanner(
+                projectToken = Exponea.configuration.projectToken,
+                customerIds = customerIds
+        )
     }
 
     // Private Helpers

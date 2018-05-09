@@ -1,35 +1,44 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.Banner
-import com.exponea.sdk.models.Personalization
+import android.content.Context
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
-import com.exponea.sdk.util.FileManager.gson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
+import com.google.gson.Gson
 import java.util.*
 
 /**
  * Personalization Manager is responsible to get the banner ids and fetch
  * the content for personalization of active banners.
- * When getPersonalization the banners will be show in a web view instance.
+ * When getPersonalization is called, the banners will be show in a web view instance.
  */
 
 class PersonalizationManagerImpl(
-        private val exponeaService: ExponeaService
+        private val exponeaService: ExponeaService,
+        private val context: Context
 ) : PersonalizationManager {
 
-    private val banner: Banner = Banner()
+    val gson = Gson()
+
     private var preferencesIds: MutableList<String> = mutableListOf()
 
-    override fun getBannersConfiguration(projectToken: String) {
-        fetchConfiguration(projectToken)
+    override fun showBanner(projectToken: String, customerIds: CustomerIds) {
+        getBannersConfiguration(projectToken, customerIds)
     }
 
-    override fun getPersonalization(projectToken: String, banner: Banner) {
-        fetchActiveBanners(projectToken, banner)
+    override fun getBannersConfiguration(projectToken: String, customerIds: CustomerIds) {
+        fetchConfiguration(projectToken, customerIds)
     }
 
-    private fun fetchConfiguration(projectToken: String) {
+    override fun getPersonalization(projectToken: String, customerIds: CustomerIds) {
+        fetchActiveBanners(projectToken, customerIds)
+    }
+
+    private fun fetchConfiguration(projectToken: String, customerIds: CustomerIds) {
         exponeaService
                 .getBannerConfiguration(projectToken)
                 .enqueue(
@@ -39,7 +48,7 @@ class PersonalizationManagerImpl(
                             if (responseCode in 200..299) {
                                 val result = response.body().toString()
                                 val personalization = gson.fromJson(result, Personalization::class.java)
-                                onSerializadedSuccess(personalization)
+                                onSerializadedSuccess(personalization, projectToken, customerIds)
                             } else {
                                 Logger.d(
                                         this@PersonalizationManagerImpl,
@@ -55,7 +64,13 @@ class PersonalizationManagerImpl(
                 )
     }
 
-    private fun fetchActiveBanners(projectToken: String, banner: Banner) {
+    private fun fetchActiveBanners(projectToken: String, customerIds: CustomerIds) {
+
+        val banner = Banner(
+                customerIds = customerIds,
+                personalizationIds = preferencesIds
+        )
+
         exponeaService
                 .postFetchBanner(projectToken, banner)
                 .enqueue(
@@ -64,8 +79,17 @@ class PersonalizationManagerImpl(
                             Logger.d(this@PersonalizationManagerImpl, "Response Code: $responseCode")
                             if (responseCode in 200..299) {
                                 val result = response.body().toString()
-                                val personalization = gson.fromJson(result, Personalization::class.java)
-                                onSerializadedSuccess(personalization)
+                                val bannerResult = gson.fromJson(result, BannerResult::class.java)
+                                Exponea.component.fileManager.createFile(
+                                        filename = Constants.General.bannerFilename,
+                                        type = Constants.General.bannerFilenameExt
+                                )
+                                Exponea.component.fileManager.writeToFile(
+                                        filename = Constants.General.bannerFullFilename,
+                                        text = result
+                                )
+                                // Present the WebView with Banner data.
+                                TODO("Wait for Exponea answer on how to show the banner when we have more than 1 banner.")
                             } else {
                                 Logger.d(
                                         this@PersonalizationManagerImpl,
@@ -81,9 +105,14 @@ class PersonalizationManagerImpl(
                 )
     }
 
-    private fun onSerializadedSuccess(personalization: Personalization) {
+    private fun onSerializadedSuccess(
+            personalization: Personalization,
+            projectToken: String,
+            customerIds: CustomerIds
+    ) {
 
         var isExpirationValid: Boolean = true
+        var isMobileAvailable: Boolean = false
 
         for (data in personalization.data) {
             // Check if the banner has expiration date and if it's valid.
@@ -93,14 +122,44 @@ class PersonalizationManagerImpl(
                     isExpirationValid = checkExpirationDate(it.fromDate?.toLong(), it.toDate?.toLong())
                 }
             }
-        }
-//
-//        val data = personalization.data.flatMap { (id, _, _, _, _) -> listOf(id).toMutableList() }
-//        banner.personalizationIds = data
+            data.deviceTarget?.let {
+                if ((it.type == "mobile") || (it.type == "any")) {
+                    isMobileAvailable = true
+                }
+            }
 
+            if (isExpirationValid && isMobileAvailable) {
+                data.id?.let {
+                    preferencesIds.add(it)
+                }
+                fetchActiveBanners(projectToken, customerIds)
+            }
+            else {
+                Logger.d(
+                        this@PersonalizationManagerImpl,
+                        "There is no banner to show")
+            }
+        }
+    }
+
+    private fun showWebView(script: String, css: String) {
+        val webView: WebView = WebView(context)
+        webView.settings.javaScriptEnabled = true
+        // Inject the javascript into webview.
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Inject the JavaScript into the WebView.
+                webView.loadUrl(script)
+                // Inject the CSS into the WebView.
+                webView.loadUrl(css)
+            }
+        }
+        webView.loadUrl(ClassLoader.getSystemResource(Constants.General.bannerFullFilename).file)
     }
 
     // Helper Methods
+
     private fun checkExpirationDate(start: Long?, end: Long?): Boolean {
 
         val fromDate = start?.let { it } ?: run { return false }

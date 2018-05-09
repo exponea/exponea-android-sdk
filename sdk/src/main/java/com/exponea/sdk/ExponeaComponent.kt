@@ -17,27 +17,28 @@ class ExponeaComponent(
         context: Context
 ) {
     // Gson Deserializer
-    val gson = Gson()
+    internal val gson = Gson()
     // In App Purchase Manager
-    val iapManager: IapManager = IapManagerImpl(context)
+    internal val iapManager: IapManager = IapManagerImpl(context)
     // Device Manager
-    val deviceManager: DeviceManager = DeviceManagerImpl(context)
+    internal val deviceManager: DeviceManager = DeviceManagerImpl(context)
     // Preferences
-    val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
+    internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
-    val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
-    val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
-    val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(preferences)
-    val eventRepository: EventRepository = EventRepositoryImpl()
+    internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
+    internal val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
+    internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(preferences)
+    internal val eventRepository: EventRepository = EventRepositoryImpl()
     // Network Handler
-    val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
+    internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
     // Api Service
-    val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
+    internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
     //Managers
-    val serviceManager: ServiceManager = ServiceManagerImpl(context)
-    val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
-    val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
-    val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
-    val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
-    val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(exponeaService)
+    internal val serviceManager: ServiceManager = ServiceManagerImpl(context)
+    internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
+    internal val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
+    internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
+    internal val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
+    internal val fileManager: FileManager = FileManagerImpl()
+    internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(exponeaService, context)
 }

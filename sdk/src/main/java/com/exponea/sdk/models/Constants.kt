@@ -65,5 +65,8 @@ object Constants {
     /// General constants
     object General {
         val GooglePlay: String = "Google Play Store"
+        val bannerFilename: String = "personalization"
+        val bannerFilenameExt: String = "html"
+        val bannerFullFilename: String = "personalization.html"
     }
 }

@@ -1,0 +1,15 @@
+package com.exponea.sdk.manager
+
+import com.exponea.sdk.models.CustomerAttributeModel
+import com.exponea.sdk.models.CustomerAttributes
+import com.exponea.sdk.models.Result
+
+interface FetchManager {
+
+    fun fetchCustomerAttributes(
+            projectToken: String,
+            attributes: CustomerAttributes,
+            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+            onFailure: (String) -> Unit
+    )
+}

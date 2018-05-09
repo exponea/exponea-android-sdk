@@ -34,6 +34,7 @@ class ExponeaComponent(
     // Api Service
     val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
     //Managers
+    val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
     val serviceManager: ServiceManager = ServiceManagerImpl(context)
     val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)

@@ -3,16 +3,13 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.enqueue
-import com.google.gson.Gson
 import io.paperdb.Paper
-import okhttp3.Response
-import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
@@ -181,41 +178,15 @@ object Exponea {
      */
     fun fetchCustomerAttributes(customerIds: CustomerIds,
                                 attributes: MutableList<HashMap<String, String>>,
-                                onAttributeFetched: (value: String) -> Unit,
-                                onAttributeError: (error: String) -> Unit,
-                                onFetchError: (String) -> Unit) {
+                                onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+                                onFailure: (String) -> Unit) {
 
-        val attrs = CustomerAttributes(customerIds, attributes)
-        component.exponeaService.postFetchAttributes(
-                projectToken = configuration.projectToken,
-                attributes = attrs
-        ).enqueue(
-                onResponse = {_, response: Response ->
-                    val body = response.body()?.string()
-
-                    if (response.code() in 200..203) {
-                        val receivedAttributes = component.gson.fromJson(body, AttributesResponse::class.java)
-                        receivedAttributes.results?.forEach {
-                            if (it.success && it.value != null) {
-                                onAttributeFetched(it.value)
-                            } else if (it.value == null) {
-                                Logger.e(this, "Error: fetched value is null")
-                                onAttributeError("Error: Value is null")
-                            } else  {
-                                Logger.e(this, "Error")
-                                onAttributeError("Error")
-                            }
-                        }
-                    } else {
-                        onFetchError(response.message())
-                    }
-
-                },
-                onFailure = { _, exception: IOException ->
-                    Logger.e(this, "Attribute Fetch error $exception")
-                    onFetchError(exception.toString())
-                }
-        )
+       component.fetchManager.fetchCustomerAttributes(
+               projectToken = configuration.projectToken,
+               attributes = CustomerAttributes(customerIds, attributes),
+               onSuccess = onSuccess,
+               onFailure = onFailure
+       )
     }
 
 

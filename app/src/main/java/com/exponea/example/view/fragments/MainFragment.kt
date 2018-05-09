@@ -27,15 +27,14 @@ class MainFragment : BaseFragment() {
 
         var attrs = mutableListOf(
                 hashMapOf(
-                        Pair("tye", "property"),
+                        Pair("type", "property"),
                         Pair("property", "first_name")
                 )
         )
 
         Exponea.fetchCustomerAttributes(CustomerIds(cookie = App.instance.userIdManager.uniqueUserID), attrs,
-                onAttributeError = { Log.d("CallExample", it )},
-                onAttributeFetched = { Log.d("CallExample", "Laoded $it ") },
-                onFetchError = { Log.d("CallExample", "Error: $it") } )
+                onFailure = {Log.d("Call", it) },
+                onSuccess = {Log.d("Call", it.toString()) })
 
     }
 }

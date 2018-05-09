@@ -9,6 +9,7 @@ import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.FileManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
+import com.google.gson.Gson
 import io.paperdb.Paper
 import okhttp3.Response
 import java.io.IOException
@@ -177,16 +178,23 @@ object Exponea {
 
     fun fetchCustomerAttributes(customerIds: CustomerIds,
                                 attributes: MutableList<HashMap<String, String>>,
-                                onSuccess: (List<Pair<Boolean, String?>>) -> Unit,
+                                onSuccess: (AttributesResponse) -> Unit,
                                 onError: (String) -> Unit) {
 
         val attrs = CustomerAttributes(customerIds, attributes)
-
         component.exponeaService.postFetchAttributes(
                 projectToken = configuration.projectToken,
                 attributes = attrs
         ).enqueue(
-                onResponse = {_, response: Response -> Logger.d(this, response.body()?.string()!!) },
+                onResponse = {_, response: Response ->
+
+                    val body = response.body()?.string()
+                    val attributes = Gson().fromJson(body, AttributesResponse::class.java)
+                    onSuccess(attributes)
+
+
+
+                },
                 onFailure = {_, exception: IOException -> Logger.d(this, exception.toString())}
         )
     }

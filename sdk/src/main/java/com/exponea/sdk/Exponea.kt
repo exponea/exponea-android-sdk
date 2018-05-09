@@ -176,10 +176,13 @@ object Exponea {
     }
 
 
+    /**
+     * Fetches customer attributes
+     */
     fun fetchCustomerAttributes(customerIds: CustomerIds,
                                 attributes: MutableList<HashMap<String, String>>,
-                                onAttributeFetched: (name: String, value: String) -> Unit,
-                                onAttributeError: (name: String) -> Unit,
+                                onAttributeFetched: (value: String) -> Unit,
+                                onAttributeError: (error: String) -> Unit,
                                 onFetchError: (String) -> Unit) {
 
         val attrs = CustomerAttributes(customerIds, attributes)
@@ -189,25 +192,23 @@ object Exponea {
         ).enqueue(
                 onResponse = {_, response: Response ->
                     val body = response.body()?.string()
-                    val receivedAttributes = Gson().fromJson(body, AttributesResponse::class.java)
-                    if (receivedAttributes.success) {
 
-                      receivedAttributes?.results?.forEachIndexed { index, attribute ->
-
-                          if (attribute.success && attribute.value != null) {
-                              onAttributeFetched("name", attribute.value)
-                          } else {
-                              onAttributeError("name")
-                          }
-
-                      }
-
-
+                    if (response.code() in 200..203) {
+                        val receivedAttributes = component.gson.fromJson(body, AttributesResponse::class.java)
+                        receivedAttributes.results?.forEach {
+                            if (it.success && it.value != null) {
+                                onAttributeFetched(it.value)
+                            } else if (it.value == null) {
+                                Logger.e(this, "Error: fetched value is null")
+                                onAttributeError("Error: Value is null")
+                            } else  {
+                                Logger.e(this, "Error")
+                                onAttributeError("Error")
+                            }
+                        }
                     } else {
-                        onFetchError("/TODO real error")
+                        onFetchError(response.message())
                     }
-
-
 
                 },
                 onFailure = { _, exception: IOException ->

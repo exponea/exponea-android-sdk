@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.CustomerAttributeModel
 import com.exponea.sdk.models.CustomerAttributes
+import com.exponea.sdk.models.CustomerEvents
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
@@ -37,5 +38,11 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
                     onFailure(exception.toString())
                 }
         )
+    }
+
+    override fun fetchCustomerEvents(projectToken: String,
+                                     customerEvents: CustomerEvents,
+                                     onSuccess: () -> Unit,
+                                     onFailure: (String) -> Unit) {
     }
 }

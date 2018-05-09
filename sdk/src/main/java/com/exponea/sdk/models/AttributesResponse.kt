@@ -9,6 +9,6 @@ data class AttributesResponse(
 
      data class Attribute(
             val success: Boolean,
-            var value: String
+            val value: String?
     )
 }

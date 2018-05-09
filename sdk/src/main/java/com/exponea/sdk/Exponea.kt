@@ -178,8 +178,9 @@ object Exponea {
 
     fun fetchCustomerAttributes(customerIds: CustomerIds,
                                 attributes: MutableList<HashMap<String, String>>,
-                                onSuccess: (AttributesResponse) -> Unit,
-                                onError: (String) -> Unit) {
+                                onAttributeFetched: (name: String, value: String) -> Unit,
+                                onAttributeError: (name: String) -> Unit,
+                                onFetchError: (String) -> Unit) {
 
         val attrs = CustomerAttributes(customerIds, attributes)
         component.exponeaService.postFetchAttributes(
@@ -187,15 +188,32 @@ object Exponea {
                 attributes = attrs
         ).enqueue(
                 onResponse = {_, response: Response ->
-
                     val body = response.body()?.string()
-                    val attributes = Gson().fromJson(body, AttributesResponse::class.java)
-                    onSuccess(attributes)
+                    val receivedAttributes = Gson().fromJson(body, AttributesResponse::class.java)
+                    if (receivedAttributes.success) {
+
+                      receivedAttributes?.results?.forEachIndexed { index, attribute ->
+
+                          if (attribute.success && attribute.value != null) {
+                              onAttributeFetched("name", attribute.value)
+                          } else {
+                              onAttributeError("name")
+                          }
+
+                      }
+
+
+                    } else {
+                        onFetchError("/TODO real error")
+                    }
 
 
 
                 },
-                onFailure = {_, exception: IOException -> Logger.d(this, exception.toString())}
+                onFailure = { _, exception: IOException ->
+                    Logger.e(this, "Attribute Fetch error $exception")
+                    onFetchError(exception.toString())
+                }
         )
     }
 

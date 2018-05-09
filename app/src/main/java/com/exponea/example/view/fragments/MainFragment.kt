@@ -33,8 +33,9 @@ class MainFragment : BaseFragment() {
         )
 
         Exponea.fetchCustomerAttributes(CustomerIds(cookie = App.instance.userIdManager.uniqueUserID), attrs,
-                onError = { Log.d("CallExample", it)},
-                onSuccess = {Log.d("CallExample", it.toString())})
+              onAttributeError = { Log.d("CallExample", it )},
+                onAttributeFetched = { p, v -> Log.d("CallExample", "Laoded pair: $p - $v ") },
+                onFetchError = { Log.d("CallExample", "Error: $it") } )
 
     }
 }

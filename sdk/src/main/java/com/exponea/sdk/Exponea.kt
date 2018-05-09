@@ -3,6 +3,8 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.manager.SessionManager
+import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
@@ -47,6 +49,9 @@ object Exponea {
             configuration.sessionTimeout = value
         }
 
+    /**
+     * Defines if automatic session tracking is enabled
+     */
     var isAutomaticSessionTracking: Boolean
         get() = configuration.automaticSessionTracking
         set(value) {
@@ -239,6 +244,9 @@ object Exponea {
         trackInAppPurchase()
 
         // Initialize session observer
+        configuration.automaticSessionTracking = component
+                .preferences.getBoolean(SessionManagerImpl
+                .PREF_SESSION_AUTO_TRACK, true)
         startSessionTracking(configuration.automaticSessionTracking)
 
     }

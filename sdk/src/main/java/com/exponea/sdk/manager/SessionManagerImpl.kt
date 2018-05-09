@@ -12,12 +12,13 @@ import com.exponea.sdk.util.Logger
 import java.util.*
 
 class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences) : SessionManager() {
-    var isListenerActive = false
     var application = context as Application
+    private var isListenerActive = false
 
     companion object {
         const val PREF_SESSION_END = "SessionEndTime"
         const val PREF_SESSION_START = "SessionStartTime"
+        const val PREF_SESSION_AUTO_TRACK = "SessionAutomaticTracking"
     }
 
     /**
@@ -40,6 +41,7 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
         if (!isListenerActive) {
             application.registerActivityLifecycleCallbacks(this)
             isListenerActive = true
+            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, true)
         }
     }
 
@@ -50,6 +52,7 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
         if (isListenerActive) {
             application.unregisterActivityLifecycleCallbacks(this)
             isListenerActive = false
+            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, false)
         }
     }
 

@@ -12,6 +12,7 @@ import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 @SuppressLint("StaticFieldLeak")
@@ -189,6 +190,22 @@ object Exponea {
        )
     }
 
+
+    fun fetchCustomerEvents(customerIds: CustomerIds,
+                            eventTypes: ArrayList<String> = arrayListOf("page_view"),
+                            order: String = "desc",
+                            limit: Int = 3,
+                            skip: Int = 100,
+                            onFailure: (String) -> Unit,
+                            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
+                            ) {
+        component.fetchManager.fetchCustomerEvents(
+                projectToken = configuration.projectToken,
+                customerEvents = CustomerEvents(customerIds, eventTypes, order, limit, skip),
+                onFailure = onFailure,
+                onSuccess = onSuccess
+        )
+    }
 
     /**
      * Manually track FCM Token to Exponea API

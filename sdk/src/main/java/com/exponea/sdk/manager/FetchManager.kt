@@ -1,9 +1,6 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.CustomerAttributeModel
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerEvents
-import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.*
 
 interface FetchManager {
 
@@ -17,7 +14,7 @@ interface FetchManager {
     fun fetchCustomerEvents(
             projectToken: String,
             customerEvents: CustomerEvents,
-            onSuccess: () -> Unit,
+            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
             onFailure: (String) -> Unit
     )
 }

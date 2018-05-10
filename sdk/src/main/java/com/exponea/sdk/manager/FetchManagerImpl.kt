@@ -1,15 +1,14 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.CustomerAttributeModel
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerEvents
-import com.exponea.sdk.models.Result
+import android.util.Log
+import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.Response
+import java.io.IOException
 
 class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
 
@@ -42,7 +41,28 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
 
     override fun fetchCustomerEvents(projectToken: String,
                                      customerEvents: CustomerEvents,
-                                     onSuccess: () -> Unit,
+                                     onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
                                      onFailure: (String) -> Unit) {
+
+        api.postFetchEvents(projectToken, customerEvents).enqueue(
+                onResponse = {_, response: Response ->
+                    val jsonBody = response.body()?.string()
+                    val type = object : TypeToken<Result<ArrayList<CustomerEventModel>>>(){}.type
+                    if (response.code() in 200..203) {
+                        val result = gson.fromJson<Result<ArrayList<CustomerEventModel>>>(jsonBody, type)
+                        onSuccess(result)
+
+                    } else {
+                        Logger.e(this, "Failed to fetch events: ${response.message()}\n" +
+                                "Body: $jsonBody")
+                        onFailure("Failed to fetch events: ${response.message()}\n" +
+                                "Body: $jsonBody")
+                    }
+                },
+                onFailure = {_, exception: IOException ->
+                    Logger.e(this, "Failed to fetch events", exception)
+                    onFailure(exception.toString())
+                }
+        )
     }
 }

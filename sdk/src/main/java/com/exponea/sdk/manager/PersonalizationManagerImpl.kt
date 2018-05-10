@@ -8,7 +8,6 @@ import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
-import com.google.gson.Gson
 import java.util.*
 
 /**
@@ -21,8 +20,6 @@ class PersonalizationManagerImpl(
         private val exponeaService: ExponeaService,
         private val context: Context
 ) : PersonalizationManager {
-
-    val gson = Gson()
 
     private var preferencesIds: MutableList<String> = mutableListOf()
 
@@ -47,7 +44,7 @@ class PersonalizationManagerImpl(
                             Logger.d(this@PersonalizationManagerImpl, "Response Code: $responseCode")
                             if (responseCode in 200..299) {
                                 val result = response.body().toString()
-                                val personalization = gson.fromJson(result, Personalization::class.java)
+                                val personalization = Exponea.component.gson.fromJson(result, Personalization::class.java)
                                 onSerializadedSuccess(personalization, projectToken, customerIds)
                             } else {
                                 Logger.d(
@@ -79,17 +76,25 @@ class PersonalizationManagerImpl(
                             Logger.d(this@PersonalizationManagerImpl, "Response Code: $responseCode")
                             if (responseCode in 200..299) {
                                 val result = response.body().toString()
-                                val bannerResult = gson.fromJson(result, BannerResult::class.java)
-                                Exponea.component.fileManager.createFile(
-                                        filename = Constants.General.bannerFilename,
-                                        type = Constants.General.bannerFilenameExt
-                                )
-                                Exponea.component.fileManager.writeToFile(
-                                        filename = Constants.General.bannerFullFilename,
-                                        text = result
-                                )
-                                // Present the WebView with Banner data.
-                                TODO("Wait for Exponea answer on how to show the banner when we have more than 1 banner.")
+                                val bannerResult = Exponea.component.gson.fromJson(result, BannerResult::class.java)
+
+                                // For now get only the first item in the result and present it.
+                                val data = bannerResult.data.first()
+
+                                // Save the html result into a temporary file if exists.
+                                data.html?.let {
+                                    Exponea.component.fileManager.createFile(
+                                            filename = Constants.General.bannerFilename,
+                                            type = Constants.General.bannerFilenameExt
+                                    )
+
+                                    Exponea.component.fileManager.writeToFile(
+                                            filename = Constants.General.bannerFullFilename,
+                                            text = it
+                                    )
+                                }
+                                // Call the showwebview method to present the webview.
+                                showWebView(data.script, data.style)
                             } else {
                                 Logger.d(
                                         this@PersonalizationManagerImpl,
@@ -142,19 +147,24 @@ class PersonalizationManagerImpl(
         }
     }
 
-    private fun showWebView(script: String, css: String) {
+    /**
+     * Receive the script and css from the exponea api and prepare
+     * the webview to be presented
+     */
+
+    private fun showWebView(script: String?, css: String?) {
         val webView: WebView = WebView(context)
-        webView.settings.javaScriptEnabled = true
         // Inject the javascript into webview.
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                // Inject the JavaScript into the WebView.
-                webView.loadUrl(script)
-                // Inject the CSS into the WebView.
-                webView.loadUrl(css)
+                // Inject the JavaScript into the WebView if exists.
+                script?.let { webView.loadUrl(it) }
+                // Inject the CSS into the WebView if exits.
+                css?.let { webView.loadUrl(it) }
             }
         }
+        // Load webview with all the received data.
         webView.loadUrl(ClassLoader.getSystemResource(Constants.General.bannerFullFilename).file)
     }
 

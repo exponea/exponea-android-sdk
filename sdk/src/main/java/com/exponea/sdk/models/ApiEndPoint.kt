@@ -41,7 +41,7 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
             EndPointName.CUSTOMERS_ANONYMIZE             -> "/data/v2/$splitterToken/customers/anonymize"
             EndPointName.CUSTOMERS_EXPORT_ALL_PROPERTIES -> "/data/v2/$splitterToken/customers/export-one"
             EndPointName.CUSTOMERS_EXPORT_ALL            -> "/data/v2/$splitterToken/customers/export"
-            EndPointName.CONFIGURE_BANNER                -> "/data/v2/projects/$splitterToken/configuration/banners"
+            EndPointName.CONFIGURE_BANNER                -> "track/v2/projects/$splitterToken/configuration/banners"
             EndPointName.SHOW_BANNER                     -> "/data/v2/projects/$splitterToken/customers/personalisation/show-banners"
         }
 

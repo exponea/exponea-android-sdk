@@ -9,6 +9,5 @@ data class PersonalizationData (
         @SerializedName("device_target")
         var deviceTarget: TypeUrl? = null,
         var frequency: String? = null,
-        @SerializedName("trigger")
         var trigger: Trigger? = null
 )

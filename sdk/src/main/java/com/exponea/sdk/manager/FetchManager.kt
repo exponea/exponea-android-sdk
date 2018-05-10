@@ -17,4 +17,12 @@ interface FetchManager {
             onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
             onFailure: (String) -> Unit
     )
+
+    fun fetchCustomerEvents(
+            projectToken: String,
+            customerRecommendation: CustomerRecommendation,
+            onSuccess: () -> Unit,
+            onFailure: (String) -> Unit
+    )
+
 }

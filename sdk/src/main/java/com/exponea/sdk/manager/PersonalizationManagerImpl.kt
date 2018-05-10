@@ -5,10 +5,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
-import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.enqueue
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Personalization Manager is responsible to get the banner ids and fetch
@@ -16,110 +15,72 @@ import java.util.*
  * When getPersonalization is called, the banners will be show in a web view instance.
  */
 
-class PersonalizationManagerImpl(
-        private val exponeaService: ExponeaService,
+internal class PersonalizationManagerImpl(
         private val context: Context
 ) : PersonalizationManager {
 
     private var preferencesIds: MutableList<String> = mutableListOf()
 
     override fun showBanner(projectToken: String, customerIds: CustomerIds) {
-        getBannersConfiguration(projectToken, customerIds)
+        getBannersConfiguration(
+                projectToken = projectToken,
+                customerIds = customerIds,
+                onSuccess = {
+                    if (canShowBanner(it.results)) {
+                        getPersonalization(projectToken, customerIds)
+                    }
+                },
+                onFailure = {
+                    Logger.e(this, "Check the error log for more information.")
+                }
+        )
     }
 
-    override fun getBannersConfiguration(projectToken: String, customerIds: CustomerIds) {
-        fetchConfiguration(projectToken, customerIds)
+    /**
+     * Call the fetch manager and get the banner configuration.
+     */
+
+    override fun getBannersConfiguration(
+            projectToken: String,
+            customerIds: CustomerIds,
+            onSuccess: (Result<ArrayList<PersonalizationData>>) -> Unit,
+            onFailure: (String) -> Unit) {
+
+        Exponea.component.fetchManager.fetchBannerConfiguration(
+                projectToken = projectToken,
+                customerIds = customerIds,
+                onSuccess = onSuccess,
+                onFailure = onFailure)
     }
+
+    /**
+     * Call the fetch manager and get the banner.
+     */
 
     override fun getPersonalization(projectToken: String, customerIds: CustomerIds) {
-        fetchActiveBanners(projectToken, customerIds)
-    }
 
-    private fun fetchConfiguration(projectToken: String, customerIds: CustomerIds) {
-        exponeaService
-                .getBannerConfiguration(projectToken)
-                .enqueue(
-                        { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this@PersonalizationManagerImpl, "Response Code: $responseCode")
-                            if (responseCode in 200..299) {
-                                val result = response.body().toString()
-                                val personalization = Exponea.component.gson.fromJson(result, Personalization::class.java)
-                                onSerializadedSuccess(personalization, projectToken, customerIds)
-                            } else {
-                                Logger.d(
-                                        this@PersonalizationManagerImpl,
-                                        "Something went wrong while trying to deserialize Json")
-                            }
-                        },
-                        { _, ioException ->
-                            Logger.e(
-                                    this@PersonalizationManagerImpl,
-                                    "Fetch configuration Failed $ioException")
-                            ioException.printStackTrace()
-                        }
-                )
-    }
+        val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
 
-    private fun fetchActiveBanners(projectToken: String, customerIds: CustomerIds) {
+        Exponea.component.fetchManager.fetchBanner(
+                projectToken = projectToken,
+                bannerConfig = banner,
+                onSuccess = {
+                    val data = it.results.first()
+                    //prepareBannerToShow()
+                    showWebView(data.script, data.style)
+                },
+                onFailure = {
 
-        val banner = Banner(
-                customerIds = customerIds,
-                personalizationIds = preferencesIds
+                }
         )
-
-        exponeaService
-                .postFetchBanner(projectToken, banner)
-                .enqueue(
-                        { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this@PersonalizationManagerImpl, "Response Code: $responseCode")
-                            if (responseCode in 200..299) {
-                                val result = response.body().toString()
-                                val bannerResult = Exponea.component.gson.fromJson(result, BannerResult::class.java)
-
-                                // For now get only the first item in the result and present it.
-                                val data = bannerResult.data.first()
-
-                                // Save the html result into a temporary file if exists.
-                                data.html?.let {
-                                    Exponea.component.fileManager.createFile(
-                                            filename = Constants.General.bannerFilename,
-                                            type = Constants.General.bannerFilenameExt
-                                    )
-
-                                    Exponea.component.fileManager.writeToFile(
-                                            filename = Constants.General.bannerFullFilename,
-                                            text = it
-                                    )
-                                }
-                                // Call the showwebview method to present the webview.
-                                showWebView(data.script, data.style)
-                            } else {
-                                Logger.d(
-                                        this@PersonalizationManagerImpl,
-                                        "Something went wrong while trying to deserialize Json")
-                            }
-                        },
-                        { _, ioException ->
-                            Logger.e(
-                                    this@PersonalizationManagerImpl,
-                                    "Fetch configuration Failed $ioException")
-                            ioException.printStackTrace()
-                        }
-                )
     }
 
-    private fun onSerializadedSuccess(
-            personalization: Personalization,
-            projectToken: String,
-            customerIds: CustomerIds
-    ) {
+    private fun canShowBanner(personalization: ArrayList<PersonalizationData>) : Boolean {
 
         var isExpirationValid: Boolean = true
         var isMobileAvailable: Boolean = false
 
-        for (data in personalization.data) {
+        for (data in personalization) {
             // Check if the banner has expiration date and if it's valid.
             // If doesn't have any expiration setted, then is allowed.
             data.dateFilter?.let {
@@ -133,18 +94,24 @@ class PersonalizationManagerImpl(
                 }
             }
 
+            // Only shows the valid banners.
             if (isExpirationValid && isMobileAvailable) {
                 data.id?.let {
                     preferencesIds.add(it)
                 }
-                fetchActiveBanners(projectToken, customerIds)
             }
             else {
-                Logger.d(
-                        this@PersonalizationManagerImpl,
-                        "There is no banner to show")
+                Logger.d(this, "Banner ${data.id} is not valid")
             }
         }
+        return preferencesIds.isNotEmpty()
+    }
+
+    private fun prepareBannerToShow(customerIds: CustomerIds, personalization: PersonalizationData) : Banner {
+
+        val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
+
+        return banner
     }
 
     /**

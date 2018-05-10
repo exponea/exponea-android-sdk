@@ -3,6 +3,7 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
@@ -10,6 +11,8 @@ import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -140,6 +143,54 @@ object Exponea {
         }
 
         component.flushManager.flush()
+    }
+
+
+    /**
+     * Fetches customer attributes
+     */
+    fun fetchCustomerAttributes(customerIds: CustomerIds,
+                                attributes: MutableList<HashMap<String, Any>>,
+                                onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+                                onFailure: (String) -> Unit) {
+
+       component.fetchManager.fetchCustomerAttributes(
+               projectToken = configuration.projectToken,
+               attributes = CustomerAttributes(customerIds, attributes),
+               onSuccess = onSuccess,
+               onFailure = onFailure
+       )
+    }
+
+
+    fun fetchCustomerEvents(customerIds: CustomerIds,
+                            eventTypes: ArrayList<String> = arrayListOf("page_view"),
+                            order: String = "desc",
+                            limit: Int = 3,
+                            skip: Int = 100,
+                            onFailure: (String) -> Unit,
+                            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
+                            ) {
+        component.fetchManager.fetchCustomerEvents(
+                projectToken = configuration.projectToken,
+                customerEvents = CustomerEvents(customerIds, eventTypes, order, limit, skip),
+                onFailure = onFailure,
+                onSuccess = onSuccess
+        )
+    }
+
+
+    fun fetchRecommendation(customerIds: CustomerIds,
+                            customerRecommendation: CustomerRecommendation,
+                            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+                            onFailure: (String) -> Unit) {
+
+        component.fetchManager.fetchCustomerAttributes(
+                projectToken = configuration.projectToken,
+                attributes = CustomerAttributes(customerIds, mutableListOf(customerRecommendation.toHashMap())),
+                onSuccess = onSuccess,
+                onFailure = onFailure
+        )
     }
 
     /**

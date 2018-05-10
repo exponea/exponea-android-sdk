@@ -40,5 +40,6 @@ class ExponeaComponent(
     internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
     internal val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
     internal val fileManager: FileManager = FileManagerImpl()
-    internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(exponeaService, context)
+    internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
+    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
 }

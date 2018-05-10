@@ -36,7 +36,7 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
             EndPointName.CUSTOMERS_EXPRESSION            -> "data/v2/$splitterToken/customers/expression"
             EndPointName.CUSTOMERS_PREDICTION            -> "data/v2/$splitterToken/customers/prediction"
             EndPointName.CUSTOMERS_RECOMMENDATION        -> "data/v2/$splitterToken/customers/recommendation"
-            EndPointName.CUSTOMERS_ATTRIBUTES            -> "/data/v2/$splitterToken/customers/attributes"
+            EndPointName.CUSTOMERS_ATTRIBUTES            -> "data/v2/projects/$splitterToken/customers/attributes"
             EndPointName.CUSTOMERS_EVENTS                -> "/data/v2/projects/$splitterToken/customers/events"
             EndPointName.CUSTOMERS_ANONYMIZE             -> "/data/v2/$splitterToken/customers/anonymize"
             EndPointName.CUSTOMERS_EXPORT_ALL_PROPERTIES -> "/data/v2/$splitterToken/customers/export-one"

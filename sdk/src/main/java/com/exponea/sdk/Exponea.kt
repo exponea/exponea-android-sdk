@@ -149,14 +149,13 @@ object Exponea {
     /**
      * Fetches customer attributes
      */
-    fun fetchCustomerAttributes(customerIds: CustomerIds,
-                                attributes: MutableList<HashMap<String, Any>>,
+    fun fetchCustomerAttributes(customerAttributes: CustomerAttributes,
                                 onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
                                 onFailure: (String) -> Unit) {
 
        component.fetchManager.fetchCustomerAttributes(
                projectToken = configuration.projectToken,
-               attributes = CustomerAttributes(customerIds, attributes),
+               attributes = customerAttributes,
                onSuccess = onSuccess,
                onFailure = onFailure
        )

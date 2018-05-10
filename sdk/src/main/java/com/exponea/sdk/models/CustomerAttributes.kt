@@ -6,5 +6,5 @@ data class CustomerAttributes(
         @SerializedName("customer_ids")
         var customerId: CustomerIds = CustomerIds(),
         @SerializedName("attributes")
-        var attributes: MutableList<HashMap<String, String>>? = null
+        var attributes: MutableList<HashMap<String, Any>>? = null
 )

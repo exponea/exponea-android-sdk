@@ -65,11 +65,4 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
                 }
         )
     }
-
-    override fun fetchCustomerEvents(projectToken: String,
-                                     customerRecommendation: CustomerRecommendation,
-                                     onSuccess: () -> Unit,
-                                     onFailure: (String) -> Unit) {
-
-    }
 }

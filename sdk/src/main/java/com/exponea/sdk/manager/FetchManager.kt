@@ -18,11 +18,4 @@ interface FetchManager {
             onFailure: (String) -> Unit
     )
 
-    fun fetchCustomerEvents(
-            projectToken: String,
-            customerRecommendation: CustomerRecommendation,
-            onSuccess: () -> Unit,
-            onFailure: (String) -> Unit
-    )
-
 }

@@ -1,6 +1,5 @@
 package com.exponea.sdk.manager
 
-import android.util.Log
 import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger

@@ -178,7 +178,7 @@ object Exponea {
      * Fetches customer attributes
      */
     fun fetchCustomerAttributes(customerIds: CustomerIds,
-                                attributes: MutableList<HashMap<String, String>>,
+                                attributes: MutableList<HashMap<String, Any>>,
                                 onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
                                 onFailure: (String) -> Unit) {
 
@@ -204,6 +204,20 @@ object Exponea {
                 customerEvents = CustomerEvents(customerIds, eventTypes, order, limit, skip),
                 onFailure = onFailure,
                 onSuccess = onSuccess
+        )
+    }
+
+
+    fun fetchRecommendation(customerIds: CustomerIds,
+                            customerRecommendation: CustomerRecommendation,
+                            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+                            onFailure: (String) -> Unit) {
+
+        component.fetchManager.fetchCustomerAttributes(
+                projectToken = configuration.projectToken,
+                attributes = CustomerAttributes(customerIds, mutableListOf(customerRecommendation.toHashMap())),
+                onSuccess = onSuccess,
+                onFailure = onFailure
         )
     }
 

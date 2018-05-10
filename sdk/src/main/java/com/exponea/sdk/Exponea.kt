@@ -207,11 +207,16 @@ object Exponea {
      */
 
     fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
-        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        val properties: PropertiesList = PropertiesList(
+                hashMapOf(
+                        Pair("action_type", "notification"),
+                        Pair("status", "delivered")
+                )
+        )
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,
-                eventType = "push_delivered",
+                eventType = "campaign",
                 timestamp = timestamp)
     }
 
@@ -220,11 +225,18 @@ object Exponea {
      */
 
     fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
-        val properties: PropertiesList = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+
+        val properties: PropertiesList = PropertiesList(
+                hashMapOf(
+                        Pair("action_type", "notification"),
+                        Pair("status", "clicked")
+                )
+        )
+
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,
-                eventType = "push_clicked",
+                eventType = "campaign",
                 timestamp = timestamp)
     }
 

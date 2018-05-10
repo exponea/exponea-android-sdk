@@ -21,14 +21,14 @@ interface FetchManager {
     fun fetchBannerConfiguration(
             projectToken: String,
             customerIds: CustomerIds,
-            onSuccess: (Result<ArrayList<PersonalizationData>>) -> Unit,
+            onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
             onFailure: (String) -> Unit
     )
 
     fun fetchBanner(
             projectToken: String,
             bannerConfig: Banner,
-            onSuccess: (Result<ArrayList<BannerPage>>) -> Unit,
+            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
             onFailure: (String) -> Unit
     )
 

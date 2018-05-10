@@ -43,7 +43,7 @@ internal class PersonalizationManagerImpl(
     override fun getBannersConfiguration(
             projectToken: String,
             customerIds: CustomerIds,
-            onSuccess: (Result<ArrayList<PersonalizationData>>) -> Unit,
+            onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
             onFailure: (String) -> Unit) {
 
         Exponea.component.fetchManager.fetchBannerConfiguration(
@@ -66,16 +66,15 @@ internal class PersonalizationManagerImpl(
                 bannerConfig = banner,
                 onSuccess = {
                     val data = it.results.first()
-                    //prepareBannerToShow()
-                    showWebView(data.script, data.style)
+                    if (saveHtml(data)) showWebView(data.script, data.style)
                 },
                 onFailure = {
-
+                    Logger.e(this, "Check the error log for more information.")
                 }
         )
     }
 
-    private fun canShowBanner(personalization: ArrayList<PersonalizationData>) : Boolean {
+    private fun canShowBanner(personalization: ArrayList<Personalization>) : Boolean {
 
         var isExpirationValid: Boolean = true
         var isMobileAvailable: Boolean = false
@@ -107,11 +106,24 @@ internal class PersonalizationManagerImpl(
         return preferencesIds.isNotEmpty()
     }
 
-    private fun prepareBannerToShow(customerIds: CustomerIds, personalization: PersonalizationData) : Banner {
+    /**
+     * Save the html content into a temporary file.
+     */
 
-        val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
+    private fun saveHtml(data: BannerResult) : Boolean {
+        data.html?.let {
+            Exponea.component.fileManager.createFile(
+                    filename = Constants.General.bannerFilename,
+                    type = Constants.General.bannerFilenameExt
+            )
 
-        return banner
+            Exponea.component.fileManager.writeToFile(
+                    filename = Constants.General.bannerFullFilename,
+                    text = it
+            )
+            return true
+        }
+        return false
     }
 
     /**

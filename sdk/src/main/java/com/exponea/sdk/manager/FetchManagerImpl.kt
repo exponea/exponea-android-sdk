@@ -71,7 +71,7 @@ class FetchManagerImpl(
 
     override fun fetchBannerConfiguration(projectToken: String,
                                           customerIds: CustomerIds,
-                                          onSuccess: (Result<ArrayList<PersonalizationData>>) -> Unit,
+                                          onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
                                           onFailure: (String) -> Unit) {
 
         api.getBannerConfiguration(projectToken)
@@ -79,11 +79,15 @@ class FetchManagerImpl(
                         onResponse = { _, response ->
                             val responseCode = response.code()
                             Logger.d(this, "Response Code: $responseCode")
-                            val jsonBody = response.body()?.toString()
+                            val jsonBody = response.body()?.string()
                             if (responseCode in 200..299) {
-                                val type = object : TypeToken<Result<ArrayList<PersonalizationData>>>(){}.type
-                                val result = gson.fromJson<Result<ArrayList<PersonalizationData>>>(jsonBody, type)
-                                onSuccess(result)
+                                try {
+                                    val type = object : TypeToken<Result<ArrayList<Personalization>>>(){}.type
+                                    val result = gson.fromJson<Result<ArrayList<Personalization>>>(jsonBody, type)
+                                    onSuccess(result)
+                                } catch (e: Exception) {
+                                    Logger.e(this, "Failed to deserialize banner configuration: ${e.localizedMessage}")
+                                }
                             } else {
                                 Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
                                 onFailure("Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
@@ -98,7 +102,7 @@ class FetchManagerImpl(
 
     override fun fetchBanner(projectToken: String,
                              bannerConfig: Banner,
-                             onSuccess: (Result<ArrayList<BannerPage>>) -> Unit,
+                             onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
                              onFailure: (String) -> Unit) {
 
         api.postFetchBanner(projectToken, bannerConfig)
@@ -106,11 +110,15 @@ class FetchManagerImpl(
                         onResponse = { _, response ->
                             val responseCode = response.code()
                             Logger.d(this, "Response Code: $responseCode")
-                            val jsonBody = response.body()?.toString()
+                            val jsonBody = response.body()?.string()
                             if (responseCode in 200..299) {
-                                val type = object : TypeToken<Result<ArrayList<BannerPage>>>(){}.type
-                                val result = gson.fromJson<Result<ArrayList<BannerPage>>>(jsonBody, type)
-                                onSuccess(result)
+                                try {
+                                    val type = object : TypeToken<Result<ArrayList<BannerResult>>>(){}.type
+                                    val result = gson.fromJson<Result<ArrayList<BannerResult>>>(jsonBody, type)
+                                    onSuccess(result)
+                                } catch (e: Exception) {
+                                    Logger.e(this, "Failed to deserialize banner: ${e.localizedMessage}")
+                                }
                             } else {
                                 Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
                                 onFailure("Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")

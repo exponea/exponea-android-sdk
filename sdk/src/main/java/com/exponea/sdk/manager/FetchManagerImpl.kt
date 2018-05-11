@@ -86,7 +86,9 @@ class FetchManagerImpl(
                                     val result = gson.fromJson<Result<ArrayList<Personalization>>>(jsonBody, type)
                                     onSuccess(result)
                                 } catch (e: Exception) {
+                                    // Return failure when find any exception while trying to deserialize the response.
                                     Logger.e(this, "Failed to deserialize banner configuration: ${e.localizedMessage}")
+                                    onFailure("Failed to deserialize banner: ${e.localizedMessage}")
                                 }
                             } else {
                                 Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
@@ -117,7 +119,9 @@ class FetchManagerImpl(
                                     val result = gson.fromJson<Result<ArrayList<BannerResult>>>(jsonBody, type)
                                     onSuccess(result)
                                 } catch (e: Exception) {
+                                    // Return failure when find any exception while trying to deserialize the response.
                                     Logger.e(this, "Failed to deserialize banner: ${e.localizedMessage}")
+                                    onFailure("Failed to deserialize banner: ${e.localizedMessage}")
                                 }
                             } else {
                                 Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")

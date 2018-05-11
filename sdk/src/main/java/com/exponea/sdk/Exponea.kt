@@ -304,6 +304,22 @@ object Exponea {
     }
 
     /**
+     * Tracks payment manually
+     * @param payment represents payment details
+     */
+    fun trackPayment(customerIds: CustomerIds,
+                     timestamp: Long = Date().time,
+                     payment: Payment) {
+        trackEvent(
+                eventType = Constants.EventTypes.payment,
+                timestamp = timestamp,
+                customerId = customerIds,
+                properties = payment.toHashMap(),
+                route = Route.TRACK_EVENTS
+        )
+    }
+
+    /**
      * Installation event is fired only once for the whole lifetime of the app on one
      * device when the app is launched for the first time.
      */

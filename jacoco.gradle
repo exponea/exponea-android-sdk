@@ -55,7 +55,7 @@ task coverage(dependsOn: 'jacocoTestReport') << {
     }
     result.append(index.substring(index.indexOf(footer)))
 
-    def output = new File(reports, 'index.source.html')
+    def output = new File(reports, 'coverage.html')
 
     output.delete()
     output << result.toString()

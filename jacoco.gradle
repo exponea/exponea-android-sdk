@@ -1,0 +1,63 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.0"
+    reportsDir = file("$buildDir/reports")
+}
+
+sourceSets {
+    main {
+        resources.includes = ['**/jacoco-agent.properties']
+    }
+}
+
+task jacocoTestReport(type:JacocoReport) {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+    // exclude auto-generated classes and tests
+    def fileFilter = ['**/R.class', '**/R$*.class',
+                      '**/BuildConfig.*', '**/Manifest*.*',
+                      'android/**/*.*']
+    def debugTree = fileTree(dir:
+            "${project.buildDir}/intermediates/classes/debug",
+            excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+    def kotlinDebugTree = fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug", excludes: fileFilter)
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree], [kotlinDebugTree])
+    additionalSourceDirs = files([
+            "${buildDir}/generated/source/buildConfig/debug",
+            "${buildDir}/generated/source/r/debug"
+    ])
+    executionData = fileTree(dir: project.projectDir, includes:
+            ['**/*.exec', '**/*.ec'])
+    reports {
+        xml.enabled = true
+        xml.destination = "${buildDir}/jacocoTestReport.xml"
+        csv.enabled = false
+        html.enabled = true
+        html.destination = "${buildDir}/reports/jacoco/coverage"
+    }
+}
+
+task coverage(dependsOn: 'jacocoTestReport') << {
+    def reports = new File(project.buildDir, '/reports/jacoco/coverage')
+    def index = new File(reports, 'index.html').getText('UTF-8')
+    def footer = '<div class="footer">'
+    def result = new StringBuilder(index.substring(0, index.indexOf(footer)))
+
+    reports.eachDirMatch({ !new File(it).name.startsWith(".") }) { dir ->
+        def moduleIndex = new File(dir, 'index.html')
+        def content = moduleIndex.getText('UTF-8')
+                .replaceAll('\\.\\./\\.resources', '.resources')
+                .replaceAll('href="', "href=\"${dir.name}/")
+        result.append(content.substring(content.indexOf('<h1>'), content.indexOf(footer)))
+    }
+    result.append(index.substring(index.indexOf(footer)))
+
+    def output = new File(reports, 'index.source.html')
+
+    output.delete()
+    output << result.toString()
+    println("open $output.path")
+}

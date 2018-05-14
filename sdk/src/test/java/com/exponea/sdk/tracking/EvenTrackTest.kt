@@ -14,7 +14,7 @@ import java.util.*
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class SessionStartEventTest {
+class EvenTrackTest {
 
     lateinit var repo: EventRepository
 
@@ -109,8 +109,5 @@ class SessionStartEventTest {
                 assertEquals(0, repo.all().size)
             }
         }
-
-
     }
-
 }

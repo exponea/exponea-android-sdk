@@ -37,4 +37,14 @@ class ExponeaPreferencesTest {
         prefs.setString(VAL_STRING, toSet)
         assertEquals(toSet, prefs.getString(VAL_STRING, "wrong one"))
     }
+
+    @Test
+    fun remove_ShouldPass() {
+        val value = "someOtherString"
+        prefs.setString(VAL_STRING, value)
+        assertEquals(value, prefs.getString(VAL_STRING, "deleted"))
+        assertEquals(true, prefs.remove(VAL_STRING))
+        assertEquals("deleted", prefs.getString(VAL_STRING, "deleted"))
+    }
+
 }

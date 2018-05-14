@@ -3,7 +3,10 @@ package com.exponea.sdk.fetching
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.CustomerAttributes
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
 import kotlinx.coroutines.experimental.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -15,7 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
-class FetchId {
+class FetchSegment {
 
     val customerIds: CustomerIds = CustomerIds(registered = "rito@nodesagency.com")
     var attributes: CustomerAttributes = CustomerAttributes(customerIds)
@@ -37,19 +40,19 @@ class FetchId {
 
         Exponea.flushMode = FlushMode.MANUAL
 
-        attributes.withId("cookie")
+        attributes.withProperty("first_name")
     }
 
     @After
     public fun tearDown() {
-        ExponeaMockServer.shutDown()
+        //ExponeaMockServer.shutDown()
     }
 
     @Test
     fun getCustomerId_ShouldSuccess() {
 
         // Set the response to success and json result.
-        ExponeaMockServer.setResponseSuccess("fetching/customer_id_success.json")
+        ExponeaMockServer.setResponseSuccess("fetching/segmentation_success.json")
 
         var success: Boolean? = null
         var value: String? = null
@@ -72,14 +75,14 @@ class FetchId {
 
         assertEquals("/data/v2/projects/projectToken/customers/attributes", request.path)
         assertEquals(true, success)
-        assertEquals("Marian", value)
+        assertEquals("Ricardo", value)
     }
 
     @Test
     fun getCustomerId_ShouldFailure() {
 
         // Set the response to success and json result.
-        ExponeaMockServer.setResponseError("fetching/customer_id_failure.json")
+        ExponeaMockServer.setResponseError("fetching/segmentation_failure.json")
 
         var success: Boolean? = null
         var value: String? = null

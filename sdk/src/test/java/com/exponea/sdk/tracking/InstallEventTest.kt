@@ -1,9 +1,11 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import junit.framework.Assert.assertEquals
+import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -47,6 +49,19 @@ class InstallEventTest {
         //mockServer.shutdown()
     }
 
+    @Test
+    fun testInstallEventAdded() {
+
+        // The only event tracked by now should be install_event
+        val event = Exponea.component.eventRepository.all().first()
+        assertEquals(Constants.EventTypes.installation, event.item.type)
+
+        // No more than 1 install event should be tracked
+        Exponea.trackInstall()
+        assertEquals(1, Exponea.component.eventRepository.all().size)
+
+    }
+
     private fun setupWebServer(): String {
         mockServer.start()
         return mockServer.url("/").toString()
@@ -61,8 +76,12 @@ class InstallEventTest {
         mockServer.enqueue(mockResponse)
 
         Exponea.trackInstall()
-
-        Exponea.flush()
+        runBlocking {
+            Exponea.flush()
+            Exponea.component.flushManager.onFlushFinishListener = {
+                assertEquals(0, Exponea.component.eventRepository.all().size)
+            }
+        }
 
         val request = mockServer.takeRequest()
         assertEquals("/track/v2/projects/projectToken/customers/events", request.path)

@@ -14,7 +14,7 @@ import java.util.*
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class EvenTrackTest {
+class EventTrackTest {
 
     lateinit var repo: EventRepository
 

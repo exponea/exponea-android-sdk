@@ -1,0 +1,13 @@
+{
+  "results": [
+    {
+      "success": true,
+      "value": "Ricardo"
+    },
+    {
+      "success": true,
+      "value": null
+    }
+  ],
+  "success": true
+}

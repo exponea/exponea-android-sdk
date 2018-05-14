@@ -21,7 +21,7 @@ Using manual depedency injection the application aims to have every class tested
         $ gradle  jacocoTestReport -- generate test reports and code coverage
         
         Code coverage output: build/reports/jacocoTestReport/html/index.html
-        Test reporst: build/reports/tests/testDebugUnitTest/index.html
+        Test reports: build/reports/tests/testDebugUnitTest/index.html
         
 
 ## 🔗 Useful links

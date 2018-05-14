@@ -1,5 +1,6 @@
-package com.exponea.sdk
+package com.exponea.sdk.tracking
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import junit.framework.Assert.assertEquals

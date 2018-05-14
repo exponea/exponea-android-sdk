@@ -1,12 +1,12 @@
-package com.exponea.sdk
+package com.exponea.sdk.tracking
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.Payment
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

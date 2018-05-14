@@ -18,9 +18,10 @@ Using manual depedency injection the application aims to have every class tested
 - Code Coverage: [JaCoCo](https://github.com/jacoco/jacoco)
     ## Usage
         $ gradle detektCheck -- code analysis
-        $ gradle coverage -- code coverage
-        $ gradle  jacocoTestReport<BuildType> -- test reports
+        $ gradle  jacocoTestReport -- generate test reports and code coverage
         
+        Code coverage output: build/reports/jacocoTestReport/html/index.html
+        Test reporst: build/reports/tests/testDebugUnitTest/index.html
         
 
 ## 🔗 Useful links

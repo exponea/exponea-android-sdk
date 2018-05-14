@@ -8,6 +8,7 @@ import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 
+
 class MainFragment : BaseFragment() {
     override fun onCreateView(
             inflater: LayoutInflater,

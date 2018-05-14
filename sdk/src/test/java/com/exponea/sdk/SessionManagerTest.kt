@@ -18,6 +18,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class SessionManagerTest {
@@ -38,6 +39,9 @@ class SessionManagerTest {
         configuration.sessionTimeout = 2.0
 
         Exponea.init(context, configuration)
+
+        // disable auto tracking for testing purposes
+        Exponea.isAutomaticSessionTracking = false
 
         sm = Exponea.component.sessionManager
         prefs = Exponea.component.preferences
@@ -110,6 +114,37 @@ class SessionManagerTest {
         val newEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
         assertNotEquals(sessionEndTime, newEndTime)
         assert(sessionEndTime < newEndTime)
+
+    }
+
+
+    @Test
+    fun testStopTracking() {
+        val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.resume()
+
+        // Session wont be recorded until startSessionListenerCalled()
+        var sessionStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        assertEquals(-1L, sessionStartTime)
+
+        // Starting our listener
+        sm.startSessionListener()
+        controller.resume()
+        sessionStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        assertNotEquals(-1L, sessionStartTime)
+        // Listener's state saved in SP
+        assertTrue { prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, false) }
+
+        sm.stopSessionListener()
+        assertTrue { !prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, true) }
+
+        // App looses focus, but session's end won't be recorded
+        controller.pause()
+        assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L))
+
+        // As well as the session
+        controller.resume()
+        assertEquals(sessionStartTime, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
 
 
 

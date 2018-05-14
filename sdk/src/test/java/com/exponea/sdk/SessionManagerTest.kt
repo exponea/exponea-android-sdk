@@ -6,6 +6,8 @@ import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferences
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,6 +15,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
@@ -30,6 +33,9 @@ class SessionManagerTest {
         configuration.baseURL = "url"
         configuration.projectToken = "projectToken"
         configuration.authorization = "projectAuthorization"
+
+        //Set timeout a bit smaller for  testing purposes
+        configuration.sessionTimeout = 2.0
 
         Exponea.init(context, configuration)
 
@@ -55,6 +61,26 @@ class SessionManagerTest {
         assertNotEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
         assert(Date().time >= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
         assert(preTime <= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
+
+        var previousStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+
+        controller.pause()
+        controller.resume()
+        var newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+
+        // App regained focus too quickly, old session should be resumed
+        assertEquals(previousStartTime, newStartTime)
+
+        // Sleep to wait for the timeout to end
+        previousStartTime = newStartTime
+        controller.pause()
+        Thread.sleep(2003)
+        controller.resume()
+
+        // New sesion should be started
+        newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        assert(previousStartTime < newStartTime)
+
 
     }
 

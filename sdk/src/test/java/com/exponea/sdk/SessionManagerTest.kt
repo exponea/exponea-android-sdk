@@ -6,8 +6,6 @@ import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferences
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,7 +13,6 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -53,6 +50,8 @@ class SessionManagerTest {
     @Test
     fun testSessionStart() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+
+        // Since we have disabled automatic tracking, we have to set listeners manually
         sm.startSessionListener()
         assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
 
@@ -93,7 +92,7 @@ class SessionManagerTest {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         sm.startSessionListener()
 
-        //App getting focus
+        // App getting focus
         controller.resume()
 
         val preTime = Date().time
@@ -101,7 +100,7 @@ class SessionManagerTest {
         // App looses focus
         controller.pause()
 
-        //Checking that stop timestamp was successfully saved
+        // Checking that stop timestamp was successfully saved
         val sessionEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
 
         assertNotEquals(-1L, sessionEndTime)
@@ -111,6 +110,7 @@ class SessionManagerTest {
         controller.resume()
         controller.pause()
 
+        // New session end time
         val newEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
         assertNotEquals(sessionEndTime, newEndTime)
         assert(sessionEndTime < newEndTime)
@@ -135,6 +135,7 @@ class SessionManagerTest {
         // Listener's state saved in SP
         assertTrue { prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, false) }
 
+        // Stopping session listener
         sm.stopSessionListener()
         assertTrue { !prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, true) }
 
@@ -142,7 +143,7 @@ class SessionManagerTest {
         controller.pause()
         assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L))
 
-        // As well as the session
+        // As well as the session start, until we start listeners again
         controller.resume()
         assertEquals(sessionStartTime, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
 

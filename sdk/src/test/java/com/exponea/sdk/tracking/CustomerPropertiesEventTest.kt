@@ -5,14 +5,12 @@ import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
 import kotlinx.coroutines.experimental.runBlocking
-import okhttp3.mockwebserver.MockResponse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CustomerPropertiesEventTest {
@@ -45,7 +43,6 @@ class CustomerPropertiesEventTest {
 
     @Test
     fun testEventTracked() {
-
         // Track event
         Exponea.updateCustomerProperties(
                 customerIds = CustomerIds(cookie = "cookie"),
@@ -54,7 +51,33 @@ class CustomerPropertiesEventTest {
 
         // Checking if event was successfully tracked
         assertEquals(1, repo.all().size)
-
     }
+
+    @Test
+    fun testEventSend() {
+
+        // Track event
+        Exponea.updateCustomerProperties(
+                customerIds = CustomerIds(cookie = "cookie"),
+                properties = PropertiesList(hashMapOf("first_name" to "NewName"))
+        )
+
+        ExponeaMockServer.setResponseSuccess("tracking/track_event_success.json")
+
+        // Flush event and wait for result
+        runBlocking {
+            Exponea.flush()
+            Exponea.component.flushManager.onFlushFinishListener = {
+
+                // Checking that event was successfully sent
+                assertEquals(0, repo.all().size)
+            }
+        }
+
+        val result = ExponeaMockServer.getResult()
+        // TODO Assert real value, wrong endpoint so far
+        assertEquals("/track/v2/projects/projectToken/customers/events", result.path)
+    }
+
 
 }

@@ -17,7 +17,7 @@ It has been written 100% in Kotlin with ❤️
 
 ## 📦 Installation
 
-###Download
+### Download
 
 Download via Gradle:
 
@@ -49,7 +49,7 @@ Then you can start using all the amazing features we developed for you:
 - [Push Notification Events](./PUSH.md);
 - [Flush](./FLUSH.md)
 - [Fetch Data](./FETCH.md);
-- [Payments] (./PAYMENT.md)
+- [Payments](./PAYMENT.md)
 
 ## 📎 Dependencies
 

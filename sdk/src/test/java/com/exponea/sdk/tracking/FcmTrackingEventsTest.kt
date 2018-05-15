@@ -6,7 +6,6 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
-import junit.framework.Assert
 import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Before
 import org.junit.Test

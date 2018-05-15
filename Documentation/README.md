@@ -41,15 +41,20 @@ Check out our [sample project](https://github.com/Infinario/android-sdk) to try 
 
 To implement the Exponea SDK you must configure the SDK first:
 
-- [Configuration](./CONFIG.md);
+* [Configuration](./CONFIG.md);
 
 Then you can start using all the amazing features we developed for you:
 
-- [Track Events / Customer properties](./TRACK.md);
-- [Push Notification Events](./PUSH.md);
-- [Flush](./FLUSH.md)
-- [Fetch Data](./FETCH.md);
-- [Payments](./PAYMENT.md)
+* [Track Events / Customer properties](./TRACK.md);
+* [Push Notification Events](./PUSH.md);
+* [Flush](./FLUSH.md)
+* [Fetch Data](./FETCH.md);
+* [Payments](./PAYMENT.md)
+
+## 🔗 Useful links
+
+* [Exponea Developer Hub](https://developers.exponea.com)
+* [Exponea APP](https://app.exponea.com/login)
 
 ## 📎 Dependencies
 

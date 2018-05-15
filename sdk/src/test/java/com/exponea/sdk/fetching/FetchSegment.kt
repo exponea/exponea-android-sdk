@@ -49,7 +49,7 @@ class FetchSegment {
     }
 
     @Test
-    fun getCustomerId_ShouldSuccess() {
+    fun getSegment_ShouldSuccess() {
 
         // Set the response to success and json result.
         ExponeaMockServer.setResponseSuccess("fetching/segmentation_success.json")
@@ -73,13 +73,14 @@ class FetchSegment {
 
         val request = ExponeaMockServer.getResult()
 
+        // TODO assert real response
         assertEquals("/data/v2/projects/projectToken/customers/attributes", request.path)
         assertEquals(true, success)
-        assertEquals("Ricardo", value)
+        assertEquals("Segmentation", value)
     }
 
     @Test
-    fun getCustomerId_ShouldFailure() {
+    fun getSegment_ShouldFailure() {
 
         // Set the response to success and json result.
         ExponeaMockServer.setResponseError("fetching/segmentation_failure.json")
@@ -103,6 +104,8 @@ class FetchSegment {
         }
 
         val request = ExponeaMockServer.getResult()
+
+        // TODO assert real response
         assertEquals("/data/v2/projects/projectToken/customers/attributes", request.path)
         assertNotNull(error)
         assertEquals(null, value)

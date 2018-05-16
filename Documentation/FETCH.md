@@ -12,7 +12,7 @@ It's possible to get all the customer attributes you have sent to the Exponea AP
 fun fetchCustomerAttributes(
         customerAttributes: CustomerAttributes,
         onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-        onFailure: (String) -> Unit
+        onFailure: (Result<FetchError>) -> Unit
 )
 ```
 
@@ -29,10 +29,10 @@ val attributes = CustomerAttributes(
 Exponea.fetchCustomerAttributes(
         customerAttributes = attributes,
         onSuccess = {
-			// On success, the SDK will return a list of a CustomerAttributeModel object.
+			// SDK will return a list of a CustomerAttributeModel object.
         },
         onFailure = {
-			// On failuire, SDK will return a String with the error.
+			// SDK will return a FetchError object.
         }
 )
 ```
@@ -43,11 +43,7 @@ Export all the events for a specific customer.
 
 ```
 fun fetchCustomerEvents(
-        customerIds: CustomerIds,
-        eventTypes: ArrayList<String> = arrayListOf("page_view"),
-        order: String = "desc",
-        limit: Int = 3,
-        skip: Int = 100,
+        customerEvents: CustomerEvents,
         onFailure: (String) -> Unit,
         onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
 ) 
@@ -57,19 +53,19 @@ fun fetchCustomerEvents(
 
 ```
 // Preparing the data.
-val attributes = CustomerAttributes(
-        customerId = CustomerIds(registered = "john@doe.com"),
-        attributes = MutableList(hashMapOf(Pair("name", "John"))
+val events = CustomerEvents(
+        customerIds = CustomerIds(registered = "john@doe.com"),
+        eventTypes = mutableListOf("session_start", "payment")
 )
 
 // Call fetchCustomerEvents to get the customer attributes.
 Exponea.fetchCustomerEvents(
-        customerAttributes = attributes,
+        customerEvents = events,
         onSuccess = {
-			// On success, the SDK will return a array list of a CustomerEventModel object.
+			// SDK will return a array list of a CustomerEventModel object.
         },
         onFailure = {
-			// On failuire, SDK will return a String with the error.
+			// SDK will return a FetchError object.
         }
 )
 ```
@@ -110,10 +106,10 @@ Exponea.fetchRecommendation(
         customerIds = customerId,
         customerRecommendation = recommendation, 
         onSuccess = {
-			// On success, the SDK will return a list of a CustomerAttributeModel object.
+			// SDK will return a list of a CustomerAttributeModel object.
         },
         onFailure = {
-			// On failuire, SDK will return a String with the error.
+			// SDK will return a FetchError object.
         }
 )
 ```

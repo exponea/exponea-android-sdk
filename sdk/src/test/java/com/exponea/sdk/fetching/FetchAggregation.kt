@@ -3,10 +3,7 @@ package com.exponea.sdk.fetching
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.*
 import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -56,8 +53,8 @@ class FetchAggregation {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        success = false
-                        value = it
+                        success = it.success
+                        value = it.results.jsonBody
                     })
         }
 
@@ -76,7 +73,7 @@ class FetchAggregation {
 
         var success = false
         var value: String? = null
-        var error: String? = null
+        var error: FetchError? = null
         val customerIds = CustomerIds(cookie = "cookie")
         val attrs = CustomerAttributes(customerIds)
         attrs.withAggregation("aggregationId")
@@ -88,8 +85,8 @@ class FetchAggregation {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        success = false
-                        error = it
+                        success = it.success
+                        error = it.results
                     })
         }
 

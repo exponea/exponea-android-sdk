@@ -3,10 +3,7 @@ package com.exponea.sdk.fetching
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.*
 import kotlinx.coroutines.experimental.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -56,6 +53,7 @@ class FetchProperty {
 
         var success: Boolean? = null
         var value: String? = null
+        var error: FetchError? = null
 
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
@@ -65,8 +63,8 @@ class FetchProperty {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        success = false
-                        value = null
+                        error = it.results
+                        success = it.success
                     }
             )
         }
@@ -86,7 +84,7 @@ class FetchProperty {
 
         var success: Boolean? = null
         var value: String? = null
-        var error: String? = null
+        var error: FetchError? = null
 
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
@@ -96,8 +94,8 @@ class FetchProperty {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        error = it
-                        value = null
+                        error = it.results
+                        success = it.success
                     }
             )
         }

@@ -53,7 +53,7 @@ class FetchId {
 
         var success: Boolean? = null
         var value: String? = null
-
+        var error: FetchError? = null
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
             ExponeaMockApi.fetchCustomerId(attributes,
@@ -62,8 +62,9 @@ class FetchId {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        success = false
-                        value = null
+                        success = it.success
+                        error = it.results
+
                     }
             )
         }
@@ -83,7 +84,7 @@ class FetchId {
 
         var success: Boolean? = null
         var value: String? = null
-        var error: String? = null
+        var error: FetchError? = null
 
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
@@ -93,8 +94,8 @@ class FetchId {
                         value = it.results.first().value
                     },
                     onFailure = {
-                        error = it
-                        value = null
+                        error = it.results
+                        success = it.success
                     }
             )
         }

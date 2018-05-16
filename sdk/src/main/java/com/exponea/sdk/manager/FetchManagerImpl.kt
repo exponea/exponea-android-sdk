@@ -1,6 +1,5 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
@@ -101,7 +100,6 @@ class FetchManagerImpl(
                         },
                         onFailure = { _, ioException ->
                             Logger.e(this, "Fetch configuration Failed $ioException")
-                            ioException.printStackTrace()
                         }
                 )
     }
@@ -134,7 +132,6 @@ class FetchManagerImpl(
                         },
                         onFailure = { _, ioException ->
                             Logger.e(this, "Fetch configuration Failed $ioException")
-                            ioException.printStackTrace()
                         }
                 )
     }

@@ -64,7 +64,7 @@ class FcmTrackingEventsTest {
 
         // Check if event was added to db
         val event = repo.all().first()
-        assertEquals("push_delivered", event.item.type)
+        assertEquals("campaign", event.item.type)
         assertEquals(1, repo.all().size)
 
         ExponeaMockServer.setResponseSuccess("tracking/track_event_success.json")
@@ -74,6 +74,7 @@ class FcmTrackingEventsTest {
             Exponea.component.flushManager.onFlushFinishListener = {
                 assertEquals(0, repo.all().size)
                 val result = ExponeaMockServer.getResult()
+                println("dpen")
                 assertEquals("/track/v2/projects/projectToken/customers/events", result.path)
             }
             Exponea.flush()
@@ -93,7 +94,7 @@ class FcmTrackingEventsTest {
         // Check if event was added to db
 
         val event = repo.all().first()
-        assertEquals("push_clicked", event.item.type)
+        assertEquals("campaign", event.item.type)
         assertEquals(1, repo.all().size)
 
         ExponeaMockServer.setResponseSuccess("tracking/track_event_success.json")

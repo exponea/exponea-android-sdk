@@ -56,7 +56,6 @@ class EventTrackingActivity : AppCompatActivity() {
 
     private fun setUpEventTracking(event: String) {
         val userId = App.instance.userIdManager.uniqueUserID
-
         when (event)  {
             Constants.Events.EVENT_UPDATE_CUSTOMER -> {
                 Exponea.updateCustomerProperties(
@@ -66,8 +65,6 @@ class EventTrackingActivity : AppCompatActivity() {
             }
 
             Constants.Events.EVENT_TRACK_CUSTOMER -> {
-                Toast.makeText(this, "Tracking customer event", Toast.LENGTH_SHORT).show()
-                Log.d("UID", userId)
                 Exponea.trackCustomerEvent(
                         customerIds = CustomerIds(cookie = userId),
                         properties = PropertiesList(hashMapOf( Pair("name", "customerEventTracking"))),

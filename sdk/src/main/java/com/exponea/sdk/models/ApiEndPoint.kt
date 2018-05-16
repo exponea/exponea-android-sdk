@@ -30,7 +30,7 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
             EndPointName.TRACK_EVENTS                    -> "track/v2/projects/$splitterToken/customers/events"
             EndPointName.TOKEN_ROTATE                    -> "data/v2/$splitterToken/tokens/rotate"
             EndPointName.TOKEN_REVOKE                    -> "data/v2/$splitterToken/tokens/revoke"
-            EndPointName.CUSTOMERS_PROPERTY              -> "data/v2/$splitterToken/customers/property"
+            EndPointName.CUSTOMERS_PROPERTY              -> "track/v2/projects/$splitterToken/customers"
             EndPointName.CUSTOMERS_ID                    -> "data/v2/$splitterToken/customers/id"
             EndPointName.CUSTOMERS_SEGMENTATION          -> "data/v2/$splitterToken/customers/segmentation"
             EndPointName.CUSTOMERS_EXPRESSION            -> "data/v2/$splitterToken/customers/expression"

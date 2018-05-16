@@ -65,7 +65,7 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.authorization = authorizationToken
         configuration.projectToken = projectToken
 
-        // Set our coustomer id
+        // Set our customer id
         if (editTextCustomersIds.isValid()) {
             App.instance.userIdManager.uniqueUserID = customerIds
         }

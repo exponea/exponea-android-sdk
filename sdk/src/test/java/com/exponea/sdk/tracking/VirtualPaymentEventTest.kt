@@ -4,7 +4,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.Payment
+import com.exponea.sdk.models.PurchasedItem
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Before
@@ -45,8 +45,12 @@ class VirtualPaymentEventTest {
                 .setResponseCode(200)
 
         mockServer.enqueue(mockResponse)
-        val payment = Payment("USD", 200.3, "Item", "Type")
-        Exponea.trackPayment(CustomerIds(cookie = "cookie"), payment = payment)
+        val payment = PurchasedItem(
+                currency = "USD",
+                value = 200.3,
+                productId = "Item",
+                productTitle = "Speed Boost", paymentSystem = "Sys")
+        Exponea.trackPayment(CustomerIds(cookie = "cookie"), purchasedItem = payment)
         Exponea.flush()
 
         val request = mockServer.takeRequest()

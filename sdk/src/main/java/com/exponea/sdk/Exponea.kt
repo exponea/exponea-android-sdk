@@ -381,12 +381,12 @@ object Exponea {
 
     fun trackPayment(customerIds: CustomerIds,
                      timestamp: Long = Date().time,
-                     payment: Payment) {
+                     purchasedItem: PurchasedItem) {
         trackEvent(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
                 customerId = customerIds,
-                properties = payment.toHashMap(),
+                properties = purchasedItem.toHashMap(),
                 route = Route.TRACK_EVENTS
         )
     }

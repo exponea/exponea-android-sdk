@@ -3,6 +3,7 @@ package com.exponea.sdk
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.Route
 import io.paperdb.Paper
 import org.junit.After
 import org.junit.Before
@@ -29,7 +30,8 @@ class ExponeaDatabaseTest {
     )
 
     lateinit var db : ExponeaDatabase<DatabaseStorageObject<Person>>
-    val mockData = DatabaseStorageObject(item = Person("firstname", "secondname"), projectId = MOCK_PROJECT_ID)
+    val mockData = DatabaseStorageObject(item = Person("firstname", "secondname"), projectId = MOCK_PROJECT_ID,
+            route = Route.TRACK_EVENTS)
 
     @Before
     fun init() {

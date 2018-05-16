@@ -2,12 +2,9 @@ package com.exponea.sdk
 
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.manager.FlushManager
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.Payment
 import com.exponea.sdk.repository.EventRepository
-import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

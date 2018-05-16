@@ -374,9 +374,9 @@ object Exponea {
         component.eventManager.addEventToQueue(event, route)
     }
 
-     /*
+     /**
      * Tracks payment manually
-     * @param payment represents payment details
+     * @param purchasedItem - represents payment details
      */
 
     fun trackPayment(customerIds: CustomerIds,

@@ -351,7 +351,7 @@ object Exponea {
      * Initializes payments listener
      */
     private fun trackInAppPurchase() {
-        if (this.configuration.automaticSessionTracking) {
+        if (this.configuration.automaticPaymentTracking) {
             // Add the observers when the automatic session tracking is true.
             this.component.iapManager.configure()
             this.component.iapManager.startObservingPayments()

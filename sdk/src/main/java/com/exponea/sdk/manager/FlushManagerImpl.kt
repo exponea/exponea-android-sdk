@@ -42,7 +42,11 @@ class FlushManagerImpl(
         when(databaseObject.route) {
             Route.TRACK_EVENTS -> trackEvent(databaseObject.projectId, databaseObject)
             Route.TRACK_CUSTOMERS -> trackCustomer(databaseObject.projectId, databaseObject)
-            else -> return
+            Route.CUSTOMERS_PROPERTY -> trackCustomer(databaseObject.projectId, databaseObject)
+            else -> {
+                Logger.e(this, "Couldn't find properly route")
+                return
+            }
         }
     }
 

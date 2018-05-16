@@ -182,6 +182,11 @@ object Exponea {
     }
 
 
+    /**
+     * Fetch events for a specific customer
+     * @param onFailure - Method will be called if there was an error
+     * @param onSuccess - this method will be called when data is ready
+     */
     fun fetchCustomerEvents(customerEvents: CustomerEvents,
                             onFailure: (Result<FetchError>) -> Unit,
                             onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
@@ -195,6 +200,11 @@ object Exponea {
     }
 
 
+    /**
+     * Fetch recommendations for a specific customer
+     * @param onFailure - Method will be called if there was an error
+     * @param onSuccess - this method will be called when data is ready
+     */
     fun fetchRecommendation(customerIds: CustomerIds,
                             customerRecommendation: CustomerRecommendation,
                             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
@@ -336,6 +346,10 @@ object Exponea {
         }
 
     }
+
+    /**
+     * Initializes payments listener
+     */
     private fun trackInAppPurchase() {
         if (this.configuration.automaticSessionTracking) {
             // Add the observers when the automatic session tracking is true.

@@ -182,17 +182,13 @@ object Exponea {
     }
 
 
-    fun fetchCustomerEvents(customerIds: CustomerIds,
-                            eventTypes: ArrayList<String> = arrayListOf("page_view"),
-                            order: String = "desc",
-                            limit: Int = 3,
-                            skip: Int = 100,
+    fun fetchCustomerEvents(customerEvents: CustomerEvents,
                             onFailure: (Result<FetchError>) -> Unit,
                             onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
                             ) {
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,
-                customerEvents = CustomerEvents(customerIds, eventTypes, order, limit, skip),
+                customerEvents = customerEvents,
                 onFailure = onFailure,
                 onSuccess = onSuccess
         )

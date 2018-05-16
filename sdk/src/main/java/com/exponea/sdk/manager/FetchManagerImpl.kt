@@ -14,7 +14,7 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
     override fun fetchCustomerAttributes(projectToken: String,
                                          attributes: CustomerAttributes,
                                          onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                                         onFailure: (String) -> Unit) {
+                                         onFailure: (Result<FetchError>) -> Unit) {
 
         api.postFetchAttributes(projectToken, attributes).enqueue(
                 onResponse = {_, response: Response ->
@@ -25,15 +25,17 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
                         val result = gson.fromJson<Result<List<CustomerAttributeModel>>>(jsonBody, type)
                         onSuccess(result)
                     } else {
-                        Logger.e(this, "Fetch Failed: ${response.message()}\n" +
-                                "Body: $jsonBody")
-                        onFailure("Fetch failed: ${response.message()}\n" +
-                                "Body: $jsonBody")
+                        val error = FetchError(jsonBody, response.message())
+                        val result  = Result(false, results = error)
+                        Logger.e(this, "Fetch Failed: $result")
+                        onFailure(result)
                     }
                 },
                 onFailure = {_, exception ->
-                    Logger.e(this, "Fetch failed: exception caught($exception)")
-                    onFailure(exception.toString())
+                    val error = FetchError(null, exception.toString())
+                    val result = Result(false, error)
+                    Logger.e(this, "Fetch failed: $result", exception)
+                    onFailure(result)
                 }
         )
     }
@@ -41,7 +43,7 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
     override fun fetchCustomerEvents(projectToken: String,
                                      customerEvents: CustomerEvents,
                                      onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
-                                     onFailure: (String) -> Unit) {
+                                     onFailure: (Result<FetchError>) -> Unit) {
 
         api.postFetchEvents(projectToken, customerEvents).enqueue(
                 onResponse = {_, response: Response ->
@@ -52,15 +54,17 @@ class FetchManagerImpl(val api: ExponeaService, val gson: Gson) : FetchManager {
                         onSuccess(result)
 
                     } else {
-                        Logger.e(this, "Failed to fetch events: ${response.message()}\n" +
-                                "Body: $jsonBody")
-                        onFailure("Failed to fetch events: ${response.message()}\n" +
-                                "Body: $jsonBody")
+                        val error = FetchError(jsonBody, response.message())
+                        val result  = Result(false, results = error)
+                        Logger.e(this, "Fetch Failed: $result")
+                        onFailure(result)
                     }
                 },
                 onFailure = {_, exception: IOException ->
-                    Logger.e(this, "Failed to fetch events", exception)
-                    onFailure(exception.toString())
+                    val error = FetchError(null, exception.toString())
+                    val result = Result(false, error)
+                    Logger.e(this, "Failed to fetch events: $result", exception)
+                    onFailure(result)
                 }
         )
     }

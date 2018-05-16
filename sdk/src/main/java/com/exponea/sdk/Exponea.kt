@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.Result
-import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
@@ -198,7 +197,7 @@ object Exponea {
      */
     fun fetchCustomerAttributes(customerAttributes: CustomerAttributes,
                                 onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                                onFailure: (String) -> Unit) {
+                                onFailure: (Result<FetchError>) -> Unit) {
 
        component.fetchManager.fetchCustomerAttributes(
                projectToken = configuration.projectToken,
@@ -214,7 +213,7 @@ object Exponea {
                             order: String = "desc",
                             limit: Int = 3,
                             skip: Int = 100,
-                            onFailure: (String) -> Unit,
+                            onFailure: (Result<FetchError>) -> Unit,
                             onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
                             ) {
         component.fetchManager.fetchCustomerEvents(
@@ -229,7 +228,7 @@ object Exponea {
     fun fetchRecommendation(customerIds: CustomerIds,
                             customerRecommendation: CustomerRecommendation,
                             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                            onFailure: (String) -> Unit) {
+                            onFailure: (Result<FetchError>) -> Unit) {
 
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,

@@ -35,11 +35,5 @@ class MainFragment : BaseFragment() {
                         Pair("property", "first_name" as Any)
                 )
         )
-
-//        Exponea.fetchCustomerAttributes(
-//                attrs,
-//                onFailure = {Log.d("Call", it)},
-//                onSuccess = {Log.d("Call", it.toString())}
-//        )
     }
 }

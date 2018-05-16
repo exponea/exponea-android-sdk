@@ -413,8 +413,11 @@ object Exponea {
                 deviceType = component.deviceManager.getDeviceType()
         )
 
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+
         trackEvent(
-                eventType = "installation",
+                customerId = CustomerIds(cookie = uuid),
+                eventType = Constants.EventTypes.installation,
                 properties = device.toHashMap(),
                 route = Route.TRACK_EVENTS
         )

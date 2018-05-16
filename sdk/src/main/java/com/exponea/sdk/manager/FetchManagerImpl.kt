@@ -75,7 +75,7 @@ class FetchManagerImpl(
     override fun fetchBannerConfiguration(projectToken: String,
                                           customerIds: CustomerIds,
                                           onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
-                                          onFailure: (String) -> Unit) {
+                                          onFailure: (Result<FetchError>) -> Unit) {
 
         api.getBannerConfiguration(projectToken)
                 .enqueue(
@@ -90,16 +90,20 @@ class FetchManagerImpl(
                                     onSuccess(result)
                                 } catch (e: Exception) {
                                     // Return failure when find any exception while trying to deserialize the response.
-                                    Logger.e(this, "Failed to deserialize banner configuration: ${e.localizedMessage}")
-                                    onFailure("Failed to deserialize banner: ${e.localizedMessage}")
+                                    val error = FetchError(jsonBody, e.localizedMessage)
+                                    Logger.e(this, "Failed to deserialize banner configuration: $error")
+                                    onFailure(Result(false, error))
                                 }
                             } else {
-                                Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
-                                onFailure("Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
+                                val error = FetchError(jsonBody, response.message())
+                                Logger.e(this, "Failed to fetch events: $error")
+                                onFailure(Result(false, error))
                             }
                         },
                         onFailure = { _, ioException ->
+                            val error = FetchError(null, ioException.localizedMessage)
                             Logger.e(this, "Fetch configuration Failed $ioException")
+                            onFailure(Result(false, error))
                         }
                 )
     }
@@ -107,7 +111,7 @@ class FetchManagerImpl(
     override fun fetchBanner(projectToken: String,
                              bannerConfig: Banner,
                              onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
-                             onFailure: (String) -> Unit) {
+                             onFailure: (Result<FetchError>) -> Unit) {
 
         api.postFetchBanner(projectToken, bannerConfig)
                 .enqueue(
@@ -122,16 +126,20 @@ class FetchManagerImpl(
                                     onSuccess(result)
                                 } catch (e: Exception) {
                                     // Return failure when find any exception while trying to deserialize the response.
-                                    Logger.e(this, "Failed to deserialize banner: ${e.localizedMessage}")
-                                    onFailure("Failed to deserialize banner: ${e.localizedMessage}")
+                                    val error = FetchError(jsonBody, e.localizedMessage)
+                                    Logger.e(this, "Failed to deserialize banner: $error")
+                                    onFailure(Result(false, error))
                                 }
                             } else {
-                                Logger.e(this, "Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
-                                onFailure("Failed to fetch events: ${response.message()}\n" + "Body: $jsonBody")
+                                val error = FetchError(jsonBody, response.message())
+                                Logger.e(this, "Failed to fetch events: $error")
+                                onFailure(Result(false, error))
                             }
                         },
                         onFailure = { _, ioException ->
-                            Logger.e(this, "Fetch configuration Failed $ioException")
+                            val error = FetchError(null, ioException.localizedMessage)
+                            Logger.e(this, "Fetch configuration Failed: $error", ioException)
+                            onFailure(Result(false, error))
                         }
                 )
     }

@@ -44,7 +44,7 @@ internal class PersonalizationManagerImpl(
             projectToken: String,
             customerIds: CustomerIds,
             onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
-            onFailure: (String) -> Unit) {
+            onFailure: (Result<FetchError>) -> Unit) {
 
         Exponea.component.fetchManager.fetchBannerConfiguration(
                 projectToken = projectToken,

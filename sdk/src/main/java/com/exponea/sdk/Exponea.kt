@@ -127,7 +127,7 @@ object Exponea {
         trackEvent(
                 customerId = customerIds,
                 properties = properties.toHashMap(),
-                route = Route.TRACK_CUSTOMERS
+                route = Route.CUSTOMERS_PROPERTY
         )
     }
 

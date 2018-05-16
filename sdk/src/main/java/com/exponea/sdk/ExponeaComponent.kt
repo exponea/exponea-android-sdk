@@ -42,4 +42,5 @@ class ExponeaComponent(
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
+    internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
 }

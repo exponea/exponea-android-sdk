@@ -3,11 +3,13 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.*
+
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -41,6 +43,26 @@ object Exponea {
         }
 
     /**
+     * Defines session timeout considered for app usage
+     */
+
+    var sessionTimeout: Double
+        get() = configuration.sessionTimeout
+        set(value) {
+            configuration.sessionTimeout = value
+        }
+
+    /**
+     * Defines if automatic session tracking is enabled
+     */
+    var isAutomaticSessionTracking: Boolean
+        get() = configuration.automaticSessionTracking
+        set(value) {
+            configuration.automaticSessionTracking = value
+            startSessionTracking(value)
+        }
+
+    /**
      * Check if our library has been properly initialized
      */
 
@@ -57,11 +79,9 @@ object Exponea {
         get() {
             return configuration.automaticPushNotification
         }
-
     /**
      * Set which level the debugger should output log messages
      */
-
     var loggerLevel: Logger.Level
         get () = Logger.level
         set(value) {
@@ -271,6 +291,12 @@ object Exponea {
         // Track In-App purchase
         trackInAppPurchase()
 
+        // Initialize session observer
+        configuration.automaticSessionTracking = component
+                .preferences.getBoolean(SessionManagerImpl
+                .PREF_SESSION_AUTO_TRACK, true)
+        startSessionTracking(configuration.automaticSessionTracking)
+
     }
 
     private fun onFlushPeriodChanged() {
@@ -302,6 +328,18 @@ object Exponea {
         component.serviceManager.stop()
     }
 
+    /**
+     * Initializes session listener
+     * @param enableSessionTracking - determines sdk tracking session's state
+     */
+    private fun startSessionTracking(enableSessionTracking: Boolean) {
+        if (enableSessionTracking) {
+            component.sessionManager.startSessionListener()
+        } else {
+            component.sessionManager.stopSessionListener()
+        }
+
+    }
     private fun trackInAppPurchase() {
         if (this.configuration.automaticSessionTracking) {
             // Add the observers when the automatic session tracking is true.
@@ -314,6 +352,7 @@ object Exponea {
     }
 
     /**
+<<<<<<< HEAD
      * Send a tracking event to Exponea
      */
 
@@ -338,6 +377,23 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event, route)
+    }
+
+     /*
+     * Tracks payment manually
+     * @param payment represents payment details
+     */
+
+    fun trackPayment(customerIds: CustomerIds,
+                     timestamp: Long = Date().time,
+                     payment: Payment) {
+        trackEvent(
+                eventType = Constants.EventTypes.payment,
+                timestamp = timestamp,
+                customerId = customerIds,
+                properties = payment.toHashMap(),
+                route = Route.TRACK_EVENTS
+        )
     }
 
     /**

@@ -39,7 +39,7 @@ class ConfigurationTest {
     @Test
     fun InstantiateSDKWithoutConfig_ShouldFail() {
         initializeExponeaWithoutConfig()
-        assertEquals(Exponea.isInitialized, false)
+        assertEquals(Exponea.isInitialized, true)
     }
 
     @Test

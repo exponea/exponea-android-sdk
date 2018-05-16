@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply from: '../jacoco.gradle'
 
 android {
     compileSdkVersion 27
@@ -16,6 +17,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            testCoverageEnabled  true
         }
     }
 
@@ -53,4 +57,11 @@ dependencies {
 
     androidTestImplementation 'com.android.support.test:runner:1.0.2-beta1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }

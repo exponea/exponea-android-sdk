@@ -2,6 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.2.40'
+    ext.jacoco_version = '0.8.1'
 
     repositories {
         google()
@@ -9,8 +10,22 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+        classpath "org.jacoco:org.jacoco.core:$jacoco_version"
         classpath 'com.android.tools.build:gradle:3.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "io.gitlab.arturbosch.detekt" version "1.0.0.RC6-3"
+}
+
+detekt {
+    version = "1.0.0.RC6-3"
+    profile("main") {
+        input = "$projectDir/sdk/src/main/java"
+        config = "$projectDir/default-detekt-config.yml"
+        filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
     }
 }
 

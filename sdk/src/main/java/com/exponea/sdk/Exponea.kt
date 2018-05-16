@@ -171,7 +171,7 @@ object Exponea {
      */
     fun fetchCustomerAttributes(customerAttributes: CustomerAttributes,
                                 onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                                onFailure: (String) -> Unit) {
+                                onFailure: (Result<FetchError>) -> Unit) {
 
        component.fetchManager.fetchCustomerAttributes(
                projectToken = configuration.projectToken,
@@ -187,7 +187,7 @@ object Exponea {
                             order: String = "desc",
                             limit: Int = 3,
                             skip: Int = 100,
-                            onFailure: (String) -> Unit,
+                            onFailure: (Result<FetchError>) -> Unit,
                             onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
                             ) {
         component.fetchManager.fetchCustomerEvents(
@@ -202,7 +202,7 @@ object Exponea {
     fun fetchRecommendation(customerIds: CustomerIds,
                             customerRecommendation: CustomerRecommendation,
                             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                            onFailure: (String) -> Unit) {
+                            onFailure: (Result<FetchError>) -> Unit) {
 
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
@@ -352,7 +352,6 @@ object Exponea {
     }
 
     /**
-<<<<<<< HEAD
      * Send a tracking event to Exponea
      */
 

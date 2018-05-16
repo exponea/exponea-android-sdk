@@ -36,10 +36,10 @@ class MainFragment : BaseFragment() {
                 )
         )
 
-        Exponea.fetchCustomerAttributes(
-                attrs,
-                onFailure = {Log.d("Call", it)},
-                onSuccess = {Log.d("Call", it.toString())}
-        )
+//        Exponea.fetchCustomerAttributes(
+//                attrs,
+//                onFailure = {Log.d("Call", it)},
+//                onSuccess = {Log.d("Call", it.toString())}
+//        )
     }
 }

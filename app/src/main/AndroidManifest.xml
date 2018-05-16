@@ -22,7 +22,10 @@
             android:label="@string/title_activity_event_tracking"
             android:theme="@style/AppTheme.NoActionBar"/>
 
-        <activity android:name=".view.AuthenticationActivity"/>
+        <activity
+            android:screenOrientation="portrait"
+            android:name=".view.AuthenticationActivity"
+            />
 
     </application>
 

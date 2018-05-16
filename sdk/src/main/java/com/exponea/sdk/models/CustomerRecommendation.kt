@@ -16,7 +16,7 @@ data class CustomerRecommendation(
                         Pair("size", size),
                         Pair("strategy", strategy),
                         Pair("consider_known_items", knowItems),
-                        Pair("anit", anti),
+                        Pair("anti", anti),
                         Pair("items", items)
                 )
         }

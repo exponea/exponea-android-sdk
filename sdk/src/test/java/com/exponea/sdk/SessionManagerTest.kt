@@ -28,13 +28,11 @@ class SessionManagerTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        //val server = MockWebServer()
 
         @BeforeClass @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            //configuration.baseURL = server.url("/").toString()
             configuration.sessionTimeout = 2.0
         }
     }

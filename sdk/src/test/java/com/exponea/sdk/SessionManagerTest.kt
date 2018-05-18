@@ -1,12 +1,18 @@
 package com.exponea.sdk
 
 import android.app.Activity
+import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.preferences.ExponeaPreferences
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.AfterClass
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -20,31 +26,33 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class SessionManagerTest {
 
+    companion object {
+        val configuration = ExponeaConfiguration()
+        //val server = MockWebServer()
+
+        @BeforeClass @JvmStatic
+        fun setup() {
+            configuration.projectToken = "TestTokem"
+            configuration.authorization = "TestBasicAuthentication"
+            //configuration.baseURL = server.url("/").toString()
+            configuration.sessionTimeout = 2.0
+        }
+    }
+
     private lateinit var sm: SessionManager
     private lateinit var prefs: ExponeaPreferences
 
-
     @Before
-    fun init () {
-        val context = RuntimeEnvironment.application.applicationContext
-        val configuration = ExponeaConfiguration()
-        configuration.baseURL = "url"
-        configuration.projectToken = "projectToken"
-        configuration.authorization = "projectAuthorization"
+    fun prepareForTest() {
 
-        //Set timeout a bit smaller for  testing purposes
-        configuration.sessionTimeout = 2.0
+        val context = RuntimeEnvironment.application
 
         Exponea.init(context, configuration)
-
-        // disable auto tracking for testing purposes
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.isAutomaticSessionTracking = false
 
         sm = Exponea.component.sessionManager
         prefs = Exponea.component.preferences
-        Exponea.flushMode = FlushMode.MANUAL
-
-
     }
 
     @Test
@@ -83,8 +91,6 @@ class SessionManagerTest {
         // New sesion should be started
         newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
         assert(previousStartTime < newStartTime)
-
-
     }
 
     @Test
@@ -114,9 +120,7 @@ class SessionManagerTest {
         val newEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
         assertNotEquals(sessionEndTime, newEndTime)
         assert(sessionEndTime < newEndTime)
-
     }
-
 
     @Test
     fun testStopTracking() {
@@ -146,9 +150,5 @@ class SessionManagerTest {
         // As well as the session start, until we start listeners again
         controller.resume()
         assertEquals(sessionStartTime, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
-
-
-
     }
-
 }

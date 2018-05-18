@@ -1,11 +1,9 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CustomerAttributeModel
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.FetchError
-import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.*
 import kotlinx.coroutines.experimental.delay
+import java.util.*
 
 object ExponeaMockApi {
 
@@ -28,6 +26,11 @@ object ExponeaMockApi {
                 onSuccess = onSuccess,
                 onFailure = onFailure
         )
+        delay(2000L)
+    }
+
+    suspend fun flush() {
+        Exponea.flush()
         delay(2000L)
     }
 

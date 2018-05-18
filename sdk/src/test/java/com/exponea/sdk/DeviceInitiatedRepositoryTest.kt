@@ -28,5 +28,4 @@ class DeviceInitiatedRepositoryTest {
         assertEquals(true, repo.get())
     }
 
-
 }

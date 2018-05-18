@@ -1,67 +1,76 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.PurchasedItem
-import okhttp3.mockwebserver.MockResponse
+import com.exponea.sdk.manager.ExponeaMockApi
+import com.exponea.sdk.manager.ExponeaMockServer
+import com.exponea.sdk.models.*
+import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class VirtualPaymentEventTest {
 
-    val mockServer = MockWebServer()
-
-    @Before
-    fun setup() {
-        val mockServerAddress = setupWebServer()
-
-        println("mockServerAddress: $mockServerAddress")
-
-        val context = RuntimeEnvironment.application
-
+    companion object {
         val configuration = ExponeaConfiguration()
-        configuration.baseURL = mockServerAddress
-        configuration.projectToken = "projectToken"
-        configuration.authorization = "projectAuthorization"
-
-        Exponea.init(context, configuration)
-
-        Exponea.flushMode = FlushMode.MANUAL
-
-    }
-
-    @Test
-    fun sendPaymentEvent_ShouldPass() {
-        val mockResponse = MockResponse()
-                .setBody("")
-                .setResponseCode(200)
-
-        mockServer.enqueue(mockResponse)
+        val server = MockWebServer()
+        val customerIds = CustomerIds(registered = "john@doe.com")
         val payment = PurchasedItem(
                 currency = "USD",
                 value = 200.3,
                 productId = "Item",
-                productTitle = "Speed Boost", paymentSystem = "Sys")
-        Exponea.trackPayment(CustomerIds(cookie = "cookie"), purchasedItem = payment)
-        Exponea.flush()
+                productTitle = "Speed Boost",
+                paymentSystem = "Sys"
+        )
 
-        val request = mockServer.takeRequest()
-        assertEquals("/track/v2/projects/projectToken/customers/events", request.path)
-        assertEquals(request.getHeader("Authorization"), "projectAuthorization")
+        @BeforeClass @JvmStatic
+        fun setup() {
+            configuration.projectToken = "TestTokem"
+            configuration.authorization = "TestBasicAuthentication"
+            configuration.baseURL = server.url("/").toString()
+            configuration.maxTries = 10
+        }
 
+        @AfterClass
+        fun tearDown() {
+            server.shutdown()
+        }
     }
 
+    @Before
+    fun prepareForTest() {
 
-    private fun setupWebServer(): String {
-        mockServer.start()
-        return mockServer.url("/").toString()
+        val context = RuntimeEnvironment.application
+
+        Exponea.init(context, configuration)
+        Exponea.flushMode = FlushMode.MANUAL
     }
+
+    @Test
+    fun sendPaymentEvent_ShouldPass() {
+
+        // Set the response to success and json result.
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
+
+        Exponea.trackPayment(
+                customerIds = customerIds,
+                purchasedItem = payment
+        )
+
+        // Run blocking with coroutine to get the values from the async function.
+        runBlocking {
+            ExponeaMockApi.flush()
+        }
+
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+
+        assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
+        assertEquals(request.getHeader("Authorization"), "TestBasicAuthentication")
+    }
+
 }

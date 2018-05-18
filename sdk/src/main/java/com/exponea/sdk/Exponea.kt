@@ -278,6 +278,23 @@ object Exponea {
         )
     }
 
+    /**
+     * Tracks payment manually
+     * @param purchasedItem - represents payment details
+     */
+
+    fun trackPayment(customerIds: CustomerIds,
+                     timestamp: Long = Date().time,
+                     purchasedItem: PurchasedItem) {
+        trackEvent(
+                eventType = Constants.EventTypes.payment,
+                timestamp = timestamp,
+                customerId = customerIds,
+                properties = purchasedItem.toHashMap(),
+                route = Route.TRACK_EVENTS
+        )
+    }
+
     // Private Helpers
 
     /**
@@ -386,23 +403,6 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event, route)
-    }
-
-     /**
-     * Tracks payment manually
-     * @param purchasedItem - represents payment details
-     */
-
-    fun trackPayment(customerIds: CustomerIds,
-                     timestamp: Long = Date().time,
-                     purchasedItem: PurchasedItem) {
-        trackEvent(
-                eventType = Constants.EventTypes.payment,
-                timestamp = timestamp,
-                customerId = customerIds,
-                properties = purchasedItem.toHashMap(),
-                route = Route.TRACK_EVENTS
-        )
     }
 
     /**

@@ -1,34 +1,48 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
 import kotlinx.coroutines.experimental.runBlocking
-import org.junit.Before
-import org.junit.Test
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class CustomerPropertiesEventTest {
 
+    companion object {
+        val configuration = ExponeaConfiguration()
+        val customerIds = CustomerIds(registered = "john@doe.com")
+        val properties = PropertiesList(hashMapOf("first_name" to "NewName"))
+        val server = MockWebServer()
+
+        @BeforeClass @JvmStatic
+        fun setup() {
+            configuration.projectToken = "TestTokem"
+            configuration.authorization = "TestBasicAuthentication"
+            configuration.baseURL = server.url("/").toString()
+            configuration.maxTries = 10
+        }
+
+        @AfterClass
+        fun tearDown() {
+            server.shutdown()
+        }
+    }
+
     private lateinit var repo: EventRepository
 
     @Before
-    fun init() {
-        ExponeaMockServer.setUp()
+    fun prepareForTest() {
 
         val context = RuntimeEnvironment.application
-
-        val configuration = ExponeaConfiguration()
-        configuration.baseURL = ExponeaMockServer.address
-        configuration.projectToken = "projectToken"
-        configuration.authorization = "projectAuthorization"
-
-        configuration.maxTries = 10
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL
@@ -37,16 +51,14 @@ class CustomerPropertiesEventTest {
 
         // Clean event repository for testing purposes
         repo.clear()
-
     }
 
-
     @Test
-    fun testEventTracked() {
+    fun testEventTracked_ShouldSuccess() {
         // Track event
         Exponea.updateCustomerProperties(
-                customerIds = CustomerIds(cookie = "cookie"),
-                properties = PropertiesList(hashMapOf("first_name" to "NewName"))
+                customerIds = customerIds,
+                properties = properties
         )
 
         // Checking if event was successfully tracked
@@ -54,30 +66,27 @@ class CustomerPropertiesEventTest {
     }
 
     @Test
-    fun testEventSend() {
+    fun testEventSend_ShoudSuccess() {
 
         // Track event
         Exponea.updateCustomerProperties(
-                customerIds = CustomerIds(cookie = "cookie"),
-                properties = PropertiesList(hashMapOf("first_name" to "NewName"))
+                customerIds = customerIds,
+                properties = properties
         )
 
-        ExponeaMockServer.setResponseSuccess("tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        Exponea.flush()
 
         // Flush event and wait for result
         runBlocking {
-            Exponea.flush()
+            ExponeaMockApi.flush()
             Exponea.component.flushManager.onFlushFinishListener = {
-
                 // Checking that event was successfully sent
                 assertEquals(0, repo.all().size)
             }
         }
 
-        val result = ExponeaMockServer.getResult()
-        // TODO Assert real value, wrong endpoint so far
-        assertEquals("/track/v2/projects/projectToken/customers/events", result.path)
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+        assertEquals("/track/v2/projects/TestTokem/customers", request.path)
     }
-
-
 }

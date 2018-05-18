@@ -17,8 +17,6 @@ data class CustomerAttributes(
         const val TYPE_PREDICTION = "prediction"
         const val TYPE_SEGMENTATION = "segmentation"
         private const val id = "id"
-
-
     }
 
     /**
@@ -49,7 +47,7 @@ data class CustomerAttributes(
      * Add expression to the requested attributes
      * @param expressionId - id of the expression you want to retrieve
      */
-    fun wishExpression(expressionId: String) {
+    fun withExpression(expressionId: String) {
         addAttribute(AttributeTypes.EXPRESSION, expressionId)
     }
 
@@ -68,7 +66,6 @@ data class CustomerAttributes(
     fun withPrediction(predictionId: String) {
         addAttribute(AttributeTypes.PREDICTION, predictionId)
     }
-
 
     /**
      * @param types - Requested attribute type

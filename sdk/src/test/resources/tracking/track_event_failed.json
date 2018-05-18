@@ -1,1 +1,6 @@
-{"success": false}
+{
+  "errors": [
+    "Field 'event_type' is required."
+  ],
+  "success": false
+}

@@ -5,58 +5,64 @@ import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.*
 import kotlinx.coroutines.experimental.runBlocking
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class FetchSegment {
 
-    val customerIds: CustomerIds = CustomerIds(registered = "rito@nodesagency.com")
-    var attributes: CustomerAttributes = CustomerAttributes(customerIds)
+    companion object {
+        val configuration = ExponeaConfiguration()
+        val customerIds = CustomerIds(registered = "john@doe.com")
+        val attrs = CustomerAttributes(customerIds)
+        val server = MockWebServer()
 
-    // Start the mockserver and set the exponea api configuration.
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            configuration.projectToken = "TestTokem"
+            configuration.authorization = "TestBasicAuthentication"
+            configuration.baseURL = server.url("/").toString()
+
+            attrs.withSegmentation("SegmentationId")
+        }
+
+        @AfterClass
+        fun tearDown() {
+            server.shutdown()
+        }
+    }
+
     @Before
-    public fun setup() {
-
-        ExponeaMockServer.setUp()
+    fun prepareForTest() {
 
         val context = RuntimeEnvironment.application
 
-        val configuration = ExponeaConfiguration()
-        configuration.baseURL = ExponeaMockServer.address
-        configuration.projectToken = "projectToken"
-        configuration.authorization = "projectAuthorization"
-
         Exponea.init(context, configuration)
-
         Exponea.flushMode = FlushMode.MANUAL
-
-        attributes.withProperty("first_name")
-    }
-
-    @After
-    public fun tearDown() {
-        //ExponeaMockServer.shutDown()
     }
 
     @Test
     fun getSegment_ShouldSuccess() {
 
         // Set the response to success and json result.
-        ExponeaMockServer.setResponseSuccess("fetching/segmentation_success.json")
+        ExponeaMockServer.setResponseSuccess(server,"fetching/segmentation_success.json")
 
         var success: Boolean? = null
         var value: String? = null
         var error: FetchError? = null
+
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
-            ExponeaMockApi.fetchCustomerId(attributes,
+            ExponeaMockApi.fetchCustomerId(
+                    attributes = attrs,
                     onSuccess = {
                         success = it.results.first().success
                         value = it.results.first().value
@@ -68,19 +74,19 @@ class FetchSegment {
             )
         }
 
-        val request = ExponeaMockServer.getResult()
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
 
-        // TODO assert real response
-        assertEquals("/data/v2/projects/projectToken/customers/attributes", request.path)
+        assertEquals("/data/v2/projects/TestTokem/customers/attributes", request.path)
         assertEquals(true, success)
         assertEquals("Segmentation", value)
+        assertNull(error)
     }
 
     @Test
     fun getSegment_ShouldFailure() {
 
         // Set the response to success and json result.
-        ExponeaMockServer.setResponseError("fetching/segmentation_failure.json")
+        ExponeaMockServer.setResponseError(server,"fetching/segmentation_failure.json")
 
         var success: Boolean? = null
         var value: String? = null
@@ -88,7 +94,8 @@ class FetchSegment {
 
         // Run blocking with coroutine to get the values from the async function.
         runBlocking {
-            ExponeaMockApi.fetchCustomerId(attributes,
+            ExponeaMockApi.fetchCustomerId(
+                    attributes = attrs,
                     onSuccess = {
                         success = it.results.first().success
                         value = it.results.first().value
@@ -100,11 +107,12 @@ class FetchSegment {
             )
         }
 
-        val request = ExponeaMockServer.getResult()
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
 
         // TODO assert real response
-        assertEquals("/data/v2/projects/projectToken/customers/attributes", request.path)
+        assertEquals("/data/v2/projects/TestTokem/customers/attributes", request.path)
         assertNotNull(error)
-        assertEquals(null, value)
+        assertNull(value)
+        assertEquals(false, success)
     }
 }

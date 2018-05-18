@@ -76,6 +76,4 @@ class ExponeaDatabaseTest {
         assertEquals(true,db.clear())
     }
 
-
-
 }

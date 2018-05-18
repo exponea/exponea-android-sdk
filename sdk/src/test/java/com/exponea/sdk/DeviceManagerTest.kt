@@ -22,7 +22,6 @@ class DeviceManagerTest {
         deviceManager = DeviceManagerImpl(RuntimeEnvironment.application.applicationContext)
         val tabletType = deviceManager.getDeviceType()
         assertEquals("tablet", tabletType)
-
     }
 
     @Test
@@ -32,7 +31,6 @@ class DeviceManagerTest {
         val type = deviceManager.getDeviceType()
         assertEquals("mobile", type)
     }
-
 
     @Test
     @Config(qualifiers = "normal")
@@ -47,5 +45,4 @@ class DeviceManagerTest {
         deviceManager = DeviceManagerImpl(RuntimeEnvironment.application.applicationContext)
         assertEquals(true, deviceManager.isTablet())
     }
-
 }

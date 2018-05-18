@@ -1,90 +1,83 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
-import junit.framework.Assert.assertEquals
+import com.exponea.sdk.manager.ExponeaMockApi
+import com.exponea.sdk.manager.ExponeaMockServer
+import com.exponea.sdk.models.*
+import com.exponea.sdk.repository.EventRepository
 import kotlinx.coroutines.experimental.runBlocking
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class InstallEventTest {
+
     companion object {
-        var hasSetup: Boolean = false
+        val configuration = ExponeaConfiguration()
+        val server = MockWebServer()
+
+        @BeforeClass @JvmStatic
+        fun setup() {
+            configuration.projectToken = "TestTokem"
+            configuration.authorization = "TestBasicAuthentication"
+            configuration.baseURL = server.url("/").toString()
+            configuration.maxTries = 10
+        }
+
+        @AfterClass
+        fun tearDown() {
+            server.shutdown()
+        }
     }
 
-    val mockServer = MockWebServer()
+    lateinit var repo: EventRepository
 
     @Before
-    public fun setup() {
-        val mockServerAddress = setupWebServer()
-
-        println("mockServerAddress: $mockServerAddress")
+    fun prepareForTest() {
 
         val context = RuntimeEnvironment.application
 
-        val configuration = ExponeaConfiguration()
-        configuration.baseURL = mockServerAddress
-        configuration.projectToken = "projectToken"
-        configuration.authorization = "projectAuthorization"
-
         Exponea.init(context, configuration)
-
         Exponea.flushMode = FlushMode.MANUAL
 
-        hasSetup = true
-    }
+        repo = Exponea.component.eventRepository
 
-    @After
-    public fun tearDown() {
-        //mockServer.shutdown()
+        // Clean event repository for testing purposes
+        repo.clear()
+
+        Exponea.component.deviceInitiatedRepository.set(false)
+        Exponea.trackInstall()
     }
 
     @Test
-    fun testInstallEventAdded() {
+    fun testInstallEventAdded_ShouldSuccess() {
 
         // The only event tracked by now should be install_event
-        val event = Exponea.component.eventRepository.all().first()
-        assertEquals(Constants.EventTypes.installation, event.item.type)
+        val event = repo.all()
 
-        // No more than 1 install event should be tracked
-        Exponea.trackInstall()
-        assertEquals(1, Exponea.component.eventRepository.all().size)
-
-    }
-
-    private fun setupWebServer(): String {
-        mockServer.start()
-        return mockServer.url("/").toString()
+        assertEquals(Constants.EventTypes.installation, event.first().item.type)
     }
 
     @Test
     fun sendInstallEvenTest_ShouldPass() {
-        val mockResponse = MockResponse()
-                .setBody("")
-                .setResponseCode(200)
 
-        mockServer.enqueue(mockResponse)
+        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
 
-        Exponea.trackInstall()
         runBlocking {
-            Exponea.flush()
+            ExponeaMockApi.flush()
             Exponea.component.flushManager.onFlushFinishListener = {
                 assertEquals(0, Exponea.component.eventRepository.all().size)
             }
         }
 
-        val request = mockServer.takeRequest()
-        assertEquals("/track/v2/projects/projectToken/customers/events", request.path)
-        assertEquals(request.getHeader("Authorization"), "projectAuthorization")
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+
+        assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
+        assertEquals(request.getHeader("Authorization"), "TestBasicAuthentication")
     }
 }

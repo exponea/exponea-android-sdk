@@ -16,9 +16,11 @@ data class ExponeaConfiguration(
         // Maximum retries value to flush data to api.
         var maxTries: Int = 10,
         // Timeout session value considered for app usage.
-        var sessionTimeout: Int = 20,
+        var sessionTimeout: Double = 20.0,
         // Flag to control automatic tracking for In-App purchases
-        var automaticSessionTracking: Boolean = true,
+        var automaticPaymentTracking: Boolean = true,
+        // Flag to control automatic session tracking
+        var automaticSessionTracking: Boolean= true,
         // Flag to control if the App will handle push notifications automatically.
         var automaticPushNotification: Boolean = true,
         // Icon to be showed in push notifications.

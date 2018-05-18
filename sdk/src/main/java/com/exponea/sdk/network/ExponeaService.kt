@@ -2,8 +2,6 @@ package com.exponea.sdk.network
 
 import com.exponea.sdk.models.*
 import okhttp3.Call
-import okhttp3.Response
-import java.io.IOException
 
 interface ExponeaService {
     fun postEvent(projectToken: String, event: ExportedEventType): Call
@@ -21,4 +19,6 @@ interface ExponeaService {
     fun postFetchAllProperties(projectToken: String, customerIds: CustomerIds): Call
     fun postFetchAllCustomers(projectToken: String, customer: CustomerExportModel): Call
     fun postAnonymize(projectToken: String, customerIds: CustomerIds): Call
+    fun getBannerConfiguration(projectToken: String): Call
+    fun postFetchBanner(projectToken: String, banner: Banner): Call
 }

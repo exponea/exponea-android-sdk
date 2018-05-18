@@ -66,7 +66,7 @@ object Exponea {
      * Check if our library has been properly initialized
      */
 
-    internal var isInitialized: Boolean = false
+     var isInitialized: Boolean = false
         get() {
             return this::configuration.isInitialized
         }

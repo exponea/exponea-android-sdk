@@ -5,4 +5,17 @@
     <string name="purchase">Purchase</string>
     <string name="search">Search</string>
     <string name="discover">Discover</string>
+    <string name="title_activity_event_tracking">EventTrackingActivity</string>
+    <string name="action_track_customer_event">Track Customer Event</string>
+    <string name="action_track_event">Track Event</string>
+    <string name="action_track_purchase">Track Purchase</string>
+    <string name="action_track_install">Track Install</string>
+
+    <string name="hint_custids">Customer Id</string>
+    <string name="hint_auth_code">Authentication Code</string>
+    <string name="hint_project_token">Project Token</string>
+    <string name="action_authenticate">Authenticate</string>
+    <string name="action_fill_fields">Fill fields</string>
+    <string name="action_manual_flush">Manual Flush</string>
+    <string name="action_track_customer_update">Track Customer Update</string>
 </resources>

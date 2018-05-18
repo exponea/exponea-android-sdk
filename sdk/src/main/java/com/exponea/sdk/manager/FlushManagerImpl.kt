@@ -72,7 +72,6 @@ class FlushManagerImpl(
                                     "Sending Event Failed ${databaseObject.id}",
                                     ioException
                             )
-                            ioException.printStackTrace()
                             onEventSentFailed(databaseObject)
                         }
                 )

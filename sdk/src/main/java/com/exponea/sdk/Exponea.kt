@@ -181,11 +181,11 @@ object Exponea {
        )
     }
 
-
     /**
-     * Fetch events for a specific customer
-     * @param onFailure - Method will be called if there was an error
-     * @param onSuccess - this method will be called when data is ready
+     * Fetch events for a specific customer.
+     * @param customerEvents - Event from a specific customer to be tracked.
+     * @param onFailure - Method will be called if there was an error.
+     * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchCustomerEvents(customerEvents: CustomerEvents,
                             onFailure: (Result<FetchError>) -> Unit,
@@ -199,11 +199,12 @@ object Exponea {
         )
     }
 
-
     /**
-     * Fetch recommendations for a specific customer
-     * @param onFailure - Method will be called if there was an error
-     * @param onSuccess - this method will be called when data is ready
+     * Fetch recommendations for a specific customer.
+     * @param customerIds - Specify your customer with external id.
+     * @param customerRecommendation - Recommendation for the customer.
+     * @param onFailure - Method will be called if there was an error.
+     * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchRecommendation(customerIds: CustomerIds,
                             customerRecommendation: CustomerRecommendation,
@@ -219,7 +220,7 @@ object Exponea {
     }
 
     /**
-     * Manually track FCM Token to Exponea API
+     * Manually track FCM Token to Exponea API.
      */
 
     fun trackFcmToken(customerIds: CustomerIds, fcmToken: String) {
@@ -228,7 +229,7 @@ object Exponea {
     }
 
     /**
-     * Manually track delivered push notification to Exponea API
+     * Manually track delivered push notification to Exponea API.
      */
 
     fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
@@ -246,7 +247,7 @@ object Exponea {
     }
 
     /**
-     * Manually track clicked push notification to Exponea API
+     * Manually track clicked push notification to Exponea API.
      */
 
     fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
@@ -280,7 +281,9 @@ object Exponea {
 
     /**
      * Tracks payment manually
-     * @param purchasedItem - represents payment details
+     * @param purchasedItem - represents payment details.
+     * @param timestamp - Time in timestamp format where the event was created.
+     * @param purchasedItem - Information about the purchased item.
      */
 
     fun trackPayment(customerIds: CustomerIds,
@@ -322,10 +325,18 @@ object Exponea {
 
     }
 
+    /**
+     * Start the service when the flush period was changed.
+     */
+
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
         startService()
     }
+
+    /**
+     * Start or stop the service when the flush mode was changed.
+     */
 
     private fun onFlushModeChanged() {
         Logger.d(this, "onFlushModeChanged: $flushMode")
@@ -336,6 +347,10 @@ object Exponea {
         }
     }
 
+    /**
+     * Starts the service.
+     */
+
     private fun startService() {
         Logger.d(this, "startService")
 
@@ -345,6 +360,10 @@ object Exponea {
         }
         component.serviceManager.start()
     }
+
+    /**
+     * Stops the service.
+     */
 
     private fun stopService() {
         Logger.d(this, "stopService")
@@ -367,6 +386,7 @@ object Exponea {
     /**
      * Initializes payments listener
      */
+
     private fun trackInAppPurchase() {
         if (this.configuration.automaticPaymentTracking) {
             // Add the observers when the automatic session tracking is true.

@@ -25,6 +25,9 @@ class MainActivity : AppCompatActivity() {
         } else {
             setupListeners()
         }
+        if (savedInstanceState == null) {
+            replaceFragment(MainFragment())
+        }
 
     }
 

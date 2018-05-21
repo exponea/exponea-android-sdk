@@ -1,15 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
 
-    <TextView
+
+    <Button
+        android:id="@+id/attributesButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="Main" />
+        android:layout_marginEnd="16dp"
+        android:text="Attributes"
+        android:theme="@style/AppButton"
+        app:layout_constraintBottom_toBottomOf="@+id/eventsButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/eventsButton" />
 
-</FrameLayout>
+    <Button
+        android:id="@+id/eventsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:text="Events"
+        android:theme="@style/AppButton"
+        app:layout_constraintBottom_toBottomOf="@+id/recommendationsButton"
+        app:layout_constraintEnd_toStartOf="@+id/attributesButton"
+        app:layout_constraintStart_toEndOf="@+id/recommendationsButton"
+        app:layout_constraintTop_toTopOf="@+id/recommendationsButton" />
+
+    <Button
+        android:id="@+id/recommendationsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:text="Recommended"
+        android:theme="@style/AppButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+
+    <TextView
+        android:id="@+id/resultTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/borders_rect"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/attributesButton"
+        app:layout_constraintStart_toStartOf="@+id/recommendationsButton"
+        app:layout_constraintTop_toBottomOf="@+id/recommendationsButton" />
+
+    <ProgressBar
+        android:visibility="invisible"
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</android.support.constraint.ConstraintLayout>

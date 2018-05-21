@@ -4,14 +4,14 @@
     <item
         android:id="@+id/actionMain"
         android:icon="@drawable/ic_home_white_24dp"
-        android:title="@string/home" />
+        android:title="@string/fetch" />
 
     <item
         android:id="@+id/actionPurchase"
         android:icon="@drawable/ic_card_giftcard_white_24dp"
-        android:title="@string/purchase" />
+        android:title="@string/track" />
     <item
         android:id="@+id/actionSettings"
         android:icon="@drawable/ic_settings_white_24dp"
-        android:title="@string/settings" />
+        android:title="@string/manual_flush" />
 </menu>

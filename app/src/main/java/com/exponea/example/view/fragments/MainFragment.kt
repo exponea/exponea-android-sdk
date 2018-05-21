@@ -27,7 +27,7 @@ class MainFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         trackPage(Constants.ScreenNames.mainScreen)
-        setupListeners()
+        initListeners()
     }
 
     private fun setProgressBarVisible(visible: Boolean) {
@@ -38,93 +38,127 @@ class MainFragment : BaseFragment() {
         }
     }
 
-    private fun setupListeners() {
-        // Initialize customer to target
+    /**
+     * Initialize button listener
+     */
+    private fun initListeners() {
+
+        attributesButton.setOnClickListener {
+            setProgressBarVisible(true)
+            fetchCustomerAttributes()
+        }
+        recommendationsButton.setOnClickListener {
+            setProgressBarVisible(true)
+            fetchRecommended()
+
+        }
+        eventsButton.setOnClickListener {
+            setProgressBarVisible(true)
+            fetchCustomerEvents()
+        }
+    }
+
+    /**
+     * Method handles recommendations loading
+     */
+    private fun fetchRecommended() {
+        // Init customer structure
         val uuid = App.instance.userIdManager.uniqueUserID
         val customerIds = CustomerIds(cookie = uuid)
 
-        attributesButton.setOnClickListener {
+        // Init recommendation structure and specify params
+        val recommendation = CustomerRecommendation(
+                id = uuid,
+                strategy = "winner"
+        )
 
-            // Initialize our attributes structure
-            val attributes = CustomerAttributes(customerIds)
+        // Specify callbacks and start loading
+        Exponea.fetchRecommendation(
+                customerIds = customerIds,
+                customerRecommendation = recommendation,
+                onSuccess = {onFetchSuccess(it)},
+                onFailure = {onFetchFailed(it)}
 
-            // Select attributes to fetch
-            attributes.apply {
-                withProperty("first_name")
-            }
-            setProgressBarVisible(true)
+        )
+    }
 
-            // Specify callbacks and start loading
-            Exponea.fetchCustomerAttributes(
-                    customerAttributes = attributes,
-                    onFailure = { onFetchFailed(it) },
-                    onSuccess = {onFetchSuccess(it)}
-            )
-        }
+    /**
+     * Method handles loading events for customer
+     */
+    private fun fetchCustomerEvents() {
+        // Init customer structure
+        val uuid = App.instance.userIdManager.uniqueUserID
+        val customerIds = CustomerIds(cookie = uuid)
 
-        recommendationsButton.setOnClickListener {
-
-            // Init out recommendation structure
-            val recommendation = CustomerRecommendation(
-                    id = uuid,
-                    strategy = "winner"
-            )
-            setProgressBarVisible(true)
-
-            // Specify callbacks and start loading
-            Exponea.fetchRecommendation(
-                    customerIds = customerIds,
-                    customerRecommendation = recommendation,
-                    onSuccess = {onFetchSuccess(it)},
-                    onFailure = {onFetchFailed(it)}
-
-            )
-        }
-
-        eventsButton.setOnClickListener {
-
-            // Initialize our events structure
-            val events = CustomerEvents(
-                    customerIds = customerIds,
-                    eventTypes = mutableListOf("event1", "event2"),
-                    sortOrder = "desc"
-            )
-            setProgressBarVisible(true)
-            // Specify callback and start loading
-            Exponea.fetchCustomerEvents(
-                    customerEvents = events,
-                    onFailure = {onFetchFailed(it)},
-                    onSuccess = {
-                        Handler(Looper.getMainLooper()).post({
-                            setProgressBarVisible(false)
-                            resultTextView.text = it.toString()
-                        })
-                    }
-            )
-
-        }
-
+        // Init customers events structure and specify params
+        val events = CustomerEvents(
+                customerIds = customerIds,
+                eventTypes = mutableListOf("event1", "event2"),
+                sortOrder = "desc"
+        )
+        // Specify callback and start loading
+        Exponea.fetchCustomerEvents(
+                customerEvents = events,
+                onFailure = {onFetchFailed(it)},
+                onSuccess = {
+                  runOnUiThread {
+                      setProgressBarVisible(false)
+                      resultTextView.text = it.toString()
+                  }
+                }
+        )
 
     }
 
-    // Fetch successful callback
+    /**
+     * Method handles loading customer attributes and properties
+     */
+    private fun fetchCustomerAttributes() {
+        val uuid = App.instance.userIdManager.uniqueUserID
+        val customerIds = CustomerIds(cookie = uuid)
+        val attributes = CustomerAttributes(customerIds)
+
+        // Select attributes to fetch
+        attributes.apply {
+            withProperty("first_name")
+            withProperty("email")
+        }
+
+        // Specify callbacks and start loading
+        Exponea.fetchCustomerAttributes(
+                customerAttributes = attributes,
+                onFailure = { onFetchFailed(it) },
+                onSuccess = {onFetchSuccess(it)}
+        )
+    }
+
+    /**
+     * Our success callback
+     */
     private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
-        Handler(Looper.getMainLooper()).post({
+       runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = result.toString()
-        })
+        }
 
     }
 
-    // Fetch failed callback
+    /**
+     * Our failure callback
+     */
     private fun onFetchFailed(result: Result<FetchError>) {
-
-        Handler(Looper.getMainLooper()).post({
+        runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = "Message: ${result.results.message}" +
                     "\nJson: ${result.results.jsonBody}"
-        })
-
-
+        }
     }
+
+    /**
+     * Method to update ui
+     */
+    private fun runOnUiThread(runnable: () -> Unit) {
+        Handler(Looper.getMainLooper()).post(runnable)
+    }
+
 }

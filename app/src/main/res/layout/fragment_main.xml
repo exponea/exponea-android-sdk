@@ -12,7 +12,7 @@
         android:id="@+id/attributesButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="@dimen/content_margin"
         android:text="Attributes"
         android:theme="@style/AppButton"
         app:layout_constraintBottom_toBottomOf="@+id/eventsButton"
@@ -23,8 +23,8 @@
         android:id="@+id/eventsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginEnd="@dimen/content_margin"
+        android:layout_marginStart="@dimen/content_margin"
         android:text="Events"
         android:theme="@style/AppButton"
         app:layout_constraintBottom_toBottomOf="@+id/recommendationsButton"
@@ -36,26 +36,37 @@
         android:id="@+id/recommendationsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="@dimen/content_margin"
         android:layout_marginTop="32dp"
         android:text="Recommended"
         android:theme="@style/AppButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
-
-    <TextView
-        android:id="@+id/resultTextView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+    <FrameLayout
+        android:background="@drawable/borders_rect"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
-        android:background="@drawable/borders_rect"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/attributesButton"
         app:layout_constraintStart_toStartOf="@+id/recommendationsButton"
-        app:layout_constraintTop_toBottomOf="@+id/recommendationsButton" />
+        app:layout_constraintTop_toBottomOf="@+id/recommendationsButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp">
+
+
+        <TextView
+            android:layout_margin="8dp"
+            android:id="@+id/resultTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            android:text="TextView"
+            />
+
+    </FrameLayout>
+
+
 
     <ProgressBar
         android:visibility="invisible"

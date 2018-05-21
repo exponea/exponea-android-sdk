@@ -13,6 +13,7 @@ import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import kotlinx.android.synthetic.main.fragment_purchase.*
 
@@ -59,6 +60,8 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
 
         buttonTrackToken.setOnClickListener { trackFCMToken() }
+
+        buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
     }
 
     /**
@@ -69,6 +72,20 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
         Exponea.trackClickedPush(
                 customerIds = customerIds,
                 fcmToken = "Fcm Token"
+        )
+    }
+
+    /**
+     * Method to handle updating customer properties
+     */
+    private fun trackUpdateCustomerProperties() {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+
+        // Properties to update
+        val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
+        Exponea.updateCustomerProperties(
+                customerIds = customerIds,
+                properties = props
         )
     }
 

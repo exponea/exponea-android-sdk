@@ -60,8 +60,7 @@
             android:id="@+id/resultTextView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-
-            android:text="TextView"
+            android:text="No data loaded"
             />
 
     </FrameLayout>

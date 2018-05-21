@@ -3,7 +3,6 @@ package com.exponea.example.view.fragments
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +12,6 @@ import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
-import kotlinx.android.synthetic.main.activity_authentication.*
 import kotlinx.android.synthetic.main.fragment_main.*
 
 

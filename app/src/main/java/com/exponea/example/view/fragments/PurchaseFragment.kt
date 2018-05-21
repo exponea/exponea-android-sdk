@@ -41,13 +41,60 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
         trackPage(Constants.ScreenNames.purchaseScreen)
 
         listView.adapter = Adapter()
-        listView.onItemClickListener = this
+
+        // Init buttons listeners
+        initListeners()
 
     }
 
 
-    override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Log.d("Adapter", "Click")
+    private fun initListeners() {
+        listView.onItemClickListener = this
+        buttonTrackClicked.setOnClickListener { trackPushClicked() }
+
+        buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
+
+        buttonTrackToken.setOnClickListener { trackFCMToken() }
+    }
+
+    /**
+     * Method to handle push clicked event tracking
+     */
+    private fun trackPushClicked() {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackClickedPush(
+                customerIds = customerIds,
+                fcmToken = "Fcm Token"
+        )
+    }
+
+    /**
+     * Method to handle push delivered event tracking"
+     */
+    private fun trackPushDelivered() {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackDeliveredPush(
+                customerIds = customerIds,
+                fcmToken = "Fcm Token"
+        )
+
+    }
+
+    /**
+     * Method to handle token tracking
+     */
+    private fun trackFCMToken() {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackFcmToken(
+                customerIds = customerIds,
+                fcmToken = "FCM token"
+        )
+    }
+
+    /**
+     * Method to manually track customer's purchases
+     */
+    private fun trackPayment(position: Int) {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
         val purchasedItem = PurchasedItem(
                 value = 2011.1,
@@ -60,6 +107,13 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
                 customerIds = customerIds,
                 purchasedItem = purchasedItem)
 
+    }
+
+    override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        Log.d("Adapter", "Click")
+
+        // Track purchase at position
+        trackPayment(position)
         Toast.makeText(context, "Payment Tracked", Toast.LENGTH_SHORT).show()
 
     }

@@ -1,6 +1,7 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -38,6 +39,9 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.subtitle = "tracking"
+
+        // Track visited screen
         trackPage(Constants.ScreenNames.purchaseScreen)
 
         listView.adapter = Adapter()

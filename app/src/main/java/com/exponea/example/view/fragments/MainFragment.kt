@@ -3,6 +3,7 @@ package com.exponea.example.view.fragments
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +27,11 @@ class MainFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Track visited screen
         trackPage(Constants.ScreenNames.mainScreen)
+        (activity as AppCompatActivity).supportActionBar?.subtitle = "fetching"
+
+        // Init listeners
         initListeners()
     }
 

@@ -8,6 +8,10 @@ import com.exponea.sdk.models.PropertiesList
 
 open class BaseFragment : Fragment() {
 
+    /**
+     * Tracks certain screen that customer have visited
+     * @param pageName - Name of the screen
+     */
     fun trackPage(pageName: String) {
         val userID = App.instance.userIdManager.uniqueUserID
 

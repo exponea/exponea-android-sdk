@@ -1,6 +1,7 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +22,9 @@ class SettingsFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.subtitle = "flush"
 
+        // Track visited screen
         trackPage(Constants.ScreenNames.settingsScreen)
 
         settingsBtnFlush.setOnClickListener {

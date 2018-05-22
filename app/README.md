@@ -33,11 +33,11 @@ Exponea.init(App.instance, configuration)
 Additional set ups can be made, such as configuring logger level, tweaking flush mode/period etc.
 ```
 Exponea.init(App.instance, configuration)
-        // Set our debug level to debug
-        Exponea.loggerLevel = Logger.Level.DEBUG
-        // Set up our flushing
-        Exponea.flushMode = FlushMode.PERIOD
-        Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
+// Set our debug level to debug
+Exponea.loggerLevel = Logger.Level.DEBUG
+// Set up our flushing
+Exponea.flushMode = FlushMode.PERIOD
+Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 ```
 
 After SDK has been configured, new activity will launch

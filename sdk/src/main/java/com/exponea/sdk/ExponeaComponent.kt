@@ -25,9 +25,15 @@ class ExponeaComponent(
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
-    internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(preferences)
-    internal val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
-    internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(preferences)
+    internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(
+            preferences
+    )
+    internal val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(
+            preferences
+    )
+    internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(
+            preferences
+    )
     internal val eventRepository: EventRepository = EventRepositoryImpl()
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)

@@ -9,16 +9,16 @@ data class CustomerRecommendation(
         var anti: Boolean = false,
         var items: HashMap<String, Any> = hashMapOf()
 ) {
-        fun toHashMap() : HashMap<String, Any> {
-                return hashMapOf(
-                        Pair("type", type),
-                        Pair("id", id),
-                        Pair("size", size),
-                        Pair("strategy", strategy),
-                        Pair("consider_known_items", knowItems),
-                        Pair("anti", anti),
-                        Pair("items", items)
-                )
-        }
+    fun toHashMap(): HashMap<String, Any> {
+        return hashMapOf(
+                Pair("type", type),
+                Pair("id", id),
+                Pair("size", size),
+                Pair("strategy", strategy),
+                Pair("consider_known_items", knowItems),
+                Pair("anti", anti),
+                Pair("items", items)
+        )
+    }
 
 }

@@ -6,7 +6,8 @@ data class CustomerAttributes(
         @SerializedName("customer_ids")
         var customerId: CustomerIds,
         @SerializedName("attributes")
-        var attributes: MutableList<HashMap<String, Any>> = mutableListOf()) {
+        var attributes: MutableList<HashMap<String, Any>> = mutableListOf()
+) {
 
     companion object {
         const val TYPE = "type"
@@ -73,40 +74,53 @@ data class CustomerAttributes(
      */
     private fun addAttribute(types: AttributeTypes, associatedValue: Any) {
         when (types) {
-            AttributeTypes.PROPERTY -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_PROPERTY),
-                        Pair(TYPE_PROPERTY, associatedValue)))
+            AttributeTypes.PROPERTY     -> {
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_PROPERTY),
+                                Pair(TYPE_PROPERTY, associatedValue)
+                        )
+                )
             }
-            AttributeTypes.PREDICTION -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_PREDICTION),
-                        Pair(id, associatedValue)
-                ))
+            AttributeTypes.PREDICTION   -> {
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_PREDICTION),
+                                Pair(id, associatedValue)
+                        )
+                )
             }
-            AttributeTypes.ID -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_ID),
-                        Pair(TYPE_ID, associatedValue)
-                ))
+            AttributeTypes.ID           -> {
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_ID),
+                                Pair(TYPE_ID, associatedValue)
+                        )
+                )
             }
-            AttributeTypes.EXPRESSION -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_EXPRESSION),
-                        Pair(id, associatedValue)
-                ))
+            AttributeTypes.EXPRESSION   -> {
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_EXPRESSION),
+                                Pair(id, associatedValue)
+                        )
+                )
             }
             AttributeTypes.SEGMENTATION -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_SEGMENTATION),
-                        Pair(id, associatedValue)
-                ))
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_SEGMENTATION),
+                                Pair(id, associatedValue)
+                        )
+                )
             }
-            AttributeTypes.AGGREGATION -> {
-                attributes.add(hashMapOf(
-                        Pair(TYPE, TYPE_AGGREGATE),
-                        Pair(id, associatedValue)
-                ))
+            AttributeTypes.AGGREGATION  -> {
+                attributes.add(
+                        hashMapOf(
+                                Pair(TYPE, TYPE_AGGREGATE),
+                                Pair(id, associatedValue)
+                        )
+                )
             }
         }
     }

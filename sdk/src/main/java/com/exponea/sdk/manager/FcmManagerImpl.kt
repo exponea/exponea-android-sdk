@@ -1,20 +1,20 @@
 package com.exponea.sdk.manager
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.models.ExponeaConfiguration
-import android.app.NotificationChannel
-import android.os.Build
 
 class FcmManagerImpl(
         private val context: Context,
         private val configuration: ExponeaConfiguration
 ) : FcmManager {
 
-    private val REQUEST_CODE = 1
+    private val requestCode = 1
 
     override fun showNotification(
             title: String,
@@ -28,11 +28,11 @@ class FcmManagerImpl(
         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
         val pendingIntent = PendingIntent.getActivity(
-                context, REQUEST_CODE,
+                context, requestCode,
                 i, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification = NotificationCompat.Builder(context)
+        val notification = NotificationCompat.Builder(context, configuration.pushChannelName)
                 .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)

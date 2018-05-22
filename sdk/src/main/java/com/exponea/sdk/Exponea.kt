@@ -4,17 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
-import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.util.*
-
+import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -66,7 +62,7 @@ object Exponea {
      * Check if our library has been properly initialized
      */
 
-     var isInitialized: Boolean = false
+    var isInitialized: Boolean = false
         get() {
             return this::configuration.isInitialized
         }
@@ -169,16 +165,18 @@ object Exponea {
     /**
      * Fetches customer attributes
      */
-    fun fetchCustomerAttributes(customerAttributes: CustomerAttributes,
-                                onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                                onFailure: (Result<FetchError>) -> Unit) {
+    fun fetchCustomerAttributes(
+            customerAttributes: CustomerAttributes,
+            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    ) {
 
-       component.fetchManager.fetchCustomerAttributes(
-               projectToken = configuration.projectToken,
-               attributes = customerAttributes,
-               onSuccess = onSuccess,
-               onFailure = onFailure
-       )
+        component.fetchManager.fetchCustomerAttributes(
+                projectToken = configuration.projectToken,
+                attributes = customerAttributes,
+                onSuccess = onSuccess,
+                onFailure = onFailure
+        )
     }
 
     /**
@@ -187,10 +185,11 @@ object Exponea {
      * @param onFailure - Method will be called if there was an error.
      * @param onSuccess - this method will be called when data is ready.
      */
-    fun fetchCustomerEvents(customerEvents: CustomerEvents,
-                            onFailure: (Result<FetchError>) -> Unit,
-                            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
-                            ) {
+    fun fetchCustomerEvents(
+            customerEvents: CustomerEvents,
+            onFailure: (Result<FetchError>) -> Unit,
+            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
+    ) {
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,
                 customerEvents = customerEvents,
@@ -206,14 +205,19 @@ object Exponea {
      * @param onFailure - Method will be called if there was an error.
      * @param onSuccess - this method will be called when data is ready.
      */
-    fun fetchRecommendation(customerIds: CustomerIds,
-                            customerRecommendation: CustomerRecommendation,
-                            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-                            onFailure: (Result<FetchError>) -> Unit) {
+    fun fetchRecommendation(
+            customerIds: CustomerIds,
+            customerRecommendation: CustomerRecommendation,
+            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    ) {
 
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
-                attributes = CustomerAttributes(customerIds, mutableListOf(customerRecommendation.toHashMap())),
+                attributes = CustomerAttributes(
+                        customerIds,
+                        mutableListOf(customerRecommendation.toHashMap())
+                ),
                 onSuccess = onSuccess,
                 onFailure = onFailure
         )
@@ -233,7 +237,7 @@ object Exponea {
      */
 
     fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
-        val properties: PropertiesList = PropertiesList(
+        val properties = PropertiesList(
                 hashMapOf(
                         Pair("action_type", "notification"),
                         Pair("status", "delivered")
@@ -243,7 +247,8 @@ object Exponea {
                 customerIds = customerIds,
                 properties = properties,
                 eventType = "campaign",
-                timestamp = timestamp)
+                timestamp = timestamp
+        )
     }
 
     /**
@@ -251,8 +256,7 @@ object Exponea {
      */
 
     fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
-
-        val properties: PropertiesList = PropertiesList(
+        val properties = PropertiesList(
                 hashMapOf(
                         Pair("action_type", "notification"),
                         Pair("status", "clicked")
@@ -263,7 +267,8 @@ object Exponea {
                 customerIds = customerIds,
                 properties = properties,
                 eventType = "campaign",
-                timestamp = timestamp)
+                timestamp = timestamp
+        )
     }
 
 
@@ -286,9 +291,11 @@ object Exponea {
      * @param purchasedItem - Information about the purchased item.
      */
 
-    fun trackPayment(customerIds: CustomerIds,
-                     timestamp: Long = Date().time,
-                     purchasedItem: PurchasedItem) {
+    fun trackPayment(
+            customerIds: CustomerIds,
+            timestamp: Long = Date().time,
+            purchasedItem: PurchasedItem
+    ) {
         trackEvent(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
@@ -319,8 +326,10 @@ object Exponea {
 
         // Initialize session observer
         configuration.automaticSessionTracking = component
-                .preferences.getBoolean(SessionManagerImpl
-                .PREF_SESSION_AUTO_TRACK, true)
+                .preferences.getBoolean(
+                SessionManagerImpl
+                        .PREF_SESSION_AUTO_TRACK, true
+        )
         startSessionTracking(configuration.automaticSessionTracking)
 
     }

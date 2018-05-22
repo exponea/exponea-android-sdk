@@ -26,7 +26,9 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         val notificationId = message?.data?.get("notification_id")?.toInt() ?: 0
 
         // Configure the notification channel for push notifications on API 26+
+
         // This configuration runs only once.
+
         if (!Exponea.component.pushNotificationRepository.get()) {
             Exponea.component.fcmManager.createNotificationChannel(notificationManager)
             Exponea.component.pushNotificationRepository.set(true)

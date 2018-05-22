@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.util.Logger
 
 class FcmManagerImpl(
         private val context: Context,
@@ -22,6 +23,8 @@ class FcmManagerImpl(
             id: Int,
             manager: NotificationManager
     ) {
+        Logger.d(this, "showNotification")
+
         val i = Intent(context, PushManager::class.java)
 
         i.addCategory(Intent.CATEGORY_HOME)
@@ -32,15 +35,19 @@ class FcmManagerImpl(
                 i, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        // TODO if small icon is invalid the app will crash so this needs to be handled someway
+        val smallIconRes = configuration.pushIcon
+
+        if (smallIconRes == null) {
+            Logger.d(this, "Invalid Icon Res: $smallIconRes")
+            return
+        }
+
         val notification = NotificationCompat.Builder(context, configuration.pushChannelName)
                 .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)
-
-        configuration.pushIcon?.let {
-            notification
-                    .setSmallIcon(it)
-        }
+                .setSmallIcon(smallIconRes)
 
         manager.notify(id, notification.build())
     }

@@ -71,7 +71,7 @@ task installArchives(type: Upload) {
         mavenDeployer {
             pom.groupId = 'com.exponea.sdk'
             pom.artifactId = 'sdk'
-            pom.version = '1.0-LOCAL'
+            pom.version = '1.1-LOCAL'
             repository url: repositories.mavenLocal().url
         }
     }

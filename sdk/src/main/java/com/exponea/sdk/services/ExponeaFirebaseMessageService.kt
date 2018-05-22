@@ -8,7 +8,9 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class ExponeaFirebaseMessageService : FirebaseMessagingService() {
-    private val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val notificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
 
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)

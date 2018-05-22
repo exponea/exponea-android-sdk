@@ -21,9 +21,9 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
         Logger.d(this, "Push Notification received.")
 
-        val title = message?.data?.get("title") ?: ""
+        val title = message?.notification?.title ?: ""
 
-        val body = message?.data?.get("body") ?: ""
+        val body = message?.notification?.body ?: ""
 
         val notificationId = message?.data?.get("notification_id")?.toInt() ?: 0
 

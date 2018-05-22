@@ -43,10 +43,11 @@ class FcmManagerImpl(
             return
         }
 
-        val notification = NotificationCompat.Builder(context, configuration.pushChannelName)
+        val notification = NotificationCompat.Builder(context,configuration.pushChannelId)
                 .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)
+                .setChannelId(configuration.pushChannelId)
                 .setSmallIcon(smallIconRes)
 
         manager.notify(id, notification.build())

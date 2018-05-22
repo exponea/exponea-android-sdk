@@ -11,7 +11,7 @@ Exponea SDK is a developer kit for helping Exponea users use the API natively on
 The SDK does not use any type of Architecture
 
 ## 👌 Tests
-Using manual depedency injection the application aims to have every class tested using clean coding principles
+Using manual dependency injection the application aims to have every class tested using clean coding principles
 
 ## Code Coverage tools
 - Static Code Analysis tool: [Detekt](https://github.com/arturbosch/detekt#rulesets)
@@ -30,7 +30,9 @@ Using manual depedency injection the application aims to have every class tested
 
 ## 💻 Developers
 - @bres
+- @doha
 - @tami
+- @role
 
 ## Project Manager
 - @doha

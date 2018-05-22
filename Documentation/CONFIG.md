@@ -2,7 +2,7 @@
 
 The configuration object must be configured before starting using the SDK.
 
-It's possible to initilize the configuration through a ExponeaConfiguration object or providing a configuration file with the same structure (keys).
+It's possible to initialize the configuration through a ExponeaConfiguration object or providing a configuration file with the same structure (keys).
 
 ```
 data class ExponeaConfiguration(
@@ -71,7 +71,7 @@ var projectTokenRouteMap = hashMapOf<Route, MutableList<String>> (
 #### maxTries
 
 * Maximum number of retries to flush data to Exponea API. 
-* SDK will desconsider the value to be flushed if this number is exceed and delete from the queue.
+* SDK will consider the value to be flushed if this number is exceed and delete from the queue.
  
 #### sessionTimeout
 

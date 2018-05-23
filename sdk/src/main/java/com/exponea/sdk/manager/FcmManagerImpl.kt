@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -36,11 +37,15 @@ class FcmManagerImpl(
         )
 
         // TODO if small icon is invalid the app will crash so this needs to be handled someway
-        val smallIconRes = configuration.pushIcon
+        // If push icon was not provided in the configuration, default one will be used
+        var smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
 
-        if (smallIconRes == null) {
-            Logger.d(this, "Invalid Icon Res: $smallIconRes")
-            return
+        // Icon id was provided but was invalid
+        try {
+            context.resources.getResourceName(smallIconRes)
+        } catch (exception: Resources.NotFoundException) {
+            Logger.e(this, "Invalid icon resource: $smallIconRes")
+            smallIconRes = android.R.drawable.ic_dialog_info
         }
 
         val notification = NotificationCompat.Builder(context,configuration.pushChannelId)

@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven'
+
 apply from: '../jacoco.gradle'
 
 android {
@@ -44,7 +46,7 @@ dependencies {
     // Google Play In-App Purchase
     implementation 'com.android.billingclient:billing:1.0'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:15.0.0'
+    implementation 'com.google.firebase:firebase-messaging:15.0.2'
 
     // Base Test
     testImplementation 'junit:junit:4.12'
@@ -54,10 +56,25 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
     // Improved Unit Testing
     testImplementation "org.robolectric:robolectric:3.8"
-
-    androidTestImplementation 'com.android.support.test:runner:1.0.2-beta1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    // Co-Routines
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+task installArchives(type: Upload) {
+    group = "maven"
+    description "Installs the artifacts to the local Maven repository."
+    configuration = configurations['archives']
+    repositories {
+        mavenDeployer {
+            pom.groupId = 'com.exponea.sdk'
+            pom.artifactId = 'sdk'
+            pom.version = '1.1-LOCAL'
+            repository url: repositories.mavenLocal().url
+        }
+    }
 }
 
 kotlin {

@@ -20,7 +20,7 @@ data class ExponeaConfiguration(
         // Flag to control automatic tracking for In-App purchases
         var automaticPaymentTracking: Boolean = true,
         // Flag to control automatic session tracking
-        var automaticSessionTracking: Boolean= true,
+        var automaticSessionTracking: Boolean = true,
         // Flag to control if the App will handle push notifications automatically.
         var automaticPushNotification: Boolean = true,
         // Icon to be showed in push notifications.

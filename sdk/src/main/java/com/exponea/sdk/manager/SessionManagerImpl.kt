@@ -11,7 +11,10 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import java.util.*
 
-class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences) : SessionManager() {
+class SessionManagerImpl(
+        context: Context,
+        private val prefs: ExponeaPreferences
+) : SessionManager() {
     var application = context as Application
     private var isListenerActive = false
 
@@ -24,12 +27,14 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
     /**
      * Calculate session length
      */
-    private fun getSessionLengthInSeconds() : Long {
+    private fun getSessionLengthInSeconds(): Long {
         val start = prefs.getLong(PREF_SESSION_START, Date().time)
         val end = prefs.getLong(PREF_SESSION_END, Date().time)
-        Logger.d(this, "Session Info: \n " +
+        Logger.d(
+                this, "Session Info: \n " +
                 "\t From: ${Date(start)}\n" +
-                "\t To: ${Date(end)}")
+                "\t To: ${Date(end)}"
+        )
 
         return (end - start) / 1000
     }
@@ -64,7 +69,7 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
         Logger.d(this, "Session start ${Date(now)}")
 
         // Check if current session is the first one
-        val lastTimeStarted = prefs.getLong(PREF_SESSION_START,  -1L)
+        val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
         if (lastTimeStarted == -1L) {
             prefs.setLong(PREF_SESSION_START, now)
             return
@@ -77,7 +82,7 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
             trackEnd(now)
 
             // Start Tracking new session
-            prefs.setLong(PREF_SESSION_START,now)
+            prefs.setLong(PREF_SESSION_START, now)
             trackStart(now)
         }
 
@@ -127,9 +132,9 @@ class SessionManagerImpl(context: Context, private val prefs: ExponeaPreferences
      * Determines if current session can be resumed
      * ( i.e session timeout didn't expire )
      */
-    private fun canBeResumed(now: Long) : Boolean {
+    private fun canBeResumed(now: Long): Boolean {
         val sessionEnded = prefs.getLong(PREF_SESSION_END, -1L)
-        val currentTimeout = ( now - sessionEnded ) / 1000
+        val currentTimeout = (now - sessionEnded) / 1000
         return currentTimeout < Exponea.sessionTimeout
 
     }

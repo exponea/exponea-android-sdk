@@ -7,7 +7,6 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.util.Logger
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * Personalization Manager is responsible to get the banner ids and fetch
@@ -44,13 +43,15 @@ internal class PersonalizationManagerImpl(
             projectToken: String,
             customerIds: CustomerIds,
             onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit) {
+            onFailure: (Result<FetchError>) -> Unit
+    ) {
 
         Exponea.component.fetchManager.fetchBannerConfiguration(
                 projectToken = projectToken,
                 customerIds = customerIds,
                 onSuccess = onSuccess,
-                onFailure = onFailure)
+                onFailure = onFailure
+        )
     }
 
     /**
@@ -74,17 +75,20 @@ internal class PersonalizationManagerImpl(
         )
     }
 
-    private fun canShowBanner(personalization: ArrayList<Personalization>) : Boolean {
+    private fun canShowBanner(personalization: ArrayList<Personalization>): Boolean {
 
-        var isExpirationValid: Boolean = true
-        var isMobileAvailable: Boolean = false
+        var isExpirationValid = true
+        var isMobileAvailable = false
 
         for (data in personalization) {
             // Check if the banner has expiration date and if it's valid.
-            // If doesn't have any expiration setted, then is allowed.
+            // If doesn't have any expiration set, then is allowed.
             data.dateFilter?.let {
                 if (it.enabled) {
-                    isExpirationValid = checkExpirationDate(it.fromDate?.toLong(), it.toDate?.toLong())
+                    isExpirationValid = checkExpirationDate(
+                            it.fromDate?.toLong(),
+                            it.toDate?.toLong()
+                    )
                 }
             }
             data.deviceTarget?.let {
@@ -98,8 +102,7 @@ internal class PersonalizationManagerImpl(
                 data.id?.let {
                     preferencesIds.add(it)
                 }
-            }
-            else {
+            } else {
                 Logger.d(this, "Banner ${data.id} is not valid")
             }
         }
@@ -110,7 +113,7 @@ internal class PersonalizationManagerImpl(
      * Save the html content into a temporary file.
      */
 
-    private fun saveHtml(data: BannerResult) : Boolean {
+    private fun saveHtml(data: BannerResult): Boolean {
         data.html?.let {
             Exponea.component.fileManager.createFile(
                     filename = Constants.General.bannerFilename,
@@ -128,12 +131,12 @@ internal class PersonalizationManagerImpl(
 
     /**
      * Receive the script and css from the exponea api and prepare
-     * the webview to be presented
+     * the web view to be presented
      */
 
     private fun showWebView(script: String?, css: String?) {
-        val webView: WebView = WebView(context)
-        // Inject the javascript into webview.
+        val webView = WebView(context)
+        // Inject the javascript into web view.
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
@@ -143,7 +146,7 @@ internal class PersonalizationManagerImpl(
                 css?.let { webView.loadUrl(it) }
             }
         }
-        // Load webview with all the received data.
+        // Load web view with all the received data.
         webView.loadUrl(ClassLoader.getSystemResource(Constants.General.bannerFullFilename).file)
     }
 
@@ -158,7 +161,7 @@ internal class PersonalizationManagerImpl(
         val endDate = Date(toDate)
         val currDate = Date()
 
-        return ( currDate >= startDate) && (currDate <= endDate)
+        return (currDate >= startDate) && (currDate <= endDate)
     }
 
 }

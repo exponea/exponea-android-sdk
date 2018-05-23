@@ -86,7 +86,7 @@ class SessionManagerTest {
         Thread.sleep(2003)
         controller.resume()
 
-        // New sesion should be started
+        // New session should be started
         newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
         assert(previousStartTime < newStartTime)
     }

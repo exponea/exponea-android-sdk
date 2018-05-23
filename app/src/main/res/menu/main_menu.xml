@@ -4,29 +4,14 @@
     <item
         android:id="@+id/actionMain"
         android:icon="@drawable/ic_home_white_24dp"
-        android:title="@string/home"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/actionDiscover"
-        android:icon="@drawable/ic_store_white_24dp"
-        android:title="@string/discover"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/actionSearch"
-        android:icon="@drawable/ic_search_white_24dp"
-        android:title="@string/search"
-        app:showAsAction="ifRoom" />
+        android:title="@string/fetch" />
 
     <item
         android:id="@+id/actionPurchase"
         android:icon="@drawable/ic_card_giftcard_white_24dp"
-        android:title="@string/purchase"
-        app:showAsAction="ifRoom" />
+        android:title="@string/track" />
     <item
         android:id="@+id/actionSettings"
         android:icon="@drawable/ic_settings_white_24dp"
-        android:title="@string/settings"
-        app:showAsAction="ifRoom" />
+        android:title="@string/manual_flush" />
 </menu>

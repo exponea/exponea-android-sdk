@@ -2,12 +2,14 @@ package com.exponea.example.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import com.exponea.example.R
-import com.exponea.example.models.Constants
+import com.exponea.example.view.fragments.MainFragment
+import com.exponea.example.view.fragments.PurchaseFragment
+import com.exponea.example.view.fragments.SettingsFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.activity_authentication.*
-import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,19 +25,28 @@ class MainActivity : AppCompatActivity() {
         } else {
             setupListeners()
         }
+        if (savedInstanceState == null) {
+            replaceFragment(MainFragment())
+        }
 
     }
 
+    private fun replaceFragment(fragment: Fragment) : Boolean {
+        supportFragmentManager
+                ?.beginTransaction()
+                ?.replace(R.id.container, fragment)
+                ?.commit()
+        return true
+    }
+
     private fun setupListeners() {
-        buttonTrackCustomerEvent.setOnClickListener {
-            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_TRACK_CUSTOMER)
+        navigation.setOnNavigationItemSelectedListener{
+            when (it.itemId) {
+                R.id.actionMain -> replaceFragment(MainFragment())
+                R.id.actionPurchase -> replaceFragment(PurchaseFragment())
+                else -> replaceFragment(SettingsFragment())
+            }
         }
-
-        buttonTrackEvent.setOnClickListener{
-            EventTrackingActivity.startAsIntent(this, Constants.Events.EVENT_UPDATE_CUSTOMER)
-        }
-
-
     }
 
 }

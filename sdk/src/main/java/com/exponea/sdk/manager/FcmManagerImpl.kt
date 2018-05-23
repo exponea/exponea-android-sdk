@@ -1,20 +1,21 @@
 package com.exponea.sdk.manager
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.models.ExponeaConfiguration
-import android.app.NotificationChannel
-import android.os.Build
+import com.exponea.sdk.util.Logger
 
 class FcmManagerImpl(
         private val context: Context,
         private val configuration: ExponeaConfiguration
 ) : FcmManager {
 
-    private val REQUEST_CODE = 1
+    private val requestCode = 1
 
     override fun showNotification(
             title: String,
@@ -22,25 +23,32 @@ class FcmManagerImpl(
             id: Int,
             manager: NotificationManager
     ) {
+        Logger.d(this, "showNotification")
+
         val i = Intent(context, PushManager::class.java)
 
         i.addCategory(Intent.CATEGORY_HOME)
         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
         val pendingIntent = PendingIntent.getActivity(
-                context, REQUEST_CODE,
+                context, requestCode,
                 i, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification = NotificationCompat.Builder(context)
+        // TODO if small icon is invalid the app will crash so this needs to be handled someway
+        val smallIconRes = configuration.pushIcon
+
+        if (smallIconRes == null) {
+            Logger.d(this, "Invalid Icon Res: $smallIconRes")
+            return
+        }
+
+        val notification = NotificationCompat.Builder(context,configuration.pushChannelId)
                 .setContentText(message)
                 .setContentTitle(title)
                 .setContentIntent(pendingIntent)
-
-        configuration.pushIcon?.let {
-            notification
-                    .setSmallIcon(it)
-        }
+                .setChannelId(configuration.pushChannelId)
+                .setSmallIcon(smallIconRes)
 
         manager.notify(id, notification.build())
     }

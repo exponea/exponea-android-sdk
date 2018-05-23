@@ -8,7 +8,6 @@ import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
-import java.util.*
 
 class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
@@ -39,11 +38,11 @@ class FlushManagerImpl(
     private fun trySendingEvent(
             databaseObject: DatabaseStorageObject<ExportedEventType>
     ) {
-        when(databaseObject.route) {
-            Route.TRACK_EVENTS -> trackEvent(databaseObject.projectId, databaseObject)
-            Route.TRACK_CUSTOMERS -> trackCustomer(databaseObject.projectId, databaseObject)
+        when (databaseObject.route) {
+            Route.TRACK_EVENTS       -> trackEvent(databaseObject.projectId, databaseObject)
+            Route.TRACK_CUSTOMERS    -> trackCustomer(databaseObject.projectId, databaseObject)
             Route.CUSTOMERS_PROPERTY -> trackCustomer(databaseObject.projectId, databaseObject)
-            else -> {
+            else                     -> {
                 Logger.e(this, "Couldn't find properly route")
                 return
             }

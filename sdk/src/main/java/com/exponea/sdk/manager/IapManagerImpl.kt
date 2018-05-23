@@ -4,9 +4,11 @@ import android.content.Context
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponse
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.util.Logger
-import kotlin.collections.HashMap
 
 /**
  * In-App Purchase class handles all the purchases made inside the
@@ -16,7 +18,7 @@ import kotlin.collections.HashMap
  *
  * @param context Application Context
  */
-class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
+class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient = BillingClient.newBuilder(context).setListener(this).build()
     private val device = DeviceProperties()
@@ -32,11 +34,11 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
                 // Store all available products at the Play Store for future use
                 // when user purchase item.
                 getAvailableProducts()
-                Logger.d(this,"Billing service was initiated")
+                Logger.d(this, "Billing service was initiated")
             }
 
             override fun onBillingServiceDisconnected() {
-                Logger.d(this,"Billing service was disconnected")
+                Logger.d(this, "Billing service was disconnected")
             }
         })
     }
@@ -47,9 +49,9 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
     override fun startObservingPayments() {
         // Checks if the client is currently connected to the service.
         if (billingClient.isReady) {
-            Logger.d(this,"Billing client was successfully started")
+            Logger.d(this, "Billing client was successfully started")
         } else {
-            Logger.e(this,"Billing client was not properly started")
+            Logger.e(this, "Billing client was not properly started")
         }
     }
 
@@ -83,8 +85,10 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
         }
     }
 
-    override fun onPurchasesUpdated(@BillingResponse responseCode: Int,
-                                    purchases: List<Purchase>?) {
+    override fun onPurchasesUpdated(
+            @BillingResponse responseCode: Int,
+            purchases: List<Purchase>?
+    ) {
         if (responseCode == BillingResponse.OK && purchases != null) {
             for (purchase in purchases) {
 
@@ -111,9 +115,9 @@ class IapManagerImpl(context: Context): IapManager, PurchasesUpdatedListener {
 
             }
         } else if (responseCode == BillingResponse.USER_CANCELED) {
-            Logger.w(this,"User has canceled the purchased item.")
+            Logger.w(this, "User has canceled the purchased item.")
         } else {
-            Logger.e(this,"Could not load the purchase item.")
+            Logger.e(this, "Could not load the purchase item.")
         }
     }
 }

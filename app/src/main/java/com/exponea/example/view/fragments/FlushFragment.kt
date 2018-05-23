@@ -9,15 +9,15 @@ import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.fragment_settings.*
+import kotlinx.android.synthetic.main.fragment_flush.*
 
-class SettingsFragment : BaseFragment() {
+class FlushFragment : BaseFragment() {
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_settings, container, false)
+        return layoutInflater.inflate(R.layout.fragment_flush, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

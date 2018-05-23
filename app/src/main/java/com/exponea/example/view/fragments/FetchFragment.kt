@@ -13,16 +13,16 @@ import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
-import kotlinx.android.synthetic.main.fragment_main.*
+import kotlinx.android.synthetic.main.fragment_fetch.*
 
 
-class MainFragment : BaseFragment() {
+class FetchFragment : BaseFragment() {
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_main, container, false)
+        return layoutInflater.inflate(R.layout.fragment_fetch, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

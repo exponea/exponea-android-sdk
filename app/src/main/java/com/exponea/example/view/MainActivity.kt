@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import com.exponea.example.R
-import com.exponea.example.view.fragments.MainFragment
-import com.exponea.example.view.fragments.PurchaseFragment
-import com.exponea.example.view.fragments.SettingsFragment
+import com.exponea.example.view.fragments.FetchFragment
+import com.exponea.example.view.fragments.TrackFragment
+import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.sdk.Exponea
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             setupListeners()
         }
         if (savedInstanceState == null) {
-            replaceFragment(MainFragment())
+            replaceFragment(FetchFragment())
         }
 
     }
@@ -42,9 +42,9 @@ class MainActivity : AppCompatActivity() {
     private fun setupListeners() {
         navigation.setOnNavigationItemSelectedListener{
             when (it.itemId) {
-                R.id.actionMain -> replaceFragment(MainFragment())
-                R.id.actionPurchase -> replaceFragment(PurchaseFragment())
-                else -> replaceFragment(SettingsFragment())
+                R.id.actionMain -> replaceFragment(FetchFragment())
+                R.id.actionPurchase -> replaceFragment(TrackFragment())
+                else -> replaceFragment(FlushFragment())
             }
         }
     }

@@ -44,9 +44,11 @@ Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 
 After SDK has been configured, new activity will launch
 
-# Application
+# Main Screen
 
-`MainActivity` will launch shortly after configuration is completed. The activity itself doesn't do much except in-app navigation. It's the <b>fragments</b> inside of activity that are important. There are 3 <b>fragment</b>  for each navigation button, each of them is derived from `BaseFragment`.
+`MainActivity` will launch shortly after configuration is completed. The activity itself doesn't do much except in-app navigation. It's the <b>fragments</b> inside of activity that are important. There are 3 <b>fragment</b>  for each navigation button, each of them is derived from `BaseFragment`
+
+## Screen Tracking
 
 `BaseFragment` contains only one method, that allows us to track every screen user has navigated to
 ```
@@ -58,3 +60,53 @@ Exponea.trackCustomerEvent(
 )
 ```
 So each time fragment get created (i.e user navigates to it), we can track it using `fun trackPage(pageName: String)` method, where name of the screen(`pageName`) is the only parameter.
+
+## Fetch, Track, Flush
+
+`MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK: <b>Data fetching, event tracking and gathered data flushing</b> respectively
+
+### FetchFragment
+
+This fragment contains three buttons and the output window below them.
+Every button click will call specific fetch method from the SDK. Let's take a look at **Attributes** button.
+
+Here we specify `onClickListener` as usual
+```
+attributesButton.setOnClickListener {
+            setProgressBarVisible(true)
+            fetchCustomerAttributes()
+        }
+```
+Now the `fetchCustomerAttributes()` method!
+First, we should Initialize `CustomerIds` structure
+```
+val uuid = App.instance.userIdManager.uniqueUserID
+       val customerIds = CustomerIds(cookie = uuid)
+       val attributes = CustomerAttributes(customerIds)
+```
+Next, let's specify what customer attributes we want to obtain
+Starting with... customer's  name and email adress
+```
+attributes.apply {
+            withProperty("first_name")
+            withProperty("email")
+        }
+```
+And finally, we call `Exponea.fetchCustomerAttributes()` method from the SDK with specified **attributes** and **callbacks**
+```
+Exponea.fetchCustomerAttributes(
+               customerAttributes = attributes,
+               onFailure = { onFetchFailed(it) },
+               onSuccess = {onFetchSuccess(it)}
+       )
+```
+Our callbacks are pretty simple. We just take whatever we got from the server and put it's string representation to the TextView bellow our buttons
+```
+private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
+       runOnUiThread {
+            setProgressBarVisible(false)
+            resultTextView.text = result.toString()
+        }
+    }
+```
+> Note that both `onFailure` callback and `onSuccess` callback will be called on the separate thread. So in this example we used `Handler` to post changes and  update UI accordingly.

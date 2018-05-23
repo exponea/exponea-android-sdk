@@ -46,11 +46,10 @@ After SDK has been configured, new activity will launch
 
 # Main Screen
 
-`MainActivity` will launch shortly after configuration is completed. The activity itself doesn't do much except in-app navigation. It's the <b>fragments</b> inside of activity that are important. There are 3 <b>fragment</b>  for each navigation button, each of them is derived from `BaseFragment`
+`MainActivity` will launch shortly after configuration is completed. The activity itself doesn't do much except in-app navigation. It's the <b>fragments</b> inside of activity that are important. All the fragments are derived from the `BaseFragment`
 
 ## Screen Tracking
-
-`BaseFragment` contains only one method, that allows us to track every screen user has navigated to
+`BaseFragment` contains only one method, it allows us to track every screen user has navigated to
 ```
 Exponea.trackCustomerEvent(
         eventType =  "page_view",
@@ -59,11 +58,14 @@ Exponea.trackCustomerEvent(
         timestamp = null
 )
 ```
-So each time fragment get created (i.e user navigates to it), we can track it using `fun trackPage(pageName: String)` method, where name of the screen(`pageName`) is the only parameter.
+So each time fragment get created (i.e user navigates to it), we can track it using `fun trackPage(pageName: String)` method, where name of the screen(`pageName`) is the only parameter. Perfect example for tracking customer events specific for your application!
 
 ## Fetch, Track, Flush
 
-`MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK: <b>Data fetching, event tracking and gathered data flushing</b> respectively
+`MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK:
+- Data fetching
+- Common events Tracking
+- Manual flushing
 
 ### FetchFragment
 
@@ -84,7 +86,7 @@ val uuid = App.instance.userIdManager.uniqueUserID
        val customerIds = CustomerIds(cookie = uuid)
        val attributes = CustomerAttributes(customerIds)
 ```
-Next, let's specify what customer attributes we want to obtain
+Next, let's specify what customer attributes we want to obtain.
 Starting with... customer's  name and email adress
 ```
 attributes.apply {
@@ -109,14 +111,14 @@ private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
         }
     }
 ```
-> Note that both `onFailure` callback and `onSuccess` callback will be called on the separate thread. So in this example we used `Handler` to post changes and  update UI accordingly.
+> Note that both `onFailure` callback and `onSuccess` callback will be called on the separate thread. So in this example we used `Handler` to post changes on the Main Thread and  update UI accordingly.
 
 ### TrackFragment
 
-This fragment contains `ListView`, several buttons and contains different tracking examples for different events.
+This fragment consist of `ListView`, several buttons and contains different tracking examples for different events.
 
 ##### Payments tracking
-`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method simply constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
+`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method simply is constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
 ```
 val purchasedItem = PurchasedItem(
                 value = 2011.1,
@@ -145,11 +147,20 @@ private fun trackPushDelivered() {
 ```
 
 ##### CustomerProperties
-Final one allow you update customer properties. Just need to initialize `customerIds` as usual and ***properties*** you want add or update
+Final one allows you to update customer properties. Just need to initialize `customerIds` as usual and ***properties*** you want add or update
 ```
 val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
       Exponea.updateCustomerProperties(
               customerIds = customerIds,
               properties = props
       )
+```
+
+### FlushFragment
+
+This one is pretty simple. Just one button. All the events that we've tracked so far along the way, are waiting for a moment when they will be sent to the Exponea API. This **Flush** button does nothing but makes it happen right here right now.
+```
+settingsBtnFlush.setOnClickListener {
+            Exponea.flush()
+        }
 ```

@@ -110,3 +110,46 @@ private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
     }
 ```
 > Note that both `onFailure` callback and `onSuccess` callback will be called on the separate thread. So in this example we used `Handler` to post changes and  update UI accordingly.
+
+### TrackFragment
+
+This fragment contains `ListView`, several buttons and contains different tracking examples for different events.
+
+##### Payments tracking
+`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method simply constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
+```
+val purchasedItem = PurchasedItem(
+                value = 2011.1,
+                currency = "USD",
+                paymentSystem = "System",
+                productId = id.toString(),
+                productTitle = mockItems()[position]
+        )
+        Exponea.trackPayment(
+                customerIds = customerIds,
+                purchasedItem = purchasedItem)
+```
+
+##### Firebase Cloud Messaging Notifications
+
+Next three buttons are here showcase push notifications tracking, i.e notification delivered, clicked etc.
+
+```
+private fun trackPushDelivered() {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackDeliveredPush(
+                customerIds = customerIds,
+                fcmToken = "Fcm Token"
+        )
+    }
+```
+
+##### CustomerProperties
+Final one allow you update customer properties. Just need to initialize `customerIds` as usual and ***properties*** you want add or update
+```
+val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
+      Exponea.updateCustomerProperties(
+              customerIds = customerIds,
+              properties = props
+      )
+```

@@ -257,7 +257,7 @@ object Exponea {
      */
 
     fun trackFcmToken(customerIds: CustomerIds, fcmToken: String) {
-        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+        val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         updateCustomerProperties(customerIds, properties)
     }
 

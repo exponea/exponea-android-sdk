@@ -51,7 +51,7 @@ class InstallEventTest {
         repo.clear()
 
         Exponea.component.deviceInitiatedRepository.set(false)
-        Exponea.trackInstall()
+        Exponea.trackInstallEvent()
     }
 
     @Test

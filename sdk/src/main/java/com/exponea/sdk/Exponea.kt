@@ -348,7 +348,7 @@ object Exponea {
         startService()
 
         // Track Install Event
-        trackInstall()
+        trackInstallEvent()
 
         // Track In-App purchase
         trackInAppPurchase()
@@ -468,7 +468,7 @@ object Exponea {
      * device when the app is launched for the first time.
      */
 
-    internal fun trackInstall(
+    internal fun trackInstallEvent(
             campaign: String? = null,
             campaignId: String? = null,
             link: String? = null

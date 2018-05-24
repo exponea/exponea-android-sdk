@@ -103,6 +103,7 @@ class SessionManagerImpl(
      override fun trackSessionStart(timestamp: Long) {
         Logger.d(this, "Tracking session start at: ${Date(timestamp)}")
 
+        // Save session start time if session tracking is manual
         if (!isListenerActive) {
             prefs.setLong(PREF_SESSION_START, timestamp)
         }
@@ -122,6 +123,8 @@ class SessionManagerImpl(
      */
      override fun trackSessionEnd(timestamp: Long) {
         Logger.d(this, "Tracking session end at: ${Date(timestamp)}")
+
+        // Save session end time if session tracking is manual
         if (!isListenerActive) {
             prefs.setLong(PREF_SESSION_END, timestamp)
         }

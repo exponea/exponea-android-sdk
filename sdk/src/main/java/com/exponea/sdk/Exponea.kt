@@ -179,6 +179,10 @@ object Exponea {
         )
     }
 
+    /**
+     * Manually tracks session start
+     * @param timestamp - determines session start time
+     */
     fun trackSessionStart(timestamp: Long = Date().time) {
         if (isAutomaticSessionTracking) {
             Logger.w(Exponea.component.sessionManager,
@@ -188,6 +192,10 @@ object Exponea {
         component.sessionManager.trackSessionStart(timestamp)
     }
 
+    /**
+     * Manually tracks session end
+     * @param timestamp - determines session end time
+     */
     fun trackSessionEnd(timestamp: Long = Date().time) {
 
         if (isAutomaticSessionTracking) {

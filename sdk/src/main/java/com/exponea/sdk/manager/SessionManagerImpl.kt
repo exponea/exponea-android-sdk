@@ -79,11 +79,11 @@ class SessionManagerImpl(
             Logger.d(this, "New Session Started: ${Date(now)}")
 
             // Finish Tracking old session
-            trackEnd(now)
+            trackSessionEnd(now)
 
             // Start Tracking new session
             prefs.setLong(PREF_SESSION_START, now)
-            trackStart(now)
+            trackSessionStart(now)
         }
 
     }
@@ -100,7 +100,7 @@ class SessionManagerImpl(
     /**
      * Tracking Session Start
      */
-    private fun trackStart(timestamp: Long) {
+     override fun trackSessionStart(timestamp: Long) {
         val properties = DeviceProperties().toHashMap()
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.trackEvent(
@@ -114,7 +114,7 @@ class SessionManagerImpl(
     /**
      * Tracking Session End
      */
-    private fun trackEnd(timestamp: Long) {
+     override fun trackSessionEnd(timestamp: Long) {
         val properties = DeviceProperties().toHashMap()
         properties["app_version"] = BuildConfig.VERSION_CODE
         properties["duration"] = getSessionLengthInSeconds()

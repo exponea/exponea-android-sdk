@@ -215,9 +215,9 @@ object Exponea {
      * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchCustomerEvents(
-            customerEvents: CustomerEvents,
+            customerEvents: FetchEventsRequest,
             onFailure: (Result<FetchError>) -> Unit,
-            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
+            onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
     ) {
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,

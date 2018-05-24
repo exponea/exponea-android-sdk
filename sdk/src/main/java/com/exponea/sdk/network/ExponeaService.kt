@@ -15,7 +15,7 @@ interface ExponeaService {
     fun postFetchPrediction(projectToken: String, id: ExponeaFetchId): Call
     fun postFetchRecommendation(projectToken: String, recommendation: CustomerRecommendation): Call
     fun postFetchAttributes(projectToken: String, attributes: CustomerAttributes): Call
-    fun postFetchEvents(projectToken: String, events: CustomerEvents): Call
+    fun postFetchEvents(projectToken: String, events: FetchEventsRequest): Call
     fun postFetchAllProperties(projectToken: String, customerIds: CustomerIds): Call
     fun postFetchAllCustomers(projectToken: String, customer: CustomerExportModel): Call
     fun postAnonymize(projectToken: String, customerIds: CustomerIds): Call

@@ -13,8 +13,8 @@ interface FetchManager {
 
     fun fetchCustomerEvents(
             projectToken: String,
-            customerEvents: CustomerEvents,
-            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
+            customerEvents: FetchEventsRequest,
+            onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     )
 

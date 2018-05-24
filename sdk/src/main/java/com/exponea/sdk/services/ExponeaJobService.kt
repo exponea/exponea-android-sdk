@@ -22,7 +22,7 @@ class ExponeaJobService : JobService() {
             jobFinished(params, true)
         }
 
-        Exponea.component.flushManager.flush()
+        Exponea.component.flushManager.flushData()
 
         // Return true to let the job know we aren't finished with our work
 

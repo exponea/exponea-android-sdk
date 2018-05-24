@@ -152,13 +152,13 @@ object Exponea {
      * Manually push all events to Exponea
      */
 
-    fun flush() {
+    fun flushData() {
         if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
             return
         }
 
-        component.flushManager.flush()
+        component.flushManager.flushData()
     }
 
 

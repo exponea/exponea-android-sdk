@@ -4,10 +4,7 @@ import android.content.Context
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponse
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.PurchasedItem
-import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.*
 import com.exponea.sdk.util.Logger
 
 /**
@@ -66,7 +63,9 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
      * Receive the purchased item and send it to the database.
      */
     override fun trackPurchase(properties: HashMap<String, Any>) {
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         Exponea.trackEvent(
+                customerId = CustomerIds(cookie = uuid),
                 eventType = "payment",
                 properties = properties,
                 route = Route.TRACK_EVENTS

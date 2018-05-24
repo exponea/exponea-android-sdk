@@ -15,7 +15,6 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
-import kotlinx.android.synthetic.main.fragment_purchase.*
 
 class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(
@@ -106,7 +105,7 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackFCMToken() {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
-        Exponea.trackFcmToken(
+        Exponea.trackPushToken(
                 customerIds = customerIds,
                 fcmToken = "FCM token"
         )

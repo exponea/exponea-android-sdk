@@ -179,6 +179,27 @@ object Exponea {
         )
     }
 
+    fun trackSessionStart(timestamp: Long = Date().time) {
+        if (isAutomaticSessionTracking) {
+            Logger.w(Exponea.component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on ")
+            return
+        }
+        component.sessionManager.trackSessionStart(timestamp)
+    }
+
+    fun trackSessionEnd(timestamp: Long = Date().time) {
+
+        if (isAutomaticSessionTracking) {
+            Logger.w(Exponea.component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on ")
+            return
+        }
+
+        component.sessionManager.trackSessionEnd(timestamp)
+    }
+
+
     /**
      * Fetch events for a specific customer.
      * @param customerEvents - Event from a specific customer to be tracked.

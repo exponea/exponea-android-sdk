@@ -124,7 +124,7 @@ class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
                 productId = id.toString(),
                 productTitle = mockItems()[position]
         )
-        Exponea.trackPayment(
+        Exponea.trackPaymentEvent(
                 customerIds = customerIds,
                 purchasedItem = purchasedItem)
 

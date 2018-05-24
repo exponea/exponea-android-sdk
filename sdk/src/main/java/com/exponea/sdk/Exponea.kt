@@ -320,7 +320,7 @@ object Exponea {
      * @param purchasedItem - Information about the purchased item.
      */
 
-    fun trackPayment(
+    fun trackPaymentEvent(
             customerIds: CustomerIds,
             timestamp: Long = Date().time,
             purchasedItem: PurchasedItem

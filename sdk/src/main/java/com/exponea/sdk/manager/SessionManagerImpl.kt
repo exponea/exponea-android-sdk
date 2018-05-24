@@ -5,6 +5,7 @@ import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.preferences.ExponeaPreferences
@@ -109,8 +110,11 @@ class SessionManagerImpl(
         }
 
         val properties = DeviceProperties().toHashMap()
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.trackEvent(
+                customerId = CustomerIds(cookie = uuid),
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -133,8 +137,10 @@ class SessionManagerImpl(
         properties["app_version"] = BuildConfig.VERSION_CODE
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         Exponea.trackEvent(
+                customerId = CustomerIds(cookie = uuid),
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

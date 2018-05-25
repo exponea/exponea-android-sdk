@@ -30,7 +30,7 @@ object ExponeaMockApi {
     }
 
     suspend fun flush() {
-        Exponea.flush()
+        Exponea.flushData()
         delay(2000L)
     }
 

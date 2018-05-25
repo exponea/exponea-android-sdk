@@ -15,14 +15,15 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import kotlinx.android.synthetic.main.fragment_track.*
 
-class PurchaseFragment : BaseFragment(), AdapterView.OnItemClickListener {
+class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_purchase, container, false)
+        return layoutInflater.inflate(R.layout.fragment_track, container, false)
     }
 
 

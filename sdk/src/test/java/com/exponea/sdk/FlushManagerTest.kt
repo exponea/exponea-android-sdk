@@ -52,7 +52,7 @@ class FlushManagerTest {
     @Test
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
-        manager.flush()
+        manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
         }
@@ -61,7 +61,7 @@ class FlushManagerTest {
     @Test
     fun flushEvents_ShouldFail() {
         ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
-        manager.flush()
+        manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)
         }

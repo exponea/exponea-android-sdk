@@ -109,7 +109,7 @@ class EventTrackTest {
         ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
 
         runBlocking {
-            Exponea.flush()
+            Exponea.flushData()
             Exponea.component.flushManager.onFlushFinishListener = {
                 assertEquals(1, repo.all().size)
                 val event = repo.all().first()
@@ -145,7 +145,7 @@ class EventTrackTest {
         ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
 
         runBlocking {
-            Exponea.flush()
+            Exponea.flushData()
             Exponea.component.flushManager.onFlushFinishListener = {
                 assertEquals(0, repo.all().size)
             }

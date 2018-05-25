@@ -75,7 +75,7 @@ class CustomerPropertiesEventTest {
         )
 
         ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
-        Exponea.flush()
+        Exponea.flushData()
 
         // Flush event and wait for result
         runBlocking {

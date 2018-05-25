@@ -118,7 +118,7 @@ private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
 This fragment consist of `ListView`, several buttons and contains different tracking examples for different events.
 
 ##### Payments tracking
-`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method simply is constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
+`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method is simply  constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
 ```
 val purchasedItem = PurchasedItem(
                 value = 2011.1,
@@ -127,7 +127,7 @@ val purchasedItem = PurchasedItem(
                 productId = id.toString(),
                 productTitle = mockItems()[position]
         )
-        Exponea.trackPayment(
+        Exponea.trackPaymentEvent(
                 customerIds = customerIds,
                 purchasedItem = purchasedItem)
 ```

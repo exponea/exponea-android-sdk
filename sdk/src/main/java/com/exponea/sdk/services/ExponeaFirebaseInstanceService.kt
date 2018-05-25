@@ -16,6 +16,6 @@ class ExponeaFirebaseInstanceService : FirebaseInstanceIdService() {
         */
 
         Logger.d(this, "Firebase Token Refreshed")
-        Exponea.component.pushManager.trackFcmToken()
+       // Exponea.component.pushManager.trackFcmToken()
     }
 }

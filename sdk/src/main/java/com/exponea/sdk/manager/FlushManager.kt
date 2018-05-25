@@ -6,5 +6,5 @@ interface FlushManager {
     /**
      * Starts flushing all events to Exponea
      */
-    fun flush()
+    fun flushData()
 }

@@ -97,7 +97,7 @@ class ExponeaServiceImpl(
         return networkManager.post(endPoint, jsonBody)
     }
 
-    override fun postFetchEvents(projectToken: String, events: CustomerEvents): Call {
+    override fun postFetchEvents(projectToken: String, events: FetchEventsRequest): Call {
         val endPoint = ApiEndPoint(
                 ApiEndPoint.EndPointName.CUSTOMERS_EVENTS,
                 projectToken

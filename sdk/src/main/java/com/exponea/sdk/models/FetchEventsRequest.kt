@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 
-data class CustomerEvents(
+data class FetchEventsRequest(
         @SerializedName("customer_ids")
         var customerIds: CustomerIds = CustomerIds(),
         var eventTypes: MutableList<String>,

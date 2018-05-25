@@ -6,7 +6,6 @@ import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
@@ -59,7 +58,7 @@ class FcmTrackingEventsTest {
     @Test
     fun testTokenEventAdded_ShouldSuccess() {
         // Track token
-        Exponea.trackFcmToken(
+        Exponea.trackPushToken(
                 customerIds = customerIds,
                 fcmToken = token
         )

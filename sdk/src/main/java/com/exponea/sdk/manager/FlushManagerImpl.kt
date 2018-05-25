@@ -17,7 +17,7 @@ class FlushManagerImpl(
     override var onFlushFinishListener: (() -> Unit)? = null
     override var isRunning: Boolean = false
 
-    override fun flush() {
+    override fun flushData() {
         val allEvents = eventRepository.all()
 
         Logger.d(this, "flushEvents: Count ${allEvents.size}")
@@ -109,7 +109,7 @@ class FlushManagerImpl(
 
         eventRepository.remove(databaseObject.id)
         // Once done continue and try to flush the rest of events
-        flush()
+        flushData()
     }
 
     private fun onEventSentFailed(databaseObject: DatabaseStorageObject<ExportedEventType>) {
@@ -121,6 +121,6 @@ class FlushManagerImpl(
             eventRepository.update(databaseObject)
         }
 
-        flush()
+        flushData()
     }
 }

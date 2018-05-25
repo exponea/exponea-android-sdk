@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import java.sql.Timestamp
 
 abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
@@ -13,6 +14,10 @@ abstract class SessionManager : Application.ActivityLifecycleCallbacks {
     abstract fun startSessionListener()
 
     abstract fun stopSessionListener()
+
+    abstract fun trackSessionEnd(timestamp: Long)
+
+    abstract fun trackSessionStart(timestamp: Long)
 
     override fun onActivityPaused(activity: Activity?) {
         onSessionEnd()

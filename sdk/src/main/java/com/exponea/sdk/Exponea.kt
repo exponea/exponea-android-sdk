@@ -152,13 +152,13 @@ object Exponea {
      * Manually push all events to Exponea
      */
 
-    fun flush() {
+    fun flushData() {
         if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
             return
         }
 
-        component.flushManager.flush()
+        component.flushManager.flushData()
     }
 
 
@@ -180,15 +180,44 @@ object Exponea {
     }
 
     /**
+     * Manually tracks session start
+     * @param timestamp - determines session start time
+     */
+    fun trackSessionStart(timestamp: Long = Date().time) {
+        if (isAutomaticSessionTracking) {
+            Logger.w(Exponea.component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on ")
+            return
+        }
+        component.sessionManager.trackSessionStart(timestamp)
+    }
+
+    /**
+     * Manually tracks session end
+     * @param timestamp - determines session end time
+     */
+    fun trackSessionEnd(timestamp: Long = Date().time) {
+
+        if (isAutomaticSessionTracking) {
+            Logger.w(Exponea.component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on ")
+            return
+        }
+
+        component.sessionManager.trackSessionEnd(timestamp)
+    }
+
+
+    /**
      * Fetch events for a specific customer.
      * @param customerEvents - Event from a specific customer to be tracked.
      * @param onFailure - Method will be called if there was an error.
      * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchCustomerEvents(
-            customerEvents: CustomerEvents,
+            customerEvents: FetchEventsRequest,
             onFailure: (Result<FetchError>) -> Unit,
-            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
+            onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
     ) {
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,
@@ -227,8 +256,8 @@ object Exponea {
      * Manually track FCM Token to Exponea API.
      */
 
-    fun trackFcmToken(customerIds: CustomerIds, fcmToken: String) {
-        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
+    fun trackPushToken(customerIds: CustomerIds, fcmToken: String) {
+        val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         updateCustomerProperties(customerIds, properties)
     }
 
@@ -291,7 +320,7 @@ object Exponea {
      * @param purchasedItem - Information about the purchased item.
      */
 
-    fun trackPayment(
+    fun trackPaymentEvent(
             customerIds: CustomerIds,
             timestamp: Long = Date().time,
             purchasedItem: PurchasedItem
@@ -319,7 +348,7 @@ object Exponea {
         startService()
 
         // Track Install Event
-        trackInstall()
+        trackInstallEvent()
 
         // Track In-App purchase
         trackInAppPurchase()
@@ -439,7 +468,7 @@ object Exponea {
      * device when the app is launched for the first time.
      */
 
-    internal fun trackInstall(
+    internal fun trackInstallEvent(
             campaign: String? = null,
             campaignId: String? = null,
             link: String? = null

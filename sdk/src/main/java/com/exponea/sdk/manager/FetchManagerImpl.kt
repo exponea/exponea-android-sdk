@@ -50,17 +50,17 @@ class FetchManagerImpl(
 
     override fun fetchCustomerEvents(
             projectToken: String,
-            customerEvents: CustomerEvents,
-            onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit,
+            customerEvents: FetchEventsRequest,
+            onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     ) {
 
         api.postFetchEvents(projectToken, customerEvents).enqueue(
                 onResponse = { _, response: Response ->
                     val jsonBody = response.body()?.string()
-                    val type = object : TypeToken<Result<ArrayList<CustomerEventModel>>>() {}.type
+                    val type = object : TypeToken<Result<ArrayList<CustomerEvent>>>() {}.type
                     if (response.code() in 200..203) {
-                        val result = gson.fromJson<Result<ArrayList<CustomerEventModel>>>(
+                        val result = gson.fromJson<Result<ArrayList<CustomerEvent>>>(
                                 jsonBody,
                                 type
                         )

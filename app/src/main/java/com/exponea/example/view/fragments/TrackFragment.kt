@@ -15,6 +15,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.fragment_track.*
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
@@ -108,7 +109,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
         Exponea.trackPushToken(
                 customerIds = customerIds,
-                fcmToken = "FCM token"
+                fcmToken = FirebaseInstanceId.getInstance().token!!
         )
     }
 

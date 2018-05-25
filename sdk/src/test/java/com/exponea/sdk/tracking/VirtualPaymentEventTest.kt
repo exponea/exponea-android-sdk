@@ -57,7 +57,7 @@ class VirtualPaymentEventTest {
         // Set the response to success and json result.
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
-        Exponea.trackPayment(
+        Exponea.trackPaymentEvent(
                 customerIds = customerIds,
                 purchasedItem = payment
         )

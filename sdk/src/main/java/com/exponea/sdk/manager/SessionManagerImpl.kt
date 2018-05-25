@@ -5,6 +5,7 @@ import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.preferences.ExponeaPreferences
@@ -79,11 +80,11 @@ class SessionManagerImpl(
             Logger.d(this, "New Session Started: ${Date(now)}")
 
             // Finish Tracking old session
-            trackEnd(now)
+            trackSessionEnd(now)
 
             // Start Tracking new session
             prefs.setLong(PREF_SESSION_START, now)
-            trackStart(now)
+            trackSessionStart(now)
         }
 
     }
@@ -100,10 +101,20 @@ class SessionManagerImpl(
     /**
      * Tracking Session Start
      */
-    private fun trackStart(timestamp: Long) {
+     override fun trackSessionStart(timestamp: Long) {
+        Logger.d(this, "Tracking session start at: ${Date(timestamp)}")
+
+        // Save session start time if session tracking is manual
+        if (!isListenerActive) {
+            prefs.setLong(PREF_SESSION_START, timestamp)
+        }
+
         val properties = DeviceProperties().toHashMap()
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.trackEvent(
+                customerId = CustomerIds(cookie = uuid),
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -114,13 +125,22 @@ class SessionManagerImpl(
     /**
      * Tracking Session End
      */
-    private fun trackEnd(timestamp: Long) {
+     override fun trackSessionEnd(timestamp: Long) {
+        Logger.d(this, "Tracking session end at: ${Date(timestamp)}")
+
+        // Save session end time if session tracking is manual
+        if (!isListenerActive) {
+            prefs.setLong(PREF_SESSION_END, timestamp)
+        }
+
         val properties = DeviceProperties().toHashMap()
         properties["app_version"] = BuildConfig.VERSION_CODE
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         Exponea.trackEvent(
+                customerId = CustomerIds(cookie = uuid),
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

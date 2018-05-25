@@ -28,7 +28,7 @@ class FlushFragment : BaseFragment() {
         trackPage(Constants.ScreenNames.settingsScreen)
 
         settingsBtnFlush.setOnClickListener {
-            Exponea.flush()
+            Exponea.flushData()
         }
     }
 }

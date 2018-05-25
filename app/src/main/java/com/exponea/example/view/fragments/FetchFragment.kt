@@ -96,7 +96,7 @@ class FetchFragment : BaseFragment() {
         val customerIds = CustomerIds(cookie = uuid)
 
         // Init customers events structure and specify params
-        val events = CustomerEvents(
+        val events = FetchEventsRequest(
                 customerIds = customerIds,
                 eventTypes = mutableListOf("event1", "event2"),
                 sortOrder = "desc"

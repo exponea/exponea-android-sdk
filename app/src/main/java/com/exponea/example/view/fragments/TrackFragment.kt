@@ -106,7 +106,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackFCMToken() {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
-        Exponea.trackFcmToken(
+        Exponea.trackPushToken(
                 customerIds = customerIds,
                 fcmToken = "FCM token"
         )
@@ -124,7 +124,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
                 productId = id.toString(),
                 productTitle = mockItems()[position]
         )
-        Exponea.trackPayment(
+        Exponea.trackPaymentEvent(
                 customerIds = customerIds,
                 purchasedItem = purchasedItem)
 

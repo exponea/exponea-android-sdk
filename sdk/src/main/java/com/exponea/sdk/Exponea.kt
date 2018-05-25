@@ -122,7 +122,7 @@ object Exponea {
     fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
         trackEvent(
                 customerId = customerIds,
-                properties = properties.toHashMap(),
+                properties = properties.properties,
                 route = Route.CUSTOMERS_PROPERTY
         )
     }

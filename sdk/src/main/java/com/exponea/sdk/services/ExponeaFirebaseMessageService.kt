@@ -21,10 +21,9 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
         Logger.d(this, "Push Notification received.")
 
-        val title = message?.notification?.title ?: ""
+        val title = message?.data?.get("title") ?: ""
 
-        val body = message?.notification?.body ?: ""
-
+        val body = message?.data?.get("message") ?: ""
         val notificationId = message?.data?.get("notification_id")?.toInt() ?: 0
 
         // Configure the notification channel for push notifications on API 26+

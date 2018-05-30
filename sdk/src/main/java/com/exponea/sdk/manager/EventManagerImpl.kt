@@ -22,6 +22,7 @@ class EventManagerImpl(
 
         val route = when(eventType) {
             EventType.TRACK_CUSTOMER -> Route.TRACK_CUSTOMERS
+            EventType.PUSH_TOKEN -> Route.TRACK_CUSTOMERS
             else -> Route.TRACK_EVENTS
         }
 

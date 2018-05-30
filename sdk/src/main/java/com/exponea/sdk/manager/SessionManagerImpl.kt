@@ -70,6 +70,7 @@ class SessionManagerImpl(
         val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
         if (lastTimeStarted == -1L) {
             prefs.setLong(PREF_SESSION_START, now)
+            trackSessionStart(now)
             return
         }
 

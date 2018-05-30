@@ -75,6 +75,30 @@ internal class PersonalizationManagerImpl(
         )
     }
 
+    /**
+     * Fetches personalized banners
+     */
+    override fun getWebLayer(
+            projectToken: String,
+            customerIds: CustomerIds,
+            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit) {
+        getBannersConfiguration(
+                projectToken = projectToken,
+                customerIds = customerIds,
+                onSuccess = {
+                    if (canShowBanner(it.results)) {
+                        val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
+                        Exponea.component.fetchManager.fetchBanner(
+                               projectToken, banner, onSuccess, onFailure)
+                    }
+                },
+                onFailure = {
+                    Logger.e(this, "Check the error log for more information.")
+                }
+        )
+    }
+
     private fun canShowBanner(personalization: ArrayList<Personalization>): Boolean {
 
         var isExpirationValid = true

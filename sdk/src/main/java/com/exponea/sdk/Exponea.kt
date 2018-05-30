@@ -8,9 +8,11 @@ import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.Logger
+import com.google.gson.reflect.TypeToken
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -178,6 +180,27 @@ object Exponea {
                 onFailure = onFailure
         )
     }
+
+
+    /**
+     * Fetches banners web representation
+     * @param customerIds - Id of a customer
+     * @param onSuccess - success callback, when data is ready
+     * @param onFailure - failure callback, in case of errors
+     */
+    fun getPersonalizationWebLayer(
+            customerIds: CustomerIds,
+            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit) {
+        // TODO map banners id's
+        Exponea.component.personalizationManager.getWebLayer(
+                customerIds = customerIds,
+                projectToken = Exponea.configuration.projectToken,
+                onSuccess = onSuccess,
+                onFailure = onFailure
+        )
+    }
+
 
     /**
      * Manually tracks session start

@@ -484,7 +484,7 @@ object Exponea {
 
         val event = ExportedEventType(
                 type = eventType,
-                timestamp = timestamp,
+                timestamp = null,
                 customerIds = customerId,
                 properties = properties
         )

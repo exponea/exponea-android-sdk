@@ -8,7 +8,6 @@ import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.util.Logger
-import com.google.gson.reflect.TypeToken
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit

@@ -1,6 +1,7 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
@@ -62,6 +63,10 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonTrackToken.setOnClickListener { trackFCMToken() }
 
         buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
+
+        buttonCustomEvent.setOnClickListener {
+            CustomEventDialog.show(childFragmentManager, {})
+        }
     }
 
     /**

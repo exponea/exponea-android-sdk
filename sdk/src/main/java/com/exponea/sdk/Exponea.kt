@@ -143,7 +143,7 @@ object Exponea {
     ) {
         trackEvent(
                 customerId = customerIds,
-                properties = properties.toHashMap(),
+                properties = properties.properties,
                 timestamp = timestamp,
                 eventType = eventType,
                 type = type

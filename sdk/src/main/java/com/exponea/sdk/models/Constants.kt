@@ -38,6 +38,7 @@ object Constants {
         val sessionEnd: String = "session_end"
         val sessionStart: String = "session_start"
         val payment: String = "payment"
+        val push: String = "campaign"
     }
 
     /// Error messages

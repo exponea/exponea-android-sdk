@@ -11,6 +11,7 @@ import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -123,7 +124,7 @@ object Exponea {
         trackEvent(
                 customerId = customerIds,
                 properties = properties.properties,
-                route = Route.CUSTOMERS_PROPERTY
+                type = EventType.TRACK_CUSTOMER
         )
     }
 
@@ -137,14 +138,15 @@ object Exponea {
             customerIds: CustomerIds,
             properties: PropertiesList,
             timestamp: Long?,
-            eventType: String?
+            eventType: String?,
+            type: EventType = EventType.TRACK_EVENT
     ) {
         trackEvent(
                 customerId = customerIds,
-                properties = properties.toHashMap(),
+                properties = properties.properties,
                 timestamp = timestamp,
                 eventType = eventType,
-                route = Route.TRACK_EVENTS
+                type = type
         )
     }
 
@@ -178,6 +180,27 @@ object Exponea {
                 onFailure = onFailure
         )
     }
+
+
+    /**
+     * Fetches banners web representation
+     * @param customerIds - Id of a customer
+     * @param onSuccess - success callback, when data is ready
+     * @param onFailure - failure callback, in case of errors
+     */
+    fun getPersonalizationWebLayer(
+            customerIds: CustomerIds,
+            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit) {
+        // TODO map banners id's
+        Exponea.component.personalizationManager.getWebLayer(
+                customerIds = customerIds,
+                projectToken = Exponea.configuration.projectToken,
+                onSuccess = onSuccess,
+                onFailure = onFailure
+        )
+    }
+
 
     /**
      * Manually tracks session start
@@ -258,7 +281,12 @@ object Exponea {
 
     fun trackPushToken(customerIds: CustomerIds, fcmToken: String) {
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
-        updateCustomerProperties(customerIds, properties)
+        trackEvent(
+                eventType = Constants.EventTypes.push,
+                customerId = customerIds,
+                properties = properties.properties,
+                type = EventType.PUSH_TOKEN
+        )
     }
 
     /**
@@ -275,7 +303,7 @@ object Exponea {
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,
-                eventType = "campaign",
+                eventType = Constants.EventTypes.push,
                 timestamp = timestamp
         )
     }
@@ -295,8 +323,9 @@ object Exponea {
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,
-                eventType = "campaign",
-                timestamp = timestamp
+                eventType = Constants.EventTypes.push,
+                timestamp = timestamp,
+                type = EventType.PUSH_OPENED
         )
     }
 
@@ -330,7 +359,7 @@ object Exponea {
                 timestamp = timestamp,
                 customerId = customerIds,
                 properties = purchasedItem.toHashMap(),
-                route = Route.TRACK_EVENTS
+                type = EventType.PAYMENT
         )
     }
 
@@ -445,7 +474,7 @@ object Exponea {
             timestamp: Long? = Date().time,
             customerId: CustomerIds? = null,
             properties: HashMap<String, Any> = hashMapOf(),
-            route: Route
+            type: EventType
     ) {
 
         if (!isInitialized) {
@@ -455,12 +484,14 @@ object Exponea {
 
         val event = ExportedEventType(
                 type = eventType,
-                timestamp = timestamp,
+                timestamp = null,
                 customerIds = customerId,
                 properties = properties
         )
 
-        component.eventManager.addEventToQueue(event, route)
+
+
+        component.eventManager.addEventToQueue(event, type)
     }
 
     /**
@@ -491,7 +522,7 @@ object Exponea {
                 customerId = CustomerIds(cookie = uuid),
                 eventType = Constants.EventTypes.installation,
                 properties = device.toHashMap(),
-                route = Route.TRACK_EVENTS
+                type = EventType.INSTALL
         )
 
         component.deviceInitiatedRepository.set(true)

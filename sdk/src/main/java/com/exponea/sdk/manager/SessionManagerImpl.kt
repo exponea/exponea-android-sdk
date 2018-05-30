@@ -4,10 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.*
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import java.util.*
@@ -73,6 +70,7 @@ class SessionManagerImpl(
         val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
         if (lastTimeStarted == -1L) {
             prefs.setLong(PREF_SESSION_START, now)
+            trackSessionStart(now)
             return
         }
 
@@ -118,7 +116,7 @@ class SessionManagerImpl(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
-                route = Route.TRACK_EVENTS
+                type = EventType.SESSION_START
         )
     }
 
@@ -144,7 +142,7 @@ class SessionManagerImpl(
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,
-                route = Route.TRACK_EVENTS
+                type = EventType.SESSION_END
         )
     }
 

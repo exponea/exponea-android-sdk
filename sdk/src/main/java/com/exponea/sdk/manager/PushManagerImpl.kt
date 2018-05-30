@@ -18,8 +18,7 @@ class PushManagerImpl(
     val customerIds = CustomerIds(cookie = uniqueToken)
 
     override fun trackFcmToken() {
-        val properties = PropertiesList(hashMapOf(Pair("push_notification_token", fcmToken)))
-        Exponea.updateCustomerProperties(customerIds, properties)
+        Exponea.trackPushToken(customerIds, fcmToken)
     }
 
     override fun trackDeliveredPush() {

@@ -7,15 +7,10 @@ import com.google.firebase.iid.FirebaseInstanceIdService
 class ExponeaFirebaseInstanceService : FirebaseInstanceIdService() {
     override fun onTokenRefresh() {
 
-        //TODO to fix lateinit not initialized bug
-        /*
         if (!Exponea.isAutoPushNotification) {
             return
         }
-
-        */
-
         Logger.d(this, "Firebase Token Refreshed")
-       // Exponea.component.pushManager.trackFcmToken()
+        Exponea.component.pushManager.trackFcmToken()
     }
 }

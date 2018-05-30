@@ -16,6 +16,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.util.Logger
+import com.google.firebase.FirebaseApp
 import kotlinx.android.synthetic.main.activity_authentication.*
 import java.util.concurrent.TimeUnit
 
@@ -79,6 +80,7 @@ class AuthenticationActivity : AppCompatActivity() {
         Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 
         startActivity(Intent(this, MainActivity::class.java))
+        FirebaseApp.initializeApp(App.instance)
         finish()
     }
 

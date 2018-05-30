@@ -139,7 +139,7 @@ object Exponea {
             properties: PropertiesList,
             timestamp: Long?,
             eventType: String?,
-            type: EventType = EventType.TRACK_CUSTOMER
+            type: EventType = EventType.TRACK_EVENT
     ) {
         trackEvent(
                 customerId = customerIds,

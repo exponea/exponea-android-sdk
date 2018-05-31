@@ -52,6 +52,7 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         Exponea.component.fcmManager.showNotification(
                 title,
                 body,
+                data,
                 notificationId,
                 notificationManager
         )

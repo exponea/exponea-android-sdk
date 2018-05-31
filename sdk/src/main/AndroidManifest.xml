@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.exponea.sdk">
@@ -5,11 +6,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
-
-
     <application>
         <service
-            android:name="com.exponea.sdk.services.ExponeaJobService"
+            android:name=".services.ExponeaJobService"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service android:name=".services.ExponeaFirebaseInstanceService">
@@ -26,10 +25,12 @@
         <provider
             android:name="com.google.firebase.provider.FirebaseInitProvider"
             android:authorities="${applicationId}.firebaseinitprovider"
-            tools:node="remove"
-            />
+            tools:node="remove" />
 
+        <receiver
+            android:name=".services.ExponeaPushReceiver"
+            android:enabled="true"
+            android:exported="false"></receiver>
     </application>
-
 
 </manifest>

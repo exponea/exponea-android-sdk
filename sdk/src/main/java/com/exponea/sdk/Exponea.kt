@@ -293,13 +293,23 @@ object Exponea {
      * Manually track delivered push notification to Exponea API.
      */
 
-    fun trackDeliveredPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+    fun trackDeliveredPush(
+            customerIds: CustomerIds,
+            data: NotificationData? = null,
+            fcmToken: String,
+            timestamp: Long? = null) {
         val properties = PropertiesList(
                 hashMapOf(
                         Pair("action_type", "notification"),
                         Pair("status", "delivered")
                 )
         )
+        data?.let {
+            properties["campaign_id"] = it.campaignId
+            properties["campaign_name"] = data.campaignName
+            properties["action_id"] = data.actionId
+        }
+        Logger.d(this, properties.toString())
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,
@@ -312,13 +322,24 @@ object Exponea {
      * Manually track clicked push notification to Exponea API.
      */
 
-    fun trackClickedPush(customerIds: CustomerIds, fcmToken: String, timestamp: Long? = null) {
+    fun trackClickedPush(
+            customerIds: CustomerIds,
+            data: NotificationData? = null,
+            fcmToken: String,
+            timestamp: Long? = null
+            ) {
         val properties = PropertiesList(
                 hashMapOf(
-                        Pair("action_type", "notification"),
-                        Pair("status", "clicked")
+                        "action_type" to "notification",
+                        "status" to "clicked"
                 )
         )
+
+        data?.let {
+            properties["campaign_id"] = data.campaignId
+            properties["campaign_name"] = data.campaignName
+            properties["action_id"] = data.actionId
+        }
 
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,

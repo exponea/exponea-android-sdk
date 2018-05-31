@@ -30,11 +30,10 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
         val body = message?.data?.get("message") ?: ""
 
-        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES).create()
+        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
         val dataString = message?.data?.get("data")
         val data = gson.fromJson(dataString, NotificationData::class.java)
         val notificationId = message?.data?.get("notification_id")?.toInt() ?: 0
-
         // Configure the notification channel for push notifications on API 26+
 
         // This configuration runs only once.
@@ -45,7 +44,9 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         }
 
         // Track the delivered push event to Exponea API.
-        Exponea.component.pushManager.trackDeliveredPush()
+        Exponea.component.pushManager.trackDeliveredPush(
+                data = data
+        )
 
         // Show push notification.
         Exponea.component.fcmManager.showNotification(

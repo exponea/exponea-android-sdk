@@ -309,7 +309,6 @@ object Exponea {
             properties["campaign_name"] = data.campaignName
             properties["action_id"] = data.actionId
         }
-        Logger.d(this, properties.toString())
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
                 properties = properties,

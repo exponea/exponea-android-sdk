@@ -17,6 +17,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import kotlinx.android.synthetic.main.fragment_track.*
+import java.util.*
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(
@@ -65,9 +66,24 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
 
         buttonCustomEvent.setOnClickListener {
-            CustomEventDialog.show(childFragmentManager, {_, _ -> })
+            CustomEventDialog.show(childFragmentManager, {eventName, properties ->
+                trackCustomEvent(eventName, properties)})
         }
     }
+
+    /**
+     * Method to handle custom event tracking obtained by CustomEventDialog
+     */
+    private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackCustomerEvent(
+                eventType = eventName,
+                customerIds = customerIds,
+                properties = propertiesList,
+                timestamp = Date().time
+        )
+    }
+
 
     /**
      * Method to handle push clicked event tracking

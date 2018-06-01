@@ -109,7 +109,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
         Exponea.trackPushToken(
                 customerIds = customerIds,
-                fcmToken = FirebaseInstanceId.getInstance().token!!
+                fcmToken = FirebaseInstanceId.getInstance().token ?: ""
         )
     }
 

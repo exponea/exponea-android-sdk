@@ -11,6 +11,7 @@ import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.example.view.dialogs.CustomAttributesDialog
 import com.exponea.example.view.dialogs.CustomEventDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
@@ -63,7 +64,11 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         buttonTrackToken.setOnClickListener { trackFCMToken() }
 
-        buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
+        buttonUpdateProperties.setOnClickListener {
+            CustomAttributesDialog.show(childFragmentManager, {
+                trackUpdateCustomerProperties(it)
+            })
+        }
 
         buttonCustomEvent.setOnClickListener {
             CustomEventDialog.show(childFragmentManager, {eventName, properties ->
@@ -99,14 +104,12 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     /**
      * Method to handle updating customer properties
      */
-    private fun trackUpdateCustomerProperties() {
+    private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
 
-        // Properties to update
-        val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
         Exponea.updateCustomerProperties(
                 customerIds = customerIds,
-                properties = props
+                properties = propertiesList
         )
     }
 

@@ -106,25 +106,26 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonTrackDelivered" />
 
     <Button
-        android:theme="@style/AppButton"
         android:id="@+id/buttonUpdateProperties"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="Update cust. Properites"
-        app:layout_constraintStart_toStartOf="parent"
+        android:theme="@style/AppButton"
+        app:layout_constraintStart_toStartOf="@+id/textView3"
         app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
     <Button
-        android:theme="@style/AppButton"
         android:id="@+id/buttonCustomEvent"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
         android:text="Custom Event"
+        android:theme="@style/AppButton"
         app:layout_constraintBottom_toBottomOf="@+id/buttonUpdateProperties"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonUpdateProperties"
         app:layout_constraintTop_toTopOf="@+id/buttonUpdateProperties" />
 
 </android.support.constraint.ConstraintLayout>

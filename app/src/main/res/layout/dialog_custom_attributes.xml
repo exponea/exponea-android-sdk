@@ -47,6 +47,9 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
+        android:inputType="text"
+        android:imeOptions="actionNext"
+        android:maxLines="1"
         android:layout_marginTop="24dp"
         android:ems="10"
         android:text="Name"
@@ -95,6 +98,9 @@
 
     <EditText
         android:id="@+id/editTextValue"
+        android:inputType="text"
+        android:imeOptions="actionNext"
+        android:maxLines="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"

@@ -8,7 +8,7 @@
 
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/textViewTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -31,8 +31,8 @@
         android:maxLines="1"
         android:text="event_name"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView6"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+        app:layout_constraintStart_toEndOf="@+id/textViewTypeLabel"
+        app:layout_constraintTop_toBottomOf="@+id/textViewTitle" />
 
     <TextView
         android:id="@+id/label"
@@ -69,7 +69,8 @@
         android:ems="10"
         android:inputType="text"
         android:imeOptions="actionNext"
-        android:maxLines="1"        android:text="value"
+        android:maxLines="1"
+        android:text="value"
         app:layout_constraintBottom_toBottomOf="@+id/editTextPropName"
         app:layout_constraintEnd_toStartOf="@+id/buttonAddProperty"
         app:layout_constraintStart_toEndOf="@+id/editTextPropName"
@@ -124,7 +125,7 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
-        android:id="@+id/textView6"
+        android:id="@+id/textViewTypeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"

@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5">
+        app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
 
         <TextView
             android:id="@+id/textViewAttributes"
@@ -30,7 +30,7 @@
     </FrameLayout>
 
     <TextView
-        android:id="@+id/textView5"
+        android:id="@+id/textViewTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -53,12 +53,12 @@
         android:layout_marginTop="24dp"
         android:ems="10"
         android:text="Name"
-        app:layout_constraintEnd_toStartOf="@+id/space2"
+        app:layout_constraintEnd_toStartOf="@+id/space"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/space2" />
+        app:layout_constraintTop_toTopOf="@+id/space" />
 
     <Space
-        android:id="@+id/space2"
+        android:id="@+id/space"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -107,7 +107,7 @@
         android:text="Value"
         app:layout_constraintBottom_toBottomOf="@+id/editTextName"
         app:layout_constraintEnd_toStartOf="@+id/buttonAddAttr"
-        app:layout_constraintStart_toEndOf="@+id/space2"
+        app:layout_constraintStart_toEndOf="@+id/space"
         app:layout_constraintTop_toTopOf="@+id/editTextName" />
 
 

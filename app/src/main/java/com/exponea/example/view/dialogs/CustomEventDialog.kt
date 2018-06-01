@@ -5,18 +5,28 @@ import android.app.Dialog
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import com.exponea.example.R
+import com.exponea.example.utils.asJson
+import com.exponea.sdk.models.PropertiesList
 
 class CustomEventDialog : DialogFragment() {
 
-    private lateinit var onConfirmed: () -> Unit
-
+    private lateinit var onConfirmed: (eventName: String, properties: PropertiesList) -> Unit
+    private val propsMap =  hashMapOf("property" to "some value" as Any)
     companion object {
 
         const val TAG = "CustomEventDialog"
 
-        fun show(fragmentManager: FragmentManager, callback : () -> (Unit) ) {
+        fun show(
+                fragmentManager: FragmentManager,
+                callback : (eventName: String, properties: PropertiesList) -> (Unit)
+        ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
                     as? CustomEventDialog
                     ?: CustomEventDialog()
@@ -28,14 +38,41 @@ class CustomEventDialog : DialogFragment() {
     }
 
 
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(context, R.style.MyDialogTheme)
         val inflate = LayoutInflater.from(context)
         val view = inflate.inflate(R.layout.dialog_custom_event, null ,false)
         builder.setView(view)
-            .setPositiveButton("Track", {_, _ -> })
-            .setNegativeButton(android.R.string.cancel, {_, _ ->})
+        initListeners(view)
         return builder.create()
     }
+
+    private fun initListeners(view: View) {
+        val propName : EditText = view.findViewById(R.id.editTextPropName)
+        val propValue : EditText = view.findViewById(R.id.editTextValue)
+        val eventName : EditText = view.findViewById(R.id.editTextEventName)
+        val propsTextView : TextView = view.findViewById(R.id.textViewProperties)
+
+        propsTextView.text = propsMap.asJson()
+
+        view.findViewById<Button>(R.id.buttonAddProperty).setOnClickListener {
+            if (!propValue.text.isEmpty() && !propName.text.isEmpty()) {
+                Log.d(TAG, propsMap.toString())
+                propsMap[propName.text.toString()] = propName.text.toString()
+                propsTextView.text = propsMap.asJson()
+            }
+        }
+
+        view.findViewById<Button>(R.id.buttonTrack).setOnClickListener {
+            val name = eventName.text.toString()
+            val properties = PropertiesList(propsMap)
+            onConfirmed(name, properties)
+            dismiss()
+        }
+
+    }
+
+
 
 }

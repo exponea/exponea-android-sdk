@@ -65,7 +65,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
 
         buttonCustomEvent.setOnClickListener {
-            CustomEventDialog.show(childFragmentManager, {})
+            CustomEventDialog.show(childFragmentManager, {_, _ -> })
         }
     }
 

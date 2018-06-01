@@ -32,3 +32,12 @@ fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
         }
     })
 }
+
+fun HashMap<String, Any>.asJson() : String{
+    var string = "{\n"
+    this.toList().forEachIndexed { index, pair ->
+        string += "\t ${pair.first}: ${pair.second}"
+        if (index != this.size - 1) string += ",\n"
+    }
+    return "$string\n}"
+}

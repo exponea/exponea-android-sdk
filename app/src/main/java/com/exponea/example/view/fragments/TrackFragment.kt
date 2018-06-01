@@ -132,7 +132,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     }
 
     override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Log.d("Adapter", "Click")
 
         // Track purchase at position
         trackPayment(position)

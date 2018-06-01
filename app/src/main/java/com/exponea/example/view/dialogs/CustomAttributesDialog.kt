@@ -45,6 +45,7 @@ class CustomAttributesDialog : DialogFragment() {
         val nameView = view.findViewById(R.id.editTextName) as EditText
         val valueView = view.findViewById(R.id.editTextValue) as EditText
         val propertiesView = view.findViewById(R.id.textViewAttributes) as TextView
+        propertiesView.text = attributes.asJson()
         view.findViewById<Button>(R.id.buttonAddAttr).setOnClickListener {
             if (!nameView.text.isEmpty() && !valueView.text.isEmpty() ) {
                 attributes[nameView.text.toString()] = valueView.text.toString()

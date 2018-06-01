@@ -1,4 +1,4 @@
-package com.exponea.example.view.fragments
+package com.exponea.example.view.dialogs
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -18,7 +18,8 @@ class CustomEventDialog : DialogFragment() {
 
         fun show(fragmentManager: FragmentManager, callback : () -> (Unit) ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
-                    as? CustomEventDialog ?: CustomEventDialog()
+                    as? CustomEventDialog
+                    ?: CustomEventDialog()
 
             fragment.onConfirmed = callback
             fragment.show(fragmentManager, TAG)

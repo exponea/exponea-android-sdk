@@ -1,7 +1,6 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +11,7 @@ import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.example.view.dialogs.CustomEventDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList

@@ -1,9 +1,6 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.FetchError
-import com.exponea.sdk.models.Personalization
-import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.*
 
 interface PersonalizationManager {
     fun showBanner(projectToken: String, customerIds: CustomerIds)
@@ -16,4 +13,11 @@ interface PersonalizationManager {
     )
 
     fun getPersonalization(projectToken: String, customerIds: CustomerIds)
+
+    fun getWebLayer(
+            projectToken: String,
+            customerIds: CustomerIds,
+            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    )
 }

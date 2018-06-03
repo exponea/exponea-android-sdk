@@ -68,7 +68,7 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
                 customerId = CustomerIds(cookie = uuid),
                 eventType = "payment",
                 properties = properties,
-                route = Route.TRACK_EVENTS
+                type = EventType.PAYMENT
         )
     }
 

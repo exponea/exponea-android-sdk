@@ -52,7 +52,7 @@
         android:maxLines="1"
         android:layout_marginTop="24dp"
         android:ems="10"
-        android:text="Name"
+        android:text="first_name"
         app:layout_constraintEnd_toStartOf="@+id/space"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/space" />
@@ -104,7 +104,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:text="Value"
+        android:text="New Name"
         app:layout_constraintBottom_toBottomOf="@+id/editTextName"
         app:layout_constraintEnd_toStartOf="@+id/buttonAddAttr"
         app:layout_constraintStart_toEndOf="@+id/space"

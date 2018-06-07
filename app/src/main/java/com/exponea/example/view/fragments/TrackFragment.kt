@@ -11,11 +11,14 @@ import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.example.view.dialogs.CustomAttributesDialog
+import com.exponea.example.view.dialogs.CustomEventDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import kotlinx.android.synthetic.main.fragment_track.*
+import java.util.*
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(
@@ -61,8 +64,31 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         buttonTrackToken.setOnClickListener { trackFCMToken() }
 
-        buttonUpdateProperties.setOnClickListener { trackUpdateCustomerProperties() }
+        buttonUpdateProperties.setOnClickListener {
+            CustomAttributesDialog.show(childFragmentManager, {
+                trackUpdateCustomerProperties(it)
+            })
+        }
+
+        buttonCustomEvent.setOnClickListener {
+            CustomEventDialog.show(childFragmentManager, {eventName, properties ->
+                trackCustomEvent(eventName, properties)})
+        }
     }
+
+    /**
+     * Method to handle custom event tracking obtained by CustomEventDialog
+     */
+    private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
+        val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+        Exponea.trackCustomerEvent(
+                eventType = eventName,
+                customerIds = customerIds,
+                properties = propertiesList,
+                timestamp = Date().time
+        )
+    }
+
 
     /**
      * Method to handle push clicked event tracking
@@ -78,14 +104,12 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     /**
      * Method to handle updating customer properties
      */
-    private fun trackUpdateCustomerProperties() {
+    private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
 
-        // Properties to update
-        val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
         Exponea.updateCustomerProperties(
                 customerIds = customerIds,
-                properties = props
+                properties = propertiesList
         )
     }
 

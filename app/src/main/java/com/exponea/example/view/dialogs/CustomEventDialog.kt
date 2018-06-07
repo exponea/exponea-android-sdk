@@ -59,7 +59,7 @@ class CustomEventDialog : DialogFragment() {
         view.findViewById<Button>(R.id.buttonAddProperty).setOnClickListener {
             if (!propValue.text.isEmpty() && !propName.text.isEmpty()) {
                 Log.d(TAG, propsMap.toString())
-                propsMap[propName.text.toString()] = propName.text.toString()
+                propsMap[propName.text.toString()] = propValue.text.toString()
                 propsTextView.text = propsMap.asJson()
             }
         }

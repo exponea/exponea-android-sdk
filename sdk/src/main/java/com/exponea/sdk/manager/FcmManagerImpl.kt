@@ -9,6 +9,8 @@ import android.content.res.Resources
 import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 
 class FcmManagerImpl(
@@ -21,17 +23,15 @@ class FcmManagerImpl(
     override fun showNotification(
             title: String,
             message: String,
+            data: NotificationData,
             id: Int,
             manager: NotificationManager
     ) {
         Logger.d(this, "showNotification")
 
-        val i = Intent(context, PushManager::class.java)
+        val i = ExponeaPushReceiver.getClickIntent(context, data)
 
-        i.addCategory(Intent.CATEGORY_HOME)
-        i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-
-        val pendingIntent = PendingIntent.getActivity(
+        val pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode,
                 i, PendingIntent.FLAG_UPDATE_CURRENT
         )

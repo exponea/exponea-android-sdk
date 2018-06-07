@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.google.firebase.iid.FirebaseInstanceId
@@ -21,17 +22,19 @@ class PushManagerImpl(
         Exponea.trackPushToken(customerIds, fcmToken)
     }
 
-    override fun trackDeliveredPush() {
+    override fun trackDeliveredPush(data: NotificationData?) {
         Exponea.trackDeliveredPush(
                 customerIds = customerIds,
-                fcmToken = fcmToken
+                fcmToken = fcmToken,
+                data = data
         )
     }
 
-    override fun trackClickedPush() {
+    override fun trackClickedPush(data: NotificationData?) {
         Exponea.trackClickedPush(
                 customerIds = customerIds,
-                fcmToken = fcmToken
+                fcmToken = fcmToken,
+                data = data
         )
     }
 

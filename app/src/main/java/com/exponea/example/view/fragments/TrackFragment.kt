@@ -17,6 +17,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.fragment_track.*
 import java.util.*
 
@@ -132,7 +133,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
         Exponea.trackPushToken(
                 customerIds = customerIds,
-                fcmToken = "FCM token"
+                fcmToken = FirebaseInstanceId.getInstance().token ?: ""
         )
     }
 
@@ -155,7 +156,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     }
 
     override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Log.d("Adapter", "Click")
 
         // Track purchase at position
         trackPayment(position)

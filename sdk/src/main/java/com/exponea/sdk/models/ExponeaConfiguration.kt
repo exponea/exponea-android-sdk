@@ -5,7 +5,7 @@ import android.app.NotificationManager
 data class ExponeaConfiguration(
         // Default project token.
         var projectToken: String = "",
-        // Map routes and project tokens to be send to Exponea API.
+        // Map event types and project tokens to be send to Exponea API.
         var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
         // Authorization http header.
         var authorization: String? = null,

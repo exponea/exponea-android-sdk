@@ -8,8 +8,8 @@ It's possible to initialize the configuration through a ExponeaConfiguration obj
 data class ExponeaConfiguration(
         // Default project token.
         var projectToken: String = "",
-        // Map routes and project tokens to be send to Exponea API.
-        var projectTokenRouteMap: HashMap<Route, MutableList<String>> = hashMapOf(),
+        // Map event types and project tokens to be send to Exponea API.
+        var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
         // Authorization http header.
         var authorization: String? = null,
         // Base url for http requests to Exponea API.
@@ -47,9 +47,9 @@ data class ExponeaConfiguration(
 Eg:
 
 ```
-var projectTokenRouteMap = hashMapOf<Route, MutableList<String>> (
-        Pair(Route.TRACK_CUSTOMERS, mutableListOf("ProjectTokenA", "ProjectTokenB")),
-        Pair(Route.TRACK_EVENTS, mutableListOf("ProjectTokenA", "ProjectTokenC"))
+var projectTokenRouteMap = hashMapOf<EventType, MutableList<String>> (
+        Pair(EventType.TRACK_CUSTOMER, mutableListOf("ProjectTokenA", "ProjectTokenB")),
+        Pair(EventType.TRACK_EVENT, mutableListOf("ProjectTokenA", "ProjectTokenC"))
 )
 ```
 

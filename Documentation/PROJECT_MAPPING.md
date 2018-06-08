@@ -9,8 +9,8 @@ Eg:
 If you want to identify the project tokens `TOKEN_001` and `TOKEN_002` for the event type `TRACK_CUSTOMER` you should configure the `projectTokenRouteMap` in the configuration object as:
 
 ```
-var projectTokenRouteMap = hashMapOf<Route, MutableList<String>> (
-        Pair(Route.TRACK_CUSTOMERS, mutableListOf("TOKEN_001", "TOKEN_002"))
+var projectTokenRouteMap = hashMapOf<EventType, MutableList<String>> (
+        Pair(EventType.TRACK_CUSTOMER, mutableListOf("TOKEN_001", "TOKEN_002"))
 )
 ```
 

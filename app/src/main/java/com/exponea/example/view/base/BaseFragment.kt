@@ -14,12 +14,14 @@ open class BaseFragment : Fragment() {
      */
     fun trackPage(pageName: String) {
         val userID = App.instance.userIdManager.uniqueUserID
+        val registeredID = App.instance.registeredIdManager.registeredID
 
         val properties = PropertiesList(hashMapOf(Pair("name", pageName)))
+        val customerIds = CustomerIds(cookie = userID, registered = registeredID)
 
         Exponea.trackCustomerEvent(
                 eventType =  "page_view",
-                customerIds = CustomerIds(cookie = userID),
+                customerIds = customerIds,
                 properties = properties,
                 timestamp = null
         )

@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "845271490429",
+    "firebase_url": "https://exponea-test-7400a.firebaseio.com",
+    "project_id": "exponea-test-7400a",
+    "storage_bucket": "exponea-test-7400a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845271490429:android:07d45c4ff01c0bd0",
+        "android_client_info": {
+          "package_name": "com.exponea.example"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "845271490429-op6m666o2aicnnrpmm56sjt5726a7ep6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.exponea.example",
+            "certificate_hash": "faeda4180222e6a4d1cb6e940bc4ccbd9f36382c"
+          }
+        },
+        {
+          "client_id": "845271490429-aa3m3rl15gv364r7bjrl9tbnjla3s5p7.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "845271490429-aa3m3rl15gv364r7bjrl9tbnjla3s5p7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9Hw4ZmGfc_9H3oNimwpHBzmIqXFP_D-0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "845271490429-aa3m3rl15gv364r7bjrl9tbnjla3s5p7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

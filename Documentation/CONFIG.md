@@ -53,6 +53,8 @@ var projectTokenRouteMap = hashMapOf<Route, MutableList<String>> (
 )
 ```
 
+For detailed information, please go to [Project Mapping documentation](../Documentation/PROJECT_MAPPING.md)
+
 #### authorization
 
 * Basic authentication supported by a combination of public/private token. 

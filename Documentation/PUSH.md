@@ -10,7 +10,7 @@ For push notifications to work, you need a working Google API project. The follo
 2) Click on **Create Project** button
 3) Fill in preferred project name and click **Create** button
 4) Please wait for the project to create, it usually takes only a few seconds
-5) After the project has been created you will be redirected to the **Project Dashboard** page where you'll find **Project Number** which is needed in the Infinario Android SDK
+5) After the project has been created you will be redirected to the **Project Dashboard** page where you'll find **Project Number** which is needed in the Exponea Android SDK
 6) In the left menu, navigate to **APIs & auth -> APIs** and find **Google Cloud Messaging for Android**
 7) Please make sure the Google Cloud Messaging for Android is **turned ON**
 8) In the left menu, navigate to **APIs & auth -> Credentials** and click on **Create new Key** button

@@ -1,6 +1,7 @@
 package com.exponea.example
 
 import android.app.Application
+import com.exponea.example.managers.RegisteredIdManager
 import com.exponea.example.managers.UserIdManager
 
 class App : Application() {
@@ -9,6 +10,7 @@ class App : Application() {
     }
 
     lateinit var userIdManager: UserIdManager
+    lateinit var registeredIdManager: RegisteredIdManager
 
     override fun onCreate() {
         super.onCreate()
@@ -18,7 +20,8 @@ class App : Application() {
 
         // Create our UserIDManager for getting our unique ID
         userIdManager = UserIdManager(this)
-
+        // Create our RegisteredIDManager to get the registered ID.
+        registeredIdManager = RegisteredIdManager(this)
     }
 
 

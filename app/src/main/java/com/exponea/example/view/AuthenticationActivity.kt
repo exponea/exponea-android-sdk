@@ -24,14 +24,14 @@ class AuthenticationActivity : AppCompatActivity() {
 
     var authorizationToken = ""
     var projectToken = ""
-    var customerIds = ""
+    var registeredIds = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
         setSupportActionBar(toolbar)
         editTextAuthCode.onTextChanged { authorizationToken = it  }
-        editTextCustomersIds.onTextChanged { customerIds = it }
+        editTextRegisteredIds.onTextChanged { registeredIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }
 
         button.setOnClickListener {
@@ -67,8 +67,8 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.projectToken = projectToken
 
         // Set our customer id
-        if (editTextCustomersIds.isValid()) {
-            App.instance.userIdManager.uniqueUserID = customerIds
+        if (editTextRegisteredIds.isValid()) {
+            App.instance.registeredIdManager.registeredID = registeredIds
         }
 
         // Start our SDK

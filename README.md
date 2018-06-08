@@ -42,7 +42,7 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 To implement the Exponea SDK you must configure the SDK first:
 
 * [Configuration](./Documentation/CONFIG.md);
-* [Project Token Mapping](./Documentation/PROJECT_MAPPING.md)
+* [Project Token Mapping](./Documentation/PROJECT_MAPPING.md);
 
 Then you can start using all the amazing features we developed for you:
 

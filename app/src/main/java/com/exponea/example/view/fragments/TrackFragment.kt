@@ -2,7 +2,6 @@ package com.exponea.example.view.fragments
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +10,8 @@ import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
-import com.exponea.example.view.dialogs.CustomAttributesDialog
-import com.exponea.example.view.dialogs.CustomEventDialog
+import com.exponea.example.view.dialogs.TrackCustomAttributesDialog
+import com.exponea.example.view.dialogs.TrackCustomEventDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
@@ -66,19 +65,19 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonTrackToken.setOnClickListener { trackFCMToken() }
 
         buttonUpdateProperties.setOnClickListener {
-            CustomAttributesDialog.show(childFragmentManager, {
+            TrackCustomAttributesDialog.show(childFragmentManager, {
                 trackUpdateCustomerProperties(it)
             })
         }
 
         buttonCustomEvent.setOnClickListener {
-            CustomEventDialog.show(childFragmentManager, {eventName, properties ->
+            TrackCustomEventDialog.show(childFragmentManager, { eventName, properties ->
                 trackCustomEvent(eventName, properties)})
         }
     }
 
     /**
-     * Method to handle custom event tracking obtained by CustomEventDialog
+     * Method to handle custom event tracking obtained by TrackCustomEventDialog
      */
     private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)

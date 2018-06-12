@@ -68,8 +68,8 @@ class FetchFragment : BaseFragment() {
      */
     private fun fetchRecommended() {
         // Init customer structure
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
+        val uuid = App.instance.registeredIdManager.registeredID
+        val customerIds = CustomerIds(registered = uuid)
 
         // Init recommendation structure and specify params
         val recommendation = CustomerRecommendation(
@@ -92,8 +92,8 @@ class FetchFragment : BaseFragment() {
      */
     private fun fetchCustomerEvents() {
         // Init customer structure
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
+        val uuid = App.instance.registeredIdManager.registeredID
+        val customerIds = CustomerIds(registered = uuid)
 
         // Init customers events structure and specify params
         val events = FetchEventsRequest(
@@ -119,8 +119,8 @@ class FetchFragment : BaseFragment() {
      * Method handles loading customer attributes and properties
      */
     private fun fetchCustomerAttributes() {
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
+        val uuid = App.instance.registeredIdManager.registeredID
+        val customerIds = CustomerIds(registered = uuid)
         val attributes = CustomerAttributes(customerIds)
 
         // Select attributes to fetch

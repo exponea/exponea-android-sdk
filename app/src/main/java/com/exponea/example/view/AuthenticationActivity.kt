@@ -66,7 +66,7 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.authorization = authorizationToken
         configuration.projectToken = projectToken
 
-        // Set our customer id
+        // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {
             App.instance.registeredIdManager.registeredID = registeredIds
         }

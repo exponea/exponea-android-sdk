@@ -88,7 +88,7 @@ class FetchPrediction {
         var success = false
         var value: String? = null
         var error: FetchError? = null
-        val customerIds = CustomerIds(cookie = "cookie")
+        val customerIds = CustomerIds(registered = "registered")
         val attrs = CustomerAttributes(customerIds)
         attrs.withPrediction("predictionId")
 

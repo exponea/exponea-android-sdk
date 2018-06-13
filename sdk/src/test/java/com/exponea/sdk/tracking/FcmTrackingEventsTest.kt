@@ -21,7 +21,7 @@ class FcmTrackingEventsTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(cookie = "cookie")
+        val customerIds = CustomerIds(registered = "registered")
         const val token = "FirebaseCloudToken#"
         val server = MockWebServer()
 
@@ -66,8 +66,9 @@ class FcmTrackingEventsTest {
         assertEquals(1, repo.all().size)
 
         val props = repo.all().first().item.properties
-        val token = ((props?.get("properties")) as HashMap<*, *>)["push_notification_token"]
-
+        val token = props?.let {
+            it["google_push_notification_id"]
+        }
         assertEquals("FirebaseCloudToken#", token)
     }
 

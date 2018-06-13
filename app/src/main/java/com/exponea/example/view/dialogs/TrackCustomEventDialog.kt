@@ -15,21 +15,21 @@ import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
 
-class CustomEventDialog : DialogFragment() {
+class TrackCustomEventDialog : DialogFragment() {
 
     private lateinit var onConfirmed: (eventName: String, properties: PropertiesList) -> Unit
     private val propsMap =  hashMapOf("property" to "some value" as Any)
     companion object {
 
-        const val TAG = "CustomEventDialog"
+        const val TAG = "TrackCustomEventDialog"
 
         fun show(
                 fragmentManager: FragmentManager,
                 callback : (eventName: String, properties: PropertiesList) -> (Unit)
         ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
-                    as? CustomEventDialog
-                    ?: CustomEventDialog()
+                    as? TrackCustomEventDialog
+                    ?: TrackCustomEventDialog()
 
             fragment.onConfirmed = callback
             fragment.show(fragmentManager, TAG)
@@ -42,7 +42,7 @@ class CustomEventDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(context, R.style.MyDialogTheme)
         val inflate = LayoutInflater.from(context)
-        val view = inflate.inflate(R.layout.dialog_custom_event, null ,false)
+        val view = inflate.inflate(R.layout.dialog_track_custom_event, null ,false)
         builder.setView(view)
         initListeners(view)
         return builder.create()

@@ -11,6 +11,8 @@ import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.example.view.dialogs.FetchCustomAttributeDialog
+import com.exponea.example.view.dialogs.FetchCustomEventsDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import kotlinx.android.synthetic.main.fragment_fetch.*
@@ -49,7 +51,6 @@ class FetchFragment : BaseFragment() {
     private fun initListeners() {
 
         attributesButton.setOnClickListener {
-            setProgressBarVisible(true)
             fetchCustomerAttributes()
         }
         recommendationsButton.setOnClickListener {
@@ -58,7 +59,6 @@ class FetchFragment : BaseFragment() {
 
         }
         eventsButton.setOnClickListener {
-            setProgressBarVisible(true)
             fetchCustomerEvents()
         }
     }
@@ -91,27 +91,21 @@ class FetchFragment : BaseFragment() {
      * Method handles loading events for customer
      */
     private fun fetchCustomerEvents() {
-        // Init customer structure
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
 
-        // Init customers events structure and specify params
-        val events = FetchEventsRequest(
-                customerIds = customerIds,
-                eventTypes = mutableListOf("event1", "event2"),
-                sortOrder = "desc"
-        )
-        // Specify callback and start loading
-        Exponea.fetchCustomerEvents(
-                customerEvents = events,
-                onFailure = {onFetchFailed(it)},
-                onSuccess = {
-                  runOnUiThread {
-                      setProgressBarVisible(false)
-                      resultTextView.text = it.toString()
-                  }
-                }
-        )
+
+        FetchCustomEventsDialog.show(childFragmentManager, {
+            setProgressBarVisible(true)
+            Exponea.fetchCustomerEvents(
+                    customerEvents = it,
+                    onFailure = {onFetchFailed(it)},
+                    onSuccess = {
+                        runOnUiThread {
+                            setProgressBarVisible(false)
+                            resultTextView.text = it.toString()
+                        }
+                    }
+            )
+        })
 
     }
 
@@ -119,22 +113,15 @@ class FetchFragment : BaseFragment() {
      * Method handles loading customer attributes and properties
      */
     private fun fetchCustomerAttributes() {
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
-        val attributes = CustomerAttributes(customerIds)
 
-        // Select attributes to fetch
-        attributes.apply {
-            withProperty("first_name")
-            withProperty("email")
-        }
-
-        // Specify callbacks and start loading
-        Exponea.fetchCustomerAttributes(
-                customerAttributes = attributes,
-                onFailure = { onFetchFailed(it) },
-                onSuccess = {onFetchSuccess(it)}
-        )
+        FetchCustomAttributeDialog.show(childFragmentManager, {
+            setProgressBarVisible(true)
+            Exponea.fetchCustomerAttributes(
+                    customerAttributes = it,
+                    onFailure = { onFetchFailed(it) },
+                    onSuccess = {onFetchSuccess(it)}
+            )
+        })
     }
 
     /**

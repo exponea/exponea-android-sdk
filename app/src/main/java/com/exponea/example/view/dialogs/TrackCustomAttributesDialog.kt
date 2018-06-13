@@ -14,17 +14,17 @@ import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
 
-class CustomAttributesDialog : DialogFragment() {
+class TrackCustomAttributesDialog : DialogFragment() {
 
     private lateinit var onUpdate: (PropertiesList) -> Unit
     private val attributes = HashMap<String, Any>()
 
     companion object {
-        const val TAG = "CustomAttributesDialog"
+        const val TAG = "TrackCustomAttributesDialog"
 
         fun show(fragmentManager: FragmentManager, onUpdate: (PropertiesList) -> Unit) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
-                    as? CustomAttributesDialog ?: CustomAttributesDialog()
+                    as? TrackCustomAttributesDialog ?: TrackCustomAttributesDialog()
 
             fragment.onUpdate = onUpdate
             fragment.show(fragmentManager, TAG)
@@ -34,7 +34,7 @@ class CustomAttributesDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(context, R.style.MyDialogTheme)
         val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.dialog_custom_attributes, null, false)
+        val view = inflater.inflate(R.layout.dialog_track_custom_attributes, null, false)
         builder.setView(view)
         initListeners(view)
         return builder.create()

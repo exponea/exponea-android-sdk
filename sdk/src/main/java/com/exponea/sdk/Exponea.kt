@@ -123,7 +123,7 @@ object Exponea {
     fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
         trackEvent(
-                customerId = customerIds.also { it.cookie = uuid },
+                customerId = customerIds.apply { cookie = uuid },
                 properties = properties.properties,
                 type = EventType.TRACK_CUSTOMER
         )
@@ -146,7 +146,7 @@ object Exponea {
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         trackEvent(
-                customerId = customerIds.also { it.cookie = uuid },
+                customerId = customerIds.apply { cookie = uuid },
                 properties = properties.properties,
                 timestamp = timestamp,
                 eventType = eventType,
@@ -383,7 +383,7 @@ object Exponea {
         trackEvent(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
-                customerId = customerIds.also { it.cookie = uuid },
+                customerId = customerIds.apply { cookie = uuid },
                 properties = purchasedItem.toHashMap(),
                 type = EventType.PAYMENT
         )
@@ -545,7 +545,7 @@ object Exponea {
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         trackEvent(
-                customerId = CustomerIds().also { it.cookie = uuid },
+                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.installation,
                 properties = device.toHashMap(),
                 type = EventType.INSTALL

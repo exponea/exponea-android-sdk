@@ -112,7 +112,7 @@ class SessionManagerImpl(
 
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.trackEvent(
-                customerId = CustomerIds().also { it.cookie = uuid },
+                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -138,7 +138,7 @@ class SessionManagerImpl(
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         Exponea.trackEvent(
-                customerId = CustomerIds().also { it.cookie = uuid },
+                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

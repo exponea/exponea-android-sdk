@@ -16,7 +16,7 @@ class PushManagerImpl(
         get() = FirebaseInstanceId.getInstance().token.toString()
 
     val uniqueToken = uniqueIdentifierRepository.get()
-    val customerIds = CustomerIds().also { it.cookie = uniqueToken }
+    val customerIds = CustomerIds().apply { cookie = uniqueToken }
 
     override fun trackFcmToken() {
         Exponea.trackPushToken(customerIds, fcmToken)

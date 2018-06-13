@@ -68,8 +68,8 @@ class FetchFragment : BaseFragment() {
      */
     private fun fetchRecommended() {
         // Init customer structure
-        val uuid = App.instance.userIdManager.uniqueUserID
-        val customerIds = CustomerIds(cookie = uuid)
+        val uuid = App.instance.registeredIdManager.registeredID
+        val customerIds = CustomerIds(registered = uuid)
 
         // Init recommendation structure and specify params
         val recommendation = CustomerRecommendation(
@@ -91,7 +91,6 @@ class FetchFragment : BaseFragment() {
      * Method handles loading events for customer
      */
     private fun fetchCustomerEvents() {
-
 
         FetchCustomEventsDialog.show(childFragmentManager, {
             setProgressBarVisible(true)

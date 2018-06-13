@@ -46,7 +46,7 @@ class FetchCustomEventsDialog : DialogFragment() {
 
 
         buttonFetch.setOnClickListener {
-            val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
+            val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
             val fetchRequest = FetchEventsRequest(
                     customerIds = customerIds,
                     eventTypes = input.text.split(",").map { it.trim() }.toMutableList(),

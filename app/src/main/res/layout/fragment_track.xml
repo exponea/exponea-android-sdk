@@ -8,13 +8,15 @@
 
 
     <ListView
-        android:background="@drawable/borders_rect"
         android:id="@+id/listView"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="@dimen/content_margin"
         android:layout_marginStart="@dimen/content_margin"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="@dimen/content_margin"
+        android:background="@drawable/borders_rect"
+        app:layout_constraintBottom_toTopOf="@+id/textView2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
@@ -35,26 +37,26 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:text="FCM"
-        android:textStyle="bold"
         android:textColor="@color/colorAccent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/listView" />
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/buttonTrackToken"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:theme="@style/AppButton"
         android:id="@+id/buttonTrackToken"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
         android:text="Track FCM Token"
+        android:theme="@style/AppButton"
+        app:layout_constraintBottom_toTopOf="@+id/buttonTrackClicked"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Space
         android:id="@+id/space"
@@ -68,52 +70,53 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonTrackToken" />
 
     <Button
-        android:theme="@style/AppButton"
         android:id="@+id/buttonTrackClicked"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="Track Clicked"
+        android:theme="@style/AppButton"
+        app:layout_constraintBottom_toTopOf="@+id/textView3"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/space"
-        app:layout_constraintTop_toBottomOf="@+id/space" />
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/space" />
 
     <Button
-        android:theme="@style/AppButton"
         android:id="@+id/buttonTrackDelivered"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
         android:text="Track Delivered"
+        android:theme="@style/AppButton"
+        app:layout_constraintBottom_toTopOf="@+id/textView3"
         app:layout_constraintEnd_toStartOf="@+id/space"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/space" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:textStyle="bold"
-        android:textColor="@color/colorAccent"
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:text="Customer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonTrackDelivered" />
+        android:textColor="@color/colorAccent"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/buttonUpdateProperties"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/buttonUpdateProperties"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginBottom="32dp"
         android:text="Update cust. Properites"
         android:theme="@style/AppButton"
-        app:layout_constraintStart_toStartOf="@+id/textView3"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/textView3" />
 
     <Button
         android:id="@+id/buttonCustomEvent"

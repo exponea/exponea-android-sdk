@@ -5,9 +5,9 @@ import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
-import com.exponea.sdk.models.FlushMode.MANUAL
-import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.models.FlushMode.*
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.addAppStateCallbacks
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -416,6 +416,22 @@ object Exponea {
         )
         startSessionTracking(configuration.automaticSessionTracking)
 
+        context.addAppStateCallbacks(
+                onOpen = {
+                    Logger.i(this, "App is opened")
+                    if (flushMode == APP_CLOSE) {
+                        flushMode = PERIOD
+                    }
+                },
+                onClosed = {
+                    Logger.i(this, "App is closed")
+                    if (flushMode == PERIOD) {
+                        flushMode = APP_CLOSE
+
+                    }
+                }
+        )
+
     }
 
     /**
@@ -435,7 +451,7 @@ object Exponea {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
             PERIOD -> startService()
-        // APP_CLOSE -> // TODO somehow implement this
+            APP_CLOSE -> stopService()
             MANUAL -> stopService()
         }
     }

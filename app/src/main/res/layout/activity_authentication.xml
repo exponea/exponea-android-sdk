@@ -86,7 +86,8 @@
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/editTextRegisteredIds"
-            android:maxLines="3"
+            android:maxLines="1"
+            android:inputType="text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/hint_registered" />

@@ -40,7 +40,7 @@ class ExponeaComponent(
     // Api Service
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
     //Managers
-    internal val serviceManager: ServiceManager = ServiceManagerImpl(context)
+    internal val serviceManager: ServiceManager = ServiceWorkManagerImpl(context, exponeaConfiguration)
     internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     internal val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
     internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)

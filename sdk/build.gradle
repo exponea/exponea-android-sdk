@@ -47,6 +47,9 @@ dependencies {
     implementation 'com.android.billingclient:billing:1.0'
     // Google Firebase Cloud Message
     implementation 'com.google.firebase:firebase-messaging:15.0.2'
+    // Google WorkManager
+    implementation 'android.arch.work:work-runtime:1.0.0-alpha02'
+
 
     // Base Test
     testImplementation 'junit:junit:4.12'

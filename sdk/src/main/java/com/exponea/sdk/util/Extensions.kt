@@ -26,15 +26,22 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
 
 fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     (this as Application).registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+        private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {
             onOpen()
+            activityCount++
         }
         override fun onActivityStarted(activity: Activity?) {}
         override fun onActivityDestroyed(activity: Activity?) {}
         override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
         override fun onActivityStopped(activity: Activity?) {}
         override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
-        override fun onActivityPaused(activity: Activity?) {}
+        override fun onActivityPaused(activity: Activity?) {
+            activityCount--
+            if(activityCount <= 0) {
+                onClosed()
+            }
+        }
 
     })
     this.registerComponentCallbacks(object  : ComponentCallbacks2 {

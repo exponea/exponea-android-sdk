@@ -63,6 +63,7 @@ class SessionManagerImpl(
      *  Method called when app is in foreground
      */
     override fun onSessionStart() {
+        Exponea.component.backgroundTimerManager.stopTimer()
         val now = Date().time
         Logger.d(this, "Session start ${Date(now)}")
 
@@ -94,6 +95,7 @@ class SessionManagerImpl(
         val now = Date().time
         Logger.d(this, "Session end ${Date(now)}")
         prefs.setLong(PREF_SESSION_END, now)
+        Exponea.component.backgroundTimerManager.startTimer()
     }
 
     /**

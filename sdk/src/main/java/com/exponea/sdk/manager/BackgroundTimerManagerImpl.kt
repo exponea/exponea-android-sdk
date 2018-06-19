@@ -9,11 +9,11 @@ import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
 
-class ServiceWorkManagerImpl(context: Context, private val configuration: ExponeaConfiguration?) : ServiceManager {
+class BackgroundTimerManagerImpl(context: Context, private val configuration: ExponeaConfiguration) : BackgroundTimerManager {
     private val keyUniqueName = "KeyUniqueName"
     private val gson = Gson()
 
-    override fun start() {
+    override fun startTimer() {
         val configurationData = try {
             gson.toJson(configuration)
         } catch (exception: Exception) {
@@ -32,7 +32,7 @@ class ServiceWorkManagerImpl(context: Context, private val configuration: Expone
         val workRequest = OneTimeWorkRequest
                 .Builder(ExponeaWorkRequest::class.java)
                 .setInputData(input)
-                .setInitialDelay(120, TimeUnit.SECONDS)
+                .setInitialDelay(configuration.sessionTimeout.toLong(), TimeUnit.SECONDS)
                 .build()
 
         WorkManager
@@ -44,11 +44,11 @@ class ServiceWorkManagerImpl(context: Context, private val configuration: Expone
                 )
                 .enqueue()
 
-        Logger.d(this, "ServiceWorkManagerImpl.start() -> enqueued background task...")
+        Logger.d(this, "BackgroundTimerManagerImpl.start() -> enqueued background task...")
     }
 
-    override fun stop() {
-        Logger.d(this, "ServiceWorkManagerImpl.stop() -> cancelling all work")
+    override fun stopTimer() {
+        Logger.d(this, "BackgroundTimerManagerImpl.stop() -> cancelling all work")
         WorkManager
                 .getInstance()
                 .cancelUniqueWork(keyUniqueName)

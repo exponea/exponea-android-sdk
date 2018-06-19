@@ -6,6 +6,7 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
 import com.exponea.sdk.models.FlushMode.*
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import io.paperdb.Paper
@@ -110,7 +111,7 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
-
+        ExponeaConfigRepository.set(context, configuration)
         initializeSdk()
     }
 
@@ -450,8 +451,8 @@ object Exponea {
     private fun onFlushModeChanged() {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
-            PERIOD -> stopService()
-            APP_CLOSE -> startService()
+            PERIOD -> startService()
+            APP_CLOSE -> stopService()
             MANUAL -> stopService()
         }
     }

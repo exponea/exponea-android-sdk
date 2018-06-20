@@ -9,6 +9,7 @@ import com.exponea.sdk.models.FlushMode.*
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
+import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -99,6 +100,8 @@ object Exponea {
         }
     }
 
+
+
     fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
 
@@ -112,6 +115,7 @@ object Exponea {
             return
         }
         ExponeaConfigRepository.set(context, configuration)
+        FirebaseApp.initializeApp(context)
         initializeSdk()
     }
 
@@ -435,6 +439,8 @@ object Exponea {
 
     }
 
+
+
     /**
      * Start the service when the flush period was changed.
      */
@@ -506,6 +512,25 @@ object Exponea {
             // Remove the observers when the automatic session tracking is false.
             this.component.iapManager.stopObservingPayments()
         }
+    }
+
+    /**
+     * Basic Sdk init
+     */
+    internal fun basicInit(context: Context, configuration: ExponeaConfiguration) {
+        Logger.i(this, "Basic Init")
+
+        Paper.init(context)
+
+        this.context = context
+        this.configuration = configuration
+
+        if (!isInitialized) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
+        this.component = ExponeaComponent(configuration, context)
+        FirebaseApp.initializeApp(context)
     }
 
     /**

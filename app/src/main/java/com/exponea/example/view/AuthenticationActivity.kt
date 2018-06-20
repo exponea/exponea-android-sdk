@@ -80,7 +80,6 @@ class AuthenticationActivity : AppCompatActivity() {
         Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 
         startActivity(Intent(this, MainActivity::class.java))
-        FirebaseApp.initializeApp(App.instance)
         finish()
     }
 

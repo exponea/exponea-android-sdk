@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 
 class ExponeaPushReceiver : BroadcastReceiver() {
@@ -29,6 +30,13 @@ class ExponeaPushReceiver : BroadcastReceiver() {
             ACTION_CLICKED -> {
                 Logger.i(this, "Push notification clicked")
                 val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData
+                if (!Exponea.isInitialized) {
+                    val config = ExponeaConfigRepository.get(context)
+                    if (config != null) {
+                        Logger.d(this, "Newly initiated")
+                        Exponea.basicInit(context.applicationContext, config)
+                    }
+                }
                 Exponea.component.pushManager.trackClickedPush(
                         data = data
                 )

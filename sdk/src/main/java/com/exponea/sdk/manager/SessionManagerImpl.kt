@@ -138,7 +138,7 @@ class SessionManagerImpl(
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
-
+        clear()
         Exponea.trackEvent(
                 customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionEnd,
@@ -146,6 +146,7 @@ class SessionManagerImpl(
                 properties = properties,
                 type = EventType.SESSION_END
         )
+
     }
 
     /**
@@ -154,9 +155,16 @@ class SessionManagerImpl(
      */
     private fun canBeResumed(now: Long): Boolean {
         val sessionEnded = prefs.getLong(PREF_SESSION_END, -1L)
+        if (sessionEnded == -1L) return false
         val currentTimeout = (now - sessionEnded) / 1000
         return currentTimeout < Exponea.sessionTimeout
 
+    }
+
+    private fun clear() {
+        Logger.d(this, "Clearing session Info")
+        prefs.setLong(PREF_SESSION_START, -1)
+        prefs.setLong(PREF_SESSION_END, -1)
     }
 
 

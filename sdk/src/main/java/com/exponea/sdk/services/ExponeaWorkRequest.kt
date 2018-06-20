@@ -5,6 +5,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
+import java.util.*
 import java.util.concurrent.CountDownLatch
 
 class ExponeaWorkRequest : Worker() {
@@ -23,7 +24,7 @@ class ExponeaWorkRequest : Worker() {
             Exponea.init(applicationContext, config)
             Logger.d(this, "doWork -> Initialized SDK")
         }
-
+        Exponea.component.sessionManager.trackSessionEnd(Date().time)
         Exponea.component.flushManager.onFlushFinishListener = {
             Logger.d(this, "doWork -> Finished")
             countDownLatch.countDown()

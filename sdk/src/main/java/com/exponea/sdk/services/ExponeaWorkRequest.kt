@@ -1,12 +1,9 @@
 package com.exponea.sdk.services
 
-import android.util.Log
 import androidx.work.Worker
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
-import com.google.gson.Gson
 import java.util.*
 import java.util.concurrent.CountDownLatch
 

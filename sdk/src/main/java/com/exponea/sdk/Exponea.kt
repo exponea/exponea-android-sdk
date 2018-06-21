@@ -2,7 +2,6 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.text.BoringLayout
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*

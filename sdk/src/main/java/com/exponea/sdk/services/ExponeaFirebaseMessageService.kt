@@ -2,6 +2,7 @@ package com.exponea.sdk.services
 
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -23,7 +24,8 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext)
             if (config != null) {
-                Exponea.basicInit(applicationContext, config)
+                Looper.prepare()
+                Exponea.init(applicationContext, config)
             }
         }
 

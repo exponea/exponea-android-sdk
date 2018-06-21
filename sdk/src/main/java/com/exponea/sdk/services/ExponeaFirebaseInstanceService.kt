@@ -1,5 +1,6 @@
 package com.exponea.sdk.services
 
+import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
@@ -11,7 +12,8 @@ class ExponeaFirebaseInstanceService : FirebaseInstanceIdService() {
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext)
             if (config != null) {
-                Exponea.basicInit(applicationContext, config)
+                Looper.prepare()
+                Exponea.init(applicationContext, config)
             }
         }
         if (!Exponea.isAutoPushNotification) {

@@ -65,7 +65,7 @@ object Exponea {
      * Check if our library has been properly initialized
      */
 
-    internal var isInitialized: Boolean = false
+    var isInitialized: Boolean = false
         get() {
             return this::configuration.isInitialized
         }
@@ -87,7 +87,6 @@ object Exponea {
             Logger.level = value
         }
 
-    internal var partiallyInitialized: Boolean = false
 
     @Throws(InvalidConfigurationException::class)
     fun init(context: Context, configFile: String) {
@@ -119,10 +118,6 @@ object Exponea {
         ExponeaConfigRepository.set(context, configuration)
         FirebaseApp.initializeApp(context)
         initializeSdk()
-    }
-
-    fun isInitialized() : Boolean {
-        return isInitialized && !partiallyInitialized
     }
 
 
@@ -445,7 +440,6 @@ object Exponea {
                     }
                 }
         )
-        partiallyInitialized = false
     }
 
 
@@ -523,25 +517,6 @@ object Exponea {
         }
     }
 
-    /**
-     * Basic Sdk init
-     */
-    internal fun basicInit(context: Context, configuration: ExponeaConfiguration) {
-        Logger.i(this, "Basic Init")
-
-        Paper.init(context)
-
-        this.context = context
-        this.configuration = configuration
-
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
-        partiallyInitialized = true
-        this.component = ExponeaComponent(configuration, context)
-        FirebaseApp.initializeApp(context)
-    }
 
     /**
      * Send a tracking event to Exponea
@@ -555,7 +530,7 @@ object Exponea {
             type: EventType
     ) {
 
-        if (!isInitialized && !partiallyInitialized) {
+        if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }

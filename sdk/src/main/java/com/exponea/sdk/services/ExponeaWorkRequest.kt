@@ -1,5 +1,6 @@
 package com.exponea.sdk.services
 
+import android.os.Looper
 import androidx.work.Worker
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -18,7 +19,8 @@ class ExponeaWorkRequest : Worker() {
         val config = ExponeaConfigRepository.get(applicationContext) ?: return WorkerResult.FAILURE
 
         if (!Exponea.isInitialized) {
-            Exponea.basicInit(applicationContext, config)
+            Looper.prepare()
+            Exponea.init(applicationContext, config)
         }
 
         try {

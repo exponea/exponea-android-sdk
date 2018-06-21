@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Examples"
 
-        if (!Exponea.isInitialized()) {
+        if (!Exponea.isInitialized) {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
         } else {

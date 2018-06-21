@@ -3,6 +3,7 @@ package com.exponea.sdk.services
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -34,7 +35,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
                     val config = ExponeaConfigRepository.get(context)
                     if (config != null) {
                         Logger.d(this, "Newly initiated")
-                        Exponea.basicInit(context.applicationContext, config)
+                        Exponea.init(context.applicationContext, config)
                     }
                 }
                 Exponea.component.pushManager.trackClickedPush(

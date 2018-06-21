@@ -18,9 +18,12 @@ class ExponeaWorkRequest : Worker() {
     override fun doWork(): WorkerResult {
         Logger.d(this, "doWork -> Starting...")
         val countDownLatch = CountDownLatch(1)
+        val config = ExponeaConfigRepository.get(applicationContext) ?: return WorkerResult.FAILURE
 
-        if (!Exponea.isInitialized)
-            return WorkerResult.FAILURE
+        if (!Exponea.isInitialized) {
+            Exponea.basicInit(applicationContext, config)
+        }
+
         try {
             Exponea.component.sessionManager.trackSessionEnd(Date().time)
             Exponea.component.flushManager.onFlushFinishListener = {
@@ -42,7 +45,6 @@ class ExponeaWorkRequest : Worker() {
 
             return WorkerResult.SUCCESS
         } catch (e: Exception) {
-            Log.d(KEY_CONFIG_INPUT, e.toString())
             return WorkerResult.FAILURE
         }
     }

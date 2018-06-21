@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.text.BoringLayout
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
@@ -65,7 +66,7 @@ object Exponea {
      * Check if our library has been properly initialized
      */
 
-    var isInitialized: Boolean = false
+    internal var isInitialized: Boolean = false
         get() {
             return this::configuration.isInitialized
         }
@@ -86,6 +87,8 @@ object Exponea {
         set(value) {
             Logger.level = value
         }
+
+    internal var partiallyInitialized: Boolean = false
 
     @Throws(InvalidConfigurationException::class)
     fun init(context: Context, configFile: String) {
@@ -118,6 +121,11 @@ object Exponea {
         FirebaseApp.initializeApp(context)
         initializeSdk()
     }
+
+    fun isInitialized() : Boolean {
+        return isInitialized && !partiallyInitialized
+    }
+
 
     /**
      * Update the informed properties to a specific customer.
@@ -401,6 +409,8 @@ object Exponea {
      */
 
     private fun initializeSdk() {
+
+
         // Start Network Manager
         this.component = ExponeaComponent(this.configuration, context)
 
@@ -436,7 +446,7 @@ object Exponea {
                     }
                 }
         )
-
+        partiallyInitialized = false
     }
 
 
@@ -529,6 +539,7 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
+        partiallyInitialized = true
         this.component = ExponeaComponent(configuration, context)
         FirebaseApp.initializeApp(context)
     }
@@ -545,7 +556,7 @@ object Exponea {
             type: EventType
     ) {
 
-        if (!isInitialized) {
+        if (!isInitialized && !partiallyInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }

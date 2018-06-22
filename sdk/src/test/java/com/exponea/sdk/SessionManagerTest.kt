@@ -1,6 +1,8 @@
 package com.exponea.sdk
 
 import android.app.Activity
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
@@ -51,6 +53,7 @@ class SessionManagerTest {
 
         sm = Exponea.component.sessionManager
         prefs = Exponea.component.preferences
+        WorkManager.initialize(context, Configuration.Builder().build())
     }
 
     @Test

@@ -63,6 +63,8 @@ class SessionManagerImpl(
      *  Method called when app is in foreground
      */
     override fun onSessionStart() {
+        // Cancel background timer if set
+        Exponea.component.backgroundTimerManager.stopTimer()
         val now = Date().time
         Logger.d(this, "Session start ${Date(now)}")
 
@@ -94,6 +96,8 @@ class SessionManagerImpl(
         val now = Date().time
         Logger.d(this, "Session end ${Date(now)}")
         prefs.setLong(PREF_SESSION_END, now)
+        // Start background timer to track end of the session
+        Exponea.component.backgroundTimerManager.startTimer()
     }
 
     /**
@@ -136,7 +140,8 @@ class SessionManagerImpl(
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
         val uuid = Exponea.component.uniqueIdentifierRepository.get()
-
+        // Clear session
+        clear()
         Exponea.trackEvent(
                 customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionEnd,
@@ -144,6 +149,7 @@ class SessionManagerImpl(
                 properties = properties,
                 type = EventType.SESSION_END
         )
+
     }
 
     /**
@@ -152,9 +158,19 @@ class SessionManagerImpl(
      */
     private fun canBeResumed(now: Long): Boolean {
         val sessionEnded = prefs.getLong(PREF_SESSION_END, -1L)
+        if (sessionEnded == -1L) return false
         val currentTimeout = (now - sessionEnded) / 1000
         return currentTimeout < Exponea.sessionTimeout
 
+    }
+
+    /**
+     * Set Session's end and start to default values
+     */
+    private fun clear() {
+        Logger.d(this, "Clearing session Info")
+        prefs.setLong(PREF_SESSION_START, -1)
+        prefs.setLong(PREF_SESSION_END, -1)
     }
 
 

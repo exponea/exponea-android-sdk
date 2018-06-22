@@ -5,9 +5,11 @@ import android.content.Context
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.*
-import com.exponea.sdk.models.FlushMode.MANUAL
-import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.models.FlushMode.*
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.addAppStateCallbacks
+import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -85,6 +87,7 @@ object Exponea {
             Logger.level = value
         }
 
+
     @Throws(InvalidConfigurationException::class)
     fun init(context: Context, configFile: String) {
         // Try to parse our file
@@ -98,6 +101,8 @@ object Exponea {
         }
     }
 
+
+
     fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
 
@@ -110,9 +115,11 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
-
+        ExponeaConfigRepository.set(context, configuration)
+        FirebaseApp.initializeApp(context)
         initializeSdk()
     }
+
 
     /**
      * Update the informed properties to a specific customer.
@@ -396,6 +403,8 @@ object Exponea {
      */
 
     private fun initializeSdk() {
+
+
         // Start Network Manager
         this.component = ExponeaComponent(this.configuration, context)
 
@@ -416,7 +425,24 @@ object Exponea {
         )
         startSessionTracking(configuration.automaticSessionTracking)
 
+        context.addAppStateCallbacks(
+                onOpen = {
+                    Logger.i(this, "App is opened")
+                    if (flushMode == APP_CLOSE) {
+                        flushMode = PERIOD
+                    }
+                },
+                onClosed = {
+                    Logger.i(this, "App is closed")
+                    if (flushMode == PERIOD) {
+                        flushMode = APP_CLOSE
+
+                    }
+                }
+        )
     }
+
+
 
     /**
      * Start the service when the flush period was changed.
@@ -435,7 +461,7 @@ object Exponea {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
             PERIOD -> startService()
-        // APP_CLOSE -> // TODO somehow implement this
+            APP_CLOSE -> stopService()
             MANUAL -> stopService()
         }
     }
@@ -490,6 +516,7 @@ object Exponea {
             this.component.iapManager.stopObservingPayments()
         }
     }
+
 
     /**
      * Send a tracking event to Exponea

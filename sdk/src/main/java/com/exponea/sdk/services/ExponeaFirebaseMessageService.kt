@@ -2,14 +2,14 @@ package com.exponea.sdk.services
 
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
+import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.FieldNamingPolicy
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 class ExponeaFirebaseMessageService : FirebaseMessagingService() {
@@ -19,12 +19,20 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)
+        Logger.d(this, "Push Notification received.")
+
+        if (!Exponea.isInitialized) {
+            val config = ExponeaConfigRepository.get(applicationContext)
+            if (config != null) {
+                Looper.prepare()
+                Exponea.init(applicationContext, config)
+            }
+        }
 
         if (!Exponea.isAutoPushNotification) {
             return
         }
 
-        Logger.d(this, "Push Notification received.")
 
         val title = message?.data?.get("title") ?: ""
 

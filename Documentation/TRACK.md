@@ -15,7 +15,6 @@ In the SDK you can track an event using the following accessor:
 
 ```
 fun trackCustomerEvent(
-        customerIds: CustomerIds,
         properties: PropertiesList,
         timestamp: Long?,
         eventType: String?
@@ -26,27 +25,25 @@ fun trackCustomerEvent(
 
 ```
 // Preparing the data.
-val customerIds = CustomerIds(cookie = "382d4221-3441-44b7-a676-3eb5f515157f")
 val properties = PropertiesList(hashMapOf(Pair("name", "John")))
 
-// Call trackCustomerEvent to send the event to Exponea API.
-Exponea.trackCustomerEvent(
-        customerId = customerIds,
+// Call trackEvent to send the event to Exponea API.
+Exponea.trackEvent(
         properties = properties,
         timestamp = Date().time
         eventType =  "page_view"
 )
 ```
-        
+
 ## 🔍 Customer Properties
 
-#### Update customer properties
+#### identify Customer
 
 Save or update your customer data in the Exponea APP through this method.
 
 ```
-fun updateCustomerProperties(
-        customerIds: CustomerIds, 
+fun identifyCustomer(
+        customerIds: CustomerIds,
         properties: PropertiesList
 )
 ```
@@ -55,11 +52,11 @@ fun updateCustomerProperties(
 
 ```
 // Preparing the data.
-val customerIds = CustomerIds(registered = "john@doe.com")
+val customerIds = CustomerIds().withId("registered","donald@exponea.com")
 val properties = PropertiesList(hashMapOf(Pair("name", "John")))
 
-// Call updateCustomerProperties to send the event to Exponea API.
-Exponea.updateCustomerProperties(
+// Call identifyCustomer to send the event to Exponea API.
+Exponea.identifyCustomer(
         customerIds = customerIds,
         properties = properties
 )

@@ -21,7 +21,6 @@ fun fetchCustomerAttributes(
 ```
 // Preparing the data.
 val attributes = CustomerAttributes(
-        customerId = CustomerIds(registered = "john@doe.com"),
         attributes = MutableList(hashMapOf(Pair("name", "John"))
 )
 
@@ -46,7 +45,7 @@ fun fetchCustomerEvents(
         customerEvents: CustomerEvents,
         onFailure: (String) -> Unit,
         onSuccess: (Result<ArrayList<CustomerEventModel>>) -> Unit
-) 
+)
 ```
 
 #### 💻 Usage
@@ -76,7 +75,6 @@ Get items recommended for a customer.
 
 ```
 fun fetchRecommendation(
-        customerIds: CustomerIds,
         customerRecommendation: CustomerRecommendation,
         onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
         onFailure: (String) -> Unit
@@ -87,7 +85,6 @@ fun fetchRecommendation(
 
 ```
 // Preparing the data.
-val customerId = CustomerIds(registered = "john@doe.com"),
 val recommendation = CustomerRecommendation(
         type = "recommendation",
         id =  "592ff585fb60094e02bfaf6a",
@@ -103,7 +100,6 @@ val recommendation = CustomerRecommendation(
 
 // Call fetchRecommendation to get the customer attributes.
 Exponea.fetchRecommendation(
-        customerIds = customerId,
         customerRecommendation = recommendation, 
         onSuccess = {
 			// SDK will return a list of a CustomerAttributeModel object.

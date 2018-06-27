@@ -128,8 +128,8 @@ object Exponea {
      */
 
     fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
+        component.customerIdsRepository.set(customerIds)
         trackEvent(
-                customerIds = customerIds,
                 properties = properties.properties,
                 type = EventType.TRACK_CUSTOMER
         )
@@ -177,11 +177,10 @@ object Exponea {
             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     ) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
-        customerAttributes.customerId.apply { cookie = uuid }
+        val customer = Exponea.component.customerIdsRepository.get()
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
-                attributes = customerAttributes,
+                attributes = customerAttributes.apply { customerIds = customer },
                 onSuccess = onSuccess,
                 onFailure = onFailure
         )
@@ -198,9 +197,9 @@ object Exponea {
             onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit) {
         // TODO map banners id's
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+        val customerIds = Exponea.component.customerIdsRepository.get()
         Exponea.component.personalizationManager.getWebLayer(
-                customerIds = CustomerIds(uuid),
+                customerIds = customerIds,
                 projectToken = Exponea.configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
@@ -248,8 +247,9 @@ object Exponea {
             onFailure: (Result<FetchError>) -> Unit,
             onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
     ) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
-        customerEvents.customerIds.apply { cookie = uuid }
+        val customer = Exponea.component.customerIdsRepository.get()
+        customerEvents.customerIds = customer
+
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,
                 customerEvents = customerEvents,
@@ -270,13 +270,12 @@ object Exponea {
             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     ) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+        val customer = Exponea.component.customerIdsRepository.get()
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
                 attributes = CustomerAttributes(
-                        CustomerIds(uuid),
-                        mutableListOf(customerRecommendation.toHashMap())
-                ),
+                        customer,
+                        mutableListOf(customerRecommendation.toHashMap())),
                 onSuccess = onSuccess,
                 onFailure = onFailure
         )
@@ -511,7 +510,6 @@ object Exponea {
      */
 
     internal fun trackEvent(
-            customerIds: CustomerIds = CustomerIds(),
             eventType: String? = null,
             timestamp: Long? = Date().time,
             properties: HashMap<String, Any> = hashMapOf(),
@@ -523,8 +521,7 @@ object Exponea {
             return
         }
 
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
-        customerIds.apply { cookie = uuid }
+        val customerIds = component.customerIdsRepository.get()
 
         val event = ExportedEventType(
                 type = eventType,

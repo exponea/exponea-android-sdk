@@ -5,20 +5,28 @@ import okhttp3.Cookie
 import java.util.HashMap
 
 data class CustomerIds(
-        private var externalIds : HashMap<String, Any?> = hashMapOf()
+        internal var externalIds : HashMap<String, Any?> = hashMapOf()
 ) {
 
-    var cookie: String? = null
-        internal set(value) {
-            field = value
-        }
+    init {
+        externalIds.remove(COOKIE)
+    }
+
+    companion object {
+        private const val COOKIE = "cookie"
+    }
+
+    internal var cookie: String? = null
 
     internal constructor(cookie: String) : this() {
         this.cookie = cookie
     }
 
+
+
+
     fun withId(key: String, value: Any?) : CustomerIds {
-        if (key == "cookie") {
+        if (key == COOKIE) {
             Logger.e(this, "Changing cookie is not allowed")
             return this
         }
@@ -33,7 +41,7 @@ data class CustomerIds(
             Logger.e(this, "Empty cookie")
         }
         return externalIds.apply {
-            set("cookie", cookie as Any?)
+            set(COOKIE, cookie as Any?)
         }
     }
 

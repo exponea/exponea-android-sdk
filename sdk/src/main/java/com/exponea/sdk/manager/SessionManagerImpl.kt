@@ -70,7 +70,8 @@ class SessionManagerImpl(
 
         // Check if current session is the first one
         val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
-        if (lastTimeStarted == -1L) {
+        val lastTimeFinished = prefs.getLong(PREF_SESSION_END, -1L)
+        if (lastTimeStarted == -1L || lastTimeFinished == -1L) {
             prefs.setLong(PREF_SESSION_START, now)
             trackSessionStart(now)
             return

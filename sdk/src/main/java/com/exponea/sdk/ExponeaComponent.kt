@@ -28,9 +28,14 @@ class ExponeaComponent(
     internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(
             preferences
     )
-    internal val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(
+    private val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(
             preferences
     )
+
+    internal val customerIdsRepository: CustomerIdsRepository = CustomerIdsRepositoryImpl(
+            gson, uniqueIdentifierRepository, preferences
+    )
+
     internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(
             preferences
     )

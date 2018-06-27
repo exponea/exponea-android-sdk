@@ -9,9 +9,6 @@ import com.google.gson.reflect.TypeToken
 class CustomerIdsRepositoryImpl(private val gson: Gson,
                                 private val uuidRepo: UniqueIdentifierRepository,
                                 private val prefs: ExponeaPreferences) :  CustomerIdsRepository {
-    init {
-        set(CustomerIds())
-    }
 
     companion object {
         private const val PREFS_CUSTOMERIDS = "ExponeaCustomerIds"
@@ -20,7 +17,7 @@ class CustomerIdsRepositoryImpl(private val gson: Gson,
 
     override fun get(): CustomerIds {
         val uuid = uuidRepo.get()
-        val json = prefs.getString(PREFS_CUSTOMERIDS, "")
+        val json = prefs.getString(PREFS_CUSTOMERIDS, "{}")
         val type = object : TypeToken<HashMap<String, Any?>>() {}.type
         val ids = gson.fromJson<HashMap<String, Any?>>(json,  type)
         show( CustomerIds().apply {

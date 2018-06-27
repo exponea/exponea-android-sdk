@@ -56,7 +56,7 @@ class CustomerPropertiesEventTest {
     @Test
     fun testEventTracked_ShouldSuccess() {
         // Track event
-        Exponea.updateCustomerProperties(
+        Exponea.identifyCustomer(
                 customerIds = customerIds,
                 properties = properties
         )
@@ -69,7 +69,7 @@ class CustomerPropertiesEventTest {
     fun testEventSend_ShoudSuccess() {
 
         // Track event
-        Exponea.updateCustomerProperties(
+        Exponea.identifyCustomer(
                 customerIds = customerIds,
                 properties = properties
         )

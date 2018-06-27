@@ -57,7 +57,7 @@ class EventTrackTest {
     @Test
     fun testEventAdded() {
 
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
@@ -75,7 +75,7 @@ class EventTrackTest {
 
         ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
 
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
@@ -97,7 +97,7 @@ class EventTrackTest {
     @Test
     fun testEventFlushFailed() {
 
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
@@ -128,7 +128,7 @@ class EventTrackTest {
 
         repo.clear()
 
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,

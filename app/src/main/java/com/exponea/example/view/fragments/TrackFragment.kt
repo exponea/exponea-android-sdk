@@ -80,7 +80,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle custom event tracking obtained by TrackCustomEventDialog
      */
     private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 eventType = eventName,
                 properties = propertiesList,
                 timestamp = Date().time
@@ -103,7 +103,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
         val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
 
-        Exponea.updateCustomerProperties(
+        Exponea.identifyCustomer(
                 customerIds = customerIds,
                 properties = propertiesList
         )

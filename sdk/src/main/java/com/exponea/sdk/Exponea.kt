@@ -127,9 +127,9 @@ object Exponea {
      * flushed (send it to api).
      */
 
-    fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
+    fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) {
         component.customerIdsRepository.set(customerIds)
-        trackEvent(
+        track(
                 properties = properties.properties,
                 type = EventType.TRACK_CUSTOMER
         )
@@ -141,13 +141,13 @@ object Exponea {
      * flushed (send it to api).
      */
 
-    fun trackCustomerEvent(
+    fun trackEvent(
             properties: PropertiesList,
             timestamp: Long? = Date().time,
             eventType: String?
     ) {
 
-        trackEvent(
+        track(
                 properties = properties.properties,
                 timestamp = timestamp,
                 eventType = eventType,
@@ -287,7 +287,7 @@ object Exponea {
 
     fun trackPushToken(fcmToken: String) {
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
-        trackEvent(
+        track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
                 type = EventType.PUSH_TOKEN
@@ -313,7 +313,7 @@ object Exponea {
             properties["campaign_name"] = it.campaignName
             properties["action_id"] = it.actionId
         }
-        trackEvent(
+        track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
                 type = EventType.PUSH_DELIVERED
@@ -342,7 +342,7 @@ object Exponea {
             properties["campaign_name"] = data.campaignName
             properties["action_id"] = data.actionId
         }
-        trackEvent(
+        track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
                 type = EventType.PUSH_OPENED
@@ -375,7 +375,7 @@ object Exponea {
             purchasedItem: PurchasedItem
     ) {
 
-        trackEvent(
+        track(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
                 properties = purchasedItem.toHashMap(),
@@ -509,7 +509,7 @@ object Exponea {
      * Send a tracking event to Exponea
      */
 
-    internal fun trackEvent(
+    internal fun track(
             eventType: String? = null,
             timestamp: Long? = Date().time,
             properties: HashMap<String, Any> = hashMapOf(),
@@ -557,7 +557,7 @@ object Exponea {
                 deviceType = component.deviceManager.getDeviceType()
         )
 
-        trackEvent(
+        track(
                 eventType = Constants.EventTypes.installation,
                 properties = device.toHashMap(),
                 type = EventType.INSTALL

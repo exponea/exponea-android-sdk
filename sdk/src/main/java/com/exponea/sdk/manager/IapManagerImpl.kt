@@ -63,7 +63,7 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
      * Receive the purchased item and send it to the database.
      */
     override fun trackPurchase(properties: HashMap<String, Any>) {
-        Exponea.trackEvent(
+        Exponea.track(
                 eventType = "payment",
                 properties = properties,
                 type = EventType.PAYMENT

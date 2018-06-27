@@ -115,7 +115,7 @@ class SessionManagerImpl(
         val properties = DeviceProperties().toHashMap()
 
         properties["app_version"] = BuildConfig.VERSION_CODE
-        Exponea.trackEvent(
+        Exponea.track(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -140,7 +140,7 @@ class SessionManagerImpl(
         Logger.d(this, "Session duration: ${properties["duration"]}")
         // Clear session
         clear()
-        Exponea.trackEvent(
+        Exponea.track(
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

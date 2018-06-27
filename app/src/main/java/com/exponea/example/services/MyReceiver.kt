@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.exponea.example.view.MainActivity
-import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.services.ExponeaPushReceiver
 

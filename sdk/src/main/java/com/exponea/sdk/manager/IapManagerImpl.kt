@@ -63,9 +63,7 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
      * Receive the purchased item and send it to the database.
      */
     override fun trackPurchase(properties: HashMap<String, Any>) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         Exponea.trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = "payment",
                 properties = properties,
                 type = EventType.PAYMENT

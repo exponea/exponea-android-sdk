@@ -78,7 +78,6 @@ class FetchFragment : BaseFragment() {
 
         // Specify callbacks and start loading
         Exponea.fetchRecommendation(
-                customerIds = customerIds,
                 customerRecommendation = recommendation,
                 onSuccess = {onFetchSuccess(it)},
                 onFailure = {onFetchFailed(it)}

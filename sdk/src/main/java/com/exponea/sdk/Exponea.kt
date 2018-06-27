@@ -128,9 +128,8 @@ object Exponea {
      */
 
     fun updateCustomerProperties(customerIds: CustomerIds, properties: PropertiesList) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         trackEvent(
-                customerId = customerIds.apply { cookie = uuid },
+                customerIds = customerIds,
                 properties = properties.properties,
                 type = EventType.TRACK_CUSTOMER
         )
@@ -143,21 +142,16 @@ object Exponea {
      */
 
     fun trackCustomerEvent(
-            customerIds: CustomerIds,
             properties: PropertiesList,
-            timestamp: Long?,
-            eventType: String?,
-            type: EventType = EventType.TRACK_EVENT
+            timestamp: Long? = Date().time,
+            eventType: String?
     ) {
 
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
-
         trackEvent(
-                customerId = customerIds.apply { cookie = uuid },
                 properties = properties.properties,
                 timestamp = timestamp,
                 eventType = eventType,
-                type = type
+                type = EventType.TRACK_EVENT
         )
     }
 
@@ -201,12 +195,12 @@ object Exponea {
      * @param onFailure - failure callback, in case of errors
      */
     fun getPersonalizationWebLayer(
-            customerIds: CustomerIds,
             onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit) {
         // TODO map banners id's
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         Exponea.component.personalizationManager.getWebLayer(
-                customerIds = customerIds,
+                customerIds = CustomerIds(uuid),
                 projectToken = Exponea.configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
@@ -272,7 +266,6 @@ object Exponea {
      * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchRecommendation(
-            customerIds: CustomerIds,
             customerRecommendation: CustomerRecommendation,
             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
@@ -281,7 +274,7 @@ object Exponea {
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
                 attributes = CustomerAttributes(
-                        customerIds.apply { cookie = uuid },
+                        CustomerIds(uuid),
                         mutableListOf(customerRecommendation.toHashMap())
                 ),
                 onSuccess = onSuccess,
@@ -293,12 +286,10 @@ object Exponea {
      * Manually track FCM Token to Exponea API.
      */
 
-    fun trackPushToken(customerIds: CustomerIds, fcmToken: String) {
+    fun trackPushToken(fcmToken: String) {
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         trackEvent(
                 eventType = Constants.EventTypes.push,
-                customerId = customerIds.apply { cookie = uuid },
                 properties = properties.properties,
                 type = EventType.PUSH_TOKEN
         )
@@ -309,7 +300,6 @@ object Exponea {
      */
 
     fun trackDeliveredPush(
-            customerIds: CustomerIds,
             data: NotificationData? = null,
             fcmToken: String,
             timestamp: Long? = null) {
@@ -324,11 +314,11 @@ object Exponea {
             properties["campaign_name"] = it.campaignName
             properties["action_id"] = it.actionId
         }
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
-                properties = properties,
+        trackEvent(
                 eventType = Constants.EventTypes.push,
-                timestamp = timestamp
+                properties = properties.properties,
+                type = EventType.PUSH_DELIVERED
+
         )
     }
 
@@ -337,7 +327,6 @@ object Exponea {
      */
 
     fun trackClickedPush(
-            customerIds: CustomerIds,
             data: NotificationData? = null,
             fcmToken: String,
             timestamp: Long? = null
@@ -354,13 +343,11 @@ object Exponea {
             properties["campaign_name"] = data.campaignName
             properties["action_id"] = data.actionId
         }
-
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
-                properties = properties,
+        trackEvent(
                 eventType = Constants.EventTypes.push,
-                timestamp = timestamp,
+                properties = properties.properties,
                 type = EventType.PUSH_OPENED
+
         )
     }
 
@@ -385,16 +372,13 @@ object Exponea {
      */
 
     fun trackPaymentEvent(
-            customerIds: CustomerIds,
             timestamp: Long = Date().time,
             purchasedItem: PurchasedItem
     ) {
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         trackEvent(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
-                customerId = customerIds.apply { cookie = uuid },
                 properties = purchasedItem.toHashMap(),
                 type = EventType.PAYMENT
         )
@@ -527,9 +511,9 @@ object Exponea {
      */
 
     internal fun trackEvent(
+            customerIds: CustomerIds = CustomerIds(),
             eventType: String? = null,
             timestamp: Long? = Date().time,
-            customerId: CustomerIds? = null,
             properties: HashMap<String, Any> = hashMapOf(),
             type: EventType
     ) {
@@ -539,10 +523,13 @@ object Exponea {
             return
         }
 
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+        customerIds.apply { cookie = uuid }
+
         val event = ExportedEventType(
                 type = eventType,
                 timestamp = null,
-                customerIds = customerId?.toHashMap(),
+                customerIds = customerIds.toHashMap(),
                 properties = properties
         )
 
@@ -573,10 +560,7 @@ object Exponea {
                 deviceType = component.deviceManager.getDeviceType()
         )
 
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
-
         trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.installation,
                 properties = device.toHashMap(),
                 type = EventType.INSTALL

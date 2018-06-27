@@ -112,11 +112,9 @@ class SessionManagerImpl(
         }
 
         val properties = DeviceProperties().toHashMap()
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -139,11 +137,9 @@ class SessionManagerImpl(
         properties["app_version"] = BuildConfig.VERSION_CODE
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         // Clear session
         clear()
         Exponea.trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

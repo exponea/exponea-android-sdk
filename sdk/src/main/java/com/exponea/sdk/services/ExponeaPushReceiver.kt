@@ -3,7 +3,6 @@ package com.exponea.sdk.services
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -12,18 +11,14 @@ import com.exponea.sdk.util.Logger
 class ExponeaPushReceiver : BroadcastReceiver() {
 
     companion object {
-        const val ACTION_CLICKED = "PushNotificationClicked"
+        const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"
         const val EXTRA_DATA = "NotificationData"
 
         fun getClickIntent(context: Context, data: NotificationData) : Intent {
-            val intent = Intent(context, ExponeaPushReceiver::class.java)
-            intent.apply {
-                action = ACTION_CLICKED
+            return Intent(ACTION_CLICKED).apply {
                 putExtra(EXTRA_DATA, data)
             }
-            return intent
         }
-
     }
 
     override fun onReceive(context: Context, intent: Intent) {

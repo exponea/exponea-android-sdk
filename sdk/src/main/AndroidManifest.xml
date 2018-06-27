@@ -30,7 +30,12 @@
         <receiver
             android:name=".services.ExponeaPushReceiver"
             android:enabled="true"
-            android:exported="false"></receiver>
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.exponea.sdk.action.PUSH_CLICKED"/>
+
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

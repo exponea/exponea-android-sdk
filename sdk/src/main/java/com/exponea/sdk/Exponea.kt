@@ -183,7 +183,8 @@ object Exponea {
             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     ) {
-
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+        customerAttributes.customerId.apply { cookie = uuid }
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
                 attributes = customerAttributes,
@@ -253,6 +254,8 @@ object Exponea {
             onFailure: (Result<FetchError>) -> Unit,
             onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
     ) {
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
+        customerEvents.customerIds.apply { cookie = uuid }
         component.fetchManager.fetchCustomerEvents(
                 projectToken = configuration.projectToken,
                 customerEvents = customerEvents,
@@ -274,11 +277,11 @@ object Exponea {
             onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
     ) {
-
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         component.fetchManager.fetchCustomerAttributes(
                 projectToken = configuration.projectToken,
                 attributes = CustomerAttributes(
-                        customerIds,
+                        customerIds.apply { cookie = uuid },
                         mutableListOf(customerRecommendation.toHashMap())
                 ),
                 onSuccess = onSuccess,
@@ -292,9 +295,10 @@ object Exponea {
 
     fun trackPushToken(customerIds: CustomerIds, fcmToken: String) {
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
+        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         trackEvent(
                 eventType = Constants.EventTypes.push,
-                customerId = customerIds,
+                customerId = customerIds.apply { cookie = uuid },
                 properties = properties.properties,
                 type = EventType.PUSH_TOKEN
         )
@@ -317,8 +321,8 @@ object Exponea {
         )
         data?.let {
             properties["campaign_id"] = it.campaignId
-            properties["campaign_name"] = data.campaignName
-            properties["action_id"] = data.actionId
+            properties["campaign_name"] = it.campaignName
+            properties["action_id"] = it.actionId
         }
         Exponea.trackCustomerEvent(
                 customerIds = customerIds,
@@ -538,7 +542,7 @@ object Exponea {
         val event = ExportedEventType(
                 type = eventType,
                 timestamp = null,
-                customerIds = customerId,
+                customerIds = customerId?.toHashMap(),
                 properties = properties
         )
 

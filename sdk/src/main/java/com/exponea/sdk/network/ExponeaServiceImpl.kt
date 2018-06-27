@@ -84,7 +84,7 @@ class ExponeaServiceImpl(
                 ApiEndPoint.EndPointName.CUSTOMERS_RECOMMENDATION,
                 projectToken
         ).toString()
-        val jsonBody = gson.toJson(recommendation)
+        val jsonBody = gson.toJson(recommendation.toHashMap())
         return networkManager.post(endPoint, jsonBody)
     }
 
@@ -93,7 +93,7 @@ class ExponeaServiceImpl(
                 ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES,
                 projectToken
         ).toString()
-        val jsonBody = gson.toJson(attributes)
+        val jsonBody = gson.toJson(attributes.toHashMap())
         return networkManager.post(endPoint, jsonBody)
     }
 
@@ -102,7 +102,7 @@ class ExponeaServiceImpl(
                 ApiEndPoint.EndPointName.CUSTOMERS_EVENTS,
                 projectToken
         ).toString()
-        val jsonBody = gson.toJson(events)
+        val jsonBody = gson.toJson(events.toHashMap())
         return networkManager.post(endPoint, jsonBody)
     }
 
@@ -111,7 +111,7 @@ class ExponeaServiceImpl(
                 ApiEndPoint.EndPointName.CUSTOMERS_EXPORT_ALL_PROPERTIES,
                 projectToken
         ).toString()
-        val jsonBody = gson.toJson(customerIds)
+        val jsonBody = gson.toJson(customerIds.toHashMap())
         return networkManager.post(endPoint, jsonBody)
     }
 
@@ -129,7 +129,7 @@ class ExponeaServiceImpl(
                 ApiEndPoint.EndPointName.CUSTOMERS_ANONYMIZE,
                 projectToken
         ).toString()
-        val jsonBody = gson.toJson(customerIds)
+        val jsonBody = gson.toJson(customerIds.toHashMap())
         return networkManager.post(endPoint, jsonBody)
     }
 

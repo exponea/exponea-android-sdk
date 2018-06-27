@@ -16,7 +16,7 @@ open class BaseFragment : Fragment() {
         val registeredID = App.instance.registeredIdManager.registeredID
 
         val properties = PropertiesList(hashMapOf(Pair("name", pageName)))
-        val customerIds = CustomerIds(registered = registeredID)
+        val customerIds = CustomerIds().withId("registered", registeredID)
 
         Exponea.trackCustomerEvent(
                 eventType =  "page_view",

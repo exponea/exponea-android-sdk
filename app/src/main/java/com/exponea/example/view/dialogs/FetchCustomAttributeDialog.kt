@@ -74,7 +74,7 @@ class FetchCustomAttributeDialog : DialogFragment(), AdapterView.OnItemSelectedL
     }
 
     private fun buildCustomAttributeFrom(type: String, value: String) : CustomerAttributes {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         return when(type) {
             CustomerAttributes.TYPE_PROPERTY -> CustomerAttributes(customerIds).also { it.withProperty(value) }
             CustomerAttributes.TYPE_AGGREGATE -> CustomerAttributes(customerIds).also { it.withAggregation(value) }

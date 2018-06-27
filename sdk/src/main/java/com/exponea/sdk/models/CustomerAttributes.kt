@@ -20,6 +20,13 @@ data class CustomerAttributes(
         private const val id = "id"
     }
 
+    fun toHashMap() : HashMap<String, Any> {
+        return hashMapOf (
+                "customer_ids" to customerId.toHashMap(),
+                "attributes" to attributes
+        )
+    }
+
     /**
      * Add property to the requested attributes
      * @param propertyName - name of the requested property ( ex: "first_name" )

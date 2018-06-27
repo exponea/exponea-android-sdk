@@ -80,7 +80,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle custom event tracking obtained by TrackCustomEventDialog
      */
     private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered" ,App.instance.registeredIdManager.registeredID)
         Exponea.trackCustomerEvent(
                 eventType = eventName,
                 customerIds = customerIds,
@@ -94,7 +94,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle push clicked event tracking
      */
     private fun trackPushClicked() {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         Exponea.trackClickedPush(
                 customerIds = customerIds,
                 fcmToken = "Fcm Token"
@@ -105,7 +105,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle updating customer properties
      */
     private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
 
         Exponea.updateCustomerProperties(
                 customerIds = customerIds,
@@ -117,7 +117,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle push delivered event tracking"
      */
     private fun trackPushDelivered() {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         Exponea.trackDeliveredPush(
                 customerIds = customerIds,
                 fcmToken = "Fcm Token"
@@ -129,7 +129,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle token tracking
      */
     private fun trackFCMToken() {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         Exponea.trackPushToken(
                 customerIds = customerIds,
                 fcmToken = FirebaseInstanceId.getInstance().token ?: ""
@@ -140,7 +140,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to manually track customer's purchases
      */
     private fun trackPayment(position: Int) {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
+        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         val purchasedItem = PurchasedItem(
                 value = 2011.1,
                 currency = "USD",

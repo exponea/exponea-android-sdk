@@ -25,7 +25,8 @@ class InstallEventTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
+            println(configuration.baseURL)
             configuration.maxTries = 10
         }
 

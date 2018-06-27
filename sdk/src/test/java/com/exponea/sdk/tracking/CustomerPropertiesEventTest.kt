@@ -19,7 +19,7 @@ class CustomerPropertiesEventTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "john@doe.com")
+        val customerIds = CustomerIds().withId("registered", "john@doe.com")
         val properties = PropertiesList(hashMapOf("first_name" to "NewName"))
         val server = MockWebServer()
 
@@ -27,7 +27,8 @@ class CustomerPropertiesEventTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
+
             configuration.maxTries = 10
         }
 

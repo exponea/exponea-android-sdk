@@ -20,7 +20,6 @@ class EventTrackTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "john@doe.com")
         val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         val server = MockWebServer()
 
@@ -28,7 +27,7 @@ class EventTrackTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }
 
@@ -58,7 +57,6 @@ class EventTrackTest {
     fun testEventAdded() {
 
         Exponea.trackEvent(
-                customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -76,7 +74,6 @@ class EventTrackTest {
         ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
 
         Exponea.trackEvent(
-                customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -98,7 +95,6 @@ class EventTrackTest {
     fun testEventFlushFailed() {
 
         Exponea.trackEvent(
-                customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -129,7 +125,6 @@ class EventTrackTest {
         repo.clear()
 
         Exponea.trackEvent(
-                customerIds = customerIds,
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties

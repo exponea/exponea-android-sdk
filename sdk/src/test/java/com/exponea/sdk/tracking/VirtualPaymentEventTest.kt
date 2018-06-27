@@ -19,7 +19,6 @@ class VirtualPaymentEventTest {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
-        val customerIds = CustomerIds(registered = "john@doe.com")
         val payment = PurchasedItem(
                 currency = "USD",
                 value = 200.3,
@@ -32,7 +31,7 @@ class VirtualPaymentEventTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }
 
@@ -58,7 +57,6 @@ class VirtualPaymentEventTest {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         Exponea.trackPaymentEvent(
-                customerIds = customerIds,
                 purchasedItem = payment
         )
 

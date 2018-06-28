@@ -189,7 +189,6 @@ object Exponea {
 
     /**
      * Fetches banners web representation
-     * @param customerIds - Id of a customer
      * @param onSuccess - success callback, when data is ready
      * @param onFailure - failure callback, in case of errors
      */
@@ -260,7 +259,6 @@ object Exponea {
 
     /**
      * Fetch recommendations for a specific customer.
-     * @param customerIds - Specify your customer with external id.
      * @param customerRecommendation - Recommendation for the customer.
      * @param onFailure - Method will be called if there was an error.
      * @param onSuccess - this method will be called when data is ready.
@@ -367,7 +365,6 @@ object Exponea {
      * Tracks payment manually
      * @param purchasedItem - represents payment details.
      * @param timestamp - Time in timestamp format where the event was created.
-     * @param purchasedItem - Information about the purchased item.
      */
 
     fun trackPaymentEvent(

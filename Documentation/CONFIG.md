@@ -1,4 +1,4 @@
-Â## 🔍 Configuration
+## 🔍 Configuration
 
 The configuration object must be configured before starting using the SDK.
 
@@ -91,7 +91,7 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 * Flag to control the automatic tracking of user sessions.
 * When set to true, the SDK will
-automatically send `session_start` and `session_end` to Exponea API
+automatically send `session_start` and `session_end` events to Exponea API
 
 #### automaticPushNotification
 

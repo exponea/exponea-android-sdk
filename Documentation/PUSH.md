@@ -23,7 +23,7 @@ When It's coming to setting up Firebase inside you application, you have options
   2. Click **Cloud Messaging** , then click the provided tutorial link **Set Up Cloud Messaging**.
   3. Click the **Connect** button to Firebase button to connect to Firebase and add the necessary code to your app.
   4.  Click the **Add FCM to your App** button to allow `gradle` add needed dependencies for you
-  5. That's it! You're good to go, checkout [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
+  5. That's it! You're good to go, check out [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
 
 #### Manually add Firebase
   1. Open you Project and navigate to `Project overview -> Project Settings`
@@ -74,7 +74,7 @@ When It's coming to setting up Firebase inside you application, you have options
 
   ```
 
-7. That's should be it! Checkout [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
+7. That's should be it! Check out [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
 
 
   ### Enabling Exponea push notifications

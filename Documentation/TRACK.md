@@ -14,7 +14,7 @@ So the possible events for tracking will be: ‘search’, ‘product view’, �
 In the SDK you can track an event using the following accessor:
 
 ```
-fun trackCustomerEvent(
+fun trackEvent(
         properties: PropertiesList,
         timestamp: Long?,
         eventType: String?

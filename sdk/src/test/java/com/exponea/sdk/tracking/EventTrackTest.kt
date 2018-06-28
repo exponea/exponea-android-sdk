@@ -20,7 +20,6 @@ class EventTrackTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "john@doe.com")
         val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         val server = MockWebServer()
 
@@ -28,7 +27,7 @@ class EventTrackTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }
 
@@ -57,8 +56,7 @@ class EventTrackTest {
     @Test
     fun testEventAdded() {
 
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
+        Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -75,8 +73,7 @@ class EventTrackTest {
 
         ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
 
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
+        Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -97,8 +94,7 @@ class EventTrackTest {
     @Test
     fun testEventFlushFailed() {
 
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
+        Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties
@@ -128,8 +124,7 @@ class EventTrackTest {
 
         repo.clear()
 
-        Exponea.trackCustomerEvent(
-                customerIds = customerIds,
+        Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = Date().time,
                 properties = properties

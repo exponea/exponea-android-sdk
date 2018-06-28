@@ -16,7 +16,7 @@ data class PurchasedItem(
         var sdkVersion: String? = null
 ) {
     fun toHashMap(): HashMap<String, Any> {
-        val hashMap = hashMapOf<String, Any>(
+        val hashMap = hashMapOf(
                 Pair("brutto", value),
                 Pair("currency", currency),
                 Pair("payment_system", paymentSystem),

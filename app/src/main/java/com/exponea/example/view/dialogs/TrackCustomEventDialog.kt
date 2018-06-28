@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
@@ -53,6 +54,7 @@ class TrackCustomEventDialog : DialogFragment() {
         val propValue : EditText = view.findViewById(R.id.editTextValue)
         val eventName : EditText = view.findViewById(R.id.editTextEventName)
         val propsTextView : TextView = view.findViewById(R.id.textViewProperties)
+
 
         propsTextView.text = propsMap.asJson()
 

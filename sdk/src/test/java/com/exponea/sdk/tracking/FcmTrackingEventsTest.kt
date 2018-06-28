@@ -21,7 +21,6 @@ class FcmTrackingEventsTest {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "registered")
         const val token = "FirebaseCloudToken#"
         val server = MockWebServer()
 
@@ -29,7 +28,7 @@ class FcmTrackingEventsTest {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }
 
@@ -59,7 +58,6 @@ class FcmTrackingEventsTest {
     fun testTokenEventAdded_ShouldSuccess() {
         // Track token
         Exponea.trackPushToken(
-                customerIds = customerIds,
                 fcmToken = token
         )
 
@@ -76,7 +74,6 @@ class FcmTrackingEventsTest {
     fun testTrackDeliveredPush_ShouldSuccess() {
         // Track delivered push
         Exponea.trackDeliveredPush(
-                customerIds = customerIds,
                 fcmToken = token
         )
 
@@ -104,7 +101,6 @@ class FcmTrackingEventsTest {
     fun testTrackClickedPush_ShouldSuccess() {
         // Track clicked push
         Exponea.trackClickedPush(
-                customerIds = customerIds,
                 fcmToken = token
         )
 

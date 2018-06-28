@@ -20,15 +20,14 @@ class FetchAggregation {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "john@doe.com")
-        val attrs = CustomerAttributes(customerIds)
+        val attrs = CustomerAttributes()
         val server = MockWebServer()
 
         @BeforeClass @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
 
             attrs.withAggregation("aggregationId")
         }

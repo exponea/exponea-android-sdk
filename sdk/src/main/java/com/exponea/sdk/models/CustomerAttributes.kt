@@ -3,11 +3,15 @@ package com.exponea.sdk.models
 import com.google.gson.annotations.SerializedName
 
 data class CustomerAttributes(
-        @SerializedName("customer_ids")
-        var customerId: CustomerIds,
+
         @SerializedName("attributes")
         var attributes: MutableList<HashMap<String, Any>> = mutableListOf()
 ) {
+
+
+    internal constructor(customerIds: CustomerIds, attributes: MutableList<HashMap<String, Any>>) : this (attributes) {
+        this.customerIds = customerIds
+    }
 
     companion object {
         const val TYPE = "type"
@@ -18,6 +22,15 @@ data class CustomerAttributes(
         const val TYPE_PREDICTION = "prediction"
         const val TYPE_SEGMENTATION = "segmentation"
         private const val id = "id"
+    }
+
+    internal var customerIds = CustomerIds()
+
+    fun toHashMap() : HashMap<String, Any> {
+        return hashMapOf (
+                "customer_ids" to customerIds.toHashMap(),
+                "attributes" to attributes
+        )
     }
 
     /**

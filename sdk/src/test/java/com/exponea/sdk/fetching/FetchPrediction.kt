@@ -20,8 +20,7 @@ class FetchPrediction {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val customerIds = CustomerIds(registered = "john@doe.com")
-        val attrs = CustomerAttributes(customerIds)
+        val attrs = CustomerAttributes()
         val server = MockWebServer()
 
         @BeforeClass @JvmStatic
@@ -29,7 +28,7 @@ class FetchPrediction {
 
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
-            configuration.baseURL = server.url("/").toString()
+            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
 
             attrs.withPrediction("PredictionId")
         }
@@ -88,8 +87,7 @@ class FetchPrediction {
         var success = false
         var value: String? = null
         var error: FetchError? = null
-        val customerIds = CustomerIds(registered = "registered")
-        val attrs = CustomerAttributes(customerIds)
+        val attrs = CustomerAttributes()
         attrs.withPrediction("predictionId")
 
         runBlocking {

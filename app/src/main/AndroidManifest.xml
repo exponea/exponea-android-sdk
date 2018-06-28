@@ -11,8 +11,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:screenOrientation="portrait"
-            android:name=".view.MainActivity">
+            android:name=".view.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,9 +20,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:screenOrientation="portrait"
             android:name=".view.AuthenticationActivity"
-            />
+            android:screenOrientation="portrait" />
+
+        <receiver
+            android:name=".services.MyReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter><action android:name="com.exponea.sdk.action.PUSH_CLICKED"/> </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 import java.util.*
+import kotlin.collections.HashMap
 
 /*
 Example Payload
@@ -26,7 +27,7 @@ data class ExportedEventType(
         var type: String? = null,
         var timestamp: Long? = Date().time,
         @SerializedName("customer_ids")
-        var customerIds: CustomerIds? = null,
+        var customerIds: HashMap<String, Any?>? = null,
         @SerializedName("properties")
         var properties: HashMap<String, Any>? = null,
         var errors: HashMap<String, String>? = null

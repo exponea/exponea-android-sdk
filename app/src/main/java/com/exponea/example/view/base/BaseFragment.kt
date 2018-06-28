@@ -1,9 +1,7 @@
 package com.exponea.example.view.base
 
 import android.support.v4.app.Fragment
-import com.exponea.example.App
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.PropertiesList
 
 open class BaseFragment : Fragment() {
@@ -13,14 +11,10 @@ open class BaseFragment : Fragment() {
      * @param pageName - Name of the screen
      */
     fun trackPage(pageName: String) {
-        val registeredID = App.instance.registeredIdManager.registeredID
-
         val properties = PropertiesList(hashMapOf(Pair("name", pageName)))
-        val customerIds = CustomerIds(registered = registeredID)
 
-        Exponea.trackCustomerEvent(
+        Exponea.trackEvent(
                 eventType =  "page_view",
-                customerIds = customerIds,
                 properties = properties,
                 timestamp = null
         )

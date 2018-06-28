@@ -3,7 +3,7 @@ package com.exponea.sdk.models
 object Constants {
     /// Network
     object Repository {
-        val baseURL: String = "https://api.exponea.com/"
+        val baseURL: String = "https://api.exponea.com"
         val contentType: String = "application/json"
         val headerContentType: String = "content-type"
         val headerAccept: String = "accept"

@@ -15,16 +15,13 @@ class PushManagerImpl(
     override val fcmToken: String
         get() = FirebaseInstanceId.getInstance().token.toString()
 
-    val uniqueToken = uniqueIdentifierRepository.get()
-    val customerIds = CustomerIds().apply { cookie = uniqueToken }
 
     override fun trackFcmToken() {
-        Exponea.trackPushToken(customerIds, fcmToken)
+        Exponea.trackPushToken(fcmToken)
     }
 
     override fun trackDeliveredPush(data: NotificationData?) {
         Exponea.trackDeliveredPush(
-                customerIds = customerIds,
                 fcmToken = fcmToken,
                 data = data
         )
@@ -32,7 +29,6 @@ class PushManagerImpl(
 
     override fun trackClickedPush(data: NotificationData?) {
         Exponea.trackClickedPush(
-                customerIds = customerIds,
                 fcmToken = fcmToken,
                 data = data
         )

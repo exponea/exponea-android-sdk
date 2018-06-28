@@ -74,14 +74,13 @@ class FetchCustomAttributeDialog : DialogFragment(), AdapterView.OnItemSelectedL
     }
 
     private fun buildCustomAttributeFrom(type: String, value: String) : CustomerAttributes {
-        val customerIds = CustomerIds(registered = App.instance.registeredIdManager.registeredID)
         return when(type) {
-            CustomerAttributes.TYPE_PROPERTY -> CustomerAttributes(customerIds).also { it.withProperty(value) }
-            CustomerAttributes.TYPE_AGGREGATE -> CustomerAttributes(customerIds).also { it.withAggregation(value) }
-            CustomerAttributes.TYPE_EXPRESSION -> CustomerAttributes(customerIds).also { it.withExpression(value) }
-            CustomerAttributes.TYPE_SEGMENTATION -> CustomerAttributes(customerIds).also { it.withSegmentation(value) }
-            CustomerAttributes.TYPE_PREDICTION -> CustomerAttributes(customerIds).also { it.withPrediction(value) }
-            else -> CustomerAttributes(customerIds).also { it.withId(value) }
+            CustomerAttributes.TYPE_PROPERTY -> CustomerAttributes().also { it.withProperty(value) }
+            CustomerAttributes.TYPE_AGGREGATE -> CustomerAttributes().also { it.withAggregation(value) }
+            CustomerAttributes.TYPE_EXPRESSION -> CustomerAttributes().also { it.withExpression(value) }
+            CustomerAttributes.TYPE_SEGMENTATION -> CustomerAttributes().also { it.withSegmentation(value) }
+            CustomerAttributes.TYPE_PREDICTION -> CustomerAttributes().also { it.withPrediction(value) }
+            else -> CustomerAttributes().also { it.withId(value) }
         }
     }
 

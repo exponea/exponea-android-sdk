@@ -69,8 +69,7 @@ class FetchFragment : BaseFragment() {
     private fun fetchRecommended() {
         // Init customer structure
         val uuid = App.instance.registeredIdManager.registeredID
-        val customerIds = CustomerIds(registered = uuid)
-
+        val customerIds = CustomerIds().withId("registered", uuid)
         // Init recommendation structure and specify params
         val recommendation = CustomerRecommendation(
                 id = uuid,
@@ -79,7 +78,6 @@ class FetchFragment : BaseFragment() {
 
         // Specify callbacks and start loading
         Exponea.fetchRecommendation(
-                customerIds = customerIds,
                 customerRecommendation = recommendation,
                 onSuccess = {onFetchSuccess(it)},
                 onFailure = {onFetchFailed(it)}

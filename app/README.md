@@ -51,9 +51,8 @@ After SDK has been configured, new activity will launch
 ## Screen Tracking
 `BaseFragment` contains only one method, it allows us to track every screen user has navigated to
 ```
-Exponea.trackCustomerEvent(
+Exponea.trackEvent(
         eventType =  "page_view",
-        customerIds = CustomerIds(cookie = userID),
         properties = properties,
         timestamp = null
 )
@@ -75,32 +74,42 @@ Every button click will call specific fetch method from the SDK. Let's take a lo
 Here we specify `onClickListener` as usual
 ```
 attributesButton.setOnClickListener {
-            setProgressBarVisible(true)
-            fetchCustomerAttributes()
-        }
+           fetchCustomerAttributes()
+       }
 ```
 Now the `fetchCustomerAttributes()` method!
-First, we should Initialize `CustomerIds` structure
 ```
-val uuid = App.instance.userIdManager.uniqueUserID
-       val customerIds = CustomerIds(cookie = uuid)
-       val attributes = CustomerAttributes(customerIds)
-```
-Next, let's specify what customer attributes we want to obtain.
-Starting with... customer's  name and email adress
+
+FetchCustomAttributeDialog.show(childFragmentManager, {
+            setProgressBarVisible(true)
+            Exponea.fetchCustomerAttributes(
+                    customerAttributes = it,
+                    onFailure = { onFetchFailed(it) },
+                    onSuccess = {onFetchSuccess(it)}
+            )
+        })
+    }
+
+    ```
+Clicking the button will cause the dialog to pop up, where user will be able to specify specific attribute to fetch
+In the end it will construct `CustomerAttributes` and send it via callback like so:
 ```
 attributes.apply {
             withProperty("first_name")
             withProperty("email")
         }
+
+onFetch(customerAttributes)
+
 ```
-And finally, we call `Exponea.fetchCustomerAttributes()` method from the SDK with specified **attributes** and **callbacks**
+And finally, we will call `Exponea.fetchCustomerAttributes()` method from the SDK with specified **attributes** and **callbacks**
 ```
 Exponea.fetchCustomerAttributes(
                customerAttributes = attributes,
                onFailure = { onFetchFailed(it) },
                onSuccess = {onFetchSuccess(it)}
        )
+
 ```
 Our callbacks are pretty simple. We just take whatever we got from the server and put it's string representation to the TextView bellow our buttons
 ```
@@ -118,7 +127,7 @@ private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
 This fragment consist of `ListView`, several buttons and contains different tracking examples for different events.
 
 ##### Payments tracking
-`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method is simply  constructing `PurchasedItem` object and sends it to according SDK method along with `customerIds`
+`ListView` represents list of items that can be purchased by customer. Each item click will result in calling `trackPayment()` method. This method is simply  constructing `PurchasedItem` object and sends it to according SDK method
 ```
 val purchasedItem = PurchasedItem(
                 value = 2011.1,
@@ -140,18 +149,50 @@ Next three buttons are here showcase push notifications tracking, i.e notificati
 private fun trackPushDelivered() {
         val customerIds = CustomerIds(cookie = App.instance.userIdManager.uniqueUserID)
         Exponea.trackDeliveredPush(
-                customerIds = customerIds,
                 fcmToken = "Fcm Token"
         )
     }
 ```
+##### Acting upon notification Clicking
+> Thats applies only if automaticPushNotification is set to `true`
 
-##### CustomerProperties
-Final one allows you to update customer properties. Just need to initialize `customerIds` as usual and ***properties*** you want add or update
+If you want specify action to be completed when user opens push notification. You'll have to register your own `Broadcast Receiver` like so
+```
+        <receiver
+            android:name=".services.MyReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter><action android:name="com.exponea.sdk.action.PUSH_CLICKED"/> </intent-filter>
+        </receiver>
+  ```
+
+The last but not least: `onReceiveMethod`
+
+  ```
+  override fun onReceive(context: Context, intent: Intent) {
+    when(intent.action) {
+        ExponeaPushReceiver.ACTION_CLICKED -> {
+
+                // Extract payload data
+                val data = intent.getParcelableExtra<NotificationData>(ExponeaPushReceiver.EXTRA_DATA)
+                Log.i("Receiver", "Payload: $data")
+
+                // Act upon push receiving
+                context.startActivity(Intent(context, MainActivity::class.java))
+            }
+
+  ```
+
+
+
+
+
+##### identifyCustomer
+Final one allows you to update customer properties.
+It will also show a dialog, where you can specify attributes you want save or update
 ```
 val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "another@email.com"))
       Exponea.updateCustomerProperties(
-              customerIds = customerIds,
               properties = props
       )
 ```

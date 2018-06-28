@@ -41,6 +41,9 @@ enum class EventType {
     /// Event used for registering the push notifications token of the device with Exponea.
     PUSH_TOKEN,
 
+    // For tracking that a push notification has been delivered
+    PUSH_DELIVERED,
+
     /// For tracking that a push notification has been opened.
     PUSH_OPENED,
 }

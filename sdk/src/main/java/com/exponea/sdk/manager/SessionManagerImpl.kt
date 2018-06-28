@@ -70,7 +70,8 @@ class SessionManagerImpl(
 
         // Check if current session is the first one
         val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
-        if (lastTimeStarted == -1L) {
+        val lastTimeFinished = prefs.getLong(PREF_SESSION_END, -1L)
+        if (lastTimeStarted == -1L || lastTimeFinished == -1L) {
             prefs.setLong(PREF_SESSION_START, now)
             trackSessionStart(now)
             return
@@ -112,11 +113,9 @@ class SessionManagerImpl(
         }
 
         val properties = DeviceProperties().toHashMap()
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
 
         properties["app_version"] = BuildConfig.VERSION_CODE
-        Exponea.trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
+        Exponea.track(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,
                 properties = properties,
@@ -139,11 +138,9 @@ class SessionManagerImpl(
         properties["app_version"] = BuildConfig.VERSION_CODE
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
-        val uuid = Exponea.component.uniqueIdentifierRepository.get()
         // Clear session
         clear()
-        Exponea.trackEvent(
-                customerId = CustomerIds().apply { cookie = uuid },
+        Exponea.track(
                 eventType = Constants.EventTypes.sessionEnd,
                 timestamp = timestamp,
                 properties = properties,

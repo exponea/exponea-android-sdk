@@ -6,34 +6,36 @@ It's possible to initialize the configuration through a ExponeaConfiguration obj
 
 ```
 data class ExponeaConfiguration(
-        // Default project token.
-        var projectToken: String = "",
-        // Map event types and project tokens to be send to Exponea API.
-        var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
-        // Authorization http header.
-        var authorization: String? = null,
-        // Base url for http requests to Exponea API.
-        var baseURL: String = Constants.Repository.baseURL,
-        // Content type value to make http requests.
-        var contentType: String = Constants.Repository.contentType,
-        // Maximum retries value to flush data to api.
-        var maxTries: Int = 10,
-        // Timeout session value considered for app usage.
-        var sessionTimeout: Int = 20,
-        // Flag to control automatic tracking for In-App purchases
-        var automaticSessionTracking: Boolean = true,
-        // Flag to control if the App will handle push notifications automatically.
-        var automaticPushNotification: Boolean = true,
-        // Icon to be showed in push notifications.
-        var pushIcon: Int? = null,
-        // Channel name for push notifications. Only for API level 26+.
-        var pushChannelName: String = "Exponea",
-        // Channel description for push notifications. Only for API level 26+.
-        var pushChannelDescription: String = "Notifications",
-        // Channel ID for push notifications. Only for API level 26+.
-        var pushChannelId: String = "0",
-        // Notification importance for the notification channel. Only for API level 26+.
-        var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
+  // Default project token.
+  var projectToken: String = "",
+  // Map event types and project tokens to be send to Exponea API.
+  var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
+  // Authorization http header.
+  var authorization: String? = null,
+  // Base url for http requests to Exponea API.
+  var baseURL: String = Constants.Repository.baseURL,
+  // Content type value to make http requests.
+  var contentType: String = Constants.Repository.contentType,
+  // Maximum retries value to flush data to api.
+  var maxTries: Int = 10,
+  // Timeout session value considered for app usage.
+  var sessionTimeout: Double = 20.0,
+  // Flag to control automatic tracking for In-App purchases
+  var automaticPaymentTracking: Boolean = true,
+  // Flag to control automatic session tracking
+  var automaticSessionTracking: Boolean = true,
+  // Flag to control if the App will handle push notifications automatically.
+  var automaticPushNotification: Boolean = true,
+  // Icon to be showed in push notifications.
+  var pushIcon: Int? = null,
+  // Channel name for push notifications. Only for API level 26+.
+  var pushChannelName: String = "Exponea",
+  // Channel description for push notifications. Only for API level 26+.
+  var pushChannelDescription: String = "Notifications",
+  // Channel ID for push notifications. Only for API level 26+.
+  var pushChannelId: String = "0",
+  // Notification importance for the notification channel. Only for API level 26+.
+  var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
 )
 ```
 #### projectToken
@@ -57,7 +59,7 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 #### authorization
 
-* Basic authentication supported by a combination of public/private token. 
+* Basic authentication supported by a combination of public/private token.
 * For more information, please click [here](https://developers.exponea.com/v2/reference#basic-authentication)
 
 #### baseURL
@@ -67,23 +69,29 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 #### contentType
 
-* Content type value to make http requests. 
+* Content type value to make http requests.
 * Default value `application/json`
 
 #### maxTries
 
-* Maximum number of retries to flush data to Exponea API. 
+* Maximum number of retries to flush data to Exponea API.
 * SDK will consider the value to be flushed if this number is exceed and delete from the queue.
- 
+
 #### sessionTimeout
 
-* Session is a real time spent in the App, it starts when the App is launched and ends when the App goes to background. 
+* Session is a real time spent in the App, it starts when the App is launched and ends when the App goes to background.
 * This value will be used to calculate the session timing.
- 
-#### automaticSessionTracking
- 
-* Flag to control the automatic tracking for In-App purchases done at the Google Play Store. 
+
+#### automaticPaymentTracking
+
+* Flag to control the automatic tracking for In-App purchases done at the Google Play Store.
 * When active, the SDK will add the Billing service listeners in order to get payments done in the App.
+
+#### automaticSessionTracking
+
+* Flag to control the automatic tracking of user sessions.
+* When set to true, the SDK will
+automatically send `session_start` and `session_end` events to Exponea API
 
 #### automaticPushNotification
 
@@ -95,7 +103,7 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 #### pushChannelName
 
-* Name of the Channel to be created for the push notifications. 
+* Name of the Channel to be created for the push notifications.
 * Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels)
 
 #### pushChannelDescription
@@ -105,10 +113,10 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 #### pushChannelId
 
-* Channel ID for push notifications. 
+* Channel ID for push notifications.
 * Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels)
 
 #### pushNotificationImportance
 
 * Notification importance for the notification channel.
-* Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels) 
+* Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels)

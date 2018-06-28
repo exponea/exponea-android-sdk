@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
@@ -45,6 +46,11 @@ class TrackCustomAttributesDialog : DialogFragment() {
         val nameView = view.findViewById(R.id.editTextName) as EditText
         val valueView = view.findViewById(R.id.editTextValue) as EditText
         val propertiesView = view.findViewById(R.id.textViewAttributes) as TextView
+        val idsView : TextView = view.findViewById(R.id.idsTextView)
+
+        idsView.text = "registered: ${App.instance.registeredIdManager.registeredID}"
+
+
         propertiesView.text = attributes.asJson()
         view.findViewById<Button>(R.id.buttonAddAttr).setOnClickListener {
             if (!nameView.text.isEmpty() && !valueView.text.isEmpty() ) {

@@ -1,0 +1,94 @@
+apply plugin: 'signing'
+apply plugin: 'maven'
+apply plugin: 'io.codearte.nexus-staging'
+
+// Username & password for Sonatype, stored in gradle.properties
+
+def _ossrhUsername = System.getenv('NEXUS_USERNAME')
+def _ossrhPassword = System.getenv('NEXUS_PASSWORD')
+
+allprojects { ext."signing.keyId" = System.getenv('keyId') }
+allprojects { ext."signing.secretKeyRingFile" = System.getenv('secretKeyRingFile') }
+allprojects { ext."signing.password" = System.getenv('password') }
+
+// Artifact settings
+def _group = 'com.exponea.sdk'
+def _version = '0.9.2'
+def _archivesBaseName = 'sdk'
+
+def _name = 'Exponea Sdk Library '
+def _description = 'Exponea Sdk Library'
+
+nexusStaging {
+    packageGroup = "com.exponea"
+}
+
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                pom.groupId = _group
+                pom.artifactId = _archivesBaseName
+                pom.version = _version
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: _ossrhUsername, password: _ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: _ossrhUsername, password: _ossrhPassword)
+                }
+
+                pom.project {
+                    name _name
+                    packaging 'aar'
+                    description _description
+                    url 'https://github.com/exponea/exponea-android-sdk'
+                    inceptionYear '2018'
+
+                    scm {
+                        url 'https://github.com/nodes-android/nstack-kotlin'
+                        connection 'scm:https://github.com/exponea/exponea-android-sdk.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'exponea'
+                            name 'Exponea'
+                            email 'contact@exponea.com'
+                        }
+                    }
+
+                    issueManagement {
+                        system 'GitHub issues'
+                        url 'https://github.com/exponea/exponea-android-sdk/issues'
+                    }
+                }
+            }
+        }
+    }
+
+    signing {
+        required { gradle.taskGraph.hasTask("uploadArchives") }
+        sign configurations.archives
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.sourceFiles
+    }
+
+    artifacts {
+        archives androidSourcesJar
+    }
+
+}

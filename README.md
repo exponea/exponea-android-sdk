@@ -8,7 +8,7 @@
 
 ## Exponea Android SDK
 
-This library allows you to interact from your application or game with the Exponea APP.
+This library allows you to interact from your application or game with the Exponea App.
 
 Exponea empowers B2C marketers to raise conversion rates, improve acquisition ROI, and maximize customer lifetime value.
 
@@ -22,13 +22,19 @@ It has been written 100% in Kotlin with ❤️
 Download via Gradle:
 
 ```groovy
-compile "TODO: ADD THE CORRECT PACKAGE @HERE"
+dependencies {
+  compile 'com.exponea.sdk:sdk:0.9.2'
+}
 ```
 
-Download via Marven:
+Download via Maven:
 
 ```groovy
-"TODO: ADD THE CORRECT PACKAGE @HERE"
+<dependency>
+    <groupId>com.exponea.sdk</groupId>
+    <artifactId>sdk</artifactId>
+    <version>0.9.2</version>
+</dependency>
 ```
 
 ## 📱 Demo Application
@@ -41,21 +47,21 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 
 To implement the Exponea SDK you must configure the SDK first:
 
-* [Configuration](./Documentation/CONFIG.md);
-* [Project Token Mapping](./Documentation/PROJECT_MAPPING.md);
+* [Configuration](./Documentation/CONFIG.md)
+* [Project Token Mapping](./Documentation/PROJECT_MAPPING.md)
 
-Then you can start using all the amazing features we developed for you:
+Then you can start using all supported features:
 
-* [Track Events / Customer properties](./Documentation/TRACK.md);
-* [Push Notification Events](./Documentation/PUSH.md);
+* [Track Events / Customer properties](./Documentation/TRACK.md)
+* [Push Notification Events](./Documentation/PUSH.md)
 * [Flush](./Documentation/FLUSH.md)
-* [Fetch Data](./Documentation/FETCH.md);
+* [Fetch Data](./Documentation/FETCH.md)
 * [Payments](./Documentation/PAYMENT.md)
 
 ## 🔗 Useful links
 
 * [Exponea Developer Hub](https://developers.exponea.com)
-* [Exponea APP](https://app.exponea.com/login)
+* [Exponea App](https://app.exponea.com/login)
 
 ## 📎 Dependencies
 
@@ -65,6 +71,9 @@ Then you can start using all the amazing features we developed for you:
 * billing 1.0
 * firebase-messaging 15.0.0
 
+## ⚠️ Version Disclaimer
+
+This SDK supports **API 21+** and **Android 5+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
 
 ## 📄 License
 

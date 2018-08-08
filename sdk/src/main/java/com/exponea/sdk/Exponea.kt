@@ -300,7 +300,7 @@ object Exponea {
     fun trackDeliveredPush(
             data: NotificationData? = null,
             fcmToken: String,
-            timestamp: Long? = null) {
+            timestamp: Long? = Date().time) {
         val properties = PropertiesList(
                 hashMapOf(
                         Pair("action_type", "notification"),
@@ -315,8 +315,8 @@ object Exponea {
         track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
-                type = EventType.PUSH_DELIVERED
-
+                type = EventType.PUSH_DELIVERED,
+                timestamp = timestamp
         )
     }
 
@@ -327,7 +327,7 @@ object Exponea {
     fun trackClickedPush(
             data: NotificationData? = null,
             fcmToken: String,
-            timestamp: Long? = null
+            timestamp: Long? = Date().time
             ) {
         val properties = PropertiesList(
                 hashMapOf(
@@ -344,8 +344,8 @@ object Exponea {
         track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
-                type = EventType.PUSH_OPENED
-
+                type = EventType.PUSH_OPENED,
+                timestamp = timestamp
         )
     }
 
@@ -480,6 +480,7 @@ object Exponea {
      * Initializes session listener
      * @param enableSessionTracking - determines sdk tracking session's state
      */
+
     private fun startSessionTracking(enableSessionTracking: Boolean) {
         if (enableSessionTracking) {
             component.sessionManager.startSessionListener()
@@ -525,7 +526,7 @@ object Exponea {
 
         val event = ExportedEventType(
                 type = eventType,
-                timestamp = null,
+                timestamp = timestamp,
                 customerIds = customerIds.toHashMap(),
                 properties = properties
         )

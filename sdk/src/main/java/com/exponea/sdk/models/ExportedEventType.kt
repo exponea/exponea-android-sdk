@@ -4,22 +4,6 @@ import com.google.gson.annotations.SerializedName
 import java.util.*
 import kotlin.collections.HashMap
 
-/*
-Example Payload
-
-{
-   "customer_ids":{
-      "registered":"unique ID"
-   },
-   "project_id":"project token",
-   "type":"event name",
-   "properties":{
-      "event property name":"event property value",
-   },
-   "timestamp":1465906739
-}
-
- */
 data class ExportedEventType(
         @SerializedName("project_id")
         var projectId: String? = null,

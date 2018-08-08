@@ -421,7 +421,8 @@ object Exponea {
                     Logger.i(this, "App is closed")
                     if (flushMode == PERIOD) {
                         flushMode = APP_CLOSE
-
+                        // Flush data when app is closing for flush mode periodic.
+                        Exponea.component.flushManager.flushData()
                     }
                 }
         )

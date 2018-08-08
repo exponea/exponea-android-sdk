@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
@@ -36,5 +37,9 @@ class EventManagerImpl(
             eventRepository.add(databaseStorageObject)
         }
 
+        // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
+        if (Exponea.flushMode == FlushMode.IMMEDIATE) {
+            Exponea.component.flushManager.flushData()
+        }
     }
 }

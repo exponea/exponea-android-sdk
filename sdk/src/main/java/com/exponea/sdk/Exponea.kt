@@ -448,6 +448,7 @@ object Exponea {
             PERIOD -> startService()
             APP_CLOSE -> stopService()
             MANUAL -> stopService()
+            IMMEDIATE -> stopService()
         }
     }
 
@@ -458,7 +459,7 @@ object Exponea {
     private fun startService() {
         Logger.d(this, "startService")
 
-        if (flushMode == MANUAL) {
+        if (flushMode == MANUAL || flushMode == IMMEDIATE) {
             Logger.w(this, "Flush mode manual set -> Skipping job service")
             return
         }
@@ -527,8 +528,6 @@ object Exponea {
                 customerIds = customerIds.toHashMap(),
                 properties = properties
         )
-
-
 
         component.eventManager.addEventToQueue(event, type)
     }

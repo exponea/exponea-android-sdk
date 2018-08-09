@@ -79,6 +79,7 @@ object Exponea {
         set(value) {
             configuration.automaticPushNotification = value
         }
+
     /**
      * Set which level the debugger should output log messages
      */

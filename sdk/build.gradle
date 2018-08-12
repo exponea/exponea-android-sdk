@@ -40,13 +40,13 @@ dependencies {
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     // Deserialization
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.google.code.gson:gson:2.8.5'
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
     // Google Play In-App Purchase
     implementation 'com.android.billingclient:billing:1.0'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:15.0.2'
+    implementation 'com.google.firebase:firebase-messaging:17.1.0'
     // Google WorkManager
     implementation 'android.arch.work:work-runtime:1.0.0-alpha02'
 

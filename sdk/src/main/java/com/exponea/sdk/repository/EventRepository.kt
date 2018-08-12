@@ -7,7 +7,7 @@ interface EventRepository {
     fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>>
     fun add(item: DatabaseStorageObject<ExportedEventType>): Boolean
     fun update(item: DatabaseStorageObject<ExportedEventType>): Boolean
-    fun get(id: String): DatabaseStorageObject<ExportedEventType>
+    fun get(id: String): DatabaseStorageObject<ExportedEventType>?
     fun remove(id: String): Boolean
     fun clear(): Boolean
 }

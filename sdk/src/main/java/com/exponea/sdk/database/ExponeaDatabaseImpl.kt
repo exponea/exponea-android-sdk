@@ -42,7 +42,7 @@ class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase
 
     override fun get(id: String): DatabaseStorageObject<T>? {
         return try {
-            book.read(id) as DatabaseStorageObject<T>
+            book.read(id) as DatabaseStorageObject<T>?
         } catch (exception: PaperDbException) {
             Logger.e(this, "Error reading from database", exception)
             null

@@ -44,6 +44,9 @@ class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase
         return try {
             book.read(id) as DatabaseStorageObject<T>?
         } catch (exception: PaperDbException) {
+
+            // Delete invalid data in case of exception
+            remove(id)
             Logger.e(this, "Error reading from database", exception)
             null
         }

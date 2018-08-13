@@ -14,6 +14,8 @@ import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -46,8 +48,12 @@ class ExponeaDatabaseTest {
 
     @Test
     fun testGet_ShouldPass() {
-        db.add(mockData)
-        assertEquals("firstname", db.get(mockData.id).item.firstName)
+        val success = db.add(mockData)
+        if (success) {
+            db.get(mockData.id)?.let {
+                assertEquals("firstname",it.item.firstName)
+            }
+        }
     }
 
     @Test
@@ -55,19 +61,17 @@ class ExponeaDatabaseTest {
         db.add(mockData)
         mockData.item.firstName = "anotherFirstName"
         db.update(item = mockData)
-        assertEquals("anotherFirstName", db.get(mockData.id).item.firstName)
+        db.get(mockData.id)?.let {
+            assertEquals("anotherFirstName", it.item.firstName)
+        }
     }
 
     @Test
     fun testRemove_ShouldPass() {
         assertEquals(true,db.add(mockData))
         assertEquals(true,db.remove(mockData.id))
-        try {
-            db.get(mockData.id)
-        } catch (ex: Exception) {
-            assert(ex is IllegalStateException)
-        }
-        assertEquals(true, db.remove(mockData.id))
+        val item = db.get(mockData.id)
+        assertTrue { item == null }
     }
 
     @After

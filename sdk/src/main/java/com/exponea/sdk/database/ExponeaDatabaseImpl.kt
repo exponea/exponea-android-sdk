@@ -1,7 +1,9 @@
 package com.exponea.sdk.database
 
 import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
+import io.paperdb.PaperDbException
 
 class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
     val book = Paper.book(databaseName)
@@ -11,7 +13,7 @@ class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase
         val keys = book.allKeys
 
         for (key in keys) {
-            val value = book.read<DatabaseStorageObject<T>>(key)
+            val value = get(key) ?: continue
             list.add(value)
         }
 
@@ -19,27 +21,55 @@ class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase
     }
 
     override fun add(item: DatabaseStorageObject<T>): Boolean {
-        book.write(item.id, item)
-        return true
+        return try {
+            book.write(item.id, item)
+            true
+        } catch (exception: PaperDbException) {
+            Logger.e(this, "Error writing object $item to the database", exception)
+            false
+        }
     }
 
     override fun update(item: DatabaseStorageObject<T>): Boolean {
-        book.write(item.id, item)
-        return true
+        return try {
+            book.write(item.id, item)
+            true
+        } catch (exception: PaperDbException) {
+            Logger.e(this, "Error updating $item", exception)
+            false
+        }
     }
 
-    override fun get(id: String): DatabaseStorageObject<T> {
-        return book.read(id)
+    override fun get(id: String): DatabaseStorageObject<T>? {
+        return try {
+            book.read(id) as DatabaseStorageObject<T>?
+        } catch (exception: PaperDbException) {
+
+            // Delete invalid data in case of exception
+            remove(id)
+            Logger.e(this, "Error reading from database", exception)
+            null
+        }
     }
 
     override fun remove(id: String): Boolean {
-        book.delete(id)
-        return true
+        return try {
+            book.delete(id)
+            true
+        } catch (exception: PaperDbException) {
+            Logger.e(this, "Error deleting item from database", exception)
+            false
+        }
     }
 
     override fun clear(): Boolean {
-        book.destroy()
-        return true
+        return try {
+            book.destroy()
+            true
+        } catch (exception: PaperDbException) {
+            Logger.e(this, "Error clearing database", exception)
+            false
+        }
     }
 
 }

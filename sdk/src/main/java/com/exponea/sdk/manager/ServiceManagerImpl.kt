@@ -56,7 +56,15 @@ class ServiceManagerImpl(context: Context) : ServiceManager {
     }
 
     private fun hasPendingJob(): Boolean {
-        for (jobInfo in jobScheduler.allPendingJobs) {
+
+        val jobs: MutableList<JobInfo> = try {
+            jobScheduler.allPendingJobs
+        } catch (exception: IllegalArgumentException) {
+            Logger.e(this, "Error obtaining pending jobs", exception)
+            mutableListOf()
+        }
+
+        for (jobInfo in jobs) {
             if (jobInfo.id == jobID) {
                 Logger.d(
                         this,

@@ -23,7 +23,7 @@ Download via Gradle:
 
 ```groovy
 dependencies {
-  compile 'com.exponea.sdk:sdk:0.9.2'
+  compile 'com.exponea.sdk:sdk:1.0.0'
 }
 ```
 
@@ -33,7 +33,7 @@ Download via Maven:
 <dependency>
     <groupId>com.exponea.sdk</groupId>
     <artifactId>sdk</artifactId>
-    <version>0.9.2</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 

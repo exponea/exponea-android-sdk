@@ -17,6 +17,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         fun getClickIntent(context: Context, data: NotificationData) : Intent {
             return Intent(ACTION_CLICKED).apply {
                 putExtra(EXTRA_DATA, data)
+                `package` = context.packageName
             }
         }
     }

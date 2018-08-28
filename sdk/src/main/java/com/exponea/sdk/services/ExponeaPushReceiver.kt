@@ -14,14 +14,17 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"
         const val EXTRA_NOTIFICATION_ID = "NotificationId"
         const val EXTRA_DATA = "NotificationData"
+        const val EXTRA_CUSTOM_DATA = "NotificationCustomData"
 
         fun getClickIntent(
                 context: Context,
                 id: Int,
-                data: NotificationData) : Intent {
+                data: NotificationData,
+                messageData : HashMap<String, String>) : Intent {
             return Intent(ACTION_CLICKED).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
+                putExtra(EXTRA_CUSTOM_DATA, messageData)
             }
         }
     }

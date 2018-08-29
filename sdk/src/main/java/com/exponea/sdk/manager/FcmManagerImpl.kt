@@ -25,11 +25,12 @@ class FcmManagerImpl(
             message: String,
             data: NotificationData,
             id: Int,
-            manager: NotificationManager
+            manager: NotificationManager,
+            messageData: HashMap<String, String>
     ) {
         Logger.d(this, "showNotification")
 
-        val i = ExponeaPushReceiver.getClickIntent(context, data)
+        val i = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
 
         val pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode,

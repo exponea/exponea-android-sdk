@@ -56,13 +56,24 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
                 data = data
         )
 
+        //Create a map with all the data of the remote message, removing the data already processed
+        val messageData = message?.data?.apply {
+            remove("title")
+            remove("message")
+            remove("data")
+            remove("notification_id")
+        }?.run {
+            HashMap(this)
+        } ?: HashMap()
+
         // Show push notification.
         Exponea.component.fcmManager.showNotification(
                 title,
                 body,
                 data,
                 notificationId,
-                notificationManager
+                notificationManager,
+                messageData
         )
     }
 }

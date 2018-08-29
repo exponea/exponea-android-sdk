@@ -25,6 +25,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
                 putExtra(EXTRA_CUSTOM_DATA, messageData)
+                `package` = context.packageName
             }
         }
     }

@@ -13,10 +13,10 @@ class ExponeaWorkRequest : Worker() {
         const val KEY_CONFIG_INPUT = "KeyConfigInput"
     }
 
-    override fun doWork(): WorkerResult {
+    override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")
         val countDownLatch = CountDownLatch(1)
-        val config = ExponeaConfigRepository.get(applicationContext) ?: return WorkerResult.FAILURE
+        val config = ExponeaConfigRepository.get(applicationContext) ?: return Result.FAILURE
 
         if (!Exponea.isInitialized) {
             Looper.prepare()
@@ -37,14 +37,14 @@ class ExponeaWorkRequest : Worker() {
                 countDownLatch.await()
             } catch (e: InterruptedException) {
                 Logger.e(this, "doWork -> countDownLatch was interrupted", e)
-                return WorkerResult.FAILURE
+                return Result.FAILURE
             }
 
             Logger.d(this, "doWork -> Success!")
 
-            return WorkerResult.SUCCESS
+            return Result.SUCCESS
         } catch (e: Exception) {
-            return WorkerResult.FAILURE
+            return Result.FAILURE
         }
     }
 }

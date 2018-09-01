@@ -2,18 +2,41 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
-import com.exponea.sdk.models.*
-import com.exponea.sdk.models.FlushMode.*
+import com.exponea.sdk.models.BannerResult
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerAttributeModel
+import com.exponea.sdk.models.CustomerAttributes
+import com.exponea.sdk.models.CustomerEvent
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.EventType
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.FetchEventsRequest
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.FlushMode.APP_CLOSE
+import com.exponea.sdk.models.FlushMode.IMMEDIATE
+import com.exponea.sdk.models.FlushMode.MANUAL
+import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
-import java.util.*
+import java.util.Date
+import java.util.HashMap
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -89,7 +112,6 @@ object Exponea {
             Logger.level = value
         }
 
-
     @Throws(InvalidConfigurationException::class)
     fun init(context: Context, configFile: String) {
         // Try to parse our file
@@ -102,8 +124,6 @@ object Exponea {
             throw InvalidConfigurationException()
         }
     }
-
-
 
     fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
@@ -122,7 +142,6 @@ object Exponea {
         initializeSdk()
     }
 
-
     /**
      * Update the informed properties to a specific customer.
      * All properties will be stored into database until it will be
@@ -132,8 +151,8 @@ object Exponea {
     fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) {
         component.customerIdsRepository.set(customerIds)
         track(
-                properties = properties.properties,
-                type = EventType.TRACK_CUSTOMER
+            properties = properties.properties,
+            type = EventType.TRACK_CUSTOMER
         )
     }
 
@@ -144,16 +163,16 @@ object Exponea {
      */
 
     fun trackEvent(
-            properties: PropertiesList,
-            timestamp: Long? = Date().time,
-            eventType: String?
+        properties: PropertiesList,
+        timestamp: Long? = Date().time,
+        eventType: String?
     ) {
 
         track(
-                properties = properties.properties,
-                timestamp = timestamp,
-                eventType = eventType,
-                type = EventType.TRACK_EVENT
+            properties = properties.properties,
+            timestamp = timestamp,
+            eventType = eventType,
+            type = EventType.TRACK_EVENT
         )
     }
 
@@ -170,24 +189,22 @@ object Exponea {
         component.flushManager.flushData()
     }
 
-
     /**
      * Fetches customer attributes
      */
     fun fetchCustomerAttributes(
-            customerAttributes: CustomerAttributes,
-            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        customerAttributes: CustomerAttributes,
+        onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
         val customer = Exponea.component.customerIdsRepository.get()
         component.fetchManager.fetchCustomerAttributes(
-                projectToken = configuration.projectToken,
-                attributes = customerAttributes.apply { customerIds = customer },
-                onSuccess = onSuccess,
-                onFailure = onFailure
+            projectToken = configuration.projectToken,
+            attributes = customerAttributes.apply { customerIds = customer },
+            onSuccess = onSuccess,
+            onFailure = onFailure
         )
     }
-
 
     /**
      * Fetches banners web representation
@@ -195,18 +212,18 @@ object Exponea {
      * @param onFailure - failure callback, in case of errors
      */
     fun getPersonalizationWebLayer(
-            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit) {
+        onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
         // TODO map banners id's
         val customerIds = Exponea.component.customerIdsRepository.get()
         Exponea.component.personalizationManager.getWebLayer(
-                customerIds = customerIds,
-                projectToken = Exponea.configuration.projectToken,
-                onSuccess = onSuccess,
-                onFailure = onFailure
+            customerIds = customerIds,
+            projectToken = Exponea.configuration.projectToken,
+            onSuccess = onSuccess,
+            onFailure = onFailure
         )
     }
-
 
     /**
      * Manually tracks session start
@@ -214,8 +231,10 @@ object Exponea {
      */
     fun trackSessionStart(timestamp: Long = Date().time) {
         if (isAutomaticSessionTracking) {
-            Logger.w(Exponea.component.sessionManager,
-                    "Can't manually track session, since automatic tracking is on ")
+            Logger.w(
+                Exponea.component.sessionManager,
+                "Can't manually track session, since automatic tracking is on "
+            )
             return
         }
         component.sessionManager.trackSessionStart(timestamp)
@@ -228,14 +247,15 @@ object Exponea {
     fun trackSessionEnd(timestamp: Long = Date().time) {
 
         if (isAutomaticSessionTracking) {
-            Logger.w(Exponea.component.sessionManager,
-                    "Can't manually track session, since automatic tracking is on ")
+            Logger.w(
+                Exponea.component.sessionManager,
+                "Can't manually track session, since automatic tracking is on "
+            )
             return
         }
 
         component.sessionManager.trackSessionEnd(timestamp)
     }
-
 
     /**
      * Fetch events for a specific customer.
@@ -244,18 +264,18 @@ object Exponea {
      * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchCustomerEvents(
-            customerEvents: FetchEventsRequest,
-            onFailure: (Result<FetchError>) -> Unit,
-            onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
+        customerEvents: FetchEventsRequest,
+        onFailure: (Result<FetchError>) -> Unit,
+        onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
     ) {
         val customer = Exponea.component.customerIdsRepository.get()
         customerEvents.customerIds = customer
 
         component.fetchManager.fetchCustomerEvents(
-                projectToken = configuration.projectToken,
-                customerEvents = customerEvents,
-                onFailure = onFailure,
-                onSuccess = onSuccess
+            projectToken = configuration.projectToken,
+            customerEvents = customerEvents,
+            onFailure = onFailure,
+            onSuccess = onSuccess
         )
     }
 
@@ -266,18 +286,19 @@ object Exponea {
      * @param onSuccess - this method will be called when data is ready.
      */
     fun fetchRecommendation(
-            customerRecommendation: CustomerRecommendation,
-            onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        customerRecommendation: CustomerRecommendation,
+        onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
         val customer = Exponea.component.customerIdsRepository.get()
         component.fetchManager.fetchCustomerAttributes(
-                projectToken = configuration.projectToken,
-                attributes = CustomerAttributes(
-                        customer,
-                        mutableListOf(customerRecommendation.toHashMap())),
-                onSuccess = onSuccess,
-                onFailure = onFailure
+            projectToken = configuration.projectToken,
+            attributes = CustomerAttributes(
+                customer,
+                mutableListOf(customerRecommendation.toHashMap())
+            ),
+            onSuccess = onSuccess,
+            onFailure = onFailure
         )
     }
 
@@ -288,9 +309,9 @@ object Exponea {
     fun trackPushToken(fcmToken: String) {
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         track(
-                eventType = Constants.EventTypes.push,
-                properties = properties.properties,
-                type = EventType.PUSH_TOKEN
+            eventType = Constants.EventTypes.push,
+            properties = properties.properties,
+            type = EventType.PUSH_TOKEN
         )
     }
 
@@ -299,14 +320,15 @@ object Exponea {
      */
 
     fun trackDeliveredPush(
-            data: NotificationData? = null,
-            fcmToken: String,
-            timestamp: Long? = Date().time) {
+        data: NotificationData? = null,
+        fcmToken: String,
+        timestamp: Long? = Date().time
+    ) {
         val properties = PropertiesList(
-                hashMapOf(
-                        Pair("action_type", "notification"),
-                        Pair("status", "delivered")
-                )
+            hashMapOf(
+                Pair("action_type", "notification"),
+                Pair("status", "delivered")
+            )
         )
         data?.let {
             properties["campaign_id"] = it.campaignId
@@ -314,10 +336,10 @@ object Exponea {
             properties["action_id"] = it.actionId
         }
         track(
-                eventType = Constants.EventTypes.push,
-                properties = properties.properties,
-                type = EventType.PUSH_DELIVERED,
-                timestamp = timestamp
+            eventType = Constants.EventTypes.push,
+            properties = properties.properties,
+            type = EventType.PUSH_DELIVERED,
+            timestamp = timestamp
         )
     }
 
@@ -326,15 +348,15 @@ object Exponea {
      */
 
     fun trackClickedPush(
-            data: NotificationData? = null,
-            fcmToken: String,
-            timestamp: Long? = Date().time
-            ) {
+        data: NotificationData? = null,
+        fcmToken: String,
+        timestamp: Long? = Date().time
+    ) {
         val properties = PropertiesList(
-                hashMapOf(
-                        "action_type" to "notification",
-                        "status" to "clicked"
-                )
+            hashMapOf(
+                "action_type" to "notification",
+                "status" to "clicked"
+            )
         )
 
         data?.let {
@@ -343,13 +365,12 @@ object Exponea {
             properties["action_id"] = data.actionId
         }
         track(
-                eventType = Constants.EventTypes.push,
-                properties = properties.properties,
-                type = EventType.PUSH_OPENED,
-                timestamp = timestamp
+            eventType = Constants.EventTypes.push,
+            properties = properties.properties,
+            type = EventType.PUSH_OPENED,
+            timestamp = timestamp
         )
     }
-
 
     /**
      * Opens a WebView showing the personalized page with the
@@ -358,8 +379,8 @@ object Exponea {
 
     fun showBanners(customerIds: CustomerIds) {
         Exponea.component.personalizationManager.showBanner(
-                projectToken = Exponea.configuration.projectToken,
-                customerIds = customerIds
+            projectToken = Exponea.configuration.projectToken,
+            customerIds = customerIds
         )
     }
 
@@ -370,15 +391,15 @@ object Exponea {
      */
 
     fun trackPaymentEvent(
-            timestamp: Long = Date().time,
-            purchasedItem: PurchasedItem
+        timestamp: Long = Date().time,
+        purchasedItem: PurchasedItem
     ) {
 
         track(
-                eventType = Constants.EventTypes.payment,
-                timestamp = timestamp,
-                properties = purchasedItem.toHashMap(),
-                type = EventType.PAYMENT
+            eventType = Constants.EventTypes.payment,
+            timestamp = timestamp,
+            properties = purchasedItem.toHashMap(),
+            type = EventType.PAYMENT
         )
     }
 
@@ -390,10 +411,11 @@ object Exponea {
 
     private fun initializeSdk() {
 
-
         // Start Network Manager
         this.component = ExponeaComponent(this.configuration, context)
 
+        // WorkManager
+        WorkManager.initialize(context, Configuration.Builder().build())
         // Alarm Manager Starter
         startService()
 
@@ -405,31 +427,29 @@ object Exponea {
 
         // Initialize session observer
         configuration.automaticSessionTracking = component
-                .preferences.getBoolean(
-                SessionManagerImpl
-                        .PREF_SESSION_AUTO_TRACK, true
+            .preferences.getBoolean(
+            SessionManagerImpl
+                .PREF_SESSION_AUTO_TRACK, true
         )
         startSessionTracking(configuration.automaticSessionTracking)
 
         context.addAppStateCallbacks(
-                onOpen = {
-                    Logger.i(this, "App is opened")
-                    if (flushMode == APP_CLOSE) {
-                        flushMode = PERIOD
-                    }
-                },
-                onClosed = {
-                    Logger.i(this, "App is closed")
-                    if (flushMode == PERIOD) {
-                        flushMode = APP_CLOSE
-                        // Flush data when app is closing for flush mode periodic.
-                        Exponea.component.flushManager.flushData()
-                    }
+            onOpen = {
+                Logger.i(this, "App is opened")
+                if (flushMode == APP_CLOSE) {
+                    flushMode = PERIOD
                 }
+            },
+            onClosed = {
+                Logger.i(this, "App is closed")
+                if (flushMode == PERIOD) {
+                    flushMode = APP_CLOSE
+                    // Flush data when app is closing for flush mode periodic.
+                    Exponea.component.flushManager.flushData()
+                }
+            }
         )
     }
-
-
 
     /**
      * Start the service when the flush period was changed.
@@ -488,7 +508,6 @@ object Exponea {
         } else {
             component.sessionManager.stopSessionListener()
         }
-
     }
 
     /**
@@ -506,16 +525,15 @@ object Exponea {
         }
     }
 
-
     /**
      * Send a tracking event to Exponea
      */
 
     internal fun track(
-            eventType: String? = null,
-            timestamp: Long? = Date().time,
-            properties: HashMap<String, Any> = hashMapOf(),
-            type: EventType
+        eventType: String? = null,
+        timestamp: Long? = Date().time,
+        properties: HashMap<String, Any> = hashMapOf(),
+        type: EventType
     ) {
 
         if (!isInitialized) {
@@ -526,10 +544,10 @@ object Exponea {
         val customerIds = component.customerIdsRepository.get()
 
         val event = ExportedEventType(
-                type = eventType,
-                timestamp = timestamp,
-                customerIds = customerIds.toHashMap(),
-                properties = properties
+            type = eventType,
+            timestamp = timestamp,
+            customerIds = customerIds.toHashMap(),
+            properties = properties
         )
 
         component.eventManager.addEventToQueue(event, type)
@@ -541,9 +559,9 @@ object Exponea {
      */
 
     internal fun trackInstallEvent(
-            campaign: String? = null,
-            campaignId: String? = null,
-            link: String? = null
+        campaign: String? = null,
+        campaignId: String? = null,
+        link: String? = null
     ) {
 
         if (component.deviceInitiatedRepository.get()) {
@@ -551,16 +569,16 @@ object Exponea {
         }
 
         val device = DeviceProperties(
-                campaign = campaign,
-                campaignId = campaignId,
-                link = link,
-                deviceType = component.deviceManager.getDeviceType()
+            campaign = campaign,
+            campaignId = campaignId,
+            link = link,
+            deviceType = component.deviceManager.getDeviceType()
         )
 
         track(
-                eventType = Constants.EventTypes.installation,
-                properties = device.toHashMap(),
-                type = EventType.INSTALL
+            eventType = Constants.EventTypes.installation,
+            properties = device.toHashMap(),
+            type = EventType.INSTALL
         )
 
         component.deviceInitiatedRepository.set(true)

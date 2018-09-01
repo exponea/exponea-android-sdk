@@ -47,7 +47,7 @@ class ExponeaComponent(
 
     //Managers
     internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(context, exponeaConfiguration)
-    internal val serviceManager: ServiceManager = ServiceManagerImpl(context)
+    internal val serviceManager: ServiceManager = ServiceManagerImpl()
     internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     internal val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService)
     internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)

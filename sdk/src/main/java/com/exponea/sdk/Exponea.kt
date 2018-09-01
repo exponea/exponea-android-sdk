@@ -584,4 +584,14 @@ object Exponea {
 
         component.deviceInitiatedRepository.set(true)
     }
+
+    fun anonymize() {
+        if (!isInitialized) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
+        component.anonymizeManager.anonymize()
+        trackInstallEvent()
+        component.sessionManager.trackSessionStart(System.currentTimeMillis() / 1000)
+    }
 }

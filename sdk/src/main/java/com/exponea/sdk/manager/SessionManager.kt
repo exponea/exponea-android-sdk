@@ -20,6 +20,8 @@ abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
     abstract fun trackSessionStart(timestamp: Long = currentTimeSeconds())
 
+    abstract fun reset()
+
     override fun onActivityPaused(activity: Activity?) {
         onSessionEnd()
     }
@@ -33,4 +35,5 @@ abstract class SessionManager : Application.ActivityLifecycleCallbacks {
     override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
     override fun onActivityStopped(activity: Activity?) {}
     override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
+
 }

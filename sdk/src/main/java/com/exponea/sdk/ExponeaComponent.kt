@@ -56,4 +56,5 @@ class ExponeaComponent(
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
+    internal val anonymizeManager: AnonymizeManager = AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, sessionManager, deviceInitiatedRepository)
 }

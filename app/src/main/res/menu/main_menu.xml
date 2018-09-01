@@ -14,4 +14,9 @@
         android:id="@+id/actionSettings"
         android:icon="@drawable/ic_cloud_upload_black_24dp"
         android:title="@string/manual_flush" />
+
+    <item
+        android:id="@+id/actionAnonymize"
+        android:icon="@drawable/ic_anonymous"
+        android:title="@string/anonymize"/>
 </menu>

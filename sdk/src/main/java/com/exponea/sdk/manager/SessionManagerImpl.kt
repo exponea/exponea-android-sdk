@@ -172,5 +172,7 @@ class SessionManagerImpl(
         prefs.setLong(PREF_SESSION_END, -1)
     }
 
-
+    override fun reset() {
+        clear()
+    }
 }

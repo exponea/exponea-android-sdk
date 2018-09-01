@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import com.exponea.example.R
+import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.example.view.fragments.FlushFragment
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
             when (it.itemId) {
                 R.id.actionMain -> replaceFragment(FetchFragment())
                 R.id.actionPurchase -> replaceFragment(TrackFragment())
+                R.id.actionAnonymize -> replaceFragment(AnonymizeFragment())
                 else -> replaceFragment(FlushFragment())
             }
         }

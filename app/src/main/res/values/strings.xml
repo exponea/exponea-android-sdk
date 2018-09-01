@@ -22,4 +22,5 @@
     <string name="manual_flush">Manual Flush</string>
     <string name="track">Track</string>
     <string name="fetch">Fetch</string>
+    <string name="anonymize">Anonymize</string>
 </resources>

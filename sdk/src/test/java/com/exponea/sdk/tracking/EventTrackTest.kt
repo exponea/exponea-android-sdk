@@ -3,15 +3,22 @@ package com.exponea.sdk.tracking
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.util.currentTimeSeconds
 import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -23,7 +30,8 @@ class EventTrackTest {
         val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         val server = MockWebServer()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
@@ -57,9 +65,9 @@ class EventTrackTest {
     fun testEventAdded() {
 
         Exponea.trackEvent(
-                eventType = Constants.EventTypes.sessionStart,
-                timestamp = Date().time,
-                properties = properties
+            eventType = Constants.EventTypes.sessionStart,
+            timestamp = currentTimeSeconds(),
+            properties = properties
         )
 
         assertEquals(1, repo.all().size)
@@ -71,12 +79,11 @@ class EventTrackTest {
     @Test
     fun testEventFlushed() {
 
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         Exponea.trackEvent(
-                eventType = Constants.EventTypes.sessionStart,
-                timestamp = Date().time,
-                properties = properties
+            eventType = Constants.EventTypes.sessionStart,
+            properties = properties
         )
 
         runBlocking {
@@ -95,14 +102,13 @@ class EventTrackTest {
     fun testEventFlushFailed() {
 
         Exponea.trackEvent(
-                eventType = Constants.EventTypes.sessionStart,
-                timestamp = Date().time,
-                properties = properties
+            eventType = Constants.EventTypes.sessionStart,
+            properties = properties
         )
 
         assertEquals(1, repo.all().size)
 
-        ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
+        ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
         runBlocking {
             Exponea.flushData()
@@ -125,9 +131,9 @@ class EventTrackTest {
         repo.clear()
 
         Exponea.trackEvent(
-                eventType = Constants.EventTypes.sessionStart,
-                timestamp = Date().time,
-                properties = properties
+            eventType = Constants.EventTypes.sessionStart,
+            timestamp = currentTimeSeconds(),
+            properties = properties
         )
 
         assertEquals(1, repo.all().size)
@@ -137,7 +143,7 @@ class EventTrackTest {
         event.tries = 10
         repo.update(event)
 
-        ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
+        ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
         runBlocking {
             Exponea.flushData()

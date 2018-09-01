@@ -24,7 +24,7 @@ class ExponeaWorkRequest : Worker() {
         }
 
         try {
-            Exponea.component.sessionManager.trackSessionEnd(Date().time)
+            Exponea.component.sessionManager.trackSessionEnd()
             Exponea.component.flushManager.onFlushFinishListener = {
                 Logger.d(this, "doWork -> Finished")
                 countDownLatch.countDown()

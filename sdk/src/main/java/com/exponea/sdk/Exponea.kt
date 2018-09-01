@@ -32,6 +32,7 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
+import com.exponea.sdk.util.currentTimeSeconds
 import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
 import java.util.Date
@@ -164,7 +165,7 @@ object Exponea {
 
     fun trackEvent(
         properties: PropertiesList,
-        timestamp: Long? = Date().time,
+        timestamp: Long? = currentTimeSeconds(),
         eventType: String?
     ) {
 
@@ -229,7 +230,7 @@ object Exponea {
      * Manually tracks session start
      * @param timestamp - determines session start time
      */
-    fun trackSessionStart(timestamp: Long = Date().time) {
+    fun trackSessionStart(timestamp: Long = currentTimeSeconds()) {
         if (isAutomaticSessionTracking) {
             Logger.w(
                 Exponea.component.sessionManager,
@@ -244,7 +245,7 @@ object Exponea {
      * Manually tracks session end
      * @param timestamp - determines session end time
      */
-    fun trackSessionEnd(timestamp: Long = Date().time) {
+    fun trackSessionEnd(timestamp: Long = currentTimeSeconds()) {
 
         if (isAutomaticSessionTracking) {
             Logger.w(
@@ -322,7 +323,7 @@ object Exponea {
     fun trackDeliveredPush(
         data: NotificationData? = null,
         fcmToken: String,
-        timestamp: Long? = Date().time
+        timestamp: Long? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -350,7 +351,7 @@ object Exponea {
     fun trackClickedPush(
         data: NotificationData? = null,
         fcmToken: String,
-        timestamp: Long? = Date().time
+        timestamp: Long? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -391,7 +392,7 @@ object Exponea {
      */
 
     fun trackPaymentEvent(
-        timestamp: Long = Date().time,
+        timestamp: Long = currentTimeSeconds(),
         purchasedItem: PurchasedItem
     ) {
 
@@ -531,7 +532,7 @@ object Exponea {
 
     internal fun track(
         eventType: String? = null,
-        timestamp: Long? = Date().time,
+        timestamp: Long? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType
     ) {

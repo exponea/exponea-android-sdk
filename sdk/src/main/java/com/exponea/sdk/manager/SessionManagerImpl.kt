@@ -7,7 +7,9 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class SessionManagerImpl(
         context: Context,
@@ -26,15 +28,15 @@ class SessionManagerImpl(
      * Calculate session length
      */
     private fun getSessionLengthInSeconds(): Long {
-        val start = prefs.getLong(PREF_SESSION_START, Date().time)
-        val end = prefs.getLong(PREF_SESSION_END, Date().time)
+        val start = prefs.getLong(PREF_SESSION_START, currentTimeSeconds())
+        val end = prefs.getLong(PREF_SESSION_END, currentTimeSeconds())
         Logger.d(
                 this, "Session Info: \n " +
-                "\t From: ${Date(start)}\n" +
-                "\t To: ${Date(end)}"
+                "\t From: ${Date(TimeUnit.SECONDS.toMillis(start))}\n" +
+                "\t To: ${Date(TimeUnit.SECONDS.toMillis(end))}"
         )
 
-        return (end - start) / 1000
+        return (end - start)
     }
 
     /**
@@ -65,8 +67,8 @@ class SessionManagerImpl(
     override fun onSessionStart() {
         // Cancel background timer if set
         Exponea.component.backgroundTimerManager.stopTimer()
-        val now = Date().time
-        Logger.d(this, "Session start ${Date(now)}")
+        val now = currentTimeSeconds()
+        Logger.d(this, "Session start ${Date(TimeUnit.SECONDS.toMillis(now))}")
 
         // Check if current session is the first one
         val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
@@ -78,7 +80,7 @@ class SessionManagerImpl(
         }
 
         if (!canBeResumed(now)) {
-            Logger.d(this, "New Session Started: ${Date(now)}")
+            Logger.d(this, "New Session Started: ${Date(TimeUnit.SECONDS.toMillis(now))}")
 
             // Finish Tracking old session
             trackSessionEnd(now)
@@ -94,8 +96,8 @@ class SessionManagerImpl(
      * Method called when app goes to background
      */
     override fun onSessionEnd() {
-        val now = Date().time
-        Logger.d(this, "Session end ${Date(now)}")
+        val now = currentTimeSeconds()
+        Logger.d(this, "Session end ${Date(TimeUnit.SECONDS.toMillis(now))}")
         prefs.setLong(PREF_SESSION_END, now)
         // Start background timer to track end of the session
         Exponea.component.backgroundTimerManager.startTimer()
@@ -156,7 +158,7 @@ class SessionManagerImpl(
     private fun canBeResumed(now: Long): Boolean {
         val sessionEnded = prefs.getLong(PREF_SESSION_END, -1L)
         if (sessionEnded == -1L) return false
-        val currentTimeout = (now - sessionEnded) / 1000
+        val currentTimeout = (now - sessionEnded)
         return currentTimeout < Exponea.sessionTimeout
 
     }

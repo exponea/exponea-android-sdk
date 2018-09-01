@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.util.currentTimeSeconds
 import org.bouncycastle.util.Times
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,17 +51,17 @@ class ConfigurationTest {
 
     @Test
     fun TestData() {
-        val timestamp = Date().time
+        val timestamp = currentTimeSeconds()
         println("Timestamp: ${timestamp}")
-        println("Timestamp: ${Calendar.getInstance().timeInMillis}")
+        println("Timestamp: ${Calendar.getInstance().timeInMillis / 1000}")
 
         //val cal =
-        println("Timestamp to Date: ${Date(timestamp.toLong() * 1000)}")
+        println("Timestamp to Date: ${Date(timestamp * 1000)}")
 
         println("Timestamp to Date 2: ${ Date(timestamp) }")
 
         val newStamp = 424515600000
-        println("New timestamp to Date 2: ${ Date(newStamp.toLong()) }")
+        println("New timestamp to Date 2: ${ Date(newStamp) }")
 
     }
 

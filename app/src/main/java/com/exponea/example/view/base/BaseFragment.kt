@@ -11,12 +11,11 @@ open class BaseFragment : Fragment() {
      * @param pageName - Name of the screen
      */
     fun trackPage(pageName: String) {
-        val properties = PropertiesList(hashMapOf(Pair("name", pageName)))
+        val properties = PropertiesList(hashMapOf("name" to pageName))
 
         Exponea.trackEvent(
-                eventType =  "page_view",
-                properties = properties,
-                timestamp = null
+            eventType = "page_view",
+            properties = properties
         )
     }
 }

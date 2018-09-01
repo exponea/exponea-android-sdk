@@ -82,8 +82,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     private fun trackCustomEvent(eventName: String, propertiesList: PropertiesList) {
         Exponea.trackEvent(
                 eventType = eventName,
-                properties = propertiesList,
-                timestamp = Date().time
+                properties = propertiesList
         )
     }
 

@@ -2,7 +2,6 @@ package com.exponea.sdk.util
 
 import android.app.Activity
 import android.app.Application
-import android.content.ComponentCallbacks
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
@@ -11,6 +10,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
     this.enqueue(object : Callback {
@@ -25,12 +25,14 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
 }
 
 fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
-    (this as Application).registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+    (this as Application).registerActivityLifecycleCallbacks(object :
+        Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {
             onOpen()
             activityCount++
         }
+
         override fun onActivityStarted(activity: Activity?) {}
         override fun onActivityDestroyed(activity: Activity?) {}
         override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
@@ -38,13 +40,12 @@ fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
         override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
         override fun onActivityPaused(activity: Activity?) {
             activityCount--
-            if(activityCount <= 0) {
+            if (activityCount <= 0) {
                 onClosed()
             }
         }
-
     })
-    this.registerComponentCallbacks(object  : ComponentCallbacks2 {
+    this.registerComponentCallbacks(object : ComponentCallbacks2 {
         override fun onLowMemory() {}
 
         override fun onConfigurationChanged(newConfig: Configuration?) {}
@@ -56,3 +57,5 @@ fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
         }
     })
 }
+
+fun currentTimeSeconds() = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())

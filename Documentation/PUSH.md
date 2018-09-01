@@ -120,7 +120,7 @@ fun trackDeliveredPush(
 val customerIds = CustomerIds(registered = "john@doe.com")
 
 Exponea.trackDeliveredPush(
-        timestamp = Date().time
+        timestamp = currentTimeSeconds()
 )
 ```
 
@@ -139,6 +139,6 @@ fun trackClickedPush(
 
 Exponea.trackClickedPush(
         fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
-        timestamp = Date().time
+        timestamp = currentTimeSeconds()
 )
 ```

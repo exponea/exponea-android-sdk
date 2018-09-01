@@ -30,7 +30,7 @@ val properties = PropertiesList(hashMapOf(Pair("name", "John")))
 // Call trackEvent to send the event to Exponea API.
 Exponea.trackEvent(
         properties = properties,
-        timestamp = Date().time
+        timestamp = currentTimeSeconds(),
         eventType =  "page_view"
 )
 ```

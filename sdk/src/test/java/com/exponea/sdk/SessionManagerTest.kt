@@ -11,6 +11,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.util.currentTimeSeconds
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -64,14 +65,14 @@ class SessionManagerTest {
         sm.startSessionListener()
         assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
 
-        val preTime = Date().time
+        val preTime = currentTimeSeconds()
 
         // App getting focus
         controller.resume()
 
         // Checking that start timestamp was successfully saved
         assertNotEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
-        assert(Date().time >= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
+        assert(currentTimeSeconds() >= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
         assert(preTime <= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
 
         var previousStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
@@ -102,7 +103,7 @@ class SessionManagerTest {
         // App getting focus
         controller.resume()
 
-        val preTime = Date().time
+        val preTime = currentTimeSeconds()
 
         // App looses focus
         controller.pause()
@@ -115,6 +116,7 @@ class SessionManagerTest {
 
         // User comes back and then leaves
         controller.resume()
+        Thread.sleep(1000)
         controller.pause()
 
         // New session end time

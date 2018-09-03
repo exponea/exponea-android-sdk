@@ -3,7 +3,7 @@
 </p>
 
 ### Specs
-[![API](https://img.shields.io/badge/API-21%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=14) 
+[![API](https://img.shields.io/badge/API-14%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=14) 
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0) 
 
 ## Exponea Android SDK
@@ -57,6 +57,7 @@ Then you can start using all supported features:
 * [Flush](./Documentation/FLUSH.md)
 * [Fetch Data](./Documentation/FETCH.md)
 * [Payments](./Documentation/PAYMENT.md)
+* [Anonymize](./Documentation/ANONYMIZE.md)
 
 ## 🔗 Useful links
 
@@ -73,7 +74,7 @@ Then you can start using all supported features:
 
 ## ⚠️ Version Disclaimer
 
-This SDK supports **API 21+** and **Android 5+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
+This SDK supports **API 14+** and **Android 4+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
 
 ## 📄 License
 

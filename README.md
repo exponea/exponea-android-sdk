@@ -14,8 +14,6 @@ Exponea empowers B2C marketers to raise conversion rates, improve acquisition RO
 
 It has been written 100% in Kotlin with ❤️
 
-##[Release notes](./Documentation/RELEASE_NOTES.md)
-
 ## 📦 Installation
 
 ### Download
@@ -65,13 +63,9 @@ Then you can start using all supported features:
 * [Exponea Developer Hub](https://developers.exponea.com)
 * [Exponea App](https://app.exponea.com/login)
 
-## 📎 Dependencies
+## 📝 Release Notes
 
-* okhttp 3.10.0
-* paperdb 2.6
-* gson 2.8.2
-* billing 1.0
-* firebase-messaging 15.0.0
+Release notes can be found [here](./Documentation/RELEASE_NOTES.md).
 
 ## ⚠️ Version Disclaimer
 

@@ -14,6 +14,7 @@ Exponea empowers B2C marketers to raise conversion rates, improve acquisition RO
 
 It has been written 100% in Kotlin with ❤️
 
+##[Release notes](./Documentation/RELEASE_NOTES.md)
 
 ## 📦 Installation
 

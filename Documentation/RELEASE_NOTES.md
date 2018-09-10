@@ -1,5 +1,9 @@
 ## Release Notes
 
+
+### 1.1.1
+* Expandable Notifications
+
 ### 1.1.0
 
 * [Anonymize feature](./ANONYMIZE.md)

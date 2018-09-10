@@ -4,7 +4,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.res.Resources
 import android.os.Build
 import android.support.v4.app.NotificationCompat
@@ -14,27 +13,27 @@ import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 
 class FcmManagerImpl(
-        private val context: Context,
-        private val configuration: ExponeaConfiguration
+    private val context: Context,
+    private val configuration: ExponeaConfiguration
 ) : FcmManager {
 
     private val requestCode = 1
 
     override fun showNotification(
-            title: String,
-            message: String,
-            data: NotificationData,
-            id: Int,
-            manager: NotificationManager,
-            messageData: HashMap<String, String>
+        title: String,
+        message: String,
+        data: NotificationData,
+        id: Int,
+        manager: NotificationManager,
+        messageData: HashMap<String, String>
     ) {
         Logger.d(this, "showNotification")
 
         val i = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
 
         val pendingIntent = PendingIntent.getBroadcast(
-                context, requestCode,
-                i, PendingIntent.FLAG_UPDATE_CURRENT
+            context, requestCode,
+            i, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         // TODO if small icon is invalid the app will crash so this needs to be handled someway
@@ -49,18 +48,19 @@ class FcmManagerImpl(
             smallIconRes = android.R.drawable.ic_dialog_info
         }
 
-        val notification = NotificationCompat.Builder(context,configuration.pushChannelId)
-                .setContentText(message)
-                .setContentTitle(title)
-                .setContentIntent(pendingIntent)
-                .setChannelId(configuration.pushChannelId)
-                .setSmallIcon(smallIconRes)
+        val notification = NotificationCompat.Builder(context, configuration.pushChannelId)
+            .setContentText(message)
+            .setContentTitle(title)
+            .setContentIntent(pendingIntent)
+            .setChannelId(configuration.pushChannelId)
+            .setSmallIcon(smallIconRes)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
 
         manager.notify(id, notification.build())
     }
 
     override fun createNotificationChannel(
-            manager: NotificationManager
+        manager: NotificationManager
     ) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library

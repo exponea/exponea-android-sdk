@@ -76,8 +76,7 @@ class AuthenticationActivity : AppCompatActivity() {
         // Set our debug level to debug
         Exponea.loggerLevel = Logger.Level.DEBUG
         // Set up our flushing
-        Exponea.flushMode = FlushMode.PERIOD
-        Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
+        Exponea.flushMode = FlushMode.IMMEDIATE
 
         startActivity(Intent(this, MainActivity::class.java))
         finish()

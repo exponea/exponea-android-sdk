@@ -84,12 +84,11 @@ class FlushManagerImpl(
                 .postCustomer(projectToken, databaseObject.item)
                 .enqueue(
                         { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this, "Response Code: $responseCode")
-                            if (responseCode in 200..299) {
-                                onEventSentSuccess(databaseObject)
-                            } else {
-                                onEventSentFailed(databaseObject)
+                            Logger.d(this, "Response Code: ${response.code()}")
+                            when(response.code()) {
+                                in 200..299 -> onEventSentSuccess(databaseObject)
+                                in 500..599 -> flushData()
+                                else -> onEventSentFailed(databaseObject)
                             }
                         },
                         { _, ioException ->

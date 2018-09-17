@@ -12,14 +12,21 @@ import com.exponea.sdk.util.enqueue
 class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
         private val eventRepository: EventRepository,
-        private val exponeaService: ExponeaService
+        private val exponeaService: ExponeaService,
+        private val connectionManager: ConnectionManager
 ) : FlushManager {
     override var onFlushFinishListener: (() -> Unit)? = null
     override var isRunning: Boolean = false
 
     override fun flushData() {
-        val allEvents = eventRepository.all()
 
+        if (!connectionManager.isConnectedToInternet()) {
+            Logger.d(this, "Internet connection is not available, skipping flushing")
+            onFlushFinishListener?.invoke()
+            return
+        }
+
+        val allEvents = eventRepository.all()
         Logger.d(this, "flushEvents: Count ${allEvents.size}")
 
         val firstEvent = allEvents.firstOrNull()
@@ -35,9 +42,8 @@ class FlushManagerImpl(
         }
     }
 
-    private fun trySendingEvent(
-            databaseObject: DatabaseStorageObject<ExportedEventType>
-    ) {
+    private fun trySendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>) {
+
         when (databaseObject.route) {
             Route.TRACK_EVENTS       -> trackEvent(databaseObject.projectId, databaseObject)
             Route.TRACK_CUSTOMERS    -> trackCustomer(databaseObject.projectId, databaseObject)

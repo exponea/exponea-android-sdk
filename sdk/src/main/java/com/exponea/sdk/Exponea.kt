@@ -49,7 +49,7 @@ object Exponea {
      * Defines which mode the library should flush out events
      */
 
-    var flushMode: FlushMode = PERIOD
+    var flushMode: FlushMode = IMMEDIATE
         set(value) {
             field = value
             onFlushModeChanged()

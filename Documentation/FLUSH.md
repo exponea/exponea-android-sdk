@@ -1,16 +1,12 @@
 ## 🔍 Flush events
 
-All tracked events and track customer properties are stored in the internal database in the Exponea SDK. By default, Exponea SDK automatically takes care of flushing events to the Exponea API. This feature can be turned off setting the property FlushMode to MANUAL. Please be careful with turning automatic flushing off because if you turn it off, you need to manually call Exponea.flush() to flush the tracked events manually every time there is something to flush.
+> All tracked events and track customer properties are stored in the internal database in the Exponea SDK. By default, Exponea SDK automatically takes care of flushing events to the Exponea API. This feature can be turned off setting the property FlushMode to MANUAL. Please be careful with turning automatic flushing off because if you turn it off, you need to manually call Exponea.flush() to flush the tracked events manually every time there is something to flush.
 
+All tracked events and track customer properties are stored in the internal database in the Exponea SDK. When a event was successfully sent to Exponea API, the object will be deleted from the local database.
 
-```
-fun flushData()
-```
+Exponea SDK will only flush data when the device has a stable internet connection. If when flushing the data, a connection/server error occurs, it will keep the data stored until it can be flushed at a later time.
 
-#### 💻 Usage
-```
-Exponea.flushData()
-```
+You can configure the flushing mode to work differently to suit your needs.
 
 When a event was successfully sent to Exponea API, the register will be excluded from the database.
 
@@ -22,3 +18,38 @@ It's possible to change the period to flush the events recorded into the databas
 In case you call the flush() method and the service is already running, the SDK will check it and return waiting for the first attempt to flush the events.
 
 The Exponea SDK Flush service will try to flush all registers recorded in the database, but when the maximum limit of retries has achieved, the SDK will delete the specific event from the database and will not try to send it again. You can configure this value by setting the property maxTries in the Exponea Configuration.
+
+```
+enum class FlushMode {
+    /**
+     * Periodic data flushing will be flushing data in your specified interval (in seconds)
+     * it will be automatically changed to APP_CLOSE to flush remaining events when app is in the background
+     */
+    PERIOD, APP_CLOSE,
+
+    /**
+     * Manual flushing mode disables any automatic upload and it's your responsibility to flush data.
+     */
+    MANUAL,
+
+    /**
+     * [ DEFAULT VALUE ]
+     * Flushes all data immediately as it is received
+     */
+    IMMEDIATE
+}
+```
+
+
+#### Manual Flush
+To manually trigger a data flush to the API, use the following method.
+
+
+```
+fun flushData()
+```
+
+#### 💻 Usage
+```
+Exponea.flushData()
+```

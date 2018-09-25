@@ -10,7 +10,7 @@ data class ExportedEventType(
         var projectId: String? = null,
         @SerializedName("event_type")
         var type: String? = null,
-        var timestamp: Long? = currentTimeSeconds(),
+        var timestamp: Float? = currentTimeSeconds(),
         @SerializedName("customer_ids")
         var customerIds: HashMap<String, Any?>? = null,
         @SerializedName("properties")

@@ -30,6 +30,14 @@ class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
         return sharedPreferences.getLong(key, default)
     }
 
+    override fun setFloat(key: String, value: Float) {
+        sharedPreferences.edit().putFloat(key, value).apply()
+    }
+
+    override fun getFloat(key: String, default: Float): Float {
+        return sharedPreferences.getFloat(key, default)
+    }
+
     override fun remove(key: String): Boolean {
         sharedPreferences.edit().remove(key).apply()
         return true

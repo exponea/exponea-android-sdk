@@ -228,7 +228,7 @@ object Exponea {
      * Manually tracks session start
      * @param timestamp - determines session start time
      */
-    fun trackSessionStart(timestamp: Long = currentTimeSeconds()) {
+    fun trackSessionStart(timestamp: Float = currentTimeSeconds()) {
         if (isAutomaticSessionTracking) {
             Logger.w(
                 Exponea.component.sessionManager,
@@ -243,7 +243,7 @@ object Exponea {
      * Manually tracks session end
      * @param timestamp - determines session end time
      */
-    fun trackSessionEnd(timestamp: Long = currentTimeSeconds()) {
+    fun trackSessionEnd(timestamp: Float = currentTimeSeconds()) {
 
         if (isAutomaticSessionTracking) {
             Logger.w(
@@ -522,13 +522,14 @@ object Exponea {
         eventType: String? = null,
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType,
-        timestamp: Long = currentTimeSeconds()
+        timestamp: Float = currentTimeSeconds()
     ) {
 
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
+
 
         val customerIds = component.customerIdsRepository.get()
 
@@ -580,6 +581,6 @@ object Exponea {
         }
         component.anonymizeManager.anonymize()
         trackInstallEvent()
-        component.sessionManager.trackSessionStart(System.currentTimeMillis() / 1000)
+        component.sessionManager.trackSessionStart(currentTimeSeconds())
     }
 }

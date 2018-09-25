@@ -8,6 +8,7 @@ import com.exponea.sdk.models.*
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.toDate
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -19,21 +20,21 @@ class SessionManagerImpl(
     private var isListenerActive = false
 
     companion object {
-        const val PREF_SESSION_END = "SessionEndTime"
-        const val PREF_SESSION_START = "SessionStartTime"
+        const val PREF_SESSION_END = "SessionEndTimeFloat"
+        const val PREF_SESSION_START = "SessionStartTimeFloat"
         const val PREF_SESSION_AUTO_TRACK = "SessionAutomaticTracking"
     }
 
     /**
      * Calculate session length
      */
-    private fun getSessionLengthInSeconds(): Long {
-        val start = prefs.getLong(PREF_SESSION_START, currentTimeSeconds())
-        val end = prefs.getLong(PREF_SESSION_END, currentTimeSeconds())
+    private fun getSessionLengthInSeconds(): Float {
+        val start = prefs.getFloat(PREF_SESSION_START, currentTimeSeconds())
+        val end = prefs.getFloat(PREF_SESSION_END, currentTimeSeconds())
         Logger.d(
                 this, "Session Info: \n " +
-                "\t From: ${Date(TimeUnit.SECONDS.toMillis(start))}\n" +
-                "\t To: ${Date(TimeUnit.SECONDS.toMillis(end))}"
+                "\t From: ${start.toDate()}\n" +
+                "\t To: ${end.toDate()}"
         )
 
         return (end - start)
@@ -68,25 +69,25 @@ class SessionManagerImpl(
         // Cancel background timer if set
         Exponea.component.backgroundTimerManager.stopTimer()
         val now = currentTimeSeconds()
-        Logger.d(this, "Session start ${Date(TimeUnit.SECONDS.toMillis(now))}")
+        Logger.d(this, "Session start ${now.toDate()}")
 
         // Check if current session is the first one
-        val lastTimeStarted = prefs.getLong(PREF_SESSION_START, -1L)
-        val lastTimeFinished = prefs.getLong(PREF_SESSION_END, -1L)
-        if (lastTimeStarted == -1L || lastTimeFinished == -1L) {
-            prefs.setLong(PREF_SESSION_START, now)
+        val lastTimeStarted = prefs.getFloat(PREF_SESSION_START, -1f)
+        val lastTimeFinished = prefs.getFloat(PREF_SESSION_END, -1f)
+        if (lastTimeStarted == -1f || lastTimeFinished == -1f) {
+            prefs.setFloat(PREF_SESSION_START, now)
             trackSessionStart(now)
             return
         }
 
         if (!canBeResumed(now)) {
-            Logger.d(this, "New Session Started: ${Date(TimeUnit.SECONDS.toMillis(now))}")
+            Logger.d(this, "New Session Started: ${now.toDate()}")
 
             // Finish Tracking old session
             trackSessionEnd(now)
 
             // Start Tracking new session
-            prefs.setLong(PREF_SESSION_START, now)
+            prefs.setFloat(PREF_SESSION_START, now)
             trackSessionStart(now)
         }
 
@@ -97,8 +98,8 @@ class SessionManagerImpl(
      */
     override fun onSessionEnd() {
         val now = currentTimeSeconds()
-        Logger.d(this, "Session end ${Date(TimeUnit.SECONDS.toMillis(now))}")
-        prefs.setLong(PREF_SESSION_END, now)
+        Logger.d(this, "Session end ${now.toDate()}")
+        prefs.setFloat(PREF_SESSION_END, now)
         // Start background timer to track end of the session
         Exponea.component.backgroundTimerManager.startTimer()
     }
@@ -106,12 +107,12 @@ class SessionManagerImpl(
     /**
      * Tracking Session Start
      */
-     override fun trackSessionStart(timestamp: Long) {
-        Logger.d(this, "Tracking session start at: ${Date(timestamp)}")
+     override fun trackSessionStart(timestamp: Float) {
+        Logger.d(this, "Tracking session start at: ${timestamp.toDate()}")
 
         // Save session start time if session tracking is manual
         if (!isListenerActive) {
-            prefs.setLong(PREF_SESSION_START, timestamp)
+            prefs.setFloat(PREF_SESSION_START, timestamp)
         }
 
         val properties = DeviceProperties().toHashMap()
@@ -128,12 +129,12 @@ class SessionManagerImpl(
     /**
      * Tracking Session End
      */
-     override fun trackSessionEnd(timestamp: Long) {
-        Logger.d(this, "Tracking session end at: ${Date(timestamp)}")
+     override fun trackSessionEnd(timestamp: Float) {
+        Logger.d(this, "Tracking session end at: ${timestamp.toDate()}")
 
         // Save session end time if session tracking is manual
         if (!isListenerActive) {
-            prefs.setLong(PREF_SESSION_END, timestamp)
+            prefs.setFloat(PREF_SESSION_END, timestamp)
         }
 
         val properties = DeviceProperties().toHashMap()
@@ -155,9 +156,9 @@ class SessionManagerImpl(
      * Determines if current session can be resumed
      * ( i.e session timeout didn't expire )
      */
-    private fun canBeResumed(now: Long): Boolean {
-        val sessionEnded = prefs.getLong(PREF_SESSION_END, -1L)
-        if (sessionEnded == -1L) return false
+    private fun canBeResumed(now: Float): Boolean {
+        val sessionEnded = prefs.getFloat(PREF_SESSION_END, -1f)
+        if (sessionEnded == -1f) return false
         val currentTimeout = (now - sessionEnded)
         return currentTimeout < Exponea.sessionTimeout
 
@@ -168,8 +169,8 @@ class SessionManagerImpl(
      */
     private fun clear() {
         Logger.d(this, "Clearing session Info")
-        prefs.setLong(PREF_SESSION_START, -1)
-        prefs.setLong(PREF_SESSION_END, -1)
+        prefs.setFloat(PREF_SESSION_START, -1f)
+        prefs.setFloat(PREF_SESSION_END, -1f)
     }
 
     override fun reset() {

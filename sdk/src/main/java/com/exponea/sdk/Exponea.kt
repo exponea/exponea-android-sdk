@@ -165,13 +165,11 @@ object Exponea {
 
     fun trackEvent(
         properties: PropertiesList,
-        timestamp: Long? = currentTimeSeconds(),
         eventType: String?
     ) {
 
         track(
             properties = properties.properties,
-            timestamp = timestamp,
             eventType = eventType,
             type = EventType.TRACK_EVENT
         )
@@ -322,9 +320,7 @@ object Exponea {
 
     fun trackDeliveredPush(
         data: NotificationData? = null,
-        fcmToken: String,
-        timestamp: Long? = currentTimeSeconds()
-    ) {
+        fcmToken: String) {
         val properties = PropertiesList(
             hashMapOf(
                 Pair("action_type", "notification"),
@@ -339,8 +335,7 @@ object Exponea {
         track(
             eventType = Constants.EventTypes.push,
             properties = properties.properties,
-            type = EventType.PUSH_DELIVERED,
-            timestamp = timestamp
+            type = EventType.PUSH_DELIVERED
         )
     }
 
@@ -350,9 +345,7 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
-        fcmToken: String,
-        timestamp: Long? = currentTimeSeconds()
-    ) {
+        fcmToken: String) {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "notification",
@@ -368,8 +361,7 @@ object Exponea {
         track(
             eventType = Constants.EventTypes.push,
             properties = properties.properties,
-            type = EventType.PUSH_OPENED,
-            timestamp = timestamp
+            type = EventType.PUSH_OPENED
         )
     }
 
@@ -391,14 +383,10 @@ object Exponea {
      * @param timestamp - Time in timestamp format where the event was created.
      */
 
-    fun trackPaymentEvent(
-        timestamp: Long = currentTimeSeconds(),
-        purchasedItem: PurchasedItem
-    ) {
+    fun trackPaymentEvent(purchasedItem: PurchasedItem) {
 
         track(
             eventType = Constants.EventTypes.payment,
-            timestamp = timestamp,
             properties = purchasedItem.toHashMap(),
             type = EventType.PAYMENT
         )
@@ -532,9 +520,9 @@ object Exponea {
 
     internal fun track(
         eventType: String? = null,
-        timestamp: Long? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
-        type: EventType
+        type: EventType,
+        timestamp: Long = currentTimeSeconds()
     ) {
 
         if (!isInitialized) {

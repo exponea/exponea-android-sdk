@@ -2,6 +2,8 @@ package com.exponea.sdk.preferences
 
 import android.content.Context
 import android.preference.PreferenceManager
+import android.util.Log
+import com.exponea.sdk.util.Logger
 
 class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -30,12 +32,14 @@ class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
         return sharedPreferences.getLong(key, default)
     }
 
-    override fun setFloat(key: String, value: Float) {
-        sharedPreferences.edit().putFloat(key, value).apply()
+    override fun setDouble(key: String, value: Double) {
+        Logger.d(this, "put double: $value")
+        sharedPreferences.edit().putLong(key, value.toRawBits()).apply()
     }
 
-    override fun getFloat(key: String, default: Float): Float {
-        return sharedPreferences.getFloat(key, default)
+    override fun getDouble(key: String, default: Double): Double {
+        Logger.d(this, "get double: ${Double.fromBits(getLong(key, (-1.0).toRawBits()))}")
+        return Double.fromBits(sharedPreferences.getLong(key, (-1.0).toRawBits()))
     }
 
     override fun remove(key: String): Boolean {

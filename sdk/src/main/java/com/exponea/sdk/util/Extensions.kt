@@ -64,11 +64,9 @@ fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     })
 }
 
-fun Float.toDate() : Date{
-    return Date(TimeUnit.SECONDS.toMillis(this.toLong()))
-}
+fun Double.toDate() : Date {
+    return Date((this * 1000).toLong())}
 
-fun currentTimeSeconds(): Float {
-    val seconds = System.currentTimeMillis() / 1000.0
-    return "%.3f".format(seconds).toFloat()
+fun currentTimeSeconds(): Double {
+  return Date().time / 1000.0
 }

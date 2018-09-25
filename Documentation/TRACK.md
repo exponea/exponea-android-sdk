@@ -16,7 +16,7 @@ In the SDK you can track an event using the following accessor:
 ```
 fun trackEvent(
         properties: PropertiesList,
-        timestamp: Float?,
+        timestamp: Double?,
         eventType: String?
 )
 ```

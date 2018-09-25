@@ -33,9 +33,10 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
-import java.util.HashMap
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
@@ -164,7 +165,7 @@ object Exponea {
 
     fun trackEvent(
         properties: PropertiesList,
-        timestamp: Float? = currentTimeSeconds(),
+        timestamp: Double? = currentTimeSeconds(),
         eventType: String?
     ) {
 
@@ -229,7 +230,7 @@ object Exponea {
      * Manually tracks session start
      * @param timestamp - determines session start time ( in seconds )
      */
-    fun trackSessionStart(timestamp: Float = currentTimeSeconds()) {
+    fun trackSessionStart(timestamp: Double = currentTimeSeconds()) {
         if (isAutomaticSessionTracking) {
             Logger.w(
                 Exponea.component.sessionManager,
@@ -244,7 +245,7 @@ object Exponea {
      * Manually tracks session end
      * @param timestamp - determines session end time ( in seconds )
      */
-    fun trackSessionEnd(timestamp: Float = currentTimeSeconds()) {
+    fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) {
 
         if (isAutomaticSessionTracking) {
             Logger.w(
@@ -321,7 +322,7 @@ object Exponea {
 
     fun trackDeliveredPush(
         data: NotificationData? = null,
-        timestamp: Float? = currentTimeSeconds()
+        timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -329,6 +330,9 @@ object Exponea {
                 Pair("status", "delivered")
             )
         )
+        Logger.d(this, "Push dev: ${timestamp.toString()}")
+        Logger.d(this, "Push dev time ${Date()}")
+        Logger.d(this, "Push dev time ${timestamp?.toDate()}")
         data?.let {
             properties["campaign_id"] = it.campaignId
             properties["campaign_name"] = it.campaignName
@@ -348,7 +352,7 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
-        timestamp: Float? = currentTimeSeconds()
+        timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -389,7 +393,7 @@ object Exponea {
      */
 
     fun trackPaymentEvent(
-        timestamp: Float = currentTimeSeconds(),
+        timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
     ) {
 
@@ -529,7 +533,7 @@ object Exponea {
 
     internal fun track(
         eventType: String? = null,
-        timestamp: Float? = currentTimeSeconds(),
+        timestamp: Double? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType
     ) {

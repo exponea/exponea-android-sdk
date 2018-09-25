@@ -110,7 +110,7 @@ Exponea.trackPushToken(
 ```
 fun trackDeliveredPush(
         data: NotificationData? = null,
-        timestamp: Float? = null
+        timestamp: Double? = null
 )
 ```
 
@@ -129,7 +129,7 @@ Exponea.trackDeliveredPush(
 ```
 fun trackClickedPush(
         data: NotificationData? = null,
-        timestamp: Float? = null
+        timestamp: Double? = null
 )
 ```
 

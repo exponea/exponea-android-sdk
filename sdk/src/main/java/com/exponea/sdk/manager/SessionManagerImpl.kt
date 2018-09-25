@@ -20,17 +20,17 @@ class SessionManagerImpl(
     private var isListenerActive = false
 
     companion object {
-        const val PREF_SESSION_END = "SessionEndTimeFloat"
-        const val PREF_SESSION_START = "SessionStartTimeFloat"
+        const val PREF_SESSION_END = "SessionEndTimeDouble"
+        const val PREF_SESSION_START = "SessionStartTimeDouble"
         const val PREF_SESSION_AUTO_TRACK = "SessionAutomaticTracking"
     }
 
     /**
      * Calculate session length
      */
-    private fun getSessionLengthInSeconds(): Float {
-        val start = prefs.getFloat(PREF_SESSION_START, currentTimeSeconds())
-        val end = prefs.getFloat(PREF_SESSION_END, currentTimeSeconds())
+    private fun getSessionLengthInSeconds(): Double {
+        val start = prefs.getDouble(PREF_SESSION_START, currentTimeSeconds())
+        val end = prefs.getDouble(PREF_SESSION_END, currentTimeSeconds())
         Logger.d(
                 this, "Session Info: \n " +
                 "\t From: ${start.toDate()}\n" +
@@ -72,10 +72,10 @@ class SessionManagerImpl(
         Logger.d(this, "Session start ${now.toDate()}")
 
         // Check if current session is the first one
-        val lastTimeStarted = prefs.getFloat(PREF_SESSION_START, -1f)
-        val lastTimeFinished = prefs.getFloat(PREF_SESSION_END, -1f)
-        if (lastTimeStarted == -1f || lastTimeFinished == -1f) {
-            prefs.setFloat(PREF_SESSION_START, now)
+        val lastTimeStarted = prefs.getDouble(PREF_SESSION_START, -1.0)
+        val lastTimeFinished = prefs.getDouble(PREF_SESSION_END, -1.0)
+        if (lastTimeStarted == -1.0 || lastTimeFinished == -1.0) {
+            prefs.getDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
             return
         }
@@ -87,7 +87,7 @@ class SessionManagerImpl(
             trackSessionEnd(now)
 
             // Start Tracking new session
-            prefs.setFloat(PREF_SESSION_START, now)
+            prefs.setDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
         }
 
@@ -99,7 +99,7 @@ class SessionManagerImpl(
     override fun onSessionEnd() {
         val now = currentTimeSeconds()
         Logger.d(this, "Session end ${now.toDate()}")
-        prefs.setFloat(PREF_SESSION_END, now)
+        prefs.setDouble(PREF_SESSION_END, now)
         // Start background timer to track end of the session
         Exponea.component.backgroundTimerManager.startTimer()
     }
@@ -107,12 +107,12 @@ class SessionManagerImpl(
     /**
      * Tracking Session Start
      */
-     override fun trackSessionStart(timestamp: Float) {
+     override fun trackSessionStart(timestamp: Double) {
         Logger.d(this, "Tracking session start at: ${timestamp.toDate()}")
 
         // Save session start time if session tracking is manual
         if (!isListenerActive) {
-            prefs.setFloat(PREF_SESSION_START, timestamp)
+            prefs.setDouble(PREF_SESSION_START, timestamp)
         }
 
         val properties = DeviceProperties().toHashMap()
@@ -129,12 +129,12 @@ class SessionManagerImpl(
     /**
      * Tracking Session End
      */
-     override fun trackSessionEnd(timestamp: Float) {
+     override fun trackSessionEnd(timestamp: Double) {
         Logger.d(this, "Tracking session end at: ${timestamp.toDate()}")
 
         // Save session end time if session tracking is manual
         if (!isListenerActive) {
-            prefs.setFloat(PREF_SESSION_END, timestamp)
+            prefs.setDouble(PREF_SESSION_END, timestamp)
         }
 
         val properties = DeviceProperties().toHashMap()
@@ -156,9 +156,9 @@ class SessionManagerImpl(
      * Determines if current session can be resumed
      * ( i.e session timeout didn't expire )
      */
-    private fun canBeResumed(now: Float): Boolean {
-        val sessionEnded = prefs.getFloat(PREF_SESSION_END, -1f)
-        if (sessionEnded == -1f) return false
+    private fun canBeResumed(now: Double): Boolean {
+        val sessionEnded = prefs.getDouble(PREF_SESSION_END, -1.0)
+        if (sessionEnded == -1.0) return false
         val currentTimeout = (now - sessionEnded)
         return currentTimeout < Exponea.sessionTimeout
 
@@ -169,8 +169,8 @@ class SessionManagerImpl(
      */
     private fun clear() {
         Logger.d(this, "Clearing session Info")
-        prefs.setFloat(PREF_SESSION_START, -1f)
-        prefs.setFloat(PREF_SESSION_END, -1f)
+        prefs.setDouble(PREF_SESSION_START, -1.0)
+        prefs.setDouble(PREF_SESSION_END, -1.0)
     }
 
     override fun reset() {

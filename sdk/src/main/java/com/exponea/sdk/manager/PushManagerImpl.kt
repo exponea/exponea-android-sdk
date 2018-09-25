@@ -22,14 +22,12 @@ class PushManagerImpl(
 
     override fun trackDeliveredPush(data: NotificationData?) {
         Exponea.trackDeliveredPush(
-                fcmToken = fcmToken,
                 data = data
         )
     }
 
     override fun trackClickedPush(data: NotificationData?) {
         Exponea.trackClickedPush(
-                fcmToken = fcmToken,
                 data = data
         )
     }

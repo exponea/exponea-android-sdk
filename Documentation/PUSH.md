@@ -100,7 +100,7 @@ fun trackFcmToken(
 
 ```
 
-Exponea.trackFcmToken(
+Exponea.trackPushToken(
         fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
 )
 ```
@@ -109,17 +109,17 @@ Exponea.trackFcmToken(
 
 ```
 fun trackDeliveredPush(
-        fcmToken: String,
-        timestamp: Long? = null
+        data: NotificationData? = null,
+        timestamp: Float? = null
 )
 ```
 
 #### 💻 Usage
 
 ```
-val customerIds = CustomerIds(registered = "john@doe.com")
 
 Exponea.trackDeliveredPush(
+        data = /** get NotificationData from push payload **//
         timestamp = currentTimeSeconds()
 )
 ```
@@ -128,8 +128,8 @@ Exponea.trackDeliveredPush(
 
 ```
 fun trackClickedPush(
-        fcmToken: String,
-        timestamp: Long? = null
+        data: NotificationData? = null,
+        timestamp: Float? = null
 )
 ```
 
@@ -138,7 +138,7 @@ fun trackClickedPush(
 ```
 
 Exponea.trackClickedPush(
-        fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
+        data = /** get NotificationData from push payload**//
         timestamp = currentTimeSeconds()
 )
 ```

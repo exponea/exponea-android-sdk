@@ -35,7 +35,6 @@ import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
-import java.util.Date
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
 
@@ -228,7 +227,7 @@ object Exponea {
 
     /**
      * Manually tracks session start
-     * @param timestamp - determines session start time
+     * @param timestamp - determines session start time ( in seconds )
      */
     fun trackSessionStart(timestamp: Float = currentTimeSeconds()) {
         if (isAutomaticSessionTracking) {
@@ -243,7 +242,7 @@ object Exponea {
 
     /**
      * Manually tracks session end
-     * @param timestamp - determines session end time
+     * @param timestamp - determines session end time ( in seconds )
      */
     fun trackSessionEnd(timestamp: Float = currentTimeSeconds()) {
 
@@ -322,7 +321,6 @@ object Exponea {
 
     fun trackDeliveredPush(
         data: NotificationData? = null,
-        fcmToken: String,
         timestamp: Float? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
@@ -350,7 +348,6 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
-        fcmToken: String,
         timestamp: Float? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
@@ -388,7 +385,7 @@ object Exponea {
     /**
      * Tracks payment manually
      * @param purchasedItem - represents payment details.
-     * @param timestamp - Time in timestamp format where the event was created.
+     * @param timestamp - Time in timestamp format where the event was created. ( in seconds )
      */
 
     fun trackPaymentEvent(

@@ -17,7 +17,7 @@ If you use in your project some virtual payments (e.g. purchase with in-game gol
 
 ```
 fun trackPaymentEvent(
-            timestamp: Long = currentTimeSeconds(),
+            timestamp: Float = currentTimeSeconds(),
             purchasedItem: PurchasedItem
     )
 ```

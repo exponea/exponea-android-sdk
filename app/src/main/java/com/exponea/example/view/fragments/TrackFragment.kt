@@ -14,6 +14,7 @@ import com.exponea.example.view.dialogs.TrackCustomAttributesDialog
 import com.exponea.example.view.dialogs.TrackCustomEventDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.google.firebase.iid.FirebaseInstanceId
@@ -92,7 +93,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackPushClicked() {
         Exponea.trackClickedPush(
-                fcmToken = "Fcm Token"
+                NotificationData("campaing_id", "Campaign Name")
         )
     }
 
@@ -112,8 +113,9 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle push delivered event tracking"
      */
     private fun trackPushDelivered() {
+
         Exponea.trackDeliveredPush(
-                fcmToken = "Fcm Token"
+                data = NotificationData("campaing_id", "Campaign Name")
         )
 
     }

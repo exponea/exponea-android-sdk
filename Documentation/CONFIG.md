@@ -83,7 +83,7 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 * This value will be used to calculate the session timing.
 * Minimal timeout value is **1** second
 * Maximal timeout value is **120** seconds
-* Default timeout value: **60** seconds
+* Default timeout value: **20** seconds
 
 #### automaticPaymentTracking
 

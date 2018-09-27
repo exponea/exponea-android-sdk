@@ -61,10 +61,11 @@ So each time fragment get created (i.e user navigates to it), we can track it us
 
 ## Fetch, Track, Flush, Anonymize
 
-`MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK:
+`MainActivity` allow user to navigate between 4 fragments:`FetchFragment`, `TrackFragment`, `FlushFragment` and `AnonymizeFragment`. Goal of each fragment is to showcase different aspects of SDK:
 - Data fetching
 - Common events Tracking
 - Manual flushing
+- User anonymization
 
 ### FetchFragment
 
@@ -180,7 +181,10 @@ The last but not least: `onReceiveMethod`
                 Log.i("Receiver", "Payload: $data")
 
                 // Act upon push receiving
-                context.startActivity(Intent(context, MainActivity::class.java))
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+              startActivity(context, launchIntent, null)
             }
 
   ```

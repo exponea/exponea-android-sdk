@@ -111,7 +111,9 @@ Exponea.fetchCustomerAttributes(
        )
 
 ```
+
 Our callbacks are pretty simple. We just take whatever we got from the server and put it's string representation to the TextView bellow our buttons
+
 ```
 private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
        runOnUiThread {

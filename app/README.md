@@ -90,7 +90,7 @@ FetchCustomAttributeDialog.show(childFragmentManager, {
         })
     }
 
-    ```
+```
 Clicking the button will cause the dialog to pop up, where user will be able to specify specific attribute to fetch
 In the end it will construct `CustomerAttributes` and send it via callback like so:
 ```

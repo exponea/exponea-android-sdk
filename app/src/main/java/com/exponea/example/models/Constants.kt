@@ -8,6 +8,7 @@ class Constants {
             var searchScreen = "Search"
             var purchaseScreen = "Purchase"
             var settingsScreen = "Settings"
+            var anonymizeScreen = "Anonymize"
         }
     }
     class Events {

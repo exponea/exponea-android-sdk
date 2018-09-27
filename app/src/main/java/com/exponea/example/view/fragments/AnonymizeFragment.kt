@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.exponea.example.R
+import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
 import kotlinx.android.synthetic.main.fragment_anonymize.*
@@ -22,6 +23,10 @@ class AnonymizeFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Track visited screen
+        trackPage(Constants.ScreenNames.anonymizeScreen)
+
         (activity as AppCompatActivity).supportActionBar?.subtitle = "anonymize"
         btnAnonymize.setOnClickListener {
             Exponea.anonymize()

@@ -20,11 +20,6 @@ class CustomerIdsRepositoryImpl(private val gson: Gson,
         val json = prefs.getString(PREFS_CUSTOMERIDS, "{}")
         val type = object : TypeToken<HashMap<String, Any?>>() {}.type
         val ids = gson.fromJson<HashMap<String, Any?>>(json,  type)
-        show( CustomerIds().apply {
-            cookie = uuid
-            externalIds = ids
-
-        } )
         return CustomerIds().apply {
             cookie = uuid
             externalIds = ids
@@ -34,12 +29,11 @@ class CustomerIdsRepositoryImpl(private val gson: Gson,
     override fun set(customerIds: CustomerIds) {
         val json = gson.toJson(customerIds.externalIds)
         prefs.setString(PREFS_CUSTOMERIDS, json)
-        show()
     }
 
-
-    fun show(cid : CustomerIds =  get()) {
-        Logger.i(this, "Cookie: ${cid.cookie}\nExternal others: ${cid.externalIds}")
+    override fun clear() {
+        Logger.d(this, "Clearing customer ids")
+        prefs.remove(PREFS_CUSTOMERIDS)
     }
 
 }

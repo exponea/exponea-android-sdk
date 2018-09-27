@@ -592,6 +592,6 @@ object Exponea {
         }
         component.anonymizeManager.anonymize()
         trackInstallEvent()
-        component.sessionManager.trackSessionStart(System.currentTimeMillis() / 1000)
+        component.sessionManager.trackSessionStart(currentTimeSeconds())
     }
 }

@@ -36,11 +36,10 @@ class AnonymizeTest {
         val newId = Exponea.component.customerIdsRepository.get().cookie
         assertNotEquals(previousId, newId)
         val list = Exponea.component.eventRepository.all()
-        assertEquals(list.size, 2)
+        assertEquals(list.size, 1)
         val typeList = list.map {
             it.item.type
         }
         assertTrue(typeList.contains(Constants.EventTypes.sessionStart))
-        assertTrue(typeList.contains(Constants.EventTypes.installation))
     }
 }

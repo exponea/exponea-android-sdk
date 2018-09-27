@@ -36,7 +36,6 @@ class FcmManagerImpl(
             i, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // TODO if small icon is invalid the app will crash so this needs to be handled someway
         // If push icon was not provided in the configuration, default one will be used
         var smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
 

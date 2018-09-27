@@ -38,7 +38,7 @@ Exponea.init(App.instance, configuration)
 // Set our debug level to debug
 Exponea.loggerLevel = Logger.Level.DEBUG
 // Set up our flushing
-Exponea.flushMode = FlushMode.PERIOD
+Exponea.flushMode = FlushMode.IMMEDIATE
 Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 ```
 
@@ -59,12 +59,13 @@ Exponea.trackEvent(
 ```
 So each time fragment get created (i.e user navigates to it), we can track it using `fun trackPage(pageName: String)` method, where name of the screen(`pageName`) is the only parameter. Perfect example for tracking customer events specific for your application!
 
-## Fetch, Track, Flush
+## Fetch, Track, Flush, Anonymize
 
-`MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK:
+`MainActivity` allow user to navigate between 4 fragments:`FetchFragment`, `TrackFragment`, `FlushFragment` and `AnonymizeFragment`. Goal of each fragment is to showcase different aspects of SDK:
 - Data fetching
 - Common events Tracking
 - Manual flushing
+- User anonymization
 
 ### FetchFragment
 
@@ -90,7 +91,7 @@ FetchCustomAttributeDialog.show(childFragmentManager, {
         })
     }
 
-    ```
+```
 Clicking the button will cause the dialog to pop up, where user will be able to specify specific attribute to fetch
 In the end it will construct `CustomerAttributes` and send it via callback like so:
 ```
@@ -111,7 +112,9 @@ Exponea.fetchCustomerAttributes(
        )
 
 ```
+
 Our callbacks are pretty simple. We just take whatever we got from the server and put it's string representation to the TextView bellow our buttons
+
 ```
 private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
        runOnUiThread {
@@ -178,7 +181,10 @@ The last but not least: `onReceiveMethod`
                 Log.i("Receiver", "Payload: $data")
 
                 // Act upon push receiving
-                context.startActivity(Intent(context, MainActivity::class.java))
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+              startActivity(context, launchIntent, null)
             }
 
   ```
@@ -199,9 +205,18 @@ val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "anot
 
 ### FlushFragment
 
-This one is pretty simple. Just one button. All the events that we've tracked so far along the way, are waiting for a moment when they will be sent to the Exponea API. This **Flush** button does nothing but makes it happen right here right now.
+This one is pretty simple. Just one button. All the events that we've tracked so far along the way, might be waiting for a moment when they will be sent to the Exponea API. This **Flush** button does nothing but makes it happen right here right now.
 ```
 settingsBtnFlush.setOnClickListener {
             Exponea.flush()
         }
+```
+
+### AnonymizeFragment
+
+Another lonely button. This one will fully anonymize current user by assigning new UUID and reseting any other Ids.
+```
+btnAnonymize.setOnClickListener {
+           Exponea.anonymize()
+       }
 ```

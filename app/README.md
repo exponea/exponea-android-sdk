@@ -38,7 +38,7 @@ Exponea.init(App.instance, configuration)
 // Set our debug level to debug
 Exponea.loggerLevel = Logger.Level.DEBUG
 // Set up our flushing
-Exponea.flushMode = FlushMode.PERIOD
+Exponea.flushMode = FlushMode.IMMEDIATE
 Exponea.flushPeriod = FlushPeriod(1, TimeUnit.MINUTES)
 ```
 
@@ -59,7 +59,7 @@ Exponea.trackEvent(
 ```
 So each time fragment get created (i.e user navigates to it), we can track it using `fun trackPage(pageName: String)` method, where name of the screen(`pageName`) is the only parameter. Perfect example for tracking customer events specific for your application!
 
-## Fetch, Track, Flush
+## Fetch, Track, Flush, Anonymize
 
 `MainActivity` allow user to navigate between 3 fragments:`FetchFragment`, `TrackFragment` and `FlushFragment`. Goal of each fragment is to showcase different aspects of SDK:
 - Data fetching
@@ -201,9 +201,18 @@ val props = PropertiesList(hashMapOf("first_name" to "newName", "email" to "anot
 
 ### FlushFragment
 
-This one is pretty simple. Just one button. All the events that we've tracked so far along the way, are waiting for a moment when they will be sent to the Exponea API. This **Flush** button does nothing but makes it happen right here right now.
+This one is pretty simple. Just one button. All the events that we've tracked so far along the way, might be waiting for a moment when they will be sent to the Exponea API. This **Flush** button does nothing but makes it happen right here right now.
 ```
 settingsBtnFlush.setOnClickListener {
             Exponea.flush()
         }
+```
+
+### AnonymizeFragment
+
+Another lonely button. This one will fully anonymize current user by assigning new UUID and reseting any other Ids.
+```
+btnAnonymize.setOnClickListener {
+           Exponea.anonymize()
+       }
 ```

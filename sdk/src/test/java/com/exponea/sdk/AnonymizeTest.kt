@@ -3,6 +3,7 @@ package com.exponea.sdk
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.util.currentTimeSeconds
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +30,7 @@ class AnonymizeTest {
         Exponea.trackEvent(
             eventType = "test",
             properties = PropertiesList(hashMapOf("name" to "test")),
-            timestamp = Date().time
+            timestamp = currentTimeSeconds()
         )
 
         Exponea.anonymize()

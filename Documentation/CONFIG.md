@@ -81,6 +81,9 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 * Session is a real time spent in the App, it starts when the App is launched and ends when the App goes to background.
 * This value will be used to calculate the session timing.
+* Minimal timeout value is **1** second
+* Maximal timeout value is **120** seconds
+* Default timeout value: **20** seconds
 
 #### automaticPaymentTracking
 

@@ -1,6 +1,7 @@
 package com.exponea.sdk.models
 
 import android.os.Build
+import com.exponea.sdk.BuildConfig
 import com.google.gson.annotations.SerializedName
 
 data class DeviceProperties(
@@ -11,7 +12,7 @@ data class DeviceProperties(
         var osName: String = Constants.DeviceInfo.osName,
         var osVersion: String = Build.VERSION.RELEASE,
         var sdk: String = Constants.DeviceInfo.sdk,
-        var sdkVersion: String = Constants.DeviceInfo.sdkVersion,
+        var sdkVersion: String = BuildConfig.VERSION_NAME,
         var deviceModel: String = Build.MODEL,
         var deviceType: String? = null
 ) {

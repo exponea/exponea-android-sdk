@@ -33,10 +33,10 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import io.paperdb.Paper
-import java.util.Date
-import java.util.HashMap
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
@@ -165,7 +165,7 @@ object Exponea {
 
     fun trackEvent(
         properties: PropertiesList,
-        timestamp: Long? = currentTimeSeconds(),
+        timestamp: Double? = currentTimeSeconds(),
         eventType: String?
     ) {
 
@@ -228,9 +228,9 @@ object Exponea {
 
     /**
      * Manually tracks session start
-     * @param timestamp - determines session start time
+     * @param timestamp - determines session start time ( in seconds )
      */
-    fun trackSessionStart(timestamp: Long = currentTimeSeconds()) {
+    fun trackSessionStart(timestamp: Double = currentTimeSeconds()) {
         if (isAutomaticSessionTracking) {
             Logger.w(
                 Exponea.component.sessionManager,
@@ -243,9 +243,9 @@ object Exponea {
 
     /**
      * Manually tracks session end
-     * @param timestamp - determines session end time
+     * @param timestamp - determines session end time ( in seconds )
      */
-    fun trackSessionEnd(timestamp: Long = currentTimeSeconds()) {
+    fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) {
 
         if (isAutomaticSessionTracking) {
             Logger.w(
@@ -322,8 +322,7 @@ object Exponea {
 
     fun trackDeliveredPush(
         data: NotificationData? = null,
-        fcmToken: String,
-        timestamp: Long? = currentTimeSeconds()
+        timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -331,6 +330,9 @@ object Exponea {
                 Pair("status", "delivered")
             )
         )
+        Logger.d(this, "Push dev: ${timestamp.toString()}")
+        Logger.d(this, "Push dev time ${Date()}")
+        Logger.d(this, "Push dev time ${timestamp?.toDate()}")
         data?.let {
             properties["campaign_id"] = it.campaignId
             properties["campaign_name"] = it.campaignName
@@ -350,8 +352,7 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
-        fcmToken: String,
-        timestamp: Long? = currentTimeSeconds()
+        timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
@@ -388,11 +389,11 @@ object Exponea {
     /**
      * Tracks payment manually
      * @param purchasedItem - represents payment details.
-     * @param timestamp - Time in timestamp format where the event was created.
+     * @param timestamp - Time in timestamp format where the event was created. ( in seconds )
      */
 
     fun trackPaymentEvent(
-        timestamp: Long = currentTimeSeconds(),
+        timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
     ) {
 
@@ -532,7 +533,7 @@ object Exponea {
 
     internal fun track(
         eventType: String? = null,
-        timestamp: Long? = currentTimeSeconds(),
+        timestamp: Double? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType
     ) {
@@ -541,6 +542,7 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
+
 
         val customerIds = component.customerIdsRepository.get()
 

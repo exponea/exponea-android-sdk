@@ -55,14 +55,6 @@ class ConfigurationTest {
         println("Timestamp: ${timestamp}")
         println("Timestamp: ${Calendar.getInstance().timeInMillis / 1000}")
 
-        //val cal =
-        println("Timestamp to Date: ${Date(timestamp * 1000)}")
-
-        println("Timestamp to Date 2: ${ Date(timestamp) }")
-
-        val newStamp = 424515600000
-        println("New timestamp to Date 2: ${ Date(newStamp) }")
-
     }
 
 //    @Test

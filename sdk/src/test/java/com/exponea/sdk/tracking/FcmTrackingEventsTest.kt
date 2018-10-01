@@ -73,9 +73,7 @@ class FcmTrackingEventsTest {
     @Test
     fun testTrackDeliveredPush_ShouldSuccess() {
         // Track delivered push
-        Exponea.trackDeliveredPush(
-                fcmToken = token
-        )
+        Exponea.trackDeliveredPush()
 
         // Check if event was added to db
         val event = repo.all().first()
@@ -100,9 +98,7 @@ class FcmTrackingEventsTest {
     @Test
     fun testTrackClickedPush_ShouldSuccess() {
         // Track clicked push
-        Exponea.trackClickedPush(
-                fcmToken = token
-        )
+        Exponea.trackClickedPush()
 
         // Check if event was added to db
         val event = repo.all().first()

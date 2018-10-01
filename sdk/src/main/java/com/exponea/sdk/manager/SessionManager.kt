@@ -16,9 +16,9 @@ abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
     abstract fun stopSessionListener()
 
-    abstract fun trackSessionEnd(timestamp: Long = currentTimeSeconds())
+    abstract fun trackSessionEnd(timestamp: Double = currentTimeSeconds())
 
-    abstract fun trackSessionStart(timestamp: Long = currentTimeSeconds())
+    abstract fun trackSessionStart(timestamp: Double = currentTimeSeconds())
 
     abstract fun reset()
 

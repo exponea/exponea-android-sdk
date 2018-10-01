@@ -75,7 +75,7 @@ class SessionManagerImpl(
         val lastTimeStarted = prefs.getDouble(PREF_SESSION_START, -1.0)
         val lastTimeFinished = prefs.getDouble(PREF_SESSION_END, -1.0)
         if (lastTimeStarted == -1.0 || lastTimeFinished == -1.0) {
-            prefs.getDouble(PREF_SESSION_START, now)
+            prefs.setDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
             return
         }

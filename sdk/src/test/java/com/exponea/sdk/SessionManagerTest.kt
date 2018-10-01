@@ -63,23 +63,24 @@ class SessionManagerTest {
 
         // Since we have disabled automatic tracking, we have to set listeners manually
         sm.startSessionListener()
-        assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
+        assertEquals(-1.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
 
         val preTime = currentTimeSeconds()
 
         // App getting focus
         controller.resume()
+        Thread.sleep(100)
 
         // Checking that start timestamp was successfully saved
-        assertNotEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
-        assert(currentTimeSeconds() >= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
-        assert(preTime <= prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
+        assertNotEquals(-1.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
+        assert(currentTimeSeconds() >= prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
+        assert(preTime <= prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
 
-        var previousStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        var previousStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
 
         controller.pause()
         controller.resume()
-        var newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        var newStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
 
         // App regained focus too quickly, old session should be resumed
         assertEquals(previousStartTime, newStartTime)
@@ -91,7 +92,7 @@ class SessionManagerTest {
         controller.resume()
 
         // New session should be started
-        newStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
+        newStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
         assert(previousStartTime < newStartTime)
     }
 
@@ -109,9 +110,9 @@ class SessionManagerTest {
         controller.pause()
 
         // Checking that stop timestamp was successfully saved
-        val sessionEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
+        val sessionEndTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0)
 
-        assertNotEquals(-1L, sessionEndTime)
+        assertNotEquals(-1.0, sessionEndTime)
         assert(preTime <= sessionEndTime)
 
         // User comes back and then leaves
@@ -120,7 +121,7 @@ class SessionManagerTest {
         controller.pause()
 
         // New session end time
-        val newEndTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L)
+        val newEndTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0)
         assertNotEquals(sessionEndTime, newEndTime)
         assert(sessionEndTime < newEndTime)
     }
@@ -131,14 +132,14 @@ class SessionManagerTest {
         controller.resume()
 
         // Session wont be recorded until startSessionListenerCalled()
-        var sessionStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
-        assertEquals(-1L, sessionStartTime)
+        var sessionStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
+        assertEquals(-1.0, sessionStartTime)
 
         // Starting our listener
         sm.startSessionListener()
         controller.resume()
-        sessionStartTime = prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L)
-        assertNotEquals(-1L, sessionStartTime)
+        sessionStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
+        assertNotEquals(-1.0, sessionStartTime)
         // Listener's state saved in SP
         assertTrue { prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, false) }
 
@@ -148,10 +149,10 @@ class SessionManagerTest {
 
         // App looses focus, but session's end won't be recorded
         controller.pause()
-        assertEquals(-1L, prefs.getLong(SessionManagerImpl.PREF_SESSION_END, -1L))
+        assertEquals(-1.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0))
 
         // As well as the session start, until we start listeners again
         controller.resume()
-        assertEquals(sessionStartTime, prefs.getLong(SessionManagerImpl.PREF_SESSION_START, -1L))
+        assertEquals(sessionStartTime, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
     }
 }

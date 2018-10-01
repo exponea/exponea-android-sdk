@@ -1,5 +1,15 @@
 ## Release Notes
 
+### 1.1.4
+* Timestamp type changed from Long to Double for better precision
+
+### 1.1.3
+* Fixed anonymize functionality
+
+### 1.1.2
+* Default flush mode set to `IMMIDIATE`
+* Improved retry mechanism for events flushing
+
 
 ### 1.1.1
 * Expandable Notifications

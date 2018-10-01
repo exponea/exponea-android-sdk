@@ -90,7 +90,7 @@ class FetchFragment : BaseFragment() {
      */
     private fun fetchCustomerEvents() {
 
-        FetchCustomEventsDialog.show(childFragmentManager, {
+        FetchCustomEventsDialog.show(childFragmentManager) {
             setProgressBarVisible(true)
             Exponea.fetchCustomerEvents(
                     customerEvents = it,
@@ -102,7 +102,7 @@ class FetchFragment : BaseFragment() {
                         }
                     }
             )
-        })
+        }
 
     }
 
@@ -111,14 +111,14 @@ class FetchFragment : BaseFragment() {
      */
     private fun fetchCustomerAttributes() {
 
-        FetchCustomAttributeDialog.show(childFragmentManager, {
+        FetchCustomAttributeDialog.show(childFragmentManager) { attrs ->
             setProgressBarVisible(true)
             Exponea.fetchCustomerAttributes(
-                    customerAttributes = it,
+                    customerAttributes = attrs,
                     onFailure = { onFetchFailed(it) },
                     onSuccess = {onFetchSuccess(it)}
             )
-        })
+        }
     }
 
     /**

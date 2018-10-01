@@ -3,6 +3,7 @@ package com.exponea.example.services
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.support.v4.content.ContextCompat.startActivity
 import android.util.Log
 import com.exponea.example.view.MainActivity
 import com.exponea.sdk.models.NotificationData
@@ -19,7 +20,10 @@ class MyReceiver : BroadcastReceiver() {
                 Log.i("Receiver", "Payload: $data")
 
                 // Act upon push receiving
-                context.startActivity(Intent(context, MainActivity::class.java))
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(context, launchIntent, null)
             }
         }
     }

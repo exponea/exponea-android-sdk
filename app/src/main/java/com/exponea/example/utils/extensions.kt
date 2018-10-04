@@ -3,6 +3,7 @@ package com.exponea.example.utils
 import android.support.design.widget.TextInputEditText
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Patterns
 
 
 fun TextInputEditText.isValid() : Boolean{
@@ -14,6 +15,18 @@ fun TextInputEditText.isValid() : Boolean{
     }
     return isValid
 }
+
+fun TextInputEditText.isVaildUrl() : Boolean {
+    val isEmpty = text.toString().isEmpty()
+    val isUrl = Patterns.WEB_URL.matcher(text).matches() && (text.startsWith("https://") || text.startsWith("http://"))
+    error = when {
+        isEmpty -> "Empty URL"
+        !isUrl -> "Invalid Url"
+        else -> null
+    }
+    return !isEmpty && isUrl
+}
+
 
 fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
     this.addTextChangedListener(object : TextWatcher {

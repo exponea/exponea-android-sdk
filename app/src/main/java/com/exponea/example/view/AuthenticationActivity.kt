@@ -3,12 +3,14 @@ package com.exponea.example.view
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Selection
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import com.exponea.example.App
 import com.exponea.example.BuildConfig
 import com.exponea.example.R
+import com.exponea.example.utils.isVaildUrl
 import com.exponea.example.utils.isValid
 import com.exponea.example.utils.onTextChanged
 import com.exponea.sdk.Exponea
@@ -25,17 +27,21 @@ class AuthenticationActivity : AppCompatActivity() {
     var authorizationToken = ""
     var projectToken = ""
     var registeredIds = ""
+    var apiUrl = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
         setSupportActionBar(toolbar)
-        editTextAuthCode.onTextChanged { authorizationToken = it  }
+
+        editTextAuthCode.onTextChanged { authorizationToken = it }
         editTextRegisteredIds.onTextChanged { registeredIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }
+        editTextApiUrl.onTextChanged { apiUrl = it }
+
 
         button.setOnClickListener {
-            if (!editTextProjectToken.isValid() || !editTextAuthCode.isValid()) {
+            if (!editTextProjectToken.isValid() || !editTextAuthCode.isValid() || !editTextApiUrl.isVaildUrl()) {
                 Toast.makeText(this, "Empty field", Toast.LENGTH_SHORT).show()
             } else {
                 initSdk()
@@ -50,13 +56,14 @@ class AuthenticationActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-       return when(item?.itemId) {
+        return when (item?.itemId) {
             R.id.button_fill_fields -> {
-               editTextAuthCode.setText(BuildConfig.AuthorizationToken)
-               editTextProjectToken.setText(BuildConfig.DefaultProjectToken)
-               true
+                editTextAuthCode.setText(BuildConfig.AuthorizationToken)
+                editTextProjectToken.setText(BuildConfig.DefaultProjectToken)
+                editTextApiUrl.setText(BuildConfig.DefaultApiUrl)
+                true
             }
-           else -> super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -65,6 +72,7 @@ class AuthenticationActivity : AppCompatActivity() {
         val configuration = ExponeaConfiguration()
         configuration.authorization = authorizationToken
         configuration.projectToken = projectToken
+        configuration.baseURL = apiUrl
 
         // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {

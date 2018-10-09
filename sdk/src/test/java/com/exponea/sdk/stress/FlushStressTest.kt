@@ -11,7 +11,6 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.currentTimeSeconds
-import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -85,15 +84,13 @@ class FlushStressTest {
             if (r.nextInt(10) == 3) {
                 assertEquals(repo.all().size, insertedCount)
                 insertedCount = 0
-                runBlocking {
-                    val lock = CountDownLatch(1)
-                    manager.flushData()
-                    manager.onFlushFinishListener = {
-                        assertEquals(repo.all().size, 0)
-                        lock.countDown()
-                    }
-                    lock.await()
+                val lock = CountDownLatch(1)
+                manager.flushData()
+                manager.onFlushFinishListener = {
+                    assertEquals(repo.all().size, 0)
+                    lock.countDown()
                 }
+                lock.await()
             }
         }
     }

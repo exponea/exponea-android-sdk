@@ -1,16 +1,20 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
-import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -21,7 +25,8 @@ class InstallEventTest {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
@@ -67,14 +72,15 @@ class InstallEventTest {
     @Test
     fun sendInstallEvenTest_ShouldPass() {
 
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
-        runBlocking {
-            ExponeaMockApi.flush()
-            Exponea.component.flushManager.onFlushFinishListener = {
-                assertEquals(0, Exponea.component.eventRepository.all().size)
-            }
+        val lock = CountDownLatch(1)
+        Exponea.flushData()
+        Exponea.component.flushManager.onFlushFinishListener = {
+            assertEquals(0, Exponea.component.eventRepository.all().size)
+            lock.countDown()
         }
+        lock.await()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 

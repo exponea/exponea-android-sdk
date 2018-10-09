@@ -11,6 +11,7 @@ import org.junit.*
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -80,11 +81,14 @@ class CustomerPropertiesEventTest {
 
         // Flush event and wait for result
         runBlocking {
-            ExponeaMockApi.flush()
+            val lock = CountDownLatch(1)
+            Exponea.component.flushManager.flushData()
             Exponea.component.flushManager.onFlushFinishListener = {
                 // Checking that event was successfully sent
                 assertEquals(0, repo.all().size)
+                lock.countDown()
             }
+            lock.await()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

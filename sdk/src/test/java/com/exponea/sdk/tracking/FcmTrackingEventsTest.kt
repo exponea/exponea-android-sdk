@@ -1,18 +1,19 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
-import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -24,7 +25,8 @@ class FcmTrackingEventsTest {
         const val token = "FirebaseCloudToken#"
         val server = MockWebServer()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
@@ -58,7 +60,7 @@ class FcmTrackingEventsTest {
     fun testTokenEventAdded_ShouldSuccess() {
         // Track token
         Exponea.trackPushToken(
-                fcmToken = token
+            fcmToken = token
         )
 
         assertEquals(1, repo.all().size)
@@ -81,15 +83,16 @@ class FcmTrackingEventsTest {
         assertEquals("campaign", event.item.type)
         assertEquals(1, repo.all().size)
 
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         // Flush this event and check it was sent successfully
-        runBlocking {
-            ExponeaMockApi.flush()
-            Exponea.component.flushManager.onFlushFinishListener = {
-                assertEquals(0, repo.all().size)
-            }
+        val lock = CountDownLatch(1)
+        Exponea.flushData()
+        Exponea.component.flushManager.onFlushFinishListener = {
+            assertEquals(0, repo.all().size)
+            lock.countDown()
         }
+        lock.await()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
@@ -106,18 +109,18 @@ class FcmTrackingEventsTest {
         assertEquals("campaign", event.item.type)
         assertEquals(1, repo.all().size)
 
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
-        runBlocking {
-            ExponeaMockApi.flush()
-            Exponea.component.flushManager.onFlushFinishListener = {
-                assertEquals(0, repo.all().size)
-            }
+        val lock = CountDownLatch(1)
+        Exponea.flushData()
+        Exponea.component.flushManager.onFlushFinishListener = {
+            assertEquals(0, repo.all().size)
+            lock.countDown()
         }
+        lock.await()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
     }
-
 }

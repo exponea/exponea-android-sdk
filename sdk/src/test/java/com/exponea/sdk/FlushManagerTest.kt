@@ -13,6 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -53,18 +54,24 @@ class FlushManagerTest {
     @Test
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
+        val lock = CountDownLatch(1)
         manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
+            lock.countDown()
         }
+        lock.await()
     }
 
     @Test
     fun flushEvents_ShouldFail() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
+        val lock = CountDownLatch(1)
         manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)
+            lock.countDown()
         }
+        lock.await()
     }
 }

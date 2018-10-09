@@ -88,10 +88,10 @@ If the `isAutoPushNotification` is enabled, then the SDK will add track the "cam
 
 In case you decide to deactivate the automatic push notification, you can still track this event manually.
 
-#### Track FCM Token
+#### Track Push Token (FCM)
 
 ```
-fun trackFcmToken(
+fun trackPushToken(
         fcmToken: String
 )
 ```

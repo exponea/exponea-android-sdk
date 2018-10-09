@@ -22,7 +22,8 @@ class FlushManagerTest {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.baseURL = server.url("/").toString()
             configuration.projectToken = "projectToken"
@@ -51,7 +52,7 @@ class FlushManagerTest {
 
     @Test
     fun flushEvents_ShouldPass() {
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
@@ -60,11 +61,10 @@ class FlushManagerTest {
 
     @Test
     fun flushEvents_ShouldFail() {
-        ExponeaMockServer.setResponseError(server,"tracking/track_event_failed.json")
+        ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
         manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)
         }
     }
-
 }

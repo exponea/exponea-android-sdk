@@ -6,17 +6,11 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.DecimalFormat
-import java.text.NumberFormat
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.Date
 
 fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
     this.enqueue(object : Callback {
@@ -32,7 +26,7 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
 
 fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     (this as Application).registerActivityLifecycleCallbacks(object :
-            Application.ActivityLifecycleCallbacks {
+        Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {
             onOpen()
@@ -64,9 +58,10 @@ fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     })
 }
 
-fun Double.toDate() : Date {
-    return Date((this * 1000).toLong())}
+fun Double.toDate(): Date {
+    return Date((this * 1000).toLong())
+}
 
 fun currentTimeSeconds(): Double {
-  return Date().time / 1000.0
+    return Date().time / 1000.0
 }

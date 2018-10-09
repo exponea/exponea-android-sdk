@@ -1,6 +1,5 @@
 package com.exponea.sdk.stress
 
-import android.util.Log
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DatabaseStorageObject
@@ -12,7 +11,6 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.tracking.CustomerPropertiesEventTest
 import com.exponea.sdk.util.currentTimeSeconds
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.newSingleThreadContext
 import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.withContext
@@ -36,6 +34,7 @@ class StressTest {
         val configuration = ExponeaConfiguration()
         val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         val server = MockWebServer()
+        const val stressCount = 1000
 
         @BeforeClass
         @JvmStatic
@@ -72,7 +71,7 @@ class StressTest {
     fun testTrackEventStressed() {
 
         val eventList = mutableListOf<String>()
-        for (i in 0 until 10000) {
+        for (i in 0 until stressCount) {
 
             val eventType = when {
                 i % 7 == 0 -> Constants.EventTypes.sessionEnd
@@ -123,41 +122,13 @@ class StressTest {
     @Test
     fun testTrackCustomerStressed() {
         // Track event
-        for (i in 0 until 1000) {
+        for (i in 0 until stressCount) {
             Exponea.identifyCustomer(
                 customerIds = CustomerPropertiesEventTest.customerIds,
                 properties = CustomerPropertiesEventTest.properties
             )
         }
-        assertEquals(1000, repo.all().size)
-    }
-
-    @Test
-    fun testFlushingStressed() {
-        val eventList = mutableListOf<String>()
-        val r = Random()
-        var repoSize = 0
-        for (i in 0 until 10000) {
-            val eventType = when {
-                i % 7 == 0 -> Constants.EventTypes.sessionEnd
-                i % 5 == 0 -> Constants.EventTypes.installation
-                i % 3 == 0 -> Constants.EventTypes.sessionStart
-                i % 2 == 0 -> Constants.EventTypes.payment
-                else -> Constants.EventTypes.push
-            }
-            eventList += eventType
-            Exponea.trackEvent(
-                eventType = eventType,
-                timestamp = currentTimeSeconds(),
-                properties = properties
-            )
-            if (r.nextInt(5) == 3) {
-                val previousRepoSize = repoSize
-                repoSize = repo.all().size
-                assertEquals(repoSize, i + 1 - previousRepoSize)
-                Exponea.flushData()
-            }
-        }
+        assertEquals(stressCount, repo.all().size)
     }
 
     @Test
@@ -168,9 +139,8 @@ class StressTest {
             coroutineList += newSingleThreadContext(i.toString())
         }
         val r = Random()
-        val eventCount = 1000
         runBlocking {
-            for (i in 0 until eventCount) {
+            for (i in 0 until stressCount) {
                 val eventType = when {
                     i % 7 == 0 -> Constants.EventTypes.sessionEnd
                     i % 5 == 0 -> Constants.EventTypes.installation
@@ -186,10 +156,7 @@ class StressTest {
                 )
             }
         }
-        repo.all().forEach {
-            Log.d("ITEM_ADDED", it.item.type)
-        }
-        assertEquals(eventCount, repo.all().size)
+        assertEquals(stressCount, repo.all().size)
     }
 
     private suspend fun addEvent(
@@ -199,11 +166,11 @@ class StressTest {
         eventType: String?
     ) {
         withContext(coroutineContext) {
-        Exponea.trackEvent(
-            eventType = eventType,
-            timestamp = timestamp,
-            properties = properties
-        )
-    }
+            Exponea.trackEvent(
+                eventType = eventType,
+                timestamp = timestamp,
+                properties = properties
+            )
+        }
     }
 }

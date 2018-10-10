@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 1.1.5
+* Fixed a crash when push notification payload was null
+
 ### 1.1.4
 * Timestamp type changed from Long to Double for better precision
 

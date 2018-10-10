@@ -22,7 +22,7 @@ class FcmManagerImpl(
     override fun showNotification(
         title: String,
         message: String,
-        data: NotificationData,
+        data: NotificationData?,
         id: Int,
         manager: NotificationManager,
         messageData: HashMap<String, String>

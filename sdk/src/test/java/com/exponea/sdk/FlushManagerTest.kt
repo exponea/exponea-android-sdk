@@ -1,10 +1,10 @@
 package com.exponea.sdk
 
-import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.manager.FlushManager
+import com.exponea.sdk.manager.*
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.stress.FlushStressTest
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -29,6 +29,7 @@ class FlushManagerTest {
             configuration.baseURL = server.url("/").toString()
             configuration.projectToken = "projectToken"
             configuration.authorization = "projectAuthorization"
+            configuration.maxTries = 1
         }
 
         @AfterClass
@@ -55,23 +56,50 @@ class FlushManagerTest {
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         val lock = CountDownLatch(1)
-        manager.flushData()
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
             lock.countDown()
         }
+        manager.flushData()
         lock.await()
     }
 
     @Test
-    fun flushEvents_ShouldFail() {
-        ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
+    fun flushEvents_ShouldFail_WithNoInternetConnection() {
+
+        val service = ExponeaMockService(false)
+        val noInternetManager = NoInternetConnectionManagerMock
+
+        //change the manager instance to one without internet access
+        manager = FlushManagerImpl(FlushStressTest.configuration, repo, service, noInternetManager)
+
         val lock = CountDownLatch(1)
-        manager.flushData()
+
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)
             lock.countDown()
         }
+        manager.flushData()
+
+        lock.await()
+
+    }
+
+    /**
+     * When the servers fail to receive a event, it's deleted after 'configuration.maxTries' so
+     * when the 'onFlushFinishListener' is called, it should be empty
+     */
+    @Test
+    fun flushEvents_ShouldBeEmptyWhenItFails() {
+        ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
+        val lock = CountDownLatch(1)
+
+        manager.onFlushFinishListener = {
+            assertEquals(0, repo.all().size)
+            lock.countDown()
+        }
+        manager.flushData()
+
         lock.await()
     }
 }

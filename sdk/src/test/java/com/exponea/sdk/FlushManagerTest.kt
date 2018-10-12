@@ -22,6 +22,8 @@ class FlushManagerTest {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
+        
+        const val timeout: Long = 30_000 // 30 sec
 
         @BeforeClass
         @JvmStatic
@@ -52,7 +54,7 @@ class FlushManagerTest {
         manager = Exponea.component.flushManager
     }
 
-    @Test
+    @Test(timeout = timeout)
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         val lock = CountDownLatch(1)
@@ -64,7 +66,7 @@ class FlushManagerTest {
         lock.await()
     }
 
-    @Test
+    @Test(timeout = timeout)
     fun flushEvents_ShouldFail_WithNoInternetConnection() {
 
         val service = ExponeaMockService(false)
@@ -89,7 +91,7 @@ class FlushManagerTest {
      * When the servers fail to receive a event, it's deleted after 'configuration.maxTries' so
      * when the 'onFlushFinishListener' is called, it should be empty
      */
-    @Test
+    @Test(timeout = timeout)
     fun flushEvents_ShouldBeEmptyWhenItFails() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
         val lock = CountDownLatch(1)

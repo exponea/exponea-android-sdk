@@ -61,6 +61,9 @@ dependencies {
     testImplementation "org.robolectric:robolectric:3.8"
     // Co-Routines
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+    // Mockito
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC2"
+    testImplementation 'com.github.gmazzo:okhttp-mock:1.1.0'
 
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

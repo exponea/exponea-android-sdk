@@ -72,7 +72,6 @@ class FlushManagerTest {
 
         //change the manager instance to one without internet access
         manager = FlushManagerImpl(FlushStressTest.configuration, repo, service, noInternetManager)
-        repo = Exponea.component.eventRepository
 
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)

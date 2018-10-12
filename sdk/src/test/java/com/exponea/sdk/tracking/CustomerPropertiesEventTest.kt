@@ -1,17 +1,20 @@
 package com.exponea.sdk.tracking
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
-import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -24,7 +27,8 @@ class CustomerPropertiesEventTest {
         val properties = PropertiesList(hashMapOf("first_name" to "NewName"))
         val server = MockWebServer()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestBasicAuthentication"
@@ -76,20 +80,20 @@ class CustomerPropertiesEventTest {
                 properties = properties
         )
 
-        ExponeaMockServer.setResponseSuccess(server,"tracking/track_event_success.json")
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         Exponea.flushData()
 
-        // Flush event and wait for result
-        runBlocking {
-            val lock = CountDownLatch(1)
-            Exponea.component.flushManager.flushData()
-            Exponea.component.flushManager.onFlushFinishListener = {
-                // Checking that event was successfully sent
-                assertEquals(0, repo.all().size)
-                lock.countDown()
-            }
-            lock.await()
+        val syncObject = Object()
+
+        Exponea.component.flushManager.onFlushFinishListener = {
+            // Checking that event was successfully sent
+            assertEquals(0, repo.all().size)
+            synchronized(syncObject) { syncObject.notify() }
         }
+        // Flush event and wait for result
+        Exponea.component.flushManager.flushData()
+
+        synchronized(syncObject) { syncObject.wait() }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/track/v2/projects/TestTokem/customers", request.path)

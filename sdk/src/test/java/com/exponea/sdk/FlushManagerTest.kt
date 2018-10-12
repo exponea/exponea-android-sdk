@@ -79,8 +79,7 @@ class FlushManagerTest {
         }
 
         manager.flushData()
-        synchronized(lock) { lock.wait() }
-
+        synchronized(lock) { lock.wait(5000) }
     }
 
     /**

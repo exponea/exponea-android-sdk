@@ -427,6 +427,9 @@ object Exponea {
         // Track In-App purchase
         trackInAppPurchase()
 
+        // Track Firebase Token
+        trackFirebaseToken()
+
         // Initialize session observer
         configuration.automaticSessionTracking = component
             .preferences.getBoolean(
@@ -524,6 +527,15 @@ object Exponea {
         } else {
             // Remove the observers when the automatic session tracking is false.
             this.component.iapManager.stopObservingPayments()
+        }
+    }
+
+    /**
+     * Send the firebase token
+     */
+    private fun trackFirebaseToken() {
+        if (Exponea.isAutoPushNotification) {
+            this.component.pushManager.trackFcmToken()
         }
     }
 

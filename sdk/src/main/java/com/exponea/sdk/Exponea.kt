@@ -431,11 +431,11 @@ object Exponea {
         trackFirebaseToken()
 
         // Initialize session observer
-        configuration.automaticSessionTracking = component
-            .preferences.getBoolean(
-            SessionManagerImpl
-                .PREF_SESSION_AUTO_TRACK, true
-        )
+        component.preferences
+                .setBoolean(
+                        SessionManagerImpl.PREF_SESSION_AUTO_TRACK,
+                        configuration.automaticSessionTracking
+                )
         startSessionTracking(configuration.automaticSessionTracking)
 
         context.addAppStateCallbacks(

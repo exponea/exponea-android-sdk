@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 1.1.6
+* Automatic session tracking property in configuration is now properly respected
+* Fixed a crash when Firebase was initialised before Exponea
+
 ### 1.1.5
 * Fixed a crash when push notification payload was null
 

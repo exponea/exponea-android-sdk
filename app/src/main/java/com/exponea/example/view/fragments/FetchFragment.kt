@@ -49,17 +49,10 @@ class FetchFragment : BaseFragment() {
      * Initialize button listener
      */
     private fun initListeners() {
-
-        attributesButton.setOnClickListener {
-            fetchCustomerAttributes()
-        }
         recommendationsButton.setOnClickListener {
             setProgressBarVisible(true)
             fetchRecommended()
 
-        }
-        eventsButton.setOnClickListener {
-            fetchCustomerEvents()
         }
     }
 
@@ -89,7 +82,6 @@ class FetchFragment : BaseFragment() {
      * Method handles loading events for customer
      */
     private fun fetchCustomerEvents() {
-
         FetchCustomEventsDialog.show(childFragmentManager) {
             setProgressBarVisible(true)
             Exponea.fetchCustomerEvents(

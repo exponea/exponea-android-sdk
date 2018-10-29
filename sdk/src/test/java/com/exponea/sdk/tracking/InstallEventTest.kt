@@ -29,7 +29,7 @@ class InstallEventTest {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestBasicAuthentication"
+            configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             println(configuration.baseURL)
             configuration.maxTries = 10
@@ -85,6 +85,6 @@ class InstallEventTest {
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
-        assertEquals(request.getHeader("Authorization"), "TestBasicAuthentication")
+        assertEquals(request.getHeader("Authorization"), "TestTokenAuthentication")
     }
 }

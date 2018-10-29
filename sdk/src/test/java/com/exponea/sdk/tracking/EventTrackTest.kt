@@ -28,7 +28,7 @@ class EventTrackTest {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestBasicAuthentication"
+            configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 3
         }

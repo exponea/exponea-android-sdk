@@ -27,7 +27,7 @@ class FetchSegment {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestBasicAuthentication"
+            configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
 
             attrs.withSegmentation("SegmentationId")

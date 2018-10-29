@@ -31,7 +31,7 @@ class CustomerPropertiesEventTest {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestBasicAuthentication"
+            configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
 
             configuration.maxTries = 10

@@ -193,6 +193,7 @@ object Exponea {
     /**
      * Fetches customer attributes
      */
+    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
     fun fetchCustomerAttributes(
         customerAttributes: CustomerAttributes,
         onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
@@ -264,6 +265,7 @@ object Exponea {
      * @param onFailure - Method will be called if there was an error.
      * @param onSuccess - this method will be called when data is ready.
      */
+    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
     fun fetchCustomerEvents(
         customerEvents: FetchEventsRequest,
         onFailure: (Result<FetchError>) -> Unit,

@@ -6,6 +6,7 @@ interface PushManager {
     val fcmToken: String?
 
     fun trackFcmToken()
+    fun trackFcmToken(token: String? = null)
     fun trackDeliveredPush(data: NotificationData? = null)
     fun trackClickedPush(data: NotificationData? = null)
 }

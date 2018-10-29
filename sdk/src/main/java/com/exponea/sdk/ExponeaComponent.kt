@@ -40,6 +40,7 @@ class ExponeaComponent(
             preferences
     )
     internal val eventRepository: EventRepository = EventRepositoryImpl()
+    internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
     // Api Service
@@ -53,7 +54,7 @@ class ExponeaComponent(
     internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
     internal val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
     internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration)
-    internal val pushManager: PushManager = PushManagerImpl(uniqueIdentifierRepository)
+    internal val pushManager: PushManager = PushManagerImpl(firebaseTokenRepository)
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)

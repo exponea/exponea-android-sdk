@@ -78,4 +78,18 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
                 messageData
         )
     }
+
+    override fun onNewToken(token: String?) {
+        super.onNewToken(token)
+        if (!Exponea.isInitialized) {
+            val config = ExponeaConfigRepository.get(applicationContext) ?: return
+            Looper.prepare()
+            Exponea.init(applicationContext, config)
+        }
+        if (!Exponea.isAutoPushNotification) {
+            return
+        }
+        Logger.d(this, "Firebase Token Refreshed")
+        Exponea.component.pushManager.trackFcmToken(token)
+    }
 }

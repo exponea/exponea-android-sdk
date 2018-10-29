@@ -35,7 +35,7 @@ class SessionManagerTest {
         @BeforeClass @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestBasicAuthentication"
+            configuration.authorization = "TestTokenAuthentication"
             configuration.sessionTimeout = 2.0
         }
     }

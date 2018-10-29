@@ -49,17 +49,10 @@ class FetchFragment : BaseFragment() {
      * Initialize button listener
      */
     private fun initListeners() {
-
-        attributesButton.setOnClickListener {
-            fetchCustomerAttributes()
-        }
         recommendationsButton.setOnClickListener {
             setProgressBarVisible(true)
             fetchRecommended()
 
-        }
-        eventsButton.setOnClickListener {
-            fetchCustomerEvents()
         }
     }
 

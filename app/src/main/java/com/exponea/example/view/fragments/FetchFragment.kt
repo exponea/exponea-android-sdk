@@ -89,7 +89,6 @@ class FetchFragment : BaseFragment() {
      * Method handles loading events for customer
      */
     private fun fetchCustomerEvents() {
-
         FetchCustomEventsDialog.show(childFragmentManager) {
             setProgressBarVisible(true)
             Exponea.fetchCustomerEvents(

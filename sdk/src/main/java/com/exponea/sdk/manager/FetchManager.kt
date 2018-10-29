@@ -4,6 +4,7 @@ import com.exponea.sdk.models.*
 
 interface FetchManager {
 
+    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
     fun fetchCustomerAttributes(
             projectToken: String,
             attributes: CustomerAttributes,
@@ -11,6 +12,7 @@ interface FetchManager {
             onFailure: (Result<FetchError>) -> Unit
     )
 
+    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
     fun fetchCustomerEvents(
             projectToken: String,
             customerEvents: FetchEventsRequest,

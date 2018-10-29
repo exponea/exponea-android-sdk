@@ -3,9 +3,6 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.FirebaseTokenRepository
-import com.exponea.sdk.repository.UniqueIdentifierRepository
-import com.exponea.sdk.util.Logger
-import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessagingService
 
 class PushManagerImpl(
@@ -42,9 +39,7 @@ class PushManagerImpl(
 
     override fun onCreate() {
         super.onCreate()
-
         trackClickedPush()
     }
-
 
 }

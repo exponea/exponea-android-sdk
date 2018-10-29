@@ -16,7 +16,7 @@ class FirebaseTokenRepositoryImpl(private val preferences: ExponeaPreferences) :
 
     override fun get(): String? {
         val token = preferences.getString(key, "")
-        return if (token.isNotBlank()) token else null
+        return if (token.isNotEmpty()) token else null
     }
 
 }

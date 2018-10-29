@@ -6,29 +6,8 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
-import com.exponea.sdk.models.BannerResult
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.CustomerAttributeModel
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerEvent
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.CustomerRecommendation
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.EventType
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.models.FetchError
-import com.exponea.sdk.models.FetchEventsRequest
-import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.FlushMode.APP_CLOSE
-import com.exponea.sdk.models.FlushMode.IMMEDIATE
-import com.exponea.sdk.models.FlushMode.MANUAL
-import com.exponea.sdk.models.FlushMode.PERIOD
-import com.exponea.sdk.models.FlushPeriod
-import com.exponea.sdk.models.NotificationData
-import com.exponea.sdk.models.PropertiesList
-import com.exponea.sdk.models.PurchasedItem
-import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.*
+import com.exponea.sdk.models.FlushMode.*
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
@@ -606,7 +585,13 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
+
+        val firebaseToken = component.firebaseTokenRepository.get()
+
+        component.pushManager.trackFcmToken(" ")
         component.anonymizeManager.anonymize()
         component.sessionManager.trackSessionStart(currentTimeSeconds())
+        component.pushManager.trackFcmToken(firebaseToken)
+
     }
 }

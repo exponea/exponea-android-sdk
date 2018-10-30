@@ -12,16 +12,12 @@ class PushManagerImpl(
     override val fcmToken: String?
         get() = firebaseTokenRepository.get()
 
-    override fun trackFcmToken() {
-        if (fcmToken != null) {
-            Exponea.trackPushToken(fcmToken!!)
-        }
-    }
-
     override fun trackFcmToken(token: String?) {
         if (token != null) {
             firebaseTokenRepository.set(token)
-            trackFcmToken()
+        }
+        if (fcmToken != null) {
+            Exponea.trackPushToken(fcmToken!!)
         }
     }
 

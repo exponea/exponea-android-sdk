@@ -124,9 +124,9 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle token tracking
      */
     private fun trackFCMToken() {
-        Exponea.trackPushToken(
-                fcmToken = FirebaseInstanceId.getInstance().token ?: ""
-        )
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+            Exponea.trackPushToken(it.token)
+        }
     }
 
     /**

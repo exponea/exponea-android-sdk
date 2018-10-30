@@ -2,26 +2,20 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationData
-import com.exponea.sdk.repository.UniqueIdentifierRepository
-import com.exponea.sdk.util.Logger
-import com.google.firebase.iid.FirebaseInstanceId
+import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.google.firebase.messaging.FirebaseMessagingService
 
 class PushManagerImpl(
-        private val uniqueIdentifierRepository: UniqueIdentifierRepository
+        private val firebaseTokenRepository: FirebaseTokenRepository
 ) : PushManager, FirebaseMessagingService() {
 
     override val fcmToken: String?
-        get() = try {
-            FirebaseInstanceId.getInstance()?.token
-        } catch (e: Exception) {
-            // Firebase not initiated return null
-            Logger.w(this, e.message ?: "Firebase not initiated")
-            null
+        get() = firebaseTokenRepository.get()
+
+    override fun trackFcmToken(token: String?) {
+        if (token != null) {
+            firebaseTokenRepository.set(token)
         }
-
-
-    override fun trackFcmToken() {
         if (fcmToken != null) {
             Exponea.trackPushToken(fcmToken!!)
         }
@@ -41,9 +35,7 @@ class PushManagerImpl(
 
     override fun onCreate() {
         super.onCreate()
-
         trackClickedPush()
     }
-
 
 }

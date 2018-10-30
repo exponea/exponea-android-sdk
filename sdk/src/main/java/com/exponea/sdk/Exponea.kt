@@ -289,6 +289,7 @@ object Exponea {
      */
 
     fun trackPushToken(fcmToken: String) {
+        component.firebaseTokenRepository.set(fcmToken)
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         track(
             eventType = Constants.EventTypes.push,

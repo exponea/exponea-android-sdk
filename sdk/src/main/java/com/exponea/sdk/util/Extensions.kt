@@ -6,11 +6,13 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
-import java.util.Date
+import java.util.*
 
 fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
     this.enqueue(object : Callback {
@@ -26,7 +28,7 @@ fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOExcep
 
 fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     (this as Application).registerActivityLifecycleCallbacks(object :
-        Application.ActivityLifecycleCallbacks {
+            Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {
             onOpen()
@@ -65,3 +67,5 @@ fun Double.toDate(): Date {
 fun currentTimeSeconds(): Double {
     return Date().time / 1000.0
 }
+
+inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)

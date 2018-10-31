@@ -84,6 +84,12 @@ object Exponea {
         }
 
     /**
+     * Whenever a notification with extra values is received, this callback is called
+     * with the values as map
+     */
+    var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
+
+    /**
      * Set which level the debugger should output log messages
      */
     var loggerLevel: Logger.Level

@@ -86,8 +86,19 @@ object Exponea {
     /**
      * Whenever a notification with extra values is received, this callback is called
      * with the values as map
+     *
+     * If a previous data was received and no listener was attached to the callback,
+     * that data i'll be dispatched as soon as a listener is attached
      */
     var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
+        set(value) {
+            field = value
+            val storeData = component.pushNotificationRepository.getExtraData()
+            if(storeData != null){
+                field?.invoke(storeData)
+                component.pushNotificationRepository.clearExtraData()
+            }
+        }
 
     /**
      * Set which level the debugger should output log messages

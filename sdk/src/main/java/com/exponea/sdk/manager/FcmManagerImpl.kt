@@ -79,7 +79,7 @@ class FcmManagerImpl(
         handlePayloadSound(notification, messageData)
         handlePayloadButtons(notification, messageData)
         handlePayloadActions(notification, messageData)
-        handlePayloadAttributes(notification, messageData)
+        handlePayloadAttributes(messageData)
     }
 
     override fun createNotificationChannel(
@@ -143,10 +143,15 @@ class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadAttributes(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+    private fun handlePayloadAttributes(messageData: HashMap<String, String>) {
         if (messageData["attributes"] != null) {
             val item: Map<String, String> = Gson().fromJson(messageData["attributes"]!!)
             Logger.w(this, item.toString())
+
+            if (Exponea.notificationDataCallback == null) {
+                Exponea.component.pushNotificationRepository.setExtraData(item)
+                return
+            }
             Exponea.notificationDataCallback?.invoke(item)
         }
     }

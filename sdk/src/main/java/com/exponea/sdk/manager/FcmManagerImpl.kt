@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -97,6 +98,9 @@ class FcmManagerImpl(
 
             channel.description = description
             channel.setShowBadge(true)
+            // Remove the default notification sound as it can be customized via payload and we
+            // can't change it after setting it
+            channel.setSound(null, null)
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             manager.createNotificationChannel(channel)
@@ -115,10 +119,19 @@ class FcmManagerImpl(
     }
 
     private fun handlePayloadSound(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        if (messageData["sound"] != null) {
-            val soundUri = Uri.parse("android.resource://" + context.packageName + "/" + messageData["sound"])
-            notification.setSound(soundUri)
+        // remove default notification sound
+        notification.setSound(null)
+
+        // set the uri for the default sound
+        var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        // if the raw file exists, use it as custom sound
+        if (messageData["sound"] != null && context.resources.getIdentifier(messageData["sound"], "raw", context.packageName) != 0) {
+            soundUri =  Uri.parse("android.resource://" + context.packageName + "/raw/" + messageData["sound"])
         }
+
+        // Manually play the notification sound
+        RingtoneManager.getRingtone(context, soundUri).also { it.play() }
     }
 
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {

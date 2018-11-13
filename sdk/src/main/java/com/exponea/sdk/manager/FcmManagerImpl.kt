@@ -136,9 +136,12 @@ class FcmManagerImpl(
         if (messageData["action"] != null) {
             val action = messageData["action"]
             val actionEnum = ACTIONS.find(action)
-            val url = messageData["url"]
+            var url = messageData["url"]
 
             if (url != null && actionEnum != null) {
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    url = "http://$url"
+                }
                 val pi = generateActionPendingIntent(actionEnum, url)
                 notification.setContentIntent(pi)
             }

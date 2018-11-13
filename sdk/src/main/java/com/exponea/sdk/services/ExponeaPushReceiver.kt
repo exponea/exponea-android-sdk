@@ -34,7 +34,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_CLICKED -> {
                 Logger.i(this, "Push notification clicked")
-                val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData
+                val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
                 if (!Exponea.isInitialized) {
                     val config = ExponeaConfigRepository.get(context)
                     if (config != null) {

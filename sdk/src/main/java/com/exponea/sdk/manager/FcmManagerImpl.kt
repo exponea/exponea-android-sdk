@@ -104,11 +104,12 @@ class FcmManagerImpl(
     }
 
     private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+        //Load the image in the payload and add as a big picture in the notification
         if (messageData["image"] != null) {
             val bigImageBitmap = getBitmapFromUrl(messageData["image"]!!)
+            //verify if the image was successfully loaded
             if (bigImageBitmap != null) {
                 notification.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bigImageBitmap))
-
             }
         }
     }
@@ -122,9 +123,13 @@ class FcmManagerImpl(
 
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
         if (messageData["buttons"] != null) {
-            val array = JSONArray(messageData["buttons"])
-            for (i in 0 until array.length()) {
-                val item: Map<String, String> = Gson().fromJson(array[i].toString())
+            val buttonsArray = JSONArray(messageData["buttons"])
+
+            //if we have a button payload, verify each button action
+            for (i in 0 until buttonsArray.length()) {
+                val item: Map<String, String> = Gson().fromJson(buttonsArray[i].toString())
+
+                //create the button intent based in the action
                 val actionEnum = ACTIONS.find(item["action"])
                 val pi = generateActionPendingIntent(actionEnum, item["url"])
                 notification.addAction(smallIconRes, item["title"], pi)
@@ -133,6 +138,7 @@ class FcmManagerImpl(
     }
 
     private fun handlePayloadActions(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+        //handle the notification body click action
         if (messageData["action"] != null) {
             val action = messageData["action"]
             val actionEnum = ACTIONS.find(action)
@@ -166,10 +172,16 @@ class FcmManagerImpl(
     private fun generateActionPendingIntent(action: ACTIONS?, url: String? = null): PendingIntent? {
         return when (action) {
             ACTIONS.APP -> pendingIntent
-            ACTIONS.BROWSER, ACTIONS.DEEPLINK -> {
+            ACTIONS.BROWSER -> {
                 val actionIntent = Intent(Intent.ACTION_VIEW)
                 actionIntent.data = Uri.parse(url)
                 PendingIntent.getActivity(context, 0, actionIntent, 0)
+            }
+            ACTIONS.DEEPLINK ->{
+                val deepIntent = Intent(Intent.ACTION_VIEW)
+                deepIntent.data = Uri.parse(url)
+                deepIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                PendingIntent.getActivity(context, 0, deepIntent, 0)
             }
             else -> pendingIntent
         }

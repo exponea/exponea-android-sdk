@@ -132,7 +132,7 @@ class FcmManagerImpl(
                 //create the button intent based in the action
                 val actionEnum = ACTIONS.find(item["action"])
                 val pi = generateActionPendingIntent(actionEnum, item["url"])
-                notification.addAction(smallIconRes, item["title"], pi)
+                notification.addAction(0, item["title"], pi)
             }
         }
     }
@@ -177,7 +177,7 @@ class FcmManagerImpl(
                 actionIntent.data = Uri.parse(url)
                 PendingIntent.getActivity(context, 0, actionIntent, 0)
             }
-            ACTIONS.DEEPLINK ->{
+            ACTIONS.DEEPLINK -> {
                 val deepIntent = Intent(Intent.ACTION_VIEW)
                 deepIntent.data = Uri.parse(url)
                 deepIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

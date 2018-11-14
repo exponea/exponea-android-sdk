@@ -26,7 +26,6 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext)
             if (config != null) {
-                Looper.prepare()
                 Exponea.init(applicationContext, config)
             }
         }

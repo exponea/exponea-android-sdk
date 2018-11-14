@@ -92,9 +92,13 @@ object Exponea {
      */
     var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
         set(value) {
+            if (!isInitialized) {
+                Logger.w(this, "SDK not initialized")
+                return
+            }
             field = value
             val storeData = component.pushNotificationRepository.getExtraData()
-            if(storeData != null){
+            if (storeData != null) {
                 field?.invoke(storeData)
                 component.pushNotificationRepository.clearExtraData()
             }

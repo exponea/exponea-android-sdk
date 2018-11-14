@@ -135,8 +135,8 @@ class FcmManagerImpl(
     }
 
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        if (messageData["buttons"] != null) {
-            val buttonsArray = JSONArray(messageData["buttons"])
+        if (messageData["actions"] != null) {
+            val buttonsArray = JSONArray(messageData["actions"])
 
             //if we have a button payload, verify each button action
             for (i in 0 until buttonsArray.length()) {

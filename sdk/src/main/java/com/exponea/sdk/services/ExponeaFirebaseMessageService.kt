@@ -34,9 +34,7 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             return
         }
 
-
         val title = message?.data?.get("title") ?: ""
-
         val body = message?.data?.get("message") ?: ""
 
         val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()

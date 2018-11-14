@@ -8,15 +8,15 @@ android {
         applicationId "com.exponea.example"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 15
+        versionCode 16
         versionName "1.0.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         vectorDrawables.useSupportLibrary = true
 
-        buildConfigField "String", "AuthorizationToken", "\"Token p2wngcaktd8vyh0pwk5bgu1zt9tk9reczhye27i65yz8fofuroebka6mjf6r1mt0\""
-        buildConfigField "String", "DefaultProjectToken", "\"0aef3a96-3804-11e8-b710-141877340e97\""
-        buildConfigField "String", "DefaultApiUrl", "\"https://api.exponea.com\""
+        buildConfigField "String", "AuthorizationToken", "\"Token 9fxxk5jnckd4zv95ctu3fqvl7491axpify2o5sxbrmmkeqxxsph1aaibjsqczd1z\""
+        buildConfigField "String", "DefaultProjectToken", "\"47b5cc2c-e661-11e8-bb95-0a580a201692\""
+        buildConfigField "String", "DefaultApiUrl", "\"https://api-analytics.1.gdev.exponea.com\""
     }
     buildTypes {
         release {

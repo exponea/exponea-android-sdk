@@ -131,7 +131,7 @@ class FcmManagerImpl(
         }
 
         // Manually play the notification sound
-        RingtoneManager.getRingtone(context, soundUri).also { it.play() }
+        RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
     }
 
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {

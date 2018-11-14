@@ -148,7 +148,7 @@ Exponea.notificationDataCallback = {
 }
 ```
 
-Note that If a previous data was received and no listener was attached to the callback, that data i'll be dispatched as soon as a listener is attached.
+Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
 
 ## 🔗 Handling deeplinks
 Android's deeplinks allow you to trigger specific actions on your app. Exponea SDK notifications can handle deeplink for you, but your application must be ready to receive them.
@@ -170,7 +170,7 @@ To handle a deeplink first add the desired host and scheme to your `AndroidManif
 ```
 When firing a notification the same host and scheme must be used.
 
-When the deeplink is triggered, your activity can received the data and handle it accordingly:
+When the deeplink is triggered, your activity can receive the data and handle it accordingly:
 ```
 if (getIntent() != null) {
    val data = getIntent().data
@@ -179,4 +179,4 @@ if (getIntent() != null) {
    }
 }
 ```
-More info about deeplinks can be found at the google official docs [here](https://developer.android.com/training/app-links/deep-linking).
+More info about deeplinks can be found in the Google official docs [here](https://developer.android.com/training/app-links/deep-linking).

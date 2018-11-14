@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Looper
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
@@ -107,6 +108,9 @@ object Exponea {
 
     fun init(context: Context, configuration: ExponeaConfiguration) {
         Logger.i(this, "Init")
+
+        if (Looper.myLooper() == null)
+            Looper.prepare()
 
         Paper.init(context)
 

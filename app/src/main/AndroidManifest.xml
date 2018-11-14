@@ -18,6 +18,18 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Accepts URIs that begin with "exponea://notifications.actions.cancel”-->
+                <data
+                    android:host="notifications.actions.cancel"
+                    android:scheme="exponea" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".view.AuthenticationActivity"
@@ -27,7 +39,9 @@
             android:name=".services.MyReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter><action android:name="com.exponea.sdk.action.PUSH_CLICKED"/> </intent-filter>
+            <intent-filter>
+                <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
+            </intent-filter>
         </receiver>
     </application>
 

@@ -53,7 +53,6 @@ When It's coming to setting up Firebase inside you application, you have options
 6. Then, in your module Gradle file (usually the app/build.gradle), add the apply plugin line at the bottom of the file to enable the Gradle plugin:
 
   ```
-
   apply plugin: 'com.android.application'
 
   android {
@@ -95,11 +94,9 @@ fun trackPushToken(
         fcmToken: String
 )
 ```
-
 #### 💻 Usage
 
 ```
-
 Exponea.trackPushToken(
         fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
 )
@@ -117,7 +114,6 @@ fun trackDeliveredPush(
 #### 💻 Usage
 
 ```
-
 Exponea.trackDeliveredPush(
         data = /** get NotificationData from push payload **//
         timestamp = currentTimeSeconds()
@@ -136,9 +132,51 @@ fun trackClickedPush(
 #### 💻 Usage
 
 ```
-
 Exponea.trackClickedPush(
         data = /** get NotificationData from push payload**//
         timestamp = currentTimeSeconds()
 )
 ```
+## 🔍 Tracking notification extra data
+  Some notifications can have an extra data payload. Whenever a notification arrives the Exponea SDK can inform you about that received that via a `notificationCallback`. The extras are a `Map<String, String>`.
+
+#### 💻 Usage
+
+```
+Exponea.notificationDataCallback = {
+     extra -> //handle the extras value
+}
+```
+
+Note that If a previous data was received and no listener was attached to the callback, that data i'll be dispatched as soon as a listener is attached.
+
+## 🔗 Handling deeplinks
+Android's deeplinks allow you to trigger specific actions on your app. Exponea SDK notifications can handle deeplink for you, but your application must be ready to receive them.
+
+To handle a deeplink first add the desired host and scheme to your `AndroidManifest.xml`:
+```
+<activity ...>
+   <intent-filter>
+       <action android:name="android.intent.action.VIEW" />
+       <category android:name="android.intent.category.DEFAULT" />
+       <category android:name="android.intent.category.BROWSABLE" />
+
+        <!-- Accepts URIs that begin with "exponea://notifications.actions.cancel”-->
+        <data
+           android:host="notifications.actions.cancel"
+           android:scheme="exponea" />
+   </intent-filter>
+</activity>
+```
+When firing a notification the same host and scheme must be used.
+
+When the deeplink is triggered, your activity can received the data and handle it accordingly:
+```
+if (getIntent() != null) {
+   val data = getIntent().data
+   if (data != null) {
+      Toast.makeText(this, "Deeplink received: $data", Toast.LENGTH_SHORT).show()
+   }
+}
+```
+More info about deeplinks can be found at the google official docs [here](https://developer.android.com/training/app-links/deep-linking).

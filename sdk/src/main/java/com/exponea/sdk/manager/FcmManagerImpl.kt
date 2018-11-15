@@ -32,8 +32,9 @@ class FcmManagerImpl(
         private val configuration: ExponeaConfiguration
 ) : FcmManager {
 
+    private lateinit var pendingIntent: PendingIntent
+    private lateinit var pushReceiverIntent: Intent
     private val requestCode = 1
-    private var pendingIntent: PendingIntent? = null
     private var smallIconRes = -1
 
     override fun showNotification(
@@ -46,12 +47,9 @@ class FcmManagerImpl(
     ) {
         Logger.d(this, "showNotification")
 
-        val i = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
+        pushReceiverIntent = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
 
-        pendingIntent = PendingIntent.getBroadcast(
-                context, requestCode,
-                i, PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        pendingIntent = PendingIntent.getBroadcast(context, requestCode, pushReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         // If push icon was not provided in the configuration, default one will be used
         smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
@@ -127,7 +125,7 @@ class FcmManagerImpl(
 
         // if the raw file exists, use it as custom sound
         if (messageData["sound"] != null && context.resources.getIdentifier(messageData["sound"], "raw", context.packageName) != 0) {
-            soundUri =  Uri.parse("android.resource://" + context.packageName + "/raw/" + messageData["sound"])
+            soundUri = Uri.parse("android.resource://" + context.packageName + "/raw/" + messageData["sound"])
         }
 
         // Manually play the notification sound
@@ -186,15 +184,16 @@ class FcmManagerImpl(
         return when (action) {
             ACTIONS.APP -> pendingIntent
             ACTIONS.BROWSER -> {
-                val actionIntent = Intent(Intent.ACTION_VIEW)
-                actionIntent.data = Uri.parse(url)
-                PendingIntent.getActivity(context, 0, actionIntent, 0)
+                val actionIntent = pushReceiverIntent
+                actionIntent.action = ExponeaPushReceiver.ACTION_URL_CLICKED
+                actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
+                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
             ACTIONS.DEEPLINK -> {
-                val deepIntent = Intent(Intent.ACTION_VIEW)
-                deepIntent.data = Uri.parse(url)
-                deepIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                PendingIntent.getActivity(context, 0, deepIntent, 0)
+                val actionIntent = pushReceiverIntent
+                actionIntent.action = ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED
+                actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
+                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
             else -> pendingIntent
         }
@@ -204,10 +203,8 @@ class FcmManagerImpl(
         var bmp: Bitmap? = null
         thread {
             try {
-                val options = BitmapFactory.Options()
-                options.inSampleSize = 4 //reduce the image to avoid OOM in low end devices
                 val input = URL(url).openStream()
-                bmp = BitmapFactory.decodeStream(input, null, options)
+                bmp = BitmapFactory.decodeStream(input)
             } catch (e: IOException) {
                 e.printStackTrace()
             }

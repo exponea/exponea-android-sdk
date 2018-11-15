@@ -71,15 +71,19 @@ class ExponeaPushReceiver : BroadcastReceiver() {
                 Exponea.init(context.applicationContext, config)
             }
         }
+
         Exponea.component.pushManager.trackClickedPush(
                 data = data
         )
 
-        //After clicking the notification button (action), dismiss it
+        // After clicking the notification button (action), dismiss it
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
         if (notificationId != -1) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.cancel(notificationId)
         }
+        // And close the notification tray
+        val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+        context.sendBroadcast(it)
     }
 }

@@ -203,10 +203,8 @@ class FcmManagerImpl(
         var bmp: Bitmap? = null
         thread {
             try {
-                val options = BitmapFactory.Options()
-                options.inSampleSize = 4 //reduce the image to avoid OOM in low end devices
                 val input = URL(url).openStream()
-                bmp = BitmapFactory.decodeStream(input, null, options)
+                bmp = BitmapFactory.decodeStream(input)
             } catch (e: IOException) {
                 e.printStackTrace()
             }

@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 1.2.0-beta-2
+* Fix image quality in rich push
+* Fix dismissal of notification tray on button click
+
 ### 1.2.0-beta-1
 * Adds support for the rich push notifications feature
 

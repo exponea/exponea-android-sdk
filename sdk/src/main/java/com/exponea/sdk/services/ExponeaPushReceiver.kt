@@ -41,33 +41,23 @@ class ExponeaPushReceiver : BroadcastReceiver() {
 
         Logger.i(this, "Push notification clicked")
 
+        val url = intent.getStringExtra(EXTRA_URL)
+        val buttonClickedIntent = Intent(Intent.ACTION_VIEW)
+        buttonClickedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        if (url != null && url.isNotEmpty())
+            buttonClickedIntent.data = Uri.parse(url)
+
         when (intent.action) {
-            ACTION_CLICKED -> {
-            }
-            ACTION_DEEPLINK_CLICKED -> {
-                val url = intent.getStringExtra(EXTRA_URL)
-                if (url.isNotEmpty()) {
-                    val i = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse(url)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    PendingIntent.getActivity(context, 0, i, 0).send()
-                }
-            }
-            ACTION_URL_CLICKED -> {
-                val url = intent.getStringExtra(EXTRA_URL)
-                if (url.isNotEmpty()) {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(browserIntent)
-                }
-            }
+            ACTION_CLICKED -> Unit
+            ACTION_DEEPLINK_CLICKED -> PendingIntent.getActivity(context, 0, buttonClickedIntent, PendingIntent.FLAG_UPDATE_CURRENT).send()
+            ACTION_URL_CLICKED -> context.startActivity(buttonClickedIntent)
         }
 
         val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(context)
-            if (config != null) {
+            config?.let {
                 Logger.d(this, "Newly initiated")
                 Exponea.init(context.applicationContext, config)
             }
@@ -78,12 +68,21 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         )
 
         // After clicking the notification button (action), dismiss it
+        dimissNotification(context, intent)
+
+        // And close the notification tray
+        closeNotificationTray(context)
+    }
+
+    private fun dimissNotification(context: Context, intent: Intent) {
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
         if (notificationId != -1) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.cancel(notificationId)
         }
-        // And close the notification tray
+    }
+
+    private fun closeNotificationTray(context: Context) {
         val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
         context.sendBroadcast(it)
     }

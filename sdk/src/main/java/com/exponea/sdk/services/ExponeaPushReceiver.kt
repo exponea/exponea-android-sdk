@@ -58,6 +58,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
                 val url = intent.getStringExtra(EXTRA_URL)
                 if (url.isNotEmpty()) {
                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(browserIntent)
                 }
             }

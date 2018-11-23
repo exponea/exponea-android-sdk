@@ -17,11 +17,9 @@ import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.fromJson
-import com.google.gson.Gson
-import org.json.JSONArray
 import java.io.IOException
 import java.net.URL
 import kotlin.concurrent.thread
@@ -48,7 +46,6 @@ class FcmManagerImpl(
         Logger.d(this, "showNotification")
 
         pushReceiverIntent = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
-
         pendingIntent = PendingIntent.getBroadcast(context, requestCode, pushReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         // If push icon was not provided in the configuration, default one will be used
@@ -71,21 +68,19 @@ class FcmManagerImpl(
                 .setStyle(NotificationCompat.BigTextStyle().bigText(message))
 
         handlePayload(notification, messageData)
-
         manager.notify(id, notification.build())
     }
 
     private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        handlePayloadImage(notification, messageData)
-        handlePayloadSound(notification, messageData)
-        handlePayloadButtons(notification, messageData)
-        handlePayloadActions(notification, messageData)
-        handlePayloadAttributes(messageData)
+        val notificationPayload = NotificationPayload(messageData)
+        handlePayloadImage(notification, notificationPayload)
+        handlePayloadSound(notification, notificationPayload)
+        handlePayloadButtons(notification, notificationPayload)
+        handlePayloadNotificationAction(notification, notificationPayload)
+        handlePayloadAttributes(notificationPayload)
     }
 
-    override fun createNotificationChannel(
-            manager: NotificationManager
-    ) {
+    override fun createNotificationChannel(manager: NotificationManager) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -105,10 +100,10 @@ class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        //Load the image in the payload and add as a big picture in the notification
-        if (messageData["image"] != null) {
-            val bigImageBitmap = getBitmapFromUrl(messageData["image"]!!)
+    private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
+        // Load the image in the payload and add as a big picture in the notification
+        if (messageData.image != null) {
+            val bigImageBitmap = getBitmapFromUrl(messageData.image)
             //verify if the image was successfully loaded
             if (bigImageBitmap != null) {
                 notification.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bigImageBitmap))
@@ -116,83 +111,68 @@ class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadSound(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+    private fun handlePayloadSound(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         // remove default notification sound
         notification.setSound(null)
-
         // set the uri for the default sound
         var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
         // if the raw file exists, use it as custom sound
-        if (messageData["sound"] != null && context.resources.getIdentifier(messageData["sound"], "raw", context.packageName) != 0) {
-            soundUri = Uri.parse("android.resource://" + context.packageName + "/raw/" + messageData["sound"])
-        }
-
+        if (messageData.sound != null && context.resources.getIdentifier(messageData.sound, "raw", context.packageName) != 0)
+            soundUri = Uri.parse("""android.resource://${context.packageName}/raw/${messageData.sound}""")
         // Manually play the notification sound
         RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
     }
 
-    private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        if (messageData["actions"] != null) {
-            val buttonsArray = JSONArray(messageData["actions"])
-
+    private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
+        if (messageData.buttons != null) {
             //if we have a button payload, verify each button action
-            for (i in 0 until buttonsArray.length()) {
-                val item: Map<String, String> = Gson().fromJson(buttonsArray[i].toString())
-
-                //create the button intent based in the action
-                val actionEnum = ACTIONS.find(item["action"])
-                val pi = generateActionPendingIntent(actionEnum, item["url"])
-                notification.addAction(0, item["title"], pi)
+            messageData.buttons.forEach {
+                val pi = generateActionPendingIntent(it.action, it.url)
+                notification.addAction(0, it.title, pi)
             }
         }
     }
 
-    private fun handlePayloadActions(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+    private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         //handle the notification body click action
-        if (messageData["action"] != null) {
-            val action = messageData["action"]
-            val actionEnum = ACTIONS.find(action)
-            var url = messageData["url"]
-
-            if (url != null && actionEnum != null) {
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    url = "http://$url"
+        if (messageData.notificationAction != null) {
+            with(messageData) {
+                if (notificationAction?.url != null && notificationAction.action != null) {
+                    var url = notificationAction.url
+                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                        url = "http://$url"
+                    }
+                    val pi = generateActionPendingIntent(notificationAction.action, url)
+                    notification.setContentIntent(pi)
                 }
-                val pi = generateActionPendingIntent(actionEnum, url)
-                notification.setContentIntent(pi)
             }
         }
     }
 
-    private fun handlePayloadAttributes(messageData: HashMap<String, String>) {
-        if (messageData["attributes"] != null) {
-            val item: Map<String, String> = Gson().fromJson(messageData["attributes"]!!)
-            Logger.w(this, item.toString())
-
+    private fun handlePayloadAttributes(messageData: NotificationPayload) {
+        if (messageData.attributes != null) {
             if (Exponea.notificationDataCallback == null) {
-                Exponea.component.pushNotificationRepository.setExtraData(item)
+                Exponea.component.pushNotificationRepository.setExtraData(messageData.attributes)
                 return
             }
             Handler(Looper.getMainLooper()).post {
-                Exponea.notificationDataCallback?.invoke(item)
+                Exponea.notificationDataCallback?.invoke(messageData.attributes)
             }
         }
     }
 
-    private fun generateActionPendingIntent(action: ACTIONS?, url: String? = null): PendingIntent? {
+    private fun generateActionPendingIntent(action: NotificationPayload.Actions?, url: String? = null): PendingIntent? {
+        val actionIntent = pushReceiverIntent
+        actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
+
         return when (action) {
-            ACTIONS.APP -> pendingIntent
-            ACTIONS.BROWSER -> {
-                val actionIntent = pushReceiverIntent
+            NotificationPayload.Actions.APP -> pendingIntent
+            NotificationPayload.Actions.BROWSER -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_URL_CLICKED
-                actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
                 PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
-            ACTIONS.DEEPLINK -> {
-                val actionIntent = pushReceiverIntent
+            NotificationPayload.Actions.DEEPLINK -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED
-                actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
                 PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
             else -> pendingIntent
@@ -212,13 +192,4 @@ class FcmManagerImpl(
         return bmp
     }
 
-    private enum class ACTIONS(val value: String) {
-        APP("app"),
-        BROWSER("browser"),
-        DEEPLINK("deeplink");
-
-        companion object {
-            fun find(value: String?) = ACTIONS.values().find { it.value == value }
-        }
-    }
 }

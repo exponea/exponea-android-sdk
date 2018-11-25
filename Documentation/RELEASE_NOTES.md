@@ -1,5 +1,10 @@
 ## Release Notes
 
+### 1.2.0-beta-3
+* Fix an edge case where a notification triggered intent might crash the app
+* Add automatic ProGuard rules to the SDK 
+* Internal improvements to rich push notifications code
+
 ### 1.2.0-beta-2
 * Fix image quality in rich push
 * Fix dismissal of notification tray on button click

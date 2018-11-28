@@ -7,6 +7,7 @@ import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 
 class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
+
     private val mediaTypeJson: MediaType = MediaType.parse("application/json")!!
     private lateinit var networkClient: OkHttpClient
 
@@ -25,11 +26,25 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
                     .addHeader("Authorization", "${exponeaConfiguration.authorization}")
                     .build()
 
-            if (exponeaConfiguration.authorization?.contains("Basic") == true){
+            if (exponeaConfiguration.authorization?.contains("Basic") == true) {
                 Logger.w(this, "Warning: Basic authentication is deprecated. Use Token authentication instead.")
             }
 
-            return@Interceptor it.proceed(request)
+            return@Interceptor try {
+                it.proceed(request)
+            } catch (e: Exception) {
+                // Sometimes the request can fail due to SSL problems crashing the app. When that
+                // happens, we return a dummy failed request
+                Logger.w(this, e.toString())
+                val message = "Error: request canceled by " + e.toString()
+                Response.Builder()
+                        .code(400)
+                        .protocol(Protocol.HTTP_2)
+                        .message(message)
+                        .request(it.request())
+                        .body(ResponseBody.create(MediaType.parse("text/plain"), message))
+                        .build()
+            }
         }
     }
 

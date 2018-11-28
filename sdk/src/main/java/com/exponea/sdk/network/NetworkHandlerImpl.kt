@@ -1,14 +1,10 @@
 package com.exponea.sdk.network
 
-import android.util.Log
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
-import java.io.IOException
-import kotlin.Exception
-
 
 class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
 

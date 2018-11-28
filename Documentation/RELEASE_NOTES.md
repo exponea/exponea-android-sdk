@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 1.2.0-beta-4
+
+* Add a workaround for a crash happening only on Meizu M5 with Android 6.0 due to OkHttp 
+
 ### 1.2.0-beta-3
 * Fix an edge case where a notification triggered intent might crash the app
 * Add automatic ProGuard rules to the SDK 

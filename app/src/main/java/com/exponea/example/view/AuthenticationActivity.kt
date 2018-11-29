@@ -1,9 +1,8 @@
 package com.exponea.example.view
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Selection
+import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -16,11 +15,8 @@ import com.exponea.example.utils.onTextChanged
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.util.Logger
-import com.google.firebase.FirebaseApp
 import kotlinx.android.synthetic.main.activity_authentication.*
-import java.util.concurrent.TimeUnit
 
 class AuthenticationActivity : AppCompatActivity() {
 
@@ -80,7 +76,8 @@ class AuthenticationActivity : AppCompatActivity() {
         }
 
         // Start our SDK
-        Exponea.init(App.instance, configuration)
+        //Exponea.init(App.instance, configuration)
+        Exponea.initFromFile(App.instance)
         // Set our debug level to debug
         Exponea.loggerLevel = Logger.Level.DEBUG
         // Set up our flushing

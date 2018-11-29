@@ -1,0 +1,16 @@
+{
+  "projectToken": "47b5cc2c-e661-11e8-bb95-0a580a201692",
+  "authorization": "Token 9fxxk5jnckd4zv95ctu3fqvl7491axpify2o5sxbrmmkeqxxsph1aaibjsqczd1z",
+  "baseURL": "https://api-analytics.1.gdev.exponea.com",
+  "contentType": "application/json",
+  "maxTries": 10,
+  "sessionTimeout": 20.0,
+  "automaticPaymentTracking": true,
+  "automaticSessionTracking": true,
+  "automaticPushNotification": true,
+  "pushIcon": null,
+  "pushChannelName": "Exponea",
+  "pushChannelDescription": "Notifications",
+  "pushChannelId": "0",
+  "pushNotificationImportance": 3
+}

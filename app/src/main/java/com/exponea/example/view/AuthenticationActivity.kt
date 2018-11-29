@@ -76,8 +76,9 @@ class AuthenticationActivity : AppCompatActivity() {
         }
 
         // Start our SDK
-        //Exponea.init(App.instance, configuration)
-        Exponea.initFromFile(App.instance)
+        //Exponea.initFromFile(App.instance)
+        Exponea.init(App.instance, configuration)
+
         // Set our debug level to debug
         Exponea.loggerLevel = Logger.Level.DEBUG
         // Set up our flushing

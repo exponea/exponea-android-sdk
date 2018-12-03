@@ -1,5 +1,11 @@
 ## Release Notes
 
+### 1.2.0-beta-5
+
+* Fix parsing of notification body action deeplink url
+* Improve initialising Exponea from configuration file
+* Update documentation
+
 ### 1.2.0-beta-4
 
 * Add a workaround for a crash happening only on Meizu M5 with Android 6.0 due to OkHttp 

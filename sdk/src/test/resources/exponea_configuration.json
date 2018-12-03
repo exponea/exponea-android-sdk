@@ -1,0 +1,16 @@
+{
+  "projectToken": "testToken",
+  "authorization": "Token testToken",
+  "baseURL": "https://testUrl.test.com",
+  "contentType": "application/json",
+  "maxTries": 10,
+  "sessionTimeout": 20.0,
+  "automaticPaymentTracking": true,
+  "automaticSessionTracking": true,
+  "automaticPushNotification": true,
+  "pushIcon": null,
+  "pushChannelName": "Exponea",
+  "pushChannelDescription": "Notifications",
+  "pushChannelId": "0",
+  "pushNotificationImportance": 3
+}

@@ -2,8 +2,10 @@
 
 The configuration object must be configured before starting using the SDK.
 
-It's possible to initialize the configuration through a ExponeaConfiguration object or providing a configuration file with the same structure (keys).
+It's possible to initialize the configuration through a ExponeaConfiguration object or providing a configuration file with the same structure (keys). In case of initializing the SDK with the configuration file, it must be located at the assets folder of the application with the name `exponea_configuration.json`. An configuration file example can be seen [here](
+../app/src/main/assets/exponea_configuration.json).
 
+### Configuration Class
 ```
 data class ExponeaConfiguration(
   // Default project token.

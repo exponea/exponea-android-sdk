@@ -2,13 +2,10 @@ package com.exponea.sdk
 
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.currentTimeSeconds
-import org.bouncycastle.util.Times
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.sql.Timestamp
-import java.text.DateFormat
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -34,7 +31,7 @@ class ConfigurationTest {
 
     private fun setupConfigurationWithFile() {
         val context = RuntimeEnvironment.application
-        Exponea.init(context, "config_valid.xml")
+        Exponea.initFromFile(context)
     }
 
     @Test
@@ -52,15 +49,13 @@ class ConfigurationTest {
     @Test
     fun TestData() {
         val timestamp = currentTimeSeconds()
-        println("Timestamp: ${timestamp}")
+        println("Timestamp: $timestamp")
         println("Timestamp: ${Calendar.getInstance().timeInMillis / 1000}")
-
     }
 
-//    @Test
-//    TODO: Finish test loading from file.
-//    fun InstantiateSDKWithFile_ShouldPass() {
-//        setupConfigurationWithFile()
-//        assertEquals(Exponea.isInitialized, true)
-//    }
+    @Test
+    fun InstantiateSDKWithFile_ShouldPass() {
+        setupConfigurationWithFile()
+        assertEquals(Exponea.isInitialized, true)
+    }
 }

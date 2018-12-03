@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.content.Context
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
@@ -21,6 +22,26 @@ class FileManagerImpl : FileManager {
         val filePath = ClassLoader.getSystemResource(filename).file
         val bufferedWriter = File(filePath).bufferedWriter()
         bufferedWriter.write(text)
+    }
+
+    override fun readContentFromDefaultFile(context: Context): String? {
+        return try {
+
+            val configurationFileName = "exponea_configuration.json"
+            var inputStream = javaClass.classLoader.getResourceAsStream(configurationFileName)
+
+            if (inputStream == null)
+                inputStream = context.assets.open(configurationFileName)
+
+            val buffer = inputStream.bufferedReader()
+
+            val inputString = buffer.use { it.readText() }
+            Logger.d(this, "Configuration file successfully loaded")
+            inputString
+        } catch (e: Exception) {
+            Logger.e(this, "Could not load configuration file ")
+            null
+        }
     }
 
     override fun readContentFromFile(filename: String): String? {
@@ -53,6 +74,18 @@ class FileManagerImpl : FileManager {
 
         if (data.isNullOrEmpty()) {
             Logger.e(this, "No data found on Configuration file $filename")
+            return null
+        }
+
+        return gson.fromJson(data, ExponeaConfiguration::class.java)
+    }
+
+
+    override fun getConfigurationFromDefaultFile(buffer: Context): ExponeaConfiguration? {
+        val data = readContentFromDefaultFile(buffer)
+
+        if (data.isNullOrEmpty()) {
+            Logger.e(this, "No data found on Configuration file")
             return null
         }
 

@@ -25,10 +25,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <!-- Accepts URIs that begin with "exponea://notifications.actions.cancel”-->
-                <data
-                    android:host="notifications.actions.cancel"
-                    android:scheme="exponea" />
+                <!-- Accepts URIs that begin with "exponea://”-->
+                <data android:scheme="exponea" />
             </intent-filter>
         </activity>
         <activity

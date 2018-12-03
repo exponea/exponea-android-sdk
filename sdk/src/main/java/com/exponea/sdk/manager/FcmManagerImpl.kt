@@ -139,7 +139,7 @@ class FcmManagerImpl(
             with(messageData) {
                 if (notificationAction?.url != null && notificationAction.action != null) {
                     var url = notificationAction.url
-                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    if (!url.contains("://")) {
                         url = "http://$url"
                     }
                     val pi = generateActionPendingIntent(notificationAction.action, url)

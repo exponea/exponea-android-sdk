@@ -3,8 +3,8 @@
 </p>
 
 ### Specs
-[![API](https://img.shields.io/badge/API-14%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=14) 
-[![License](https://img.shields.io/badge/License-Apache%202.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0) 
+[![API](https://img.shields.io/badge/API-14%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=14)
+[![License](https://img.shields.io/badge/License-Apache%202.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Exponea Android SDK
 
@@ -45,7 +45,7 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 ### Getting Started
 
 To implement the Exponea SDK you must configure the SDK first:
-
+*  ##### **[Detailed Guides about ExponeaSDK Integrations](./Guides/README.md)**
 * [Configuration](./Documentation/CONFIG.md)
 * [Project Token Mapping](./Documentation/PROJECT_MAPPING.md)
 

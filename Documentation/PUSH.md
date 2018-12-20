@@ -76,8 +76,10 @@ When It's coming to setting up Firebase inside you application, you have options
 7. That's should be it! Check out [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
 
 
-  ### Enabling Exponea push notifications
-Once you have configured Firebase you it need to obtaint **Google Cloud Messaging API key**. You can find in your Firebase Project's Settings: `Project Overview` -> `Project Settings` -> `Cloud Messaging`. `Server Key` is your **Google Cloud Messaging API Key**. All you need to do is to enter this key in the input field on the **Project / Settings / Push Notifications** in the Exponea web application.
+  ### Confuring Exponea Web App
+Once you have configured Firebase you it need to obtained **Google Cloud Messaging API key**. You can find in your Firebase Project's Settings. See [this guide](../Guides/FIREBASE.md)
+to help you configure Exponea web APP
+
 
 ## 🔍 Automatic track Push Notification
 
@@ -149,34 +151,3 @@ Exponea.notificationDataCallback = {
 ```
 
 Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
-
-## 🔗 Handling deeplinks
-Android's deeplinks allow you to trigger specific actions on your app. Exponea SDK notifications can handle deeplink for you, but your application must be ready to receive them.
-
-To handle a deeplink first add the desired host and scheme to your `AndroidManifest.xml`:
-```
-<activity ...>
-   <intent-filter>
-       <action android:name="android.intent.action.VIEW" />
-       <category android:name="android.intent.category.DEFAULT" />
-       <category android:name="android.intent.category.BROWSABLE" />
-
-        <!-- Accepts URIs that begin with "exponea://notifications.actions.cancel”-->
-        <data
-           android:host="notifications.actions.cancel"
-           android:scheme="exponea" />
-   </intent-filter>
-</activity>
-```
-When firing a notification the same host and scheme must be used.
-
-When the deeplink is triggered, your activity can receive the data and handle it accordingly:
-```
-if (getIntent() != null) {
-   val data = getIntent().data
-   if (data != null) {
-      Toast.makeText(this, "Deeplink received: $data", Toast.LENGTH_SHORT).show()
-   }
-}
-```
-More info about deeplinks can be found in the Google official docs [here](https://developer.android.com/training/app-links/deep-linking).

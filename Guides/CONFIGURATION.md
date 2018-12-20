@@ -6,13 +6,16 @@
 
 1. Open [Exponea Web app](https://app.exponea.com) and login using your credentials
 
-![](config1.png)
+![](pics/config1.png)
 
 2. Choose your project in the top-left corner and navigate to Settings
 
-![](config2.png)
+![](pics/config2.png)
 
 3. In settings, navigate to Project/AccessManagement
 There you can view or edit you `API Base URL` and `Project Token`
 
-![](config3.png)
+![](pics/config3.png)
+
+
+4. Follow [this guide](https://docs.exponea.com/reference#basic-authentication) in order to get your Authorization Token

@@ -38,6 +38,7 @@ You can find these parameteres in `Exponea console`.
         configuration.baseURL = apiUrl
 ```
 
+
 ##### Using Configuration file
 You can also use .json file in order to provide your configuration. The SDK searches for a file called
 `exponea_configuration.json` that must be inside the "assets" folder of your application
@@ -49,10 +50,12 @@ You can also use .json file in order to provide your configuration. The SDK sear
 }
 ```
 
+> [Check out our example app to learn how configuration file could look like](../app/src/main/assets/exponea_configuration.json)
+
 > [Learn more about how you can configure ExponeaSDK](../Documentation/CONFIG.md)
 
 
-After configuration is taken care of, it is time to initize ExponeaSDK. Best place to initize it will be in you Application `onCreate()` method as requires your's application `Context`. Application is a the class for maintaining global application state. It's usually looks similar to this ( along with our SDK initilization code )
+After configuration is taken care of, it is time to initize ExponeaSDK. Best place to initize it will be in you Application `onCreate()` method as requires your's application `Context`. Application is a the class for maintaining global application state. It's usually looks similar to this ( along with our SDK initilization code ). Heres a basic SDK initization example
 
 ```
  class MyApplication : Application() {
@@ -61,9 +64,10 @@ After configuration is taken care of, it is time to initize ExponeaSDK. Best pla
 
      // TODO Your implementation here
      val configuration = ExponeaConfiguration()
-     configuration.authorization = authorizationToken
-     configuration.projectToken = projectToken
-     configuration.baseURL = apiUrl
+
+     configuration.authorization = "Token jlk5askvxss99asmnbgayrks333"
+     configuration.projectToken = "47b5cc2c-e661-11e8-bb95-0a580a201692"
+     configuration.baseURL = "https://api.exponea.com"
 
      // Sdk initization
       Exponea.init(this, configuration)

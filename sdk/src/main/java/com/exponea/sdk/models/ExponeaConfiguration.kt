@@ -11,6 +11,8 @@ data class ExponeaConfiguration(
         var authorization: String? = null,
         /** Base url for http requests to Exponea API. */
         var baseURL: String = Constants.Repository.baseURL,
+        /** Level of HTTP logging, default value is BODY. */
+        var httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.BODY,
         /** Content type value to make http requests. */
         var contentType: String = Constants.Repository.contentType,
         /** Maximum retries value to flush data to api. */
@@ -34,4 +36,14 @@ data class ExponeaConfiguration(
         /** Notification importance for the notification channel. Only for API level 26+. */
         var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
 ) {
+    enum class HttpLoggingLevel {
+        /** No logs. */
+        NONE,
+        /** Logs request and response lines. */
+        BASIC,
+        /** Logs request and response lines and their respective headers. */
+        HEADERS,
+        /** Logs request and response lines and their respective headers and bodies (if present). */
+        BODY
+    }
 }

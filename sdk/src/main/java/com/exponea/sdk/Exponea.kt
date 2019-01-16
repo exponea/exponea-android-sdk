@@ -114,19 +114,6 @@ object Exponea {
             Logger.level = value
         }
 
-    @Throws(InvalidConfigurationException::class)
-    fun init(context: Context, configFile: String) {
-        // Try to parse our file
-        val configuration = Exponea.component.fileManager.getConfigurationFromFile(configFile)
-
-        // If our file isn't null then try initiating normally
-        if (configuration != null) {
-            init(context, configuration)
-        } else {
-            throw InvalidConfigurationException()
-        }
-    }
-
     /**
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application

@@ -51,7 +51,12 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
     private fun getNetworkLogger(): HttpLoggingInterceptor {
         val interceptor = HttpLoggingInterceptor()
 
-        interceptor.level = HttpLoggingInterceptor.Level.BODY
+        interceptor.level = when(exponeaConfiguration.httpLoggingLevel) {
+            ExponeaConfiguration.HttpLoggingLevel.NONE -> HttpLoggingInterceptor.Level.NONE
+            ExponeaConfiguration.HttpLoggingLevel.BASIC -> HttpLoggingInterceptor.Level.BASIC
+            ExponeaConfiguration.HttpLoggingLevel.HEADERS -> HttpLoggingInterceptor.Level.HEADERS
+            ExponeaConfiguration.HttpLoggingLevel.BODY -> HttpLoggingInterceptor.Level.BODY
+        }
 
         return interceptor
     }

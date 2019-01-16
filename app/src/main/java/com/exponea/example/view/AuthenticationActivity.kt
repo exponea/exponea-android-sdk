@@ -69,6 +69,7 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.authorization = authorizationToken
         configuration.projectToken = projectToken
         configuration.baseURL = apiUrl
+        configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
 
         // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {

@@ -61,8 +61,8 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 #### authorization
 
-* Basic authentication supported by a combination of public/private token.
-* For more information, please click [here](https://developers.exponea.com/v2/reference#basic-authentication)
+* Supported by token authentication.
+* For more information, please click [here](https://docs.exponea.com/v2/reference#token-authentication)
 
 #### baseURL
 

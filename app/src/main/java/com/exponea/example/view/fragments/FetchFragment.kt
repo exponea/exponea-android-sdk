@@ -51,65 +51,6 @@ class FetchFragment : BaseFragment() {
     private fun initListeners() {
         recommendationsButton.setOnClickListener {
             setProgressBarVisible(true)
-            fetchRecommended()
-
-        }
-    }
-
-    /**
-     * Method handles recommendations loading
-     */
-    private fun fetchRecommended() {
-        // Init customer structure
-        val uuid = App.instance.registeredIdManager.registeredID
-        val customerIds = CustomerIds().withId("registered", uuid)
-        // Init recommendation structure and specify params
-        val recommendation = CustomerRecommendation(
-                id = uuid,
-                strategy = "winner"
-        )
-
-        // Specify callbacks and start loading
-        Exponea.fetchRecommendation(
-                customerRecommendation = recommendation,
-                onSuccess = {onFetchSuccess(it)},
-                onFailure = {onFetchFailed(it)}
-
-        )
-    }
-
-    /**
-     * Method handles loading events for customer
-     */
-    private fun fetchCustomerEvents() {
-        FetchCustomEventsDialog.show(childFragmentManager) {
-            setProgressBarVisible(true)
-            Exponea.fetchCustomerEvents(
-                    customerEvents = it,
-                    onFailure = {onFetchFailed(it)},
-                    onSuccess = {
-                        runOnUiThread {
-                            setProgressBarVisible(false)
-                            resultTextView.text = it.toString()
-                        }
-                    }
-            )
-        }
-
-    }
-
-    /**
-     * Method handles loading customer attributes and properties
-     */
-    private fun fetchCustomerAttributes() {
-
-        FetchCustomAttributeDialog.show(childFragmentManager) { attrs ->
-            setProgressBarVisible(true)
-            Exponea.fetchCustomerAttributes(
-                    customerAttributes = attrs,
-                    onFailure = { onFetchFailed(it) },
-                    onSuccess = {onFetchSuccess(it)}
-            )
         }
     }
 

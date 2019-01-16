@@ -114,23 +114,6 @@ object Exponea {
             Logger.level = value
         }
 
-    @Deprecated(
-            "Use initFromFile(context: Context)",
-            replaceWith = ReplaceWith("Exponea.initFromFile(context)")
-    )
-    @Throws(InvalidConfigurationException::class)
-    fun init(context: Context, configFile: String) {
-        // Try to parse our file
-        val configuration = Exponea.component.fileManager.getConfigurationFromFile(configFile)
-
-        // If our file isn't null then try initiating normally
-        if (configuration != null) {
-            init(context, configuration)
-        } else {
-            throw InvalidConfigurationException()
-        }
-    }
-
     /**
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
@@ -220,24 +203,6 @@ object Exponea {
     }
 
     /**
-     * Fetches customer attributes
-     */
-    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
-    fun fetchCustomerAttributes(
-        customerAttributes: CustomerAttributes,
-        onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-        onFailure: (Result<FetchError>) -> Unit
-    ) {
-        val customer = Exponea.component.customerIdsRepository.get()
-        component.fetchManager.fetchCustomerAttributes(
-            projectToken = configuration.projectToken,
-            attributes = customerAttributes.apply { customerIds = customer },
-            onSuccess = onSuccess,
-            onFailure = onFailure
-        )
-    }
-
-    /**
      * Fetches banners web representation
      * @param onSuccess - success callback, when data is ready
      * @param onFailure - failure callback, in case of errors
@@ -286,52 +251,6 @@ object Exponea {
         }
 
         component.sessionManager.trackSessionEnd(timestamp)
-    }
-
-    /**
-     * Fetch events for a specific customer.
-     * @param customerEvents - Event from a specific customer to be tracked.
-     * @param onFailure - Method will be called if there was an error.
-     * @param onSuccess - this method will be called when data is ready.
-     */
-    @Deprecated("Basic authorization was deprecated and fetching data will not be available in the future.")
-    fun fetchCustomerEvents(
-        customerEvents: FetchEventsRequest,
-        onFailure: (Result<FetchError>) -> Unit,
-        onSuccess: (Result<ArrayList<CustomerEvent>>) -> Unit
-    ) {
-        val customer = Exponea.component.customerIdsRepository.get()
-        customerEvents.customerIds = customer
-
-        component.fetchManager.fetchCustomerEvents(
-            projectToken = configuration.projectToken,
-            customerEvents = customerEvents,
-            onFailure = onFailure,
-            onSuccess = onSuccess
-        )
-    }
-
-    /**
-     * Fetch recommendations for a specific customer.
-     * @param customerRecommendation - Recommendation for the customer.
-     * @param onFailure - Method will be called if there was an error.
-     * @param onSuccess - this method will be called when data is ready.
-     */
-    fun fetchRecommendation(
-        customerRecommendation: CustomerRecommendation,
-        onSuccess: (Result<List<CustomerAttributeModel>>) -> Unit,
-        onFailure: (Result<FetchError>) -> Unit
-    ) {
-        val customer = Exponea.component.customerIdsRepository.get()
-        component.fetchManager.fetchCustomerAttributes(
-            projectToken = configuration.projectToken,
-            attributes = CustomerAttributes(
-                customer,
-                mutableListOf(customerRecommendation.toHashMap())
-            ),
-            onSuccess = onSuccess,
-            onFailure = onFailure
-        )
     }
 
     /**

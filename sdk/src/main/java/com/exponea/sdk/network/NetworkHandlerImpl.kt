@@ -27,7 +27,7 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
                     .build()
 
             if (exponeaConfiguration.authorization?.contains("Basic") == true) {
-                Logger.w(this, "Warning: Basic authentication is deprecated. Use Token authentication instead.")
+                Logger.e(this, "Error: Basic authentication is deprecated. Use Token authentication instead.")
             }
 
             return@Interceptor try {

@@ -22,7 +22,7 @@ Download via Gradle:
 
 ```groovy
 dependencies {
-  compile 'com.exponea.sdk:sdk:1.1.7'
+  compile 'com.exponea.sdk:sdk:2.0.0'
 }
 ```
 
@@ -32,7 +32,7 @@ Download via Maven:
 <dependency>
     <groupId>com.exponea.sdk</groupId>
     <artifactId>sdk</artifactId>
-    <version>1.1.7</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -45,7 +45,8 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 ### Getting Started
 
 To implement the Exponea SDK you must configure the SDK first:
-*  ##### **[Detailed Guides about ExponeaSDK Integrations](./Guides/README.md)**
+
+*  **[Detailed Guides about ExponeaSDK Integrations](./Guides/README.md)**
 * [Configuration](./Documentation/CONFIG.md)
 * [Project Token Mapping](./Documentation/PROJECT_MAPPING.md)
 

@@ -1,5 +1,10 @@
 ## Release Notes
 
+### 2.0.0
+
+* Removal of deprecated functions
+* Documentation improvements
+
 ### 1.2.0-beta-5
 
 * Fix parsing of notification body action deeplink url

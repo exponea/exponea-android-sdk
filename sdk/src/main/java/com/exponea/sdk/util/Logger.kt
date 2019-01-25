@@ -8,8 +8,8 @@ object Logger {
         ERROR(4),
         WARN(3),
         INFO(2),
-        VERBOSE(1),
-        DEBUG(0)
+        DEBUG(1),
+        VERBOSE(0)
     }
 
     var level: Level = Level.INFO
@@ -44,17 +44,17 @@ object Logger {
         Log.i(parent.javaClass.simpleName, message)
     }
 
-    fun v(parent: Any, message: String) {
-        if (level.value > Level.VERBOSE.value) {
-            return
-        }
-        Log.v(parent.javaClass.simpleName, message)
-    }
-
     fun d(parent: Any, message: String) {
         if (level.value > Level.DEBUG.value) {
             return
         }
         Log.d(parent.javaClass.simpleName, message)
+    }
+
+    fun v(parent: Any, message: String) {
+        if (level.value > Level.VERBOSE.value) {
+            return
+        }
+        Log.v(parent.javaClass.simpleName, message)
     }
 }

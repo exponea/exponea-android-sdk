@@ -27,9 +27,10 @@ class PushManagerImpl(
         )
     }
 
-    override fun trackClickedPush(data: NotificationData?) {
+    override fun trackClickedPush(data: NotificationData?, url: String?) {
         Exponea.trackClickedPush(
-                data = data
+                data = data,
+                url =  url ?: ""
         )
     }
 

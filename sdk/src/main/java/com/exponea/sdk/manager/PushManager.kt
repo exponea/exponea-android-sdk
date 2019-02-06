@@ -7,5 +7,5 @@ interface PushManager {
 
     fun trackFcmToken(token: String? = null)
     fun trackDeliveredPush(data: NotificationData? = null)
-    fun trackClickedPush(data: NotificationData? = null)
+    fun trackClickedPush(data: NotificationData? = null, url: String? = null)
 }

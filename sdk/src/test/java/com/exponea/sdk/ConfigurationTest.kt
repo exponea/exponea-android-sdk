@@ -12,14 +12,7 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class ConfigurationTest {
 
-    private fun initializeExponeaWithoutConfig() {
-        val context = RuntimeEnvironment.application
-        try {
-            Exponea.init(context, "")
-        } catch (e: Exception) {
 
-        }
-    }
 
     private fun setupConfigurationWithStruct() {
         val context = RuntimeEnvironment.application
@@ -34,11 +27,6 @@ class ConfigurationTest {
         Exponea.initFromFile(context)
     }
 
-    @Test
-    fun InstantiateSDKWithoutConfig_ShouldFail() {
-        initializeExponeaWithoutConfig()
-        assertEquals(Exponea.isInitialized, true)
-    }
 
     @Test
     fun InstantiateSDKWithConfig_ShouldPass() {

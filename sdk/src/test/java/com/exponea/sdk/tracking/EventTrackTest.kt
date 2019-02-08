@@ -44,6 +44,9 @@ class EventTrackTest {
     @Before
     fun prepareForTest() {
 
+        // Installation event success
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
+
         val context = RuntimeEnvironment.application
 
         Exponea.init(context, configuration)
@@ -51,8 +54,12 @@ class EventTrackTest {
 
         repo = Exponea.component.eventRepository
 
+
+
         // Clean event repository for testing purposes
         repo.clear()
+        val a = repo.all().size
+        assertEquals(a, 0)
     }
 
     @Test
@@ -73,12 +80,15 @@ class EventTrackTest {
     @Test
     fun testEventFlushed() {
 
+
+        // Session start event success
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 properties = properties
         )
+
         val lock = Object()
         Exponea.flushData()
         Exponea.component.flushManager.onFlushFinishListener = {
@@ -87,7 +97,7 @@ class EventTrackTest {
         }
         synchronized(lock) { lock.wait() }
 
-        val request = server.takeRequest(5, TimeUnit.SECONDS)
+        val request = server.takeRequest()
 
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
     }
@@ -95,11 +105,14 @@ class EventTrackTest {
     @Test
     fun testEventFlushFailed() {
 
+        // Track session start
         Exponea.trackEvent(
                 eventType = Constants.EventTypes.sessionStart,
                 properties = properties
         )
         assertEquals(1, repo.all().size)
+
+
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
         val lock = Object()
         Exponea.component.flushManager.onFlushFinishListener = {

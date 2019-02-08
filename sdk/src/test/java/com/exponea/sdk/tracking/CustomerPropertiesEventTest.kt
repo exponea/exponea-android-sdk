@@ -47,6 +47,7 @@ class CustomerPropertiesEventTest {
 
     @Before
     fun prepareForTest() {
+        ExponeaMockServer.setResponseSuccess(EventTrackTest.server, "tracking/track_event_success.json")
 
         val context = RuntimeEnvironment.application
 
@@ -74,13 +75,14 @@ class CustomerPropertiesEventTest {
     @Test
     fun testEventSend_ShoudSuccess() {
 
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
+
         // Track event
         Exponea.identifyCustomer(
                 customerIds = customerIds,
                 properties = properties
         )
 
-        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         Exponea.flushData()
 
         val syncObject = Object()

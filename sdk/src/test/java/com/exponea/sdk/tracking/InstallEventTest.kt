@@ -48,6 +48,9 @@ class InstallEventTest {
 
         val context = RuntimeEnvironment.application
 
+        // First Install event success
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
+
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL
 
@@ -56,26 +59,32 @@ class InstallEventTest {
         // Clean event repository for testing purposes
         repo.clear()
 
-        Exponea.component.deviceInitiatedRepository.set(false)
-        Exponea.trackInstallEvent()
+
     }
 
     @Test
     fun testInstallEventAdded_ShouldSuccess() {
 
-        // The only event tracked by now should be install_event
-        val event = repo.all()
+        Exponea.component.deviceInitiatedRepository.set(false)
+        Exponea.trackInstallEvent()
 
-        assertEquals(Constants.EventTypes.installation, event.first().item.type)
+        // The only event tracked by now should be install_event
+        val event = repo.all().first()
+        assertEquals(Constants.EventTypes.installation, event.item.type)
     }
 
     @Test
     fun sendInstallEvenTest_ShouldPass() {
 
+        Exponea.component.deviceInitiatedRepository.set(false)
+        Exponea.trackInstallEvent()
+
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         val lock = CountDownLatch(1)
+
         Exponea.flushData()
+
         Exponea.component.flushManager.onFlushFinishListener = {
             assertEquals(0, Exponea.component.eventRepository.all().size)
             lock.countDown()

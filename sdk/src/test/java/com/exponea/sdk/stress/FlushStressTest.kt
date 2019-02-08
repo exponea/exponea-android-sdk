@@ -28,7 +28,7 @@ class FlushStressTest {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
-        const val stressCount = 1000
+        const val stressCount = 500
 
         @BeforeClass
         @JvmStatic
@@ -54,6 +54,7 @@ class FlushStressTest {
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         repo = Exponea.component.eventRepository
         service = ExponeaMockService(true)
@@ -64,9 +65,10 @@ class FlushStressTest {
     @Test
     fun testFlushingStressed() {
         val r = Random()
-        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
         var insertedCount = 0
         for (i in 0 until stressCount) {
+
+            ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
             val eventType = when {
                 i % 7 == 0 -> Constants.EventTypes.sessionEnd

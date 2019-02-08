@@ -44,6 +44,7 @@ class FcmTrackingEventsTest {
 
     @Before
     fun prepareForTest() {
+        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         val context = RuntimeEnvironment.application
 

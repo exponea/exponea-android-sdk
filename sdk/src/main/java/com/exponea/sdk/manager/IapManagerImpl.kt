@@ -71,10 +71,10 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
     }
 
     override fun getAvailableProducts() {
-        billingClient.let { billingClient ->
+        billingClient.let { bc ->
             val params = SkuDetailsParams.newBuilder()
             params.setType(BillingClient.SkuType.INAPP)
-            billingClient.querySkuDetailsAsync(params.build()) { responseCode, skuDetailsList ->
+            bc.querySkuDetailsAsync(params.build()) { responseCode, skuDetailsList ->
                 if (responseCode == BillingClient.BillingResponse.OK && skuDetailsList != null) {
                     skuList.addAll(skuDetailsList)
                 }

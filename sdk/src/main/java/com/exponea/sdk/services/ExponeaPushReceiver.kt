@@ -64,7 +64,8 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         }
 
         Exponea.component.pushManager.trackClickedPush(
-                data = data
+                data = data,
+                url = url
         )
 
         // After clicking the notification button (action), dismiss it

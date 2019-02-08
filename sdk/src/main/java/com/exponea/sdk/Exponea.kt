@@ -304,17 +304,17 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
-        url: String = "",
+        actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "notification",
-                "status" to "clicked",
-                "notification_action_url" to url,
-                "os_name" to "Android"
-            )
+                "status" to "clicked")
         )
+
+        // Copy notification action data
+        actionData?.let { properties.properties.putAll(it.toHashMap()) }
 
         data?.let {
             properties["campaign_id"] = data.campaignId

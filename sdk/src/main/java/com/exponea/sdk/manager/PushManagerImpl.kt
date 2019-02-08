@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -27,12 +28,14 @@ class PushManagerImpl(
         )
     }
 
-    override fun trackClickedPush(data: NotificationData?, url: String?) {
+
+    override fun trackClickedPush(data: NotificationData?, action: NotificationAction?) {
         Exponea.trackClickedPush(
                 data = data,
-                url =  url ?: ""
+                actionData = action
         )
     }
+
 
     override fun onCreate() {
         super.onCreate()

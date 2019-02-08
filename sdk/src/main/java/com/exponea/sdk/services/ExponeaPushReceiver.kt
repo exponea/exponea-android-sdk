@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
@@ -21,7 +22,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         const val EXTRA_NOTIFICATION_ID = "NotificationId"
         const val EXTRA_DATA = "NotificationData"
         const val EXTRA_CUSTOM_DATA = "NotificationCustomData"
-        const val EXTRA_URL = "NotificationUrl"
+        const val EXTRA_ACTION_INFO = "notification_action"
 
         fun getClickIntent(
                 context: Context,
@@ -41,9 +42,11 @@ class ExponeaPushReceiver : BroadcastReceiver() {
 
         Logger.i(this, "Push notification clicked")
 
-        val url = intent.getStringExtra(EXTRA_URL)
+        val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
         val buttonClickedIntent = Intent(Intent.ACTION_VIEW)
         buttonClickedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val url  = action?.url
+        Logger.d(this,"Inteaction: $intent")
 
         if (url != null && url.isNotEmpty())
             buttonClickedIntent.data = Uri.parse(url)
@@ -64,7 +67,8 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         }
 
         Exponea.component.pushManager.trackClickedPush(
-                data = data
+                data = data,
+                action = action
         )
 
         // After clicking the notification button (action), dismiss it

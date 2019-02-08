@@ -16,10 +16,12 @@ import android.os.Looper
 import android.support.v4.app.NotificationCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.adjustUrl
 import java.io.IOException
 import java.net.URL
 import kotlin.concurrent.thread
@@ -32,7 +34,7 @@ class FcmManagerImpl(
 
     private lateinit var pendingIntent: PendingIntent
     private lateinit var pushReceiverIntent: Intent
-    private val requestCode = 1
+    private val requestCode = 111
     private var smallIconRes = -1
 
     override fun showNotification(
@@ -126,8 +128,9 @@ class FcmManagerImpl(
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         if (messageData.buttons != null) {
             //if we have a button payload, verify each button action
-            messageData.buttons.forEach {
-                val pi = generateActionPendingIntent(it.action, it.url)
+            messageData.buttons.forEachIndexed { index, it ->
+                val info = NotificationAction(NotificationAction.ACTION_TYPE_BUTTON, it.title, it.url.adjustUrl())
+                val pi = generateActionPendingIntent(it.action, info, index)
                 notification.addAction(0, it.title, pi)
             }
         }
@@ -135,18 +138,13 @@ class FcmManagerImpl(
 
     private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         //handle the notification body click action
-        if (messageData.notificationAction != null) {
-            with(messageData) {
-                if (notificationAction?.url != null && notificationAction.action != null) {
-                    var url = notificationAction.url
-                    if (!url.contains("://")) {
-                        url = "http://$url"
-                    }
-                    val pi = generateActionPendingIntent(notificationAction.action, url)
-                    notification.setContentIntent(pi)
-                }
-            }
+
+        messageData.notificationAction?.let {
+                val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.url.adjustUrl())
+                val pi = generateActionPendingIntent(it.action, info, requestCode)
+                notification.setContentIntent(pi)
         }
+
     }
 
     private fun handlePayloadAttributes(messageData: NotificationPayload) {
@@ -161,12 +159,16 @@ class FcmManagerImpl(
         }
     }
 
-    private fun generateActionPendingIntent(action: NotificationPayload.Actions?, url: String? = null): PendingIntent? {
+    private fun generateActionPendingIntent(action: NotificationPayload.Actions?, actionInfo: NotificationAction, requestCode: Int): PendingIntent? {
         val actionIntent = pushReceiverIntent
-        actionIntent.putExtra(ExponeaPushReceiver.EXTRA_URL, url)
+        actionIntent.putExtra(ExponeaPushReceiver.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {
-            NotificationPayload.Actions.APP -> pendingIntent
+            NotificationPayload.Actions.APP -> {
+                actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
+                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+
             NotificationPayload.Actions.BROWSER -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_URL_CLICKED
                 PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -175,7 +177,10 @@ class FcmManagerImpl(
                 actionIntent.action = ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED
                 PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
-            else -> pendingIntent
+            else -> {
+                actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
+                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
         }
     }
 

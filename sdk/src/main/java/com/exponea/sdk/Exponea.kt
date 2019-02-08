@@ -277,8 +277,9 @@ object Exponea {
     ) {
         val properties = PropertiesList(
             hashMapOf(
-                Pair("action_type", "notification"),
-                Pair("status", "delivered")
+                "action_type" to "notification",
+                "status" to "delivered",
+                "os_name" to "Android"
             )
         )
         Logger.d(this, "Push dev: ${timestamp.toString()}")
@@ -303,14 +304,17 @@ object Exponea {
 
     fun trackClickedPush(
         data: NotificationData? = null,
+        actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "notification",
-                "status" to "clicked"
-            )
+                "status" to "clicked")
         )
+
+        // Copy notification action data
+        actionData?.let { properties.properties.putAll(it.toHashMap()) }
 
         data?.let {
             properties["campaign_id"] = data.campaignId

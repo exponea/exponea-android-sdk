@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 2.1.0
+* Advanced tracking for push-notification actions
+* Flushing behaviour fixes
+
 ### 2.0.0
 
 * Removal of deprecated functions

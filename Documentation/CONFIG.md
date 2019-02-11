@@ -38,6 +38,8 @@ data class ExponeaConfiguration(
   var pushChannelId: String = "0",
   // Notification importance for the notification channel. Only for API level 26+.
   var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
+  // A list of SKUs for automatic in-app purchases tracking
+  var skuList: List<String> = arrayListOf()
 )
 ```
 #### projectToken
@@ -125,3 +127,7 @@ automatically send `session_start` and `session_end` events to Exponea API
 
 * Notification importance for the notification channel.
 * Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels)
+
+#### skuList
+
+* A list of SKUs for automatic in-app purchases tracking.

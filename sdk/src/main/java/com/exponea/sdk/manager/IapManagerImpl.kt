@@ -24,13 +24,13 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
     /**
      * Starts the connection and implement the billing listener.
      */
-    override fun configure() {
+    override fun configure(skuList: List<String>) {
         // Starts up BillingClient setup process asynchronously.
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(@BillingResponse billingResponseCode: Int) {
-                // Store all available products at the Play Store for future use
-                // when user purchase item.
-                getAvailableProducts()
+                // Store the products at the Play Store using the skuList for future use when
+                // user purchase an item
+                getAvailableProducts(skuList)
                 Logger.d(this, "Billing service was initiated")
             }
 
@@ -70,13 +70,15 @@ class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
         )
     }
 
-    override fun getAvailableProducts() {
+    override fun getAvailableProducts(skuList: List<String>) {
         billingClient.let { bc ->
-            val params = SkuDetailsParams.newBuilder()
-            params.setType(BillingClient.SkuType.INAPP)
+            val params = SkuDetailsParams.newBuilder().apply {
+                setType(BillingClient.SkuType.INAPP)
+                setSkusList(skuList)
+            }
             bc.querySkuDetailsAsync(params.build()) { responseCode, skuDetailsList ->
                 if (responseCode == BillingClient.BillingResponse.OK && skuDetailsList != null) {
-                    skuList.addAll(skuDetailsList)
+                    this.skuList.addAll(skuDetailsList)
                 }
             }
         }

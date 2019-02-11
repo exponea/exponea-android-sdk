@@ -380,7 +380,7 @@ object Exponea {
         trackInstallEvent()
 
         // Track In-App purchase
-        trackInAppPurchase()
+        trackInAppPurchase(configuration.skuList)
 
         // Track Firebase Token
         trackFirebaseToken()
@@ -474,10 +474,10 @@ object Exponea {
      * Initializes payments listener
      */
 
-    private fun trackInAppPurchase() {
+    private fun trackInAppPurchase(skuList: List<String>) {
         if (this.configuration.automaticPaymentTracking) {
             // Add the observers when the automatic session tracking is true.
-            this.component.iapManager.configure()
+            this.component.iapManager.configure(skuList)
             this.component.iapManager.startObservingPayments()
         } else {
             // Remove the observers when the automatic session tracking is false.

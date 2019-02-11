@@ -138,13 +138,11 @@ class FcmManagerImpl(
 
     private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         //handle the notification body click action
-
         messageData.notificationAction?.let {
                 val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.url.adjustUrl())
                 val pi = generateActionPendingIntent(it.action, info, requestCode)
                 notification.setContentIntent(pi)
         }
-
     }
 
     private fun handlePayloadAttributes(messageData: NotificationPayload) {

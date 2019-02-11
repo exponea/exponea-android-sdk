@@ -12,8 +12,6 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class ConfigurationTest {
 
-
-
     private fun setupConfigurationWithStruct() {
         val context = RuntimeEnvironment.application
         val configuration = ExponeaConfiguration()
@@ -26,7 +24,6 @@ class ConfigurationTest {
         val context = RuntimeEnvironment.application
         Exponea.initFromFile(context)
     }
-
 
     @Test
     fun InstantiateSDKWithConfig_ShouldPass() {

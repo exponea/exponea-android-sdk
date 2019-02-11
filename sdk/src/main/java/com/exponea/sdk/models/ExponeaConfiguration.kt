@@ -34,7 +34,9 @@ data class ExponeaConfiguration(
         /** Channel ID for push notifications. Only for API level 26+. */
         var pushChannelId: String = "0",
         /** Notification importance for the notification channel. Only for API level 26+. */
-        var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
+        var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
+        /** A list of SKUs for automatic in-app purchases tracking*/
+        var skuList: List<String> = arrayListOf()
 ) {
     enum class HttpLoggingLevel {
         /** No logs. */

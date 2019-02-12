@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 2.2.0
+* Fix for crash with billing client 1.2 dependency 
+	- **It is now required to provide a list of SKUs of in app purchases you wish to track. Please see [this document](./PAYMENT.md) for information about how to set this up.**
+
 ### 2.1.0
 * Advanced tracking for push-notification actions
 * Flushing behaviour fixes

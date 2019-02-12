@@ -6,7 +6,7 @@ In order to use the automatic payment tracking, the Exponea SDK needs to set the
 
 All In-App Purchase will handle all the purchases made inside the app using the Google Play Store. After capture the purchased item, it will be send to the database in order to be flushed and send to the Exponea API.
 
-The listeners can be activate or deactivated by setting the `automaticPaymentTracking` property and providing a `skuList` in Exponea Configuration.
+The listeners can be activate or deactivated by setting the `automaticPaymentTracking` property and providing a `skuList` in Exponea Configuration [as shown here](./CONFIG.md).
 
 Purchase events contain all basic information about the device (OS, OS version, SDK, SDK version and device model) combined with additional purchase attributes brutto, item_id and item_title. Brutto attribute contains price paid by the player. Attribute item_title consists of human-friendly name of the bought item (e.g. Silver sword) and item_id corresponds to the product identifier for the in-app purchase.
 

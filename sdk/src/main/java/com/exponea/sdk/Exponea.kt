@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Looper
 import androidx.work.Configuration
@@ -15,6 +16,7 @@ import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.RemoteMessage
 import io.paperdb.Paper
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -358,6 +360,22 @@ object Exponea {
             properties = purchasedItem.toHashMap(),
             type = EventType.PAYMENT
         )
+    }
+
+    /**
+     * Handles the notification payload from FirebaseMessagingService
+     * @param message the RemoteMessage payload received from Firebase
+     * @param manager the system notification manager instance
+     */
+    fun showNotification(
+            message: RemoteMessage?,
+            manager: NotificationManager
+    ) {
+        if (!isInitialized) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return
+        }
+        component.fcmManager.showRemoteMessageNotification(message, manager)
     }
 
     // Private Helpers

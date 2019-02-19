@@ -2,9 +2,12 @@ package com.exponea.sdk.manager
 
 import android.app.NotificationManager
 import android.content.Context
+import com.exponea.sdk.Exponea
+import com.exponea.sdk.FlushManagerTest
 
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationData
+import com.google.firebase.messaging.RemoteMessage
 
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +33,12 @@ class FcmManagerImplTest {
     fun handleNullDataNotificationTest() {
         val data: NotificationData? = null
         manager.showNotification("", "", data, 0, notificationManager, hashMapOf())
+    }
+
+    @Test
+    fun handleNullRemoteMessageNotificationTest() {
+        val data: RemoteMessage? = null
+        manager.showRemoteMessageNotification(data, notificationManager)
     }
 
 }

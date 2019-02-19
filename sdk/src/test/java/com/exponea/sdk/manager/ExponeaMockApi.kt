@@ -7,8 +7,6 @@ import java.util.*
 
 object ExponeaMockApi {
 
-
-
     suspend fun flush() {
         Exponea.flushData()
         delay(2000L)

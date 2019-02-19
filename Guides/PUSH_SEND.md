@@ -45,10 +45,11 @@ use **Actions->Others** and choose **Mobile Push Notifications** in pop-up menu
 
 ## Payload handling
 
-Exponea will automatically handle interactions you've provided in **Payload Builder**
-You need only to provide valid URL for browser interaction and a URI for **Deep link** like so:
+By default Exponea will automatically handle interactions you've provided in **Payload Builder**. You need only to provide valid URL for browser interaction and a URI for **Deep link** like so:
 
 ![](pics/send9.png)
+
+You can change this behavior by changing the `isAutoPushNotification` flag. In that case you'll have to manually handle payloads on your own `FirebaseMessagingService` implementation. If you're handling it manually you can still use Exponea to track and/or show the notification using `Exponea.handleRemoteMessage()` method.
 
 ### Deep link Handling
 
@@ -75,7 +76,6 @@ When firing a notification the same host and scheme must be used.
 When the deeplink is triggered, your activity can receive the data and handle it accordingly. This can be done for example in Activity's `onCreate()` method
 
 ```
-
 if (getIntent() != null) {
 
    // The deeplink you've sent

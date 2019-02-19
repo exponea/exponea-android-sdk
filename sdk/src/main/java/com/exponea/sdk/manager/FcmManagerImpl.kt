@@ -22,6 +22,9 @@ import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.adjustUrl
+import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import java.io.IOException
 import java.net.URL
 import kotlin.concurrent.thread
@@ -36,6 +39,56 @@ class FcmManagerImpl(
     private lateinit var pushReceiverIntent: Intent
     private val requestCode = 111
     private var smallIconRes = -1
+
+    override fun handleRemoteMessage(message: RemoteMessage?, manager: NotificationManager, showNotification: Boolean) {
+
+        Logger.d(this, "handleRemoteMessage")
+
+        if (message == null) return
+
+        val title = message.data?.get("title") ?: ""
+        val body = message.data?.get("message") ?: ""
+
+        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+        val dataString = message.data?.get("data")
+        val data = gson.fromJson(dataString, NotificationData::class.java)
+        val notificationId = message.data?.get("notification_id")?.toInt() ?: 0
+
+        // Configure the notification channel for push notifications on API 26+
+        // This configuration runs only once.
+        if (!Exponea.component.pushNotificationRepository.get()) {
+            createNotificationChannel(manager)
+            Exponea.component.pushNotificationRepository.set(true)
+        }
+
+        // Track the delivered push event to Exponea API.
+        Exponea.component.pushManager.trackDeliveredPush(
+                data = data
+        )
+
+        if (showNotification){
+            //Create a map with all the data of the remote message, removing the data already processed
+            val messageData = message.data?.apply {
+                remove("title")
+                remove("message")
+                remove("data")
+                remove("notification_id")
+            }?.run {
+                HashMap(this)
+            } ?: HashMap()
+
+            // Show push notification.
+            showNotification(
+                    title,
+                    body,
+                    data,
+                    notificationId,
+                    manager,
+                    messageData
+            )
+        }
+
+    }
 
     override fun showNotification(
             title: String,
@@ -73,15 +126,6 @@ class FcmManagerImpl(
         manager.notify(id, notification.build())
     }
 
-    private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        val notificationPayload = NotificationPayload(messageData)
-        handlePayloadImage(notification, notificationPayload)
-        handlePayloadSound(notification, notificationPayload)
-        handlePayloadButtons(notification, notificationPayload)
-        handlePayloadNotificationAction(notification, notificationPayload)
-        handlePayloadAttributes(notificationPayload)
-    }
-
     override fun createNotificationChannel(manager: NotificationManager) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -100,6 +144,15 @@ class FcmManagerImpl(
             // or other notification behaviors after this
             manager.createNotificationChannel(channel)
         }
+    }
+
+    private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
+        val notificationPayload = NotificationPayload(messageData)
+        handlePayloadImage(notification, notificationPayload)
+        handlePayloadSound(notification, notificationPayload)
+        handlePayloadButtons(notification, notificationPayload)
+        handlePayloadNotificationAction(notification, notificationPayload)
+        handlePayloadAttributes(notificationPayload)
     }
 
     private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
@@ -139,9 +192,9 @@ class FcmManagerImpl(
     private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         //handle the notification body click action
         messageData.notificationAction?.let {
-                val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.url.adjustUrl())
-                val pi = generateActionPendingIntent(it.action, info, requestCode)
-                notification.setContentIntent(pi)
+            val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.url.adjustUrl())
+            val pi = generateActionPendingIntent(it.action, info, requestCode)
+            notification.setContentIntent(pi)
         }
     }
 

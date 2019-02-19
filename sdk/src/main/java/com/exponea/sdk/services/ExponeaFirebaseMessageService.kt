@@ -32,7 +32,7 @@ class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             return
         }
 
-        Exponea.showNotification(message, notificationManager)
+        Exponea.handleRemoteMessage(message, notificationManager)
     }
 
     override fun onNewToken(token: String?) {

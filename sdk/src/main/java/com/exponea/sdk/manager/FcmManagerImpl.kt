@@ -40,9 +40,9 @@ class FcmManagerImpl(
     private val requestCode = 111
     private var smallIconRes = -1
 
-    override fun showRemoteMessageNotification(message: RemoteMessage?, manager: NotificationManager) {
+    override fun handleRemoteMessage(message: RemoteMessage?, manager: NotificationManager, showNotification: Boolean) {
 
-        Logger.d(this, "showRemoteMessageNotification")
+        Logger.d(this, "handleRemoteMessage")
 
         if (message == null) return
 
@@ -66,25 +66,27 @@ class FcmManagerImpl(
                 data = data
         )
 
-        //Create a map with all the data of the remote message, removing the data already processed
-        val messageData = message.data?.apply {
-            remove("title")
-            remove("message")
-            remove("data")
-            remove("notification_id")
-        }?.run {
-            HashMap(this)
-        } ?: HashMap()
+        if (showNotification){
+            //Create a map with all the data of the remote message, removing the data already processed
+            val messageData = message.data?.apply {
+                remove("title")
+                remove("message")
+                remove("data")
+                remove("notification_id")
+            }?.run {
+                HashMap(this)
+            } ?: HashMap()
 
-        // Show push notification.
-        showNotification(
-                title,
-                body,
-                data,
-                notificationId,
-                manager,
-                messageData
-        )
+            // Show push notification.
+            showNotification(
+                    title,
+                    body,
+                    data,
+                    notificationId,
+                    manager,
+                    messageData
+            )
+        }
 
     }
 

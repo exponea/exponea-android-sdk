@@ -49,7 +49,7 @@ By default Exponea will automatically handle interactions you've provided in **P
 
 ![](pics/send9.png)
 
-You can change this behavior by changing the `isAutoPushNotification` flag. In that case you'll have to manually handle payloads on your own `FirebaseMessagingService` implementation. If you're handling it manually and still want to Exponea to show the notification, you can use `Exponea.showNotification(message: RemoteMessage?, manager: NotificationManager)` method.
+You can change this behavior by changing the `isAutoPushNotification` flag. In that case you'll have to manually handle payloads on your own `FirebaseMessagingService` implementation. If you're handling it manually and still want to Exponea to show the notification, you can use `Exponea.handleRemoteMessage()` method.
 
 ### Deep link Handling
 

@@ -366,16 +366,18 @@ object Exponea {
      * Handles the notification payload from FirebaseMessagingService
      * @param message the RemoteMessage payload received from Firebase
      * @param manager the system notification manager instance
+     * @param showNotification indicates if the SDK should display the notification or just track it
      */
-    fun showNotification(
+    fun handleRemoteMessage(
             message: RemoteMessage?,
-            manager: NotificationManager
+            manager: NotificationManager,
+            showNotification: Boolean = true
     ) {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
-        component.fcmManager.showRemoteMessageNotification(message, manager)
+        component.fcmManager.handleRemoteMessage(message, manager, showNotification)
     }
 
     // Private Helpers

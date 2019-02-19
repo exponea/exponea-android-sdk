@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.2.1
+* Add the ability to use custom Firebase service by create public method in Exponea to handle remote push notification, which tracks and optionally shows notification
+
 ### 2.2.0
 * Fix for crash with billing client 1.2 dependency 
 	- **It is now required to provide a list of SKUs of in app purchases you wish to track. Please see [this document](./PAYMENT.md) for information about how to set this up.**

@@ -96,7 +96,7 @@ class FcmManagerImpl(
             manager: NotificationManager,
             messageData: HashMap<String, String>
     ) {
-        Logger.d(this, "showRemoteMessageNotification")
+        Logger.d(this, "showNotification")
 
         pushReceiverIntent = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
         pendingIntent = PendingIntent.getBroadcast(context, requestCode, pushReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT)

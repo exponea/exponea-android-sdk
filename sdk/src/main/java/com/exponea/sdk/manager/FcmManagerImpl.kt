@@ -66,7 +66,7 @@ class FcmManagerImpl(
                 data = data
         )
 
-        if (showNotification){
+        if (showNotification) {
             //Create a map with all the data of the remote message, removing the data already processed
             val messageData = message.data?.apply {
                 remove("title")
@@ -192,7 +192,7 @@ class FcmManagerImpl(
     private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         //handle the notification body click action
         messageData.notificationAction?.let {
-            val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.url.adjustUrl())
+            val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.title, it.url.adjustUrl())
             val pi = generateActionPendingIntent(it.action, info, requestCode)
             notification.setContentIntent(pi)
         }

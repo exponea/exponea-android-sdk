@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.2.2
+* Fixed a bug with notification body deeplink not getting parsed correctly
+
 ### 2.2.1
 * Add the ability to use custom Firebase service by create public method in Exponea to handle remote push notification, which tracks and optionally shows notification
 

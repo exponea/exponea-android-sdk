@@ -66,7 +66,7 @@ class FcmManagerImpl(
                 data = data
         )
 
-        if (showNotification) {
+        if (showNotification && isValidNotification(message)) {
             //Create a map with all the data of the remote message, removing the data already processed
             val messageData = message.data?.apply {
                 remove("title")
@@ -144,6 +144,10 @@ class FcmManagerImpl(
             // or other notification behaviors after this
             manager.createNotificationChannel(channel)
         }
+    }
+
+    private fun isValidNotification(message: RemoteMessage?): Boolean {
+        return (message?.data?.get("title")?.isNotBlank() == true)
     }
 
     private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {

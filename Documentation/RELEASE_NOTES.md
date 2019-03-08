@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 2.2.3
+* Possible fix for null enum ordinal crash on routes when loading from database
+* Don't display push notifications if title is empty
+
 ### 2.2.2
 * Fixed a bug with notification body deeplink not getting parsed correctly
 

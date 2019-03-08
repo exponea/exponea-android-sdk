@@ -7,6 +7,6 @@ data class DatabaseStorageObject<T>(
         var tries: Int = 0,
         var projectId: String,
         var item: T,
-        var route: Route,
+        var route: Route?,
         var shouldBeSkipped: Boolean = false
 )

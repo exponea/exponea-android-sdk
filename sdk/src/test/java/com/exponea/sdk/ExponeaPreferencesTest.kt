@@ -1,12 +1,12 @@
 package com.exponea.sdk
 
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -21,7 +21,7 @@ class ExponeaPreferencesTest {
 
     @Before
     fun init() {
-        prefs = ExponeaPreferencesImpl(RuntimeEnvironment.application.applicationContext)
+        prefs = ExponeaPreferencesImpl(ApplicationProvider.getApplicationContext())
     }
 
     @Test

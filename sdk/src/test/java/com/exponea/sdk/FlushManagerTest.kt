@@ -1,5 +1,7 @@
 package com.exponea.sdk
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.*
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -12,7 +14,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -42,7 +44,7 @@ class FlushManagerTest {
 
     @Before
     fun init() {
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL
@@ -54,19 +56,21 @@ class FlushManagerTest {
     @Test
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
-        val lock = Object()
+        val count = CountDownLatch(1)
+
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
-            synchronized(lock) { lock.notify() }
+            count.countDown()
         }
         manager.flushData()
-        synchronized(lock) { lock.wait() }
+
+        count.await()
     }
 
     @Test(timeout = 30_000)
     fun flushEvents_ShouldFail_WithNoInternetConnection() {
 
-        val lock = Object()
+        val count = CountDownLatch(1)
         val service = ExponeaMockService(false)
         val noInternetManager = NoInternetConnectionManagerMock
 
@@ -75,11 +79,11 @@ class FlushManagerTest {
 
         manager.onFlushFinishListener = {
             assertEquals(1, repo.all().size)
-            synchronized(lock) { lock.notify() }
+            count.countDown()
         }
 
         manager.flushData()
-        synchronized(lock) { lock.wait(5000) }
+        count.await()
     }
 
     /**
@@ -90,15 +94,14 @@ class FlushManagerTest {
     fun flushEvents_ShouldBeEmptyWhenItFails() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
-        val lock = Object()
+        val count = CountDownLatch(1)
 
         manager.onFlushFinishListener = {
             assertEquals(0, repo.all().size)
-            synchronized(lock) { lock.notify() }
+            count.countDown()
         }
         manager.flushData()
 
-        synchronized(lock) { lock.wait() }
-
+        count.await()
     }
 }

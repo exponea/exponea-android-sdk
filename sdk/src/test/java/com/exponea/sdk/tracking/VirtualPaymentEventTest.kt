@@ -1,15 +1,21 @@
 package com.exponea.sdk.tracking
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PurchasedItem
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -44,7 +50,7 @@ class VirtualPaymentEventTest {
     @Before
     fun prepareForTest() {
 
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL

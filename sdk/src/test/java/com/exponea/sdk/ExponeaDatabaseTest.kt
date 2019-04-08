@@ -1,5 +1,6 @@
 package com.exponea.sdk
 
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
@@ -12,9 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -37,7 +36,7 @@ class ExponeaDatabaseTest {
 
     @Before
     fun init() {
-        Paper.init(RuntimeEnvironment.application.applicationContext)
+        Paper.init(ApplicationProvider.getApplicationContext())
         db = ExponeaDatabaseImpl(DB_NAME)
     }
 

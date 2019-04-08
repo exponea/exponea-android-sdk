@@ -1,11 +1,9 @@
 package com.exponea.sdk.stress
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ConnectionManagerMock
-import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.manager.ExponeaMockService
-import com.exponea.sdk.manager.FlushManager
-import com.exponea.sdk.manager.FlushManagerImpl
+import com.exponea.sdk.manager.*
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -18,8 +16,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import java.util.Random
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
@@ -50,7 +47,7 @@ class FlushStressTest {
 
     @Before
     fun init() {
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL

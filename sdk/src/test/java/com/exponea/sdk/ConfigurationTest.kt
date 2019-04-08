@@ -1,11 +1,12 @@
 package com.exponea.sdk
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.currentTimeSeconds
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -13,7 +14,7 @@ import kotlin.test.assertEquals
 class ConfigurationTest {
 
     private fun setupConfigurationWithStruct() {
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration()
         configuration.projectToken = "projectToken"
         configuration.authorization = "projectAuthorization"
@@ -21,7 +22,7 @@ class ConfigurationTest {
     }
 
     private fun setupConfigurationWithFile() {
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.initFromFile(context)
     }
 

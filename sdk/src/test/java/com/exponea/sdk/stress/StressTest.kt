@@ -1,13 +1,9 @@
 package com.exponea.sdk.stress
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DatabaseStorageObject
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.tracking.CustomerPropertiesEventTest
 import com.exponea.sdk.util.currentTimeSeconds
@@ -21,8 +17,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import java.util.Random
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -56,7 +51,7 @@ class StressTest {
     @Before
     fun prepareForTest() {
 
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL

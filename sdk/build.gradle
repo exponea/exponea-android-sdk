@@ -45,7 +45,7 @@ dependencies {
     // Google Play In-App Purchase
     implementation 'com.android.billingclient:billing:1.2'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:17.3.0'
+    implementation 'com.google.firebase:firebase-messaging:17.5.0'
     // Google WorkManager
     api 'android.arch.work:work-runtime:1.0.0-alpha08'
 

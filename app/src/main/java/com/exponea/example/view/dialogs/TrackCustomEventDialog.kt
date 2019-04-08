@@ -3,8 +3,8 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +16,7 @@ import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
 
-class TrackCustomEventDialog : DialogFragment() {
+class TrackCustomEventDialog : androidx.fragment.app.DialogFragment() {
 
     private lateinit var onConfirmed: (eventName: String, properties: PropertiesList) -> Unit
     private val propsMap =  hashMapOf("property" to "some value" as Any)
@@ -25,7 +25,7 @@ class TrackCustomEventDialog : DialogFragment() {
         const val TAG = "TrackCustomEventDialog"
 
         fun show(
-                fragmentManager: FragmentManager,
+                fragmentManager: androidx.fragment.app.FragmentManager,
                 callback : (eventName: String, properties: PropertiesList) -> (Unit)
         ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)

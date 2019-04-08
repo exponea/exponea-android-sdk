@@ -3,8 +3,8 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
@@ -13,7 +13,7 @@ import com.exponea.example.R
 import com.exponea.sdk.models.CustomerAttributes
 import com.exponea.sdk.models.CustomerIds
 
-class FetchCustomAttributeDialog : DialogFragment(), AdapterView.OnItemSelectedListener{
+class FetchCustomAttributeDialog : androidx.fragment.app.DialogFragment(), AdapterView.OnItemSelectedListener{
 
     lateinit var onFetch: (CustomerAttributes) -> Unit
     lateinit var attribute: String
@@ -22,7 +22,7 @@ class FetchCustomAttributeDialog : DialogFragment(), AdapterView.OnItemSelectedL
 
         const val TAG = "FetchCustomerAttributesDialog"
 
-        fun show(fragmentManager: FragmentManager, onFetch: (CustomerAttributes) -> Unit) {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, onFetch: (CustomerAttributes) -> Unit) {
             val fragment = fragmentManager.findFragmentByTag(TAG) as?
                     FetchCustomAttributeDialog ?: FetchCustomAttributeDialog()
             fragment.onFetch = onFetch

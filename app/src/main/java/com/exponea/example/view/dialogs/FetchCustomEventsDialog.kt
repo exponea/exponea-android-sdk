@@ -3,8 +3,8 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -14,7 +14,7 @@ import com.exponea.example.R
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.FetchEventsRequest
 
-class FetchCustomEventsDialog : DialogFragment() {
+class FetchCustomEventsDialog : androidx.fragment.app.DialogFragment() {
 
     lateinit var onFetch: (FetchEventsRequest) -> Unit
 
@@ -22,7 +22,7 @@ class FetchCustomEventsDialog : DialogFragment() {
     companion object {
         private val TAG = FetchCustomEventsDialog::class.java.canonicalName
 
-        fun show(fragmentManager: FragmentManager, onFetch: (FetchEventsRequest) -> Unit) {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, onFetch: (FetchEventsRequest) -> Unit) {
 
             val fragment = fragmentManager.findFragmentByTag(TAG)
                     as? FetchCustomEventsDialog ?: FetchCustomEventsDialog()

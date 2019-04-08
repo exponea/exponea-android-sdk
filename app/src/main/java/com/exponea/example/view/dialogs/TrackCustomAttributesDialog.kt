@@ -3,8 +3,8 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -15,7 +15,7 @@ import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
 
-class TrackCustomAttributesDialog : DialogFragment() {
+class TrackCustomAttributesDialog : androidx.fragment.app.DialogFragment() {
 
     private lateinit var onUpdate: (PropertiesList) -> Unit
     private val attributes = HashMap<String, Any>()
@@ -23,7 +23,7 @@ class TrackCustomAttributesDialog : DialogFragment() {
     companion object {
         const val TAG = "TrackCustomAttributesDialog"
 
-        fun show(fragmentManager: FragmentManager, onUpdate: (PropertiesList) -> Unit) {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, onUpdate: (PropertiesList) -> Unit) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
                     as? TrackCustomAttributesDialog ?: TrackCustomAttributesDialog()
 

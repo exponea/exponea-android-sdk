@@ -61,7 +61,7 @@ dependencies {
     // Improved Unit Testing
     testImplementation "org.robolectric:robolectric:3.8"
     // Co-Routines
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1'
     // Mockito
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC2"
     testImplementation 'com.github.gmazzo:okhttp-mock:1.1.0'
@@ -81,12 +81,6 @@ task installArchives(type: Upload) {
             pom.version = '1.1-LOCAL'
             repository url: repositories.mavenLocal().url
         }
-    }
-}
-
-kotlin {
-    experimental {
-        coroutines "enable"
     }
 }
 

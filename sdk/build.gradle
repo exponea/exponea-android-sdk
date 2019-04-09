@@ -47,8 +47,7 @@ dependencies {
     // Google Firebase Cloud Message
     implementation 'com.google.firebase:firebase-messaging:17.5.0'
     // Google WorkManager
-    api 'android.arch.work:work-runtime:1.0.0-alpha08'
-
+    implementation "androidx.work:work-runtime-ktx:2.0.0"
 
     // Base Test
     testImplementation 'junit:junit:4.12'

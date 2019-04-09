@@ -392,7 +392,8 @@ object Exponea {
         this.component = ExponeaComponent(this.configuration, context)
 
         // WorkManager
-        WorkManager.initialize(context, Configuration.Builder().build())
+        initWorkManager()
+
         // Alarm Manager Starter
         startService()
 
@@ -429,6 +430,17 @@ object Exponea {
                 }
             }
         )
+    }
+
+    /**
+     * Initialize the WorkManager instance
+     */
+    private fun initWorkManager() {
+        try {
+            WorkManager.initialize(context, Configuration.Builder().build())
+        } catch (e: Exception) {
+            Logger.i(this, "WorkManager already init, skipping")
+        }
     }
 
     /**

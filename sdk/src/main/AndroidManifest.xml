@@ -28,11 +28,6 @@
                 <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />
             </intent-filter>
         </receiver>
-        <provider
-            android:name="androidx.work.impl.WorkManagerInitializer"
-            android:authorities="com.gpn.azs.workmanager-init"
-            android:enabled="false"
-            tools:replace="android:authorities" />
     </application>
 
 </manifest>

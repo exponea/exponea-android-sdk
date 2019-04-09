@@ -3,17 +3,15 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
-import com.exponea.example.App
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.exponea.example.R
 import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerIds
 
-class FetchCustomAttributeDialog : androidx.fragment.app.DialogFragment(), AdapterView.OnItemSelectedListener{
+class FetchCustomAttributeDialog : DialogFragment(), AdapterView.OnItemSelectedListener {
 
     lateinit var onFetch: (CustomerAttributes) -> Unit
     lateinit var attribute: String
@@ -22,7 +20,7 @@ class FetchCustomAttributeDialog : androidx.fragment.app.DialogFragment(), Adapt
 
         const val TAG = "FetchCustomerAttributesDialog"
 
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager, onFetch: (CustomerAttributes) -> Unit) {
+        fun show(fragmentManager: FragmentManager, onFetch: (CustomerAttributes) -> Unit) {
             val fragment = fragmentManager.findFragmentByTag(TAG) as?
                     FetchCustomAttributeDialog ?: FetchCustomAttributeDialog()
             fragment.onFetch = onFetch
@@ -51,8 +49,8 @@ class FetchCustomAttributeDialog : androidx.fragment.app.DialogFragment(), Adapt
     }
 
     private fun initView(view: View) {
-        val spinner : Spinner = view.findViewById(R.id.spinner)
-        val buttonFetch : Button = view.findViewById(R.id.buttonFetchAttribute)
+        val spinner: Spinner = view.findViewById(R.id.spinner)
+        val buttonFetch: Button = view.findViewById(R.id.buttonFetchAttribute)
         val editTextName: EditText = view.findViewById(R.id.editTextName)
 
         val adapter = ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, types).also {
@@ -73,8 +71,8 @@ class FetchCustomAttributeDialog : androidx.fragment.app.DialogFragment(), Adapt
 
     }
 
-    private fun buildCustomAttributeFrom(type: String, value: String) : CustomerAttributes {
-        return when(type) {
+    private fun buildCustomAttributeFrom(type: String, value: String): CustomerAttributes {
+        return when (type) {
             CustomerAttributes.TYPE_PROPERTY -> CustomerAttributes().also { it.withProperty(value) }
             CustomerAttributes.TYPE_AGGREGATE -> CustomerAttributes().also { it.withAggregation(value) }
             CustomerAttributes.TYPE_EXPRESSION -> CustomerAttributes().also { it.withExpression(value) }

@@ -3,30 +3,30 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.exponea.example.App
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.exponea.example.R
 import com.exponea.example.utils.asJson
 import com.exponea.sdk.models.PropertiesList
 
-class TrackCustomEventDialog : androidx.fragment.app.DialogFragment() {
+class TrackCustomEventDialog : DialogFragment() {
 
     private lateinit var onConfirmed: (eventName: String, properties: PropertiesList) -> Unit
-    private val propsMap =  hashMapOf("property" to "some value" as Any)
+    private val propsMap = hashMapOf("property" to "some value" as Any)
+
     companion object {
 
         const val TAG = "TrackCustomEventDialog"
 
         fun show(
-                fragmentManager: androidx.fragment.app.FragmentManager,
-                callback : (eventName: String, properties: PropertiesList) -> (Unit)
+                fragmentManager: FragmentManager,
+                callback: (eventName: String, properties: PropertiesList) -> (Unit)
         ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
                     as? TrackCustomEventDialog
@@ -38,22 +38,20 @@ class TrackCustomEventDialog : androidx.fragment.app.DialogFragment() {
 
     }
 
-
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(context, R.style.MyDialogTheme)
         val inflate = LayoutInflater.from(context)
-        val view = inflate.inflate(R.layout.dialog_track_custom_event, null ,false)
+        val view = inflate.inflate(R.layout.dialog_track_custom_event, null, false)
         builder.setView(view)
         initListeners(view)
         return builder.create()
     }
 
     private fun initListeners(view: View) {
-        val propName : EditText = view.findViewById(R.id.editTextPropName)
-        val propValue : EditText = view.findViewById(R.id.editTextValue)
-        val eventName : EditText = view.findViewById(R.id.editTextEventName)
-        val propsTextView : TextView = view.findViewById(R.id.textViewProperties)
+        val propName: EditText = view.findViewById(R.id.editTextPropName)
+        val propValue: EditText = view.findViewById(R.id.editTextValue)
+        val eventName: EditText = view.findViewById(R.id.editTextEventName)
+        val propsTextView: TextView = view.findViewById(R.id.textViewProperties)
 
 
         propsTextView.text = propsMap.asJson()
@@ -74,7 +72,6 @@ class TrackCustomEventDialog : androidx.fragment.app.DialogFragment() {
         }
 
     }
-
 
 
 }

@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.2.4
+* Update dependencies
+
 ### 2.2.3
 * Possible fix for null enum ordinal crash on routes when loading from database
 * Don't display push notifications if title is empty

@@ -3,13 +3,13 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.utils.asJson
@@ -46,14 +46,14 @@ class TrackCustomAttributesDialog : DialogFragment() {
         val nameView = view.findViewById(R.id.editTextName) as EditText
         val valueView = view.findViewById(R.id.editTextValue) as EditText
         val propertiesView = view.findViewById(R.id.textViewAttributes) as TextView
-        val idsView : TextView = view.findViewById(R.id.idsTextView)
+        val idsView: TextView = view.findViewById(R.id.idsTextView)
 
         idsView.text = "registered: ${App.instance.registeredIdManager.registeredID}"
 
 
         propertiesView.text = attributes.asJson()
         view.findViewById<Button>(R.id.buttonAddAttr).setOnClickListener {
-            if (!nameView.text.isEmpty() && !valueView.text.isEmpty() ) {
+            if (!nameView.text.isEmpty() && !valueView.text.isEmpty()) {
                 attributes[nameView.text.toString()] = valueView.text.toString()
                 propertiesView.text = attributes.asJson()
             }

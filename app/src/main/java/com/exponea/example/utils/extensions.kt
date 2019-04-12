@@ -1,12 +1,12 @@
 package com.exponea.example.utils
 
-import android.support.design.widget.TextInputEditText
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Patterns
+import com.google.android.material.textfield.TextInputEditText
 
 
-fun TextInputEditText.isValid() : Boolean{
+fun TextInputEditText.isValid(): Boolean {
     val isValid = !text.toString().isEmpty()
     error = if (isValid) {
         null
@@ -16,8 +16,9 @@ fun TextInputEditText.isValid() : Boolean{
     return isValid
 }
 
-fun TextInputEditText.isVaildUrl() : Boolean {
+fun TextInputEditText.isVaildUrl(): Boolean {
     val isEmpty = text.toString().isEmpty()
+    val text = text ?: ""
     val isUrl = Patterns.WEB_URL.matcher(text).matches() && (text.startsWith("https://") || text.startsWith("http://"))
     error = when {
         isEmpty -> "Empty URL"
@@ -46,7 +47,7 @@ fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
     })
 }
 
-fun HashMap<String, Any>.asJson() : String{
+fun HashMap<String, Any>.asJson(): String {
     var string = "{\n"
     this.toList().forEachIndexed { index, pair ->
         string += "\t ${pair.first}: ${pair.second}"

@@ -1,12 +1,8 @@
 package com.exponea.sdk
 
 import com.exponea.sdk.util.Logger
-import org.junit.After
-import org.junit.Assert
-import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class LoggerTest {
 
@@ -58,27 +54,27 @@ class LoggerTest {
         assertEquals(Logger.Level.INFO, Logger.level)
     }
 
-    // Log level VERBOSE
-    @Test
-    fun setLoggerLevelToVerbose_shouldBeEqual1() {
-        Logger.level = Logger.Level.VERBOSE
-        assertEquals(1, Logger.level.value)
-    }
-    @Test
-    fun setLoggerLevelToVerbose_shouldBeEqualVerbose() {
-        Logger.level = Logger.Level.VERBOSE
-        assertEquals(Logger.Level.VERBOSE, Logger.level)
-    }
-
     // Log level DEBUG
     @Test
     fun setLoggerLevelToDebug_shouldBeLessThan1() {
         Logger.level = Logger.Level.DEBUG
-        assertTrue { Logger.level.value < 1 }
+        assertEquals(1, Logger.level.value)
     }
     @Test
     fun setLoggerLevelToDebug_shouldBeEqualDebug() {
         Logger.level = Logger.Level.DEBUG
         assertEquals(Logger.Level.DEBUG, Logger.level)
+    }
+
+    // Log level VERBOSE
+    @Test
+    fun setLoggerLevelToVerbose_shouldBeEqual1() {
+        Logger.level = Logger.Level.VERBOSE
+        assertEquals(0, Logger.level.value)
+    }
+    @Test
+    fun setLoggerLevelToVerbose_shouldBeEqualVerbose() {
+        Logger.level = Logger.Level.VERBOSE
+        assertEquals(Logger.Level.VERBOSE, Logger.level)
     }
 }

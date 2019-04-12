@@ -1,9 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
-import kotlinx.coroutines.experimental.delay
-import java.util.*
+import kotlinx.coroutines.delay
 
 object ExponeaMockApi {
 

@@ -1,27 +1,20 @@
 package com.exponea.sdk
 
 import android.app.Activity
-import androidx.work.Configuration
-import androidx.work.WorkManager
-import com.exponea.sdk.manager.ExponeaMockServer
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.currentTimeSeconds
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -46,7 +39,7 @@ class SessionManagerTest {
     @Before
     fun prepareForTest() {
 
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL
@@ -54,7 +47,7 @@ class SessionManagerTest {
 
         sm = Exponea.component.sessionManager
         prefs = Exponea.component.preferences
-        WorkManager.initialize(context, Configuration.Builder().build())
+
     }
 
     @Test

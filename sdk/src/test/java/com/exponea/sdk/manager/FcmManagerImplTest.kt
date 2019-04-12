@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import android.app.NotificationManager
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationData
@@ -23,8 +24,8 @@ class FcmManagerImplTest {
 
     @Before
     fun setUp() {
-        manager = FcmManagerImpl(RuntimeEnvironment.application.applicationContext, ExponeaConfiguration())
-        notificationManager = RuntimeEnvironment.application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager = FcmManagerImpl(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        notificationManager = ApplicationProvider.getApplicationContext<Context>().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
     @Test

@@ -5,14 +5,15 @@ apply from: 'maven-push.gradle'
 apply from: '../jacoco.gradle'
 
 android {
-    compileSdkVersion 27
+
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 27
         versionCode 20
         versionName "2.2.3"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
     }
 
@@ -26,11 +27,8 @@ android {
         }
     }
 
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
+    testOptions.unitTests.includeAndroidResources = true
+
 }
 
 dependencies {
@@ -39,35 +37,35 @@ dependencies {
     // Database
     implementation 'io.paperdb:paperdb:2.6'
     // Networking
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
     // Deserialization
     implementation 'com.google.code.gson:gson:2.8.5'
     // OkHttp Debugger Logger
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.1'
     // Google Play In-App Purchase
     implementation 'com.android.billingclient:billing:1.2'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:17.3.0'
+    implementation 'com.google.firebase:firebase-messaging:17.5.0'
     // Google WorkManager
-    api 'android.arch.work:work-runtime:1.0.0-alpha08'
-
+    implementation "androidx.work:work-runtime-ktx:2.0.0"
 
     // Base Test
     testImplementation 'junit:junit:4.12'
+    testImplementation 'androidx.test:core:1.1.0'
     // Kotlin jUnit
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.2.40'
     // Networking Testing
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
     // Improved Unit Testing
-    testImplementation "org.robolectric:robolectric:3.8"
+    testImplementation "org.robolectric:robolectric:4.2"
     // Co-Routines
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1'
     // Mockito
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC2"
     testImplementation 'com.github.gmazzo:okhttp-mock:1.1.0'
 
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 }
 
 task installArchives(type: Upload) {
@@ -81,12 +79,6 @@ task installArchives(type: Upload) {
             pom.version = '1.1-LOCAL'
             repository url: repositories.mavenLocal().url
         }
-    }
-}
-
-kotlin {
-    experimental {
-        coroutines "enable"
     }
 }
 

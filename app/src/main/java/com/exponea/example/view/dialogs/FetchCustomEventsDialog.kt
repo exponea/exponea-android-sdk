@@ -3,21 +3,18 @@ package com.exponea.example.view.dialogs
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import com.exponea.example.App
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.exponea.example.R
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.FetchEventsRequest
 
 class FetchCustomEventsDialog : DialogFragment() {
 
     lateinit var onFetch: (FetchEventsRequest) -> Unit
-
 
     companion object {
         private val TAG = FetchCustomEventsDialog::class.java.canonicalName

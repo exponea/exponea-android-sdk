@@ -1,5 +1,7 @@
 package com.exponea.sdk.tracking
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.CustomerIds
@@ -14,7 +16,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -49,7 +50,7 @@ class CustomerPropertiesEventTest {
     fun prepareForTest() {
         ExponeaMockServer.setResponseSuccess(EventTrackTest.server, "tracking/track_event_success.json")
 
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.init(context, configuration)
         Exponea.flushMode = FlushMode.MANUAL

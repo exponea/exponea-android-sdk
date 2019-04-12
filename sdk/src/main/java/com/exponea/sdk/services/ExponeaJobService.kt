@@ -1,12 +1,14 @@
 package com.exponea.sdk.services
 
+import android.content.Context
 import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-class ExponeaJobService : Worker() {
+class ExponeaJobService(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
         const val TAG = "ExponeaJobServiceWork"
@@ -17,7 +19,7 @@ class ExponeaJobService : Worker() {
         val countDownLatch = CountDownLatch(1)
         // If our flush mode isn't set to period then we should cancel all future jobs
         if (Exponea.flushMode != FlushMode.PERIOD) {
-            return Result.SUCCESS
+            return Result.success()
         }
         try {
             Exponea.component.flushManager.onFlushFinishListener = {
@@ -29,18 +31,19 @@ class ExponeaJobService : Worker() {
                 countDownLatch.await()
             } catch (e: InterruptedException) {
                 Logger.e(this, "doWork -> flush was interrupted", e)
-                return Result.FAILURE
+                return Result.failure()
             }
         } catch (e: UninitializedPropertyAccessException) {
-            return Result.SUCCESS
+            return Result.success()
         } catch (e: Exception) {
-            return Result.FAILURE
+            return Result.failure()
         }
-        return Result.RETRY
+        return Result.retry()
     }
 
-    override fun onStopped(cancelled: Boolean) {
-        super.onStopped(cancelled)
+    override fun onStopped() {
+        super.onStopped()
         Logger.d(this, "onStopJob")
     }
+
 }

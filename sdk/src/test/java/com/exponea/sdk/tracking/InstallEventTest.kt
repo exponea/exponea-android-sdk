@@ -1,5 +1,7 @@
 package com.exponea.sdk.tracking
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.Constants
@@ -13,7 +15,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -46,7 +47,7 @@ class InstallEventTest {
     @Before
     fun prepareForTest() {
 
-        val context = RuntimeEnvironment.application
+        val context = ApplicationProvider.getApplicationContext<Context>()
 
         // First Install event success
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")

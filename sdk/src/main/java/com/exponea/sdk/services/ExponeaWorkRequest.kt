@@ -1,14 +1,16 @@
 package com.exponea.sdk.services
 
+import android.content.Context
 import android.os.Looper
 import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
-import java.util.*
 import java.util.concurrent.CountDownLatch
 
-class ExponeaWorkRequest : Worker() {
+class ExponeaWorkRequest(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+
     companion object {
         const val KEY_CONFIG_INPUT = "KeyConfigInput"
     }
@@ -16,7 +18,7 @@ class ExponeaWorkRequest : Worker() {
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")
         val countDownLatch = CountDownLatch(1)
-        val config = ExponeaConfigRepository.get(applicationContext) ?: return Result.FAILURE
+        val config = ExponeaConfigRepository.get(applicationContext) ?: return Result.failure()
 
         if (!Exponea.isInitialized) {
             Looper.prepare()
@@ -37,14 +39,14 @@ class ExponeaWorkRequest : Worker() {
                 countDownLatch.await()
             } catch (e: InterruptedException) {
                 Logger.e(this, "doWork -> countDownLatch was interrupted", e)
-                return Result.FAILURE
+                return Result.failure()
             }
 
             Logger.d(this, "doWork -> Success!")
 
-            return Result.SUCCESS
+            return Result.success()
         } catch (e: Exception) {
-            return Result.FAILURE
+            return Result.failure()
         }
     }
 }

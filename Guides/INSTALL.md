@@ -85,9 +85,8 @@ And it also must be registered `AndroidManafifest.xml` like so:
 If you are using configuration from file you code above could be simplified
 ```
 override fun onCreate(){
-  super.onCreate()
-
-   Exponea.initFromFile(this, configuration)
+    super.onCreate()    
+    Exponea.initFromFile(this)
 }
 ```
 

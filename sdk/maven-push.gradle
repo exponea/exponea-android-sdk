@@ -13,7 +13,7 @@ allprojects { ext."signing.password" = System.getenv('password') }
 
 // Artifact settings
 def _group = 'com.exponea.sdk'
-def _version = '2.2.4'
+def _version = '2.2.5'
 def _archivesBaseName = 'sdk'
 
 def _name = 'Exponea Sdk Library '

@@ -1,5 +1,9 @@
 ## Release Notes
 
+### 2.2.5
+* Documentation improvements
+* Change notification action_type to "mobile notification" for better tracking purposes
+
 ### 2.2.4
 * Update dependencies
 

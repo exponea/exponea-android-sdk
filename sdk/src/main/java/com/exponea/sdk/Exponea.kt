@@ -279,7 +279,7 @@ object Exponea {
     ) {
         val properties = PropertiesList(
             hashMapOf(
-                "action_type" to "notification",
+                "action_type" to "mobile notification",
                 "status" to "delivered",
                 "os_name" to "Android"
             )
@@ -311,7 +311,7 @@ object Exponea {
     ) {
         val properties = PropertiesList(
             hashMapOf(
-                "action_type" to "notification",
+                "action_type" to "mobile notification",
                 "status" to "clicked")
         )
 

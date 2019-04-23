@@ -50,7 +50,7 @@ class FcmManagerImpl(
         val body = message.data?.get("message") ?: ""
 
         val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
-        val dataString = message.data?.get("data")
+        val dataString = message.data?.get("data") ?: message.data?.get("attributes")
         val data = gson.fromJson(dataString, NotificationData::class.java)
         val notificationId = message.data?.get("notification_id")?.toInt() ?: 0
 

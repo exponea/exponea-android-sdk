@@ -281,7 +281,8 @@ object Exponea {
             hashMapOf(
                 "action_type" to "mobile notification",
                 "status" to "delivered",
-                "os_name" to "Android"
+                "os_name" to "Android",
+                "platform" to "Android"
             )
         )
         Logger.d(this, "Push dev: ${timestamp.toString()}")
@@ -312,7 +313,8 @@ object Exponea {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "mobile notification",
-                "status" to "clicked")
+                "status" to "clicked",
+                "platform" to "Android")
         )
 
         // Copy notification action data

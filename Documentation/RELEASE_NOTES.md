@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.2.6
+* Improvements to notification tracking parameters
+
 ### 2.2.5
 * Documentation improvements
 * Change notification action_type to "mobile notification" for better tracking purposes

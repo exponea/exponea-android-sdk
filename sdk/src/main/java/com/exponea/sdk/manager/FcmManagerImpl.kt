@@ -147,7 +147,7 @@ class FcmManagerImpl(
     }
 
     private fun isValidNotification(message: RemoteMessage?): Boolean {
-        return (message?.data?.get("title")?.isNotBlank() == true)
+        return (message?.data?.get("title")?.isNotBlank() == true) || (message?.data?.get("message")?.isNotBlank() == true)
     }
 
     private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {

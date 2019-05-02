@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.2.7
+* Make push notifications valid when they have a title or a message
+
 ### 2.2.6
 * Improvements to notification tracking parameters
 

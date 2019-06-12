@@ -109,3 +109,30 @@ Exponea.fetchRecommendation(
         }
 )
 ```
+
+#### Consent Categories
+
+> **NOTE:** Requires Token authorization
+
+Fetch the list of your existing consent categories.
+
+```
+fun getConsents(
+        onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+        onFailure: (String) -> Unit
+)
+```
+
+#### 💻 Usage
+
+```
+// Call getConsents to get the consent categories.
+Exponea.getConsents(
+        onSuccess = {
+			// SDK will return a list of Consent objects.
+        },
+        onFailure = {
+			// SDK will return a FetchError object.
+        }
+)
+```

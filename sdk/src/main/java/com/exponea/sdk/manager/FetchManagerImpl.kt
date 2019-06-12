@@ -110,7 +110,7 @@ class FetchManagerImpl(
                             val responseCode = response.code()
                             Logger.d(this, "Response Code: $responseCode")
                             val jsonBody = response.body()?.string()
-                            if (responseCode in 200..299) {
+                            if (response.isSuccessful) {
                                 try {
                                     val type = object : TypeToken<Result<ArrayList<Consent>>>() {}.type
                                     val result = gson.fromJson<Result<ArrayList<Consent>>>(

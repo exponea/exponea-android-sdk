@@ -149,4 +149,12 @@ class ExponeaServiceImpl(
         val jsonBody = gson.toJson(banner)
         return networkManager.post(endPoint, jsonBody)
     }
+
+    override fun postFetchConsents(projectToken: String): Call {
+        val endPoint = ApiEndPoint(
+                ApiEndPoint.EndPointName.CONSENTS,
+                projectToken
+        ).toString()
+        return networkManager.post(endPoint, null)
+    }
 }

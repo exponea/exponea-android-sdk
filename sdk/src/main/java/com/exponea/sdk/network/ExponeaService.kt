@@ -21,4 +21,5 @@ interface ExponeaService {
     fun postAnonymize(projectToken: String, customerIds: CustomerIds): Call
     fun getBannerConfiguration(projectToken: String): Call
     fun postFetchBanner(projectToken: String, banner: Banner): Call
+    fun postFetchConsents(projectToken: String): Call
 }

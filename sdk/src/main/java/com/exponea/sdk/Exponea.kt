@@ -224,6 +224,22 @@ object Exponea {
     }
 
     /**
+     * Fetch the list of your existing consent categories.
+     * @param onSuccess - success callback, when data is ready
+     * @param onFailure - failure callback, in case of errors
+     */
+    fun getConsents(
+            onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    ) {
+        Exponea.component.fetchManager.fetchConsents(
+                projectToken = Exponea.configuration.projectToken,
+                onSuccess = onSuccess,
+                onFailure = onFailure
+        )
+    }
+
+    /**
      * Manually tracks session start
      * @param timestamp - determines session start time ( in seconds )
      */

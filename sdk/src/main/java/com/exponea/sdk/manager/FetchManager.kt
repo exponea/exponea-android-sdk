@@ -18,4 +18,9 @@ interface FetchManager {
             onFailure: (Result<FetchError>) -> Unit
     )
 
+    fun fetchConsents(
+            projectToken: String,
+            onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    )
 }

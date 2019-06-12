@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.3.0
+* Added option to fetch consent cateogires (see [FETCH.md](./FETCH.md))
+
 ### 2.2.7
 * Make push notifications valid when they have a title or a message
 

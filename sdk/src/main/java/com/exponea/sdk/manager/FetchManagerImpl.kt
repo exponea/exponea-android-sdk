@@ -98,4 +98,43 @@ class FetchManagerImpl(
                         }
                 )
     }
+
+    override fun fetchConsents(
+            projectToken: String,
+            onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+            onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postFetchConsents(projectToken)
+                .enqueue(
+                        onResponse = { _, response ->
+                            val responseCode = response.code()
+                            Logger.d(this, "Response Code: $responseCode")
+                            val jsonBody = response.body()?.string()
+                            if (responseCode in 200..299) {
+                                try {
+                                    val type = object : TypeToken<Result<ArrayList<Consent>>>() {}.type
+                                    val result = gson.fromJson<Result<ArrayList<Consent>>>(
+                                            jsonBody,
+                                            type
+                                    )
+                                    onSuccess(result)
+                                } catch (e: Exception) {
+                                    // Return failure when find any exception while trying to deserialize the response.
+                                    val error = FetchError(jsonBody, e.localizedMessage)
+                                    Logger.e(this, "Failed to deserialize banner: $error")
+                                    onFailure(Result(false, error))
+                                }
+                            } else {
+                                val error = FetchError(jsonBody, response.message())
+                                Logger.e(this, "Failed to fetch events: $error")
+                                onFailure(Result(false, error))
+                            }
+                        },
+                        onFailure = { _, ioException ->
+                            val error = FetchError(null, ioException.localizedMessage)
+                            Logger.e(this, "Fetch configuration Failed: $error", ioException)
+                            onFailure(Result(false, error))
+                        }
+                )
+    }
 }

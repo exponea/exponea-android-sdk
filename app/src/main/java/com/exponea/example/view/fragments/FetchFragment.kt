@@ -52,12 +52,24 @@ class FetchFragment : BaseFragment() {
         recommendationsButton.setOnClickListener {
             setProgressBarVisible(true)
         }
+
+        consentsButton.setOnClickListener {
+            setProgressBarVisible(true)
+            Exponea.getConsents(
+                    {
+                        onFetchSuccess(it)
+                    },
+                    {
+                        onFetchFailed(it)
+                    }
+                    )
+        }
     }
 
     /**
      * Our success callback
      */
-    private fun onFetchSuccess(result: Result<List<CustomerAttributeModel>>) {
+    private fun onFetchSuccess(result: Result<ArrayList<Consent>>) {
        runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = result.toString()

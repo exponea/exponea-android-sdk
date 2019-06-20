@@ -44,8 +44,8 @@ It's possible to set values in the [`ExponeaConfiguration`](../Documentation/CON
 ```
 // Create a new ExponeaConfiguration instance
 val configuration = ExponeaConfiguration()
-configuration.defaultAttributes["thisIsADefaultStringProperty"] = "This is a default string value"
-configuration.defaultAttributes["thisIsADefaultIntProperty"] = 1
+configuration.defaultProperties["thisIsADefaultStringProperty"] = "This is a default string value"
+configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
 
 // Start the SDK
 Exponea.init(App.instance, configuration)

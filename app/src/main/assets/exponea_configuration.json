@@ -13,7 +13,7 @@
   "pushChannelDescription": "Notifications",
   "pushChannelId": "0",
   "pushNotificationImportance": 3,
-  "defaultAttributes": {
+  "defaultProperties": {
     "thisIsADefaultStringProperty": "This is a default string value from a file configuration",
     "thisIsADefaultIntProperty": 100
   }

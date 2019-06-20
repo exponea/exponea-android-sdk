@@ -70,8 +70,8 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.projectToken = projectToken
         configuration.baseURL = apiUrl
         configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
-        configuration.defaultAttributes["thisIsADefaultStringProperty"] = "This is a default string value"
-        configuration.defaultAttributes["thisIsADefaultIntProperty"] = 1
+        configuration.defaultProperties["thisIsADefaultStringProperty"] = "This is a default string value"
+        configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
 
         // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {

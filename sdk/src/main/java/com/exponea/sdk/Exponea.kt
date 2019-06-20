@@ -563,7 +563,7 @@ object Exponea {
 
         val customerIds = component.customerIdsRepository.get()
 
-        val trackedProperties = configuration.defaultAttributes
+        val trackedProperties = configuration.defaultProperties
         trackedProperties.putAll(properties)
 
         val event = ExportedEventType(

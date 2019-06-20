@@ -35,6 +35,22 @@ Exponea.trackEvent(
 )
 ```
 
+## 🔍 Default Properties
+
+It's possible to set values to be sent in every tracking event. Notice that those values will be overwritten if the tracking event has properties with the same key name.
+
+#### 💻 Usage
+
+```
+// Create a new [`ExponeaConfiguration`](../Documentation/CONFIG.md) instance
+val configuration = ExponeaConfiguration()
+configuration.defaultAttributes["thisIsADefaultStringProperty"] = "This is a default string value"
+configuration.defaultAttributes["thisIsADefaultIntProperty"] = 1
+
+// Start the SDK
+Exponea.init(App.instance, configuration)
+```
+
 ## 🔍 Customer Properties
 
 #### identify Customer

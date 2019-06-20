@@ -40,6 +40,8 @@ data class ExponeaConfiguration(
   var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
   // A list of SKUs for automatic in-app purchases tracking
   var skuList: List<String> = arrayListOf()
+  /** A list of attributes to be added to all tracking events */
+  var defaultAttributes: HashMap<String, Any> = hashMapOf()
 )
 ```
 #### projectToken
@@ -131,3 +133,7 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### skuList
 
 * A list of SKUs for automatic in-app purchases tracking.
+
+#### defaultAttributes
+
+* The properties defined on this setting will always be sent with all triggered tracking events.

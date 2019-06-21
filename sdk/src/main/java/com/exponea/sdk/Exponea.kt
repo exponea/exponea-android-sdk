@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
+
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     lateinit var component: ExponeaComponent
@@ -560,14 +561,16 @@ object Exponea {
             return
         }
 
-
         val customerIds = component.customerIdsRepository.get()
+
+        val trackedProperties = configuration.defaultProperties
+        trackedProperties.putAll(properties)
 
         val event = ExportedEventType(
             type = eventType,
             timestamp = timestamp,
             customerIds = customerIds.toHashMap(),
-            properties = properties
+            properties = trackedProperties
         )
 
         component.eventManager.addEventToQueue(event, type)

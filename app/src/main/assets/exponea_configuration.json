@@ -12,5 +12,9 @@
   "pushChannelName": "Exponea",
   "pushChannelDescription": "Notifications",
   "pushChannelId": "0",
-  "pushNotificationImportance": 3
+  "pushNotificationImportance": 3,
+  "defaultProperties": {
+    "thisIsADefaultStringProperty": "This is a default string value from a file configuration",
+    "thisIsADefaultIntProperty": 100
+  }
 }

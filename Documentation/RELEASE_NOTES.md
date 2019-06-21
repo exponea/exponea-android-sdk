@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.3.1
+* Added option to specify default properties to be tracked with all events
+
 ### 2.3.0
 * Added option to fetch consent cateogires (see [FETCH.md](./FETCH.md))
 

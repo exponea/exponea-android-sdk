@@ -16,7 +16,6 @@ import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
-import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.RemoteMessage
 import io.paperdb.Paper
 import java.util.*
@@ -543,13 +542,7 @@ object Exponea {
      */
     private fun trackFirebaseToken() {
         if (isAutoPushNotification) {
-            FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Logger.e(this, "Failed to get Firebase token")
-                    return@addOnCompleteListener
-                }
-                this.component.pushManager.trackFcmToken(task.result?.token)
-            }
+            this.component.pushManager.trackFcmToken(component.firebaseTokenRepository.get())
         }
     }
 

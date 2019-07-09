@@ -1,14 +1,6 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.Banner
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerExportModel
-import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.CustomerRecommendation
-import com.exponea.sdk.models.ExponeaFetchId
-import com.exponea.sdk.models.ExponeaFetchProperty
-import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.models.FetchEventsRequest
+import com.exponea.sdk.models.*
 import com.exponea.sdk.network.ExponeaService
 import okhttp3.Call
 import okhttp3.OkHttpClient
@@ -19,6 +11,7 @@ import okhttp3.mock.MockInterceptor
 import okhttp3.mockwebserver.MockWebServer
 
 class ExponeaMockService(private val success: Boolean) : ExponeaService {
+
     private val server = MockWebServer()
     private val dummyUrl = server.url("/").toString()
 
@@ -31,6 +24,10 @@ class ExponeaMockService(private val success: Boolean) : ExponeaService {
     }
 
     override fun postRotateToken(projectToken: String): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun postFetchConsents(projectToken: String): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

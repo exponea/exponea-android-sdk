@@ -38,8 +38,11 @@ data class ExponeaConfiguration(
         /** A list of SKUs for automatic in-app purchases tracking*/
         var skuList: List<String> = arrayListOf(),
         /** A list of properties to be added to all tracking events */
-        var defaultProperties: HashMap<String, Any> = hashMapOf()
+        var defaultProperties: HashMap<String, Any> = hashMapOf(),
+        /** How ofter the token is tracked */
+        var tokenUpdateFrequency: TokenFrequency = TokenFrequency.DAILY
 ) {
+
     enum class HttpLoggingLevel {
         /** No logs. */
         NONE,
@@ -50,4 +53,14 @@ data class ExponeaConfiguration(
         /** Logs request and response lines and their respective headers and bodies (if present). */
         BODY
     }
+
+    enum class TokenFrequency {
+        /** Tracked on the first launch or if the token changes */
+        ON_TOKEN_CHANGE,
+        /** Tracked every time the app is launched */
+        EVERY_LAUNCH,
+        /** Tracked once on days where the user opens the app */
+        DAILY
+    }
+
 }

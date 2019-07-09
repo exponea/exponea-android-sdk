@@ -81,8 +81,8 @@ class FileManagerImpl : FileManager {
     }
 
 
-    override fun getConfigurationFromDefaultFile(buffer: Context): ExponeaConfiguration? {
-        val data = readContentFromDefaultFile(buffer)
+    override fun getConfigurationFromDefaultFile(context: Context): ExponeaConfiguration? {
+        val data = readContentFromDefaultFile(context)
 
         if (data.isNullOrEmpty()) {
             Logger.e(this, "No data found on Configuration file")

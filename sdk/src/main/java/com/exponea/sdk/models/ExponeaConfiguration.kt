@@ -40,7 +40,7 @@ data class ExponeaConfiguration(
         /** A list of properties to be added to all tracking events */
         var defaultProperties: HashMap<String, Any> = hashMapOf(),
         /** How ofter the token is tracked */
-        var tokenUpdateFrequency: TokenFrequency = TokenFrequency.DAILY
+        var tokenUpdateFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
 ) {
 
     enum class HttpLoggingLevel {

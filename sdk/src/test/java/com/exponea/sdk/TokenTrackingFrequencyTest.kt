@@ -19,25 +19,25 @@ class TokenTrackingFrequencyTest {
     @Test
     fun dailyToken() {
         val config = ExponeaConfiguration()
-        config.tokenUpdateFrequency = ExponeaConfiguration.TokenFrequency.DAILY
+        config.tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.DAILY
         setupConfiguration(config)
-        assertEquals(Exponea.tokenUpdateFrequency, ExponeaConfiguration.TokenFrequency.DAILY)
+        assertEquals(Exponea.tokenTrackFrequency, ExponeaConfiguration.TokenFrequency.DAILY)
     }
 
     @Test
     fun everyLaunchToken() {
         val config = ExponeaConfiguration()
-        config.tokenUpdateFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
+        config.tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
         setupConfiguration(config)
-        assertEquals(Exponea.tokenUpdateFrequency, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
+        assertEquals(Exponea.tokenTrackFrequency, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
     }
 
     @Test
     fun onTokenChangeToken() {
         val config = ExponeaConfiguration()
-        config.tokenUpdateFrequency = ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE
+        config.tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE
         setupConfiguration(config)
-        assertEquals(Exponea.tokenUpdateFrequency, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
+        assertEquals(Exponea.tokenTrackFrequency, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
     }
 
 }

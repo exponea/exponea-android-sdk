@@ -43,7 +43,7 @@ data class ExponeaConfiguration(
   /** A list of properties to be added to all tracking events */
   var defaultProperties: HashMap<String, Any> = hashMapOf(),
   /** How ofter the token is tracked */
-  var tokenUpdateFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
+  var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
 )
 ```
 #### projectToken
@@ -140,6 +140,6 @@ automatically send `session_start` and `session_end` events to Exponea API
 
 * The properties defined on this setting will always be sent with all triggered tracking events.
 
-#### tokenUpdateFrequency
+#### tokenTrackFrequency
 
 * Indicates the frequency which the Firebase token should be tracked

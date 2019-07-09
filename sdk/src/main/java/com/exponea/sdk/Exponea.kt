@@ -85,8 +85,8 @@ object Exponea {
     /**
      * Indicate the frequency which Firebase token needs to be updated
      */
-    val tokenUpdateFrequency: ExponeaConfiguration.TokenFrequency?
-        get() = configuration.tokenUpdateFrequency
+    val tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?
+        get() = configuration.tokenTrackFrequency
 
     /**
      * Whenever a notification with extra values is received, this callback is called

@@ -18,5 +18,5 @@
     "thisIsADefaultStringProperty": "This is a default string value from a file configuration",
     "thisIsADefaultIntProperty": 100
   },
-  "tokenUpdateFrequency": "EVERY_LAUNCH"
+  "tokenTrackFrequency": "EVERY_LAUNCH"
 }

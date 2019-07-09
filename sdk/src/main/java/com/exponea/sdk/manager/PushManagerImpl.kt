@@ -21,7 +21,7 @@ class PushManagerImpl(
 
     override fun trackFcmToken(token: String?) {
 
-        val shouldUpdateToken = when (Exponea.tokenUpdateFrequency) {
+        val shouldUpdateToken = when (Exponea.tokenTrackFrequency) {
             ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != null && token != fcmToken
             ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
             ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)

@@ -31,7 +31,6 @@ object Exponea {
     /**
      * Defines which mode the library should flush out events
      */
-
     var flushMode: FlushMode = IMMEDIATE
         set(value) {
             field = value
@@ -41,7 +40,6 @@ object Exponea {
     /**
      * Defines the period at which the library should flush events
      */
-
     var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
         set(value) {
             field = value
@@ -51,7 +49,6 @@ object Exponea {
     /**
      * Defines session timeout considered for app usage
      */
-
     var sessionTimeout: Double
         get() = configuration.sessionTimeout
         set(value) {
@@ -71,8 +68,7 @@ object Exponea {
     /**
      * Check if our library has been properly initialized
      */
-
-    var isInitialized: Boolean = false
+    val isInitialized: Boolean
         get() {
             return this::configuration.isInitialized
         }
@@ -80,12 +76,17 @@ object Exponea {
     /**
      * Check if the push notification listener is set to automatically
      */
-
     var isAutoPushNotification: Boolean
         get() = configuration.automaticPushNotification
         set(value) {
             configuration.automaticPushNotification = value
         }
+
+    /**
+     * Indicate the frequency which Firebase token needs to be updated
+     */
+    val tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?
+        get() = configuration.tokenTrackFrequency
 
     /**
      * Whenever a notification with extra values is received, this callback is called
@@ -112,7 +113,7 @@ object Exponea {
      * Set which level the debugger should output log messages
      */
     var loggerLevel: Logger.Level
-        get () = Logger.level
+        get() = Logger.level
         set(value) {
             Logger.level = value
         }
@@ -277,12 +278,12 @@ object Exponea {
      */
 
     fun trackPushToken(fcmToken: String) {
-        component.firebaseTokenRepository.set(fcmToken)
+        component.firebaseTokenRepository.set(fcmToken, System.currentTimeMillis())
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         track(
-            eventType = Constants.EventTypes.push,
-            properties = properties.properties,
-            type = EventType.PUSH_TOKEN
+                eventType = Constants.EventTypes.push,
+                properties = properties.properties,
+                type = EventType.PUSH_TOKEN
         )
     }
 
@@ -540,8 +541,8 @@ object Exponea {
      * Send the firebase token
      */
     private fun trackFirebaseToken() {
-        if (Exponea.isAutoPushNotification) {
-            this.component.pushManager.trackFcmToken()
+        if (isAutoPushNotification) {
+            this.component.pushManager.trackFcmToken(component.firebaseTokenRepository.get())
         }
     }
 

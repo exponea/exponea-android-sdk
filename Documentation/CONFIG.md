@@ -37,11 +37,13 @@ data class ExponeaConfiguration(
   // Channel ID for push notifications. Only for API level 26+.
   var pushChannelId: String = "0",
   // Notification importance for the notification channel. Only for API level 26+.
-  var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
+  var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
   // A list of SKUs for automatic in-app purchases tracking
-  var skuList: List<String> = arrayListOf()
+  var skuList: List<String> = arrayListOf(),
   /** A list of properties to be added to all tracking events */
-  var defaultProperties: HashMap<String, Any> = hashMapOf()
+  var defaultProperties: HashMap<String, Any> = hashMapOf(),
+  /** How ofter the token is tracked */
+  var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
 )
 ```
 #### projectToken
@@ -137,3 +139,7 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### defaultProperties
 
 * The properties defined on this setting will always be sent with all triggered tracking events.
+
+#### tokenTrackFrequency
+
+* Indicates the frequency which the Firebase token should be tracked

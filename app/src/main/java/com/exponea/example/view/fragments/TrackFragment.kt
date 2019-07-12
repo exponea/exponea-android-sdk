@@ -1,11 +1,14 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.BaseAdapter
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
@@ -59,21 +62,20 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
     private fun initListeners() {
         listView.onItemClickListener = this
+
         buttonTrackClicked.setOnClickListener { trackPushClicked() }
-
         buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
-
         buttonTrackToken.setOnClickListener { trackFCMToken() }
 
         buttonUpdateProperties.setOnClickListener {
-            TrackCustomAttributesDialog.show(childFragmentManager, {
+            TrackCustomAttributesDialog.show(childFragmentManager) {
                 trackUpdateCustomerProperties(it)
-            })
+            }
         }
 
         buttonCustomEvent.setOnClickListener {
-            TrackCustomEventDialog.show(childFragmentManager, { eventName, properties ->
-                trackCustomEvent(eventName, properties)})
+            TrackCustomEventDialog.show(childFragmentManager) { eventName, properties ->
+                trackCustomEvent(eventName, properties)}
         }
     }
 
@@ -113,11 +115,9 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle push delivered event tracking"
      */
     private fun trackPushDelivered() {
-
         Exponea.trackDeliveredPush(
                 data = NotificationData("campaing_id", "Campaign Name")
         )
-
     }
 
     /**

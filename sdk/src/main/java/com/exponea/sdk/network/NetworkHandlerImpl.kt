@@ -36,7 +36,7 @@ class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration)
                 // Sometimes the request can fail due to SSL problems crashing the app. When that
                 // happens, we return a dummy failed request
                 Logger.w(this, e.toString())
-                val message = "Error: request canceled by " + e.toString()
+                val message = "Error: request canceled by $e"
                 Response.Builder()
                         .code(400)
                         .protocol(Protocol.HTTP_2)

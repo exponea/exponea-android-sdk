@@ -17,6 +17,13 @@ android {
         consumerProguardFiles 'proguard-rules.pro'
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions { jvmTarget = "1.8" }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -47,7 +54,7 @@ dependencies {
     // Google Firebase Cloud Message
     implementation 'com.google.firebase:firebase-messaging:17.5.0'
     // Google WorkManager
-    implementation "androidx.work:work-runtime-ktx:2.0.0"
+    implementation "androidx.work:work-runtime-ktx:2.1.0"
 
     // Base Test
     testImplementation 'junit:junit:4.12'

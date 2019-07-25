@@ -33,7 +33,7 @@ class BackgroundTimerManagerImpl(private val context: Context, private val confi
 
         // Enqueue request
         WorkManager
-                .getInstance()
+                .getInstance(context)
                 .beginUniqueWork(
                         keyUniqueName,
                         ExistingWorkPolicy.REPLACE,
@@ -50,7 +50,7 @@ class BackgroundTimerManagerImpl(private val context: Context, private val confi
     override fun stopTimer() {
         Logger.d(this, "BackgroundTimerManagerImpl.stop() -> cancelling all work")
         WorkManager
-                .getInstance()
+                .getInstance(context)
                 .cancelUniqueWork(keyUniqueName)
     }
 }

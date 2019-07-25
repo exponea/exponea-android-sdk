@@ -1,5 +1,8 @@
 ## Release Notes
 
+### 2.3.2
+* `WorkManager` updated to the latest version to avoid inconsistency and crashes
+
 ### 2.3.1
 * Added option to specify default properties to be tracked with all events
 

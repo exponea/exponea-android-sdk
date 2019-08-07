@@ -2,6 +2,7 @@
 
 ### 2.3.2
 * `WorkManager` updated to the latest version to avoid inconsistency and crashes
+* Configuration now has a token update frequency, which specifies how often should the push token be sent to Exponea (on change, on every start, daily)
 
 ### 2.3.1
 * Added option to specify default properties to be tracked with all events

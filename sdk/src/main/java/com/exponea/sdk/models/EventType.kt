@@ -27,4 +27,7 @@ enum class EventType {
 
     /// For tracking that a push notification has been opened.
     PUSH_OPENED,
+
+    /// For tracking that a campaign button has been clicked.
+    CAMPAIGN_CLICK
 }

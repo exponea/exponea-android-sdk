@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.currentTimeSeconds
 import java.sql.Timestamp
 
@@ -28,6 +29,7 @@ abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityResumed(activity: Activity?) {
         onSessionStart()
+        Exponea.component.campaignRepository.clear()
     }
 
     override fun onActivityStarted(activity: Activity?) {}

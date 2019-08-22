@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import com.google.gson.Gson
@@ -12,7 +13,6 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
-import java.lang.IllegalArgumentException
 import java.util.*
 
 fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
@@ -80,4 +80,8 @@ fun String?.adjustUrl() : String? {
     } else {
         null
     }
+}
+
+fun Intent?.isDeeplinkIntent(): Boolean {
+    return Intent.ACTION_VIEW == this?.action && data?.toString()?.startsWith("http", true) == true
 }

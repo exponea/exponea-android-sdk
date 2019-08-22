@@ -28,6 +28,17 @@
                 <!-- Accepts URIs that begin with "exponea://”-->
                 <data android:scheme="exponea" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="panaxeo.com"
+                    android:pathPattern="/exponea/.*" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".view.AuthenticationActivity"

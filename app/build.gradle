@@ -14,9 +14,9 @@ android {
 
         vectorDrawables.useSupportLibrary = true
 
-        buildConfigField "String", "AuthorizationToken", "\"Token 9fxxk5jnckd4zv95ctu3fqvl7491axpify2o5sxbrmmkeqxxsph1aaibjsqczd1z\""
-        buildConfigField "String", "DefaultProjectToken", "\"47b5cc2c-e661-11e8-bb95-0a580a201692\""
-        buildConfigField "String", "DefaultApiUrl", "\"https://api-analytics.1.gdev.exponea.com\""
+        buildConfigField "String", "AuthorizationToken", "\"Token oy5ue7s1w0wedcz1uqf4x15jesucdfnujy9tm6ig7su3wuykvoixnpl37lek9bgr\""
+        buildConfigField "String", "DefaultProjectToken", "\"b7a5ab42-91fb-11e9-a458-0a580a20155b\""
+        buildConfigField "String", "DefaultApiUrl", "\"https://api-analytics.5.gdev.exponea.com\""
     }
     buildTypes {
         release {

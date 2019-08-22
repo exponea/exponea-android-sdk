@@ -7,7 +7,11 @@ import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
+import okhttp3.Call
+import okhttp3.Response
+import java.io.IOException
 
 class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
@@ -47,78 +51,65 @@ class FlushManagerImpl(
     }
 
     private fun trySendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>) {
+        updateBeforeSend(databaseObject)
+        routeSendingEvent(databaseObject)
+                ?.enqueue(handleResponse(databaseObject), handleFailure(databaseObject)
+        )
+    }
 
+    private fun updateBeforeSend(databaseObject: DatabaseStorageObject<ExportedEventType>) {
         when (databaseObject.route) {
-            Route.TRACK_EVENTS       -> trackEvent(databaseObject.projectId, databaseObject)
-            Route.TRACK_CUSTOMERS    -> trackCustomer(databaseObject.projectId, databaseObject)
-            Route.CUSTOMERS_PROPERTY -> trackCustomer(databaseObject.projectId, databaseObject)
-            else                     -> {
-                Logger.e(this, "Couldn't find properly route")
-                return
+            Route.TRACK_CAMPAIGN -> {
+                // campaign event needs to recalculate 'age' property from 'timestamp' before posting
+                databaseObject.item.properties?.let { properties ->
+                    properties["age"] = currentTimeSeconds() - (properties["timestamp"] as Double)
+                    properties.remove("timestamp")
+                }
+            }
+            else -> { /* do nothing */ }
+        }
+    }
+
+    private fun handleFailure(databaseObject: DatabaseStorageObject<ExportedEventType>): (Call, IOException) -> Unit {
+        return { _, ioException ->
+            Logger.e(
+                    this@FlushManagerImpl,
+                    "Sending Event Failed ${databaseObject.id}",
+                    ioException
+            )
+            onEventSentFailed(databaseObject)
+        }
+    }
+
+    private fun handleResponse(databaseObject: DatabaseStorageObject<ExportedEventType>): (Call, Response) -> Unit {
+        return { _, response ->
+            val responseCode = response.code()
+            Logger.d(this, "Response Code: $responseCode")
+            when (response.code()) {
+                in 200..299 -> onEventSentSuccess(databaseObject)
+                in 500..599 -> {
+                    databaseObject.shouldBeSkipped = true
+                    eventRepository.update(databaseObject)
+                    flushData()
+                }
+                else -> onEventSentFailed(databaseObject)
             }
         }
     }
 
-    private fun trackEvent(
-            projectToken: String,
-            databaseObject: DatabaseStorageObject<ExportedEventType>
-    ) {
-        exponeaService
-                .postEvent(projectToken, databaseObject.item)
-                .enqueue(
-                        { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this, "Response Code: $responseCode")
-                            when(response.code()) {
-                                in 200..299 -> onEventSentSuccess(databaseObject)
-                                in 500..599 ->  {
-                                    databaseObject.shouldBeSkipped = true
-                                    eventRepository.update(databaseObject)
-                                    flushData()
-                                }
-                                else -> onEventSentFailed(databaseObject)
-                            }
-                        },
-                        { _, ioException ->
-                            Logger.e(
-                                    this@FlushManagerImpl,
-                                    "Sending Event Failed ${databaseObject.id}",
-                                    ioException
-                            )
-                            onEventSentFailed(databaseObject)
-                        }
-                )
-    }
-
-    private fun trackCustomer(
-            projectToken: String,
-            databaseObject: DatabaseStorageObject<ExportedEventType>
-    ) {
-        exponeaService
-                .postCustomer(projectToken, databaseObject.item)
-                .enqueue(
-                        { _, response ->
-                            Logger.d(this, "Response Code: ${response.code()}")
-                            when(response.code()) {
-                                in 200..299 -> onEventSentSuccess(databaseObject)
-                                in 500..599 ->  {
-                                    databaseObject.shouldBeSkipped = true
-                                    eventRepository.update(databaseObject)
-                                    flushData()
-                                }
-                                else -> onEventSentFailed(databaseObject)
-                            }
-                        },
-                        { _, ioException ->
-                            Logger.e(
-                                    this@FlushManagerImpl,
-                                    "Sending Event Failed ${databaseObject.id}",
-                                    ioException
-                            )
-                            ioException.printStackTrace()
-                            onEventSentFailed(databaseObject)
-                        }
-                )
+    private fun routeSendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>): Call? {
+        return exponeaService.let {
+            when (databaseObject.route) {
+                Route.TRACK_EVENTS -> it.postEvent(databaseObject.projectId, databaseObject.item)
+                Route.TRACK_CUSTOMERS,
+                Route.CUSTOMERS_PROPERTY -> it.postCustomer(databaseObject.projectId, databaseObject.item)
+                Route.TRACK_CAMPAIGN -> it.postCampaignClick(databaseObject.projectId, databaseObject.item)
+                else -> {
+                    Logger.e(this, "Couldn't find properly route")
+                    return null
+                }
+            }
+        }
     }
 
     private fun onEventSentSuccess(databaseObject: DatabaseStorageObject<ExportedEventType>) {

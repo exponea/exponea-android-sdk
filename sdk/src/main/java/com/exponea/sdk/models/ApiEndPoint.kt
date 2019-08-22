@@ -7,6 +7,7 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
     enum class EndPointName {
         TRACK_CUSTOMERS,
         TRACK_EVENTS,
+        TRACK_CAMPAIGN,
         TOKEN_ROTATE,
         TOKEN_REVOKE,
         CUSTOMERS_PROPERTY,
@@ -29,6 +30,7 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
         this.url = when (endPointName) {
             EndPointName.TRACK_CUSTOMERS                 -> "/track/v2/projects/$splitterToken/customers"
             EndPointName.TRACK_EVENTS                    -> "/track/v2/projects/$splitterToken/customers/events"
+            EndPointName.TRACK_CAMPAIGN                  -> "/track/v2/projects/$splitterToken/campaigns/clicks"
             EndPointName.TOKEN_ROTATE                    -> "/data/v2/$splitterToken/tokens/rotate"
             EndPointName.TOKEN_REVOKE                    -> "/data/v2/$splitterToken/tokens/revoke"
             EndPointName.CUSTOMERS_PROPERTY              -> "/track/v2/projects/$splitterToken/customers"

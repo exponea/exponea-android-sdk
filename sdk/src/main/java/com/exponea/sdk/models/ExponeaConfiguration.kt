@@ -19,6 +19,8 @@ data class ExponeaConfiguration(
         var maxTries: Int = 10,
         /** Timeout session value considered for app usage. */
         var sessionTimeout: Double = 20.0,
+        /** Defines time to live of campaign click event in seconds considered for app usage. */
+        var campaignTTL: Double = 10.0,
         /** Flag to control automatic tracking for In-App purchases */
         var automaticPaymentTracking: Boolean = true,
         /** Flag to control automatic session tracking */

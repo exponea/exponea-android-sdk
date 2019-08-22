@@ -118,6 +118,13 @@ class SessionManagerImpl(
         val properties = DeviceProperties().toHashMap()
 
         properties["app_version"] = BuildConfig.VERSION_CODE
+        Exponea.component.campaignRepository.get()?.let {event ->
+           properties["location"] = event.completeUrl
+           properties["utm_source"] = event.source.orEmpty()
+           properties["utm_campaign"] = event.campaign.orEmpty()
+           properties["utm_content"] = event.content.orEmpty()
+           properties["utm_term"] = event.term.orEmpty()
+        }
         Exponea.track(
                 eventType = Constants.EventTypes.sessionStart,
                 timestamp = timestamp,

@@ -1,6 +1,14 @@
 package com.exponea.sdk.network
 
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Banner
+import com.exponea.sdk.models.CustomerAttributes
+import com.exponea.sdk.models.CustomerExportModel
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.ExponeaFetchId
+import com.exponea.sdk.models.ExponeaFetchProperty
+import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.FetchEventsRequest
 import okhttp3.Call
 
 interface ExponeaService {
@@ -22,4 +30,5 @@ interface ExponeaService {
     fun getBannerConfiguration(projectToken: String): Call
     fun postFetchBanner(projectToken: String, banner: Banner): Call
     fun postFetchConsents(projectToken: String): Call
+    fun postCampaignClick(projectToken: String, event: ExportedEventType): Call
 }

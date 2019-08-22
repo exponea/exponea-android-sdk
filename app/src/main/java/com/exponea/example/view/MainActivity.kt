@@ -1,17 +1,27 @@
 package com.exponea.example.view
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.Toast
+import com.exponea.example.App
+import com.exponea.example.BuildConfig
 import com.exponea.example.R
+import com.exponea.example.utils.isValid
 import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isDeeplinkIntent
+import kotlinx.android.synthetic.main.activity_authentication.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.toolbar
 
 
 class MainActivity : AppCompatActivity() {
@@ -21,27 +31,33 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Examples"
 
-        handleDeeplink(intent)
+        if (intent.isDeeplinkIntent()) {
+            if (!Exponea.isInitialized) {
+                val configuration = ExponeaConfiguration()
+                configuration.authorization = BuildConfig.AuthorizationToken
+                configuration.projectToken = BuildConfig.DefaultProjectToken
+                configuration.baseURL = BuildConfig.DefaultApiUrl
+                configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
 
-        if (!Exponea.isInitialized) {
+                Exponea.init(App.instance, configuration)
+                Exponea.loggerLevel = Logger.Level.DEBUG
+                Exponea.flushMode = FlushMode.IMMEDIATE
+            }
+
+            Toast.makeText(this, "Deep link received from ${intent?.data?.host}, " +
+                    "path is ${intent?.data?.path}", Toast.LENGTH_LONG).show()
+        }
+
+        Exponea.handleCampaignIntent(intent, applicationContext)
+
+        if (Exponea.isInitialized) {
+            setupListeners()
+        } else {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
-        } else {
-            setupListeners()
         }
         if (savedInstanceState == null) {
             replaceFragment(FetchFragment())
-        }
-
-    }
-
-    private fun handleDeeplink(intent: Intent?) {
-        intent?.let {
-            //get deeplink data
-            val data = getIntent().data
-            if (data != null) {
-                Toast.makeText(this, "Deeplink received: $data", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 

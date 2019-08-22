@@ -15,6 +15,10 @@ class ExponeaMockService(private val success: Boolean) : ExponeaService {
     private val server = MockWebServer()
     private val dummyUrl = server.url("/").toString()
 
+    override fun postCampaignClick(projectToken: String, event: ExportedEventType): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
     override fun postEvent(projectToken: String, event: ExportedEventType): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
@@ -87,6 +91,10 @@ class ExponeaMockService(private val success: Boolean) : ExponeaService {
     }
 
     override fun postFetchBanner(projectToken: String, banner: Banner): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun postFetchConsents(projectToken: String): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
     

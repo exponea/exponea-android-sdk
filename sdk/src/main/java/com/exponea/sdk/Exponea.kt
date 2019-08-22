@@ -3,17 +3,38 @@ package com.exponea.sdk
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Looper
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.SessionManagerImpl
-import com.exponea.sdk.models.*
-import com.exponea.sdk.models.FlushMode.*
+import com.exponea.sdk.models.BannerResult
+import com.exponea.sdk.models.CampaignClickInfo
+import com.exponea.sdk.models.Consent
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.EventType
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.FlushMode.APP_CLOSE
+import com.exponea.sdk.models.FlushMode.IMMEDIATE
+import com.exponea.sdk.models.FlushMode.MANUAL
+import com.exponea.sdk.models.FlushMode.PERIOD
+import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.NotificationAction
+import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.isDeeplinkIntent
 import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
@@ -116,6 +137,15 @@ object Exponea {
         get() = Logger.level
         set(value) {
             Logger.level = value
+        }
+    /**
+     * Defines time to live of campaign click event in seconds considered for app usage
+     */
+
+    var campaignTTL: Double
+        get() = configuration.campaignTTL
+        set(value) {
+            configuration.campaignTTL = value
         }
 
     /**
@@ -618,9 +648,43 @@ object Exponea {
         val firebaseToken = component.firebaseTokenRepository.get()
 
         component.pushManager.trackFcmToken(" ")
+        component.campaignRepository.clear()
         component.anonymizeManager.anonymize()
         component.sessionManager.trackSessionStart(currentTimeSeconds())
         component.pushManager.trackFcmToken(firebaseToken)
 
     }
+
+    /**
+     * Tries to handle Intent from Activity. If Intent contains data as defined for Deeplinks,
+     * given Uri is parsed, info is send to Campaign server and TRUE is returned. Otherwise FALSE
+     * is returned.
+     */
+    fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean {
+        if (!isInitialized) {
+            val config = ExponeaConfigRepository.get(appContext) ?: return false
+            Logger.d(this, "Newly initiated")
+            init(appContext, config)
+        }
+        if (!intent.isDeeplinkIntent()) {
+            return false
+        }
+        val event = CampaignClickInfo(intent!!.data!!)
+        if (!event.isValid()) {
+            Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
+            return false
+        }
+        component.campaignRepository.set(event)
+        track(
+            eventType = Constants.EventTypes.push,
+            properties = hashMapOf(
+                    "timestamp" to event.createdAt,
+                    "platform" to "Android",
+                    "url" to event.completeUrl
+            ),
+            type = EventType.CAMPAIGN_CLICK
+        )
+        return true
+    }
+
 }

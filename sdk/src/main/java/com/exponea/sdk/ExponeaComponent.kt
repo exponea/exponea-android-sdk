@@ -41,6 +41,7 @@ class ExponeaComponent(
     )
     internal val eventRepository: EventRepository = EventRepositoryImpl()
     internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
+    internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(gson, preferences)
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
     // Api Service

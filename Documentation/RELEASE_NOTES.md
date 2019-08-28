@@ -1,5 +1,10 @@
 ## Release Notes
 
+### 2.3.3
+#### August 28, 2019
+* Bug Fixes
+  * Fixed: Properties in the events were found to be accumulating over time. This happened always after tracking multiple events (after multiple calls of `Exponea.trackEvent()`, `Exponea.identifyCustomer()` or similar). The impacted versions are thankfully only `2.3.1` and `2.3.2`.
+
 ### 2.3.2
 * `WorkManager` updated to the latest version to avoid inconsistency and crashes
 * Configuration now has a token update frequency, which specifies how often should the push token be sent to Exponea (on change, on every start, daily)

@@ -74,7 +74,7 @@ class CustomerPropertiesEventTest {
     }
 
     @Test
-    fun testEventSend_ShoudSuccess() {
+    fun testEventSend_ShouldSuccess() {
 
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 

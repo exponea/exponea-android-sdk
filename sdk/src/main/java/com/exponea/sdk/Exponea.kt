@@ -662,7 +662,11 @@ object Exponea {
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean {
         if (!isInitialized) {
-            val config = ExponeaConfigRepository.get(appContext) ?: return false
+            val config = ExponeaConfigRepository.get(appContext)
+            if (config == null) {
+                Logger.e(this, "Cannot track campaign intent, unable to automatically initialize Exponea SDK!")
+                return false
+            }
             Logger.d(this, "Newly initiated")
             init(appContext, config)
         }

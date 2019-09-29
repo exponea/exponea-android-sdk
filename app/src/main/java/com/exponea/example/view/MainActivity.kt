@@ -32,18 +32,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = "Examples"
 
         if (intent.isDeeplinkIntent()) {
-            if (!Exponea.isInitialized) {
-                val configuration = ExponeaConfiguration()
-                configuration.authorization = BuildConfig.AuthorizationToken
-                configuration.projectToken = BuildConfig.DefaultProjectToken
-                configuration.baseURL = BuildConfig.DefaultApiUrl
-                configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
-
-                Exponea.init(App.instance, configuration)
-                Exponea.loggerLevel = Logger.Level.DEBUG
-                Exponea.flushMode = FlushMode.IMMEDIATE
-            }
-
             Toast.makeText(this, "Deep link received from ${intent?.data?.host}, " +
                     "path is ${intent?.data?.path}", Toast.LENGTH_LONG).show()
         }

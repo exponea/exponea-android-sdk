@@ -1,5 +1,12 @@
 ## Release Notes
 
+### 2.4.0
+#### September 30, 2019
+* Features
+    * [App links](./APP_LINKS.md): SDK can now track app opens from App Link. Sessions that are started from App Link contain campaign data.
+* Bug Fixes
+    * Exponea SDK can only be initialized once. Subsequent calls to `Exponea.init` are ignored. Multiple instances of SDK cause sessions to be tracked twice.
+
 ### 2.3.3
 #### August 28, 2019
 * Bug Fixes

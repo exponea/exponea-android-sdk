@@ -8,6 +8,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -21,7 +22,7 @@ import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class FlushStressTest {
+class FlushStressTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()

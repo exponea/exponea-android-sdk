@@ -6,6 +6,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class EventTrackTest {
+class EventTrackTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

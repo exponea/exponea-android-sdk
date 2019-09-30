@@ -10,6 +10,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
@@ -31,7 +32,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class CampaignClickEventTests {
+class CampaignClickEventTests : ExponeaSDKTest() {
 
     companion object {
 

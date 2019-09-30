@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import org.junit.AfterClass
 import org.junit.Before
@@ -16,7 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class DefaultPropertiesTest {
+class DefaultPropertiesTest : ExponeaSDKTest() {
 
     companion object {
         val CONFIG = ExponeaConfiguration()

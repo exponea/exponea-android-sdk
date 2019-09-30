@@ -8,6 +8,7 @@ import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import org.junit.Before
 import org.junit.BeforeClass
@@ -20,7 +21,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class SessionManagerTest {
+class SessionManagerTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

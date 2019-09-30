@@ -6,12 +6,12 @@ import android.net.Uri
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.AfterClass
 import org.junit.BeforeClass
 
-open class CampaignSessionTests_Base {
+open class CampaignSessionTests_Base : ExponeaSDKTest() {
 
     companion object {
 
@@ -47,13 +47,6 @@ open class CampaignSessionTests_Base {
             server.shutdown()
         }
 
-        @After
-        fun afterTest() {
-            Exponea.component.eventRepository.clear()
-            Exponea.component.campaignRepository.clear()
-            Exponea.component.sessionManager.reset()
-        }
-
         fun initExponea(context: Context) {
             Exponea.init(context, configuration)
             Exponea.flushMode = FlushMode.MANUAL
@@ -66,5 +59,4 @@ open class CampaignSessionTests_Base {
             this.data = Uri.parse(CAMPAIGN_URL)
         }
     }
-
 }

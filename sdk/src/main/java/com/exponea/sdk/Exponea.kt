@@ -89,10 +89,8 @@ object Exponea {
     /**
      * Check if our library has been properly initialized
      */
-    val isInitialized: Boolean
-        get() {
-            return this::configuration.isInitialized
-        }
+    var isInitialized: Boolean = false
+        internal set
 
     /**
      * Check if the push notification listener is set to automatically
@@ -170,6 +168,10 @@ object Exponea {
     }
 
     fun init(context: Context, configuration: ExponeaConfiguration) {
+        if (isInitialized) {
+            Logger.w(this, "Exponea SDK is alrady initialized!")
+            return
+        }
         Logger.i(this, "Init")
 
         if (Looper.myLooper() == null)
@@ -179,11 +181,7 @@ object Exponea {
 
         this.context = context
         this.configuration = configuration
-
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
+        isInitialized = true
         ExponeaConfigRepository.set(context, configuration)
         FirebaseApp.initializeApp(context)
         initializeSdk()

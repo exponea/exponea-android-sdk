@@ -8,6 +8,7 @@ import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class VirtualPaymentEventTest {
+class VirtualPaymentEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.currentTimeSeconds
 import org.junit.Before
 import org.junit.Test
@@ -15,7 +16,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class AnonymizeTest {
+class AnonymizeTest : ExponeaSDKTest() {
 
     @Before
     fun init() {

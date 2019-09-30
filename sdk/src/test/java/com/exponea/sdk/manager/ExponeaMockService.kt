@@ -94,10 +94,6 @@ class ExponeaMockService(private val success: Boolean) : ExponeaService {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchConsents(projectToken: String): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-    
     private fun mockFailCall(): Call {
         val mockInterceptor = MockInterceptor().apply {
             addRule()

@@ -8,6 +8,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class InstallEventTest {
+class InstallEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

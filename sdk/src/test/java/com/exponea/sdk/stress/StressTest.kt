@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.tracking.CustomerPropertiesEventTest
 import com.exponea.sdk.util.currentTimeSeconds
 import kotlinx.coroutines.newSingleThreadContext
@@ -23,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class StressTest {
+class StressTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

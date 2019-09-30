@@ -53,6 +53,7 @@ To implement the Exponea SDK you must configure the SDK first:
 Then you can start using all supported features:
 
 * [Track Events / Customer properties](./Documentation/TRACK.md)
+* [Track Android App Links](./Documentation/APP_LINKS.md)
 * [Push Notification Events](./Documentation/PUSH.md)
 * [Flush](./Documentation/FLUSH.md)
 * [Fetch Data](./Documentation/FETCH.md)

@@ -37,6 +37,7 @@ class FlushStressTest : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -49,10 +50,10 @@ class FlushStressTest : ExponeaSDKTest() {
     @Before
     fun init() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
-        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         repo = Exponea.component.eventRepository
         service = ExponeaMockService(true)
@@ -87,7 +88,7 @@ class FlushStressTest : ExponeaSDKTest() {
                 val lock = CountDownLatch(1)
                 manager.flushData()
                 manager.onFlushFinishListener = {
-                    assertEquals(repo.all().size, 0)
+                    assertEquals(0, repo.all().size)
                     lock.countDown()
                 }
                 lock.await()

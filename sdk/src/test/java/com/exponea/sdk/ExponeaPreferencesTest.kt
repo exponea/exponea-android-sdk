@@ -3,6 +3,7 @@ package com.exponea.sdk
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -10,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class ExponeaPreferencesTest {
+class ExponeaPreferencesTest: ExponeaSDKTest() {
 
     companion object {
         const val VAL_BOOL = "booleanValue"

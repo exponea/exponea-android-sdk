@@ -42,6 +42,7 @@ class StressTest : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -54,13 +55,11 @@ class StressTest : ExponeaSDKTest() {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
 
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
-
         repo = Exponea.component.eventRepository
-
-        // Clean event repository for testing purposes
-        repo.clear()
     }
 
     @Test

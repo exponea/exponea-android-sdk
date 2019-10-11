@@ -25,11 +25,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 @RunWith(RobolectricTestRunner::class)
 class CampaignClickEventTests : ExponeaSDKTest() {
@@ -37,11 +33,12 @@ class CampaignClickEventTests : ExponeaSDKTest() {
     companion object {
 
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        lateinit var server: MockWebServer
 
         @BeforeClass
         @JvmStatic
         fun setup() {
+            server = MockWebServer()
             configuration.projectToken = "TestToken"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
@@ -50,6 +47,7 @@ class CampaignClickEventTests : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -75,7 +73,9 @@ class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Before
     fun prepareForTest() {
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
 
         eventRepository = Exponea.component.eventRepository
@@ -212,7 +212,6 @@ class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_campaignFlush() {
-        flushAndWaitForRequest() //skip init Install event
         val deepLinkIntent = createDeeplinkIntent()
         Exponea.handleCampaignIntent(deepLinkIntent, context)
 
@@ -238,6 +237,7 @@ class CampaignClickEventTests : ExponeaSDKTest() {
             lock.countDown()
         }
         Exponea.flushData()
+        lock.await()
     }
 
     private fun createDeeplinkIntent() = Intent().apply {

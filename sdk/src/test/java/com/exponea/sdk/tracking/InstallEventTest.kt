@@ -25,19 +25,20 @@ class InstallEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        lateinit var server: MockWebServer
 
         @BeforeClass
         @JvmStatic
         fun setup() {
+            server = MockWebServer()
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
-            println(configuration.baseURL)
             configuration.maxTries = 10
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -50,18 +51,12 @@ class InstallEventTest : ExponeaSDKTest() {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        // First Install event success
-        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
-
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
 
         repo = Exponea.component.eventRepository
-
-        // Clean event repository for testing purposes
-        repo.clear()
-
-
     }
 
     @Test

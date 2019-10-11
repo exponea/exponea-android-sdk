@@ -25,11 +25,12 @@ class FcmTrackingEventsTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
         const val token = "FirebaseCloudToken#"
-        val server = MockWebServer()
+        lateinit var server: MockWebServer
 
         @BeforeClass
         @JvmStatic
         fun setup() {
+            server = MockWebServer()
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
@@ -37,6 +38,7 @@ class FcmTrackingEventsTest : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -46,11 +48,11 @@ class FcmTrackingEventsTest : ExponeaSDKTest() {
 
     @Before
     fun prepareForTest() {
-        ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
-
         val context = ApplicationProvider.getApplicationContext<Context>()
 
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
 
         repo = Exponea.component.eventRepository

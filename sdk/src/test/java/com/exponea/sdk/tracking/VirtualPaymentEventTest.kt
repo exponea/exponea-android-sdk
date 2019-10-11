@@ -3,13 +3,11 @@ package com.exponea.sdk.tracking
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ExponeaMockApi
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -25,7 +23,7 @@ class VirtualPaymentEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        lateinit var server: MockWebServer
         val payment = PurchasedItem(
                 currency = "USD",
                 value = 200.3,
@@ -34,8 +32,10 @@ class VirtualPaymentEventTest : ExponeaSDKTest() {
                 paymentSystem = "Sys"
         )
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
+            server = MockWebServer()
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
@@ -43,6 +43,7 @@ class VirtualPaymentEventTest : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -50,10 +51,10 @@ class VirtualPaymentEventTest : ExponeaSDKTest() {
 
     @Before
     fun prepareForTest() {
-
         val context = ApplicationProvider.getApplicationContext<Context>()
-
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
     }
 
@@ -66,11 +67,8 @@ class VirtualPaymentEventTest : ExponeaSDKTest() {
         Exponea.trackPaymentEvent(
                 purchasedItem = payment
         )
-
-        // Run blocking with coroutine to get the values from the async function.
-        runBlocking {
-            ExponeaMockApi.flush()
-        }
+        Exponea.flushData()
+        waitUntilFlushed()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 

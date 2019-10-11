@@ -6,18 +6,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 @RunWith(RobolectricTestRunner::class)
 class CampaignSessionTests_009 : CampaignSessionTests_Base() {
@@ -84,7 +77,7 @@ class CampaignSessionTests_009 : CampaignSessionTests_Base() {
 
         override fun onPostResume() {
             super.onPostResume()
-            Exponea.init(applicationContext, configuration)
+            initExponea(applicationContext)
         }
     }
 

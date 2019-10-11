@@ -6,9 +6,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -49,6 +46,7 @@ class CampaignSessionTests_004 : CampaignSessionTests_Base() {
         assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
         assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
         assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
+        waitUntilFlushed()
     }
 
     /**
@@ -62,7 +60,7 @@ class CampaignSessionTests_004 : CampaignSessionTests_Base() {
 
         override fun onResume() {
             super.onResume()
-            Exponea.init(applicationContext, configuration)
+            initExponea(applicationContext)
         }
     }
 

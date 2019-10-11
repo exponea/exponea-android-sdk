@@ -1,6 +1,5 @@
 package com.exponea.sdk.tracking
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ExponeaMockServer
@@ -27,11 +26,12 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
         val configuration = ExponeaConfiguration()
         val customerIds = CustomerIds().withId("registered", "john@doe.com")
         val properties = PropertiesList(hashMapOf("first_name" to "NewName"))
-        val server = MockWebServer()
+        lateinit var server: MockWebServer
 
         @BeforeClass
         @JvmStatic
         fun setup() {
+            server = MockWebServer()
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
@@ -40,6 +40,7 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun tearDown() {
             server.shutdown()
         }
@@ -49,17 +50,12 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
 
     @Before
     fun prepareForTest() {
-        ExponeaMockServer.setResponseSuccess(EventTrackTest.server, "tracking/track_event_success.json")
-
-        val context = ApplicationProvider.getApplicationContext<Context>()
-
-        Exponea.init(context, configuration)
+        skipInstallEvent()
+        Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
 
         repo = Exponea.component.eventRepository
-
-        // Clean event repository for testing purposes
-        repo.clear()
     }
 
     @Test
@@ -76,7 +72,6 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
 
     @Test
     fun testEventSend_ShouldSuccess() {
-
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         // Track event
@@ -84,8 +79,6 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
                 customerIds = customerIds,
                 properties = properties
         )
-
-        Exponea.flushData()
 
         val syncObject = Object()
 

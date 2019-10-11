@@ -6,9 +6,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -62,7 +59,7 @@ class CampaignSessionTests_007 : CampaignSessionTests_Base() {
 
         override fun onPostResume() {
             super.onPostResume()
-            Exponea.init(applicationContext, configuration)
+            initExponea(applicationContext)
         }
     }
 

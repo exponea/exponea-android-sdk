@@ -26,7 +26,8 @@ class SessionManagerTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
 
-        @BeforeClass @JvmStatic
+        @BeforeClass
+        @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
@@ -41,8 +42,9 @@ class SessionManagerTest : ExponeaSDKTest() {
     fun prepareForTest() {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
-
+        skipInstallEvent()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.isAutomaticSessionTracking = false
 

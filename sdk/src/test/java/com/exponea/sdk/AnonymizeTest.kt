@@ -20,9 +20,10 @@ class AnonymizeTest : ExponeaSDKTest() {
 
     @Before
     fun init() {
+        skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
-
         Exponea.init(context, FlushManagerTest.configuration)
+        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
     }
 

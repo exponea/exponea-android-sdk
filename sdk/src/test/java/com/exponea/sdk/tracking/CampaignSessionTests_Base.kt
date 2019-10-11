@@ -43,12 +43,15 @@ open class CampaignSessionTests_Base : ExponeaSDKTest() {
         }
 
         @AfterClass
+        @JvmStatic
         fun afterClass() {
             server.shutdown()
         }
 
         fun initExponea(context: Context) {
+            skipInstallEvent()
             Exponea.init(context, configuration)
+            waitUntilFlushed()
             Exponea.flushMode = FlushMode.MANUAL
         }
 

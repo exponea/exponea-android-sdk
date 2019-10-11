@@ -15,6 +15,7 @@ class TokenTrackingFrequencyTest : ExponeaSDKTest() {
     private fun setupConfiguration(configuration: ExponeaConfiguration) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.init(context, configuration)
+        waitUntilFlushed()
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.paperdb.Paper
 import org.junit.After
 import org.junit.Before
@@ -18,7 +19,7 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class ExponeaDatabaseTest {
+class ExponeaDatabaseTest: ExponeaSDKTest() {
 
     companion object {
         const val DB_NAME = "TestDatabase"

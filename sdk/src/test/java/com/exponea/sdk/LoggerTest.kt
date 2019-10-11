@@ -1,10 +1,14 @@
 package com.exponea.sdk
 
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.Logger
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
-class LoggerTest {
+@RunWith(RobolectricTestRunner::class)
+class LoggerTest: ExponeaSDKTest() {
 
     // Log level OFF
     @Test

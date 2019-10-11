@@ -23,7 +23,6 @@ class FlushManagerImpl(
     override var isRunning: Boolean = false
 
     override fun flushData() {
-
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flushing")
             onFlushFinishListener?.invoke()
@@ -62,8 +61,10 @@ class FlushManagerImpl(
             Route.TRACK_CAMPAIGN -> {
                 // campaign event needs to recalculate 'age' property from 'timestamp' before posting
                 databaseObject.item.properties?.let { properties ->
-                    properties["age"] = currentTimeSeconds() - (properties["timestamp"] as Double)
-                    properties.remove("timestamp")
+                    if (properties.containsKey("timestamp")) {
+                        properties["age"] = currentTimeSeconds() - (properties["timestamp"] as Double)
+                        properties.remove("timestamp")
+                    }
                 }
             }
             else -> { /* do nothing */ }

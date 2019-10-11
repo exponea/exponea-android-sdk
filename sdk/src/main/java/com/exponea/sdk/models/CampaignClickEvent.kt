@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-data class CampaignClickEvent(
+internal data class CampaignClickEvent(
     var url: String,
     var age: Double,
     var properties: PlatformProperty

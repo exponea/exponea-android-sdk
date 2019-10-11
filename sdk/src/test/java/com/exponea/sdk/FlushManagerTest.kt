@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class FlushManagerTest : ExponeaSDKTest() {
+internal class FlushManagerTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
@@ -41,8 +41,8 @@ class FlushManagerTest : ExponeaSDKTest() {
         }
     }
 
-    lateinit var manager: FlushManager
-    lateinit var repo: EventRepository
+    private lateinit var manager: FlushManager
+    private lateinit var repo: EventRepository
 
     @Before
     fun init() {

@@ -1,5 +1,5 @@
 package com.exponea.sdk.manager
 
-interface AnonymizeManager {
+internal interface AnonymizeManager {
     fun anonymize()
 }

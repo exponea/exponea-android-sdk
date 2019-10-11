@@ -30,7 +30,7 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 
-class FcmManagerImpl(
+internal class FcmManagerImpl(
         private val context: Context,
         private val configuration: ExponeaConfiguration
 ) : FcmManager {

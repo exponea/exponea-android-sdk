@@ -2,10 +2,9 @@ package com.exponea.sdk.preferences
 
 import android.content.Context
 import android.preference.PreferenceManager
-import android.util.Log
 import com.exponea.sdk.util.Logger
 
-class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
+internal class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     override fun setString(key: String, value: String) {

@@ -4,7 +4,7 @@ import android.os.Build
 import com.exponea.sdk.BuildConfig
 import com.google.gson.annotations.SerializedName
 
-data class DeviceProperties(
+internal data class DeviceProperties(
         var campaign: String? = null,
         @SerializedName("campaign_id")
         var campaignId: String? = null,

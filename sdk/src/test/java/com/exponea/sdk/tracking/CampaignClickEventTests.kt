@@ -98,7 +98,7 @@ class CampaignClickEventTests : ExponeaSDKTest() {
     @Test
     fun testHandleIntent_invalid_NullData() {
         val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = null;
+        deepLinkIntent.data = null
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         val storedEvents = eventRepository.all()
 
@@ -109,7 +109,7 @@ class CampaignClickEventTests : ExponeaSDKTest() {
     @Test
     fun testHandleIntent_invalid_InvalidUrl() {
         val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("http", "invalid"));
+        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("http", "invalid"))
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         val storedEvents = eventRepository.all()
 
@@ -120,7 +120,7 @@ class CampaignClickEventTests : ExponeaSDKTest() {
     @Test
     fun testHandleIntent_invalid_NoPayload() {
         val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"));
+        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         val storedEvents = eventRepository.all()
 

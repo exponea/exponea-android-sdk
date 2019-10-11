@@ -14,7 +14,7 @@ import com.exponea.sdk.models.FetchEventsRequest
 import com.google.gson.Gson
 import okhttp3.Call
 
-class ExponeaServiceImpl(
+internal class ExponeaServiceImpl(
     private val gson: Gson,
     private val networkManager: NetworkHandler
 ) : ExponeaService {

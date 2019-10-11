@@ -3,21 +3,17 @@ package com.exponea.sdk.manager
 import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationData
 import com.google.firebase.messaging.RemoteMessage
-
 import org.junit.Before
 import org.junit.Test
-
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 
 @RunWith(RobolectricTestRunner::class)
-class FcmManagerImplTest {
+internal class FcmManagerImplTest {
 
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager

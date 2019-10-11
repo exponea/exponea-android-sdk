@@ -11,7 +11,7 @@ import com.exponea.sdk.util.toDate
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-class ExponeaFirebaseMessageService : FirebaseMessagingService() {
+internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
     private val notificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

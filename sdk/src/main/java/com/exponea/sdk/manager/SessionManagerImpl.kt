@@ -4,15 +4,15 @@ import android.app.Application
 import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.toDate
-import java.util.*
-import java.util.concurrent.TimeUnit
 
-class SessionManagerImpl(
+internal class SessionManagerImpl(
         context: Context,
         private val prefs: ExponeaPreferences
 ) : SessionManager() {

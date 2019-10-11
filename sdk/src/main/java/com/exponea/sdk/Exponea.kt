@@ -47,7 +47,7 @@ object Exponea {
 
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
-    lateinit var component: ExponeaComponent
+    internal lateinit var component: ExponeaComponent
 
     /**
      * Defines which mode the library should flush out events

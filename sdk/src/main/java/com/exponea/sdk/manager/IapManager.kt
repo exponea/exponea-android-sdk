@@ -1,6 +1,6 @@
 package com.exponea.sdk.manager
 
-interface IapManager {
+internal interface IapManager {
     fun configure(skuList: List<String>)
     fun startObservingPayments()
     fun stopObservingPayments()

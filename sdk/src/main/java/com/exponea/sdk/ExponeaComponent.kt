@@ -12,7 +12,7 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.*
 import com.google.gson.Gson
 
-class ExponeaComponent(
+internal class ExponeaComponent(
         exponeaConfiguration: ExponeaConfiguration,
         context: Context
 ) {

@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 
-data class Banner(
+internal data class Banner(
         @SerializedName("customer_ids")
         var customerIds: CustomerIds = CustomerIds(),
         @SerializedName("personalisation_ids")

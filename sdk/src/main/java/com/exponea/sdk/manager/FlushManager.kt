@@ -1,6 +1,6 @@
 package com.exponea.sdk.manager
 
-interface FlushManager {
+internal interface FlushManager {
     var onFlushFinishListener: (() -> Unit)?
     var isRunning: Boolean
     /**

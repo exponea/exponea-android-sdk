@@ -2,7 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.*
 
-interface PersonalizationManager {
+internal interface PersonalizationManager {
     fun showBanner(projectToken: String, customerIds: CustomerIds)
 
     fun getBannersConfiguration(

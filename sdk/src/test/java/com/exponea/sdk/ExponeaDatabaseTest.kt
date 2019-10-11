@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class ExponeaDatabaseTest: ExponeaSDKTest() {
+internal class ExponeaDatabaseTest: ExponeaSDKTest() {
 
     companion object {
         const val DB_NAME = "TestDatabase"
@@ -31,8 +31,8 @@ class ExponeaDatabaseTest: ExponeaSDKTest() {
             var lastName: String
     )
 
-    lateinit var db : ExponeaDatabase<DatabaseStorageObject<Person>>
-    val mockData = DatabaseStorageObject(item = Person("firstname", "secondname"), projectId = MOCK_PROJECT_ID,
+    private lateinit var db : ExponeaDatabase<DatabaseStorageObject<Person>>
+    private val mockData = DatabaseStorageObject(item = Person("firstname", "secondname"), projectId = MOCK_PROJECT_ID,
             route = Route.TRACK_EVENTS)
 
     @Before

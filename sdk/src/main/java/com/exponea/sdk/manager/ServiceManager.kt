@@ -1,6 +1,6 @@
 package com.exponea.sdk.manager
 
-interface ServiceManager {
+internal interface ServiceManager {
     fun start()
     fun stop()
 }

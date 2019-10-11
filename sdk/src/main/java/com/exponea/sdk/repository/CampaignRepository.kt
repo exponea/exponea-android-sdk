@@ -5,7 +5,7 @@ import com.exponea.sdk.models.CampaignClickInfo
 /**
  * Repository for storing a single CampaignClickInfo.
  */
-interface CampaignRepository {
+internal interface CampaignRepository {
     /**
      * Returns CampaignClickInfo if exists and lives shorter than Exponea.campaignTTL
      */

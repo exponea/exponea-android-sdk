@@ -8,7 +8,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-class ExponeaJobService(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+internal class ExponeaJobService(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
         const val TAG = "ExponeaJobServiceWork"

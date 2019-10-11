@@ -41,7 +41,7 @@ class DefaultPropertiesTest : ExponeaSDKTest() {
         }
     }
 
-    lateinit var repo: EventRepository
+    private lateinit var repo: EventRepository
 
     @Before
     fun prepareForTest() {

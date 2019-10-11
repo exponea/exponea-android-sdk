@@ -1,6 +1,6 @@
 package com.exponea.sdk.repository
 
-interface DeviceInitiatedRepository {
+internal interface DeviceInitiatedRepository {
     fun get(): Boolean
     fun set(boolean: Boolean)
 }

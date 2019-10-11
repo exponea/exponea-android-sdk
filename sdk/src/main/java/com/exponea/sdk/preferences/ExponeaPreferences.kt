@@ -1,6 +1,6 @@
 package com.exponea.sdk.preferences
 
-interface ExponeaPreferences {
+internal interface ExponeaPreferences {
     fun setString(key: String, value: String)
     fun setBoolean(key: String, value: Boolean)
     fun setLong(key: String, value: Long)

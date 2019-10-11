@@ -7,7 +7,7 @@ import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.Gson
 import kotlin.math.abs
 
-class CampaignRepositoryImpl(
+internal class CampaignRepositoryImpl(
     private val gson: Gson,
     private val preferences: ExponeaPreferences
 ) : CampaignRepository {
@@ -15,7 +15,7 @@ class CampaignRepositoryImpl(
     private val key = "ExponeaCampaign"
 
     override fun set(clickInfo: CampaignClickInfo) {
-        val json = gson.toJson(clickInfo);
+        val json = gson.toJson(clickInfo)
         preferences.setString(key, json)
     }
 

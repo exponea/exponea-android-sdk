@@ -11,14 +11,14 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class ExponeaPreferencesTest: ExponeaSDKTest() {
+internal class ExponeaPreferencesTest: ExponeaSDKTest() {
 
     companion object {
         const val VAL_BOOL = "booleanValue"
         const val VAL_STRING = "stringValue"
     }
 
-    lateinit var prefs: ExponeaPreferences
+    private lateinit var prefs: ExponeaPreferences
 
     @Before
     fun init() {

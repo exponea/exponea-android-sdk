@@ -7,7 +7,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-internal class CustomerAtrributesTest: ExponeaSDKTest() {
+class CustomerAtrributesTest: ExponeaSDKTest() {
 
 
     @Test

@@ -1,6 +1,6 @@
 package com.exponea.sdk.manager
 
-internal interface BackgroundTimerManager {
+interface BackgroundTimerManager {
 
     fun startTimer()
 

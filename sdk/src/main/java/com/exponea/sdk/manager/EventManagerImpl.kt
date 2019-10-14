@@ -5,7 +5,7 @@ import com.exponea.sdk.models.*
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 
-internal class EventManagerImpl(
+class EventManagerImpl(
         private val configuration: ExponeaConfiguration,
         private val eventRepository: EventRepository
 ) : EventManager {

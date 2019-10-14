@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-internal data class CustomerRecommendation(
+data class CustomerRecommendation(
         var type: String = "recommendation",
         var id: String,
         var size: Int = 10,

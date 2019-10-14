@@ -2,7 +2,7 @@ package com.exponea.sdk.repository
 
 import com.exponea.sdk.models.CustomerIds
 
-internal interface CustomerIdsRepository {
+interface CustomerIdsRepository {
 
     fun get() : CustomerIds
 

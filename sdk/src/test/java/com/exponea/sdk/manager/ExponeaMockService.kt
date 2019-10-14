@@ -10,7 +10,7 @@ import okhttp3.mock.HttpCodes.HTTP_400_BAD_REQUEST
 import okhttp3.mock.MockInterceptor
 import okhttp3.mockwebserver.MockWebServer
 
-internal class ExponeaMockService(private val success: Boolean) : ExponeaService {
+class ExponeaMockService(private val success: Boolean) : ExponeaService {
 
     private val server = MockWebServer()
     private val dummyUrl = server.url("/").toString()

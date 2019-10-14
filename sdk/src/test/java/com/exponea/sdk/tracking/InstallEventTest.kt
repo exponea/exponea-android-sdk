@@ -44,7 +44,7 @@ class InstallEventTest : ExponeaSDKTest() {
         }
     }
 
-    private lateinit var repo: EventRepository
+    lateinit var repo: EventRepository
 
     @Before
     fun prepareForTest() {

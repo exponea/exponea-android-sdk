@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class CustomerAttributes(
+data class CustomerAttributes(
 
         @SerializedName("attributes")
         var attributes: MutableList<HashMap<String, Any>> = mutableListOf()

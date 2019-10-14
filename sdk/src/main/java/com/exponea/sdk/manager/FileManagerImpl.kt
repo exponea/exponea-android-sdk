@@ -7,7 +7,7 @@ import com.google.gson.Gson
 import java.io.BufferedReader
 import java.io.File
 
-internal class FileManagerImpl : FileManager {
+class FileManagerImpl : FileManager {
 
     val gson = Gson()
 

@@ -1,6 +1,6 @@
 package com.exponea.sdk.database
 
-internal interface ExponeaDatabase<T> {
+interface ExponeaDatabase<T> {
     fun all(): ArrayList<T>
     fun add(item: T): Boolean
     fun update(item: T): Boolean

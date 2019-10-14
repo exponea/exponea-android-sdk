@@ -9,7 +9,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-internal class ExponeaWorkRequest(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+class ExponeaWorkRequest(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
         const val KEY_CONFIG_INPUT = "KeyConfigInput"

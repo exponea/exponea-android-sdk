@@ -15,7 +15,7 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.*
 
-internal fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
+fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
     this.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             onFailure(call, e)
@@ -27,7 +27,7 @@ internal fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call
     })
 }
 
-internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
+fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
     (this as Application).registerActivityLifecycleCallbacks(object :
             Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
@@ -61,18 +61,18 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
     })
 }
 
-internal fun Double.toDate(): Date {
+fun Double.toDate(): Date {
     return Date((this * 1000).toLong())
 }
 
-internal fun currentTimeSeconds(): Double {
+fun currentTimeSeconds(): Double {
     return Date().time / 1000.0
 }
 
-internal inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
+inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
 
 
-internal fun String?.adjustUrl() : String? {
+fun String?.adjustUrl() : String? {
     return if (this != null) {
         if (!contains("://")) {
             "http://$this"
@@ -82,6 +82,6 @@ internal fun String?.adjustUrl() : String? {
     }
 }
 
-internal fun Intent?.isDeeplinkIntent(): Boolean {
+fun Intent?.isDeeplinkIntent(): Boolean {
     return Intent.ACTION_VIEW == this?.action && data?.toString()?.startsWith("http", true) == true
 }

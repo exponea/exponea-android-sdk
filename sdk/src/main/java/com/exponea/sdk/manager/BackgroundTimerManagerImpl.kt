@@ -6,12 +6,13 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.services.ExponeaWorkRequest
 import com.exponea.sdk.util.Logger
+import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
 /**
  * Handles background session tracking
  */
-internal class BackgroundTimerManagerImpl(private val context: Context, private val configuration: ExponeaConfiguration) : BackgroundTimerManager {
+class BackgroundTimerManagerImpl(private val context: Context, private val configuration: ExponeaConfiguration) : BackgroundTimerManager {
     private val keyUniqueName = "KeyUniqueName"
 
     /**

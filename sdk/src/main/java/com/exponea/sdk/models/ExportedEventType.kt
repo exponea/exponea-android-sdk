@@ -2,8 +2,10 @@ package com.exponea.sdk.models
 
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.annotations.SerializedName
+import java.util.*
+import kotlin.collections.HashMap
 
-internal data class ExportedEventType(
+data class ExportedEventType(
         @SerializedName("project_id")
         var projectId: String? = null,
         @SerializedName("event_type")

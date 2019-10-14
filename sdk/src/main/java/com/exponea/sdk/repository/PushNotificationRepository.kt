@@ -1,6 +1,6 @@
 package com.exponea.sdk.repository
 
-internal interface PushNotificationRepository {
+interface PushNotificationRepository {
     fun get(): Boolean
     fun set(boolean: Boolean)
     fun getExtraData(): Map<String, String>?

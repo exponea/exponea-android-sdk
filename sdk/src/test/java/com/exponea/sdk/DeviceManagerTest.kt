@@ -10,9 +10,9 @@ import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class DeviceManagerTest {
+class DeviceManagerTest {
 
-    private lateinit var deviceManager: DeviceManager
+    lateinit var deviceManager: DeviceManager
 
     @Test
     @Config(qualifiers = "large")

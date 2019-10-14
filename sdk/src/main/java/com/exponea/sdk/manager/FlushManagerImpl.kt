@@ -13,7 +13,7 @@ import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException
 
-internal class FlushManagerImpl(
+class FlushManagerImpl(
         private val configuration: ExponeaConfiguration,
         private val eventRepository: EventRepository,
         private val exponeaService: ExponeaService,

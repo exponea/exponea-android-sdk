@@ -1,6 +1,6 @@
 package com.exponea.sdk.manager
 
 
-internal interface ConnectionManager {
+interface ConnectionManager {
     fun isConnectedToInternet(): Boolean
 }

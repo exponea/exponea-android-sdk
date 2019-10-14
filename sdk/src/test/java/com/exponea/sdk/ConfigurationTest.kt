@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class ConfigurationTest: ExponeaSDKTest() {
+class ConfigurationTest: ExponeaSDKTest() {
 
     private fun setupConfigurationWithStruct() {
         val context = ApplicationProvider.getApplicationContext<Context>()

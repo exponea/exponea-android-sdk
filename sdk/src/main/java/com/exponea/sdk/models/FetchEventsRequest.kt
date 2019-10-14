@@ -1,7 +1,7 @@
 package com.exponea.sdk.models
 
 
-internal data class FetchEventsRequest(
+data class FetchEventsRequest(
         var eventTypes: MutableList<String>,
         var sortOrder: String = "desc",
         var limit: Int = 3,

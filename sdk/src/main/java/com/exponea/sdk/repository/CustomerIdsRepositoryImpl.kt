@@ -6,7 +6,7 @@ import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-internal class CustomerIdsRepositoryImpl(private val gson: Gson,
+class CustomerIdsRepositoryImpl(private val gson: Gson,
                                 private val uuidRepo: UniqueIdentifierRepository,
                                 private val prefs: ExponeaPreferences) :  CustomerIdsRepository {
 

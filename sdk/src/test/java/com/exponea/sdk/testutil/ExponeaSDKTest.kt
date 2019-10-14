@@ -7,7 +7,7 @@ import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import org.junit.After
 import java.util.concurrent.CountDownLatch
 
-internal open class ExponeaSDKTest {
+open class ExponeaSDKTest {
     companion object {
         @Synchronized fun waitUntilFlushed() {
             val lock = CountDownLatch(1)

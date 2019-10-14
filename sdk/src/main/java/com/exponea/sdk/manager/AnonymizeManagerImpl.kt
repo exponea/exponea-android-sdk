@@ -1,10 +1,11 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DeviceInitiatedRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 
-internal class AnonymizeManagerImpl(
+class AnonymizeManagerImpl(
     private val eventRepository: EventRepository,
     private val uniqueIdentifierRepository: UniqueIdentifierRepository,
     private val customerIdsRepository: CustomerIdsRepository,

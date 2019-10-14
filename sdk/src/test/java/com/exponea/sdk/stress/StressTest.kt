@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-internal class StressTest : ExponeaSDKTest() {
+class StressTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
@@ -48,7 +48,7 @@ internal class StressTest : ExponeaSDKTest() {
         }
     }
 
-    private lateinit var repo: EventRepository
+    lateinit var repo: EventRepository
 
     @Before
     fun prepareForTest() {

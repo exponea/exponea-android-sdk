@@ -4,10 +4,7 @@ import android.content.Context
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponse
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DeviceProperties
-import com.exponea.sdk.models.EventType
-import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.*
 import com.exponea.sdk.util.Logger
 
 /**
@@ -18,7 +15,7 @@ import com.exponea.sdk.util.Logger
  *
  * @param context Application Context
  */
-internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
+class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient by lazy {  BillingClient.newBuilder(context).setListener(this).build() }
     private val device = DeviceProperties()

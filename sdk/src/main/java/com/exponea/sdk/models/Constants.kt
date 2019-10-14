@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-internal object Constants {
+object Constants {
     /// Network
     object Repository {
         val baseURL: String = "https://api.exponea.com"

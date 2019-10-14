@@ -5,7 +5,7 @@ import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import io.paperdb.PaperDbException
 
-internal class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
+class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
     val book = Paper.book(databaseName)
 
     override fun all(): ArrayList<DatabaseStorageObject<T>> {

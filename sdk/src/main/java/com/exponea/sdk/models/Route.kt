@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-internal enum class Route {
+enum class Route {
     TRACK_CUSTOMERS,
     TRACK_EVENTS,
     TOKEN_ROTATE,

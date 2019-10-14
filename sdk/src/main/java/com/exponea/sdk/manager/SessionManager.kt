@@ -5,8 +5,9 @@ import android.app.Application
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.currentTimeSeconds
+import java.sql.Timestamp
 
-internal abstract class SessionManager : Application.ActivityLifecycleCallbacks {
+abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
     abstract fun onSessionStart()
 

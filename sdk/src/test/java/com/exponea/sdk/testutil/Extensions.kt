@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.FlushMode
 
-internal fun Exponea.reset() {
+fun Exponea.reset() {
     if (!isInitialized) return
     component.campaignRepository.clear()
     component.customerIdsRepository.clear()

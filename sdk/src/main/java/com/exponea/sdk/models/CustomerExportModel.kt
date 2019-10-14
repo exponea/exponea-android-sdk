@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-internal data class CustomerExportModel(
+data class CustomerExportModel(
         var attributes: CustomerExportAttributes,
         var filter: HashMap<String, String>,
         var executionTime: Int,

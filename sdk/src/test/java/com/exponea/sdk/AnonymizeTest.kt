@@ -16,7 +16,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-internal class AnonymizeTest : ExponeaSDKTest() {
+class AnonymizeTest : ExponeaSDKTest() {
 
     @Before
     fun init() {

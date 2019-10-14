@@ -1,6 +1,6 @@
 package com.exponea.sdk.repository
 
-internal interface UniqueIdentifierRepository {
+interface UniqueIdentifierRepository {
     fun get(): String
     fun clear(): Boolean
 }

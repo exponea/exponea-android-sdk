@@ -4,7 +4,7 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.fromJson
 import com.google.gson.Gson
 
-internal class PushNotificationRepositoryImpl(
+class PushNotificationRepositoryImpl(
         private val preferences: ExponeaPreferences
 ) : PushNotificationRepository {
 

@@ -13,7 +13,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 
 
-internal class ExponeaPushReceiver : BroadcastReceiver() {
+class ExponeaPushReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"

@@ -4,7 +4,7 @@ import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExportedEventType
 
-internal class EventRepositoryImpl : EventRepository {
+class EventRepositoryImpl : EventRepository {
     private val database = ExponeaDatabaseImpl<ExportedEventType>("EventDatabase")
 
     override fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>> {

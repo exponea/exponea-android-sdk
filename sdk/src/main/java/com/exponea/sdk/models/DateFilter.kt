@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class DateFilter(
+data class DateFilter(
         var enabled: Boolean = false,
         @SerializedName("from_date")
         var fromDate: Int? = null,

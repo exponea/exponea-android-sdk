@@ -5,7 +5,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.services.ExponeaJobService
 import java.util.concurrent.TimeUnit
 
-internal class ServiceManagerImpl : ServiceManager {
+class ServiceManagerImpl : ServiceManager {
 
     override fun start() {
         val request = PeriodicWorkRequest.Builder(

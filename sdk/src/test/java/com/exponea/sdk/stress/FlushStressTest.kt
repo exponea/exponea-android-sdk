@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class FlushStressTest : ExponeaSDKTest() {
+class FlushStressTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
@@ -43,8 +43,8 @@ internal class FlushStressTest : ExponeaSDKTest() {
         }
     }
 
-    private lateinit var manager: FlushManager
-    private lateinit var repo: EventRepository
+    lateinit var manager: FlushManager
+    lateinit var repo: EventRepository
     private lateinit var service: ExponeaMockService
 
     @Before

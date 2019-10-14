@@ -2,7 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.*
 
-internal interface FetchManager {
+interface FetchManager {
 
     fun fetchBannerConfiguration(
             projectToken: String,

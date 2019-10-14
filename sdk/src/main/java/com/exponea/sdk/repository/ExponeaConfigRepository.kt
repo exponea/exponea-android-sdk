@@ -2,10 +2,11 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.google.gson.Gson
 
-internal object ExponeaConfigRepository {
+object ExponeaConfigRepository {
 
     private const val PREF_CONFIG = "ExponeaConfigurationPref"
 

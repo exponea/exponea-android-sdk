@@ -6,8 +6,10 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import okhttp3.Response
+import java.io.IOException
 
-internal class FetchManagerImpl(
+class FetchManagerImpl(
         private val api: ExponeaService,
         private val gson: Gson
 ) : FetchManager {

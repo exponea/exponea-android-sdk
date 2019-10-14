@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class TokenTrackingFrequencyTest : ExponeaSDKTest() {
+class TokenTrackingFrequencyTest : ExponeaSDKTest() {
 
     private fun setupConfiguration(configuration: ExponeaConfiguration) {
         val context = ApplicationProvider.getApplicationContext<Context>()

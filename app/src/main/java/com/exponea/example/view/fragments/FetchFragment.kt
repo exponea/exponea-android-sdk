@@ -7,12 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.exponea.example.App
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
-import com.exponea.example.view.dialogs.FetchCustomAttributeDialog
-import com.exponea.example.view.dialogs.FetchCustomEventsDialog
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.*
 import kotlinx.android.synthetic.main.fragment_fetch.*

@@ -10,7 +10,6 @@ import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.ExponeaFetchId
 import com.exponea.sdk.models.ExponeaFetchProperty
 import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.models.FetchEventsRequest
 import com.google.gson.Gson
 import okhttp3.Call
 
@@ -70,10 +69,6 @@ class ExponeaServiceImpl(
     override fun postFetchAttributes(projectToken: String, attributes: CustomerAttributes): Call {
         return doPost(ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES, projectToken,
                 attributes.toHashMap())
-    }
-
-    override fun postFetchEvents(projectToken: String, events: FetchEventsRequest): Call {
-        return doPost(ApiEndPoint.EndPointName.CUSTOMERS_EVENTS, projectToken, events.toHashMap())
     }
 
     override fun postFetchAllProperties(projectToken: String, customerIds: CustomerIds): Call {

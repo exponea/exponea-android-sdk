@@ -17,7 +17,6 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
         CUSTOMERS_PREDICTION,
         CUSTOMERS_RECOMMENDATION,
         CUSTOMERS_ATTRIBUTES,
-        CUSTOMERS_EVENTS,
         CUSTOMERS_ANONYMIZE,
         CUSTOMERS_EXPORT_ALL_PROPERTIES,
         CUSTOMERS_EXPORT_ALL,
@@ -40,7 +39,6 @@ data class ApiEndPoint(private val endPointName: EndPointName, private val token
             EndPointName.CUSTOMERS_PREDICTION            -> "/data/v2/$splitterToken/customers/prediction"
             EndPointName.CUSTOMERS_RECOMMENDATION        -> "/data/v2/$splitterToken/customers/recommendation"
             EndPointName.CUSTOMERS_ATTRIBUTES            -> "/data/v2/projects/$splitterToken/customers/attributes"
-            EndPointName.CUSTOMERS_EVENTS                -> "/data/v2/projects/$splitterToken/customers/events"
             EndPointName.CUSTOMERS_ANONYMIZE             -> "/data/v2/$splitterToken/customers/anonymize"
             EndPointName.CUSTOMERS_EXPORT_ALL_PROPERTIES -> "/data/v2/$splitterToken/customers/export-one"
             EndPointName.CUSTOMERS_EXPORT_ALL            -> "/data/v2/$splitterToken/customers/export"

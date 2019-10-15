@@ -8,7 +8,6 @@ import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.ExponeaFetchId
 import com.exponea.sdk.models.ExponeaFetchProperty
 import com.exponea.sdk.models.ExportedEventType
-import com.exponea.sdk.models.FetchEventsRequest
 import okhttp3.Call
 
 interface ExponeaService {
@@ -23,7 +22,6 @@ interface ExponeaService {
     fun postFetchPrediction(projectToken: String, id: ExponeaFetchId): Call
     fun postFetchRecommendation(projectToken: String, recommendation: CustomerRecommendation): Call
     fun postFetchAttributes(projectToken: String, attributes: CustomerAttributes): Call
-    fun postFetchEvents(projectToken: String, events: FetchEventsRequest): Call
     fun postFetchAllProperties(projectToken: String, customerIds: CustomerIds): Call
     fun postFetchAllCustomers(projectToken: String, customer: CustomerExportModel): Call
     fun postAnonymize(projectToken: String, customerIds: CustomerIds): Call

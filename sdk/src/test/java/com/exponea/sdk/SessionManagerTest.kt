@@ -152,3 +152,4 @@ class SessionManagerTest : ExponeaSDKTest() {
         assertEquals(sessionStartTime, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
     }
 }
+

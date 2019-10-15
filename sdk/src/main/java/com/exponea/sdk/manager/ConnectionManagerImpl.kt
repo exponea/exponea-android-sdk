@@ -10,3 +10,4 @@ class ConnectionManagerImpl(private val context: Context) : ConnectionManager {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected
     }
 }
+

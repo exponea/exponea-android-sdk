@@ -1,7 +1,12 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.EventType
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 
@@ -44,3 +49,4 @@ class EventManagerImpl(
         }
     }
 }
+

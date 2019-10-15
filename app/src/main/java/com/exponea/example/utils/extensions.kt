@@ -55,3 +55,4 @@ fun HashMap<String, Any>.asJson(): String {
     }
     return "$string\n}"
 }
+

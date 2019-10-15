@@ -21,3 +21,4 @@ class ExampleInstrumentedTest {
         assertEquals("com.exponea.example", appContext.packageName)
     }
 }
+

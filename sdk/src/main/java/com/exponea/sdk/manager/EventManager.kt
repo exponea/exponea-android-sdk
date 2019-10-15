@@ -7,3 +7,4 @@ import com.exponea.sdk.models.Route
 interface EventManager {
     fun addEventToQueue(event: ExportedEventType, eventType: EventType)
 }
+

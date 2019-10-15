@@ -7,3 +7,4 @@ interface BackgroundTimerManager {
     fun stopTimer()
 
 }
+

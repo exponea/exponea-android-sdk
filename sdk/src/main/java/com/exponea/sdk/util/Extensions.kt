@@ -85,3 +85,4 @@ fun String?.adjustUrl() : String? {
 fun Intent?.isDeeplinkIntent(): Boolean {
     return Intent.ACTION_VIEW == this?.action && data?.toString()?.startsWith("http", true) == true
 }
+

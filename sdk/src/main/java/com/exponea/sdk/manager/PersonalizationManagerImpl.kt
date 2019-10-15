@@ -4,7 +4,13 @@ import android.content.Context
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Banner
+import com.exponea.sdk.models.BannerResult
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.Personalization
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.util.Logger
 import java.util.*
 

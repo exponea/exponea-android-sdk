@@ -4,3 +4,4 @@ interface DeviceManager {
     fun isTablet(): Boolean
     fun getDeviceType(): String
 }
+

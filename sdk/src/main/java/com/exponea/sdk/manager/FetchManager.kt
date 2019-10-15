@@ -1,6 +1,12 @@
 package com.exponea.sdk.manager
 
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Banner
+import com.exponea.sdk.models.BannerResult
+import com.exponea.sdk.models.Consent
+import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.Personalization
+import com.exponea.sdk.models.Result
 
 interface FetchManager {
 

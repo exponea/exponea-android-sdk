@@ -1,7 +1,11 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.services.ExponeaWorkRequest
@@ -54,3 +58,4 @@ class BackgroundTimerManagerImpl(private val context: Context, private val confi
                 .cancelUniqueWork(keyUniqueName)
     }
 }
+

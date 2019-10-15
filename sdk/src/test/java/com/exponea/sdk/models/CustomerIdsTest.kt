@@ -28,7 +28,7 @@ class CustomerIdsTest: ExponeaSDKTest() {
 
         assertTrue(customerIds.toHashMap()["registered"]  == "email")
 
-         customerIds = CustomerIds(mapWithoutCookie)
+        customerIds = CustomerIds(mapWithoutCookie)
 
         assertTrue(customerIds.toHashMap()["cookie"]  == null)
         customerIds.cookie = "cookiee"

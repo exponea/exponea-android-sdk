@@ -525,7 +525,7 @@ object Exponea {
             Logger.w(this, "Flush mode manual set -> Skipping job service")
             return
         }
-        component.serviceManager.start()
+        component.serviceManager.start(context)
     }
 
     /**
@@ -534,7 +534,7 @@ object Exponea {
 
     private fun stopService() {
         Logger.d(this, "stopService")
-        component.serviceManager.stop()
+        component.serviceManager.stop(context)
     }
 
     /**

@@ -1,13 +1,18 @@
 package com.exponea.sdk.manager
 
-import androidx.work.*
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.services.ExponeaJobService
 import java.util.concurrent.TimeUnit
 
 class ServiceManagerImpl : ServiceManager {
 
-    override fun start() {
+    override fun start(context: Context) {
         val request = PeriodicWorkRequest.Builder(
                 ExponeaJobService::class.java,
                 Exponea.flushPeriod.timeInMillis,
@@ -18,14 +23,14 @@ class ServiceManagerImpl : ServiceManager {
                         .build()
         ).build()
 
-        WorkManager.getInstance().enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 ExponeaJobService.TAG,
                 ExistingPeriodicWorkPolicy.KEEP,
                 request
         )
     }
 
-    override fun stop() {
-        WorkManager.getInstance().cancelAllWorkByTag(ExponeaJobService.TAG)
+    override fun stop(context: Context) {
+        WorkManager.getInstance(context).cancelAllWorkByTag(ExponeaJobService.TAG)
     }
 }

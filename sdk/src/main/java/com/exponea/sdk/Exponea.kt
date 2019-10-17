@@ -442,8 +442,8 @@ object Exponea {
         // WorkManager
         initWorkManager()
 
-        // Alarm Manager Starter
-        startService()
+        // Periodic flush service
+        startPeriodicFlushService()
 
         // Track Install Event
         trackInstallEvent()
@@ -497,7 +497,7 @@ object Exponea {
 
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
-        startService()
+        startPeriodicFlushService()
     }
 
     /**
@@ -507,34 +507,34 @@ object Exponea {
     private fun onFlushModeChanged() {
         Logger.d(this, "onFlushModeChanged: $flushMode")
         when (flushMode) {
-            PERIOD -> startService()
-            APP_CLOSE -> stopService()
-            MANUAL -> stopService()
-            IMMEDIATE -> stopService()
+            PERIOD -> startPeriodicFlushService()
+            APP_CLOSE -> stopPeriodicFlushService()
+            MANUAL -> stopPeriodicFlushService()
+            IMMEDIATE -> stopPeriodicFlushService()
         }
     }
 
     /**
-     * Starts the service.
+     * Starts the periodic flush service.
      */
 
-    private fun startService() {
-        Logger.d(this, "startService")
+    private fun startPeriodicFlushService() {
+        Logger.d(this, "startPeriodicFlushService")
 
         if (flushMode == MANUAL || flushMode == IMMEDIATE) {
             Logger.w(this, "Flush mode manual set -> Skipping job service")
             return
         }
-        component.serviceManager.start(context)
+        component.serviceManager.startPeriodicFlush(context)
     }
 
     /**
-     * Stops the service.
+     * Stops the periodic flush service.
      */
 
-    private fun stopService() {
-        Logger.d(this, "stopService")
-        component.serviceManager.stop(context)
+    private fun stopPeriodicFlushService() {
+        Logger.d(this, "stopPeriodicFlushService")
+        component.serviceManager.stopPeriodicFlush(context)
     }
 
     /**

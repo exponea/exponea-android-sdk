@@ -8,10 +8,10 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-class ExponeaJobService(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+class ExponeaPeriodicFlushWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
-        const val TAG = "ExponeaJobServiceWork"
+        const val TAG = "ExponeaPeriodicFlushWorker"
     }
 
     override fun doWork(): Result {
@@ -43,7 +43,7 @@ class ExponeaJobService(context: Context, workerParameters: WorkerParameters) : 
 
     override fun onStopped() {
         super.onStopped()
-        Logger.d(this, "onStopJob")
+        Logger.d(this, "onStopped")
     }
 
 }

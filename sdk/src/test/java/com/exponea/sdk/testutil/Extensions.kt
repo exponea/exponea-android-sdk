@@ -15,7 +15,7 @@ fun Exponea.reset() {
     component.pushNotificationRepository.set(false)
 
     component.sessionManager.stopSessionListener()
-    component.serviceManager.stop(ApplicationProvider.getApplicationContext())
+    component.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
     component.iapManager.stopObservingPayments()
     component.backgroundTimerManager.stopTimer()
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())

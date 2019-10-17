@@ -8,9 +8,8 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.services.ExponeaWorkRequest
+import com.exponea.sdk.services.ExponeaSessionEndWorker
 import com.exponea.sdk.util.Logger
-import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
 /**
@@ -30,7 +29,7 @@ class BackgroundTimerManagerImpl(private val context: Context, private val confi
 
         // Build one time work request
         val workRequest = OneTimeWorkRequest
-                .Builder(ExponeaWorkRequest::class.java)
+                .Builder(ExponeaSessionEndWorker::class.java)
                 .setConstraints(constraints)
                 .setInitialDelay(configuration.sessionTimeout.toLong(), TimeUnit.SECONDS)
                 .build()

@@ -9,11 +9,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-class ExponeaWorkRequest(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
-
-    companion object {
-        const val KEY_CONFIG_INPUT = "KeyConfigInput"
-    }
+class ExponeaSessionEndWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")

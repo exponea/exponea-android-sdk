@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import com.exponea.sdk.Exponea
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.Call
@@ -86,3 +87,33 @@ fun Intent?.isDeeplinkIntent(): Boolean {
     return Intent.ACTION_VIEW == this?.action && data?.toString()?.startsWith("http", true) == true
 }
 
+fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {
+    return this.getOrElse {
+        try {
+            Logger.e(Exponea, "Unhandled error occurs", it)
+        } catch (e: Throwable) {
+            // cannot log problem, swallowing
+        }
+        if (Exponea.safeModeEnabled) {
+            // `function` is internal and has to return T value
+            // if error occurs here, let throw it, nothing more we can do
+            return mapThrowable(it)
+        } else {
+            throw it
+        }
+    }
+}
+
+fun Result<Unit>.logOnException(): Unit {
+    val exception = this.exceptionOrNull()
+    if (exception != null) {
+        try {
+            Logger.e(Exponea, "Unhandled error occurs")
+        } catch (e: Throwable) {
+            // cannot log problem, swallowing
+        }
+        if (!Exponea.safeModeEnabled) {
+            throw exception
+        }
+    }
+}

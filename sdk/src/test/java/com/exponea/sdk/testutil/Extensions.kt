@@ -3,7 +3,7 @@ package com.exponea.sdk.testutil
 import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.Constants
 
 fun Exponea.reset() {
     if (!isInitialized) return
@@ -20,8 +20,7 @@ fun Exponea.reset() {
     component.backgroundTimerManager.stopTimer()
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
         .edit().clear().commit()
-
-    flushMode = FlushMode.IMMEDIATE
-
+    flushMode = Constants.Flush.defaultFlushMode
+    loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
 }

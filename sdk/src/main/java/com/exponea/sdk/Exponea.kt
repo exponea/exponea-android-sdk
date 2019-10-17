@@ -35,56 +35,65 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isDeeplinkIntent
+import com.exponea.sdk.util.logOnException
+import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
 import io.paperdb.Paper
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
 
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
-    lateinit var component: ExponeaComponent
+    internal lateinit var component: ExponeaComponent
 
     /**
      * Defines which mode the library should flush out events
      */
-    var flushMode: FlushMode = IMMEDIATE
-        set(value) {
+    var flushMode: FlushMode = Constants.Flush.defaultFlushMode
+        set(value) = runCatching {
             field = value
             onFlushModeChanged()
-        }
+        }.logOnException()
 
     /**
      * Defines the period at which the library should flush events
      */
-    var flushPeriod: FlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
-        set(value) {
+    var flushPeriod: FlushPeriod = Constants.Flush.defaultFlushPeriod
+        set(value) = runCatching {
             field = value
             onFlushPeriodChanged()
-        }
+        }.logOnException()
 
     /**
      * Defines session timeout considered for app usage
      */
     var sessionTimeout: Double
-        get() = configuration.sessionTimeout
-        set(value) {
-            configuration.sessionTimeout = value
+        get() = runCatching {
+            configuration.sessionTimeout
+        }.returnOnException {
+            Constants.Session.defaultTimeout
         }
+        set(value) = runCatching {
+            configuration.sessionTimeout = value
+        }.logOnException()
 
     /**
      * Defines if automatic session tracking is enabled
      */
     var isAutomaticSessionTracking: Boolean
-        get() = configuration.automaticSessionTracking
-        set(value) {
+        get() = runCatching {
+            configuration.automaticSessionTracking
+        }.returnOnException {
+            Constants.Session.defaultAutomaticTracking
+        }
+        set(value) = runCatching {
             configuration.automaticSessionTracking = value
             startSessionTracking(value)
-        }
+        }.logOnException()
 
     /**
      * Check if our library has been properly initialized
@@ -96,16 +105,24 @@ object Exponea {
      * Check if the push notification listener is set to automatically
      */
     var isAutoPushNotification: Boolean
-        get() = configuration.automaticPushNotification
-        set(value) {
-            configuration.automaticPushNotification = value
+        get() = runCatching {
+            configuration.automaticPushNotification
+        }.returnOnException {
+            Constants.PushNotif.defaultAutomaticListening
         }
+        set(value) = runCatching {
+            configuration.automaticPushNotification = value
+        }.logOnException()
 
     /**
      * Indicate the frequency which Firebase token needs to be updated
      */
-    val tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?
-        get() = configuration.tokenTrackFrequency
+    val tokenTrackFrequency: ExponeaConfiguration.TokenFrequency
+        get() = runCatching {
+            configuration.tokenTrackFrequency
+        }.returnOnException {
+            Constants.Token.defaultTokenFrequency
+        }
 
     /**
      * Whenever a notification with extra values is received, this callback is called
@@ -115,7 +132,7 @@ object Exponea {
      * that data i'll be dispatched as soon as a listener is attached
      */
     var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
-        set(value) {
+        set(value) = runCatching {
             if (!isInitialized) {
                 Logger.w(this, "SDK not initialized")
                 return
@@ -126,33 +143,50 @@ object Exponea {
                 field?.invoke(storeData)
                 component.pushNotificationRepository.clearExtraData()
             }
-        }
+        }.logOnException()
 
     /**
      * Set which level the debugger should output log messages
      */
     var loggerLevel: Logger.Level
-        get() = Logger.level
-        set(value) {
-            Logger.level = value
+        get() = runCatching {
+            Logger.level
+        }.returnOnException {
+            Constants.Logger.defaultLoggerLevel
         }
+        set(value) = runCatching {
+            Logger.level = value
+        }.logOnException()
+
     /**
      * Defines time to live of campaign click event in seconds considered for app usage
      */
-
     var campaignTTL: Double
-        get() = configuration.campaignTTL
-        set(value) {
-            configuration.campaignTTL = value
+        get() = runCatching {
+            configuration.campaignTTL
+        }.returnOnException {
+            Constants.Campaign.defaultCampaignTTL
         }
+        set(value) = runCatching {
+            configuration.campaignTTL = value
+        }.logOnException()
+
+    /**
+     * Any exception in SDK will be logged and swallowed if flag is enabled, otherwise
+     *  the exception will be rethrown
+     */
+    internal var safeModeEnabled = BuildConfig.safeModeEnabled
+        set(value) = runCatching {
+            field = value
+        }.logOnException()
 
     /**
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
+    @Deprecated("use init(context) instead")
     @Throws(InvalidConfigurationException::class)
-    fun initFromFile(context: Context) {
-
+    fun initFromFile(context: Context) = runCatching {
         Paper.init(context)
         component = ExponeaComponent(ExponeaConfiguration(), context)
 
@@ -165,13 +199,29 @@ object Exponea {
         } else {
             throw InvalidConfigurationException()
         }
+    }.returnOnException { t ->
+        // Due to backward compatibility, we have to rethrow exception for invalid configuration
+        // Other exceptions are logged and swallowed
+        if (t is InvalidConfigurationException) {
+            throw t
+        }
     }
 
-    fun init(context: Context, configuration: ExponeaConfiguration) {
+    /**
+     * Use this method using a file as configuration. The SDK searches for a file called
+     * "exponea_configuration.json" that must be inside the "assets" folder of your application
+     */
+    fun init(context: Context): Boolean = runCatching {
+        initFromFile(context)
+        return@runCatching true
+    }.returnOnException { false }
+
+    fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         if (isInitialized) {
             Logger.w(this, "Exponea SDK is alrady initialized!")
             return
         }
+
         Logger.i(this, "Init")
 
         if (Looper.myLooper() == null)
@@ -185,7 +235,7 @@ object Exponea {
         ExponeaConfigRepository.set(context, configuration)
         FirebaseApp.initializeApp(context)
         initializeSdk()
-    }
+    }.logOnException()
 
     /**
      * Update the informed properties to a specific customer.
@@ -193,13 +243,13 @@ object Exponea {
      * flushed (send it to api).
      */
 
-    fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) {
+    fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) = runCatching {
         component.customerIdsRepository.set(customerIds)
         track(
             properties = properties.properties,
             type = EventType.TRACK_CUSTOMER
         )
-    }
+    }.logOnException()
 
     /**
      * Track customer event add new events to a specific customer.
@@ -211,7 +261,7 @@ object Exponea {
         properties: PropertiesList,
         timestamp: Double? = currentTimeSeconds(),
         eventType: String?
-    ) {
+    ) = runCatching {
 
         track(
             properties = properties.properties,
@@ -219,20 +269,20 @@ object Exponea {
             eventType = eventType,
             type = EventType.TRACK_EVENT
         )
-    }
+    }.logOnException()
 
     /**
      * Manually push all events to Exponea
      */
 
-    fun flushData() {
+    fun flushData() = runCatching {
         if (component.flushManager.isRunning) {
             Logger.w(this, "Cannot flush, Job service is already in progress")
             return
         }
 
         component.flushManager.flushData()
-    }
+    }.logOnException()
 
     /**
      * Fetches banners web representation
@@ -242,7 +292,7 @@ object Exponea {
     fun getPersonalizationWebLayer(
         onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
-    ) {
+    ) = runCatching {
         // TODO map banners id's
         val customerIds = Exponea.component.customerIdsRepository.get()
         Exponea.component.personalizationManager.getWebLayer(
@@ -251,7 +301,7 @@ object Exponea {
             onSuccess = onSuccess,
             onFailure = onFailure
         )
-    }
+    }.logOnException()
 
     /**
      * Fetch the list of your existing consent categories.
@@ -261,19 +311,19 @@ object Exponea {
     fun getConsents(
             onSuccess: (Result<ArrayList<Consent>>) -> Unit,
             onFailure: (Result<FetchError>) -> Unit
-    ) {
+    ) = runCatching {
         Exponea.component.fetchManager.fetchConsents(
                 projectToken = Exponea.configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
         )
-    }
+    }.logOnException()
 
     /**
      * Manually tracks session start
      * @param timestamp - determines session start time ( in seconds )
      */
-    fun trackSessionStart(timestamp: Double = currentTimeSeconds()) {
+    fun trackSessionStart(timestamp: Double = currentTimeSeconds()) = runCatching {
         if (isAutomaticSessionTracking) {
             Logger.w(
                 Exponea.component.sessionManager,
@@ -282,13 +332,13 @@ object Exponea {
             return
         }
         component.sessionManager.trackSessionStart(timestamp)
-    }
+    }.logOnException()
 
     /**
      * Manually tracks session end
      * @param timestamp - determines session end time ( in seconds )
      */
-    fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) {
+    fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) = runCatching {
 
         if (isAutomaticSessionTracking) {
             Logger.w(
@@ -299,13 +349,13 @@ object Exponea {
         }
 
         component.sessionManager.trackSessionEnd(timestamp)
-    }
+    }.logOnException()
 
     /**
      * Manually track FCM Token to Exponea API.
      */
 
-    fun trackPushToken(fcmToken: String) {
+    fun trackPushToken(fcmToken: String) = runCatching {
         component.firebaseTokenRepository.set(fcmToken, System.currentTimeMillis())
         val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
         track(
@@ -313,7 +363,7 @@ object Exponea {
                 properties = properties.properties,
                 type = EventType.PUSH_TOKEN
         )
-    }
+    }.logOnException()
 
     /**
      * Manually track delivered push notification to Exponea API.
@@ -322,7 +372,7 @@ object Exponea {
     fun trackDeliveredPush(
         data: NotificationData? = null,
         timestamp: Double? = currentTimeSeconds()
-    ) {
+    ) = runCatching {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "mobile notification",
@@ -345,7 +395,7 @@ object Exponea {
             type = EventType.PUSH_DELIVERED,
             timestamp = timestamp
         )
-    }
+    }.logOnException()
 
     /**
      * Manually track clicked push notification to Exponea API.
@@ -355,7 +405,7 @@ object Exponea {
         data: NotificationData? = null,
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
-    ) {
+    ) = runCatching {
         val properties = PropertiesList(
             hashMapOf(
                 "action_type" to "mobile notification",
@@ -377,19 +427,19 @@ object Exponea {
             type = EventType.PUSH_OPENED,
             timestamp = timestamp
         )
-    }
+    }.logOnException()
 
     /**
      * Opens a WebView showing the personalized page with the
      * banners for a specific customer.
      */
 
-    fun showBanners(customerIds: CustomerIds) {
+    fun showBanners(customerIds: CustomerIds) = runCatching {
         Exponea.component.personalizationManager.showBanner(
             projectToken = Exponea.configuration.projectToken,
             customerIds = customerIds
         )
-    }
+    }.logOnException()
 
     /**
      * Tracks payment manually
@@ -400,7 +450,7 @@ object Exponea {
     fun trackPaymentEvent(
         timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
-    ) {
+    ) = runCatching {
 
         track(
             eventType = Constants.EventTypes.payment,
@@ -408,7 +458,7 @@ object Exponea {
             properties = purchasedItem.toHashMap(),
             type = EventType.PAYMENT
         )
-    }
+    }.logOnException()
 
     /**
      * Handles the notification payload from FirebaseMessagingService
@@ -420,13 +470,13 @@ object Exponea {
             message: RemoteMessage?,
             manager: NotificationManager,
             showNotification: Boolean = true
-    ) {
+    ) = runCatching {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
         component.fcmManager.handleRemoteMessage(message, manager, showNotification)
-    }
+    }.logOnException()
 
     // Private Helpers
 
@@ -637,7 +687,7 @@ object Exponea {
         component.deviceInitiatedRepository.set(true)
     }
 
-    fun anonymize() {
+    fun anonymize() = runCatching {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
@@ -651,14 +701,14 @@ object Exponea {
         component.sessionManager.trackSessionStart(currentTimeSeconds())
         component.pushManager.trackFcmToken(firebaseToken)
 
-    }
+    }.logOnException()
 
     /**
      * Tries to handle Intent from Activity. If Intent contains data as defined for Deeplinks,
      * given Uri is parsed, info is send to Campaign server and TRUE is returned. Otherwise FALSE
      * is returned.
      */
-    fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean {
+    fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
         if (!isInitialized) {
             val config = ExponeaConfigRepository.get(appContext)
             if (config == null) {
@@ -687,7 +737,7 @@ object Exponea {
             type = EventType.CAMPAIGN_CLICK
         )
         return true
-    }
+    }.returnOnException { false }
 
 }
 

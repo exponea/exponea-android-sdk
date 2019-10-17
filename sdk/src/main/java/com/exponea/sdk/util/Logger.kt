@@ -1,6 +1,7 @@
 package com.exponea.sdk.util
 
 import android.util.Log
+import com.exponea.sdk.models.Constants
 
 object Logger {
     enum class Level(var value: Int) {
@@ -12,7 +13,7 @@ object Logger {
         VERBOSE(0)
     }
 
-    var level: Level = Level.INFO
+    var level: Level = Constants.Logger.defaultLoggerLevel
 
     fun e(parent: Any, message: String) {
         if (level.value >= Level.ERROR.value) {
@@ -22,12 +23,12 @@ object Logger {
         Log.e(parent.javaClass.simpleName, message)
     }
 
-    fun e(parent: Any, message: String, exception: Exception) {
+    fun e(parent: Any, message: String, throwable: Throwable) {
         if (level.value >= Level.ERROR.value) {
             return
         }
 
-        Log.e(parent.javaClass.simpleName, message, exception)
+        Log.e(parent.javaClass.simpleName, message, throwable)
     }
 
     fun w(parent: Any, message: String) {

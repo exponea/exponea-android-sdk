@@ -1,5 +1,7 @@
 package com.exponea.sdk.models
 
+import java.util.concurrent.TimeUnit
+
 object Constants {
     /// Network
     object Repository {
@@ -60,7 +62,8 @@ object Constants {
 
     /// Default session values
     object Session {
-        val defaultTimeout: Double = 6.0
+        const val defaultTimeout = 20.0
+        const val defaultAutomaticTracking = true
     }
 
     /// General constants
@@ -69,5 +72,31 @@ object Constants {
         val bannerFilename: String = "personalization"
         val bannerFilenameExt: String = "html"
         val bannerFullFilename: String = "personalization.html"
+    }
+
+    /// Flush default setup
+    object Flush {
+        val defaultFlushMode = FlushMode.IMMEDIATE
+        val defaultFlushPeriod = FlushPeriod(60, TimeUnit.MINUTES)
+    }
+
+    /// Push notifications default setup
+    object PushNotif {
+        const val defaultAutomaticListening = true
+    }
+
+    /// Token default setup
+    object Token {
+        val defaultTokenFrequency = ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE
+    }
+
+    /// Logger default setup
+    object Logger {
+        val defaultLoggerLevel = com.exponea.sdk.util.Logger.Level.INFO
+    }
+
+    /// Campaign default setup
+    object Campaign {
+        const val defaultCampaignTTL = 10.0
     }
 }

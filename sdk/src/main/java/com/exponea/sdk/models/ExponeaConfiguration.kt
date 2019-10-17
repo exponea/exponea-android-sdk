@@ -18,15 +18,15 @@ data class ExponeaConfiguration(
         /** Maximum retries value to flush data to api. */
         var maxTries: Int = 10,
         /** Timeout session value considered for app usage. */
-        var sessionTimeout: Double = 20.0,
+        var sessionTimeout: Double = Constants.Session.defaultTimeout,
         /** Defines time to live of campaign click event in seconds considered for app usage. */
-        var campaignTTL: Double = 10.0,
+        var campaignTTL: Double = Constants.Campaign.defaultCampaignTTL,
         /** Flag to control automatic tracking for In-App purchases */
         var automaticPaymentTracking: Boolean = true,
         /** Flag to control automatic session tracking */
-        var automaticSessionTracking: Boolean = true,
+        var automaticSessionTracking: Boolean = Constants.Session.defaultAutomaticTracking,
         /** Flag to control if the App will handle push notifications automatically. */
-        var automaticPushNotification: Boolean = true,
+        var automaticPushNotification: Boolean = Constants.PushNotif.defaultAutomaticListening,
         /** Icon to be showed in push notifications. */
         var pushIcon: Int? = null,
         /** Channel name for push notifications. Only for API level 26+. */

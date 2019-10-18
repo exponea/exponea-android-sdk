@@ -20,12 +20,22 @@ class FlushManagerImpl(
         private val connectionManager: ConnectionManager
 ) : FlushManager {
     override var onFlushFinishListener: (() -> Unit)? = null
-    override var isRunning: Boolean = false
+    @Volatile override var isRunning: Boolean = false
+        private set
 
     override fun flushData() {
+        synchronized(this) {
+            if (isRunning) return
+            isRunning = true
+        }
+        flushDataInternal()
+    }
+
+    private fun flushDataInternal() {
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flushing")
             onFlushFinishListener?.invoke()
+            isRunning = false
             return
         }
 
@@ -35,16 +45,15 @@ class FlushManagerImpl(
         val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
 
         if (firstEvent != null) {
-            isRunning = true
             Logger.i(this, "Flushing Event: ${firstEvent.id}")
             trySendingEvent(firstEvent)
         } else {
-            isRunning = false
             Logger.i(this, "No events left to flush: ${allEvents.size}")
             eventRepository.all().forEach {
                 it.shouldBeSkipped = false
                 eventRepository.update(it)
             }
+            isRunning = false
             onFlushFinishListener?.invoke()
         }
     }
@@ -91,10 +100,11 @@ class FlushManagerImpl(
                 in 500..599 -> {
                     databaseObject.shouldBeSkipped = true
                     eventRepository.update(databaseObject)
-                    flushData()
                 }
                 else -> onEventSentFailed(databaseObject)
             }
+            // Once done continue and try to flush the rest of events
+            flushDataInternal()
         }
     }
 
@@ -115,10 +125,7 @@ class FlushManagerImpl(
 
     private fun onEventSentSuccess(databaseObject: DatabaseStorageObject<ExportedEventType>) {
         Logger.d(this, "onEventSentSuccess: ${databaseObject.id}")
-
         eventRepository.remove(databaseObject.id)
-        // Once done continue and try to flush the rest of events
-        flushData()
     }
 
     private fun onEventSentFailed(databaseObject: DatabaseStorageObject<ExportedEventType>) {
@@ -130,7 +137,5 @@ class FlushManagerImpl(
         } else {
             eventRepository.update(databaseObject)
         }
-
-        flushData()
     }
 }

@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.manager.ConnectionManagerMock
 import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.manager.ExponeaMockService
 import com.exponea.sdk.manager.FlushManager
@@ -16,6 +17,8 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
+import io.mockk.spyk
+import io.mockk.verify
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -23,6 +26,8 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
 
 @RunWith(RobolectricTestRunner::class)
 class FlushManagerTest : ExponeaSDKTest() {
@@ -124,6 +129,32 @@ class FlushManagerTest : ExponeaSDKTest() {
                 it()
             }
             manager.flushData()
+        }
+    }
+
+    @Test
+    fun `should only flush once`() {
+        val service = spyk(ExponeaMockService(true))
+        manager = FlushManagerImpl(configuration, repo, service, ConnectionManagerMock)
+        Exponea.trackEvent(
+            eventType = "my event",
+            timestamp = currentTimeSeconds(),
+            properties = properties
+        )
+
+        val lock = CountDownLatch(1)
+        manager.onFlushFinishListener = {
+            lock.countDown()
+        }
+
+        for (i in 1..10) {
+            thread(start=true) { manager.flushData() }
+        }
+
+        lock.await()
+
+        verify(exactly = 1) {
+            service.postEvent(any(), any())
         }
     }
 }

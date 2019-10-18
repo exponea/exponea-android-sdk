@@ -72,6 +72,7 @@ dependencies {
     // Mockito
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC2"
     testImplementation 'com.github.gmazzo:okhttp-mock:1.1.0'
+
     testImplementation "io.mockk:mockk:1.9.3"
 
     androidTestImplementation 'androidx.test:runner:1.2.0'

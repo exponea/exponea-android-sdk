@@ -2,10 +2,19 @@ package com.exponea.sdk
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.manager.*
-import com.exponea.sdk.models.*
+import com.exponea.sdk.manager.ExponeaMockServer
+import com.exponea.sdk.manager.ExponeaMockService
+import com.exponea.sdk.manager.FlushManager
+import com.exponea.sdk.manager.FlushManagerImpl
+import com.exponea.sdk.manager.NoInternetConnectionManagerMock
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -14,8 +23,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class FlushManagerTest : ExponeaSDKTest() {
@@ -59,27 +66,23 @@ class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun flushEvents_ShouldPass() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
-        val count = CountDownLatch(1)
 
         Exponea.trackEvent(
             eventType = Constants.EventTypes.sessionStart,
             timestamp = currentTimeSeconds(),
             properties = properties
         )
-
-        manager.onFlushFinishListener = {
-            assertEquals(0, repo.all().size)
-            count.countDown()
+        waitForIt {
+            manager.onFlushFinishListener = {
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+            manager.flushData()
         }
-        manager.flushData()
-
-        count.await()
     }
 
-    @Test(timeout = 30_000)
+    @Test
     fun flushEvents_ShouldFail_WithNoInternetConnection() {
-
-        val count = CountDownLatch(1)
         val service = ExponeaMockService(false)
         val noInternetManager = NoInternetConnectionManagerMock
 
@@ -92,13 +95,13 @@ class FlushManagerTest : ExponeaSDKTest() {
         //change the manager instance to one without internet access
         manager = FlushManagerImpl(configuration, repo, service, noInternetManager)
 
-        manager.onFlushFinishListener = {
-            assertEquals(1, repo.all().size)
-            count.countDown()
+        waitForIt {
+            manager.onFlushFinishListener = {
+                it.assertEquals(1, repo.all().size)
+                it()
+            }
+            manager.flushData()
         }
-
-        manager.flushData()
-        count.await()
     }
 
     /**
@@ -109,20 +112,18 @@ class FlushManagerTest : ExponeaSDKTest() {
     fun flushEvents_ShouldBeEmptyWhenItFails() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
-        val count = CountDownLatch(1)
-
         Exponea.trackEvent(
             eventType = Constants.EventTypes.sessionStart,
             timestamp = currentTimeSeconds(),
             properties = properties
         )
 
-        manager.onFlushFinishListener = {
-            assertEquals(0, repo.all().size)
-            count.countDown()
+        waitForIt {
+            manager.onFlushFinishListener = {
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+            manager.flushData()
         }
-        manager.flushData()
-
-        count.await()
     }
 }

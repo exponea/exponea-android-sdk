@@ -8,6 +8,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -15,7 +16,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
@@ -91,13 +91,13 @@ class FcmTrackingEventsTest : ExponeaSDKTest() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         // Flush this event and check it was sent successfully
-        val lock = CountDownLatch(1)
-        Exponea.flushData()
-        Exponea.component.flushManager.onFlushFinishListener = {
-            assertEquals(0, repo.all().size)
-            lock.countDown()
+        waitForIt {
+            Exponea.component.flushManager.onFlushFinishListener = {
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+            Exponea.flushData()
         }
-        lock.await()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
@@ -116,13 +116,13 @@ class FcmTrackingEventsTest : ExponeaSDKTest() {
 
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
-        val lock = CountDownLatch(1)
-        Exponea.flushData()
-        Exponea.component.flushManager.onFlushFinishListener = {
-            assertEquals(0, repo.all().size)
-            lock.countDown()
+        waitForIt {
+            Exponea.component.flushManager.onFlushFinishListener = {
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+            Exponea.flushData()
         }
-        lock.await()
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 

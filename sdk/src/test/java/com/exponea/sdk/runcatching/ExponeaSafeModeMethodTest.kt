@@ -65,6 +65,7 @@ internal class ExponeaSafeModeMethodTest(
 
     @Test
     fun callAfterInitWithSafeModeEnabled() {
+        skipInstallEvent()
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = true
         makeExponeaThrow()
@@ -73,6 +74,7 @@ internal class ExponeaSafeModeMethodTest(
 
     @Test(expected = TestPurposeException::class)
     fun callAfterInitWithSafeModeDisabled() {
+        skipInstallEvent()
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = false
         makeExponeaThrow()

@@ -5,17 +5,13 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import org.junit.After
-import java.util.concurrent.CountDownLatch
 
 open class ExponeaSDKTest {
     companion object {
         @Synchronized fun waitUntilFlushed() {
-            val lock = CountDownLatch(1)
-            Exponea.component.flushManager.onFlushFinishListener = {
-                lock.countDown()
-            }
-            if (Exponea.component.flushManager.isRunning) {
-                lock.await()
+            waitForIt {
+                Exponea.component.flushManager.onFlushFinishListener = { it() }
+                if (!Exponea.component.flushManager.isRunning) it()
             }
         }
 

@@ -4,11 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.AfterClass
+import org.junit.Before
 import org.junit.BeforeClass
 
 open class CampaignSessionTests_Base : ExponeaSDKTest() {
@@ -61,5 +69,17 @@ open class CampaignSessionTests_Base : ExponeaSDKTest() {
             this.addCategory(Intent.CATEGORY_BROWSABLE)
             this.data = Uri.parse(CAMPAIGN_URL)
         }
+    }
+
+    @Before
+    fun mockFlush() {
+        mockkConstructor(FlushManagerImpl::class)
+        // flush data does nothing - we want to observe the events in DB
+        every { anyConstructed<FlushManagerImpl>().flushData() } just Runs
+    }
+
+    @After
+    fun unmockFlush() {
+        unmockkConstructor(FlushManagerImpl::class)
     }
 }

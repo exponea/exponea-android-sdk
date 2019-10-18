@@ -11,6 +11,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
@@ -23,9 +24,12 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CampaignClickEventTests : ExponeaSDKTest() {
@@ -232,12 +236,12 @@ class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     private fun flushDataSync() {
-        val lock = CountDownLatch(1)
-        Exponea.component.flushManager.onFlushFinishListener = {
-            lock.countDown()
+        waitForIt {
+            Exponea.component.flushManager.onFlushFinishListener = {
+                it()
+            }
+            Exponea.flushData()
         }
-        Exponea.flushData()
-        lock.await()
     }
 
     private fun createDeeplinkIntent() = Intent().apply {

@@ -3,12 +3,17 @@ package com.exponea.sdk.stress
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.*
+import com.exponea.sdk.manager.ConnectionManagerMock
+import com.exponea.sdk.manager.ExponeaMockServer
+import com.exponea.sdk.manager.ExponeaMockService
+import com.exponea.sdk.manager.FlushManager
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -18,7 +23,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
-import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -85,13 +89,13 @@ class FlushStressTest : ExponeaSDKTest() {
             if (r.nextInt(10) == 3) {
                 assertEquals(repo.all().size, insertedCount)
                 insertedCount = 0
-                val lock = CountDownLatch(1)
-                manager.flushData()
-                manager.onFlushFinishListener = {
-                    assertEquals(0, repo.all().size)
-                    lock.countDown()
+                waitForIt {
+                    manager.onFlushFinishListener = {
+                        it.assertEquals(0, repo.all().size)
+                        it()
+                    }
+                    manager.flushData()
                 }
-                lock.await()
             }
         }
     }

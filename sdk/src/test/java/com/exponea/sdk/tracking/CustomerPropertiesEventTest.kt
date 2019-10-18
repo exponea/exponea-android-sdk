@@ -9,6 +9,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -80,19 +81,16 @@ class CustomerPropertiesEventTest : ExponeaSDKTest() {
                 properties = properties
         )
 
-        val syncObject = Object()
-
-        Exponea.component.flushManager.onFlushFinishListener = {
-            // Checking that event was successfully sent
-            assertEquals(0, repo.all().size)
-            synchronized(syncObject) { syncObject.notify() }
+        waitForIt {
+            Exponea.component.flushManager.onFlushFinishListener = {
+                assertEquals(0, repo.all().size)
+                it()
+            }
+            Exponea.component.flushManager.flushData()
         }
-        // Flush event and wait for result
-        Exponea.component.flushManager.flushData()
-
-        synchronized(syncObject) { syncObject.wait() }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/track/v2/projects/TestTokem/customers", request.path)
+        waitUntilFlushed()
     }
 }

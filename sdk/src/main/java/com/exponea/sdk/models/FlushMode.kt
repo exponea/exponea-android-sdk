@@ -22,9 +22,4 @@ enum class FlushMode {
     IMMEDIATE
 }
 
-class FlushPeriod(private val amount: Long, private val timeUnit: TimeUnit) {
-    var timeInMillis: Long = 0
-        get() {
-            return timeUnit.toMillis(amount)
-        }
-}
+data class FlushPeriod(val amount: Long, val timeUnit: TimeUnit)

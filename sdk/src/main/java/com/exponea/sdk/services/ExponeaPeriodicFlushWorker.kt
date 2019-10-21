@@ -6,22 +6,25 @@ import androidx.work.WorkerParameters
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.returnOnException
 import java.util.concurrent.CountDownLatch
 
 class ExponeaPeriodicFlushWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
-        const val TAG = "ExponeaPeriodicFlushWorker"
+        const val WORK_NAME = "ExponeaPeriodicFlushWorker"
     }
 
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")
-        val countDownLatch = CountDownLatch(1)
-        // If our flush mode isn't set to period then we should cancel all future jobs
-        if (Exponea.flushMode != FlushMode.PERIOD) {
-            return Result.success()
+        if (!Exponea.isInitialized) {
+            return Result.failure()
         }
-        try {
+        if (Exponea.flushMode != FlushMode.PERIOD) {
+            return Result.failure()
+        }
+        runCatching {
+            val countDownLatch = CountDownLatch(1)
             Exponea.component.flushManager.onFlushFinishListener = {
                 // Once our flushing is done we want to tell the system that we finished and we should reschedule
                 countDownLatch.countDown()
@@ -33,12 +36,8 @@ class ExponeaPeriodicFlushWorker(context: Context, workerParameters: WorkerParam
                 Logger.e(this, "doWork -> flush was interrupted", e)
                 return Result.failure()
             }
-        } catch (e: UninitializedPropertyAccessException) {
-            return Result.success()
-        } catch (e: Exception) {
-            return Result.failure()
-        }
-        return Result.retry()
+        }.returnOnException { Result.failure() }
+        return Result.success()
     }
 
     override fun onStopped() {

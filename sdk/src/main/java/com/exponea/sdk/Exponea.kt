@@ -493,7 +493,7 @@ object Exponea {
         initWorkManager()
 
         // Periodic flush service
-        startPeriodicFlushService()
+        if (flushMode == PERIOD) startPeriodicFlushService()
 
         // Track Install Event
         trackInstallEvent()
@@ -547,7 +547,7 @@ object Exponea {
 
     private fun onFlushPeriodChanged() {
         Logger.d(this, "onFlushPeriodChanged: $flushPeriod")
-        startPeriodicFlushService()
+        if (flushMode == PERIOD) startPeriodicFlushService()
     }
 
     /**
@@ -571,11 +571,11 @@ object Exponea {
     private fun startPeriodicFlushService() {
         Logger.d(this, "startPeriodicFlushService")
 
-        if (flushMode == MANUAL || flushMode == IMMEDIATE) {
-            Logger.w(this, "Flush mode manual set -> Skipping job service")
+        if (flushMode != PERIOD) {
+            Logger.w(this, "Flush mode is not period -> Not starting periodic flush service")
             return
         }
-        component.serviceManager.startPeriodicFlush(context)
+        component.serviceManager.startPeriodicFlush(context, flushPeriod)
     }
 
     /**

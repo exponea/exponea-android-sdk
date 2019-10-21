@@ -21,6 +21,7 @@ fun Exponea.reset() {
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
         .edit().clear().commit()
     flushMode = Constants.Flush.defaultFlushMode
+    flushPeriod = Constants.Flush.defaultFlushPeriod
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
 }

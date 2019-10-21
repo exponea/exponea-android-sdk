@@ -6,17 +6,16 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.services.ExponeaPeriodicFlushWorker
-import java.util.concurrent.TimeUnit
 
 class ServiceManagerImpl : ServiceManager {
 
-    override fun startPeriodicFlush(context: Context) {
+    override fun startPeriodicFlush(context: Context, flushPeriod: FlushPeriod) {
         val request = PeriodicWorkRequest.Builder(
                 ExponeaPeriodicFlushWorker::class.java,
-                Exponea.flushPeriod.timeInMillis,
-                TimeUnit.MILLISECONDS
+                flushPeriod.amount,
+                flushPeriod.timeUnit
         ).setConstraints(
                 Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -24,13 +23,13 @@ class ServiceManagerImpl : ServiceManager {
         ).build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                ExponeaPeriodicFlushWorker.TAG,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExponeaPeriodicFlushWorker.WORK_NAME,
+                ExistingPeriodicWorkPolicy.REPLACE,
                 request
         )
     }
 
     override fun stopPeriodicFlush(context: Context) {
-        WorkManager.getInstance(context).cancelAllWorkByTag(ExponeaPeriodicFlushWorker.TAG)
+        WorkManager.getInstance(context).cancelUniqueWork(ExponeaPeriodicFlushWorker.WORK_NAME)
     }
 }

@@ -8,7 +8,7 @@ import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 
-interface FetchManager {
+internal interface FetchManager {
 
     fun fetchBannerConfiguration(
             projectToken: String,

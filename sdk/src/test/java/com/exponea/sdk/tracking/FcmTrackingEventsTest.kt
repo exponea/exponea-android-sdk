@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class FcmTrackingEventsTest : ExponeaSDKTest() {
+internal class FcmTrackingEventsTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

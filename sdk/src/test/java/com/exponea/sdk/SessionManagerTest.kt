@@ -21,7 +21,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class SessionManagerTest : ExponeaSDKTest() {
+internal class SessionManagerTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

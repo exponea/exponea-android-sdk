@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class CampaignSessionTests_004 : CampaignSessionTests_Base() {
+internal class CampaignSessionTests_004 : CampaignSessionTests_Base() {
 
     /**
      * Cold start, campaign click Start, SDK init in Resume

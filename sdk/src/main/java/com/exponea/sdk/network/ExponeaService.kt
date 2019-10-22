@@ -10,7 +10,7 @@ import com.exponea.sdk.models.ExponeaFetchProperty
 import com.exponea.sdk.models.ExportedEventType
 import okhttp3.Call
 
-interface ExponeaService {
+internal interface ExponeaService {
     fun postEvent(projectToken: String, event: ExportedEventType): Call
     fun postCustomer(projectToken: String, event: ExportedEventType): Call
     fun postRotateToken(projectToken: String): Call

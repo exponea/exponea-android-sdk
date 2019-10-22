@@ -6,7 +6,7 @@ import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 
-interface PersonalizationManager {
+internal interface PersonalizationManager {
     fun showBanner(projectToken: String, customerIds: CustomerIds)
 
     fun getBannersConfiguration(

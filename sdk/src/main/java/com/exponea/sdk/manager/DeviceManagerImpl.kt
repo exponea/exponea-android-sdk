@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import com.exponea.sdk.util.Logger
 
-class DeviceManagerImpl(private val context: Context) : DeviceManager {
+internal class DeviceManagerImpl(private val context: Context) : DeviceManager {
     override fun isTablet(): Boolean {
         val deviceSize = context.resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
         val isDeviceLarge = deviceSize >= Configuration.SCREENLAYOUT_SIZE_LARGE

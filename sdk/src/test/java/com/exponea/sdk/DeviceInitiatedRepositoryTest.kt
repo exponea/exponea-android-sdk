@@ -12,9 +12,9 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class DeviceInitiatedRepositoryTest: ExponeaSDKTest() {
+internal class DeviceInitiatedRepositoryTest: ExponeaSDKTest() {
 
-    lateinit var repo : DeviceInitiatedRepository
+    private lateinit var repo : DeviceInitiatedRepository
 
     @Before
     fun init() {

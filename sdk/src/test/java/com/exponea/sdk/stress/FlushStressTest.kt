@@ -26,7 +26,7 @@ import java.util.*
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class FlushStressTest : ExponeaSDKTest() {
+internal class FlushStressTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
         val server = MockWebServer()
@@ -47,8 +47,8 @@ class FlushStressTest : ExponeaSDKTest() {
         }
     }
 
-    lateinit var manager: FlushManager
-    lateinit var repo: EventRepository
+    private lateinit var manager: FlushManager
+    private lateinit var repo: EventRepository
     private lateinit var service: ExponeaMockService
 
     @Before

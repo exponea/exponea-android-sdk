@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 
-fun Exponea.reset() {
+internal fun Exponea.reset() {
     if (!isInitialized) return
     component.campaignRepository.clear()
     component.customerIdsRepository.clear()

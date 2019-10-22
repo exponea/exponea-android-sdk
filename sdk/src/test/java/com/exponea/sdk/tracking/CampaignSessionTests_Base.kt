@@ -19,7 +19,7 @@ import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
 
-open class CampaignSessionTests_Base : ExponeaSDKTest() {
+internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
 
     companion object {
 

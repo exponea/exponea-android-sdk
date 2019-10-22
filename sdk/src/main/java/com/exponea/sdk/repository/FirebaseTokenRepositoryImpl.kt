@@ -2,7 +2,7 @@ package com.exponea.sdk.repository
 
 import com.exponea.sdk.preferences.ExponeaPreferences
 
-class FirebaseTokenRepositoryImpl(private val preferences: ExponeaPreferences) : FirebaseTokenRepository {
+internal class FirebaseTokenRepositoryImpl(private val preferences: ExponeaPreferences) : FirebaseTokenRepository {
 
     private val key = "ExponeaFirebaseToken"
     private val keyDate = "ExponeaLastFirebaseTokenDate"

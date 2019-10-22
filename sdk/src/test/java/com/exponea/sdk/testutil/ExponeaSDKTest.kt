@@ -6,7 +6,7 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import org.junit.After
 
-open class ExponeaSDKTest {
+internal open class ExponeaSDKTest {
     companion object {
         @Synchronized fun waitUntilFlushed() {
             waitForIt {

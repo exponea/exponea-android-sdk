@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class DefaultPropertiesTest : ExponeaSDKTest() {
+internal class DefaultPropertiesTest : ExponeaSDKTest() {
 
     companion object {
         val CONFIG = ExponeaConfiguration()
@@ -41,7 +41,7 @@ class DefaultPropertiesTest : ExponeaSDKTest() {
         }
     }
 
-    lateinit var repo: EventRepository
+    private lateinit var repo: EventRepository
 
     @Before
     fun prepareForTest() {

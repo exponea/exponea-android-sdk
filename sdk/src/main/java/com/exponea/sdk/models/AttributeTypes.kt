@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-enum class AttributeTypes {
+internal enum class AttributeTypes {
     SEGMENTATION,
     ID,
     PROPERTY,

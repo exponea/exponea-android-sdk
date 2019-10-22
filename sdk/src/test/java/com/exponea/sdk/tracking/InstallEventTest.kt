@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class InstallEventTest : ExponeaSDKTest() {
+internal class InstallEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
@@ -44,7 +44,7 @@ class InstallEventTest : ExponeaSDKTest() {
         }
     }
 
-    lateinit var repo: EventRepository
+    private lateinit var repo: EventRepository
 
     @Before
     fun prepareForTest() {

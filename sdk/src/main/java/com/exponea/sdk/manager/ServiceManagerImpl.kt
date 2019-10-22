@@ -9,7 +9,7 @@ import androidx.work.WorkManager
 import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.services.ExponeaPeriodicFlushWorker
 
-class ServiceManagerImpl : ServiceManager {
+internal class ServiceManagerImpl : ServiceManager {
 
     override fun startPeriodicFlush(context: Context, flushPeriod: FlushPeriod) {
         val request = PeriodicWorkRequest.Builder(

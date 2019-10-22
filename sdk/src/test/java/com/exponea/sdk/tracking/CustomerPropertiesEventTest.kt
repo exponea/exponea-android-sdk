@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-class CustomerPropertiesEventTest : ExponeaSDKTest() {
+internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()

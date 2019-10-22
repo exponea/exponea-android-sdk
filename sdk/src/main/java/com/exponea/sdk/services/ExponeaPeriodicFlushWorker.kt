@@ -9,7 +9,7 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
 import java.util.concurrent.CountDownLatch
 
-class ExponeaPeriodicFlushWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+internal class ExponeaPeriodicFlushWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     companion object {
         const val WORK_NAME = "ExponeaPeriodicFlushWorker"

@@ -1,8 +1,7 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.util.Logger
-import okhttp3.Cookie
-import java.util.HashMap
+import java.util.*
 
 data class CustomerIds(
         internal var externalIds : HashMap<String, Any?> = hashMapOf()

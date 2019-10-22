@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import java.util.concurrent.TimeUnit
 
-object Constants {
+internal object Constants {
     /// Network
     object Repository {
         val baseURL: String = "https://api.exponea.com"

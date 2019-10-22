@@ -7,7 +7,7 @@ import com.exponea.sdk.util.currentTimeSeconds
 /**
  * Info holder retrieved from Android Deeplink Intent Uri.
  */
-data class CampaignClickInfo(
+internal data class CampaignClickInfo(
    var source: String?,
    var campaign: String?,
    var content: String?,

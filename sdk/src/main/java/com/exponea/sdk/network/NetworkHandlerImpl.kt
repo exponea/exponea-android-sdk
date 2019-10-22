@@ -14,7 +14,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 
-class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
+internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
 
     private val mediaTypeJson: MediaType = MediaType.parse("application/json")!!
     private lateinit var networkClient: OkHttpClient

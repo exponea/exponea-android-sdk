@@ -5,9 +5,6 @@ import android.os.Bundle
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -18,7 +15,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class CampaignSessionTests_002 : CampaignSessionTests_Base() {
+internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
 
     /**
      * Hot start with new session, Campaign click start, SDK init before onResume

@@ -31,7 +31,7 @@ import kotlin.test.assertNotNull
 
 
 @RunWith(RobolectricTestRunner::class)
-class PeriodicFlushTest : ExponeaSDKTest() {
+internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Before
     fun before() {

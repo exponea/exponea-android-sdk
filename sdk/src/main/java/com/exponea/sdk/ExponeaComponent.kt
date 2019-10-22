@@ -52,7 +52,7 @@ import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.google.gson.Gson
 
-class ExponeaComponent(
+internal class ExponeaComponent(
         exponeaConfiguration: ExponeaConfiguration,
         context: Context
 ) {

@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-data class ApiEndPoint(private val endPointName: EndPointName, private val token: String) {
+internal data class ApiEndPoint(private val endPointName: EndPointName, private val token: String) {
     private val splitterToken = "$$$"
     private var url: String = ""
 

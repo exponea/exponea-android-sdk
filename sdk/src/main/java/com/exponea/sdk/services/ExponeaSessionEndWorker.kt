@@ -9,7 +9,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import java.util.concurrent.CountDownLatch
 
-class ExponeaSessionEndWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
+internal class ExponeaSessionEndWorker(context: Context, workerParameters: WorkerParameters) : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")

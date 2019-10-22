@@ -2,10 +2,8 @@ package com.exponea.sdk.manager
 
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.RecordedRequest
-import java.util.concurrent.TimeUnit
 
-object ExponeaMockServer {
+internal object ExponeaMockServer {
 
     val mockResponse = MockResponse()
 

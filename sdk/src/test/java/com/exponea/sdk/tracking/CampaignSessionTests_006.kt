@@ -8,10 +8,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class CampaignSessionTests_006 : CampaignSessionTests_Base() {
+internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
 
     /**
      * Hot Start with Resumed Session, Campaign click start, SDK init in onResume

@@ -3,7 +3,7 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 
-interface PushManager {
+internal interface PushManager {
 
     val fcmToken: String?
     val lastTrackDateInMilliseconds: Long?

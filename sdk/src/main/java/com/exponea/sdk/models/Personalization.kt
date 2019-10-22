@@ -2,7 +2,7 @@ package com.exponea.sdk.models
 
 import com.google.gson.annotations.SerializedName
 
-data class Personalization(
+internal data class Personalization(
         var id: String? = null,
         @SerializedName("date_filter")
         var dateFilter: DateFilter? = null,

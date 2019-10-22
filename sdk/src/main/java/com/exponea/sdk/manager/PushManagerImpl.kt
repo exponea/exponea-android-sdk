@@ -9,7 +9,7 @@ import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.util.Logger
 import com.google.firebase.messaging.FirebaseMessagingService
 
-class PushManagerImpl(
+internal class PushManagerImpl(
         private val firebaseTokenRepository: FirebaseTokenRepository
 ) : PushManager, FirebaseMessagingService() {
 

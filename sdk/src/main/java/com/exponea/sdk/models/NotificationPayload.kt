@@ -6,7 +6,7 @@ import org.json.JSONArray
 import java.util.*
 
 @Suppress("ArrayInDataClass")
-data class NotificationPayload(
+internal data class NotificationPayload(
         val image: String? = null,
         val sound: String? = null,
         val buttons: ArrayList<ActionPayload>? = null,

@@ -1,18 +1,11 @@
 package com.exponea.sdk.tracking
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -23,7 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class CampaignSessionTests_001 : CampaignSessionTests_Base() {
+internal class CampaignSessionTests_001 : CampaignSessionTests_Base() {
 
     /**
      * Cold start, Campaign Click Start, SDK init before onResume

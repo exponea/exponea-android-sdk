@@ -21,6 +21,7 @@ import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.repository.FirebaseTokenRepository
+import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.adjustUrl
@@ -35,11 +36,12 @@ import kotlin.concurrent.thread
 internal class FcmManagerImpl(
         private val context: Context,
         private val configuration: ExponeaConfiguration,
-        private val firebaseTokenRepository: FirebaseTokenRepository
+        private val firebaseTokenRepository: FirebaseTokenRepository,
+        private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
 
     private lateinit var pendingIntent: PendingIntent
-    private lateinit var pushReceiverIntent: Intent
+    private lateinit var getPushReceiverIntent: () -> Intent
     private val requestCode = 111
     private var smallIconRes = -1
 
@@ -78,9 +80,9 @@ internal class FcmManagerImpl(
 
         // Configure the notification channel for push notifications on API 26+
         // This configuration runs only once.
-        if (!Exponea.component.pushNotificationRepository.get()) {
+        if (!pushNotificationRepository.get()) {
             createNotificationChannel(manager)
-            Exponea.component.pushNotificationRepository.set(true)
+            pushNotificationRepository.set(true)
         }
 
         // Track the delivered push event to Exponea API.
@@ -122,8 +124,8 @@ internal class FcmManagerImpl(
     ) {
         Logger.d(this, "showNotification")
 
-        pushReceiverIntent = ExponeaPushReceiver.getClickIntent(context, id, data, messageData)
-        pendingIntent = PendingIntent.getBroadcast(context, requestCode, pushReceiverIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        getPushReceiverIntent = { ExponeaPushReceiver.getClickIntent(context, id, data, messageData) }
+        pendingIntent = PendingIntent.getBroadcast(context, requestCode, getPushReceiverIntent(), PendingIntent.FLAG_UPDATE_CURRENT)
 
         // If push icon was not provided in the configuration, default one will be used
         smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
@@ -227,7 +229,7 @@ internal class FcmManagerImpl(
     private fun handlePayloadAttributes(messageData: NotificationPayload) {
         if (messageData.attributes != null) {
             if (Exponea.notificationDataCallback == null) {
-                Exponea.component.pushNotificationRepository.setExtraData(messageData.attributes)
+                pushNotificationRepository.setExtraData(messageData.attributes)
                 return
             }
             Handler(Looper.getMainLooper()).post {
@@ -237,7 +239,7 @@ internal class FcmManagerImpl(
     }
 
     private fun generateActionPendingIntent(action: NotificationPayload.Actions?, actionInfo: NotificationAction, requestCode: Int): PendingIntent? {
-        val actionIntent = pushReceiverIntent
+        val actionIntent = getPushReceiverIntent()
         actionIntent.putExtra(ExponeaPushReceiver.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {

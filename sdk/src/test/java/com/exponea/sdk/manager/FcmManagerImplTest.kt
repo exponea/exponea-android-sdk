@@ -7,6 +7,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
+import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.google.firebase.messaging.RemoteMessage
 import org.junit.Before
 import org.junit.Test
@@ -26,7 +27,8 @@ internal class FcmManagerImplTest {
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
-            FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context))
+            FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
+            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }

@@ -620,7 +620,7 @@ object Exponea {
      */
     private fun trackFirebaseToken() {
         if (isAutoPushNotification) {
-            this.component.pushManager.trackFcmToken(component.firebaseTokenRepository.get())
+            this.component.fcmManager.trackFcmToken(component.firebaseTokenRepository.get())
         }
     }
 
@@ -695,11 +695,11 @@ object Exponea {
 
         val firebaseToken = component.firebaseTokenRepository.get()
 
-        component.pushManager.trackFcmToken(" ")
+        component.fcmManager.trackFcmToken(" ")
         component.campaignRepository.clear()
         component.anonymizeManager.anonymize()
         component.sessionManager.trackSessionStart(currentTimeSeconds())
-        component.pushManager.trackFcmToken(firebaseToken)
+        component.fcmManager.trackFcmToken(firebaseToken)
 
     }.logOnException()
 

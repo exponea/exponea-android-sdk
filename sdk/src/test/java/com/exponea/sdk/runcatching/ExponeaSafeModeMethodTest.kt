@@ -38,7 +38,6 @@ internal class ExponeaSafeModeMethodTest(
     fun makeExponeaThrow() {
         // let's mock most of ExponeaComponent to make sure any public method throws after init
         every {anyConstructed<ExponeaComponent>().eventRepository } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().pushManager } throws TestPurposeException()
         every {anyConstructed<ExponeaComponent>().personalizationManager } throws TestPurposeException()
         every {anyConstructed<ExponeaComponent>().customerIdsRepository } throws TestPurposeException()
         every {anyConstructed<ExponeaComponent>().flushManager } throws TestPurposeException()

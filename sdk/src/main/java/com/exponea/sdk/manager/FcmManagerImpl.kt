@@ -13,12 +13,14 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.NotificationPayload
+import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.adjustUrl
@@ -32,13 +34,33 @@ import kotlin.concurrent.thread
 
 internal class FcmManagerImpl(
         private val context: Context,
-        private val configuration: ExponeaConfiguration
+        private val configuration: ExponeaConfiguration,
+        private val firebaseTokenRepository: FirebaseTokenRepository
 ) : FcmManager {
 
     private lateinit var pendingIntent: PendingIntent
     private lateinit var pushReceiverIntent: Intent
     private val requestCode = 111
     private var smallIconRes = -1
+
+    override fun trackFcmToken(token: String?) {
+        val lastTrackDateInMilliseconds =
+            firebaseTokenRepository.getLastTrackDateInMilliseconds() ?: System.currentTimeMillis()
+        val shouldUpdateToken = when (Exponea.tokenTrackFrequency) {
+            ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != firebaseTokenRepository.get()
+            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
+            ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
+        }
+
+        if (token != null && shouldUpdateToken) {
+            firebaseTokenRepository.set(token, System.currentTimeMillis())
+            Exponea.trackPushToken(token)
+            return
+        }
+
+        Logger.d(this, "Token not update: shouldUpdateToken $shouldUpdateToken - token $token")
+
+    }
 
     override fun handleRemoteMessage(message: RemoteMessage?, manager: NotificationManager, showNotification: Boolean) {
 
@@ -62,7 +84,7 @@ internal class FcmManagerImpl(
         }
 
         // Track the delivered push event to Exponea API.
-        Exponea.component.pushManager.trackDeliveredPush(
+        Exponea.trackDeliveredPush(
                 data = data
         )
 

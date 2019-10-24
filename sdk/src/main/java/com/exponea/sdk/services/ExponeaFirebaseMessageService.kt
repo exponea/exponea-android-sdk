@@ -46,6 +46,6 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             return
         }
         Logger.d(this, "Firebase Token Refreshed")
-        Exponea.component.pushManager.trackFcmToken(token)
+        Exponea.component.fcmManager.trackFcmToken(token)
     }
 }

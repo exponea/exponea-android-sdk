@@ -4,7 +4,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.every
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import org.junit.After
@@ -28,24 +27,9 @@ internal class ExponeaSafeModeMethodTest(
         }
     }
 
-    private class TestPurposeException : Exception("Exception for test purposes")
-
     @Before
     fun before() {
         mockkConstructor(ExponeaComponent::class)
-    }
-
-    fun makeExponeaThrow() {
-        // let's mock most of ExponeaComponent to make sure any public method throws after init
-        every {anyConstructed<ExponeaComponent>().eventRepository } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().personalizationManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().customerIdsRepository } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().flushManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().fetchManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().connectionManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().fcmManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().sessionManager } throws TestPurposeException()
-        every {anyConstructed<ExponeaComponent>().campaignRepository } throws TestPurposeException()
     }
 
     @After
@@ -67,16 +51,16 @@ internal class ExponeaSafeModeMethodTest(
         skipInstallEvent()
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = true
-        makeExponeaThrow()
+        ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
     }
 
-    @Test(expected = TestPurposeException::class)
+    @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = false
-        makeExponeaThrow()
+        ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
     }
 }

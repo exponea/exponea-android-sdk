@@ -14,6 +14,7 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.logOnException
 
 /**
  * In-App Purchase class handles all the purchases made inside the
@@ -95,6 +96,15 @@ internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedLi
     override fun onPurchasesUpdated(
             @BillingResponse responseCode: Int,
             purchases: List<Purchase>?
+    ) {
+        runCatching {
+            onPurchasesUpdatedUnsafe(responseCode, purchases)
+        }.logOnException()
+    }
+
+    private fun onPurchasesUpdatedUnsafe(
+        @BillingResponse responseCode: Int,
+        purchases: List<Purchase>?
     ) {
         if (responseCode == BillingResponse.OK && purchases != null) {
             for (purchase in purchases) {

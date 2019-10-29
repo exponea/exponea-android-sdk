@@ -7,6 +7,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.toDate
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -19,6 +20,12 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)
+        runCatching {
+            onMessageReceivedUnsafe(message)
+        }.logOnException()
+    }
+
+    private fun onMessageReceivedUnsafe(message: RemoteMessage?) {
         Logger.d(this, "Push Notification received at ${currentTimeSeconds().toDate()}.")
 
         if (!Exponea.isInitialized) {
@@ -37,6 +44,12 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String?) {
         super.onNewToken(token)
+        runCatching {
+            onNewTokenUnsafe(token)
+        }.logOnException()
+    }
+
+    private fun onNewTokenUnsafe(token: String?) {
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext) ?: return
             Looper.prepare()

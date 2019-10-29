@@ -33,7 +33,9 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
             Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {
-            onOpen()
+            runCatching {
+                onOpen()
+            }.logOnException()
             activityCount++
         }
 
@@ -45,7 +47,9 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
         override fun onActivityPaused(activity: Activity?) {
             activityCount--
             if (activityCount <= 0) {
-                onClosed()
+                runCatching {
+                    onClosed()
+                }.logOnException()
             }
         }
     })
@@ -56,7 +60,9 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
 
         override fun onTrimMemory(level: Int) {
             if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
-                onClosed()
+                runCatching {
+                    onClosed()
+                }.logOnException()
             }
         }
     })

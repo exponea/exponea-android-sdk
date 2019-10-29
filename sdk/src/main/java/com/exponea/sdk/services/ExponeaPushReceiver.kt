@@ -11,6 +11,7 @@ import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.logOnException
 
 
 class ExponeaPushReceiver : BroadcastReceiver() {
@@ -39,7 +40,12 @@ class ExponeaPushReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        runCatching {
+            onReceiveUnsafe(context, intent)
+        }.logOnException()
+    }
 
+    private fun onReceiveUnsafe(context: Context, intent: Intent) {
         Logger.i(this, "Push notification clicked")
 
         val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
@@ -72,13 +78,13 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         )
 
         // After clicking the notification button (action), dismiss it
-        dimissNotification(context, intent)
+        dismissNotification(context, intent)
 
         // And close the notification tray
         closeNotificationTray(context)
     }
 
-    private fun dimissNotification(context: Context, intent: Intent) {
+    private fun dismissNotification(context: Context, intent: Intent) {
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
         if (notificationId != -1) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

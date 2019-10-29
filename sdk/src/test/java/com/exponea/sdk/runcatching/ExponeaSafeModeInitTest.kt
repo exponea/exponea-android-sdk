@@ -28,8 +28,6 @@ internal class ExponeaSafeModeInitTest(
         }
     }
 
-    private class TestPurposeException : Exception("Exception for test purposes")
-
     @After
     fun after() {
         unmockkStatic(Paper::class)
@@ -48,19 +46,19 @@ internal class ExponeaSafeModeInitTest(
         mockkStatic(Paper::class)
         every {
             Paper.init(ApplicationProvider.getApplicationContext())
-        } throws TestPurposeException()
+        } throws ExponeaExceptionThrowing.TestPurposeException()
         Exponea.safeModeEnabled = true
         lambda()
         assertFalse(Exponea.isInitialized)
         waitUntilFlushed()
     }
 
-    @Test(expected = TestPurposeException::class)
+    @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
     fun callInitWithExceptionWithSafeModeDisabled() {
         mockkStatic(Paper::class)
         every {
             Paper.init(ApplicationProvider.getApplicationContext())
-        } throws TestPurposeException()
+        } throws ExponeaExceptionThrowing.TestPurposeException()
         Exponea.safeModeEnabled = false
         assertFalse(Exponea.isInitialized)
         lambda()

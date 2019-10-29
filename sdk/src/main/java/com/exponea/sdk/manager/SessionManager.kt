@@ -5,6 +5,7 @@ import android.app.Application
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.logOnException
 
 internal abstract class SessionManager : Application.ActivityLifecycleCallbacks {
 
@@ -23,12 +24,17 @@ internal abstract class SessionManager : Application.ActivityLifecycleCallbacks 
     abstract fun reset()
 
     override fun onActivityPaused(activity: Activity?) {
-        onSessionEnd()
+        runCatching {
+            onSessionEnd()
+        }.logOnException()
     }
 
     override fun onActivityResumed(activity: Activity?) {
-        onSessionStart()
-        Exponea.component.campaignRepository.clear()
+        runCatching {
+            onSessionStart()
+            Exponea.component.campaignRepository.clear()
+            return@runCatching
+        }.logOnException()
     }
 
     override fun onActivityStarted(activity: Activity?) {}

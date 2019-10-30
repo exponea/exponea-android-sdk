@@ -15,6 +15,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.4.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.2.0'
+        classpath "org.jlleitschuh.gradle:ktlint-gradle:9.0.0"
     }
 }
 
@@ -41,4 +42,34 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+subprojects {
+    apply plugin: "org.jlleitschuh.gradle.ktlint"
+    ktlint {
+        verbose = true
+        android = true
+        disabledRules = [
+                "no-consecutive-blank-lines",
+                "no-blank-line-before-rbrace",
+                "import-ordering",
+                "keyword-spacing",
+                "parameter-list-wrapping",
+                "comment-spacing",
+                "max-line-length",
+                "no-wildcard-imports",
+                "op-spacing",
+                "curly-spacing",
+                "colon-spacing",
+                "comma-spacing",
+                "paren-spacing",
+                "no-multi-spaces",
+                "indent",
+                "no-unused-imports",
+                "string-template",
+                "no-unit-return",
+                "final-newline",
+                "chain-wrapping"
+        ]
+    }
 }

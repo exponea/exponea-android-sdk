@@ -4,7 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
@@ -35,8 +35,7 @@ internal class FcmManagerImplTest {
 
     @Test
     fun handleNullDataNotificationTest() {
-        val data: NotificationData? = null
-        manager.showNotification("", "", data, 0, notificationManager, hashMapOf())
+        manager.showNotification(notificationManager, NotificationPayload(HashMap()))
     }
 
     @Test

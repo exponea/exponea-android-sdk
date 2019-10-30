@@ -69,14 +69,6 @@ internal class FcmManagerImplNotificationsTest(
             assertEquals(expectedPayload, intent.extras.get(ExponeaPushReceiver.EXTRA_CUSTOM_DATA))
         }
 
-        private fun removeBaseData(payload: HashMap<String, String>) =
-            payload.apply {
-                remove("title")
-                remove("message")
-                remove("data")
-                remove("notification_id")
-            }
-
         private val testCases = arrayListOf(
             TestCase(
                 name = "basic notification",
@@ -90,7 +82,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         null,
-                        removeBaseData(NotificationTestPayloads.BASIC_NOTIFICATION)
+                        NotificationTestPayloads.BASIC_NOTIFICATION
                     )
 
                     assertNull(it.actions)
@@ -111,7 +103,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "app://test"),
                         null,
-                        removeBaseData(NotificationTestPayloads.DEEPLINK_NOTIFICATION)
+                        NotificationTestPayloads.DEEPLINK_NOTIFICATION
                     )
 
                     assertNull(it.actions)
@@ -132,7 +124,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "http://google.com"),
                         null,
-                        removeBaseData(NotificationTestPayloads.BROWSER_NOTIFICATION)
+                        NotificationTestPayloads.BROWSER_NOTIFICATION
                     )
 
                     assertNull(it.actions)
@@ -153,7 +145,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         null,
-                        removeBaseData(NotificationTestPayloads.ACTIONS_NOTIFICATION)
+                        NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
 
                     assertEquals(3, it.actions.size)
@@ -163,7 +155,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
                         null,
-                        removeBaseData(NotificationTestPayloads.ACTIONS_NOTIFICATION)
+                        NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                     assertEquals("Action 2 title", it.actions[1].title)
                     validateIntent(
@@ -171,7 +163,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "app://deeplink"),
                         null,
-                        removeBaseData(NotificationTestPayloads.ACTIONS_NOTIFICATION)
+                        NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                     assertEquals("Action 3 title", it.actions[2].title)
                     validateIntent(
@@ -179,7 +171,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com"),
                         null,
-                        removeBaseData(NotificationTestPayloads.ACTIONS_NOTIFICATION)
+                        NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                 },
                 expectedTrackingData = null
@@ -197,7 +189,7 @@ internal class FcmManagerImplNotificationsTest(
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         NotificationData("5db1582b1b2be24d0bee4de9", "push with buttons", 2),
-                        removeBaseData(NotificationTestPayloads.ATTRIBUTES_NOTIFICATION)
+                        NotificationTestPayloads.ATTRIBUTES_NOTIFICATION
                     )
 
                     assertNull(it.actions)

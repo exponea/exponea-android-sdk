@@ -1,29 +1,21 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.util.fromJson
-import com.google.gson.Gson
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import org.json.JSONArray
 import java.util.*
 
-@Suppress("ArrayInDataClass")
-internal data class NotificationPayload(
-        val image: String? = null,
-        val sound: String? = null,
-        val buttons: ArrayList<ActionPayload>? = null,
-        val notificationAction: ActionPayload? = null,
-        val attributes: Map<String, String>? = null
-) {
-
-    /**
-     * Construct the payload using the json data
-     */
-    constructor(map: Map<String, String>) : this(
-            map["image"],
-            map["sound"],
-            handleButtons(map["actions"]),
-            handleNotificationAction(map["action"], map["url"]),
-            handleAttributes(map["attributes"])
-    )
+internal class NotificationPayload(val rawData: HashMap<String, String>) {
+    val notificationId: Int = rawData["notification_id"]?.toInt() ?: 0
+    val title: String = rawData["title"] ?: ""
+    val message: String = rawData["message"] ?: ""
+    val image: String? = rawData["image"]
+    val sound: String? = rawData["sound"]
+    val buttons: ArrayList<ActionPayload>? = parseActions(rawData["actions"])
+    val notificationAction: ActionPayload = parseMainAction(rawData["action"], rawData["url"])
+    val notificationData: NotificationData? = parseNotificationData(rawData)
+    val attributes: Map<String, String>? = parseAttributes(rawData["attributes"])
 
     data class ActionPayload(
             val action: Actions? = null,
@@ -32,18 +24,26 @@ internal data class NotificationPayload(
     )
 
     companion object {
+        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
+        /**
+         * Parse notification data to use for tracking purposes
+         */
+        private fun parseNotificationData(data: Map<String, String>): NotificationData? {
+            val dataString = data["data"] ?: data["attributes"]
+            return gson.fromJson(dataString, NotificationData::class.java)
+        }
 
         /**
-         * Handle the extra attributes that can be send in the notification
+         * Parse the extra attributes that can be send in the notification
          */
-        private fun handleAttributes(attributeJson: String?): Map<String, String>? {
-            return if (attributeJson == null) null else Gson().fromJson(attributeJson)
+        private fun parseAttributes(attributeJson: String?): Map<String, String>? {
+            return if (attributeJson == null) null else gson.fromJson(attributeJson)
         }
 
         /**
          * Create an array with all the buttons action payloads
          */
-        private fun handleButtons(buttonsJson: String?): ArrayList<ActionPayload>? {
+        private fun parseActions(buttonsJson: String?): ArrayList<ActionPayload>? {
             if (buttonsJson == null)
                 return null
 
@@ -52,7 +52,7 @@ internal data class NotificationPayload(
 
             //if we have a button payload, verify each button action
             for (i in 0 until buttonsJsonArray.length()) {
-                val item: Map<String, String> = Gson().fromJson(buttonsJsonArray[i].toString())
+                val item: Map<String, String> = gson.fromJson(buttonsJsonArray[i].toString())
                 val actionEnum = Actions.find(item["action"])
                 buttonsArray.add(ActionPayload(actionEnum, item["url"], item["title"]))
             }
@@ -60,7 +60,7 @@ internal data class NotificationPayload(
             return buttonsArray
         }
 
-        private fun handleNotificationAction(actionString: String?, actionUrl: String?): ActionPayload {
+        private fun parseMainAction(actionString: String?, actionUrl: String?): ActionPayload {
             return ActionPayload(Actions.find(actionString), actionUrl)
         }
     }

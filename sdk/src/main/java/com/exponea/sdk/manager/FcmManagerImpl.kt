@@ -18,7 +18,6 @@ import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
-import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.PushNotificationRepository
@@ -26,8 +25,6 @@ import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.adjustUrl
 import com.google.firebase.messaging.RemoteMessage
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
 import java.io.IOException
 import java.net.URL
 import kotlin.concurrent.thread
@@ -39,11 +36,7 @@ internal class FcmManagerImpl(
         private val firebaseTokenRepository: FirebaseTokenRepository,
         private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
-
-    private lateinit var pendingIntent: PendingIntent
-    private lateinit var getPushReceiverIntent: () -> Intent
     private val requestCode = 111
-    private var smallIconRes = -1
 
     override fun trackFcmToken(token: String?) {
         val lastTrackDateInMilliseconds =
@@ -70,14 +63,6 @@ internal class FcmManagerImpl(
 
         if (message == null) return
 
-        val title = message.data?.get("title") ?: ""
-        val body = message.data?.get("message") ?: ""
-
-        val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
-        val dataString = message.data?.get("data") ?: message.data?.get("attributes")
-        val data = gson.fromJson(dataString, NotificationData::class.java)
-        val notificationId = message.data?.get("notification_id")?.toInt() ?: 0
-
         // Configure the notification channel for push notifications on API 26+
         // This configuration runs only once.
         if (!pushNotificationRepository.get()) {
@@ -85,69 +70,32 @@ internal class FcmManagerImpl(
             pushNotificationRepository.set(true)
         }
 
-        // Track the delivered push event to Exponea API.
-        Exponea.trackDeliveredPush(
-                data = data
-        )
+        val payload = NotificationPayload(HashMap(message.data))
 
-        if (showNotification && isValidNotification(message)) {
-            //Create a map with all the data of the remote message, removing the data already processed
-            val messageData = message.data?.apply {
-                remove("title")
-                remove("message")
-                remove("data")
-                remove("notification_id")
-            }?.run {
-                HashMap(this)
-            } ?: HashMap()
+        Exponea.trackDeliveredPush(data = payload.notificationData)
 
-            // Show push notification.
-            showNotification(
-                    title,
-                    body,
-                    data,
-                    notificationId,
-                    manager,
-                    messageData
-            )
+        if (showNotification && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
+            showNotification(manager, payload)
         }
-
     }
 
-    override fun showNotification(
-            title: String,
-            message: String,
-            data: NotificationData?,
-            id: Int,
-            manager: NotificationManager,
-            messageData: HashMap<String, String>
-    ) {
+    override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
         Logger.d(this, "showNotification")
 
-        getPushReceiverIntent = { ExponeaPushReceiver.getClickIntent(context, id, data, messageData) }
-        pendingIntent = PendingIntent.getBroadcast(context, requestCode, getPushReceiverIntent(), PendingIntent.FLAG_UPDATE_CURRENT)
-
-        // If push icon was not provided in the configuration, default one will be used
-        smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
-
-        // Icon id was provided but was invalid
-        try {
-            context.resources.getResourceName(smallIconRes)
-        } catch (exception: Resources.NotFoundException) {
-            Logger.e(this, "Invalid icon resource: $smallIconRes")
-            smallIconRes = android.R.drawable.ic_dialog_info
-        }
-
         val notification = NotificationCompat.Builder(context, configuration.pushChannelId)
-                .setContentText(message)
-                .setContentTitle(title)
-                .setContentIntent(pendingIntent)
+                .setContentText(payload.message)
+                .setContentTitle(payload.title)
                 .setChannelId(configuration.pushChannelId)
-                .setSmallIcon(smallIconRes)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                .setSmallIcon(getPushIconRes())
+                .setStyle(NotificationCompat.BigTextStyle().bigText(payload.message))
 
-        handlePayload(notification, messageData)
-        manager.notify(id, notification.build())
+        handlePayloadImage(notification, payload)
+        handlePayloadSound(notification, payload)
+        handlePayloadButtons(notification, payload)
+        handlePayloadNotificationAction(notification, payload)
+        handlePayloadAttributes(payload)
+
+        manager.notify(payload.notificationId, notification.build())
     }
 
     override fun createNotificationChannel(manager: NotificationManager) {
@@ -170,19 +118,6 @@ internal class FcmManagerImpl(
         }
     }
 
-    private fun isValidNotification(message: RemoteMessage?): Boolean {
-        return (message?.data?.get("title")?.isNotBlank() == true) || (message?.data?.get("message")?.isNotBlank() == true)
-    }
-
-    private fun handlePayload(notification: NotificationCompat.Builder, messageData: HashMap<String, String>) {
-        val notificationPayload = NotificationPayload(messageData)
-        handlePayloadImage(notification, notificationPayload)
-        handlePayloadSound(notification, notificationPayload)
-        handlePayloadButtons(notification, notificationPayload)
-        handlePayloadNotificationAction(notification, notificationPayload)
-        handlePayloadAttributes(notificationPayload)
-    }
-
     private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
         // Load the image in the payload and add as a big picture in the notification
         if (messageData.image != null) {
@@ -192,6 +127,19 @@ internal class FcmManagerImpl(
                 notification.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bigImageBitmap))
             }
         }
+    }
+
+    private fun getPushIconRes(): Int {
+        // If push icon was not provided in the configuration, default one will be used
+        var smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
+
+        try {
+            context.resources.getResourceName(smallIconRes)
+        } catch (exception: Resources.NotFoundException) {
+            Logger.e(this, "Invalid icon resource: $smallIconRes")
+            smallIconRes = android.R.drawable.ic_dialog_info
+        }
+        return smallIconRes
     }
 
     private fun handlePayloadSound(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
@@ -206,22 +154,22 @@ internal class FcmManagerImpl(
         RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
     }
 
-    private fun handlePayloadButtons(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
-        if (messageData.buttons != null) {
+    private fun handlePayloadButtons(notification: NotificationCompat.Builder, payload: NotificationPayload) {
+        if (payload.buttons != null) {
             //if we have a button payload, verify each button action
-            messageData.buttons.forEachIndexed { index, it ->
+            payload.buttons.forEachIndexed { index, it ->
                 val info = NotificationAction(NotificationAction.ACTION_TYPE_BUTTON, it.title, it.url.adjustUrl())
-                val pi = generateActionPendingIntent(it.action, info, index)
+                val pi = generateActionPendingIntent(payload, it.action, info, index)
                 notification.addAction(0, it.title, pi)
             }
         }
     }
 
-    private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
+    private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, payload: NotificationPayload) {
         //handle the notification body click action
-        messageData.notificationAction?.let {
+        payload.notificationAction.let {
             val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.title, it.url.adjustUrl())
-            val pi = generateActionPendingIntent(it.action, info, requestCode)
+            val pi = generateActionPendingIntent(payload, it.action, info, requestCode)
             notification.setContentIntent(pi)
         }
     }
@@ -238,8 +186,22 @@ internal class FcmManagerImpl(
         }
     }
 
-    private fun generateActionPendingIntent(action: NotificationPayload.Actions?, actionInfo: NotificationAction, requestCode: Int): PendingIntent? {
-        val actionIntent = getPushReceiverIntent()
+    private fun getPushReceiverIntent(payload: NotificationPayload): Intent {
+        return ExponeaPushReceiver.getClickIntent(
+            context,
+            payload.notificationId,
+            payload.notificationData,
+            payload.rawData
+        )
+    }
+
+    private fun generateActionPendingIntent(
+        payload: NotificationPayload,
+        action: NotificationPayload.Actions?,
+        actionInfo: NotificationAction,
+        requestCode: Int
+    ): PendingIntent? {
+        val actionIntent = getPushReceiverIntent(payload)
         actionIntent.putExtra(ExponeaPushReceiver.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {

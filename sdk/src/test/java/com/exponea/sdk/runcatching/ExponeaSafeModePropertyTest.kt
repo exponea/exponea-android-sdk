@@ -16,12 +16,12 @@ internal class ExponeaSafeModePropertyTest(
     name: String,
     val property: KProperty0<Any?>,
     val value: Any?
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     companion object {
         @JvmStatic
-        @ParameterizedRobolectricTestRunner.Parameters(name="Accessing {0} before init")
-        fun data() : List<Array<out Any?>> {
-            return PublicApiTestCases.properties.map { arrayOf(it.first.name, it.first, it.second)}
+        @ParameterizedRobolectricTestRunner.Parameters(name = "Accessing {0} before init")
+        fun data(): List<Array<out Any?>> {
+            return PublicApiTestCases.properties.map { arrayOf(it.first.name, it.first, it.second) }
         }
     }
 

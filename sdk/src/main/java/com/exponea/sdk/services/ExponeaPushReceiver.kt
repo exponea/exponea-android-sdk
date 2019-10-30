@@ -52,7 +52,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         val buttonClickedIntent = Intent(Intent.ACTION_VIEW)
         buttonClickedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val url  = action?.url
-        Logger.d(this,"Inteaction: $intent")
+        Logger.d(this, "Inteaction: $intent")
 
         if (url != null && url.isNotEmpty())
             buttonClickedIntent.data = Uri.parse(url)

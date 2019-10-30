@@ -118,7 +118,7 @@ internal class SessionManagerImpl(
         val properties = DeviceProperties().toHashMap()
 
         properties["app_version"] = BuildConfig.VERSION_CODE
-        Exponea.component.campaignRepository.get()?.let {event ->
+        Exponea.component.campaignRepository.get()?.let { event ->
            properties["location"] = event.completeUrl
            properties["utm_source"] = event.source.orEmpty()
            properties["utm_campaign"] = event.campaign.orEmpty()

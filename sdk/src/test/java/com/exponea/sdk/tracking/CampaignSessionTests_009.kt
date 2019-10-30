@@ -25,7 +25,7 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
     @Test
     fun testBehavior_009() {
         ExponeaConfigRepository.set(InstrumentationRegistry.getInstrumentation().context, configuration)
-        //first run will initialize SDK
+        // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
         firstRun.resume()
@@ -35,7 +35,7 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         firstRun.pause()
         firstRun.destroy()
 
-        //second run will handle Campaign Intent, but session will be resumed
+        // second run will handle Campaign Intent, but session will be resumed
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()

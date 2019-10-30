@@ -18,12 +18,12 @@ import kotlin.test.assertFalse
 internal class ExponeaSafeModeMethodTest(
     method: KFunction<Any>,
     val lambda: () -> Any
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     companion object {
         @JvmStatic
-        @ParameterizedRobolectricTestRunner.Parameters(name="{0}")
-        fun data() : List<Array<out Any?>> {
-            return PublicApiTestCases.methods.map { arrayOf(it.first, it.second)}
+        @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+        fun data(): List<Array<out Any?>> {
+            return PublicApiTestCases.methods.map { arrayOf(it.first, it.second) }
         }
     }
 

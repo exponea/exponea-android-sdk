@@ -41,7 +41,7 @@ internal class ExponeaPushReceiverNotificationsTest(
     private val intentGetter: (notification: Notification) -> Intent,
     private val expectedTrackingData: NotificationData?,
     private val expectedTrackingActionData: NotificationAction?
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager
 
@@ -80,7 +80,7 @@ internal class ExponeaPushReceiverNotificationsTest(
             ),
 
             TestCase(
-                name ="notification with actions",
+                name = "notification with actions",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
                 expectedTrackingData = null,
@@ -88,7 +88,7 @@ internal class ExponeaPushReceiverNotificationsTest(
             ),
 
             TestCase(
-                name ="notification with actions using first action",
+                name = "notification with actions using first action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[0].actionIntent).savedIntent },
                 expectedTrackingData = null,
@@ -96,7 +96,7 @@ internal class ExponeaPushReceiverNotificationsTest(
             ),
 
             TestCase(
-                name ="notification with actions using second action",
+                name = "notification with actions using second action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[1].actionIntent).savedIntent },
                 expectedTrackingData = null,
@@ -104,7 +104,7 @@ internal class ExponeaPushReceiverNotificationsTest(
             ),
 
             TestCase(
-                name ="notification with actions using third action",
+                name = "notification with actions using third action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[2].actionIntent).savedIntent },
                 expectedTrackingData = null,
@@ -157,7 +157,7 @@ internal class ExponeaPushReceiverNotificationsTest(
 
     private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {
         val messageBundle = Bundle()
-        notification.entries.forEach { messageBundle.putString(it.key, it.value)}
+        notification.entries.forEach { messageBundle.putString(it.key, it.value) }
         return RemoteMessage(messageBundle)
     }
 

@@ -76,10 +76,10 @@ internal fun currentTimeSeconds(): Double {
     return Date().time / 1000.0
 }
 
-internal inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object: TypeToken<T>() {}.type)
+internal inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object : TypeToken<T>() {}.type)
 
 
-internal fun String?.adjustUrl() : String? {
+internal fun String?.adjustUrl(): String? {
     return if (this != null) {
         if (!contains("://")) {
             "http://$this"

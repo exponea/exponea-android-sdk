@@ -19,7 +19,7 @@ internal class EventRepositoryImpl : EventRepository {
         return database.update(item)
     }
 
-    override fun get(id: String): DatabaseStorageObject<ExportedEventType>?{
+    override fun get(id: String): DatabaseStorageObject<ExportedEventType>? {
         return database.get(id)
     }
 

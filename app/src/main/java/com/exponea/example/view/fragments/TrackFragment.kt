@@ -35,7 +35,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
 
     companion object {
-        fun mockItems() : ArrayList<String> {
+        fun mockItems(): ArrayList<String> {
             val list = arrayListOf<String>()
             for (i in 1..14) {
                 list.add("Item #$i")
@@ -75,7 +75,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         buttonCustomEvent.setOnClickListener {
             TrackCustomEventDialog.show(childFragmentManager) { eventName, properties ->
-                trackCustomEvent(eventName, properties)}
+                trackCustomEvent(eventName, properties) }
         }
     }
 
@@ -153,7 +153,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
     }
 
-    inner class Adapter: BaseAdapter() {
+    inner class Adapter : BaseAdapter() {
 
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {

@@ -46,7 +46,7 @@ internal class ThreadAssertionCollector(
         assertCatching { kotlin.test.assertNull(actual, message) }
     }
 
-    fun <T : Any> assertNotNull(actual: T?, message: String? = null) : T {
+    fun <T : Any> assertNotNull(actual: T?, message: String? = null): T {
         return assertCatching { kotlin.test.assertNotNull(actual, message) }
     }
 

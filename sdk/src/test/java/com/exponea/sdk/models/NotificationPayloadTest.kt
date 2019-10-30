@@ -16,7 +16,7 @@ internal class NotificationPayloadTest(
     name: String,
     private val notificationPayload: HashMap<String, String>,
     private val validator: (NotificationPayload) -> Unit
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     companion object {
         data class TestCase(
             val name: String,

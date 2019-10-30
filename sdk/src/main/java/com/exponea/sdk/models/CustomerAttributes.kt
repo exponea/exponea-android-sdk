@@ -26,8 +26,8 @@ internal data class CustomerAttributes(
 
     internal var customerIds = CustomerIds()
 
-    fun toHashMap() : HashMap<String, Any> {
-        return hashMapOf (
+    fun toHashMap(): HashMap<String, Any> {
+        return hashMapOf(
                 "customer_ids" to customerIds.toHashMap(),
                 "attributes" to attributes
         )

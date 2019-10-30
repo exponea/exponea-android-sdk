@@ -6,7 +6,7 @@ import android.preference.PreferenceManager
 import android.provider.Settings
 
 @SuppressLint("RegisteredID")
-class RegisteredIdManager (private val context: Context) {
+class RegisteredIdManager(private val context: Context) {
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
     companion object {

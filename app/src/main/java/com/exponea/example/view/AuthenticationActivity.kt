@@ -79,7 +79,7 @@ class AuthenticationActivity : AppCompatActivity() {
         }
 
         // Start our SDK
-        //Exponea.initFromFile(App.instance)
+        // Exponea.initFromFile(App.instance)
         Exponea.init(App.instance, configuration)
 
         // Set our debug level to debug

@@ -12,7 +12,7 @@ import com.exponea.sdk.services.ExponeaPushReceiver
 class MyReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        when(intent.action) {
+        when (intent.action) {
             ExponeaPushReceiver.ACTION_CLICKED -> {
 
                 // Extract payload data

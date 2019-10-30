@@ -16,7 +16,7 @@ internal object ExponeaConfigRepository {
         prefs.setString(PREF_CONFIG, jsonConfiguration)
     }
 
-    fun get(context: Context) : ExponeaConfiguration? {
+    fun get(context: Context): ExponeaConfiguration? {
         val prefs = ExponeaPreferencesImpl(context)
         val gson = Gson()
         val jsonConfig = prefs.getString(PREF_CONFIG, "")

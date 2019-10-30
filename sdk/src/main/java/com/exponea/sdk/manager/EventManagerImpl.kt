@@ -26,7 +26,7 @@ internal class EventManagerImpl(
         // Remove all non unique ids
         routeTokenMap = routeTokenMap.distinct().toMutableList()
 
-        val route = when(eventType) {
+        val route = when (eventType) {
             EventType.TRACK_CUSTOMER -> Route.TRACK_CUSTOMERS
             EventType.PUSH_TOKEN -> Route.TRACK_CUSTOMERS
             EventType.CAMPAIGN_CLICK -> Route.TRACK_CAMPAIGN

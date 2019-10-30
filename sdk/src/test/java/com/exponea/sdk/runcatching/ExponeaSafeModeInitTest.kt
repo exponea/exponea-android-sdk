@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 internal class ExponeaSafeModeInitTest(
     method: KFunction<Any>,
     val lambda: () -> Any
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     companion object {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")

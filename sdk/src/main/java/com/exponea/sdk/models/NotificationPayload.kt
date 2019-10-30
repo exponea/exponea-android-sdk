@@ -50,7 +50,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
             val buttonsArray: ArrayList<ActionPayload> = arrayListOf()
             val buttonsJsonArray = JSONArray(buttonsJson)
 
-            //if we have a button payload, verify each button action
+            // if we have a button payload, verify each button action
             for (i in 0 until buttonsJsonArray.length()) {
                 val item: Map<String, String> = gson.fromJson(buttonsJsonArray[i].toString())
                 val actionEnum = Actions.find(item["action"])

@@ -12,7 +12,7 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-internal class PublicApiCoveredTest: ExponeaSDKTest() {
+internal class PublicApiCoveredTest : ExponeaSDKTest() {
     @Test
     fun shouldCoverAllPublicProperties() {
         Exponea::class.declaredMemberProperties.forEach { property ->

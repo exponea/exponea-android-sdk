@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-internal class ExponeaDatabaseTest: ExponeaSDKTest() {
+internal class ExponeaDatabaseTest : ExponeaSDKTest() {
 
     companion object {
         const val DB_NAME = "TestDatabase"
@@ -31,7 +31,7 @@ internal class ExponeaDatabaseTest: ExponeaSDKTest() {
             var lastName: String
     )
 
-    private lateinit var db : ExponeaDatabase<DatabaseStorageObject<Person>>
+    private lateinit var db: ExponeaDatabase<DatabaseStorageObject<Person>>
     private val mockData = DatabaseStorageObject(item = Person("firstname", "secondname"), projectId = MOCK_PROJECT_ID,
             route = Route.TRACK_EVENTS)
 
@@ -51,7 +51,7 @@ internal class ExponeaDatabaseTest: ExponeaSDKTest() {
         val success = db.add(mockData)
         if (success) {
             db.get(mockData.id)?.let {
-                assertEquals("firstname",it.item.firstName)
+                assertEquals("firstname", it.item.firstName)
             }
         }
     }
@@ -68,8 +68,8 @@ internal class ExponeaDatabaseTest: ExponeaSDKTest() {
 
     @Test
     fun testRemove_ShouldPass() {
-        assertEquals(true,db.add(mockData))
-        assertEquals(true,db.remove(mockData.id))
+        assertEquals(true, db.add(mockData))
+        assertEquals(true, db.remove(mockData.id))
         val item = db.get(mockData.id)
         assertTrue { item == null }
     }
@@ -77,7 +77,7 @@ internal class ExponeaDatabaseTest: ExponeaSDKTest() {
     @After
     @Test
     fun denit() {
-        assertEquals(true,db.clear())
+        assertEquals(true, db.clear())
     }
 
 }

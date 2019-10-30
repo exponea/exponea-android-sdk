@@ -86,7 +86,7 @@ internal class ExponeaComponent(
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
 
 
-    //Managers
+    // Managers
     internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(context, exponeaConfiguration)
     internal val serviceManager: ServiceManager = ServiceManagerImpl()
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)

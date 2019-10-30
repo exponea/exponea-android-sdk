@@ -22,7 +22,7 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
      */
     @Test
     fun testBehavior_003() {
-        //first run will initialize SDK
+        // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
         firstRun.resume()
@@ -32,7 +32,7 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
         firstRun.pause()
         firstRun.destroy()
 
-        //second run will handle Campaign Intent, but session will be resumed
+        // second run will handle Campaign Intent, but session will be resumed
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
@@ -42,7 +42,7 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
         assertNotNull(campaignEvent)
         assertTrue(Exponea.component.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
 
-        secondRun.resume()  //session is resumed, so no campaign cache clear is done
+        secondRun.resume()  // session is resumed, so no campaign cache clear is done
         secondRun.pause()
 
         assertNull(Exponea.component.campaignRepository.get())

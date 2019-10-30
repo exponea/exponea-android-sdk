@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExponeaPreferencesTest: ExponeaSDKTest() {
+internal class ExponeaPreferencesTest : ExponeaSDKTest() {
 
     companion object {
         const val VAL_BOOL = "booleanValue"

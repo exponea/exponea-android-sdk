@@ -8,7 +8,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
-internal class LoggerTest: ExponeaSDKTest() {
+internal class LoggerTest : ExponeaSDKTest() {
 
     // Log level OFF
     @Test

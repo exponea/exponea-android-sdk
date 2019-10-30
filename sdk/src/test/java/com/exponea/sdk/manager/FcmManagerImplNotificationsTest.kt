@@ -43,7 +43,7 @@ internal class FcmManagerImplNotificationsTest(
     private val expectedTrackingData: NotificationData?,
     private val expectedNotificationId: Int,
     private val expectedNotificationMatcher: (Notification) -> Unit
-): ExponeaSDKTest() {
+) : ExponeaSDKTest() {
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager
 
@@ -133,7 +133,7 @@ internal class FcmManagerImplNotificationsTest(
             ),
 
             TestCase(
-                name ="notification with actions",
+                name = "notification with actions",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 expectedNotificationId = 0,
                 expectedNotificationMatcher = {
@@ -194,7 +194,7 @@ internal class FcmManagerImplNotificationsTest(
 
                     assertNull(it.actions)
                 },
-                NotificationData(campaignId="5db1582b1b2be24d0bee4de9", campaignName="push with buttons", actionId=2)
+                NotificationData(campaignId = "5db1582b1b2be24d0bee4de9", campaignName = "push with buttons", actionId = 2)
             )
         )
 
@@ -234,7 +234,7 @@ internal class FcmManagerImplNotificationsTest(
 
     private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {
         val messageBundle = Bundle()
-        notification.entries.forEach { messageBundle.putString(it.key, it.value)}
+        notification.entries.forEach { messageBundle.putString(it.key, it.value) }
         return RemoteMessage(messageBundle)
     }
 

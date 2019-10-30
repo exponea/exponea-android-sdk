@@ -97,7 +97,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
             properties = properties
         )
 
-        //change the manager instance to one without internet access
+        // change the manager instance to one without internet access
         manager = FlushManagerImpl(configuration, repo, service, noInternetManager)
 
         waitForIt {
@@ -148,7 +148,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         }
 
         for (i in 1..10) {
-            thread(start=true) { manager.flushData() }
+            thread(start = true) { manager.flushData() }
         }
 
         lock.await()

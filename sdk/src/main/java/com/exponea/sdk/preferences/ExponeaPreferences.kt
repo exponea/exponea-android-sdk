@@ -9,7 +9,7 @@ internal interface ExponeaPreferences {
     fun getString(key: String, default: String): String
     fun getBoolean(key: String, default: Boolean): Boolean
     fun getLong(key: String, default: Long): Long
-    fun getDouble(key: String, default: Double) : Double
+    fun getDouble(key: String, default: Double): Double
 
     fun remove(key: String): Boolean
 }

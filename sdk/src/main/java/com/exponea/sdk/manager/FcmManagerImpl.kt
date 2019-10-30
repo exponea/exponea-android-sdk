@@ -122,7 +122,7 @@ internal class FcmManagerImpl(
         // Load the image in the payload and add as a big picture in the notification
         if (messageData.image != null) {
             val bigImageBitmap = getBitmapFromUrl(messageData.image)
-            //verify if the image was successfully loaded
+            // verify if the image was successfully loaded
             if (bigImageBitmap != null) {
                 notification.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bigImageBitmap))
             }
@@ -156,7 +156,7 @@ internal class FcmManagerImpl(
 
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, payload: NotificationPayload) {
         if (payload.buttons != null) {
-            //if we have a button payload, verify each button action
+            // if we have a button payload, verify each button action
             payload.buttons.forEachIndexed { index, it ->
                 val info = NotificationAction(NotificationAction.ACTION_TYPE_BUTTON, it.title, it.url.adjustUrl())
                 val pi = generateActionPendingIntent(payload, it.action, info, index)
@@ -166,7 +166,7 @@ internal class FcmManagerImpl(
     }
 
     private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, payload: NotificationPayload) {
-        //handle the notification body click action
+        // handle the notification body click action
         payload.notificationAction.let {
             val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.title, it.url.adjustUrl())
             val pi = generateActionPendingIntent(payload, it.action, info, requestCode)

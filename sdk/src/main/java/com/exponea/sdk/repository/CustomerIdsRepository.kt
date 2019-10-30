@@ -4,7 +4,7 @@ import com.exponea.sdk.models.CustomerIds
 
 internal interface CustomerIdsRepository {
 
-    fun get() : CustomerIds
+    fun get(): CustomerIds
 
     fun set(customerIds: CustomerIds)
 

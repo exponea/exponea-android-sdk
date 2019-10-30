@@ -62,11 +62,11 @@ internal object PublicApiTestCases {
         ),
         Pair(
             Exponea::getConsents,
-            { Exponea.getConsents({}, {})}
+            { Exponea.getConsents({}, {}) }
         ),
         Pair(
             Exponea::getPersonalizationWebLayer,
-            { Exponea.getPersonalizationWebLayer({}, {})}
+            { Exponea.getPersonalizationWebLayer({}, {}) }
         ),
         Pair(
             Exponea::handleCampaignIntent,
@@ -122,15 +122,15 @@ internal object PublicApiTestCases {
         ),
         Pair(
             Exponea::trackPushToken,
-            { Exponea.trackPushToken("mock-push-token")}
+            { Exponea.trackPushToken("mock-push-token") }
         ),
         Pair(
             Exponea::trackSessionEnd,
-            { Exponea.trackSessionEnd()}
+            { Exponea.trackSessionEnd() }
         ),
         Pair(
             Exponea::trackSessionStart,
-            { Exponea.trackSessionStart()}
+            { Exponea.trackSessionStart() }
         )
     )
 }

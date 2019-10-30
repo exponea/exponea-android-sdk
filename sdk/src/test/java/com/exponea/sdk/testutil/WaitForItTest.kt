@@ -27,7 +27,7 @@ class WaitForItTest {
     @Test
     fun `should pass on other thread`() {
         waitForIt {
-            thread(start=true) {
+            thread(start = true) {
                 it.assertTrue(true)
                 it()
             }
@@ -37,7 +37,7 @@ class WaitForItTest {
     @Test(expected = AssertionError::class)
     fun `should throw assertion error on other thread`() {
         waitForIt {
-            thread(start=true) {
+            thread(start = true) {
                 it.assertTrue(false)
             }
         }

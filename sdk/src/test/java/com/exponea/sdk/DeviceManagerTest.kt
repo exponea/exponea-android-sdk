@@ -16,7 +16,7 @@ internal class DeviceManagerTest {
 
     @Test
     @Config(qualifiers = "large")
-    fun testGetDeviceTypeTablet_ShouldPass(){
+    fun testGetDeviceTypeTablet_ShouldPass() {
         deviceManager = DeviceManagerImpl(ApplicationProvider.getApplicationContext())
         val tabletType = deviceManager.getDeviceType()
         assertEquals("tablet", tabletType)

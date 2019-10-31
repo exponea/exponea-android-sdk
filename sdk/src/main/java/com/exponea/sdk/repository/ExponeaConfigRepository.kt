@@ -24,7 +24,7 @@ internal object ExponeaConfigRepository {
             return null
 
         return try {
-             gson.fromJson<ExponeaConfiguration>(jsonConfig, ExponeaConfiguration::class.java)
+            gson.fromJson<ExponeaConfiguration>(jsonConfig, ExponeaConfiguration::class.java)
         } catch (e: Exception) {
             null
         }

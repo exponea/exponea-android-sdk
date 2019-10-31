@@ -2,10 +2,10 @@ package com.exponea.sdk.models
 
 enum class EventType {
     // Install event is fired only once when the app is first installed.
-     INSTALL,
+    INSTALL,
 
     // Session start event used to mark the start of a session, typically when an app comes to foreground.
-     SESSION_START,
+    SESSION_START,
 
     // Session end event used to mark the end of a session, typically when an app goes to background.
     SESSION_END,

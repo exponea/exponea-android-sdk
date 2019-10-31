@@ -3,23 +3,25 @@ package com.exponea.example.view.fragments
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.*
+import com.exponea.sdk.models.Consent
+import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.Result
 import kotlinx.android.synthetic.main.fragment_fetch.*
 
 
 class FetchFragment : BaseFragment() {
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         return layoutInflater.inflate(R.layout.fragment_fetch, container, false)
     }
@@ -52,14 +54,7 @@ class FetchFragment : BaseFragment() {
 
         consentsButton.setOnClickListener {
             setProgressBarVisible(true)
-            Exponea.getConsents(
-                    {
-                        onFetchSuccess(it)
-                    },
-                    {
-                        onFetchFailed(it)
-                    }
-                    )
+            Exponea.getConsents({ onFetchSuccess(it) }, { onFetchFailed(it) })
         }
     }
 
@@ -67,7 +62,7 @@ class FetchFragment : BaseFragment() {
      * Our success callback
      */
     private fun onFetchSuccess(result: Result<ArrayList<Consent>>) {
-       runOnUiThread {
+        runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = result.toString()
         }
@@ -81,7 +76,7 @@ class FetchFragment : BaseFragment() {
         runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = "Message: ${result.results.message}" +
-                    "\nJson: ${result.results.jsonBody}"
+                "\nJson: ${result.results.jsonBody}"
         }
     }
 

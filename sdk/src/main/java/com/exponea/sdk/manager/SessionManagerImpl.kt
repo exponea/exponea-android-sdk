@@ -107,36 +107,34 @@ internal class SessionManagerImpl(
     /**
      * Tracking Session Start
      */
-     override fun trackSessionStart(timestamp: Double) {
+    override fun trackSessionStart(timestamp: Double) {
         Logger.d(this, "Tracking session start at: ${timestamp.toDate()}")
 
         // Save session start time if session tracking is manual
         if (!isListenerActive) {
             prefs.setDouble(PREF_SESSION_START, timestamp)
         }
-
         val properties = DeviceProperties().toHashMap()
-
         properties["app_version"] = BuildConfig.VERSION_CODE
         Exponea.component.campaignRepository.get()?.let { event ->
-           properties["location"] = event.completeUrl
-           properties["utm_source"] = event.source.orEmpty()
-           properties["utm_campaign"] = event.campaign.orEmpty()
-           properties["utm_content"] = event.content.orEmpty()
-           properties["utm_term"] = event.term.orEmpty()
+            properties["location"] = event.completeUrl
+            properties["utm_source"] = event.source.orEmpty()
+            properties["utm_campaign"] = event.campaign.orEmpty()
+            properties["utm_content"] = event.content.orEmpty()
+            properties["utm_term"] = event.term.orEmpty()
         }
         Exponea.track(
-                eventType = Constants.EventTypes.sessionStart,
-                timestamp = timestamp,
-                properties = properties,
-                type = EventType.SESSION_START
+            eventType = Constants.EventTypes.sessionStart,
+            timestamp = timestamp,
+            properties = properties,
+            type = EventType.SESSION_START
         )
     }
 
     /**
      * Tracking Session End
      */
-     override fun trackSessionEnd(timestamp: Double) {
+    override fun trackSessionEnd(timestamp: Double) {
         Logger.d(this, "Tracking session end at: ${timestamp.toDate()}")
 
         // Save session end time if session tracking is manual
@@ -151,12 +149,11 @@ internal class SessionManagerImpl(
         // Clear session
         clear()
         Exponea.track(
-                eventType = Constants.EventTypes.sessionEnd,
-                timestamp = timestamp,
-                properties = properties,
-                type = EventType.SESSION_END
+            eventType = Constants.EventTypes.sessionEnd,
+            timestamp = timestamp,
+            properties = properties,
+            type = EventType.SESSION_END
         )
-
     }
 
     /**

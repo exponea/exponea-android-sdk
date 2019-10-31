@@ -27,6 +27,8 @@ import com.exponea.sdk.util.adjustUrl
 import com.google.firebase.messaging.RemoteMessage
 import java.io.IOException
 import java.net.URL
+import java.util.*
+import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 
 
@@ -36,7 +38,7 @@ internal class FcmManagerImpl(
         private val firebaseTokenRepository: FirebaseTokenRepository,
         private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
-    private val requestCode = 111
+    private val requestCodeGenerator: Random = Random()
 
     override fun trackFcmToken(token: String?) {
         val lastTrackDateInMilliseconds =
@@ -157,9 +159,9 @@ internal class FcmManagerImpl(
     private fun handlePayloadButtons(notification: NotificationCompat.Builder, payload: NotificationPayload) {
         if (payload.buttons != null) {
             // if we have a button payload, verify each button action
-            payload.buttons.forEachIndexed { index, it ->
+            payload.buttons.forEach {
                 val info = NotificationAction(NotificationAction.ACTION_TYPE_BUTTON, it.title, it.url.adjustUrl())
-                val pi = generateActionPendingIntent(payload, it.action, info, index)
+                val pi = generateActionPendingIntent(payload, it.action, info, requestCodeGenerator.nextInt())
                 notification.addAction(0, it.title, pi)
             }
         }
@@ -169,7 +171,7 @@ internal class FcmManagerImpl(
         // handle the notification body click action
         payload.notificationAction.let {
             val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.title, it.url.adjustUrl())
-            val pi = generateActionPendingIntent(payload, it.action, info, requestCode)
+            val pi = generateActionPendingIntent(payload, it.action, info, requestCodeGenerator.nextInt())
             notification.setContentIntent(pi)
         }
     }

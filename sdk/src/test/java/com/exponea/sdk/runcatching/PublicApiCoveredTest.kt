@@ -33,8 +33,8 @@ internal class PublicApiCoveredTest : ExponeaSDKTest() {
         Exponea::class.declaredFunctions.forEach { method ->
             if (method.visibility == KVisibility.PUBLIC) {
                 assertTrue(
-                    PublicApiTestCases.methods.any { compareFunctions(it.first, method) }
-                        || PublicApiTestCases.initMethods.any { compareFunctions(it.first, method) },
+                    PublicApiTestCases.methods.any { compareFunctions(it.first, method) } ||
+                        PublicApiTestCases.initMethods.any { compareFunctions(it.first, method) },
                     "Public method ${method} not found in PublicApiTestCases."
                 )
             }

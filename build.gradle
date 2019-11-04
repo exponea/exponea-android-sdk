@@ -52,8 +52,7 @@ subprojects {
         disabledRules = [
                 "max-line-length",
                 "string-template",
-                "final-newline",
-                "chain-wrapping"
+                "final-newline"
         ]
     }
 }

@@ -10,7 +10,7 @@ internal class CustomerIdsRepositoryImpl(
     private val gson: Gson,
     private val uuidRepo: UniqueIdentifierRepository,
     private val prefs: ExponeaPreferences
-) :  CustomerIdsRepository {
+) : CustomerIdsRepository {
 
     companion object {
         private const val PREFS_CUSTOMERIDS = "ExponeaCustomerIds"
@@ -20,7 +20,7 @@ internal class CustomerIdsRepositoryImpl(
         val uuid = uuidRepo.get()
         val json = prefs.getString(PREFS_CUSTOMERIDS, "{}")
         val type = object : TypeToken<HashMap<String, Any?>>() {}.type
-        val ids = gson.fromJson<HashMap<String, Any?>>(json,  type)
+        val ids = gson.fromJson<HashMap<String, Any?>>(json, type)
         return CustomerIds().apply {
             cookie = uuid
             externalIds = ids

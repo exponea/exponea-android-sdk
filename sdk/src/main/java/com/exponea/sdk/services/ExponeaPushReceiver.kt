@@ -51,7 +51,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
         val buttonClickedIntent = Intent(Intent.ACTION_VIEW)
         buttonClickedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val url  = action?.url
+        val url = action?.url
         Logger.d(this, "Inteaction: $intent")
 
         if (url != null && url.isNotEmpty())

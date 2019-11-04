@@ -51,7 +51,6 @@ subprojects {
         android = true
         disabledRules = [
                 "max-line-length",
-                "no-multi-spaces",
                 "string-template",
                 "final-newline",
                 "chain-wrapping"

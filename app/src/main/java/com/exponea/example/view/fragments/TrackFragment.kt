@@ -157,7 +157,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
             if (convertView == null) {
                 val view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false)
                 view.findViewById<TextView>(android.R.id.text1).text = mockItems()[position]
-                return  view
+                return view
             }
             convertView.findViewById<TextView>(android.R.id.text1).text = mockItems()[position]
             return convertView

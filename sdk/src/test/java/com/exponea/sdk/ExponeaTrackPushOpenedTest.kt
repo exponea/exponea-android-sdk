@@ -84,7 +84,7 @@ internal class ExponeaTrackPushOpenedTest(
             TestCase(
                 "custom action name",
                 null,
-                NotificationAction(actionType = "mock type",  actionName = "my action name"),
+                NotificationAction(actionType = "mock type", actionName = "my action name"),
                 Constants.EventTypes.push,
                 hashMapOf(
                     "status" to "clicked",
@@ -97,7 +97,7 @@ internal class ExponeaTrackPushOpenedTest(
             TestCase(
                 "custom action url",
                 null,
-                NotificationAction(actionType = "mock type",  url = "my action url"),
+                NotificationAction(actionType = "mock type", url = "my action url"),
                 Constants.EventTypes.push,
                 hashMapOf(
                     "status" to "clicked",

@@ -23,23 +23,23 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
         )
 
         var customerIds = CustomerIds(mapWithCookie)
-        assertTrue(customerIds.toHashMap()["cookie"]  == null)
+        assertTrue(customerIds.toHashMap()["cookie"] == null)
 
-        assertTrue(customerIds.toHashMap()["registered"]  == "email")
+        assertTrue(customerIds.toHashMap()["registered"] == "email")
 
         customerIds = CustomerIds(mapWithoutCookie)
 
-        assertTrue(customerIds.toHashMap()["cookie"]  == null)
+        assertTrue(customerIds.toHashMap()["cookie"] == null)
         customerIds.cookie = "cookiee"
 
-        assertTrue(customerIds.toHashMap()["cookie"]  == "cookiee")
-        assertTrue(customerIds.toHashMap()["registered"]  == "email")
+        assertTrue(customerIds.toHashMap()["cookie"] == "cookiee")
+        assertTrue(customerIds.toHashMap()["registered"] == "email")
     }
 
     fun testCookieGetter() {
         val customerIds = CustomerIds()
-        assertTrue(customerIds.cookie  == null)
+        assertTrue(customerIds.cookie == null)
         customerIds.cookie = "cookiee"
-        assertTrue(customerIds.cookie  == "cookie")
+        assertTrue(customerIds.cookie == "cookie")
     }
 }

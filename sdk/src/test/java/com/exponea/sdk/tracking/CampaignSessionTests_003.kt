@@ -42,7 +42,7 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
         assertNotNull(campaignEvent)
         assertTrue(Exponea.component.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
 
-        secondRun.resume()  // session is resumed, so no campaign cache clear is done
+        secondRun.resume() // session is resumed, so no campaign cache clear is done
         secondRun.pause()
 
         assertNull(Exponea.component.campaignRepository.get())

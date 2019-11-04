@@ -66,7 +66,7 @@ internal data class CustomerAttributes(
 
     /**
      * Add aggregation to the requested attributes
-     * @param  aggregationId - id of aggregation that you want to retrieve
+     * @param aggregationId - id of aggregation that you want to retrieve
      */
     fun withAggregation(aggregationId: String) {
         addAttribute(AttributeTypes.AGGREGATION, aggregationId)
@@ -86,7 +86,7 @@ internal data class CustomerAttributes(
      */
     private fun addAttribute(types: AttributeTypes, associatedValue: Any) {
         when (types) {
-            AttributeTypes.PROPERTY     -> {
+            AttributeTypes.PROPERTY -> {
                 attributes.add(
                         hashMapOf(
                                 Pair(TYPE, TYPE_PROPERTY),
@@ -94,7 +94,7 @@ internal data class CustomerAttributes(
                         )
                 )
             }
-            AttributeTypes.PREDICTION   -> {
+            AttributeTypes.PREDICTION -> {
                 attributes.add(
                         hashMapOf(
                                 Pair(TYPE, TYPE_PREDICTION),
@@ -102,7 +102,7 @@ internal data class CustomerAttributes(
                         )
                 )
             }
-            AttributeTypes.ID           -> {
+            AttributeTypes.ID -> {
                 attributes.add(
                         hashMapOf(
                                 Pair(TYPE, TYPE_ID),
@@ -110,7 +110,7 @@ internal data class CustomerAttributes(
                         )
                 )
             }
-            AttributeTypes.EXPRESSION   -> {
+            AttributeTypes.EXPRESSION -> {
                 attributes.add(
                         hashMapOf(
                                 Pair(TYPE, TYPE_EXPRESSION),
@@ -126,7 +126,7 @@ internal data class CustomerAttributes(
                         )
                 )
             }
-            AttributeTypes.AGGREGATION  -> {
+            AttributeTypes.AGGREGATION -> {
                 attributes.add(
                         hashMapOf(
                                 Pair(TYPE, TYPE_AGGREGATE),

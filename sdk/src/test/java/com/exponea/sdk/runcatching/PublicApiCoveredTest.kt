@@ -35,7 +35,7 @@ internal class PublicApiCoveredTest : ExponeaSDKTest() {
                 assertTrue(
                     PublicApiTestCases.methods.any { compareFunctions(it.first, method) } ||
                         PublicApiTestCases.initMethods.any { compareFunctions(it.first, method) },
-                    "Public method ${method} not found in PublicApiTestCases."
+                    "Public method $method not found in PublicApiTestCases."
                 )
             }
         }

@@ -56,7 +56,6 @@ subprojects {
                 "no-multi-spaces",
                 "no-unused-imports",
                 "string-template",
-                "no-unit-return",
                 "final-newline",
                 "chain-wrapping"
         ]

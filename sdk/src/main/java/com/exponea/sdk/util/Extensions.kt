@@ -112,7 +112,7 @@ fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {
     }
 }
 
-fun Result<Unit>.logOnException(): Unit {
+fun Result<Unit>.logOnException() {
     val exception = this.exceptionOrNull()
     if (exception != null) {
         try {

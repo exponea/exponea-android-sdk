@@ -13,8 +13,8 @@ import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.toDate
 
 internal class SessionManagerImpl(
-        context: Context,
-        private val prefs: ExponeaPreferences
+    context: Context,
+    private val prefs: ExponeaPreferences
 ) : SessionManager() {
     var application = context as Application
     private var isListenerActive = false

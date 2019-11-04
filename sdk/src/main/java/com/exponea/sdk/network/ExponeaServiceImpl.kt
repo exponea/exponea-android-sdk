@@ -101,7 +101,11 @@ internal class ExponeaServiceImpl(
         return doPost(ApiEndPoint.EndPointName.CONSENTS, projectToken, null)
     }
 
-    private fun doPost(endPointName: ApiEndPoint.EndPointName, projectToken: String, bodyContent: Any?): Call {
+    private fun doPost(
+        endPointName: ApiEndPoint.EndPointName,
+        projectToken: String,
+        bodyContent: Any?
+    ): Call {
         val endpoint = ApiEndPoint(endPointName, projectToken).toString()
         val jsonBody = bodyContent?.let { gson.toJson(it) }
         return networkManager.post(endpoint, jsonBody)

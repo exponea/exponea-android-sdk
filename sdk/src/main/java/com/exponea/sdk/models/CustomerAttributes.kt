@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 internal data class CustomerAttributes(
 
-        @SerializedName("attributes")
-        var attributes: MutableList<HashMap<String, Any>> = mutableListOf()
+    @SerializedName("attributes")
+    var attributes: MutableList<HashMap<String, Any>> = mutableListOf()
 ) {
 
     internal constructor(customerIds: CustomerIds, attributes: MutableList<HashMap<String, Any>>) : this (attributes) {

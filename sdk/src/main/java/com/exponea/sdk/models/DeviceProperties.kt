@@ -5,16 +5,16 @@ import com.exponea.sdk.BuildConfig
 import com.google.gson.annotations.SerializedName
 
 internal data class DeviceProperties(
-        var campaign: String? = null,
-        @SerializedName("campaign_id")
-        var campaignId: String? = null,
-        var link: String? = null,
-        var osName: String = Constants.DeviceInfo.osName,
-        var osVersion: String = Build.VERSION.RELEASE,
-        var sdk: String = Constants.DeviceInfo.sdk,
-        var sdkVersion: String = BuildConfig.VERSION_NAME,
-        var deviceModel: String = Build.MODEL,
-        var deviceType: String? = null
+    var campaign: String? = null,
+    @SerializedName("campaign_id")
+    var campaignId: String? = null,
+    var link: String? = null,
+    var osName: String = Constants.DeviceInfo.osName,
+    var osVersion: String = Build.VERSION.RELEASE,
+    var sdk: String = Constants.DeviceInfo.sdk,
+    var sdkVersion: String = BuildConfig.VERSION_NAME,
+    var deviceModel: String = Build.MODEL,
+    var deviceType: String? = null
 ) {
     fun toHashMap(): HashMap<String, Any> {
         val hashMap = hashMapOf<String, Any>(

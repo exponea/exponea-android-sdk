@@ -26,9 +26,9 @@ import java.util.*
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         return layoutInflater.inflate(R.layout.fragment_track, container, false)
     }

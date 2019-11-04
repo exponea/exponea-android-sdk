@@ -309,8 +309,8 @@ object Exponea {
      * @param onFailure - failure callback, in case of errors
      */
     fun getConsents(
-            onSuccess: (Result<ArrayList<Consent>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
         Exponea.component.fetchManager.fetchConsents(
                 projectToken = Exponea.configuration.projectToken,
@@ -467,9 +467,9 @@ object Exponea {
      * @param showNotification indicates if the SDK should display the notification or just track it
      */
     fun handleRemoteMessage(
-            message: RemoteMessage?,
-            manager: NotificationManager,
-            showNotification: Boolean = true
+        message: RemoteMessage?,
+        manager: NotificationManager,
+        showNotification: Boolean = true
     ) = runCatching {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")

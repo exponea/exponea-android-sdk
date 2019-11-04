@@ -18,9 +18,9 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val attributes: Map<String, String>? = parseAttributes(rawData["attributes"])
 
     data class ActionPayload(
-            val action: Actions? = null,
-            val url: String? = null,
-            val title: String? = null
+        val action: Actions? = null,
+        val url: String? = null,
+        val title: String? = null
     )
 
     companion object {

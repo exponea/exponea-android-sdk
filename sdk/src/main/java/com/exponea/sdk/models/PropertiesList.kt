@@ -1,7 +1,7 @@
 package com.exponea.sdk.models
 
 data class PropertiesList(
-        var properties: HashMap<String, Any>
+    var properties: HashMap<String, Any>
 ) {
 
     operator fun set(key: String, value: Any?) {

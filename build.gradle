@@ -51,7 +51,6 @@ subprojects {
         android = true
         disabledRules = [
                 "import-ordering",
-                "parameter-list-wrapping",
                 "max-line-length",
                 "no-wildcard-imports",
                 "no-multi-spaces",

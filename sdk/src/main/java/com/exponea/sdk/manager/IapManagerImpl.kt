@@ -94,8 +94,8 @@ internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedLi
     }
 
     override fun onPurchasesUpdated(
-            @BillingResponse responseCode: Int,
-            purchases: List<Purchase>?
+        @BillingResponse responseCode: Int,
+        purchases: List<Purchase>?
     ) {
         runCatching {
             onPurchasesUpdatedUnsafe(responseCode, purchases)

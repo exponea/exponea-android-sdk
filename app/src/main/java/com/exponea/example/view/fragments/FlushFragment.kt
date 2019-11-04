@@ -13,9 +13,9 @@ import kotlinx.android.synthetic.main.fragment_flush.*
 
 class FlushFragment : BaseFragment() {
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         return layoutInflater.inflate(R.layout.fragment_flush, container, false)
     }

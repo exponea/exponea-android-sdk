@@ -16,7 +16,10 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.*
 
-internal fun Call.enqueue(onResponse: (Call, Response) -> Unit, onFailure: (Call, IOException) -> Unit) {
+internal fun Call.enqueue(
+    onResponse: (Call, Response) -> Unit,
+    onFailure: (Call, IOException) -> Unit
+) {
     this.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
             onFailure(call, e)

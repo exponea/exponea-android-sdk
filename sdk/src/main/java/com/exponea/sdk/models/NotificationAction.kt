@@ -3,9 +3,9 @@ package com.exponea.sdk.models
 import java.io.Serializable
 
 data class NotificationAction(
-        val actionType: String,
-        val actionName: String? = null,
-        val url: String? = null
+    val actionType: String,
+    val actionName: String? = null,
+    val url: String? = null
 ) : Serializable {
 
     fun toHashMap(): HashMap<String, Any> {

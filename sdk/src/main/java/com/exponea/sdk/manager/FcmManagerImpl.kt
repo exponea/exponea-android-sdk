@@ -32,10 +32,10 @@ import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 
 internal class FcmManagerImpl(
-        private val context: Context,
-        private val configuration: ExponeaConfiguration,
-        private val firebaseTokenRepository: FirebaseTokenRepository,
-        private val pushNotificationRepository: PushNotificationRepository
+    private val context: Context,
+    private val configuration: ExponeaConfiguration,
+    private val firebaseTokenRepository: FirebaseTokenRepository,
+    private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
     private val requestCodeGenerator: Random = Random()
 
@@ -57,7 +57,11 @@ internal class FcmManagerImpl(
         Logger.d(this, "Token not update: shouldUpdateToken $shouldUpdateToken - token $token")
     }
 
-    override fun handleRemoteMessage(message: RemoteMessage?, manager: NotificationManager, showNotification: Boolean) {
+    override fun handleRemoteMessage(
+        message: RemoteMessage?,
+        manager: NotificationManager,
+        showNotification: Boolean
+    ) {
 
         Logger.d(this, "handleRemoteMessage")
 
@@ -118,7 +122,10 @@ internal class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadImage(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
+    private fun handlePayloadImage(
+        notification: NotificationCompat.Builder,
+        messageData: NotificationPayload
+    ) {
         // Load the image in the payload and add as a big picture in the notification
         if (messageData.image != null) {
             val bigImageBitmap = getBitmapFromUrl(messageData.image)
@@ -142,7 +149,10 @@ internal class FcmManagerImpl(
         return smallIconRes
     }
 
-    private fun handlePayloadSound(notification: NotificationCompat.Builder, messageData: NotificationPayload) {
+    private fun handlePayloadSound(
+        notification: NotificationCompat.Builder,
+        messageData: NotificationPayload
+    ) {
         // remove default notification sound
         notification.setSound(null)
         // set the uri for the default sound
@@ -154,7 +164,10 @@ internal class FcmManagerImpl(
         RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
     }
 
-    private fun handlePayloadButtons(notification: NotificationCompat.Builder, payload: NotificationPayload) {
+    private fun handlePayloadButtons(
+        notification: NotificationCompat.Builder,
+        payload: NotificationPayload
+    ) {
         if (payload.buttons != null) {
             // if we have a button payload, verify each button action
             payload.buttons.forEach {
@@ -165,7 +178,10 @@ internal class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadNotificationAction(notification: NotificationCompat.Builder, payload: NotificationPayload) {
+    private fun handlePayloadNotificationAction(
+        notification: NotificationCompat.Builder,
+        payload: NotificationPayload
+    ) {
         // handle the notification body click action
         payload.notificationAction.let {
             val info = NotificationAction(NotificationAction.ACTION_TYPE_NOTIFICATION, it.title, it.url.adjustUrl())

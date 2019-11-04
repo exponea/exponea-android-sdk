@@ -51,8 +51,8 @@ import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.google.gson.Gson
 
 internal class ExponeaComponent(
-        exponeaConfiguration: ExponeaConfiguration,
-        context: Context
+    exponeaConfiguration: ExponeaConfiguration,
+    context: Context
 ) {
     // Gson Deserializer
     internal val gson = Gson()

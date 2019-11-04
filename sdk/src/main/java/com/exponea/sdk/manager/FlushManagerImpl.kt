@@ -14,10 +14,10 @@ import okhttp3.Response
 import java.io.IOException
 
 internal class FlushManagerImpl(
-        private val configuration: ExponeaConfiguration,
-        private val eventRepository: EventRepository,
-        private val exponeaService: ExponeaService,
-        private val connectionManager: ConnectionManager
+    private val configuration: ExponeaConfiguration,
+    private val eventRepository: EventRepository,
+    private val exponeaService: ExponeaService,
+    private val connectionManager: ConnectionManager
 ) : FlushManager {
     override var onFlushFinishListener: (() -> Unit)? = null
     @Volatile override var isRunning: Boolean = false
@@ -80,7 +80,10 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun handleFailure(databaseObject: DatabaseStorageObject<ExportedEventType>): (Call, IOException) -> Unit {
+    private fun handleFailure(databaseObject: DatabaseStorageObject<ExportedEventType>): (
+        Call,
+        IOException
+    ) -> Unit {
         return { _, ioException ->
             Logger.e(
                     this@FlushManagerImpl,
@@ -91,7 +94,10 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun handleResponse(databaseObject: DatabaseStorageObject<ExportedEventType>): (Call, Response) -> Unit {
+    private fun handleResponse(databaseObject: DatabaseStorageObject<ExportedEventType>): (
+        Call,
+        Response
+    ) -> Unit {
         return { _, response ->
             val responseCode = response.code()
             Logger.d(this, "Response Code: $responseCode")

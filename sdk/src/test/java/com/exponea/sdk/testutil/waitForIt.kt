@@ -29,7 +29,10 @@ const val DEFAULT_TIMEOUT = 5000L
  *     }
  * }
  */
-internal fun waitForIt(timeoutMS: Long = DEFAULT_TIMEOUT, lambda: (ThreadAssertionCollector) -> Unit) {
+internal fun waitForIt(
+    timeoutMS: Long = DEFAULT_TIMEOUT,
+    lambda: (ThreadAssertionCollector) -> Unit
+) {
     ThreadAssertionCollector(timeoutMS, lambda)
 }
 

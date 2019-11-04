@@ -1,13 +1,13 @@
 package com.exponea.sdk.models
 
 internal data class CustomerRecommendation(
-        var type: String = "recommendation",
-        var id: String,
-        var size: Int = 10,
-        var strategy: String,
-        var knowItems: Boolean = false,
-        var anti: Boolean = false,
-        var items: HashMap<String, Any> = hashMapOf()
+    var type: String = "recommendation",
+    var id: String,
+    var size: Int = 10,
+    var strategy: String,
+    var knowItems: Boolean = false,
+    var anti: Boolean = false,
+    var items: HashMap<String, Any> = hashMapOf()
 ) {
     fun toHashMap(): HashMap<String, Any> {
         return hashMapOf(

@@ -21,7 +21,7 @@ import java.util.*
  */
 
 internal class PersonalizationManagerImpl(
-        private val context: Context
+    private val context: Context
 ) : PersonalizationManager {
 
     private var preferencesIds: MutableList<String> = mutableListOf()
@@ -46,10 +46,10 @@ internal class PersonalizationManagerImpl(
      */
 
     override fun getBannersConfiguration(
-            projectToken: String,
-            customerIds: CustomerIds,
-            onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        projectToken: String,
+        customerIds: CustomerIds,
+        onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
 
         Exponea.component.fetchManager.fetchBannerConfiguration(

@@ -11,8 +11,8 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 
 internal class EventManagerImpl(
-        private val configuration: ExponeaConfiguration,
-        private val eventRepository: EventRepository
+    private val configuration: ExponeaConfiguration,
+    private val eventRepository: EventRepository
 ) : EventManager {
     override fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
         Logger.d(this, "addEventToQueue")

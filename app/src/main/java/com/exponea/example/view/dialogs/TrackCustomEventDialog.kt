@@ -25,8 +25,8 @@ class TrackCustomEventDialog : DialogFragment() {
         const val TAG = "TrackCustomEventDialog"
 
         fun show(
-                fragmentManager: FragmentManager,
-                callback: (eventName: String, properties: PropertiesList) -> (Unit)
+            fragmentManager: FragmentManager,
+            callback: (eventName: String, properties: PropertiesList) -> (Unit)
         ) {
             val fragment = fragmentManager.findFragmentByTag(TAG)
                     as? TrackCustomEventDialog

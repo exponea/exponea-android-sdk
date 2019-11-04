@@ -8,14 +8,14 @@ import com.exponea.sdk.util.currentTimeSeconds
  * Info holder retrieved from Android Deeplink Intent Uri.
  */
 internal data class CampaignClickInfo(
-   var source: String?,
-   var campaign: String?,
-   var content: String?,
-   var medium: String?,
-   var term: String?,
-   var payload: String?,
-   val createdAt: Double = currentTimeSeconds(),
-   val completeUrl: String
+    var source: String?,
+    var campaign: String?,
+    var content: String?,
+    var medium: String?,
+    var term: String?,
+    var payload: String?,
+    val createdAt: Double = currentTimeSeconds(),
+    val completeUrl: String
 ) {
     internal constructor(data: Uri) : this(
             source = data.getQueryParameter("utm_source"),

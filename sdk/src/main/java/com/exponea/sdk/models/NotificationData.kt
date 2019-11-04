@@ -4,9 +4,9 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class NotificationData(
-        val campaignId: String? = null,
-        val campaignName: String? = null,
-        val actionId: Long? = null
+    val campaignId: String? = null,
+    val campaignName: String? = null,
+    val actionId: Long? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
             parcel.readString(),

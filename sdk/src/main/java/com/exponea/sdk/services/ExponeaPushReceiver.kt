@@ -25,10 +25,11 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         const val EXTRA_ACTION_INFO = "notification_action"
 
         fun getClickIntent(
-                context: Context,
-                id: Int,
-                data: NotificationData?,
-                messageData: HashMap<String, String>): Intent {
+            context: Context,
+            id: Int,
+            data: NotificationData?,
+            messageData: HashMap<String, String>
+        ): Intent {
             return Intent(ACTION_CLICKED).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)

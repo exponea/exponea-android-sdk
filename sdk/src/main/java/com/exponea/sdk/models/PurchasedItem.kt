@@ -1,19 +1,19 @@
 package com.exponea.sdk.models
 
 data class PurchasedItem(
-        var value: Double,
-        var currency: String,
-        var paymentSystem: String,
-        var productId: String,
-        var productTitle: String,
-        var receipt: String? = null,
-        var deviceModel: String? = null,
-        var deviceType: String? = null,
-        var ip: String? = null,
-        var osName: String? = null,
-        var osVersion: String? = null,
-        var sdk: String? = null,
-        var sdkVersion: String? = null
+    var value: Double,
+    var currency: String,
+    var paymentSystem: String,
+    var productId: String,
+    var productTitle: String,
+    var receipt: String? = null,
+    var deviceModel: String? = null,
+    var deviceType: String? = null,
+    var ip: String? = null,
+    var osName: String? = null,
+    var osVersion: String? = null,
+    var sdk: String? = null,
+    var sdkVersion: String? = null
 ) {
     fun toHashMap(): HashMap<String, Any> {
         val hashMap = hashMapOf(

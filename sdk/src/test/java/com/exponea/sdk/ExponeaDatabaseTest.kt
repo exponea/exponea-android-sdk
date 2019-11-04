@@ -27,8 +27,8 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     }
 
     class Person(
-            var firstName: String,
-            var lastName: String
+        var firstName: String,
+        var lastName: String
     )
 
     private lateinit var db: ExponeaDatabase<DatabaseStorageObject<Person>>

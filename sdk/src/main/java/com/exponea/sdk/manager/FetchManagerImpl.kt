@@ -14,15 +14,15 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 internal class FetchManagerImpl(
-        private val api: ExponeaService,
-        private val gson: Gson
+    private val api: ExponeaService,
+    private val gson: Gson
 ) : FetchManager {
 
     override fun fetchBannerConfiguration(
-            projectToken: String,
-            customerIds: CustomerIds,
-            onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        projectToken: String,
+        customerIds: CustomerIds,
+        onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
 
         api.getBannerConfiguration(projectToken)
@@ -63,10 +63,10 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchBanner(
-            projectToken: String,
-            bannerConfig: Banner,
-            onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        projectToken: String,
+        bannerConfig: Banner,
+        onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
 
         api.postFetchBanner(projectToken, bannerConfig)
@@ -104,9 +104,9 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchConsents(
-            projectToken: String,
-            onSuccess: (Result<ArrayList<Consent>>) -> Unit,
-            onFailure: (Result<FetchError>) -> Unit
+        projectToken: String,
+        onSuccess: (Result<ArrayList<Consent>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     ) {
         api.postFetchConsents(projectToken)
                 .enqueue(

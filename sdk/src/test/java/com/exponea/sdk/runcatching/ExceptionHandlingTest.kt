@@ -35,7 +35,6 @@ internal class ExceptionHandlingTest {
         every { Log.e(LOGTAG_TO_WATCH, any(), any()) } answers {
             errorLogCount++
         }
-
     }
 
     @After

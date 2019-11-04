@@ -129,4 +129,3 @@ internal class FcmTrackingEventsTest : ExponeaSDKTest() {
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
     }
 }
-

@@ -21,9 +21,6 @@ data class CustomerIds(
         this.cookie = cookie
     }
 
-
-
-
     fun withId(key: String, value: Any?): CustomerIds {
         if (key == COOKIE) {
             Logger.e(this, "Changing cookie is not allowed")
@@ -33,8 +30,6 @@ data class CustomerIds(
         return this
     }
 
-
-
     internal fun toHashMap(): HashMap<String, Any?> {
         if (cookie.isNullOrEmpty()) {
             Logger.e(this, "Empty cookie")
@@ -43,5 +38,4 @@ data class CustomerIds(
             set(COOKIE, cookie as Any?)
         }
     }
-
 }

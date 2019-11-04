@@ -5,7 +5,6 @@ import android.text.TextWatcher
 import android.util.Patterns
 import com.google.android.material.textfield.TextInputEditText
 
-
 fun TextInputEditText.isValid(): Boolean {
     val isValid = !text.toString().isEmpty()
     error = if (isValid) {
@@ -27,7 +26,6 @@ fun TextInputEditText.isVaildUrl(): Boolean {
     }
     return !isEmpty && isUrl
 }
-
 
 fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
     this.addTextChangedListener(object : TextWatcher {
@@ -55,4 +53,3 @@ fun HashMap<String, Any>.asJson(): String {
     }
     return "$string\n}"
 }
-

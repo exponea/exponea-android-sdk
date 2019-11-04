@@ -35,5 +35,4 @@ internal class PushNotificationRepositoryImpl(
     override fun clearExtraData() {
         preferences.remove(KEY_EXTRA_DATA)
     }
-
 }

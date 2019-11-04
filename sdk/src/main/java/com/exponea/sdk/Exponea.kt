@@ -700,7 +700,6 @@ object Exponea {
         component.anonymizeManager.anonymize()
         component.sessionManager.trackSessionStart(currentTimeSeconds())
         component.fcmManager.trackFcmToken(firebaseToken)
-
     }.logOnException()
 
     /**
@@ -738,6 +737,4 @@ object Exponea {
         )
         return true
     }.returnOnException { false }
-
 }
-

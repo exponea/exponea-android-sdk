@@ -29,7 +29,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
-
 @RunWith(RobolectricTestRunner::class)
 internal class PeriodicFlushTest : ExponeaSDKTest() {
 

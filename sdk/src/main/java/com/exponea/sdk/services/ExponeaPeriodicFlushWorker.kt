@@ -44,5 +44,4 @@ internal class ExponeaPeriodicFlushWorker(context: Context, workerParameters: Wo
         super.onStopped()
         Logger.d(this, "onStopped")
     }
-
 }

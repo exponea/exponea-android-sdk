@@ -36,5 +36,4 @@ internal object ExponeaMockServer {
 
         server.enqueue(mockResponse)
     }
-
 }

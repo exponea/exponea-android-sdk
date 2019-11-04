@@ -28,5 +28,4 @@ internal class DeviceInitiatedRepositoryTest : ExponeaSDKTest() {
         repo.set(value)
         assertEquals(true, repo.get())
     }
-
 }

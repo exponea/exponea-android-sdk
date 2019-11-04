@@ -193,5 +193,4 @@ internal class PersonalizationManagerImpl(
 
         return (currDate >= startDate) && (currDate <= endDate)
     }
-
 }

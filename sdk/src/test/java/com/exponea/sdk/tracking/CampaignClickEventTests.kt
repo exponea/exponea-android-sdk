@@ -175,7 +175,6 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertEquals(UTM_SOURCE, campaignEvent.source)
         assertEquals(CAMPAIGN_URL, campaignEvent.completeUrl)
         assertNotNull(campaignEvent.createdAt)
-
     }
 
     @Test
@@ -190,7 +189,6 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         val campaignEvent = campaignRepository.get()
 
         assertNull(campaignEvent)
-
     }
 
     @Test
@@ -250,5 +248,4 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         this.addCategory(Intent.CATEGORY_BROWSABLE)
         this.data = Uri.parse(CAMPAIGN_URL)
     }
-
 }

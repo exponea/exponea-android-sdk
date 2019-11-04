@@ -90,7 +90,6 @@ internal class SessionManagerImpl(
             prefs.setDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
         }
-
     }
 
     /**
@@ -165,7 +164,6 @@ internal class SessionManagerImpl(
         if (sessionEnded == -1.0) return false
         val currentTimeout = (now - sessionEnded)
         return currentTimeout < Exponea.sessionTimeout
-
     }
 
     /**

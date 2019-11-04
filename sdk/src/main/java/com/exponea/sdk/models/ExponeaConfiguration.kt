@@ -64,5 +64,4 @@ data class ExponeaConfiguration(
         /** Tracked once on days where the user opens the app */
         DAILY
     }
-
 }

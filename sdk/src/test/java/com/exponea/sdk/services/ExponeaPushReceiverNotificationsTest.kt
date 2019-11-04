@@ -33,7 +33,6 @@ import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaPushReceiverNotificationsTest(
     name: String,

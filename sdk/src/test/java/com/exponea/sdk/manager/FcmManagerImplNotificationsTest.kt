@@ -35,7 +35,6 @@ import org.robolectric.Shadows.shadowOf
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class FcmManagerImplNotificationsTest(
     name: String,

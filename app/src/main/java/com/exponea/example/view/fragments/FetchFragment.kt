@@ -16,7 +16,6 @@ import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Result
 import kotlinx.android.synthetic.main.fragment_fetch.*
 
-
 class FetchFragment : BaseFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -66,7 +65,6 @@ class FetchFragment : BaseFragment() {
             setProgressBarVisible(false)
             resultTextView.text = result.toString()
         }
-
     }
 
     /**
@@ -86,5 +84,4 @@ class FetchFragment : BaseFragment() {
     private fun runOnUiThread(runnable: () -> Unit) {
         Handler(Looper.getMainLooper()).post(runnable)
     }
-
 }

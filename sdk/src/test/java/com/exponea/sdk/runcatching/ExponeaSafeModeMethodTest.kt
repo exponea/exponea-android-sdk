@@ -38,7 +38,6 @@ internal class ExponeaSafeModeMethodTest(
         waitUntilFlushed()
     }
 
-
     @Test
     fun callBeforeInit() {
         Exponea.safeModeEnabled = true

@@ -2,7 +2,6 @@ package com.exponea.sdk.models
 
 import java.io.Serializable
 
-
 data class NotificationAction(
         val actionType: String,
         val actionName: String? = null,

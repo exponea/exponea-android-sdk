@@ -85,7 +85,6 @@ internal class ExponeaComponent(
     // Api Service
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
 
-
     // Managers
     internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(context, exponeaConfiguration)
     internal val serviceManager: ServiceManager = ServiceManagerImpl()
@@ -99,4 +98,3 @@ internal class ExponeaComponent(
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
     internal val anonymizeManager: AnonymizeManager = AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
 }
-

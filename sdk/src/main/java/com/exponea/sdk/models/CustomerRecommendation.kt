@@ -20,5 +20,4 @@ internal data class CustomerRecommendation(
                 Pair("items", items)
         )
     }
-
 }

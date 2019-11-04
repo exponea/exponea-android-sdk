@@ -77,6 +77,4 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
             fun find(value: String?) = Actions.values().find { it.value == value }
         }
     }
-
 }
-

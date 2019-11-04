@@ -17,6 +17,4 @@ internal class AnonymizeManagerImpl(
         customerIdsRepository.clear()
         sessionManager.reset()
     }
-
 }
-

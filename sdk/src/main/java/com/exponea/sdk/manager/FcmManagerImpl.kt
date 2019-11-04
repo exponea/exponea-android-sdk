@@ -31,7 +31,6 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 
-
 internal class FcmManagerImpl(
         private val context: Context,
         private val configuration: ExponeaConfiguration,
@@ -56,7 +55,6 @@ internal class FcmManagerImpl(
         }
 
         Logger.d(this, "Token not update: shouldUpdateToken $shouldUpdateToken - token $token")
-
     }
 
     override fun handleRemoteMessage(message: RemoteMessage?, manager: NotificationManager, showNotification: Boolean) {
@@ -239,6 +237,4 @@ internal class FcmManagerImpl(
         }.join()
         return bmp
     }
-
 }
-

@@ -10,4 +10,3 @@ internal interface FcmManager {
     fun showNotification(manager: NotificationManager, payload: NotificationPayload)
     fun createNotificationChannel(manager: NotificationManager)
 }
-

@@ -32,5 +32,4 @@ internal class CampaignRepositoryImpl(
         }
         return eventInfo
     }
-
 }

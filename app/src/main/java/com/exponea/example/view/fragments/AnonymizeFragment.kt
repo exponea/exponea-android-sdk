@@ -32,6 +32,4 @@ class AnonymizeFragment : BaseFragment() {
             Exponea.anonymize()
         }
     }
-
-
 }

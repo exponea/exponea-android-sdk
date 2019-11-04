@@ -79,5 +79,4 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     fun denit() {
         assertEquals(true, db.clear())
     }
-
 }

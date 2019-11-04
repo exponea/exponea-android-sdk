@@ -75,5 +75,4 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
         assertEquals(request.getHeader("Authorization"), "TestTokenAuthentication")
     }
-
 }

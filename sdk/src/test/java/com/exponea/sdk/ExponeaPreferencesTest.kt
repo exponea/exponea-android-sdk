@@ -47,5 +47,4 @@ internal class ExponeaPreferencesTest : ExponeaSDKTest() {
         assertEquals(true, prefs.remove(VAL_STRING))
         assertEquals("deleted", prefs.getString(VAL_STRING, "deleted"))
     }
-
 }

@@ -19,6 +19,4 @@ class App : Application() {
         // Create our RegisteredIDManager to get the registered ID.
         registeredIdManager = RegisteredIdManager(this)
     }
-
-
 }

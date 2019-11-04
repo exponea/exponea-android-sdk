@@ -35,7 +35,6 @@ class TrackCustomEventDialog : DialogFragment() {
             fragment.onConfirmed = callback
             fragment.show(fragmentManager, TAG)
         }
-
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -53,7 +52,6 @@ class TrackCustomEventDialog : DialogFragment() {
         val eventName: EditText = view.findViewById(R.id.editTextEventName)
         val propsTextView: TextView = view.findViewById(R.id.textViewProperties)
 
-
         propsTextView.text = propsMap.asJson()
 
         view.findViewById<Button>(R.id.buttonAddProperty).setOnClickListener {
@@ -70,8 +68,5 @@ class TrackCustomEventDialog : DialogFragment() {
             onConfirmed(name, properties)
             dismiss()
         }
-
     }
-
-
 }

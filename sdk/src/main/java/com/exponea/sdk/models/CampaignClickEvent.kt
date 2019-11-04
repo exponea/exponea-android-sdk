@@ -11,4 +11,3 @@ internal data class CampaignClickEvent(
             properties = PlatformProperty(PlatformProperty.ANDROID_PLATFORM)
     )
 }
-

@@ -10,7 +10,6 @@ import kotlin.reflect.KProperty0
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
-
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModePropertyTest(
     name: String,

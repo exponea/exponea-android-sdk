@@ -9,7 +9,6 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 internal class CustomerAtrributesTest : ExponeaSDKTest() {
 
-
     @Test
     fun testConstructor() {
         val customerAttributes = CustomerAttributes()
@@ -24,7 +23,6 @@ internal class CustomerAtrributesTest : ExponeaSDKTest() {
         assertTrue(map[CustomerAttributes.TYPE] == CustomerAttributes.TYPE_PROPERTY)
         assertTrue(map[CustomerAttributes.TYPE_PROPERTY] == "name")
     }
-
 
     @Test
     fun testAddPrediction() {

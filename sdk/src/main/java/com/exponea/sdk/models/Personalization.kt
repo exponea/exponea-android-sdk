@@ -11,6 +11,3 @@ internal data class Personalization(
         var frequency: String? = null,
         var trigger: Trigger? = null
 )
-
-
-

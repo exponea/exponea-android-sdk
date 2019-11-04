@@ -39,5 +39,4 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         setupConfigurationWithFile()
         assertEquals(Exponea.isInitialized, true)
     }
-
 }

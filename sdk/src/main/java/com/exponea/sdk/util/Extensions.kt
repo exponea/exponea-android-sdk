@@ -78,7 +78,6 @@ internal fun currentTimeSeconds(): Double {
 
 internal inline fun <reified T> Gson.fromJson(json: String) = this.fromJson<T>(json, object : TypeToken<T>() {}.type)
 
-
 internal fun String?.adjustUrl(): String? {
     return if (this != null) {
         if (!contains("://")) {

@@ -23,7 +23,6 @@ import kotlinx.android.synthetic.main.activity_authentication.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.toolbar
 
-
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +66,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }
-

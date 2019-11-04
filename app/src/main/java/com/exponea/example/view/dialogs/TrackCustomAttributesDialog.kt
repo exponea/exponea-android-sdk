@@ -41,7 +41,6 @@ class TrackCustomAttributesDialog : DialogFragment() {
         return builder.create()
     }
 
-
     private fun initListeners(view: View) {
         val nameView = view.findViewById(R.id.editTextName) as EditText
         val valueView = view.findViewById(R.id.editTextValue) as EditText
@@ -49,7 +48,6 @@ class TrackCustomAttributesDialog : DialogFragment() {
         val idsView: TextView = view.findViewById(R.id.idsTextView)
 
         idsView.text = "registered: ${App.instance.registeredIdManager.registeredID}"
-
 
         propertiesView.text = attributes.asJson()
         view.findViewById<Button>(R.id.buttonAddAttr).setOnClickListener {
@@ -64,8 +62,5 @@ class TrackCustomAttributesDialog : DialogFragment() {
             onUpdate(properties)
             dismiss()
         }
-
-
     }
-
 }

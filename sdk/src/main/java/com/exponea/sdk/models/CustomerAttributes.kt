@@ -8,7 +8,6 @@ internal data class CustomerAttributes(
         var attributes: MutableList<HashMap<String, Any>> = mutableListOf()
 ) {
 
-
     internal constructor(customerIds: CustomerIds, attributes: MutableList<HashMap<String, Any>>) : this (attributes) {
         this.customerIds = customerIds
     }
@@ -137,6 +136,4 @@ internal data class CustomerAttributes(
             }
         }
     }
-
 }
-

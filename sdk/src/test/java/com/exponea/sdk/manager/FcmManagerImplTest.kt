@@ -24,7 +24,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import kotlin.test.assertEquals
 
-
 @RunWith(RobolectricTestRunner::class)
 internal class FcmManagerImplTest {
 
@@ -78,5 +77,4 @@ internal class FcmManagerImplTest {
             intent2.extras.get(ExponeaPushReceiver.EXTRA_ACTION_INFO)
         )
     }
-
 }

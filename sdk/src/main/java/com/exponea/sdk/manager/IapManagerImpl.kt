@@ -129,7 +129,6 @@ internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedLi
                     )
                     trackPurchase(product.toHashMap())
                 }
-
             }
         } else if (responseCode == BillingResponse.USER_CANCELED) {
             Logger.w(this, "User has canceled the purchased item.")

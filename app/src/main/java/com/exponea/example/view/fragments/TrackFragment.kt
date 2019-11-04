@@ -33,7 +33,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         return layoutInflater.inflate(R.layout.fragment_track, container, false)
     }
 
-
     companion object {
         fun mockItems(): ArrayList<String> {
             val list = arrayListOf<String>()
@@ -43,7 +42,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
             return list
         }
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,9 +54,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         // Init buttons listeners
         initListeners()
-
     }
-
 
     private fun initListeners() {
         listView.onItemClickListener = this
@@ -88,7 +84,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
                 properties = propertiesList
         )
     }
-
 
     /**
      * Method to handle push clicked event tracking
@@ -142,7 +137,6 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         )
         Exponea.trackPaymentEvent(
                 purchasedItem = purchasedItem)
-
     }
 
     override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -150,11 +144,9 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         // Track purchase at position
         trackPayment(position)
         Toast.makeText(context, "Payment Tracked", Toast.LENGTH_SHORT).show()
-
     }
 
     inner class Adapter : BaseAdapter() {
-
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val inflater = LayoutInflater.from(parent?.context)
@@ -175,8 +167,4 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         override fun getCount() = mockItems().size
     }
-
-
-
-
 }

@@ -7,4 +7,3 @@ internal data class PlatformProperty(
         val ANDROID_PLATFORM = "Android"
     }
 }
-

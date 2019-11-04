@@ -126,5 +126,4 @@ internal class ExponeaMockService(private val success: Boolean) : ExponeaService
 
         return okHttpClient.newCall(Request.Builder().url(dummyUrl).get().build())
     }
-
 }

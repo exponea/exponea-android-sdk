@@ -50,8 +50,6 @@ subprojects {
         verbose = true
         android = true
         disabledRules = [
-                "no-consecutive-blank-lines",
-                "no-blank-line-before-rbrace",
                 "import-ordering",
                 "parameter-list-wrapping",
                 "max-line-length",

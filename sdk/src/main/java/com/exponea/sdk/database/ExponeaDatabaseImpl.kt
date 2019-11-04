@@ -71,6 +71,4 @@ internal class ExponeaDatabaseImpl<T>(private val databaseName: String) : Expone
             false
         }
     }
-
 }
-

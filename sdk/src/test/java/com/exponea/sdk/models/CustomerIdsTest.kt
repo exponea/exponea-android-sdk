@@ -25,7 +25,6 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
         var customerIds = CustomerIds(mapWithCookie)
         assertTrue(customerIds.toHashMap()["cookie"]  == null)
 
-
         assertTrue(customerIds.toHashMap()["registered"]  == "email")
 
         customerIds = CustomerIds(mapWithoutCookie)
@@ -35,7 +34,6 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
 
         assertTrue(customerIds.toHashMap()["cookie"]  == "cookiee")
         assertTrue(customerIds.toHashMap()["registered"]  == "email")
-
     }
 
     fun testCookieGetter() {
@@ -43,8 +41,5 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
         assertTrue(customerIds.cookie  == null)
         customerIds.cookie = "cookiee"
         assertTrue(customerIds.cookie  == "cookie")
-
-
     }
-
 }

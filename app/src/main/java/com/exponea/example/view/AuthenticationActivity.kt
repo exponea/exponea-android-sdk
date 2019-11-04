@@ -35,7 +35,6 @@ class AuthenticationActivity : AppCompatActivity() {
         editTextProjectToken.onTextChanged { projectToken = it }
         editTextApiUrl.onTextChanged { apiUrl = it }
 
-
         button.setOnClickListener {
             if (!editTextProjectToken.isValid() || !editTextAuthCode.isValid() || !editTextApiUrl.isVaildUrl()) {
                 Toast.makeText(this, "Empty field", Toast.LENGTH_SHORT).show()
@@ -43,7 +42,6 @@ class AuthenticationActivity : AppCompatActivity() {
                 initSdk()
             }
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -90,6 +88,4 @@ class AuthenticationActivity : AppCompatActivity() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
-
 }
-

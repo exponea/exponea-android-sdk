@@ -20,7 +20,6 @@ class RegisteredIdManager(private val context: Context) {
                 id = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
             }
             return id
-
         }
         set(value) {
             prefs.edit().putString(PREF_REGID, value).apply()

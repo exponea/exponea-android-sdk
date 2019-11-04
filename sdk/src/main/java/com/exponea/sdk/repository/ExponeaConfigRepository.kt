@@ -29,5 +29,4 @@ internal object ExponeaConfigRepository {
             null
         }
     }
-
 }

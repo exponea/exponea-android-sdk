@@ -14,7 +14,6 @@ internal class CustomerIdsRepositoryImpl(private val gson: Gson,
         private const val PREFS_CUSTOMERIDS = "ExponeaCustomerIds"
     }
 
-
     override fun get(): CustomerIds {
         val uuid = uuidRepo.get()
         val json = prefs.getString(PREFS_CUSTOMERIDS, "{}")
@@ -35,5 +34,4 @@ internal class CustomerIdsRepositoryImpl(private val gson: Gson,
         Logger.d(this, "Clearing customer ids")
         prefs.remove(PREFS_CUSTOMERIDS)
     }
-
 }

@@ -57,5 +57,4 @@ internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
     }
-
 }

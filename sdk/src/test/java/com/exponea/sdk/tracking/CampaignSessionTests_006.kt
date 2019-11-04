@@ -77,5 +77,4 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
             initExponea(applicationContext)
         }
     }
-
 }

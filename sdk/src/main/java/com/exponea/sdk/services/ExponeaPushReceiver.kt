@@ -13,7 +13,6 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.logOnException
 
-
 class ExponeaPushReceiver : BroadcastReceiver() {
 
     companion object {
@@ -97,4 +96,3 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         context.sendBroadcast(it)
     }
 }
-

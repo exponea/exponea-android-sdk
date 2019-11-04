@@ -41,5 +41,4 @@ internal class TokenTrackingFrequencyTest : ExponeaSDKTest() {
         setupConfiguration(config)
         assertEquals(Exponea.tokenTrackFrequency, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
     }
-
 }

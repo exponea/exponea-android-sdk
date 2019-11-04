@@ -26,4 +26,3 @@ internal class DeviceManagerImpl(private val context: Context) : DeviceManager {
         }
     }
 }
-

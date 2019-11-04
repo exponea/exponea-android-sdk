@@ -8,4 +8,3 @@ internal interface ExponeaDatabase<T> {
     fun remove(id: String): Boolean
     fun clear(): Boolean
 }
-

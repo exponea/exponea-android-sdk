@@ -19,6 +19,8 @@ import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.spyk
 import io.mockk.verify
+import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -26,8 +28,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.CountDownLatch
-import kotlin.concurrent.thread
 
 @RunWith(RobolectricTestRunner::class)
 internal class FlushManagerTest : ExponeaSDKTest() {

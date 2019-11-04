@@ -16,6 +16,10 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkConstructor
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -24,10 +28,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 internal class PeriodicFlushTest : ExponeaSDKTest() {

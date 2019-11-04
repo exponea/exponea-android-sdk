@@ -10,6 +10,8 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -17,8 +19,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class InstallEventTest : ExponeaSDKTest() {

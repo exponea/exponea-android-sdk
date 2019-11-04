@@ -3,8 +3,9 @@ package com.exponea.sdk.models
 import com.exponea.sdk.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import java.util.ArrayList
+import java.util.HashMap
 import org.json.JSONArray
-import java.util.*
 
 internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val notificationId: Int = rawData["notification_id"]?.toInt() ?: 0

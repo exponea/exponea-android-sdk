@@ -12,7 +12,7 @@ import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.util.Logger
-import java.util.*
+import java.util.Date
 
 /**
  * Personalization Manager is responsible to get the banner ids and fetch

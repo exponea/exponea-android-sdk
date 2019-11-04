@@ -9,9 +9,9 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
+import java.io.IOException
 import okhttp3.Call
 import okhttp3.Response
-import java.io.IOException
 
 internal class FlushManagerImpl(
     private val configuration: ExponeaConfiguration,

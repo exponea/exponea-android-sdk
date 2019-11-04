@@ -3,11 +3,11 @@ package com.exponea.sdk
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.DeviceManager
 import com.exponea.sdk.manager.DeviceManagerImpl
+import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class DeviceManagerTest {

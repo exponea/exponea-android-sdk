@@ -1,23 +1,16 @@
 package com.exponea.example.view
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.appcompat.app.AppCompatActivity
 import android.widget.Toast
-import com.exponea.example.App
-import com.exponea.example.BuildConfig
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.exponea.example.R
-import com.exponea.example.utils.isValid
 import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isDeeplinkIntent
 import kotlinx.android.synthetic.main.activity_authentication.*
 import kotlinx.android.synthetic.main.activity_main.*

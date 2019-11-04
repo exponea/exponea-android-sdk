@@ -26,14 +26,14 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class FcmManagerImplNotificationsTest(

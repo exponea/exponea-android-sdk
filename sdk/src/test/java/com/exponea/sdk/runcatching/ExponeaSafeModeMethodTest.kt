@@ -6,13 +6,13 @@ import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
+import kotlin.reflect.KFunction
+import kotlin.test.assertFalse
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
-import kotlin.reflect.KFunction
-import kotlin.test.assertFalse
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModeMethodTest(

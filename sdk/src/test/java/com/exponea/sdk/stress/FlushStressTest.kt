@@ -15,6 +15,8 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
+import java.util.Random
+import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
@@ -22,8 +24,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class FlushStressTest : ExponeaSDKTest() {

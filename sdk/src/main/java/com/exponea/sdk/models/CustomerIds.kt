@@ -1,7 +1,6 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.util.Logger
-import java.util.*
 
 data class CustomerIds(
     internal var externalIds: HashMap<String, Any?> = hashMapOf()

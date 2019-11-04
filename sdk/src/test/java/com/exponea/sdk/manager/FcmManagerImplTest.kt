@@ -17,12 +17,12 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.slot
 import io.mockk.spyk
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class FcmManagerImplTest {

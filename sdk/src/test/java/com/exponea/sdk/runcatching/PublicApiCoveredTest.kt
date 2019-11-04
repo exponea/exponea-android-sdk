@@ -2,14 +2,14 @@ package com.exponea.sdk.runcatching
 
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.reflect.KFunction
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.test.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class PublicApiCoveredTest : ExponeaSDKTest() {

@@ -21,8 +21,12 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.google.firebase.iid.FirebaseInstanceId
-import kotlinx.android.synthetic.main.fragment_track.*
-import java.util.*
+import kotlinx.android.synthetic.main.fragment_track.buttonCustomEvent
+import kotlinx.android.synthetic.main.fragment_track.buttonTrackClicked
+import kotlinx.android.synthetic.main.fragment_track.buttonTrackDelivered
+import kotlinx.android.synthetic.main.fragment_track.buttonTrackToken
+import kotlinx.android.synthetic.main.fragment_track.buttonUpdateProperties
+import kotlinx.android.synthetic.main.fragment_track.listView
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     override fun onCreateView(

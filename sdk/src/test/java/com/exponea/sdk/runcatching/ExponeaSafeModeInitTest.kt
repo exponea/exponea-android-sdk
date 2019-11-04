@@ -7,13 +7,13 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.paperdb.Paper
+import kotlin.reflect.KFunction
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
-import kotlin.reflect.KFunction
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModeInitTest(

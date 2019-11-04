@@ -2,10 +2,10 @@ package com.exponea.example.view
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.BuildConfig
 import com.exponea.example.R

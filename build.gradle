@@ -50,11 +50,8 @@ subprojects {
         verbose = true
         android = true
         disabledRules = [
-                "import-ordering",
                 "max-line-length",
-                "no-wildcard-imports",
                 "no-multi-spaces",
-                "no-unused-imports",
                 "string-template",
                 "final-newline",
                 "chain-wrapping"

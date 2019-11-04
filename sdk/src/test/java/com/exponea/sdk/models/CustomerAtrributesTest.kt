@@ -1,10 +1,10 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 internal class CustomerAtrributesTest : ExponeaSDKTest() {

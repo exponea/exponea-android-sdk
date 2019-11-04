@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-import java.util.*
+import java.util.UUID
 
 internal data class DatabaseStorageObject<T>(
     var id: String = UUID.randomUUID().toString(),

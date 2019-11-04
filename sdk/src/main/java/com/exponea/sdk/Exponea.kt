@@ -41,7 +41,7 @@ import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
 import io.paperdb.Paper
-import java.util.*
+import java.util.Date
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {

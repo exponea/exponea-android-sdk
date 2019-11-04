@@ -1,10 +1,10 @@
 package com.exponea.sdk.testutil
 
+import java.util.concurrent.TimeoutException
+import kotlin.concurrent.thread
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeoutException
-import kotlin.concurrent.thread
 
 @RunWith(RobolectricTestRunner::class)
 class WaitForItTest {

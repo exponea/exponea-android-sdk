@@ -3,8 +3,8 @@ package com.exponea.example.services
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.core.content.ContextCompat.startActivity
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
 import com.exponea.example.view.MainActivity
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.services.ExponeaPushReceiver

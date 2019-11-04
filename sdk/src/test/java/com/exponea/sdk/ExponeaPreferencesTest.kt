@@ -4,11 +4,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class ExponeaPreferencesTest : ExponeaSDKTest() {

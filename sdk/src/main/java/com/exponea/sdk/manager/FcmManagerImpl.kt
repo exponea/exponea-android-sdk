@@ -27,8 +27,7 @@ import com.exponea.sdk.util.adjustUrl
 import com.google.firebase.messaging.RemoteMessage
 import java.io.IOException
 import java.net.URL
-import java.util.*
-import kotlin.collections.HashMap
+import java.util.Random
 import kotlin.concurrent.thread
 
 internal class FcmManagerImpl(

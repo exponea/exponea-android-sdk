@@ -10,11 +10,11 @@ import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.IOException
+import java.util.Date
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
-import java.io.IOException
-import java.util.*
 
 internal fun Call.enqueue(
     onResponse: (Call, Response) -> Unit,

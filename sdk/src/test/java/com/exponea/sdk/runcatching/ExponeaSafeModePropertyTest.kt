@@ -2,13 +2,13 @@ package com.exponea.sdk.runcatching
 
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.ParameterizedRobolectricTestRunner
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty0
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.ParameterizedRobolectricTestRunner
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModePropertyTest(

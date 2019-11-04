@@ -12,6 +12,5 @@ internal data class ExportedEventType(
     @SerializedName("customer_ids")
     var customerIds: HashMap<String, Any?>? = null,
     @SerializedName("properties")
-    var properties: HashMap<String, Any>? = null,
-    var errors: HashMap<String, String>? = null
+    var properties: HashMap<String, Any>? = null
 )

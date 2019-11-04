@@ -37,11 +37,9 @@ import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isDeeplinkIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
-import com.exponea.sdk.util.toDate
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
 import io.paperdb.Paper
-import java.util.Date
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -374,25 +372,13 @@ object Exponea {
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
         val properties = PropertiesList(
-            hashMapOf(
-                "action_type" to "mobile notification",
-                "status" to "delivered",
-                "os_name" to "Android",
-                "platform" to "Android"
-            )
+            hashMapOf("status" to "delivered", "platform" to "android")
         )
-        Logger.d(this, "Push dev: ${timestamp.toString()}")
-        Logger.d(this, "Push dev time ${Date()}")
-        Logger.d(this, "Push dev time ${timestamp?.toDate()}")
-        data?.let {
-            properties["campaign_id"] = it.campaignId
-            properties["campaign_name"] = it.campaignName
-            properties["action_id"] = it.actionId
-        }
+        data?.getTrackingData()?.forEach { properties[it.key] = it.value }
         track(
-            eventType = Constants.EventTypes.push,
+            eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
             properties = properties.properties,
-            type = EventType.PUSH_DELIVERED,
+            type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
             timestamp = timestamp
         )
     }.logOnException()
@@ -408,23 +394,17 @@ object Exponea {
     ) = runCatching {
         val properties = PropertiesList(
             hashMapOf(
-                "action_type" to "mobile notification",
                 "status" to "clicked",
-                "platform" to "Android")
+                "platform" to "android",
+                "url" to (actionData?.url ?: "app"),
+                "cta" to (actionData?.actionName ?: "notification")
+            )
         )
-
-        // Copy notification action data
-        actionData?.let { properties.properties.putAll(it.toHashMap()) }
-
-        data?.let {
-            properties["campaign_id"] = data.campaignId
-            properties["campaign_name"] = data.campaignName
-            properties["action_id"] = data.actionId
-        }
+        data?.getTrackingData()?.forEach { properties[it.key] = it.value }
         track(
-            eventType = Constants.EventTypes.push,
+            eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
             properties = properties.properties,
-            type = EventType.PUSH_OPENED,
+            type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
             timestamp = timestamp
         )
     }.logOnException()

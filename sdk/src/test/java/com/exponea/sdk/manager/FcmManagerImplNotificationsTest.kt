@@ -177,23 +177,72 @@ internal class FcmManagerImplNotificationsTest(
             ),
 
             TestCase(
-                "notification with attributes",
-                NotificationTestPayloads.ATTRIBUTES_NOTIFICATION,
+                "notification from production",
+                NotificationTestPayloads.PRODUCTION_NOTIFICATION,
                 0,
                 {
-                    assertEquals("push title", shadowOf(it).contentTitle)
-                    assertEquals("push notification message", shadowOf(it).contentText)
+                    val notificationData = NotificationData(
+                        eventType = "campaign",
+                        campaignId = "5db9ab54b073dfb424ccfa6f",
+                        campaignName = "Wassil's push",
+                        actionId = 2,
+                        actionName = "Unnamed mobile push",
+                        actionType = "mobile notification",
+                        campaignPolicy = "",
+                        platform = "android",
+                        language = "",
+                        subject = "Notification title",
+                        recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z"
+                    )
+                    assertEquals("Notification title", shadowOf(it).contentTitle)
+                    assertEquals("Notification text", shadowOf(it).contentText)
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
-                        NotificationData("5db1582b1b2be24d0bee4de9", "push with buttons", 2),
-                        NotificationTestPayloads.ATTRIBUTES_NOTIFICATION
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION
                     )
 
-                    assertNull(it.actions)
+                    assertEquals(3, it.actions.size)
+                    assertEquals("Action 1 title", it.actions[0].title)
+                    validateIntent(
+                        shadowOf(it.actions[0].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION
+                    )
+                    assertEquals("Action 2 title", it.actions[1].title)
+                    validateIntent(
+                        shadowOf(it.actions[1].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "http://deeplink?search=something"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION
+                    )
+                    assertEquals("Action 3 title", it.actions[2].title)
+                    validateIntent(
+                        shadowOf(it.actions[2].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_URL_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com?search=something"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION
+                    )
                 },
-                NotificationData(campaignId = "5db1582b1b2be24d0bee4de9", campaignName = "push with buttons", actionId = 2)
+                NotificationData(
+                    eventType = "campaign",
+                    campaignId = "5db9ab54b073dfb424ccfa6f",
+                    campaignName = "Wassil's push",
+                    actionId = 2,
+                    actionName = "Unnamed mobile push",
+                    actionType = "mobile notification",
+                    campaignPolicy = "",
+                    platform = "android",
+                    language = "",
+                    subject = "Notification title",
+                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z"
+                )
             )
         )
 

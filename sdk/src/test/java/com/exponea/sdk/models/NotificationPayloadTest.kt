@@ -1,10 +1,10 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.manager.NotificationTestPayloads.ACTIONS_NOTIFICATION
-import com.exponea.sdk.manager.NotificationTestPayloads.ATTRIBUTES_NOTIFICATION
 import com.exponea.sdk.manager.NotificationTestPayloads.BASIC_NOTIFICATION
 import com.exponea.sdk.manager.NotificationTestPayloads.BROWSER_NOTIFICATION
 import com.exponea.sdk.manager.NotificationTestPayloads.DEEPLINK_NOTIFICATION
+import com.exponea.sdk.manager.NotificationTestPayloads.PRODUCTION_NOTIFICATION
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -132,30 +132,68 @@ internal class NotificationPayloadTest(
                 }
             ),
             TestCase(
-                "attributes notification",
-                ATTRIBUTES_NOTIFICATION,
+                "notification from production",
+                PRODUCTION_NOTIFICATION,
                 {
                     assertEquals(0, it.notificationId)
-                    assertEquals("push title", it.title)
-                    assertEquals("push notification message", it.message)
+                    assertEquals("Notification title", it.title)
+                    assertEquals("Notification text", it.message)
                     assertEquals(null, it.image)
                     assertEquals(null, it.sound)
-                    assertEquals(null, it.buttons)
+                    assertEquals(
+                        arrayListOf(
+                            NotificationPayload.ActionPayload(
+                                NotificationPayload.Actions.APP,
+                                null,
+                                "Action 1 title"
+                            ),
+                            NotificationPayload.ActionPayload(
+                                NotificationPayload.Actions.DEEPLINK,
+                                "http://deeplink?search=something",
+                                "Action 2 title"
+                            ),
+                            NotificationPayload.ActionPayload(
+                                NotificationPayload.Actions.BROWSER,
+                                "http://google.com?search=something",
+                                "Action 3 title"
+                            )
+                        ),
+                        it.buttons
+                    )
                     assertEquals(
                         NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
                         it.notificationAction
                     )
                     assertEquals(
-                        NotificationData("5db1582b1b2be24d0bee4de9", "push with buttons", 2),
+                        NotificationData(
+                            eventType = "campaign",
+                            campaignId = "5db9ab54b073dfb424ccfa6f",
+                            campaignName = "Wassil's push",
+                            actionId = 2,
+                            actionName = "Unnamed mobile push",
+                            actionType = "mobile notification",
+                            campaignPolicy = "",
+                            subject = "Notification title",
+                            platform = "android",
+                            language = "",
+                            recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z"
+                        ),
                         it.notificationData
                     )
                     assertEquals(
                         hashMapOf(
-                            "campaign_name" to "push with buttons",
+                            "campaign_name" to "Wassil's push",
+                            "event_type" to "campaign",
                             "action_id" to "2",
-                            "something_else" to "some other value",
-                            "campaign_id" to "5db1582b1b2be24d0bee4de9",
-                            "something" to "some value"
+                            "action_type" to "mobile notification",
+                            "campaign_policy" to "",
+                            "subject" to "Notification title",
+                            "action_name" to "Unnamed mobile push",
+                            "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z",
+                            "some property" to "some value",
+                            "language" to "",
+                            "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                            "platform" to "android"
                         ),
                         it.attributes
                     )

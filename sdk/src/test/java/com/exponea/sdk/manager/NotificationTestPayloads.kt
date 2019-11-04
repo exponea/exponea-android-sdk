@@ -26,10 +26,29 @@ internal object NotificationTestPayloads {
         "message" to "push notification message"
     )
 
-    val ATTRIBUTES_NOTIFICATION = hashMapOf(
+    val PRODUCTION_NOTIFICATION = hashMapOf(
         "action" to "app",
-        "title" to "push title",
-        "attributes" to "{\"campaign_name\":\"push with buttons\",\"action_id\":2,\"something_else\":\"some other value\",\"campaign_id\":\"5db1582b1b2be24d0bee4de9\",\"something\":\"some value\"}",
-        "message" to "push notification message"
+        "actions" to """[
+            {"action":"app","title":"Action 1 title"},
+            {"action":"deeplink","title":"Action 2 title","url":"http:\/\/deeplink?search=something"},
+            {"action":"browser","title":"Action 3 title","url":"http:\/\/google.com?search=something"}
+        ]""",
+        "url_params" to "[]",
+        "title" to "Notification title",
+        "attributes" to """{
+            "campaign_name":"Wassil's push",
+            "event_type":"campaign",
+            "action_id":2,
+            "action_type":"mobile notification",
+            "campaign_policy":"",
+            "subject":"Notification title",
+            "action_name":"Unnamed mobile push",
+            "recipient":"eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z",
+            "some property":"some value",
+            "language":"",
+            "campaign_id":"5db9ab54b073dfb424ccfa6f",
+            "platform":"android"
+        }""",
+        "message" to "Notification text"
     )
 }

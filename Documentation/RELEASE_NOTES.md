@@ -1,5 +1,10 @@
 ## Release Notes
 
+## Release Notes for 2.6.1
+#### December 20, 2019
+* Bug Fixes
+  * Fixed: Google Play Billing Library version > 2.0 would cause the SDK to fail to initialize properly. To mitigate the issue, SDK now only disables automatic payment tracking. Proper solution will be implemented later.
+
 ## Release Notes for 2.6.0
 #### November 26, 2019
 * Features

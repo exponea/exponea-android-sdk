@@ -8,8 +8,8 @@ android {
         applicationId "com.exponea.example"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 33
-        versionName "2.4.0"
+        versionCode 34
+        versionName "2.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables.useSupportLibrary = true

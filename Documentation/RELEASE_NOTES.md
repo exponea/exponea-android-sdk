@@ -1,5 +1,16 @@
 ## Release Notes
 
+## 2.5.0
+#### November 05, 2019
+* Features
+  * The SDK has a new protective layer for the public API as well as for the interaction with the operating system. It means that in the production setup it prefers to fail silently instead of crashing the whole application.
+  * Push notification events now contain more information about campaigns and the action taken and are consistent with Exponea iOS SDK.
+* Bug Fixes
+  * Increased overall code quality by fixing many lint errors. This makes many warnings from the SDK disappear when the application is compiled.
+  * The internal mechanisms of the SDK are now really hidden and not usable by the application. It prevents developers from using some undocumented internal part of the SDK in an inappropriate way.
+  * Fixed: The periodic flushing mechanism has been fixed. Once it was started, it wouldn't stop. Now it does.
+  * There are significant improvements in the unit tests of the SDK.
+
 ### 2.4.0
 #### September 30, 2019
 * Features

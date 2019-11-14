@@ -1,8 +1,14 @@
 package com.exponea.sdk
 
+import android.util.Log
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.Logger
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlin.test.assertEquals
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -80,5 +86,64 @@ internal class LoggerTest : ExponeaSDKTest() {
     fun setLoggerLevelToVerbose_shouldBeEqualVerbose() {
         Logger.level = Logger.Level.VERBOSE
         assertEquals(Logger.Level.VERBOSE, Logger.level)
+    }
+
+    @Before
+    fun before() {
+        mockkStatic(Log::class)
+    }
+
+    @After
+    fun after() {
+        unmockkAll()
+    }
+
+    private fun logMockMessageOnAllLevels() {
+        Logger.e(this, "mock message")
+        Logger.w(this, "mock message")
+        Logger.i(this, "mock message")
+        Logger.d(this, "mock message")
+        Logger.v(this, "mock message")
+    }
+
+    @Test
+    fun `logging on verbose level`() {
+        Logger.level = Logger.Level.VERBOSE
+        logMockMessageOnAllLevels()
+        verify(exactly = 1) {
+            Log.e("LoggerTest", "mock message")
+            Log.w("LoggerTest", "mock message")
+            Log.i("LoggerTest", "mock message")
+            Log.d("LoggerTest", "mock message")
+            Log.v("LoggerTest", "mock message")
+        }
+    }
+
+    @Test
+    fun `logging on off level`() {
+        Logger.level = Logger.Level.OFF
+        logMockMessageOnAllLevels()
+        verify(exactly = 0) {
+            Log.e("LoggerTest", "mock message")
+            Log.w("LoggerTest", "mock message")
+            Log.i("LoggerTest", "mock message")
+            Log.d("LoggerTest", "mock message")
+            Log.v("LoggerTest", "mock message")
+        }
+    }
+
+    @Test
+    fun `logging on error level`() {
+        Logger.level = Logger.Level.ERROR
+        logMockMessageOnAllLevels()
+        verify(exactly = 1) {
+            Log.e("LoggerTest", "mock message")
+        }
+        verify(exactly = 0) {
+            Log.w("LoggerTest", "mock message")
+            Log.i("LoggerTest", "mock message")
+            Log.d("LoggerTest", "mock message")
+            Log.v("LoggerTest", "mock message")
+        }
     }
 }

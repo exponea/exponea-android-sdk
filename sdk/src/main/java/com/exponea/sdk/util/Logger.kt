@@ -16,18 +16,16 @@ object Logger {
     var level: Level = Constants.Logger.defaultLoggerLevel
 
     fun e(parent: Any, message: String) {
-        if (level.value >= Level.ERROR.value) {
+        if (level.value > Level.ERROR.value) {
             return
         }
-
         Log.e(parent.javaClass.simpleName, message)
     }
 
     fun e(parent: Any, message: String, throwable: Throwable) {
-        if (level.value >= Level.ERROR.value) {
+        if (level.value > Level.ERROR.value) {
             return
         }
-
         Log.e(parent.javaClass.simpleName, message, throwable)
     }
 

@@ -8,6 +8,7 @@ import android.os.Looper
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.manager.ConfigurationFileManager
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.CampaignClickInfo
@@ -186,10 +187,9 @@ object Exponea {
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
         Paper.init(context)
-        component = ExponeaComponent(ExponeaConfiguration(), context)
 
         // Try to parse our file
-        val configuration = Exponea.component.fileManager.getConfigurationFromDefaultFile(context)
+        val configuration = ConfigurationFileManager.getConfigurationFromDefaultFile(context)
 
         // If our file isn't null then try initiating normally
         if (configuration != null) {

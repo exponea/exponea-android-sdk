@@ -15,7 +15,6 @@ import com.exponea.example.utils.onTextChanged
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.util.Logger
 import kotlinx.android.synthetic.main.activity_authentication.*
 
 class AuthenticationActivity : AppCompatActivity() {
@@ -80,8 +79,6 @@ class AuthenticationActivity : AppCompatActivity() {
         // Exponea.initFromFile(App.instance)
         Exponea.init(App.instance, configuration)
 
-        // Set our debug level to debug
-        Exponea.loggerLevel = Logger.Level.DEBUG
         // Set up our flushing
         Exponea.flushMode = FlushMode.IMMEDIATE
 

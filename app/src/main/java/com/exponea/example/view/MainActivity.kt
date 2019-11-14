@@ -4,16 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import com.exponea.example.R
 import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isDeeplinkIntent
-import kotlinx.android.synthetic.main.activity_authentication.*
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.navigation
 import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +26,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Deep link received from ${intent?.data?.host}, " +
                     "path is ${intent?.data?.path}", Toast.LENGTH_LONG).show()
         }
+
+        // Set log level before first call to SDK function
+        Exponea.loggerLevel = Logger.Level.DEBUG
 
         Exponea.handleCampaignIntent(intent, applicationContext)
 

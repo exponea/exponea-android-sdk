@@ -28,7 +28,6 @@ internal class EventTrackTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         lateinit var server: MockWebServer
 
         @BeforeClass
@@ -49,15 +48,16 @@ internal class EventTrackTest : ExponeaSDKTest() {
     }
 
     private lateinit var repo: EventRepository
+    private lateinit var properties: PropertiesList
 
     @Before
     fun prepareForTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
         skipInstallEvent()
         Exponea.init(context, configuration)
         waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
-
         repo = Exponea.component.eventRepository
     }
 

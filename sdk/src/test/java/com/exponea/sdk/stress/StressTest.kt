@@ -34,7 +34,6 @@ internal class StressTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val properties = PropertiesList(properties = DeviceProperties().toHashMap())
         val server = MockWebServer()
         const val stressCount = 1000
 
@@ -55,12 +54,12 @@ internal class StressTest : ExponeaSDKTest() {
     }
 
     private lateinit var repo: EventRepository
+    private lateinit var properties: PropertiesList
 
     @Before
     fun prepareForTest() {
-
         val context = ApplicationProvider.getApplicationContext<Context>()
-
+        properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
         skipInstallEvent()
         Exponea.init(context, configuration)
         waitUntilFlushed()

@@ -2,7 +2,6 @@ package com.exponea.sdk.manager
 
 import android.app.Application
 import android.content.Context
-import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
@@ -113,8 +112,7 @@ internal class SessionManagerImpl(
         if (!isListenerActive) {
             prefs.setDouble(PREF_SESSION_START, timestamp)
         }
-        val properties = DeviceProperties().toHashMap()
-        properties["app_version"] = BuildConfig.VERSION_CODE
+        val properties = DeviceProperties(application).toHashMap()
         Exponea.component.campaignRepository.get()?.let { event ->
             properties["location"] = event.completeUrl
             properties["utm_source"] = event.source.orEmpty()
@@ -141,8 +139,7 @@ internal class SessionManagerImpl(
             prefs.setDouble(PREF_SESSION_END, timestamp)
         }
 
-        val properties = DeviceProperties().toHashMap()
-        properties["app_version"] = BuildConfig.VERSION_CODE
+        val properties = DeviceProperties(application).toHashMap()
         properties["duration"] = getSessionLengthInSeconds()
         Logger.d(this, "Session duration: ${properties["duration"]}")
         // Clear session

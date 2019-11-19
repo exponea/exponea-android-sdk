@@ -654,16 +654,14 @@ object Exponea {
             return
         }
 
-        val device = DeviceProperties(
-            campaign = campaign,
-            campaignId = campaignId,
-            link = link,
-            deviceType = component.deviceManager.getDeviceType()
-        )
+        val properties = DeviceProperties(context).toHashMap()
+        campaign?.let { properties["campaign"] = it }
+        campaignId?.let { properties["campaign_id"] = it }
+        link?.let { properties["link"] = it }
 
         track(
             eventType = Constants.EventTypes.installation,
-            properties = device.toHashMap(),
+            properties = properties,
             type = EventType.INSTALL
         )
 

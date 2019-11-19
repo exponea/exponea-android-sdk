@@ -9,8 +9,10 @@ import com.exponea.sdk.manager.ExponeaMockService
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
@@ -47,6 +49,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
         }
     }
 
+    private lateinit var properties: PropertiesList
     private lateinit var manager: FlushManager
     private lateinit var repo: EventRepository
     private lateinit var service: ExponeaMockService
@@ -54,6 +57,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
     @Before
     fun init() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
         skipInstallEvent()
         Exponea.init(context, configuration)
         waitUntilFlushed()
@@ -83,7 +87,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
             Exponea.trackEvent(
                 eventType = eventType,
                 timestamp = currentTimeSeconds(),
-                properties = StressTest.properties
+                properties = properties
             )
             insertedCount++
             if (r.nextInt(10) == 3) {

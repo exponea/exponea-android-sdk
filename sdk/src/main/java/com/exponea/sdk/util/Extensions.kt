@@ -71,6 +71,17 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
     })
 }
 
+internal fun Context.getAppVersion(context: Context): String {
+    try {
+        val packageManager = context.packageManager
+        val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
+        return packageInfo.versionName
+    } catch (e: Exception) {
+        Logger.w(this, "Unable to get app version from package manager.")
+    }
+    return ""
+}
+
 internal fun Double.toDate(): Date {
     return Date((this * 1000).toLong())
 }

@@ -7,8 +7,6 @@ import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.ConnectionManagerImpl
-import com.exponea.sdk.manager.DeviceManager
-import com.exponea.sdk.manager.DeviceManagerImpl
 import com.exponea.sdk.manager.EventManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
@@ -58,8 +56,6 @@ internal class ExponeaComponent(
     internal val gson = Gson()
     // In App Purchase Manager
     internal val iapManager: IapManager = IapManagerImpl(context)
-    // Device Manager
-    internal val deviceManager: DeviceManager = DeviceManagerImpl(context)
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories

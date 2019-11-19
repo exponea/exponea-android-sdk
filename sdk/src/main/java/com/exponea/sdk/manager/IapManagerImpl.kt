@@ -27,7 +27,7 @@ import com.exponea.sdk.util.logOnException
 internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient by lazy { BillingClient.newBuilder(context).setListener(this).build() }
-    private val device = DeviceProperties()
+    private val device = DeviceProperties(context)
     private val skuList: ArrayList<SkuDetails> = ArrayList()
 
     /**

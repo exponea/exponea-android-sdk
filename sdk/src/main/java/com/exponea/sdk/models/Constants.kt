@@ -28,10 +28,8 @@ internal object Constants {
 
     // SDK Info
     object DeviceInfo {
-        val osName: String = "Android"
-        val osVersion: String = "1.0.0" // get system version
-        val sdk: String = "AndroidSDK"
-        val sdkVersion: String = "1.0.0"
+        const val osName: String = "Android"
+        const val sdk: String = "AndroidSDK"
     }
 
     // Type of customer events

@@ -24,4 +24,5 @@ internal fun Exponea.reset() {
     flushPeriod = Constants.Flush.defaultFlushPeriod
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
+    telemetry = null
 }

@@ -32,6 +32,7 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
@@ -48,6 +49,7 @@ object Exponea {
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
     internal lateinit var component: ExponeaComponent
+    internal var telemetry: TelemetryManager? = null
 
     /**
      * Defines which mode the library should flush out events
@@ -224,6 +226,9 @@ object Exponea {
 
         if (Looper.myLooper() == null)
             Looper.prepare()
+
+        telemetry = TelemetryManager(context)
+        telemetry?.start()
 
         Paper.init(context)
 

@@ -188,8 +188,6 @@ object Exponea {
     @Deprecated("use init(context) instead")
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
-        Paper.init(context)
-
         // Try to parse our file
         val configuration = ConfigurationFileManager.getConfigurationFromDefaultFile(context)
 

@@ -7,21 +7,41 @@ package com.exponea.sdk.telemetry.upload
  * https://in.appcenter.ms/preview/swagger.json
  */
 internal data class VSAppCenterAPIRequestData(
-    val logs: List<VSAppCenterAPIErrorReport>
+    val logs: List<VSAppCenterAPILog>
 )
 
-internal data class VSAppCenterAPIErrorReport(
-    val id: String,
-    val type: String,
+internal interface VSAppCenterAPILog {
+    val id: String
+    val type: String
+    val userId: String?
+    val device: VSAppCenterAPIDevice
+    val timestamp: String
+}
+
+internal data class VSAppCenterAPIErrorLog(
+    override val id: String,
+    override val userId: String? = null,
+    override val device: VSAppCenterAPIDevice,
+    override val timestamp: String,
     val fatal: Boolean,
-    val userId: String? = null,
-    val device: VSAppCenterAPIDevice,
     val exception: VSAppCenterAPIException,
-    val timestamp: String,
     val appLaunchTimestamp: String,
     val processId: Int = 0, // this is required by swagger, but we have no reasonable value for it
     val processName: String = "" // this is required by swagger, but we have no reasonable value for it
-)
+) : VSAppCenterAPILog {
+    override val type: String = "managedError"
+}
+
+internal data class VSAppCenterAPIEventLog(
+    override val id: String,
+    override val userId: String? = null,
+    override val device: VSAppCenterAPIDevice,
+    override val timestamp: String,
+    val name: String,
+    val properties: Map<String, String>
+) : VSAppCenterAPILog {
+    override val type: String = "event"
+}
 
 internal data class VSAppCenterAPIDevice(
     val appNamespace: String,

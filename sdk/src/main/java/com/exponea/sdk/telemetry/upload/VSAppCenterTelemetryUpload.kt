@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
+import com.exponea.sdk.telemetry.model.EventLog
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -38,8 +39,16 @@ internal class VSAppCenterTelemetryUpload(
 
     private val networkClient = OkHttpClient()
 
+    override fun uploadEventLog(log: EventLog, callback: (Result<Unit>) -> Unit) {
+        upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIEventLog(log))), callback)
+    }
+
     override fun uploadCrashLog(log: CrashLog, callback: (Result<Unit>) -> Unit) {
-        val requestData = Gson().toJson(getAPIRequestData(arrayListOf(log)))
+        upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIErrorLog(log))), callback)
+    }
+
+    private fun upload(data: VSAppCenterAPIRequestData, callback: (Result<Unit>) -> Unit) {
+        val requestData = Gson().toJson(data)
         val requestBuilder = Request.Builder()
             .url(uploadUrl)
             .addHeader("App-Secret", APP_SECRET)
@@ -58,16 +67,20 @@ internal class VSAppCenterTelemetryUpload(
         })
     }
 
-    private fun getAPIRequestData(logs: List<CrashLog>): VSAppCenterAPIRequestData {
-        return VSAppCenterAPIRequestData(
-            logs = logs.map { getAPIErrorReport(it) }
+    private fun getAPIEventLog(log: EventLog): VSAppCenterAPIEventLog {
+        return VSAppCenterAPIEventLog(
+            id = log.id,
+            userId = userId,
+            device = getAPIDevice(),
+            timestamp = isoDateFormat.format(Date(log.timestampMS)),
+            name = log.name,
+            properties = log.properties
         )
     }
 
-    private fun getAPIErrorReport(log: CrashLog): VSAppCenterAPIErrorReport {
-        return VSAppCenterAPIErrorReport(
+    private fun getAPIErrorLog(log: CrashLog): VSAppCenterAPIErrorLog {
+        return VSAppCenterAPIErrorLog(
             id = log.id,
-            type = "managedError",
             fatal = true,
             userId = userId,
             device = getAPIDevice(),

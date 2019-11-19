@@ -2,10 +2,12 @@ package com.exponea.sdk.telemetry
 
 import android.content.Context
 import com.exponea.sdk.BuildConfig
+import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.telemetry.storage.TelemetryStorage
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import com.exponea.sdk.util.Logger
 import java.util.Date
 import java.util.UUID
 
@@ -40,5 +42,11 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
 
     fun start() {
         crashManager.start()
+    }
+
+    fun reportEvent(name: String, properties: Map<String, String>) {
+        telemetryUpload.uploadEventLog(EventLog(name, properties)) {
+            Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
+        }
     }
 }

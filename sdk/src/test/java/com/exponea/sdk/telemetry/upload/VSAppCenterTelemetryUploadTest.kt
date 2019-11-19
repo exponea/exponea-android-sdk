@@ -2,11 +2,12 @@ package com.exponea.sdk.telemetry
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.telemetry.model.CrashLog
-import com.exponea.sdk.telemetry.upload.VSAppCenterAPIRequestData
+import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
-import com.google.gson.Gson
+import com.google.gson.JsonParser
 import java.nio.charset.Charset
 import java.util.Date
 import kotlin.test.assertEquals
@@ -22,6 +23,18 @@ import org.robolectric.RobolectricTestRunner
 internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     private lateinit var server: MockWebServer
     private lateinit var upload: VSAppCenterTelemetryUpload
+
+    private val exceptedDevice = """{
+        "appNamespace":"com.exponea.sdk.test",
+        "appVersion":"unknown version",
+        "appBuild":"unknown build",
+        "sdkName":"ExponeaSDK.android",
+        "sdkVersion":"1.0.0",
+        "osName":"Android",
+        "osVersion":"8.1.0",
+        "model":"robolectric",
+        "locale":"en_US"
+    }"""
 
     @Before
     fun before() {
@@ -40,25 +53,97 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         server.shutdown()
     }
 
-    @Test
-    fun `should send request to server`() {
+    private fun runUploadTest(
+        makeRequest: (upload: TelemetryUpload, callback: (Result<Unit>) -> Unit) -> Unit,
+        expectedRequest: String
+    ) {
         server.enqueue(MockResponse())
-        val exception = Exception("Test exception")
-        exception.stackTrace = arrayOf()
         waitForIt {
-            upload.uploadCrashLog(CrashLog(exception, Date(1573644923000))) { result ->
+            makeRequest(upload) { result ->
                 it.assertTrue(result.isSuccess)
                 it()
             }
         }
         val request = server.takeRequest()
         assertEquals("mock-install-id", request.getHeader("Install-ID"))
-        val payload = Gson().fromJson(
-            request.body.readString(Charset.defaultCharset()),
-            VSAppCenterAPIRequestData::class.java
+        assertEquals(
+            JsonParser().parse(expectedRequest),
+            JsonParser().parse(request.body.readString(Charset.defaultCharset()))
         )
-        assertEquals("2019-11-13T11:35:23Z", payload.logs[0].appLaunchTimestamp)
-        assertEquals("Test exception", payload.logs[0].exception.message)
+    }
+
+    @Test
+    fun `should upload error data to server`() {
+        runUploadTest(
+            { upload, callback ->
+                val exception = Exception("Test exception")
+                exception.stackTrace = arrayOf(StackTraceElement("mock-class", "mock-method", "mock-file.java", 123))
+                val crashLog = CrashLog(
+                    id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    errorData = TelemetryUtility.getErrorData(exception),
+                    timestampMS = 1574155789000,
+                    launchTimestampMS = 1573644923000
+                )
+                upload.uploadCrashLog(crashLog, callback)
+            },
+            """ {"logs":[
+                {
+                    "type":"managedError",
+                    "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "userId":"mock-user-id",
+                    "device": $exceptedDevice,
+                    "timestamp":"2019-11-19T09:29:49Z",
+                    "fatal":true,
+                    "exception": {
+                        "type":"java.lang.Exception",
+                        "message":"Test exception",
+                        "frames":[
+                            {
+                                "className":"mock-class",
+                                "methodName":"mock-method",
+                                "fileName":"mock-file.kt",
+                                "lineNumber":123
+                            }
+                        ],
+                        "innerExceptions":[]
+                    },
+                    "appLaunchTimestamp":"2019-11-13T11:35:23Z",
+                    "processId":0,
+                    "processName":""
+                }
+            ]}
+            """
+        )
+    }
+
+    @Test
+    fun `should upload event data to server`() {
+        runUploadTest(
+            { upload, callback ->
+                val eventLog = EventLog(
+                    id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    name = "mock-name",
+                    timestampMS = 1574155789000,
+                    properties = hashMapOf("mock-1" to "mock-value-1", "mock-2" to "mock-value-2")
+                )
+                upload.uploadEventLog(eventLog, callback)
+            },
+            """ {"logs":[
+                {
+                    "type":"event",
+                    "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "userId":"mock-user-id",
+                    "device": $exceptedDevice,
+                    "timestamp":"2019-11-19T09:29:49Z",
+                    "name": "mock-name",
+                    "properties": {
+                        "mock-1": "mock-value-1",
+                        "mock-2": "mock-value-2"
+                    }
+                }
+            ]}
+            """
+        )
     }
 
     @Test

@@ -1,12 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.Banner
-import com.exponea.sdk.models.CustomerAttributes
-import com.exponea.sdk.models.CustomerExportModel
-import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
-import com.exponea.sdk.models.ExponeaFetchId
-import com.exponea.sdk.models.ExponeaFetchProperty
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
 import okhttp3.Call
@@ -34,35 +29,7 @@ internal class ExponeaMockService(private val success: Boolean) : ExponeaService
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postRotateToken(projectToken: String): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
     override fun postFetchConsents(projectToken: String): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postRevokeToken(projectToken: String): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchProperty(projectToken: String, property: ExponeaFetchProperty): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchId(projectToken: String, id: ExponeaFetchId): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchSegmentation(projectToken: String, id: ExponeaFetchId): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchExpression(projectToken: String, id: ExponeaFetchId): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchPrediction(projectToken: String, id: ExponeaFetchId): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
@@ -70,22 +37,6 @@ internal class ExponeaMockService(private val success: Boolean) : ExponeaService
         projectToken: String,
         recommendation: CustomerRecommendation
     ): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchAttributes(projectToken: String, attributes: CustomerAttributes): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchAllProperties(projectToken: String, customerIds: CustomerIds): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchAllCustomers(projectToken: String, customer: CustomerExportModel): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postAnonymize(projectToken: String, customerIds: CustomerIds): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

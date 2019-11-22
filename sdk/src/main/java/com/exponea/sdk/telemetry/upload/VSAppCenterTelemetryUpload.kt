@@ -107,7 +107,7 @@ internal class VSAppCenterTelemetryUpload(
         return VSAppCenterAPIErrorLog(
             id = log.id,
             sid = log.runId,
-            fatal = true,
+            fatal = log.fatal,
             userId = userId,
             device = getAPIDevice(),
             exception = getAPIException(log.errorData),

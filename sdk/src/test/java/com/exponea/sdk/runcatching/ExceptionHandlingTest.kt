@@ -2,11 +2,16 @@ package com.exponea.sdk.runcatching
 
 import android.util.Log
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -17,7 +22,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExceptionHandlingTest {
+internal class ExceptionHandlingTest : ExponeaSDKTest() {
 
     private val LOGTAG_TO_WATCH = Exponea.javaClass.simpleName
 
@@ -29,6 +34,9 @@ internal class ExceptionHandlingTest {
     fun prepareTest() {
         errorLogCount = 0
         mockkStatic(Log::class)
+        Exponea.telemetry = mockk() {
+            every { reportCaughtException(any()) } just Runs
+        }
         every { Log.e(LOGTAG_TO_WATCH, any()) } answers {
             errorLogCount++
         }
@@ -47,6 +55,7 @@ internal class ExceptionHandlingTest {
         Exponea.safeModeEnabled = false
         runCatching {}.logOnException()
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -54,6 +63,7 @@ internal class ExceptionHandlingTest {
         Exponea.safeModeEnabled = true
         runCatching {}.logOnException()
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test(expected = TestPurposeException::class)
@@ -63,6 +73,7 @@ internal class ExceptionHandlingTest {
             throw TestPurposeException()
         }.logOnException()
         assertEquals(1, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -72,6 +83,7 @@ internal class ExceptionHandlingTest {
             throw TestPurposeException()
         }.logOnException()
         assertEquals(1, errorLogCount)
+        verify(exactly = 1) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -80,6 +92,7 @@ internal class ExceptionHandlingTest {
         every { Log.e(LOGTAG_TO_WATCH, any()) } throws TestPurposeException()
         runCatching {}.logOnException()
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -88,6 +101,7 @@ internal class ExceptionHandlingTest {
         every { Log.e(LOGTAG_TO_WATCH, any()) } throws TestPurposeException()
         runCatching {}.logOnException()
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -95,6 +109,7 @@ internal class ExceptionHandlingTest {
         Exponea.safeModeEnabled = false
         runCatching {}.returnOnException { fail("mapThrowable should not be called") }
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -102,6 +117,7 @@ internal class ExceptionHandlingTest {
         Exponea.safeModeEnabled = true
         runCatching {}.returnOnException { fail("mapThrowable should not be called") }
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test(expected = TestPurposeException::class)
@@ -113,6 +129,7 @@ internal class ExceptionHandlingTest {
             fail("should not be called")
         }
         assertEquals(1, errorLogCount)
+        verify(exactly = 1) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -127,6 +144,7 @@ internal class ExceptionHandlingTest {
         }
         assertTrue(mapThrowableCalled)
         assertEquals(1, errorLogCount)
+        verify(exactly = 1) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -135,6 +153,7 @@ internal class ExceptionHandlingTest {
         every { Log.e(LOGTAG_TO_WATCH, any()) } throws TestPurposeException()
         runCatching {}.returnOnException { fail("mapThrowable should not be called") }
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test
@@ -143,5 +162,6 @@ internal class ExceptionHandlingTest {
         every { Log.e(LOGTAG_TO_WATCH, any()) } throws TestPurposeException()
         runCatching {}.returnOnException { fail("mapThrowable should not be called") }
         assertEquals(0, errorLogCount)
+        verify(exactly = 0) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 }

@@ -51,4 +51,8 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
     }
+
+    fun reportCaughtException(e: Throwable) {
+        crashManager.handleException(e, false)
+    }
 }

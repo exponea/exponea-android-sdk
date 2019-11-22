@@ -23,16 +23,26 @@ internal class CrashManager(
 
     override fun uncaughtException(t: Thread, e: Throwable) {
         Logger.i(this, "Handling uncaught exception")
+        handleException(e, true)
+        oldHandler?.uncaughtException(t, e)
+    }
+
+    fun handleException(e: Throwable, fatal: Boolean) {
         try {
-            if (TelemetryUtility.isSDKRelated(e)) {
-                Logger.i(this, "Uncaught exception is sdk related, saving for later upload.")
-                storage.saveCrashLog(CrashLog(e, launchDate, runId))
+            val crashLog = CrashLog(e, fatal, launchDate, runId)
+            if (fatal) { // app is crashing, save exception, process it later
+                if (TelemetryUtility.isSDKRelated(e)) {
+                    Logger.i(this, "Fatal exception is sdk related, saving for later upload.")
+                    storage.saveCrashLog(crashLog)
+                }
+            } else { // we should have time to immediately upload the exception
+                upload.uploadCrashLog(crashLog) { result ->
+                    Logger.i(this, "Crash log upload ${if (result.isSuccess) "succeeded" else "failed"}")
+                }
             }
         } catch (e: Exception) {
             // do nothing
         }
-
-        oldHandler?.uncaughtException(t, e)
     }
 
     private fun uploadCrashLogs() {

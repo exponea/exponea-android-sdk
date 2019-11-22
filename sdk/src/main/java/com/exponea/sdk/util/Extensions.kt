@@ -114,6 +114,7 @@ fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {
             // cannot log problem, swallowing
         }
         if (Exponea.safeModeEnabled) {
+            Exponea.telemetry?.reportCaughtException(it)
             // `function` is internal and has to return T value
             // if error occurs here, let throw it, nothing more we can do
             return mapThrowable(it)
@@ -133,6 +134,8 @@ fun Result<Unit>.logOnException() {
         }
         if (!Exponea.safeModeEnabled) {
             throw exception
+        } else {
+            Exponea.telemetry?.reportCaughtException(exception)
         }
     }
 }

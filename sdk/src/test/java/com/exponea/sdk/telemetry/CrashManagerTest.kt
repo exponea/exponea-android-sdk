@@ -76,9 +76,9 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should upload crash logs`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception 1"), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 2"), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 3"), Date(), "mock-run-id")
+            CrashLog(Exception("mock exception 1"), true, Date(), "mock-run-id"),
+            CrashLog(Exception("mock exception 2"), true, Date(), "mock-run-id"),
+            CrashLog(Exception("mock exception 3"), true, Date(), "mock-run-id")
         )
         crashManager.start()
         verify(exactly = 3) { upload.uploadCrashLog(any(), any()) }
@@ -87,7 +87,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should delete crash log once uploaded`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception"), Date(), "mock-run-id")
+            CrashLog(Exception("mock exception"), true, Date(), "mock-run-id")
         )
         val callbackSlot = slot<(Result<Unit>) -> Unit>()
         every { upload.uploadCrashLog(any(), capture(callbackSlot)) } just Runs
@@ -101,7 +101,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should not delete crash log when upload fails`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception"), Date(), "mock-run-id")
+            CrashLog(Exception("mock exception"), true, Date(), "mock-run-id")
         )
         val callbackSlot = slot<(Result<Unit>) -> Unit>()
         every { upload.uploadCrashLog(any(), capture(callbackSlot)) } just Runs

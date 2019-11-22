@@ -9,14 +9,56 @@ import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.enqueue
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.IOException
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
 
 internal class FetchManagerImpl(
     private val api: ExponeaService,
     private val gson: Gson
 ) : FetchManager {
+
+    private fun <T> getFetchCallback(
+        resultType: TypeToken<Result<T>>, // gson needs to know the type of result, T gets erased at compile time
+        onSuccess: (Result<T>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ): Callback {
+        return object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val responseCode = response.code()
+                Logger.d(this, "Response Code: $responseCode")
+                val jsonBody = response.body()?.string()
+                if (response.isSuccessful) {
+                    var result: Result<T>?
+                    try {
+                        result = gson.fromJson<Result<T>>(jsonBody, resultType.type)
+                        if (result.results == null) {
+                            throw Exception("Unable to parse response from server.")
+                        }
+                    } catch (e: Exception) {
+                        val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
+                        Logger.e(this, "Failed to deserialize fetch response: $error")
+                        onFailure(Result(false, error))
+                        return
+                    }
+                    onSuccess(result) // we need to call onSuccess outside of pokemon exception handling above
+                } else {
+                    val error = FetchError(jsonBody, response.message())
+                    Logger.e(this, "Failed to fetch data: $error")
+                    onFailure(Result(false, error))
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                val error = FetchError(null, e.localizedMessage ?: "Unknown error")
+                Logger.e(this, "Fetch configuration Failed $e")
+                onFailure(Result(false, error))
+            }
+        }
+    }
 
     override fun fetchBannerConfiguration(
         projectToken: String,
@@ -24,42 +66,13 @@ internal class FetchManagerImpl(
         onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-
-        api.getBannerConfiguration(projectToken)
-                .enqueue(
-                        onResponse = { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this, "Response Code: $responseCode")
-                            val jsonBody = response.body()?.string()
-                            if (responseCode in 200..299) {
-                                try {
-                                    val type = object : TypeToken<Result<ArrayList<Personalization>>>() {}.type
-                                    val result = gson.fromJson<Result<ArrayList<Personalization>>>(
-                                            jsonBody,
-                                            type
-                                    )
-                                    onSuccess(result)
-                                } catch (e: Exception) {
-                                    // Return failure when find any exception while trying to deserialize the response.
-                                    val error = FetchError(jsonBody, e.localizedMessage)
-                                    Logger.e(
-                                            this,
-                                            "Failed to deserialize banner configuration: $error"
-                                    )
-                                    onFailure(Result(false, error))
-                                }
-                            } else {
-                                val error = FetchError(jsonBody, response.message())
-                                Logger.e(this, "Failed to fetch events: $error")
-                                onFailure(Result(false, error))
-                            }
-                        },
-                        onFailure = { _, ioException ->
-                            val error = FetchError(null, ioException.localizedMessage)
-                            Logger.e(this, "Fetch configuration Failed $ioException")
-                            onFailure(Result(false, error))
-                        }
-                )
+        api.getBannerConfiguration(projectToken).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<Personalization>>>() {},
+                onSuccess,
+                onFailure
+            )
+        )
     }
 
     override fun fetchBanner(
@@ -68,39 +81,13 @@ internal class FetchManagerImpl(
         onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-
-        api.postFetchBanner(projectToken, bannerConfig)
-                .enqueue(
-                        onResponse = { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this, "Response Code: $responseCode")
-                            val jsonBody = response.body()?.string()
-                            if (responseCode in 200..299) {
-                                try {
-                                    val type = object : TypeToken<Result<ArrayList<BannerResult>>>() {}.type
-                                    val result = gson.fromJson<Result<ArrayList<BannerResult>>>(
-                                            jsonBody,
-                                            type
-                                    )
-                                    onSuccess(result)
-                                } catch (e: Exception) {
-                                    // Return failure when find any exception while trying to deserialize the response.
-                                    val error = FetchError(jsonBody, e.localizedMessage)
-                                    Logger.e(this, "Failed to deserialize banner: $error")
-                                    onFailure(Result(false, error))
-                                }
-                            } else {
-                                val error = FetchError(jsonBody, response.message())
-                                Logger.e(this, "Failed to fetch events: $error")
-                                onFailure(Result(false, error))
-                            }
-                        },
-                        onFailure = { _, ioException ->
-                            val error = FetchError(null, ioException.localizedMessage)
-                            Logger.e(this, "Fetch configuration Failed: $error", ioException)
-                            onFailure(Result(false, error))
-                        }
-                )
+        api.postFetchBanner(projectToken, bannerConfig).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<BannerResult>>>() {},
+                onSuccess,
+                onFailure
+            )
+        )
     }
 
     override fun fetchConsents(
@@ -108,37 +95,12 @@ internal class FetchManagerImpl(
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchConsents(projectToken)
-                .enqueue(
-                        onResponse = { _, response ->
-                            val responseCode = response.code()
-                            Logger.d(this, "Response Code: $responseCode")
-                            val jsonBody = response.body()?.string()
-                            if (response.isSuccessful) {
-                                try {
-                                    val type = object : TypeToken<Result<ArrayList<Consent>>>() {}.type
-                                    val result = gson.fromJson<Result<ArrayList<Consent>>>(
-                                            jsonBody,
-                                            type
-                                    )
-                                    onSuccess(result)
-                                } catch (e: Exception) {
-                                    // Return failure when find any exception while trying to deserialize the response.
-                                    val error = FetchError(jsonBody, e.localizedMessage)
-                                    Logger.e(this, "Failed to deserialize banner: $error")
-                                    onFailure(Result(false, error))
-                                }
-                            } else {
-                                val error = FetchError(jsonBody, response.message())
-                                Logger.e(this, "Failed to fetch events: $error")
-                                onFailure(Result(false, error))
-                            }
-                        },
-                        onFailure = { _, ioException ->
-                            val error = FetchError(null, ioException.localizedMessage)
-                            Logger.e(this, "Fetch configuration Failed: $error", ioException)
-                            onFailure(Result(false, error))
-                        }
-                )
+        api.postFetchConsents(projectToken).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<Consent>>>() {},
+                onSuccess,
+                onFailure
+            )
+        )
     }
 }

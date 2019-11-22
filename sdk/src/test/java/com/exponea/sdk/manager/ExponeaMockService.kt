@@ -7,12 +7,16 @@ import com.exponea.sdk.network.ExponeaService
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.ResponseBody
 import okhttp3.mock.HttpCodes.HTTP_200_OK
 import okhttp3.mock.HttpCodes.HTTP_400_BAD_REQUEST
 import okhttp3.mock.MockInterceptor
 import okhttp3.mockwebserver.MockWebServer
 
-internal class ExponeaMockService(private val success: Boolean) : ExponeaService {
+internal class ExponeaMockService(
+    private val success: Boolean,
+    private val response: ResponseBody? = null
+) : ExponeaService {
 
     private val server = MockWebServer()
     private val dummyUrl = server.url("/").toString()
@@ -53,7 +57,7 @@ internal class ExponeaMockService(private val success: Boolean) : ExponeaService
             addRule()
                 .get().or().post().or().put()
                 .url(dummyUrl)
-                .respond(HTTP_400_BAD_REQUEST)
+                .respond(HTTP_400_BAD_REQUEST, response)
         }
         val okHttpClient = OkHttpClient
             .Builder()
@@ -68,7 +72,7 @@ internal class ExponeaMockService(private val success: Boolean) : ExponeaService
             addRule()
                 .get().or().post().or().put()
                 .url(dummyUrl)
-                .respond(HTTP_200_OK)
+                .respond(HTTP_200_OK, response)
         }
         val okHttpClient = OkHttpClient
             .Builder()

@@ -69,6 +69,10 @@ internal class ThreadAssertionCollector(
         assertCatching { kotlin.test.assertNotEquals(illegal, actual, message) }
     }
 
+    fun fail(message: String? = null) {
+        assertCatching { kotlin.test.fail(message) }
+    }
+
     operator fun invoke() {
         count.countDown()
     }

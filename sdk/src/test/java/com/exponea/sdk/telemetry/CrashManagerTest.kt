@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import java.util.Date
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Before
@@ -125,5 +126,41 @@ internal class CrashManagerTest : ExponeaSDKTest() {
             Thread.currentThread(),
             Exception("Mock exception")
         )
+    }
+
+    @Test
+    fun `should add log messages to caught exceptions`() {
+        val crashLogSlot = slot<CrashLog>()
+        every { upload.uploadCrashLog(capture(crashLogSlot), any()) } just Runs
+        crashManager.saveLogMessage(this, "message")
+        crashManager.handleException(Exception("message"), false)
+        assertEquals(1, crashLogSlot.captured.logs?.size)
+        assertEquals("CrashManagerTest message", crashLogSlot.captured.logs?.get(0))
+    }
+
+    @Test
+    fun `should add log messages to crashes`() {
+        val crashLogSlot = slot<CrashLog>()
+        every { storage.saveCrashLog(capture(crashLogSlot)) } just Runs
+        crashManager.saveLogMessage(this, "message")
+        crashManager.start()
+        Thread.getDefaultUncaughtExceptionHandler().uncaughtException(
+            Thread.currentThread(),
+            Exception("Mock exception")
+        )
+        assertEquals(1, crashLogSlot.captured.logs?.size)
+        assertEquals("CrashManagerTest message", crashLogSlot.captured.logs?.get(0))
+    }
+
+    @Test
+    fun `should limit log messages added to crashes`() {
+        val crashLogSlot = slot<CrashLog>()
+        every { upload.uploadCrashLog(capture(crashLogSlot), any()) } just Runs
+        for (i in 1..1000) crashManager.saveLogMessage(this, "message $i")
+        crashManager.handleException(Exception("message"), false)
+        assertEquals(100, crashLogSlot.captured.logs?.size)
+        for (i in 0..99) {
+            assertEquals("CrashManagerTest message ${1000 - i}", crashLogSlot.captured.logs?.get(i))
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.exponea.sdk.telemetry.storage.TelemetryStorage
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.util.Logger
 import java.util.Date
+import java.util.LinkedList
 
 internal class CrashManager(
     private val storage: TelemetryStorage,
@@ -12,7 +13,11 @@ internal class CrashManager(
     private val launchDate: Date,
     private val runId: String
 ) : Thread.UncaughtExceptionHandler {
+    companion object {
+        const val MAX_LOG_MESSAGES = 100
+    }
     private var oldHandler: Thread.UncaughtExceptionHandler? = null
+    private var latestLogMessages: LinkedList<String> = LinkedList()
 
     fun start() {
         Logger.i(this, "Starting crash manager")
@@ -29,7 +34,7 @@ internal class CrashManager(
 
     fun handleException(e: Throwable, fatal: Boolean) {
         try {
-            val crashLog = CrashLog(e, fatal, launchDate, runId)
+            val crashLog = CrashLog(e, fatal, launchDate, runId, latestLogMessages.toMutableList())
             if (fatal) { // app is crashing, save exception, process it later
                 if (TelemetryUtility.isSDKRelated(e)) {
                     Logger.i(this, "Fatal exception is sdk related, saving for later upload.")
@@ -42,6 +47,13 @@ internal class CrashManager(
             }
         } catch (e: Exception) {
             // do nothing
+        }
+    }
+
+    fun saveLogMessage(parent: Any, message: String) {
+        latestLogMessages.addFirst("${parent.javaClass.simpleName} $message")
+        if (latestLogMessages.size > MAX_LOG_MESSAGES) {
+            latestLogMessages.removeLast()
         }
     }
 

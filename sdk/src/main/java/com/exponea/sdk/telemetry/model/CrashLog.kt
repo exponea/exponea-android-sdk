@@ -10,14 +10,22 @@ internal data class CrashLog(
     val fatal: Boolean,
     val timestampMS: Long,
     val launchTimestampMS: Long,
-    val runId: String
+    val runId: String,
+    val logs: List<String>? = null
 ) {
-    constructor(e: Throwable, fatal: Boolean, launchDate: Date, runId: String) : this(
+    constructor(
+        e: Throwable,
+        fatal: Boolean,
+        launchDate: Date,
+        runId: String,
+        logs: List<String>? = null
+    ) : this(
         id = UUID.randomUUID().toString(),
         errorData = TelemetryUtility.getErrorData(e),
         fatal = fatal,
         timestampMS = System.currentTimeMillis(),
         launchTimestampMS = launchDate.time,
-        runId = runId
+        runId = runId,
+        logs = logs
     )
 }

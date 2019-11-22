@@ -44,6 +44,19 @@ internal data class VSAppCenterAPIErrorLog(
     override val type: String = "managedError"
 }
 
+internal data class VSAppCenterAPIErrorAttachmentLog(
+    override val id: String,
+    override val sid: String,
+    override val userId: String? = null,
+    override val device: VSAppCenterAPIDevice,
+    override val timestamp: String,
+    val errorId: String,
+    val contentType: String,
+    val data: String // base64 data
+) : VSAppCenterAPILog {
+    override val type: String = "errorAttachment"
+}
+
 internal data class VSAppCenterAPIEventLog(
     override val id: String,
     override val sid: String,

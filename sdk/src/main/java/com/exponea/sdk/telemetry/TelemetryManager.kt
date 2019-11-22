@@ -55,4 +55,8 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
     fun reportCaughtException(e: Throwable) {
         crashManager.handleException(e, false)
     }
+
+    fun reportLog(parent: Any, message: String) {
+        crashManager.saveLogMessage(parent, message)
+    }
 }

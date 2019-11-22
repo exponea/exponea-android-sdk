@@ -2,6 +2,7 @@ package com.exponea.sdk.telemetry.upload
 
 import android.content.Context
 import android.os.Build
+import android.util.Base64
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
@@ -51,7 +52,11 @@ internal class VSAppCenterTelemetryUpload(
     }
 
     override fun uploadCrashLog(log: CrashLog, callback: (Result<Unit>) -> Unit) {
-        upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIErrorLog(log))), callback)
+        var logs: ArrayList<VSAppCenterAPILog> = arrayListOf(getAPIErrorLog(log))
+        if (log.logs != null) {
+            logs.add(getAPIErrorAttachment(log))
+        }
+        upload(VSAppCenterAPIRequestData(logs), callback)
     }
 
     private fun uploadSessionStart(runId: String) {
@@ -113,6 +118,21 @@ internal class VSAppCenterTelemetryUpload(
             exception = getAPIException(log.errorData),
             timestamp = isoDateFormat.format(Date(log.timestampMS)),
             appLaunchTimestamp = isoDateFormat.format(Date(log.launchTimestampMS))
+        )
+    }
+
+    private fun getAPIErrorAttachment(log: CrashLog): VSAppCenterAPIErrorAttachmentLog {
+        val logString = log.logs?.joinToString("\n") ?: ""
+        val data = Base64.encodeToString(logString.toByteArray(), Base64.NO_WRAP)
+        return VSAppCenterAPIErrorAttachmentLog(
+            id = UUID.randomUUID().toString(),
+            sid = log.runId,
+            userId = userId,
+            device = getAPIDevice(),
+            timestamp = isoDateFormat.format(Date(log.timestampMS)),
+            errorId = log.id,
+            contentType = "text/plain",
+            data = data
         )
     }
 

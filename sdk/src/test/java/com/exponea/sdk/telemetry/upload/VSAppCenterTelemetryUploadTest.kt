@@ -7,7 +7,9 @@ import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
+import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import java.nio.charset.Charset
 import java.util.Date
 import kotlin.test.assertEquals
@@ -73,7 +75,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
 
     private fun runUploadTest(
         makeRequest: (upload: TelemetryUpload, callback: (Result<Unit>) -> Unit) -> Unit,
-        expectedRequest: String
+        expectedRequest: String,
+        requestPreprocessor: ((JsonElement) -> Unit)? = null
     ) {
         initializeUpload()
         server.enqueue(MockResponse())
@@ -85,9 +88,11 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         }
         val request = server.takeRequest()
         assertEquals("mock-install-id", request.getHeader("Install-ID"))
+        var jsonRequest = JsonParser().parse(request.body.readString(Charset.defaultCharset()))
+        if (requestPreprocessor != null) requestPreprocessor(jsonRequest)
         assertEquals(
             JsonParser().parse(expectedRequest),
-            JsonParser().parse(request.body.readString(Charset.defaultCharset()))
+            jsonRequest
         )
     }
 
@@ -135,6 +140,65 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                 }
             ]}
             """
+        )
+    }
+
+    @Test
+    fun `should upload error data with logs to server`() {
+        runUploadTest(
+            { upload, callback ->
+                val exception = Exception("Test exception")
+                exception.stackTrace = arrayOf()
+                val crashLog = CrashLog(
+                    id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    fatal = false,
+                    errorData = TelemetryUtility.getErrorData(exception),
+                    timestampMS = 1574155789000,
+                    launchTimestampMS = 1573644923000,
+                    runId = "mock-run-id",
+                    logs = arrayListOf("log 1", "log 2")
+                )
+                upload.uploadCrashLog(crashLog, callback)
+            },
+            """ {"logs":[
+                {
+                    "type":"managedError",
+                    "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "sid":"mock-run-id",
+                    "userId":"mock-user-id",
+                    "device": $exceptedDevice,
+                    "timestamp":"2019-11-19T09:29:49Z",
+                    "fatal":false,
+                    "exception": {
+                        "type":"java.lang.Exception",
+                        "message":"Test exception",
+                        "frames":[],
+                        "innerExceptions":[]
+                    },
+                    "appLaunchTimestamp":"2019-11-13T11:35:23Z",
+                    "processId":0,
+                    "processName":""
+                },
+                {
+                    "type":"errorAttachment",
+                    "id":"REPLACED ID FOR TEST",
+                    "sid":"mock-run-id",
+                    "userId":"mock-user-id",
+                    "device": $exceptedDevice,
+                    "timestamp":"2019-11-19T09:29:49Z",
+                    "errorId":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "contentType":"text/plain",
+                    "data":"bG9nIDEKbG9nIDI="
+                }
+            ]}
+            """,
+            { request: JsonElement -> // replace the id that's generated with every request
+                request
+                    .asJsonObject["logs"]
+                    .asJsonArray[1]
+                    .asJsonObject
+                    .add("id", JsonPrimitive("REPLACED ID FOR TEST"))
+            }
         )
     }
 

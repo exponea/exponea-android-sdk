@@ -36,6 +36,7 @@ internal class ExceptionHandlingTest : ExponeaSDKTest() {
         mockkStatic(Log::class)
         Exponea.telemetry = mockk() {
             every { reportCaughtException(any()) } just Runs
+            every { reportLog(any(), any()) } just Runs
         }
         every { Log.e(LOGTAG_TO_WATCH, any()) } answers {
             errorLogCount++

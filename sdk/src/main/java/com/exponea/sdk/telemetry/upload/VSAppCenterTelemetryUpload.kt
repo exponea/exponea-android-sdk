@@ -5,12 +5,14 @@ import android.os.Build
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.UUID
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType
@@ -24,6 +26,7 @@ internal class VSAppCenterTelemetryUpload(
     private val installId: String,
     private val sdkVersion: String,
     private val userId: String,
+    runId: String,
     private val uploadUrl: String = DEFAULT_UPLOAD_URL
 ) : TelemetryUpload {
     companion object {
@@ -39,12 +42,33 @@ internal class VSAppCenterTelemetryUpload(
 
     private val networkClient = OkHttpClient()
 
+    init {
+        uploadSessionStart(runId)
+    }
+
     override fun uploadEventLog(log: EventLog, callback: (Result<Unit>) -> Unit) {
         upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIEventLog(log))), callback)
     }
 
     override fun uploadCrashLog(log: CrashLog, callback: (Result<Unit>) -> Unit) {
         upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIErrorLog(log))), callback)
+    }
+
+    private fun uploadSessionStart(runId: String) {
+        upload(
+            VSAppCenterAPIRequestData(
+                logs = arrayListOf(
+                    VSAppCenterAPIStartSession(
+                        id = UUID.randomUUID().toString(),
+                        timestamp = isoDateFormat.format(Date()),
+                        sid = runId,
+                        device = getAPIDevice()
+                    )
+                )
+            )
+        ) {
+            Logger.i(this, "Session start ${if (it.isSuccess) "succeeded" else "failed" }")
+        }
     }
 
     private fun upload(data: VSAppCenterAPIRequestData, callback: (Result<Unit>) -> Unit) {
@@ -70,6 +94,7 @@ internal class VSAppCenterTelemetryUpload(
     private fun getAPIEventLog(log: EventLog): VSAppCenterAPIEventLog {
         return VSAppCenterAPIEventLog(
             id = log.id,
+            sid = log.runId,
             userId = userId,
             device = getAPIDevice(),
             timestamp = isoDateFormat.format(Date(log.timestampMS)),
@@ -81,6 +106,7 @@ internal class VSAppCenterTelemetryUpload(
     private fun getAPIErrorLog(log: CrashLog): VSAppCenterAPIErrorLog {
         return VSAppCenterAPIErrorLog(
             id = log.id,
+            sid = log.runId,
             fatal = true,
             userId = userId,
             device = getAPIDevice(),

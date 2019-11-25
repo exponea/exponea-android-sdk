@@ -12,14 +12,26 @@ internal data class VSAppCenterAPIRequestData(
 
 internal interface VSAppCenterAPILog {
     val id: String
+    val sid: String
     val type: String
     val userId: String?
     val device: VSAppCenterAPIDevice
     val timestamp: String
 }
 
+internal data class VSAppCenterAPIStartSession(
+    override val id: String,
+    override val sid: String,
+    override val userId: String? = null,
+    override val device: VSAppCenterAPIDevice,
+    override val timestamp: String
+) : VSAppCenterAPILog {
+    override val type: String = "startSession"
+}
+
 internal data class VSAppCenterAPIErrorLog(
     override val id: String,
+    override val sid: String,
     override val userId: String? = null,
     override val device: VSAppCenterAPIDevice,
     override val timestamp: String,
@@ -34,6 +46,7 @@ internal data class VSAppCenterAPIErrorLog(
 
 internal data class VSAppCenterAPIEventLog(
     override val id: String,
+    override val sid: String,
     override val userId: String? = null,
     override val device: VSAppCenterAPIDevice,
     override val timestamp: String,

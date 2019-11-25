@@ -9,7 +9,8 @@ import java.util.Date
 internal class CrashManager(
     private val storage: TelemetryStorage,
     private val upload: TelemetryUpload,
-    private val launchDate: Date
+    private val launchDate: Date,
+    private val runId: String
 ) : Thread.UncaughtExceptionHandler {
     private var oldHandler: Thread.UncaughtExceptionHandler? = null
 
@@ -25,7 +26,7 @@ internal class CrashManager(
         try {
             if (TelemetryUtility.isSDKRelated(e)) {
                 Logger.i(this, "Uncaught exception is sdk related, saving for later upload.")
-                storage.saveCrashLog(CrashLog(e, launchDate))
+                storage.saveCrashLog(CrashLog(e, launchDate, runId))
             }
         } catch (e: Exception) {
             // do nothing

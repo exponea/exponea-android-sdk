@@ -17,6 +17,7 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         const val INSTALL_ID_KEY = "INSTALL_ID"
     }
 
+    private var runId = UUID.randomUUID().toString()
     private var installId: String
     init {
         try {
@@ -35,17 +36,18 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         context,
         installId,
         BuildConfig.VERSION_NAME,
+        runId,
         userId ?: installId
     )
 
-    private val crashManager: CrashManager = CrashManager(telemetryStorage, telemetryUpload, Date())
+    private val crashManager: CrashManager = CrashManager(telemetryStorage, telemetryUpload, Date(), runId)
 
     fun start() {
         crashManager.start()
     }
 
     fun reportEvent(name: String, properties: Map<String, String>) {
-        telemetryUpload.uploadEventLog(EventLog(name, properties)) {
+        telemetryUpload.uploadEventLog(EventLog(name, properties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
     }

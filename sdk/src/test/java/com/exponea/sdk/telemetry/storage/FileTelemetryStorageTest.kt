@@ -25,6 +25,8 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
         unmockkAll()
     }
 
+    fun getMockCrashLog(): CrashLog = CrashLog(Exception("Boom!"), Date(), "mock-run-id")
+
     @Test
     fun `should return empty result without stored crash logs`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
@@ -34,13 +36,13 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
     @Test
     fun `should not fail deleting crash log that's not saved`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        storage.deleteCrashLog(CrashLog(Exception("Boom!"), Date()))
+        storage.deleteCrashLog(getMockCrashLog())
     }
 
     @Test
     fun `should save-get-delete crash log`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        val crashLog = CrashLog(Exception("Boom!"), Date())
+        val crashLog = getMockCrashLog()
         storage.saveCrashLog(crashLog)
         val crashLogs = storage.getAllCrashLogs()
         assertEquals(1, crashLogs.size)
@@ -52,11 +54,11 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
     @Test
     fun `should sort crash logs`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        val crashLog1 = CrashLog(Exception("Boom!"), Date())
+        val crashLog1 = getMockCrashLog()
         Thread.sleep(5)
-        val crashLog2 = CrashLog(Exception("Boom!"), Date())
+        val crashLog2 = getMockCrashLog()
         Thread.sleep(5)
-        val crashLog3 = CrashLog(Exception("Boom!"), Date())
+        val crashLog3 = getMockCrashLog()
         storage.saveCrashLog(crashLog2)
         storage.saveCrashLog(crashLog3)
         storage.saveCrashLog(crashLog1)
@@ -75,8 +77,8 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
         every { anyConstructed<FileTelemetryStorage>()["getLogsDirectory"]() } returns null
 
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        storage.saveCrashLog(CrashLog(Exception("Boom!"), Date()))
-        storage.deleteCrashLog(CrashLog(Exception("Boom!"), Date()))
+        storage.saveCrashLog(getMockCrashLog())
+        storage.deleteCrashLog(getMockCrashLog())
         assertEquals(arrayListOf(), storage.getAllCrashLogs())
     }
 
@@ -86,15 +88,15 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
         every { anyConstructed<FileTelemetryStorage>()["getLogsDirectory"]() } throws RuntimeException()
 
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        storage.saveCrashLog(CrashLog(Exception("Boom!"), Date()))
-        storage.deleteCrashLog(CrashLog(Exception("Boom!"), Date()))
+        storage.saveCrashLog(getMockCrashLog())
+        storage.deleteCrashLog(getMockCrashLog())
         assertEquals(arrayListOf(), storage.getAllCrashLogs())
     }
 
     @Test
     fun `should filter crash logs when loading files`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        storage.saveCrashLog(CrashLog(Exception("Boom!"), Date()))
+        storage.saveCrashLog(getMockCrashLog())
         val myDir = File(ApplicationProvider.getApplicationContext<Context>().cacheDir, FileTelemetryStorage.DIRECTORY)
         File(myDir, "some_other_file").writeText("mock data")
         assertEquals(1, storage.getAllCrashLogs().size)
@@ -103,9 +105,9 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
     @Test
     fun `should skip and delete files with corrupt data when loading files`() {
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
-        val crashLog1 = CrashLog(Exception("Boom!"), Date())
+        val crashLog1 = getMockCrashLog()
         storage.saveCrashLog(crashLog1)
-        val crashLog2 = CrashLog(Exception("Boom!"), Date())
+        val crashLog2 = getMockCrashLog()
         storage.saveCrashLog(crashLog2)
         val myDir = File(ApplicationProvider.getApplicationContext<Context>().cacheDir, FileTelemetryStorage.DIRECTORY)
         File(myDir, storage.getFileName(crashLog2)).writeText("{ corruptData:")

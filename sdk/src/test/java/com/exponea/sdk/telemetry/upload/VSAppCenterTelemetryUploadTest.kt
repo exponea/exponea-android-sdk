@@ -13,6 +13,7 @@ import java.util.Date
 import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -39,13 +40,19 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     @Before
     fun before() {
         server = MockWebServer()
+    }
+
+    private fun initializeUpload(): RecordedRequest {
+        server.enqueue(MockResponse()) // for session start event
         upload = VSAppCenterTelemetryUpload(
             context = ApplicationProvider.getApplicationContext(),
             installId = "mock-install-id",
             sdkVersion = "1.0.0",
             userId = "mock-user-id",
+            runId = "mock-run-id",
             uploadUrl = server.url("/something").toString()
         )
+        return server.takeRequest() // session start
     }
 
     @After
@@ -53,10 +60,22 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         server.shutdown()
     }
 
+    @Test
+    fun `should send session start when constructed`() {
+        val request = initializeUpload()
+        // timestamp and id changes with every requests, let's check other properties
+        val payload = JsonParser().parse(request.body.readString(Charset.defaultCharset()))
+        val payloadEvent = payload.asJsonObject["logs"].asJsonArray[0].asJsonObject
+        assertEquals("startSession", payloadEvent["type"].asString)
+        assertEquals("mock-run-id", payloadEvent["sid"].asString)
+        assertEquals(JsonParser().parse(exceptedDevice), payloadEvent["device"].asJsonObject)
+    }
+
     private fun runUploadTest(
         makeRequest: (upload: TelemetryUpload, callback: (Result<Unit>) -> Unit) -> Unit,
         expectedRequest: String
     ) {
+        initializeUpload()
         server.enqueue(MockResponse())
         waitForIt {
             makeRequest(upload) { result ->
@@ -82,7 +101,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     errorData = TelemetryUtility.getErrorData(exception),
                     timestampMS = 1574155789000,
-                    launchTimestampMS = 1573644923000
+                    launchTimestampMS = 1573644923000,
+                    runId = "mock-run-id"
                 )
                 upload.uploadCrashLog(crashLog, callback)
             },
@@ -90,6 +110,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                 {
                     "type":"managedError",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "sid":"mock-run-id",
                     "userId":"mock-user-id",
                     "device": $exceptedDevice,
                     "timestamp":"2019-11-19T09:29:49Z",
@@ -124,7 +145,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     name = "mock-name",
                     timestampMS = 1574155789000,
-                    properties = hashMapOf("mock-1" to "mock-value-1", "mock-2" to "mock-value-2")
+                    properties = hashMapOf("mock-1" to "mock-value-1", "mock-2" to "mock-value-2"),
+                    runId = "mock-run-id"
                 )
                 upload.uploadEventLog(eventLog, callback)
             },
@@ -132,6 +154,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                 {
                     "type":"event",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
+                    "sid":"mock-run-id",
                     "userId":"mock-user-id",
                     "device": $exceptedDevice,
                     "timestamp":"2019-11-19T09:29:49Z",
@@ -148,13 +171,14 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
 
     @Test
     fun `succeed if server returns 500`() {
+        initializeUpload()
         val response = MockResponse()
         response.setResponseCode(500)
         server.enqueue(response)
         val exception = Exception("Test exception")
         exception.stackTrace = arrayOf()
         waitForIt {
-            upload.uploadCrashLog(CrashLog(exception, Date())) { result ->
+            upload.uploadCrashLog(CrashLog(exception, Date(), "mock-run-id")) { result ->
                 it.assertTrue(result.isSuccess)
                 it()
             }

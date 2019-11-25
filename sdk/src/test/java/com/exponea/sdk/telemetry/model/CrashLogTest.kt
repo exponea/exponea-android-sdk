@@ -18,7 +18,7 @@ internal class CrashLogTest : ExponeaSDKTest() {
         val e = Exception("Exception happened", Exception("Cause exception"))
         e.cause?.stackTrace = arrayOf(StackTraceElement("MockClass", "mockMethod", "mockFile", 123))
         e.stackTrace = arrayOf()
-        val crashLog = CrashLog(e, Date(12345))
+        val crashLog = CrashLog(e, Date(12345), "mock-run-id")
         assertEquals("Exception happened", crashLog.errorData.message)
         assertEquals("Cause exception", crashLog.errorData.cause?.message)
         assertEquals(
@@ -30,5 +30,6 @@ internal class CrashLogTest : ExponeaSDKTest() {
                 crashLog.timestampMS > System.currentTimeMillis() - EPSILON_MS
         )
         assertEquals(12345, crashLog.launchTimestampMS)
+        assertEquals("mock-run-id", crashLog.runId)
     }
 }

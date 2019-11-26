@@ -1,5 +1,13 @@
 ## Release Notes
 
+## Release Notes for 2.6.0
+#### November 26, 2019
+* Features
+  * The SDK is now able to report the SDK-related crashes to Exponea. This helps us keep the SDK in a good shape and work on fixes as soon as possible. 
+* Bug Fixes
+  * Fixed: https://github.com/exponea/exponea-android-sdk/issues/16 - The internal database could have been initialized twice. This won't happen anymore.
+  * Fixed: The SDK now correctly reports the version of the host application in the session events.
+
 ## 2.5.0
 #### November 05, 2019
 * Features

@@ -49,8 +49,5 @@ subprojects {
     ktlint {
         verbose = true
         android = true
-        disabledRules = [
-                "final-newline"
-        ]
     }
 }

@@ -82,15 +82,19 @@ internal class ExponeaComponent(
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
 
     // Managers
-    internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(context, exponeaConfiguration)
+    internal val backgroundTimerManager: BackgroundTimerManager =
+        BackgroundTimerManagerImpl(context, exponeaConfiguration)
     internal val serviceManager: ServiceManager = ServiceManagerImpl()
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
     internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
-    internal val flushManager: FlushManager = FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
-    internal val fcmManager: FcmManager = FcmManagerImpl(context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository)
+    internal val flushManager: FlushManager =
+        FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
+    internal val fcmManager: FcmManager =
+        FcmManagerImpl(context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository)
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
-    internal val anonymizeManager: AnonymizeManager = AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
+    internal val anonymizeManager: AnonymizeManager =
+        AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
 }

@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 internal object NotificationTestPayloads {
+    /* ktlint-disable max-line-length */
     val BASIC_NOTIFICATION = hashMapOf(
         "action" to "app",
         "title" to "push title",
@@ -51,4 +52,5 @@ internal object NotificationTestPayloads {
         }""",
         "message" to "Notification text"
     )
+    /* ktlint-enable== max-line-length */
 }

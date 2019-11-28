@@ -4,7 +4,13 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
+import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkConstructor
 import org.junit.After
+import org.junit.Before
 
 internal open class ExponeaSDKTest {
     companion object {
@@ -20,6 +26,13 @@ internal open class ExponeaSDKTest {
                 ApplicationProvider.getApplicationContext()
             )).set(true)
         }
+    }
+
+    @Before
+    fun disableTelemetry() {
+        mockkConstructor(VSAppCenterTelemetryUpload::class)
+        every { anyConstructed<VSAppCenterTelemetryUpload>().uploadCrashLog(any(), any()) } just Runs
+        every { anyConstructed<VSAppCenterTelemetryUpload>().uploadEventLog(any(), any()) } just Runs
     }
 
     @After

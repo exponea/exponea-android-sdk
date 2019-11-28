@@ -10,6 +10,7 @@ import com.exponea.sdk.testutil.waitForIt
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
+import io.mockk.unmockkConstructor
 import java.nio.charset.Charset
 import java.util.Date
 import kotlin.test.assertEquals
@@ -41,6 +42,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
 
     @Before
     fun before() {
+        unmockkConstructor(VSAppCenterTelemetryUpload::class)
         server = MockWebServer()
     }
 

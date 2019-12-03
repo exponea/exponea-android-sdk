@@ -1,7 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.Banner
-import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
 import okhttp3.Call
@@ -37,9 +37,9 @@ internal class ExponeaMockService(
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchRecommendation(
+    override fun postFetchAttributes(
         projectToken: String,
-        recommendation: CustomerRecommendation
+        attributesRequest: CustomerAttributesRequest
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }

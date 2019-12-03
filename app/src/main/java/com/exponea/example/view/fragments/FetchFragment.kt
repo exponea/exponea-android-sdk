@@ -10,11 +10,15 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
+import com.exponea.example.view.dialogs.FetchRecommendationDialog
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Consent
+import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Result
-import kotlinx.android.synthetic.main.fragment_fetch.*
+import kotlinx.android.synthetic.main.fragment_fetch.consentsButton
+import kotlinx.android.synthetic.main.fragment_fetch.progressBar
+import kotlinx.android.synthetic.main.fragment_fetch.recommendationsButton
+import kotlinx.android.synthetic.main.fragment_fetch.resultTextView
 
 class FetchFragment : BaseFragment() {
     override fun onCreateView(
@@ -48,7 +52,7 @@ class FetchFragment : BaseFragment() {
      */
     private fun initListeners() {
         recommendationsButton.setOnClickListener {
-            setProgressBarVisible(true)
+            FetchRecommendationDialog.show(childFragmentManager) { fetchRecommended(it) }
         }
 
         consentsButton.setOnClickListener {
@@ -58,9 +62,21 @@ class FetchFragment : BaseFragment() {
     }
 
     /**
+     * Method handles recommendations loading
+     */
+    private fun fetchRecommended(options: CustomerRecommendationOptions) {
+        setProgressBarVisible(true)
+        Exponea.fetchRecommendation(
+            recommendationOptions = options,
+            onSuccess = { onFetchSuccess(it) },
+            onFailure = { onFetchFailed(it) }
+        )
+    }
+
+    /**
      * Our success callback
      */
-    private fun onFetchSuccess(result: Result<ArrayList<Consent>>) {
+    private fun <T> onFetchSuccess(result: Result<ArrayList<T>>) {
         runOnUiThread {
             setProgressBarVisible(false)
             resultTextView.text = result.toString()

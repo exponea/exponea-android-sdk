@@ -15,6 +15,9 @@ import com.exponea.sdk.models.CampaignClickInfo
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.CustomerRecommendationOptions
+import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -318,6 +321,29 @@ object Exponea {
                 projectToken = Exponea.configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
+        )
+    }.logOnException()
+
+    /**
+     * Fetch recommendations for a specific customer.
+     * @param recommendationOptions - Recommendation options for the customer.
+     * @param onFailure - Method will be called if there was an error.
+     * @param onSuccess - this method will be called when data is ready.
+     */
+    fun fetchRecommendation(
+        recommendationOptions: CustomerRecommendationOptions,
+        onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) = runCatching {
+        val customer = Exponea.component.customerIdsRepository.get()
+        component.fetchManager.fetchRecommendation(
+            projectToken = configuration.projectToken,
+            recommendationRequest = CustomerRecommendationRequest(
+                customerIds = customer.toHashMap().filter { e -> e.value != null },
+                options = recommendationOptions
+            ),
+            onSuccess = onSuccess,
+            onFailure = onFailure
         )
     }.logOnException()
 

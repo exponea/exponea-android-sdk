@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import java.util.Date
@@ -139,3 +140,6 @@ fun Result<Unit>.logOnException() {
         }
     }
 }
+
+val JsonElement.asOptionalString: String?
+    get() = if (this.isJsonNull) null else this.asString

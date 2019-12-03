@@ -93,7 +93,7 @@ internal class ExponeaComponent(
         FcmManagerImpl(context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository)
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
-    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, gson)
+    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService)
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
     internal val anonymizeManager: AnonymizeManager =
         AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)

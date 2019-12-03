@@ -7,6 +7,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 
@@ -36,6 +37,13 @@ internal interface FetchManager {
         projectToken: String,
         recommendationRequest: CustomerRecommendationRequest,
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
+
+    fun fetchInAppMessages(
+        projectToken: String,
+        customerIds: CustomerIds,
+        onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 }

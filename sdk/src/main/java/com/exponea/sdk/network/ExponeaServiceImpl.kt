@@ -4,6 +4,7 @@ import com.exponea.sdk.models.ApiEndPoint
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CampaignClickEvent
 import com.exponea.sdk.models.CustomerAttributesRequest
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExportedEventType
 import com.google.gson.Gson
 import okhttp3.Call
@@ -46,6 +47,17 @@ internal class ExponeaServiceImpl(
 
     override fun postFetchConsents(projectToken: String): Call {
         return doPost(ApiEndPoint.EndPointName.CONSENTS, projectToken, null)
+    }
+
+    override fun postFetchInAppMessages(projectToken: String, customerIds: CustomerIds): Call {
+        return doPost(
+            ApiEndPoint.EndPointName.IN_APP_MESSAGES,
+            projectToken,
+            hashMapOf(
+                "customer_ids" to customerIds.toHashMap(),
+                "device" to "android"
+            )
+        )
     }
 
     private fun doPost(

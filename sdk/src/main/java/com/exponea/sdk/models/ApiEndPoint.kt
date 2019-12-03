@@ -11,7 +11,8 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
         CUSTOMERS_ATTRIBUTES,
         CONFIGURE_BANNER,
         SHOW_BANNER,
-        CONSENTS
+        CONSENTS,
+        IN_APP_MESSAGES
     }
 
     init {
@@ -23,6 +24,7 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
             EndPointName.CONFIGURE_BANNER -> "/track/v2/projects/$splitterToken/configuration/banners"
             EndPointName.SHOW_BANNER -> "/data/v2/projects/$splitterToken/customers/personalisation/show-banners"
             EndPointName.CONSENTS -> "/data/v2/projects/$splitterToken/consent/categories"
+            EndPointName.IN_APP_MESSAGES -> "/personalization/in-app-messages/$splitterToken"
         }
 
         this.url = this.url.replace(splitterToken, token)

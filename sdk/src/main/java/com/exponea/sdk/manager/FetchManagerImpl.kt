@@ -9,6 +9,7 @@ import com.exponea.sdk.models.CustomerRecommendationDeserializer
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.CustomerRecommendationResponse
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
@@ -133,6 +134,21 @@ internal class FetchManagerImpl(
                         onFailure(Result(false, FetchError(null, "Server returned empty results")))
                     }
                 },
+                onFailure
+            )
+        )
+    }
+
+    override fun fetchInAppMessages(
+        projectToken: String,
+        customerIds: CustomerIds,
+        onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postFetchInAppMessages(projectToken, customerIds).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<InAppMessage>>>() {},
+                onSuccess,
                 onFailure
             )
         )

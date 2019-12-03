@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CustomerAttributesRequest
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
 import okhttp3.Call
@@ -49,6 +50,10 @@ internal class ExponeaMockService(
     }
 
     override fun postFetchBanner(projectToken: String, banner: Banner): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun postFetchInAppMessages(projectToken: String, customerIds: CustomerIds): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

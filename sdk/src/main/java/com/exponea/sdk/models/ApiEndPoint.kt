@@ -24,7 +24,7 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
             EndPointName.CONFIGURE_BANNER -> "/track/v2/projects/$splitterToken/configuration/banners"
             EndPointName.SHOW_BANNER -> "/data/v2/projects/$splitterToken/customers/personalisation/show-banners"
             EndPointName.CONSENTS -> "/data/v2/projects/$splitterToken/consent/categories"
-            EndPointName.IN_APP_MESSAGES -> "/personalization/in-app-messages/$splitterToken"
+            EndPointName.IN_APP_MESSAGES -> "/webxp/s/$splitterToken/inappmessages"
         }
 
         this.url = this.url.replace(splitterToken, token)

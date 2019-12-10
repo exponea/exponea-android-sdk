@@ -7,6 +7,10 @@ internal data class InAppMessage(
     val id: String,
     @SerializedName("name")
     val name: String,
+    @SerializedName("message_type")
+    val messageType: String,
+    @SerializedName("frequency")
+    val frequency: String,
     @SerializedName("payload")
     val payload: InAppMessagePayload,
     @SerializedName("variant_id")
@@ -19,15 +23,11 @@ internal data class InAppMessage(
     val dateFilter: DateFilter
 )
 
-/**
- * This is temporary, will change in the future.
- * We should filter based on events and properties.
- * For now, we get objects e.g. {type:"not important" url: "URL"}.
- * Check that URL = eventName
- */
 internal data class InAppMessageTrigger(
-    @SerializedName("include_pages")
-    val includePages: List<Map<String, String>>
+    @SerializedName("type")
+    val type: String?,
+    @SerializedName("event_type")
+    val eventType: String?
 )
 
 internal data class InAppMessagePayload(

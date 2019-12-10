@@ -12,6 +12,8 @@ internal class InAppMessageTest {
     {
         "id": "5dd86f44511946ea55132f29",
         "name": "Test serving in-app message",
+        "message_type": "modal",
+        "frequency": "only_once",
         "payload": {
             "image_url":"https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
             "title":"filip.vozar@exponea.com",
@@ -31,10 +33,8 @@ internal class InAppMessageTest {
         "variant_id": 0,
         "variant_name": "Variant A",
         "trigger": {
-            "exclude_pages": [],
-            "include_pages": [
-                { "type": "any" }
-            ]
+            "type": "event",
+            "event_type": "session_start"
         },
         "date_filter": {
             "enabled": false,
@@ -50,9 +50,11 @@ internal class InAppMessageTest {
             InAppMessage(
                 id = "5dd86f44511946ea55132f29",
                 name = "Test serving in-app message",
+                messageType = "modal",
+                frequency = "only_once",
                 variantId = 0,
                 variantName = "Variant A",
-                trigger = InAppMessageTrigger(includePages = arrayListOf(hashMapOf("type" to "any"))),
+                trigger = InAppMessageTrigger(type = "event", eventType = "session_start"),
                 dateFilter = DateFilter(false, null, null),
                 payload = InAppMessagePayload(
                     imageUrl = "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",

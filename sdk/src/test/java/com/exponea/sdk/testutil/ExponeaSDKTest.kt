@@ -2,6 +2,7 @@ package com.exponea.sdk.testutil
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
@@ -33,6 +34,12 @@ internal open class ExponeaSDKTest {
         mockkConstructor(VSAppCenterTelemetryUpload::class)
         every { anyConstructed<VSAppCenterTelemetryUpload>().uploadCrashLog(any(), any()) } just Runs
         every { anyConstructed<VSAppCenterTelemetryUpload>().uploadEventLog(any(), any()) } just Runs
+    }
+
+    @Before
+    fun disableInAppMessagePrefetch() {
+        mockkConstructor(InAppMessageManagerImpl::class)
+        every { anyConstructed<InAppMessageManagerImpl>().preload() } just Runs
     }
 
     @After

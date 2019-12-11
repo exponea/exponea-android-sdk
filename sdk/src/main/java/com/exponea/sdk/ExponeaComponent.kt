@@ -19,6 +19,8 @@ import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.IapManager
 import com.exponea.sdk.manager.IapManagerImpl
+import com.exponea.sdk.manager.InAppMessageManager
+import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.PersonalizationManager
 import com.exponea.sdk.manager.PersonalizationManagerImpl
 import com.exponea.sdk.manager.ServiceManager
@@ -42,6 +44,8 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
+import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
@@ -76,6 +80,7 @@ internal class ExponeaComponent(
     internal val eventRepository: EventRepository = EventRepositoryImpl()
     internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
     internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(gson, preferences)
+    internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, gson)
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
     // Api Service
@@ -97,4 +102,6 @@ internal class ExponeaComponent(
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
     internal val anonymizeManager: AnonymizeManager =
         AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
+    internal val inAppMessageManager: InAppMessageManager =
+        InAppMessageManagerImpl(exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
 }

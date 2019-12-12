@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FetchError
@@ -7,6 +8,7 @@ import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
 import io.mockk.Runs
@@ -28,6 +30,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var fetchManager: FetchManager
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var messagesCache: InAppMessagesCache
+    private lateinit var bitmapCache: InAppMessageBitmapCache
     private lateinit var manager: InAppMessageManager
 
     @Before
@@ -35,13 +38,19 @@ internal class InAppMessageManagerImplTest {
         fetchManager = mockk()
         messagesCache = mockk()
         every { messagesCache.set(any()) } just Runs
+        bitmapCache = mockk()
+        every { bitmapCache.has(any()) } returns false
+        every { bitmapCache.preload(any(), any()) } just Runs
+        every { bitmapCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         manager = InAppMessageManagerImpl(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(),
             customerIdsRepository,
             messagesCache,
-            fetchManager
+            fetchManager,
+            bitmapCache
         )
     }
 
@@ -87,11 +96,21 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
-    fun `should get message if available`() {
+    fun `should get message if both message and bitmap available`() {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(),
             InAppMessageTest.getInAppMessage()
         )
+        every { bitmapCache.has(any()) } returns true
         assertEquals(InAppMessageTest.getInAppMessage(), manager.get())
+    }
+
+    @Test
+    fun `should not get message if bitmap is not available`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(),
+            InAppMessageTest.getInAppMessage()
+        )
+        assertEquals(null, manager.get())
     }
 }

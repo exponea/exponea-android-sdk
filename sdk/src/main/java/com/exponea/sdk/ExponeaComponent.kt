@@ -103,5 +103,5 @@ internal class ExponeaComponent(
     internal val anonymizeManager: AnonymizeManager =
         AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
     internal val inAppMessageManager: InAppMessageManager =
-        InAppMessageManagerImpl(exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
+        InAppMessageManagerImpl(context, exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
 }

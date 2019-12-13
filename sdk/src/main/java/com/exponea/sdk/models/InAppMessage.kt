@@ -1,5 +1,7 @@
 package com.exponea.sdk.models
 
+import android.graphics.Color
+import com.exponea.sdk.util.Logger
 import com.google.gson.annotations.SerializedName
 
 internal data class InAppMessage(
@@ -59,4 +61,24 @@ internal data class InAppMessagePayload(
     val backgroundColor: String,
     @SerializedName("close_button_color")
     val closeButtonColor: String
-)
+) {
+    companion object {
+        fun parseFontSize(fontSize: String, defaultValue: Float): Float {
+            try {
+                return fontSize.replace("px", "").toFloat()
+            } catch (e: Throwable) {
+                Logger.w(this, "Unable to parse in-app message font size $e")
+                return defaultValue
+            }
+        }
+
+        fun parseColor(color: String, defaultValue: Int): Int {
+            try {
+                return Color.parseColor(color)
+            } catch (e: Throwable) {
+                Logger.w(this, "Unable to parse in-app message color $e")
+                return defaultValue
+            }
+        }
+    }
+}

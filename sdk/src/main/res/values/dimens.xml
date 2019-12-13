@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="exponea_sdk_in_app_message_window_corner_radius">15dp</dimen>
+</resources>

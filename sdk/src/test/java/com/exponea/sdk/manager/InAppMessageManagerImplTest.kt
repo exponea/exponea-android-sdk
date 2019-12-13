@@ -92,7 +92,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get null if no messages available`() {
         every { messagesCache.get() } returns arrayListOf()
-        assertNull(manager.get())
+        assertNull(manager.getRandom())
     }
 
     @Test
@@ -102,7 +102,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage()
         )
         every { bitmapCache.has(any()) } returns true
-        assertEquals(InAppMessageTest.getInAppMessage(), manager.get())
+        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom())
     }
 
     @Test
@@ -111,6 +111,6 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(),
             InAppMessageTest.getInAppMessage()
         )
-        assertEquals(null, manager.get())
+        assertEquals(null, manager.getRandom())
     }
 }

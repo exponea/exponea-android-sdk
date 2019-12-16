@@ -21,7 +21,6 @@ internal class SessionManagerImpl(
     companion object {
         const val PREF_SESSION_END = "SessionEndTimeDouble"
         const val PREF_SESSION_START = "SessionStartTimeDouble"
-        const val PREF_SESSION_AUTO_TRACK = "SessionAutomaticTracking"
     }
 
     /**
@@ -46,7 +45,6 @@ internal class SessionManagerImpl(
         if (!isListenerActive) {
             application.registerActivityLifecycleCallbacks(this)
             isListenerActive = true
-            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, true)
         }
     }
 
@@ -57,7 +55,6 @@ internal class SessionManagerImpl(
         if (isListenerActive) {
             application.unregisterActivityLifecycleCallbacks(this)
             isListenerActive = false
-            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, false)
         }
     }
 

@@ -9,7 +9,6 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.ConfigurationFileManager
-import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.CampaignClickInfo
 import com.exponea.sdk.models.Consent
@@ -514,12 +513,6 @@ object Exponea {
         // Track Firebase Token
         trackFirebaseToken()
 
-        // Initialize session observer
-        component.preferences
-                .setBoolean(
-                        SessionManagerImpl.PREF_SESSION_AUTO_TRACK,
-                        configuration.automaticSessionTracking
-                )
         startSessionTracking(configuration.automaticSessionTracking)
 
         context.addAppStateCallbacks(

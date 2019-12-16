@@ -4,6 +4,6 @@ import com.exponea.sdk.models.InAppMessage
 
 internal interface InAppMessageManager {
     fun preload(callback: ((Result<Unit>) -> Unit)? = null)
-    fun getRandom(): InAppMessage?
-    fun showRandom()
+    fun getRandom(eventType: String): InAppMessage?
+    fun showRandom(eventType: String)
 }

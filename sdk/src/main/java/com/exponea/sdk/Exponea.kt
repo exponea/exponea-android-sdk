@@ -666,6 +666,9 @@ object Exponea {
         )
 
         component.eventManager.addEventToQueue(event, type)
+        if (eventType != null) {
+            component.inAppMessageManager.showRandom(eventType)
+        }
     }
 
     /**

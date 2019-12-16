@@ -45,7 +45,11 @@ internal class InAppMessageTest {
         }
         """
 
-        fun getInAppMessage(id: String? = null): InAppMessage {
+        fun getInAppMessage(
+            id: String? = null,
+            dateFilter: DateFilter? = null,
+            trigger: InAppMessageTrigger? = null
+        ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
                 name = "Test serving in-app message",
@@ -53,8 +57,8 @@ internal class InAppMessageTest {
                 frequency = "only_once",
                 variantId = 0,
                 variantName = "Variant A",
-                trigger = InAppMessageTrigger(type = "event", eventType = "session_start"),
-                dateFilter = DateFilter(false, null, null),
+                trigger = trigger ?: InAppMessageTrigger(type = "event", eventType = "session_start"),
+                dateFilter = dateFilter ?: DateFilter(false, null, null),
                 payload = InAppMessagePayload(
                     imageUrl = "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
                     title = "filip.vozar@exponea.com",

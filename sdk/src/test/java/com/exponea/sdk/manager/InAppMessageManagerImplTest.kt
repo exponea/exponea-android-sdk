@@ -2,10 +2,12 @@ package com.exponea.sdk.manager
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.InAppMessageTrigger
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
@@ -18,6 +20,7 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.junit.After
 import org.junit.Before
@@ -31,7 +34,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var messagesCache: InAppMessagesCache
     private lateinit var bitmapCache: InAppMessageBitmapCache
-    private lateinit var manager: InAppMessageManager
+    private lateinit var manager: InAppMessageManagerImpl
 
     @Before
     fun before() {
@@ -92,7 +95,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get null if no messages available`() {
         every { messagesCache.get() } returns arrayListOf()
-        assertNull(manager.getRandom())
+        assertNull(manager.getRandom("testEvent"))
     }
 
     @Test
@@ -102,7 +105,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage()
         )
         every { bitmapCache.has(any()) } returns true
-        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom())
+        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom("session_start"))
     }
 
     @Test
@@ -111,6 +114,60 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(),
             InAppMessageTest.getInAppMessage()
         )
-        assertEquals(null, manager.getRandom())
+        assertEquals(null, manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should apply date filter`() {
+        every { bitmapCache.has(any()) } returns true
+        val setupStoredEvent = { dateFilter: DateFilter ->
+            every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(dateFilter = dateFilter))
+        }
+
+        val currentTime = (System.currentTimeMillis() / 1000).toInt()
+
+        setupStoredEvent(DateFilter(true, null, null))
+        assertNotNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, null, currentTime - 100))
+        assertNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, null, currentTime + 100))
+        assertNotNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, currentTime + 100, null))
+        assertNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, currentTime - 100, null))
+        assertNotNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, currentTime - 100, currentTime + 100))
+        assertNotNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(true, currentTime + 100, currentTime + 100))
+        assertNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(DateFilter(false, currentTime + 100, currentTime + 100))
+        assertNotNull(manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should apply event filter`() {
+        every { bitmapCache.has(any()) } returns true
+        val setupStoredEvent = { trigger: InAppMessageTrigger ->
+            every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(trigger = trigger))
+        }
+
+        setupStoredEvent(InAppMessageTrigger(type = null, eventType = null))
+        assertNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "session_start"))
+        assertNotNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
+        assertNull(manager.getRandom("session_start"))
+
+        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
+        assertNotNull(manager.getRandom("payment"))
     }
 }

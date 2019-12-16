@@ -45,20 +45,38 @@ internal class InAppMessageManagerImpl(
         messages.forEach { bitmapCache.preload(it.payload.imageUrl) }
     }
 
-    private fun canDisplay(message: InAppMessage): Boolean {
+    private fun applyDateFilter(message: InAppMessage): Boolean {
+        if (!message.dateFilter.enabled) {
+            return true
+        }
+        val currentTime = System.currentTimeMillis() / 1000
+        if (message.dateFilter.fromDate != null && message.dateFilter.fromDate > currentTime) {
+            return false
+        }
+        if (message.dateFilter.toDate != null && message.dateFilter.toDate < currentTime) {
+            return false
+        }
+        return true
+    }
+
+    private fun applyEventFilter(message: InAppMessage, eventType: String): Boolean {
+        return message.trigger.type == "event" && message.trigger.eventType == eventType
+    }
+
+    private fun hasImageFor(message: InAppMessage): Boolean {
         return bitmapCache.has(message.payload.imageUrl)
     }
 
-    override fun getRandom(): InAppMessage? {
+    override fun getRandom(eventType: String): InAppMessage? {
         val messages = inAppMessagesCache.get().filter {
-            canDisplay(it)
+            hasImageFor(it) && applyDateFilter(it) && applyEventFilter(it, eventType)
         }
         return if (messages.isNotEmpty()) messages.random() else null
     }
 
-    override fun showRandom() {
+    override fun showRandom(eventType: String) {
         thread {
-            val message = getRandom()
+            val message = getRandom(eventType)
             if (message != null) {
                 val bitmap = bitmapCache.get(message.payload.imageUrl)
                 Handler(Looper.getMainLooper()).post {

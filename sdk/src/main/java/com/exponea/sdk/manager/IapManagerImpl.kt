@@ -8,7 +8,6 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.SkuDetails
 import com.android.billingclient.api.SkuDetailsParams
-import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
@@ -24,7 +23,10 @@ import com.exponea.sdk.util.logOnException
  *
  * @param context Application Context
  */
-internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedListener {
+internal class IapManagerImpl(
+    context: Context,
+    private val eventManager: EventManager
+) : IapManager, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient by lazy { BillingClient.newBuilder(context).setListener(this).build() }
     private val device = DeviceProperties(context)
@@ -72,7 +74,7 @@ internal class IapManagerImpl(context: Context) : IapManager, PurchasesUpdatedLi
      * Receive the purchased item and send it to the database.
      */
     override fun trackPurchase(properties: HashMap<String, Any>) {
-        Exponea.track(
+        eventManager.track(
                 eventType = "payment",
                 properties = properties,
                 type = EventType.PAYMENT

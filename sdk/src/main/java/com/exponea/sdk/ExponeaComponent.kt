@@ -58,8 +58,6 @@ internal class ExponeaComponent(
 ) {
     // Gson Deserializer
     internal val gson = Gson()
-    // In App Purchase Manager
-    internal val iapManager: IapManager = IapManagerImpl(context)
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories
@@ -87,21 +85,23 @@ internal class ExponeaComponent(
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
 
     // Managers
+    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService)
     internal val backgroundTimerManager: BackgroundTimerManager =
         BackgroundTimerManagerImpl(context, exponeaConfiguration)
     internal val serviceManager: ServiceManager = ServiceManagerImpl()
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
-    internal val eventManager: EventManager = EventManagerImpl(exponeaConfiguration, eventRepository)
+    internal val inAppMessageManager: InAppMessageManager =
+        InAppMessageManagerImpl(context, exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
+    internal val eventManager: EventManager =
+        EventManagerImpl(exponeaConfiguration, eventRepository, customerIdsRepository, inAppMessageManager)
     internal val flushManager: FlushManager =
         FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
     internal val fcmManager: FcmManager =
         FcmManagerImpl(context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository)
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
-    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService)
-    internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences)
+    internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences, eventManager)
+    internal val iapManager: IapManager = IapManagerImpl(context, eventManager)
     internal val anonymizeManager: AnonymizeManager =
         AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
-    internal val inAppMessageManager: InAppMessageManager =
-        InAppMessageManagerImpl(context, exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
 }

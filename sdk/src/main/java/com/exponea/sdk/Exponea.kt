@@ -542,23 +542,16 @@ object Exponea {
      */
 
     private fun initializeSdk() {
-
-        // Start Network Manager
         this.component = ExponeaComponent(this.configuration, context)
 
-        // WorkManager
         initWorkManager()
 
-        // Periodic flush service
         if (flushMode == PERIOD) startPeriodicFlushService()
 
-        // Track Install Event
         trackInstallEvent()
 
-        // Track In-App purchase
-        trackInAppPurchase(configuration.skuList)
+        startPurchaseObserver(configuration.skuList)
 
-        // Track Firebase Token
         trackFirebaseToken()
 
         startSessionTracking(configuration.automaticSessionTracking)
@@ -653,11 +646,7 @@ object Exponea {
         }
     }
 
-    /**
-     * Initializes payments listener
-     */
-
-    private fun trackInAppPurchase(skuList: List<String>) {
+    private fun startPurchaseObserver(skuList: List<String>) {
         if (this.configuration.automaticPaymentTracking) {
             // Add the observers when the automatic session tracking is true.
             this.component.iapManager.configure(skuList)

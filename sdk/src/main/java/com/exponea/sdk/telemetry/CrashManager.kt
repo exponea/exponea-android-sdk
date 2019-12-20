@@ -27,7 +27,7 @@ internal class CrashManager(
     }
 
     override fun uncaughtException(t: Thread, e: Throwable) {
-        Logger.i(this, "Handling uncaught exception")
+        Logger.i(this, "Handling uncaught exception(app crash)")
         handleException(e, true)
         oldHandler?.uncaughtException(t, e)
     }
@@ -50,8 +50,8 @@ internal class CrashManager(
         }
     }
 
-    fun saveLogMessage(parent: Any, message: String) {
-        latestLogMessages.addFirst("${parent.javaClass.simpleName} $message")
+    fun saveLogMessage(parent: Any, message: String, timestamp: Long) {
+        latestLogMessages.addFirst("${Date(timestamp)} ${parent.javaClass.simpleName}: $message")
         if (latestLogMessages.size > MAX_LOG_MESSAGES) {
             latestLogMessages.removeLast()
         }

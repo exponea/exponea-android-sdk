@@ -56,7 +56,7 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         crashManager.handleException(e, false)
     }
 
-    fun reportLog(parent: Any, message: String) {
-        crashManager.saveLogMessage(parent, message)
+    fun reportLog(parent: Any, message: String, timestamp: Long? = null) {
+        crashManager.saveLogMessage(parent, message, timestamp ?: System.currentTimeMillis())
     }
 }

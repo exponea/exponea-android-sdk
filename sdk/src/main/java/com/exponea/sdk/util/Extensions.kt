@@ -109,7 +109,7 @@ fun Intent?.isDeeplinkIntent(): Boolean {
 fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {
     return this.getOrElse {
         try {
-            Logger.e(Exponea, "Unhandled error occurs", it)
+            Logger.e(Exponea, "Exponea Safe Mode wrapper caught unhandled error", it)
         } catch (e: Throwable) {
             // cannot log problem, swallowing
         }
@@ -128,7 +128,7 @@ fun Result<Unit>.logOnException() {
     val exception = this.exceptionOrNull()
     if (exception != null) {
         try {
-            Logger.e(Exponea, "Unhandled error occurs")
+            Logger.e(Exponea, "Exponea Safe Mode wrapper caught unhandled error", exception)
         } catch (e: Throwable) {
             // cannot log problem, swallowing
         }

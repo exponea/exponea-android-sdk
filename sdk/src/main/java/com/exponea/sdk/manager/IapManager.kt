@@ -5,5 +5,4 @@ internal interface IapManager {
     fun startObservingPayments()
     fun stopObservingPayments()
     fun trackPurchase(properties: HashMap<String, Any>)
-    fun getAvailableProducts(skuList: List<String>)
 }

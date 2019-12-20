@@ -32,29 +32,43 @@ internal class IapManagerImpl(
     private val device = DeviceProperties(context)
     private val skuList: ArrayList<SkuDetails> = ArrayList()
 
+    private var configured = false
     /**
      * Starts the connection and implement the billing listener.
      */
     override fun configure(skuList: List<String>) {
-        // Starts up BillingClient setup process asynchronously.
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(@BillingResponse billingResponseCode: Int) {
-                // Store the products at the Play Store using the skuList for future use when
-                // user purchase an item
-                getAvailableProducts(skuList)
-                Logger.d(this, "Billing service was initiated")
-            }
+        try {
+            // Starts up BillingClient setup process asynchronously.
+            billingClient.startConnection(object : BillingClientStateListener {
+                override fun onBillingSetupFinished(@BillingResponse billingResponseCode: Int) {
+                    // Store the products at the Play Store using the skuList for future use when
+                    // user purchase an item
+                    getAvailableProducts(skuList)
+                    Logger.d(this, "Billing service was initiated")
+                }
 
-            override fun onBillingServiceDisconnected() {
-                Logger.d(this, "Billing service was disconnected")
-            }
-        })
+                override fun onBillingServiceDisconnected() {
+                    Logger.d(this, "Billing service was disconnected")
+                }
+            })
+            configured = true
+        } catch (e: Throwable) {
+            Logger.e(
+                this,
+                """
+                    Unable to initialize billing client, automatic in-app purchase tracking disabled. 
+                    Probable reason is Google Play Billing Library 2.0, which Exponea SDK currently doesn't support.
+                    $e
+                """.trimIndent()
+            )
+        }
     }
 
     /**
      * Check if the listener was successfully started.
      */
     override fun startObservingPayments() {
+        if (!configured) return
         // Checks if the client is currently connected to the service.
         if (billingClient.isReady) {
             Logger.d(this, "Billing client was successfully started")
@@ -67,6 +81,7 @@ internal class IapManagerImpl(
      * Close the connection and release all held resources such as service connections.
      */
     override fun stopObservingPayments() {
+        if (!configured) return
         billingClient.endConnection()
     }
 
@@ -81,7 +96,7 @@ internal class IapManagerImpl(
         )
     }
 
-    override fun getAvailableProducts(skuList: List<String>) {
+    private fun getAvailableProducts(skuList: List<String>) {
         billingClient.let { bc ->
             val params = SkuDetailsParams.newBuilder().apply {
                 setType(BillingClient.SkuType.INAPP)

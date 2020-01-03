@@ -58,6 +58,8 @@ dependencies {
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.1.0"
 
+    implementation "com.android.support.constraint:constraint-layout:1.1.3"
+
     // Base Test
     testImplementation 'junit:junit:4.12'
     testImplementation 'androidx.test:core:1.2.0'

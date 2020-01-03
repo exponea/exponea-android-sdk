@@ -27,17 +27,20 @@ import kotlinx.android.synthetic.main.in_app_message_dialog.textViewTitle
 internal class InAppMessageDialog : Dialog {
     private val payload: InAppMessagePayload
     private val onButtonClick: () -> Unit
+    private var onDismiss: (() -> Unit)?
     private val bitmap: Bitmap
 
     constructor(
         context: Context,
         payload: InAppMessagePayload,
         image: Bitmap,
-        onButtonClick: () -> Unit
+        onButtonClick: () -> Unit,
+        onDismiss: () -> Unit
     ) : super(context) {
         this.payload = payload
         this.bitmap = image
         this.onButtonClick = onButtonClick
+        this.onDismiss = onDismiss
         val inflater = LayoutInflater.from(context)
         setContentView(inflater.inflate(R.layout.in_app_message_dialog, null, false))
     }
@@ -49,6 +52,10 @@ internal class InAppMessageDialog : Dialog {
         setupBodyText()
         setupButton()
         setupWindow()
+
+        setOnDismissListener {
+            this.onDismiss?.invoke()
+        }
     }
 
     private fun setupImage() {
@@ -84,6 +91,7 @@ internal class InAppMessageDialog : Dialog {
         )
         buttonAction.setOnClickListener {
             onButtonClick()
+            onDismiss = null // clear the dismiss listener, we called the button listener
             dismiss()
         }
     }

@@ -19,21 +19,21 @@ internal class InAppMessageDialogPresenterTest {
     @Test
     fun `should not show dialog without activity`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
-        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file")))
+        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 
     @Test
     fun `should show dialog with activity`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
-        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file")))
+        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
     @Test
     fun `should not show dialog after activity is paused`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
-        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file")))
+        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
         buildActivity(MockActivity::class.java).setup().resume().pause()
-        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file")))
+        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 }

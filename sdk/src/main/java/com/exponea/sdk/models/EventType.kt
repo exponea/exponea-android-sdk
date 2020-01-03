@@ -29,5 +29,8 @@ enum class EventType {
     PUSH_OPENED,
 
     // For tracking that a campaign button has been clicked.
-    CAMPAIGN_CLICK
+    CAMPAIGN_CLICK,
+
+    // For tracking in-app message related events.
+    BANNER
 }

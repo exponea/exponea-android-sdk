@@ -93,7 +93,7 @@ internal class ExponeaComponent(
     internal val inAppMessageManager: InAppMessageManager =
         InAppMessageManagerImpl(context, exponeaConfiguration, customerIdsRepository, inAppMessagesCache, fetchManager)
     internal val eventManager: EventManager =
-        EventManagerImpl(exponeaConfiguration, eventRepository, customerIdsRepository, inAppMessageManager)
+        EventManagerImpl(context, exponeaConfiguration, eventRepository, customerIdsRepository, inAppMessageManager)
     internal val flushManager: FlushManager =
         FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
     internal val fcmManager: FcmManager =

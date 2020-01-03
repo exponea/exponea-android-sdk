@@ -20,8 +20,10 @@ internal class InAppMessageDialogTest {
         val dialog = InAppMessageDialog(
             ApplicationProvider.getApplicationContext<Context>(),
             payload,
-            BitmapFactory.decodeFile("mock-file")
-        ) {}
+            BitmapFactory.decodeFile("mock-file"),
+            {},
+            {}
+        )
         dialog.show()
         assertEquals(payload.title, dialog.findViewById<TextView>(R.id.textViewTitle).text)
         assertEquals(payload.bodyText, dialog.findViewById<TextView>(R.id.textViewBody).text)

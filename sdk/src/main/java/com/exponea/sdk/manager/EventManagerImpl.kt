@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.content.Context
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.EventType
@@ -12,6 +13,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 
 internal class EventManagerImpl(
+    private val context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
@@ -73,7 +75,7 @@ internal class EventManagerImpl(
         addEventToQueue(event, type)
 
         if (eventType != null) {
-            inAppMessageManager.showRandom(eventType)
+            inAppMessageManager.showRandom(eventType, EventManagerInAppMessageTrackingDelegate(context, this))
         }
     }
 }

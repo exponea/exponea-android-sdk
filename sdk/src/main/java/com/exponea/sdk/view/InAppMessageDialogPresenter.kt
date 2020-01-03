@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
-import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessageDialogPresenter(context: Context) {
@@ -34,10 +33,19 @@ internal class InAppMessageDialogPresenter(context: Context) {
         )
     }
 
-    fun show(payload: InAppMessagePayload, image: Bitmap): Boolean = runCatching {
-        val dialog = InAppMessageDialog(currentActivity ?: return false, payload, image) {
-            Logger.i(this, "In-app message button clicked!")
-        }
+    fun show(
+        payload: InAppMessagePayload,
+        image: Bitmap,
+        actionCallback: () -> Unit,
+        dismissedCallback: () -> Unit
+    ): Boolean = runCatching {
+        val dialog = InAppMessageDialog(
+            currentActivity ?: return false,
+            payload,
+            image,
+            actionCallback,
+            dismissedCallback
+        )
         dialog.show()
         return true
     }.returnOnException { false }

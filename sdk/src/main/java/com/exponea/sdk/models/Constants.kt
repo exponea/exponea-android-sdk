@@ -39,6 +39,7 @@ internal object Constants {
         val sessionStart: String = "session_start"
         val payment: String = "payment"
         val push: String = "campaign"
+        val banner: String = "banner"
     }
 
     // Default session values

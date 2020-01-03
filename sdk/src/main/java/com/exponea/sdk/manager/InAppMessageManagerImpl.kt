@@ -3,6 +3,9 @@ package com.exponea.sdk.manager
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -11,7 +14,9 @@ import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.view.InAppMessageDialogPresenter
-import kotlin.concurrent.thread
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 internal class InAppMessageManagerImpl(
     context: Context,
@@ -74,15 +79,57 @@ internal class InAppMessageManagerImpl(
         return if (messages.isNotEmpty()) messages.random() else null
     }
 
-    override fun showRandom(eventType: String) {
-        thread {
+    override fun showRandom(
+        eventType: String,
+        trackingDelegate: InAppMessageTrackingDelegate
+    ): Job {
+        return GlobalScope.launch {
             val message = getRandom(eventType)
             if (message != null) {
-                val bitmap = bitmapCache.get(message.payload.imageUrl)
+                val bitmap = bitmapCache.get(message.payload.imageUrl) ?: return@launch
                 Handler(Looper.getMainLooper()).post {
-                    presenter.show(message.payload, bitmap ?: return@post)
+                    val presented = presenter.show(
+                        payload = message.payload,
+                        image = bitmap,
+                        actionCallback = {
+                            trackingDelegate.track(message, "click", true)
+                            Logger.i(this, "In-app message button clicked!")
+                        },
+                        dismissedCallback = {
+                            trackingDelegate.track(message, "close", false)
+                        }
+                    )
+                    if (presented) {
+                        trackingDelegate.track(message, "show", false)
+                    }
                 }
             }
         }
+    }
+}
+
+internal class EventManagerInAppMessageTrackingDelegate(
+    private val context: Context,
+    private val eventManager: EventManager
+) : InAppMessageTrackingDelegate {
+    override fun track(message: InAppMessage, action: String, interaction: Boolean) {
+        val properties = hashMapOf(
+            "action" to action,
+            "banner_id" to message.id,
+            "banner_name" to message.name,
+            "banner_type" to message.messageType,
+            "interaction" to interaction,
+            "os" to "Android",
+            "type" to "in-app message",
+            "variant_id" to message.variantId,
+            "variant_name" to message.variantName
+        )
+        properties.putAll(DeviceProperties(context).toHashMap())
+
+        eventManager.track(
+            eventType = Constants.EventTypes.banner,
+            properties = properties,
+            type = EventType.BANNER
+        )
     }
 }

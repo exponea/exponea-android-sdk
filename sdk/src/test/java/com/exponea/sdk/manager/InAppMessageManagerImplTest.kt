@@ -1,8 +1,11 @@
 package com.exponea.sdk.manager
 
+import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
@@ -13,19 +16,24 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.view.InAppMessageDialogPresenter
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -34,6 +42,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var messagesCache: InAppMessagesCache
     private lateinit var bitmapCache: InAppMessageBitmapCache
+    private lateinit var presenter: InAppMessageDialogPresenter
     private lateinit var manager: InAppMessageManagerImpl
 
     @Before
@@ -47,13 +56,16 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
+        presenter = mockk()
+        every { presenter.show(any(), any(), any(), any()) } returns true
         manager = InAppMessageManagerImpl(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(),
             customerIdsRepository,
             messagesCache,
             fetchManager,
-            bitmapCache
+            bitmapCache,
+            presenter
         )
     }
 
@@ -169,5 +181,54 @@ internal class InAppMessageManagerImplTest {
 
         setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
         assertNotNull(manager.getRandom("payment"))
+    }
+
+    @Test
+    fun `should track dialog lifecycle`() {
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        val delegate = spyk<InAppMessageTrackingDelegate>()
+        val actionCallbackSlot = slot<() -> Unit>()
+        val dismissedCallbackSlot = slot<() -> Unit>()
+        every { presenter.show(any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot)) } returns true
+
+        runBlocking {
+            manager.showRandom("session_start", delegate).join()
+        }
+
+        Robolectric.flushForegroundThreadScheduler()
+
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        actionCallbackSlot.captured.invoke()
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true) }
+        dismissedCallbackSlot.captured.invoke()
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
+    }
+
+    @Test
+    fun `delegate should create event data`() {
+        val eventManager = mockk<EventManager>()
+        val eventTypeSlot = slot<String>()
+        val propertiesSlot = slot<HashMap<String, Any>>()
+        val typeSlot = slot<EventType>()
+        every {
+            eventManager.track(capture(eventTypeSlot), any(), capture(propertiesSlot), capture(typeSlot))
+        } just Runs
+
+        val delegate = EventManagerInAppMessageTrackingDelegate(
+            ApplicationProvider.getApplicationContext(),
+            eventManager
+        )
+        delegate.track(InAppMessageTest.getInAppMessage(), "mock-action", false)
+        assertEquals(Constants.EventTypes.banner, eventTypeSlot.captured)
+        assertEquals(EventType.BANNER, typeSlot.captured)
+        assertEquals("5dd86f44511946ea55132f29", propertiesSlot.captured["banner_id"])
+
+        assertEquals("Test serving in-app message", propertiesSlot.captured["banner_name"])
+        assertEquals("mock-action", propertiesSlot.captured["action"])
+        assertEquals(false, propertiesSlot.captured["interaction"])
+        assertEquals(0, propertiesSlot.captured["variant_id"])
+        assertEquals("Variant A", propertiesSlot.captured["variant_name"])
     }
 }

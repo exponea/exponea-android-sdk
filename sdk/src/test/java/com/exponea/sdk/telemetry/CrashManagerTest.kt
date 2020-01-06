@@ -4,6 +4,7 @@ import com.exponea.sdk.telemetry.CrashManager
 import com.exponea.sdk.telemetry.storage.TelemetryStorage
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -12,6 +13,7 @@ import io.mockk.slot
 import io.mockk.verify
 import java.lang.System.currentTimeMillis
 import java.util.Date
+import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -165,6 +167,21 @@ internal class CrashManagerTest : ExponeaSDKTest() {
         assertEquals(100, crashLogSlot.captured.logs?.size)
         for (i in 0..99) {
             assertEquals("${Date(timestamp)} CrashManagerTest: message ${1000 - i}", crashLogSlot.captured.logs?.get(i))
+        }
+    }
+
+    @Test
+    fun `should save log messages from multiple threads`() {
+        waitForIt {
+            val threadCount = 10
+            var done = 0
+            for (i in 0..threadCount) {
+                thread {
+                    for (x in 0..100) crashManager.saveLogMessage(this, "message", currentTimeMillis())
+                    done++
+                    if (done == threadCount) it()
+                }
+            }
         }
     }
 }

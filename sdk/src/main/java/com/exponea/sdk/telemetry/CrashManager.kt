@@ -50,7 +50,7 @@ internal class CrashManager(
         }
     }
 
-    fun saveLogMessage(parent: Any, message: String, timestamp: Long) {
+    @Synchronized fun saveLogMessage(parent: Any, message: String, timestamp: Long) {
         latestLogMessages.addFirst("${Date(timestamp)} ${parent.javaClass.simpleName}: $message")
         if (latestLogMessages.size > MAX_LOG_MESSAGES) {
             latestLogMessages.removeLast()

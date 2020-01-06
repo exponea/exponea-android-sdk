@@ -50,14 +50,26 @@ import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
-import com.google.gson.Gson
-
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
+import com.google.gson.reflect.TypeToken
 internal class ExponeaComponent(
     exponeaConfiguration: ExponeaConfiguration,
     context: Context
 ) {
     // Gson Deserializer
-    internal val gson = Gson()
+    // - NaN and Infinity are serialized as strings, Gson fails to serialize them, it can do it but Exponea servers
+    //   fail to process the JSON afterwards. This way devs know there is something going on and find the issue
+    internal val gson = GsonBuilder()
+        .registerTypeAdapter(object : TypeToken<Double>() {}.type, JsonSerializer<Double> { src, _, _ ->
+            if (src.isInfinite() || src.isNaN()) { JsonPrimitive(src.toString()) } else { JsonPrimitive(src) }
+        })
+        .registerTypeAdapter(object : TypeToken<Float>() {}.type, JsonSerializer<Float> { src, _, _ ->
+            if (src.isInfinite() || src.isNaN()) { JsonPrimitive(src.toString()) } else { JsonPrimitive(src) }
+        })
+        .create()
+
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
     // Repositories

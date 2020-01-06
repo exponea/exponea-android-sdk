@@ -9,11 +9,14 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageDisplayState
+import com.exponea.sdk.models.InAppMessageFrequency
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.InAppMessageTrigger
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.view.InAppMessageDialogPresenter
@@ -25,6 +28,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -40,6 +44,7 @@ import org.robolectric.RobolectricTestRunner
 internal class InAppMessageManagerImplTest {
     private lateinit var fetchManager: FetchManager
     private lateinit var customerIdsRepository: CustomerIdsRepository
+    private lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     private lateinit var messagesCache: InAppMessagesCache
     private lateinit var bitmapCache: InAppMessageBitmapCache
     private lateinit var presenter: InAppMessageDialogPresenter
@@ -56,6 +61,10 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
+        inAppMessageDisplayStateRepository = mockk()
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(null, null)
+        every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
+        every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
         every { presenter.show(any(), any(), any(), any()) } returns true
         manager = InAppMessageManagerImpl(
@@ -64,6 +73,7 @@ internal class InAppMessageManagerImplTest {
             customerIdsRepository,
             messagesCache,
             fetchManager,
+            inAppMessageDisplayStateRepository,
             bitmapCache,
             presenter
         )
@@ -181,6 +191,72 @@ internal class InAppMessageManagerImplTest {
 
         setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
         assertNotNull(manager.getRandom("payment"))
+    }
+
+    @Test
+    fun `should apply 'always' frequency filter`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ALWAYS.value)
+        )
+        every { bitmapCache.has(any()) } returns true
+
+        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should apply 'only_once' frequency filter`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
+        )
+        every { bitmapCache.has(any()) } returns true
+        assertNotNull(manager.getRandom("session_start"))
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
+        assertNull(manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should apply 'until_visitor_interacts' frequency filter`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
+        )
+        every { bitmapCache.has(any()) } returns true
+        assertNotNull(manager.getRandom("session_start"))
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
+        assertNotNull(manager.getRandom("session_start"))
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), Date(1000))
+        assertNull(manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should apply 'once_per_visit' frequency filter`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
+        )
+        every { bitmapCache.has(any()) } returns true
+        manager.sessionStarted(Date(1000))
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1500), null)
+        assertNull(manager.getRandom("session_start"))
+        manager.sessionStarted(Date(2000))
+        assertNotNull(manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should set message displayed and interacted`() {
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        val delegate = spyk<InAppMessageTrackingDelegate>()
+        val actionCallbackSlot = slot<() -> Unit>()
+        val dismissedCallbackSlot = slot<() -> Unit>()
+        every { presenter.show(any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot)) } returns true
+
+        runBlocking { manager.showRandom("session_start", delegate).join() }
+        Robolectric.flushForegroundThreadScheduler()
+
+        verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
+        actionCallbackSlot.captured.invoke()
+        verify(exactly = 1) { inAppMessageDisplayStateRepository.setInteracted(any(), any()) }
     }
 
     @Test

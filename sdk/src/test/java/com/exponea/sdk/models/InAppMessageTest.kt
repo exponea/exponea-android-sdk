@@ -14,7 +14,7 @@ internal class InAppMessageTest {
             "id": "5dd86f44511946ea55132f29",
             "name": "Test serving in-app message",
             "message_type": "modal",
-            "frequency": "only_once",
+            "frequency": "unknown",
             "payload": {
                 "image_url":"https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
                 "title":"filip.vozar@exponea.com",
@@ -48,13 +48,14 @@ internal class InAppMessageTest {
         fun getInAppMessage(
             id: String? = null,
             dateFilter: DateFilter? = null,
-            trigger: InAppMessageTrigger? = null
+            trigger: InAppMessageTrigger? = null,
+            frequency: String? = null
         ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
                 name = "Test serving in-app message",
                 messageType = "modal",
-                frequency = "only_once",
+                rawFrequency = frequency ?: "unknown",
                 variantId = 0,
                 variantName = "Variant A",
                 trigger = trigger ?: InAppMessageTrigger(type = "event", eventType = "session_start"),

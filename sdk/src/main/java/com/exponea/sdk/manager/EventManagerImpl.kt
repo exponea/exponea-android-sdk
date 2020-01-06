@@ -11,6 +11,8 @@ import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
+import java.util.Date
 
 internal class EventManagerImpl(
     private val context: Context,
@@ -74,6 +76,9 @@ internal class EventManagerImpl(
 
         addEventToQueue(event, type)
 
+        if (type == EventType.SESSION_START) {
+            inAppMessageManager.sessionStarted(Date((timestamp ?: currentTimeSeconds()).toLong() * 1000))
+        }
         if (eventType != null) {
             inAppMessageManager.showRandom(eventType, EventManagerInAppMessageTrackingDelegate(context, this))
         }

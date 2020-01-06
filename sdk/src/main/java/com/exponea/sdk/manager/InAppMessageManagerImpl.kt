@@ -11,9 +11,11 @@ import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
+import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.view.InAppMessageDialogPresenter
+import java.util.Date
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -24,9 +26,11 @@ internal class InAppMessageManagerImpl(
     private val customerIdsRepository: CustomerIdsRepository,
     private val inAppMessagesCache: InAppMessagesCache,
     private val fetchManager: FetchManager,
+    private val displayStateRepository: InAppMessageDisplayStateRepository,
     private val bitmapCache: InAppMessageBitmapCache = InAppMessageBitmapCacheImpl(context),
     private val presenter: InAppMessageDialogPresenter = InAppMessageDialogPresenter(context)
 ) : InAppMessageManager {
+    private var sessionStartDate = Date()
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
         fetchManager.fetchInAppMessages(
@@ -45,27 +49,13 @@ internal class InAppMessageManagerImpl(
         )
     }
 
+    override fun sessionStarted(sessionStartDate: Date) {
+        this.sessionStartDate = sessionStartDate
+    }
+
     private fun preloadImages(messages: List<InAppMessage>) {
         bitmapCache.clearExcept(messages.map { it.payload.imageUrl })
         messages.forEach { bitmapCache.preload(it.payload.imageUrl) }
-    }
-
-    private fun applyDateFilter(message: InAppMessage): Boolean {
-        if (!message.dateFilter.enabled) {
-            return true
-        }
-        val currentTime = System.currentTimeMillis() / 1000
-        if (message.dateFilter.fromDate != null && message.dateFilter.fromDate > currentTime) {
-            return false
-        }
-        if (message.dateFilter.toDate != null && message.dateFilter.toDate < currentTime) {
-            return false
-        }
-        return true
-    }
-
-    private fun applyEventFilter(message: InAppMessage, eventType: String): Boolean {
-        return message.trigger.type == "event" && message.trigger.eventType == eventType
     }
 
     private fun hasImageFor(message: InAppMessage): Boolean {
@@ -74,7 +64,10 @@ internal class InAppMessageManagerImpl(
 
     override fun getRandom(eventType: String): InAppMessage? {
         val messages = inAppMessagesCache.get().filter {
-            hasImageFor(it) && applyDateFilter(it) && applyEventFilter(it, eventType)
+            hasImageFor(it) &&
+            it.applyDateFilter(System.currentTimeMillis() / 1000) &&
+            it.applyEventFilter(eventType) &&
+            it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
         return if (messages.isNotEmpty()) messages.random() else null
     }
@@ -92,6 +85,7 @@ internal class InAppMessageManagerImpl(
                         payload = message.payload,
                         image = bitmap,
                         actionCallback = {
+                            displayStateRepository.setInteracted(message, Date())
                             trackingDelegate.track(message, "click", true)
                             Logger.i(this, "In-app message button clicked!")
                         },
@@ -100,6 +94,7 @@ internal class InAppMessageManagerImpl(
                         }
                     )
                     if (presented) {
+                        displayStateRepository.setDisplayed(message, Date())
                         trackingDelegate.track(message, "show", false)
                     }
                 }

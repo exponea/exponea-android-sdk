@@ -706,6 +706,7 @@ object Exponea {
         component.fcmManager.trackFcmToken(" ")
         component.campaignRepository.clear()
         component.inAppMessagesCache.clear()
+        component.inAppMessageDisplayStateRepository.clear()
         component.anonymizeManager.anonymize()
         component.sessionManager.trackSessionStart(currentTimeSeconds())
         component.fcmManager.trackFcmToken(firebaseToken)

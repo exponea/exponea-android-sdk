@@ -9,6 +9,7 @@ import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessageDialogPresenter(context: Context) {
+    private var presenting = false
     private var currentActivity: Activity? = null
 
     /**
@@ -38,15 +39,25 @@ internal class InAppMessageDialogPresenter(context: Context) {
         image: Bitmap,
         actionCallback: () -> Unit,
         dismissedCallback: () -> Unit
-    ): Boolean = runCatching {
+    ): InAppMessageDialog? = runCatching {
+        if (presenting) {
+            return null
+        }
         val dialog = InAppMessageDialog(
-            currentActivity ?: return false,
+            currentActivity ?: return null,
             payload,
             image,
-            actionCallback,
-            dismissedCallback
+            {
+                presenting = false
+                actionCallback()
+            },
+            {
+                presenting = false
+                dismissedCallback()
+            }
         )
         dialog.show()
-        return true
-    }.returnOnException { false }
+        presenting = true
+        return dialog
+    }.returnOnException { null }
 }

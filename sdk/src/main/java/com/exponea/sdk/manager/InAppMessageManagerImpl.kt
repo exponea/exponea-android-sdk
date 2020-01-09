@@ -96,7 +96,7 @@ internal class InAppMessageManagerImpl(
                             trackingDelegate.track(message, "close", false)
                         }
                     )
-                    if (presented) {
+                    if (presented != null) {
                         displayStateRepository.setDisplayed(message, Date())
                         trackingDelegate.track(message, "show", false)
                     }

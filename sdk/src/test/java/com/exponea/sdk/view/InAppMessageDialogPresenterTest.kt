@@ -4,8 +4,8 @@ import android.app.Activity
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.InAppMessageTest
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric.buildActivity
@@ -19,21 +19,35 @@ internal class InAppMessageDialogPresenterTest {
     @Test
     fun `should not show dialog without activity`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
-        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+        assertNull(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 
     @Test
     fun `should show dialog with activity`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
-        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+        assertNotNull(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
+
     @Test
     fun `should not show dialog after activity is paused`() {
         val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
-        assertTrue(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+        val presented = presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {})
+        assertNotNull(presented)
+        presented.dismiss()
         buildActivity(MockActivity::class.java).setup().resume().pause()
-        assertFalse(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+        assertNull(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+    }
+
+    @Test
+    fun `should only show one dialog at a time`() {
+        val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
+        buildActivity(MockActivity::class.java).setup().resume()
+        val presented = presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {})
+        assertNotNull(presented)
+        assertNull(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
+        presented.dismiss()
+        assertNotNull(presenter.show(payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 }

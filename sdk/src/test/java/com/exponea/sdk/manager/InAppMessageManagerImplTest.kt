@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.app.Activity
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
@@ -39,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageManagerImplTest {
@@ -280,6 +282,26 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true) }
         dismissedCallbackSlot.captured.invoke()
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
+    }
+
+    @Test
+    fun `should open deeplink once button is clicked`() {
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        val actionCallbackSlot = slot<() -> Unit>()
+        every { presenter.show(any(), any(), capture(actionCallbackSlot), any()) } returns true
+
+        runBlocking { manager.showRandom("session_start", spyk()).join() }
+        Robolectric.flushForegroundThreadScheduler()
+
+        val activity = Activity()
+        assertNull(shadowOf(activity).nextStartedActivityForResult)
+        actionCallbackSlot.captured.invoke()
+        assertEquals(
+            InAppMessageTest.getInAppMessage().payload.buttonLink,
+            shadowOf(activity).nextStartedActivityForResult.intent.data.toString()
+        )
     }
 
     @Test

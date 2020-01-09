@@ -1,6 +1,8 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import com.exponea.sdk.models.Constants
@@ -21,7 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 internal class InAppMessageManagerImpl(
-    context: Context,
+    private val context: Context,
     private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
     private val inAppMessagesCache: InAppMessagesCache,
@@ -88,6 +90,7 @@ internal class InAppMessageManagerImpl(
                             displayStateRepository.setInteracted(message, Date())
                             trackingDelegate.track(message, "click", true)
                             Logger.i(this, "In-app message button clicked!")
+                            processInAppMessageAction(message)
                         },
                         dismissedCallback = {
                             trackingDelegate.track(message, "close", false)
@@ -99,6 +102,17 @@ internal class InAppMessageManagerImpl(
                     }
                 }
             }
+        }
+    }
+
+    private fun processInAppMessageAction(message: InAppMessage) {
+        if (message.payload.buttonType == "deep-link") { // there are no other actions right now, add enum later
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    data = Uri.parse(message.payload.buttonLink)
+                }
+            )
         }
     }
 }

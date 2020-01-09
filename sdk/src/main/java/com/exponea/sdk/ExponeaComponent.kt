@@ -1,8 +1,6 @@
 package com.exponea.sdk
 
 import android.content.Context
-import com.exponea.sdk.manager.AnonymizeManager
-import com.exponea.sdk.manager.AnonymizeManagerImpl
 import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import com.exponea.sdk.manager.ConnectionManager
@@ -51,6 +49,7 @@ import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
+import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
@@ -122,6 +121,18 @@ internal class ExponeaComponent(
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences, eventManager)
     internal val iapManager: IapManager = IapManagerImpl(context, eventManager)
-    internal val anonymizeManager: AnonymizeManager =
-        AnonymizeManagerImpl(eventRepository, uniqueIdentifierRepository, customerIdsRepository, sessionManager)
+
+    fun anonymize() {
+        val firebaseToken = Exponea.component.firebaseTokenRepository.get()
+        fcmManager.trackFcmToken(" ")
+        campaignRepository.clear()
+        inAppMessagesCache.clear()
+        inAppMessageDisplayStateRepository.clear()
+        eventRepository.clear()
+        uniqueIdentifierRepository.clear()
+        customerIdsRepository.clear()
+        sessionManager.reset()
+        sessionManager.trackSessionStart(currentTimeSeconds())
+        fcmManager.trackFcmToken(firebaseToken)
+    }
 }

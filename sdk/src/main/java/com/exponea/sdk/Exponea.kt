@@ -700,16 +700,7 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
-
-        val firebaseToken = component.firebaseTokenRepository.get()
-
-        component.fcmManager.trackFcmToken(" ")
-        component.campaignRepository.clear()
-        component.inAppMessagesCache.clear()
-        component.inAppMessageDisplayStateRepository.clear()
-        component.anonymizeManager.anonymize()
-        component.sessionManager.trackSessionStart(currentTimeSeconds())
-        component.fcmManager.trackFcmToken(firebaseToken)
+        component.anonymize()
     }.logOnException()
 
     /**

@@ -17,7 +17,6 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<ExponeaComponent>().backgroundTimerManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().iapManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().serviceManager } throws TestPurposeException()
-        every { anyConstructed<ExponeaComponent>().anonymizeManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().fcmManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().fetchManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().fileManager } throws TestPurposeException()

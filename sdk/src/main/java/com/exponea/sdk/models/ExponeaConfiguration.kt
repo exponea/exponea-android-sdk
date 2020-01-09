@@ -42,7 +42,9 @@ data class ExponeaConfiguration(
     /** A list of properties to be added to all tracking events */
     var defaultProperties: HashMap<String, Any> = hashMapOf(),
     /** How ofter the token is tracked */
-    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
+    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE,
+    /** Opt-in to experimental in-app messages feature. */
+    var inAppMessagesEnabledBETA: Boolean = false
 ) {
 
     enum class HttpLoggingLevel {

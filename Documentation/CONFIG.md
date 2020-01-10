@@ -22,8 +22,6 @@ data class ExponeaConfiguration(
   var maxTries: Int = 10,
   // Timeout session value considered for app usage.
   var sessionTimeout: Double = 20.0,
-  // Flag to control automatic tracking for In-App purchases
-  var automaticPaymentTracking: Boolean = true,
   // Flag to control automatic session tracking
   var automaticSessionTracking: Boolean = true,
   // Flag to control if the App will handle push notifications automatically.
@@ -38,8 +36,6 @@ data class ExponeaConfiguration(
   var pushChannelId: String = "0",
   // Notification importance for the notification channel. Only for API level 26+.
   var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
-  // A list of SKUs for automatic in-app purchases tracking
-  var skuList: List<String> = arrayListOf(),
   /** A list of properties to be added to all tracking events */
   var defaultProperties: HashMap<String, Any> = hashMapOf(),
   /** How ofter the token is tracked */
@@ -93,11 +89,6 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 * Maximal timeout value is **120** seconds
 * Default timeout value: **20** seconds
 
-#### automaticPaymentTracking
-
-* Flag to control the automatic tracking for In-App purchases done at the Google Play Store.
-* When active, the SDK will add the Billing service listeners in order to get payments done in the App.
-
 #### automaticSessionTracking
 
 * Flag to control the automatic tracking of user sessions.
@@ -131,10 +122,6 @@ automatically send `session_start` and `session_end` events to Exponea API
 
 * Notification importance for the notification channel.
 * Only available for API level 26+. More info [here](https://developer.android.com/training/notify-user/channels)
-
-#### skuList
-
-* A list of SKUs for automatic in-app purchases tracking.
 
 #### defaultProperties
 

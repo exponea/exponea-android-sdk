@@ -497,10 +497,9 @@ object Exponea {
 
     /**
      * Tracks payment manually
-     * @param purchasedItem - represents payment details.
      * @param timestamp - Time in timestamp format where the event was created. ( in seconds )
+     * @param purchasedItem - represents payment details.
      */
-
     fun trackPaymentEvent(
         timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
@@ -509,10 +508,12 @@ object Exponea {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
+        val properties = purchasedItem.toHashMap()
+        properties.putAll(DeviceProperties(context).toHashMap())
         component.eventManager.track(
             eventType = Constants.EventTypes.payment,
             timestamp = timestamp,
-            properties = purchasedItem.toHashMap(),
+            properties = properties,
             type = EventType.PAYMENT
         )
     }.logOnException()
@@ -549,8 +550,6 @@ object Exponea {
         if (flushMode == PERIOD) startPeriodicFlushService()
 
         trackInstallEvent()
-
-        startPurchaseObserver(configuration.skuList)
 
         trackFirebaseToken()
 
@@ -643,17 +642,6 @@ object Exponea {
             component.sessionManager.startSessionListener()
         } else {
             component.sessionManager.stopSessionListener()
-        }
-    }
-
-    private fun startPurchaseObserver(skuList: List<String>) {
-        if (this.configuration.automaticPaymentTracking) {
-            // Add the observers when the automatic session tracking is true.
-            this.component.iapManager.configure(skuList)
-            this.component.iapManager.startObservingPayments()
-        } else {
-            // Remove the observers when the automatic session tracking is false.
-            this.component.iapManager.stopObservingPayments()
         }
     }
 

@@ -16,8 +16,6 @@ import com.exponea.sdk.manager.FileManager
 import com.exponea.sdk.manager.FileManagerImpl
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
-import com.exponea.sdk.manager.IapManager
-import com.exponea.sdk.manager.IapManagerImpl
 import com.exponea.sdk.manager.InAppMessageManager
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.PersonalizationManager
@@ -128,7 +126,6 @@ internal class ExponeaComponent(
     internal val fileManager: FileManager = FileManagerImpl()
     internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
     internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences, eventManager)
-    internal val iapManager: IapManager = IapManagerImpl(context, eventManager)
 
     fun anonymize() {
         val firebaseToken = Exponea.component.firebaseTokenRepository.get()

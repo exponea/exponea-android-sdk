@@ -16,7 +16,6 @@ internal fun Exponea.reset() {
 
     component.sessionManager.stopSessionListener()
     component.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
-    component.iapManager.stopObservingPayments()
     component.backgroundTimerManager.stopTimer()
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
         .edit().clear().commit()

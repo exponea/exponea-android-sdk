@@ -1,5 +1,13 @@
 ## Release Notes
 
+## Release Notes for 2.6.2
+#### January 10, 2020
+* Bug Fixes
+  * Fixed: Fetch recommendations functionality was reimplemented, it was incorrectly removed at one point. (see [FETCH.md](./FETCH.md))
+  * Fixed: Thread safety problem in crash reporting that caused the application to crash (it would still report the crash itself).
+  * Fixed: Issue with serializing Infinity, -Infinity and NaN. Double and Float variables can hold these values, but they are not part of JSON standard and Exponea doesn't support them. These values will now be reported as string values, but should be avoided. Fixes [Issue #20](https://github.com/exponea/exponea-android-sdk/issues/20).
+  * Removed: Automatic payment tracking was broken and has been removed from the Exponea Android SDK. In case you're interested in this functionality let us know. Manual tracking is simplified - device properties are now automatically added. (see [PAYMENT.md](./PAYMENT.md))
+
 ## Release Notes for 2.6.1
 #### December 20, 2019
 * Bug Fixes

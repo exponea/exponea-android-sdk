@@ -3,7 +3,8 @@ package com.exponea.sdk.network
 import com.exponea.sdk.models.ApiEndPoint
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CampaignClickEvent
-import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.CustomerAttributesRequest
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExportedEventType
 import com.google.gson.Gson
 import okhttp3.Call
@@ -25,12 +26,11 @@ internal class ExponeaServiceImpl(
         return doPost(ApiEndPoint.EndPointName.TRACK_CUSTOMERS, projectToken, event)
     }
 
-    override fun postFetchRecommendation(
+    override fun postFetchAttributes(
         projectToken: String,
-        recommendation: CustomerRecommendation
+        attributesRequest: CustomerAttributesRequest
     ): Call {
-        return doPost(ApiEndPoint.EndPointName.CUSTOMERS_RECOMMENDATION, projectToken,
-                recommendation.toHashMap())
+        return doPost(ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES, projectToken, attributesRequest)
     }
 
     override fun getBannerConfiguration(projectToken: String): Call {
@@ -47,6 +47,17 @@ internal class ExponeaServiceImpl(
 
     override fun postFetchConsents(projectToken: String): Call {
         return doPost(ApiEndPoint.EndPointName.CONSENTS, projectToken, null)
+    }
+
+    override fun postFetchInAppMessages(projectToken: String, customerIds: CustomerIds): Call {
+        return doPost(
+            ApiEndPoint.EndPointName.IN_APP_MESSAGES,
+            projectToken,
+            hashMapOf(
+                "customer_ids" to customerIds.toHashMap(),
+                "device" to "android"
+            )
+        )
     }
 
     private fun doPost(

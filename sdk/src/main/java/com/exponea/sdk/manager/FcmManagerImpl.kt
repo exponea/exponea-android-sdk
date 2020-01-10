@@ -157,8 +157,11 @@ internal class FcmManagerImpl(
         // set the uri for the default sound
         var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         // if the raw file exists, use it as custom sound
-        if (messageData.sound != null && context.resources.getIdentifier(messageData.sound, "raw", context.packageName) != 0)
+        if (messageData.sound != null &&
+            context.resources.getIdentifier(messageData.sound, "raw", context.packageName) != 0
+        ) {
             soundUri = Uri.parse("""android.resource://${context.packageName}/raw/${messageData.sound}""")
+        }
         // Manually play the notification sound
         RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
     }

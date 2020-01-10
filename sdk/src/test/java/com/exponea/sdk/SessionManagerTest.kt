@@ -9,10 +9,13 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import com.exponea.sdk.util.currentTimeSeconds
+import io.mockk.every
+import io.mockk.mockkConstructor
+import io.mockk.unmockkAll
+import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -31,7 +34,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         fun setup() {
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
-            configuration.sessionTimeout = 2.0
+            configuration.sessionTimeout = 5.0
         }
     }
 
@@ -52,73 +55,58 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         prefs = Exponea.component.preferences
     }
 
+    @After
+    fun unmock() {
+        unmockkAll()
+    }
+
     @Test
     fun testSessionStart() {
+        mockkConstructor(Date::class)
+        every { anyConstructed<Date>().time } returns 10 * 1000 // mock current time
         val controller = Robolectric.buildActivity(Activity::class.java).create()
 
         // Since we have disabled automatic tracking, we have to set listeners manually
         sm.startSessionListener()
         assertEquals(-1.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
 
-        val preTime = currentTimeSeconds()
-
         // App getting focus
         controller.resume()
-        Thread.sleep(100)
-
         // Checking that start timestamp was successfully saved
-        assertNotEquals(-1.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
-        assert(currentTimeSeconds() >= prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
-        assert(preTime <= prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
+        assertEquals(10.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
 
-        var previousStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
-
+        every { anyConstructed<Date>().time } returns 60 * 1000 // advance in time
         controller.pause()
         controller.resume()
-        var newStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
+        // Session start did not change, we in session timeout window
+        assertEquals(10.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
 
-        // App regained focus too quickly, old session should be resumed
-        assertEquals(previousStartTime, newStartTime)
-
-        // Sleep to wait for the timeout to end
-        previousStartTime = newStartTime
         controller.pause()
-        Thread.sleep(2003)
+        every { anyConstructed<Date>().time } returns 110 * 1000 // advance in time past session timeout
         controller.resume()
-
-        // New session should be started
-        newStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
-        assert(previousStartTime < newStartTime)
+        assertEquals(110.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
     }
 
     @Test
     fun testSessionStop() {
+        mockkConstructor(Date::class)
+        every { anyConstructed<Date>().time } returns 10 * 1000
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         sm.startSessionListener()
 
         // App getting focus
         controller.resume()
 
-        val preTime = currentTimeSeconds()
-
         // App looses focus
         controller.pause()
 
-        // Checking that stop timestamp was successfully saved
-        val sessionEndTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0)
-
-        assertNotEquals(-1.0, sessionEndTime)
-        assert(preTime <= sessionEndTime)
+        assertEquals(10.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0))
 
         // User comes back and then leaves
         controller.resume()
-        Thread.sleep(1000)
+        every { anyConstructed<Date>().time } returns 20 * 1000
         controller.pause()
-
-        // New session end time
-        val newEndTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0)
-        assertNotEquals(sessionEndTime, newEndTime)
-        assert(sessionEndTime < newEndTime)
+        assertEquals(20.0, prefs.getDouble(SessionManagerImpl.PREF_SESSION_END, -1.0))
     }
 
     @Test
@@ -136,11 +124,9 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         sessionStartTime = prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0)
         assertNotEquals(-1.0, sessionStartTime)
         // Listener's state saved in SP
-        assertTrue { prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, false) }
 
         // Stopping session listener
         sm.stopSessionListener()
-        assertTrue { !prefs.getBoolean(SessionManagerImpl.PREF_SESSION_AUTO_TRACK, true) }
 
         // App looses focus, but session's end won't be recorded
         controller.pause()
@@ -149,5 +135,10 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         // As well as the session start, until we start listeners again
         controller.resume()
         assertEquals(sessionStartTime, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
+
+        controller.pause()
+        sm.startSessionListener()
+        controller.resume()
+        assertNotEquals(sessionStartTime, prefs.getDouble(SessionManagerImpl.PREF_SESSION_START, -1.0))
     }
 }

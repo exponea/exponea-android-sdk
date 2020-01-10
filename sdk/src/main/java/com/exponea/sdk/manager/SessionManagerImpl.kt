@@ -13,7 +13,8 @@ import com.exponea.sdk.util.toDate
 
 internal class SessionManagerImpl(
     context: Context,
-    private val prefs: ExponeaPreferences
+    private val prefs: ExponeaPreferences,
+    private val eventManager: EventManager
 ) : SessionManager() {
     var application = context as Application
     private var isListenerActive = false
@@ -21,7 +22,6 @@ internal class SessionManagerImpl(
     companion object {
         const val PREF_SESSION_END = "SessionEndTimeDouble"
         const val PREF_SESSION_START = "SessionStartTimeDouble"
-        const val PREF_SESSION_AUTO_TRACK = "SessionAutomaticTracking"
     }
 
     /**
@@ -46,7 +46,6 @@ internal class SessionManagerImpl(
         if (!isListenerActive) {
             application.registerActivityLifecycleCallbacks(this)
             isListenerActive = true
-            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, true)
         }
     }
 
@@ -57,7 +56,6 @@ internal class SessionManagerImpl(
         if (isListenerActive) {
             application.unregisterActivityLifecycleCallbacks(this)
             isListenerActive = false
-            prefs.setBoolean(PREF_SESSION_AUTO_TRACK, false)
         }
     }
 
@@ -120,7 +118,7 @@ internal class SessionManagerImpl(
             properties["utm_content"] = event.content.orEmpty()
             properties["utm_term"] = event.term.orEmpty()
         }
-        Exponea.track(
+        eventManager.track(
             eventType = Constants.EventTypes.sessionStart,
             timestamp = timestamp,
             properties = properties,
@@ -144,7 +142,7 @@ internal class SessionManagerImpl(
         Logger.d(this, "Session duration: ${properties["duration"]}")
         // Clear session
         clear()
-        Exponea.track(
+        eventManager.track(
             eventType = Constants.EventTypes.sessionEnd,
             timestamp = timestamp,
             properties = properties,

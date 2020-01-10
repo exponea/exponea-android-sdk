@@ -21,8 +21,6 @@ data class ExponeaConfiguration(
     var sessionTimeout: Double = Constants.Session.defaultTimeout,
     /** Defines time to live of campaign click event in seconds considered for app usage. */
     var campaignTTL: Double = Constants.Campaign.defaultCampaignTTL,
-    /** Flag to control automatic tracking for In-App purchases */
-    var automaticPaymentTracking: Boolean = true,
     /** Flag to control automatic session tracking */
     var automaticSessionTracking: Boolean = Constants.Session.defaultAutomaticTracking,
     /** Flag to control if the App will handle push notifications automatically. */
@@ -37,12 +35,12 @@ data class ExponeaConfiguration(
     var pushChannelId: String = "0",
     /** Notification importance for the notification channel. Only for API level 26+. */
     var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
-    /** A list of SKUs for automatic in-app purchases tracking*/
-    var skuList: List<String> = arrayListOf(),
     /** A list of properties to be added to all tracking events */
     var defaultProperties: HashMap<String, Any> = hashMapOf(),
     /** How ofter the token is tracked */
-    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
+    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE,
+    /** Opt-in to experimental in-app messages feature. */
+    var inAppMessagesEnabledBETA: Boolean = false
 ) {
 
     enum class HttpLoggingLevel {

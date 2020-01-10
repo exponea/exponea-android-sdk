@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
@@ -131,6 +132,10 @@ internal object PublicApiTestCases {
         Pair(
             Exponea::trackSessionStart,
             { Exponea.trackSessionStart() }
+        ),
+        Pair(
+            Exponea::fetchRecommendation,
+            { Exponea.fetchRecommendation(CustomerRecommendationOptions("", true), {}, {}) }
         )
     )
 }

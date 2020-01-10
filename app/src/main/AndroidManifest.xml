@@ -12,7 +12,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".view.MainActivity"
-            android:screenOrientation="portrait">
+            android:screenOrientation="sensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -42,7 +42,7 @@
         </activity>
         <activity
             android:name=".view.AuthenticationActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="sensor" />
 
         <receiver
             android:name=".services.MyReceiver"

@@ -6,7 +6,6 @@
   "contentType": "application/json",
   "maxTries": 10,
   "sessionTimeout": 20.0,
-  "automaticPaymentTracking": true,
   "automaticSessionTracking": true,
   "automaticPushNotification": true,
   "pushIcon": null,

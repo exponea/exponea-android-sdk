@@ -39,23 +39,7 @@ internal object Constants {
         val sessionStart: String = "session_start"
         val payment: String = "payment"
         val push: String = "campaign"
-    }
-
-    // Error messages
-    object ErrorMessages {
-        val tokenNotConfigured: String = "Project token is not configured. Please configure it before interact with the ExponeaSDK"
-        val sdkNotConfigured: String = "ExponeaSDK isn't configured."
-        val couldNotStartSession: String = "Could not start new session. Please verify the error log for more information"
-        val couldNotEndSession: String = "Could not end session. Please verify the error log for more information"
-        val couldNotTrackPayment: String = "The payment could not be tracked."
-        val verifyLogError: String = "Please verify the error log for more information."
-        val couldNotLoadReceipt: String = "Could not load the iTunes Store receipt"
-    }
-
-    // Success messages
-    object SuccessMessages {
-        val sessionStarted: String = "Session succesfully started"
-        val paymentDone: String = "Payment was succesfully tracked!"
+        val banner: String = "banner"
     }
 
     // Default session values

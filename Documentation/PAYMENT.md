@@ -1,45 +1,55 @@
 ## 🔍 Payments
 
-#### In-App Purchases
-
-In order to use the automatic payment tracking, the Exponea SDK needs to set the BillingClient class listeners.
-
-All In-App Purchase will handle all the purchases made inside the app using the Google Play Store. After capture the purchased item, it will be send to the database in order to be flushed and send to the Exponea API.
-
-The listeners can be activate or deactivated by setting the `automaticPaymentTracking` property and providing a `skuList` in Exponea Configuration [as shown here](./CONFIG.md).
-
-Purchase events contain all basic information about the device (OS, OS version, SDK, SDK version and device model) combined with additional purchase attributes brutto, item_id and item_title. Brutto attribute contains price paid by the player. Attribute item_title consists of human-friendly name of the bought item (e.g. Silver sword) and item_id corresponds to the product identifier for the in-app purchase.
-
-#### In-App Payments
-
-If you use in your project some virtual payments (e.g. purchase with in-game gold, coins, ...),  you can track them manually with simple call `trackPaymentEvent`.
-
+Exponea SDK has a convenience method `trackPaymentEvent` to help you track information about a payment for product/service within the application.
 ```
 fun trackPaymentEvent(
-            timestamp: Double = currentTimeSeconds(),
-            purchasedItem: PurchasedItem
-    )
+        timestamp: Double = currentTimeSeconds(),
+        purchasedItem: PurchasedItem
+)
 ```
+To support multiple platforms and use-cases, SDK defines abstraction `PurchasedItem` that contains basic information about the purchase.
+```
+data class PurchasedItem(
+    var value: Double,
+    var currency: String,
+    var paymentSystem: String,
+    var productId: String,
+    var productTitle: String,
+    var receipt: String? = null
+)
+```
+#### 💻 Usage
+
+```
+val item = PurchasedItem(
+        value = 12.34,
+        currency = "EUR",
+        paymentSystem = "Virtual",
+        productId = "handbag",
+        productTitle = "Awesome leather handbag"
+)
+
+Exponea.trackPaymentEvent( item = item)
+```
+
+### In-App Purchases
+
+
+If your app uses in-app purchases (e.g. purchase with in-game gold, coins, ...), you can track them with `trackPaymentEvent` using `Purchase` and `SkuDetails` objects used in Google Play Billing Library.
 
 #### 💻 Usage
 
 ```
-// Preparing the data.
+val purchase: com.android.billingclient.api.Purchase = ...
+val skuDetails: com.android.billingclient.api.SkuDetails = ...
 val item = PurchasedItem(
-        value = 0.911702,
-        currency = "EUR",
-        paymentSystem = "Virtual",
-        productId = "android.test.purchased",
-        productTitle = "Silver sword",
-        deviceModel = "LGE Nexus 5",
-        deviceType = "mobile",
-        ip = "10.0.1.58",
-        osName = "Android",
-        osVersion = "5.0.1",
-        sdk = "AndroidSDK",
-        sdkVersion = "1.1.4"
+        value = sku.priceAmountMicros / 1000000.0,
+        currency = sku.priceCurrencyCode,
+        paymentSystem = "Google Play",
+        productId = sku.sku,
+        productTitle = sku.title,
+        receipt = purchase.signature
 )
 
-// Call fetchCustomerAttributes to get the customer attributes.
-   Exponea.trackPaymentEvent( item = item)
+Exponea.trackPaymentEvent( item = item)
 ```

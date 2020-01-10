@@ -172,7 +172,9 @@ internal class VSAppCenterTelemetryUpload(
                 VSAppCenterAPIExceptionFrame(
                     it.className,
                     it.methodName,
-                    it.fileName.replace(".java", ".kt"), // There is a bug in VS App Center, it's reported. Logs with both .kt and .java extension fail to process
+                    // There is a bug in VS App Center, it's reported.
+                    // Logs with both .kt and .java extension fail to process
+                    it.fileName.replace(".java", ".kt"),
                     it.lineNumber
                 )
             },

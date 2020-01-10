@@ -13,7 +13,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
-import com.google.gson.GsonBuilder
+import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -220,7 +220,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         val request = flushAndWaitForRequest()
 
         assertEquals("/track/v2/projects/TestToken/campaigns/clicks", request!!.path)
-        var parsedRequest = GsonBuilder().create().fromJson(request.body.readUtf8(), Map::class.java) as Map<String, Any?>
+        var parsedRequest = Gson().fromJson(request.body.readUtf8(), Map::class.java) as Map<String, Any?>
         assertNotNull(parsedRequest["age"])
         assertNotNull(parsedRequest["properties"])
         assertEquals("Android", (parsedRequest["properties"] as Map<String, String>)["platform"])

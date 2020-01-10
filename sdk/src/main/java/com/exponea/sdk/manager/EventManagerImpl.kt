@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.content.Context
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.EventType
@@ -7,14 +8,21 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
+import java.util.Date
 
 internal class EventManagerImpl(
+    private val context: Context,
     private val configuration: ExponeaConfiguration,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val customerIdsRepository: CustomerIdsRepository,
+    private val inAppMessageManager: InAppMessageManager
 ) : EventManager {
-    override fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
+
+    fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
         Logger.d(this, "addEventToQueue")
 
         // Get our default token
@@ -46,6 +54,33 @@ internal class EventManagerImpl(
         // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
         if (Exponea.flushMode == FlushMode.IMMEDIATE) {
             Exponea.component.flushManager.flushData()
+        }
+    }
+
+    override fun track(
+        eventType: String?,
+        timestamp: Double?,
+        properties: HashMap<String, Any>,
+        type: EventType
+    ) {
+        val trackedProperties: HashMap<String, Any> = hashMapOf()
+        trackedProperties.putAll(configuration.defaultProperties)
+        trackedProperties.putAll(properties)
+
+        val event = ExportedEventType(
+            type = eventType,
+            timestamp = timestamp,
+            customerIds = customerIdsRepository.get().toHashMap(),
+            properties = trackedProperties
+        )
+
+        addEventToQueue(event, type)
+
+        if (type == EventType.SESSION_START) {
+            inAppMessageManager.sessionStarted(Date((timestamp ?: currentTimeSeconds()).toLong() * 1000))
+        }
+        if (eventType != null) {
+            inAppMessageManager.showRandom(eventType, EventManagerInAppMessageTrackingDelegate(context, this))
         }
     }
 }

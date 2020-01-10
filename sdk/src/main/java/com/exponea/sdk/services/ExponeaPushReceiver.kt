@@ -59,7 +59,13 @@ class ExponeaPushReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             ACTION_CLICKED -> Unit
-            ACTION_DEEPLINK_CLICKED -> PendingIntent.getActivity(context, 0, buttonClickedIntent, PendingIntent.FLAG_UPDATE_CURRENT).send()
+            ACTION_DEEPLINK_CLICKED ->
+                PendingIntent.getActivity(
+                    context,
+                    0,
+                    buttonClickedIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                ).send()
             ACTION_URL_CLICKED -> context.startActivity(buttonClickedIntent)
         }
 

@@ -4,12 +4,17 @@ import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.CustomerRecommendationDeserializer
+import com.exponea.sdk.models.CustomerRecommendationRequest
+import com.exponea.sdk.models.CustomerRecommendationResponse
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import okhttp3.Call
@@ -17,9 +22,13 @@ import okhttp3.Callback
 import okhttp3.Response
 
 internal class FetchManagerImpl(
-    private val api: ExponeaService,
-    private val gson: Gson
+    private val api: ExponeaService
 ) : FetchManager {
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(
+            CustomerRecommendation::class.java,
+            CustomerRecommendationDeserializer()
+        ).create()
 
     private fun <T> getFetchCallback(
         resultType: TypeToken<Result<T>>, // gson needs to know the type of result, T gets erased at compile time
@@ -36,7 +45,7 @@ internal class FetchManagerImpl(
                     try {
                         result = gson.fromJson<Result<T>>(jsonBody, resultType.type)
                         if (result.results == null) {
-                            throw Exception("Unable to parse response from server.")
+                            throw Exception("Unable to parse response from the server.")
                         }
                     } catch (e: Exception) {
                         val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
@@ -98,6 +107,47 @@ internal class FetchManagerImpl(
         api.postFetchConsents(projectToken).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<Consent>>>() {},
+                onSuccess,
+                onFailure
+            )
+        )
+    }
+
+    override fun fetchRecommendation(
+        projectToken: String,
+        recommendationRequest: CustomerRecommendationRequest,
+        onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postFetchAttributes(projectToken, recommendationRequest).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>>>() {},
+                { result: Result<ArrayList<CustomerRecommendationResponse>> ->
+                    if (result.results.isNotEmpty()) {
+                        val innerResult = result.results[0]
+                        if (innerResult.success && innerResult.value != null) {
+                            onSuccess(Result(true, innerResult.value))
+                        } else {
+                            onFailure(Result(false, FetchError(null, innerResult.error ?: "Server returned error")))
+                        }
+                    } else {
+                        onFailure(Result(false, FetchError(null, "Server returned empty results")))
+                    }
+                },
+                onFailure
+            )
+        )
+    }
+
+    override fun fetchInAppMessages(
+        projectToken: String,
+        customerIds: CustomerIds,
+        onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postFetchInAppMessages(projectToken, customerIds).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<InAppMessage>>>() {},
                 onSuccess,
                 onFailure
             )

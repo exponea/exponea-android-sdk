@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.os.Looper
 import androidx.work.Configuration
 import androidx.work.WorkManager
@@ -175,12 +176,26 @@ object Exponea {
 
     /**
      * Any exception in SDK will be logged and swallowed if flag is enabled, otherwise
-     *  the exception will be rethrown
+     * the exception will be rethrown.
+     * If we have application context and the application is debuggable, then safe mode is `disabled`.
+     * Default is `enabled` - for any call to SDK method before init is called.
+     * If we don't know if the app is build for debugging/release, `enabled` is the safest.
+     * You can also set the value yourself that will override the default behaviour.
      */
-    internal var safeModeEnabled = BuildConfig.safeModeEnabled
-        set(value) = runCatching {
-            field = value
-        }.logOnException()
+    private var safeModeOverride: Boolean? = null
+    internal var safeModeEnabled: Boolean
+        get() {
+            safeModeOverride?.let { return it }
+            return if (this::context.isInitialized) {
+                context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0
+            } else {
+                Logger.w(this, "No context available, defaulting to enabled safe mode")
+                true
+            }
+        }
+        set(value) {
+            safeModeOverride = value
+        }
 
     /**
      * Use this method using a file as configuration. The SDK searches for a file called
@@ -189,6 +204,7 @@ object Exponea {
     @Deprecated("use init(context) instead")
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
+        this.context = context
         // Try to parse our file
         val configuration = ConfigurationFileManager.getConfigurationFromDefaultFile(context)
 
@@ -211,11 +227,13 @@ object Exponea {
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
     fun init(context: Context): Boolean = runCatching {
+        this.context = context
         initFromFile(context)
         return@runCatching true
     }.returnOnException { false }
 
     fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
+        this.context = context
         if (isInitialized) {
             Logger.e(this, "Exponea SDK is already initialized!")
             return
@@ -232,7 +250,6 @@ object Exponea {
 
         Paper.init(context)
 
-        this.context = context
         this.configuration = configuration
         isInitialized = true
         ExponeaConfigRepository.set(context, configuration)

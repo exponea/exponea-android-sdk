@@ -6,7 +6,6 @@ import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.paperdb.Paper
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.After
@@ -37,8 +36,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
 
     @Before
     fun init() {
-        Paper.init(ApplicationProvider.getApplicationContext())
-        db = ExponeaDatabaseImpl(DB_NAME)
+        db = ExponeaDatabaseImpl(ApplicationProvider.getApplicationContext(), DB_NAME)
     }
 
     @Test

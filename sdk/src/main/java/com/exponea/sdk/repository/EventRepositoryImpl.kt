@@ -1,11 +1,12 @@
 package com.exponea.sdk.repository
 
+import android.content.Context
 import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExportedEventType
 
-internal class EventRepositoryImpl : EventRepository {
-    private val database = ExponeaDatabaseImpl<ExportedEventType>("EventDatabase")
+internal class EventRepositoryImpl(context: Context) : EventRepository {
+    private val database = ExponeaDatabaseImpl<ExportedEventType>(context, "EventDatabase")
 
     override fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>> {
         return database.all()

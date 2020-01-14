@@ -1,11 +1,18 @@
 package com.exponea.sdk.database
 
+import android.content.Context
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import io.paperdb.PaperDbException
 
-internal class ExponeaDatabaseImpl<T>(private val databaseName: String) : ExponeaDatabase<DatabaseStorageObject<T>> {
+internal class ExponeaDatabaseImpl<T>(
+    context: Context,
+    databaseName: String
+) : ExponeaDatabase<DatabaseStorageObject<T>> {
+    init {
+        Paper.init(context)
+    }
     val book = Paper.book(databaseName)
 
     override fun all(): ArrayList<DatabaseStorageObject<T>> {

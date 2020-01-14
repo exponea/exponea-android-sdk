@@ -43,7 +43,6 @@ import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
-import io.paperdb.Paper
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -247,8 +246,6 @@ object Exponea {
         telemetry = TelemetryManager(context)
         telemetry?.start()
         telemetry?.reportEvent("init", hashMapOf("sdk_version" to BuildConfig.VERSION_NAME))
-
-        Paper.init(context)
 
         this.configuration = configuration
         ExponeaConfigRepository.set(context, configuration)

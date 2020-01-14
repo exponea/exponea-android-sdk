@@ -1,12 +1,11 @@
 package com.exponea.sdk.runcatching
 
-import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
-import io.paperdb.Paper
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -30,7 +29,7 @@ internal class ExponeaSafeModeInitTest(
 
     @After
     fun after() {
-        unmockkStatic(Paper::class)
+        unmockkConstructor(TelemetryManager::class)
     }
 
     @Test
@@ -43,9 +42,9 @@ internal class ExponeaSafeModeInitTest(
 
     @Test
     fun callInitWithExceptionWithSafeModeEnabled() {
-        mockkStatic(Paper::class)
+        mockkConstructor(TelemetryManager::class)
         every {
-            Paper.init(ApplicationProvider.getApplicationContext())
+            anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()
         Exponea.safeModeEnabled = true
         lambda()
@@ -55,9 +54,9 @@ internal class ExponeaSafeModeInitTest(
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
     fun callInitWithExceptionWithSafeModeDisabled() {
-        mockkStatic(Paper::class)
+        mockkConstructor(TelemetryManager::class)
         every {
-            Paper.init(ApplicationProvider.getApplicationContext())
+            anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()
         Exponea.safeModeEnabled = false
         assertFalse(Exponea.isInitialized)

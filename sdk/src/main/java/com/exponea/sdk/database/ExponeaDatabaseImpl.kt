@@ -6,6 +6,11 @@ import com.exponea.sdk.util.Logger
 import io.paperdb.Paper
 import io.paperdb.PaperDbException
 
+/**
+ * Database uses PaperDB that has an issue with multi-threading https://github.com/pilgr/Paper/issues/114
+ * Until that's fixed we need to synchronize access to database.
+ * Good thing is that this is the only class that uses PaperDB
+ */
 internal class ExponeaDatabaseImpl<T>(
     context: Context,
     databaseName: String
@@ -13,9 +18,9 @@ internal class ExponeaDatabaseImpl<T>(
     init {
         Paper.init(context)
     }
-    val book = Paper.book(databaseName)
+    private val book = Paper.book(databaseName)
 
-    override fun all(): ArrayList<DatabaseStorageObject<T>> {
+    override fun all(): ArrayList<DatabaseStorageObject<T>> = synchronized(this) {
         val list = arrayListOf<DatabaseStorageObject<T>>()
         val keys = book.allKeys
 
@@ -27,7 +32,7 @@ internal class ExponeaDatabaseImpl<T>(
         return list
     }
 
-    override fun add(item: DatabaseStorageObject<T>): Boolean {
+    override fun add(item: DatabaseStorageObject<T>): Boolean = synchronized(this) {
         return try {
             book.write(item.id, item)
             true
@@ -37,7 +42,7 @@ internal class ExponeaDatabaseImpl<T>(
         }
     }
 
-    override fun update(item: DatabaseStorageObject<T>): Boolean {
+    override fun update(item: DatabaseStorageObject<T>): Boolean = synchronized(this) {
         return try {
             book.write(item.id, item)
             true
@@ -47,7 +52,7 @@ internal class ExponeaDatabaseImpl<T>(
         }
     }
 
-    override fun get(id: String): DatabaseStorageObject<T>? {
+    override fun get(id: String): DatabaseStorageObject<T>? = synchronized(this) {
         return try {
             book.read(id) as DatabaseStorageObject<T>?
         } catch (exception: PaperDbException) {
@@ -59,7 +64,7 @@ internal class ExponeaDatabaseImpl<T>(
         }
     }
 
-    override fun remove(id: String): Boolean {
+    override fun remove(id: String): Boolean = synchronized(this) {
         return try {
             book.delete(id)
             true
@@ -69,7 +74,7 @@ internal class ExponeaDatabaseImpl<T>(
         }
     }
 
-    override fun clear(): Boolean {
+    override fun clear(): Boolean = synchronized(this) {
         return try {
             book.destroy()
             true

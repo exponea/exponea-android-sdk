@@ -7,7 +7,6 @@ import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
-import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -28,7 +27,6 @@ internal class VSAppCenterTelemetryUpload(
     private val installId: String,
     private val sdkVersion: String,
     private val userId: String,
-    runId: String,
     private val uploadUrl: String = DEFAULT_UPLOAD_URL
 ) : TelemetryUpload {
     companion object {
@@ -44,10 +42,6 @@ internal class VSAppCenterTelemetryUpload(
 
     private val networkClient = OkHttpClient()
 
-    init {
-        uploadSessionStart(runId)
-    }
-
     override fun uploadEventLog(log: EventLog, callback: (Result<Unit>) -> Unit) {
         upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIEventLog(log))), callback)
     }
@@ -60,7 +54,7 @@ internal class VSAppCenterTelemetryUpload(
         upload(VSAppCenterAPIRequestData(logs), callback)
     }
 
-    private fun uploadSessionStart(runId: String) {
+    override fun uploadSessionStart(runId: String, callback: (Result<Unit>) -> Unit) {
         upload(
             VSAppCenterAPIRequestData(
                 logs = arrayListOf(
@@ -71,13 +65,12 @@ internal class VSAppCenterTelemetryUpload(
                         device = getAPIDevice()
                     )
                 )
-            )
-        ) {
-            Logger.i(this, "Session start ${if (it.isSuccess) "succeeded" else "failed" }")
-        }
+            ),
+            callback
+        )
     }
 
-    private fun upload(data: VSAppCenterAPIRequestData, callback: (Result<Unit>) -> Unit) {
+    fun upload(data: VSAppCenterAPIRequestData, callback: (Result<Unit>) -> Unit) {
         val requestData = Gson().toJson(data)
         val requestBuilder = Request.Builder()
             .url(uploadUrl)

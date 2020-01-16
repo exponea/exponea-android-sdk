@@ -25,8 +25,7 @@ internal open class ExponeaSDKTest {
     @Before
     fun disableTelemetry() {
         mockkConstructor(VSAppCenterTelemetryUpload::class)
-        every { anyConstructed<VSAppCenterTelemetryUpload>().uploadCrashLog(any(), any()) } just Runs
-        every { anyConstructed<VSAppCenterTelemetryUpload>().uploadEventLog(any(), any()) } just Runs
+        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
     }
 
     @Before

@@ -36,7 +36,6 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         context,
         installId,
         BuildConfig.VERSION_NAME,
-        runId,
         userId ?: installId
     )
 
@@ -44,6 +43,9 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
 
     fun start() {
         crashManager.start()
+        telemetryUpload.uploadSessionStart(runId) {
+            Logger.i(this, "Session start upload ${if (it.isSuccess) "succeeded" else "failed" }")
+        }
     }
 
     fun reportEvent(name: String, properties: Map<String, String>) {

@@ -16,7 +16,6 @@ import java.util.Date
 import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -44,19 +43,13 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     fun before() {
         unmockkConstructor(VSAppCenterTelemetryUpload::class)
         server = MockWebServer()
-    }
-
-    private fun initializeUpload(): RecordedRequest {
-        server.enqueue(MockResponse()) // for session start event
         upload = VSAppCenterTelemetryUpload(
             context = ApplicationProvider.getApplicationContext(),
             installId = "mock-install-id",
             sdkVersion = "1.0.0",
             userId = "mock-user-id",
-            runId = "mock-run-id",
             uploadUrl = server.url("/something").toString()
         )
-        return server.takeRequest() // session start
     }
 
     @After
@@ -65,8 +58,10 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should send session start when constructed`() {
-        val request = initializeUpload()
+    fun `should send session start`() {
+        server.enqueue(MockResponse())
+        upload.uploadSessionStart("mock-run-id") {}
+        val request = server.takeRequest()
         // timestamp and id changes with every requests, let's check other properties
         val payload = JsonParser().parse(request.body.readString(Charset.defaultCharset()))
         val payloadEvent = payload.asJsonObject["logs"].asJsonArray[0].asJsonObject
@@ -80,7 +75,6 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         expectedRequest: String,
         requestPreprocessor: ((JsonElement) -> Unit)? = null
     ) {
-        initializeUpload()
         server.enqueue(MockResponse())
         waitForIt {
             makeRequest(upload) { result ->
@@ -238,7 +232,6 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
 
     @Test
     fun `succeed if server returns 500`() {
-        initializeUpload()
         val response = MockResponse()
         response.setResponseCode(500)
         server.enqueue(response)

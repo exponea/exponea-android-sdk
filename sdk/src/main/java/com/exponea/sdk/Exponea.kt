@@ -245,7 +245,7 @@ object Exponea {
 
         telemetry = TelemetryManager(context)
         telemetry?.start()
-        telemetry?.reportEvent("init", hashMapOf("sdk_version" to BuildConfig.VERSION_NAME))
+        telemetry?.reportInitEvent(configuration)
 
         this.configuration = configuration
         ExponeaConfigRepository.set(context, configuration)

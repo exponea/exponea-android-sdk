@@ -2,6 +2,7 @@ package com.exponea.sdk.telemetry
 
 import android.content.Context
 import com.exponea.sdk.BuildConfig
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.telemetry.storage.TelemetryStorage
@@ -52,6 +53,14 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         telemetryUpload.uploadEventLog(EventLog(name, properties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
+    }
+
+    fun reportInitEvent(configuration: ExponeaConfiguration) {
+        val data = hashMapOf(
+            "sdkVersion" to BuildConfig.VERSION_NAME
+        )
+        data.putAll(TelemetryUtility.formatConfigurationForTracking(configuration))
+        reportEvent("init", data)
     }
 
     fun reportCaughtException(e: Throwable) {

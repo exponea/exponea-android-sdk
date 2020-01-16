@@ -1,5 +1,7 @@
 package com.exponea.sdk.telemetry
 
+import com.exponea.sdk.models.EventType
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -170,6 +172,38 @@ internal class TelemetryUtilityTest {
             e.stackTrace = arrayOf()
             for (i in 1..1000) e.stackTrace += StackTraceElement("mock class", "mock method", "mock file", i)
             assertEquals(100, TelemetryUtility.getErrorData(e).stackTrace.size)
+        }
+
+        @Test
+        fun `should format configuration`() {
+            assertEquals(
+                hashMapOf(
+                    "projectToken" to "[REDACTED]",
+                    "projectTokenRouteMap" to "[REDACTED]",
+                    "automaticSessionTracking" to "true [default]",
+                    "maxTries" to "10 [default]",
+                    "pushIcon" to "null [default]",
+                    "defaultProperties" to "[]",
+                    "httpLoggingLevel" to "BODY [default]",
+                    "tokenTrackFrequency" to "ON_TOKEN_CHANGE [default]",
+                    "pushChannelId" to "0 [default]",
+                    "campaignTTL" to "10.0 [default]",
+                    "baseURL" to "https://api.exponea.com [default]",
+                    "pushChannelDescription" to "Notifications [default]",
+                    "pushChannelName" to "Exponea [default]",
+                    "automaticPushNotification" to "false",
+                    "pushNotificationImportance" to "3 [default]",
+                    "inAppMessagesEnabledBETA" to "true",
+                    "sessionTimeout" to "20.0 [default]",
+                    "contentType" to "application/json [default]"
+                ),
+                TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
+                    projectToken = "mock_project_token",
+                    projectTokenRouteMap = hashMapOf(EventType.INSTALL to arrayListOf("mock_project_id")),
+                    automaticPushNotification = false,
+                    inAppMessagesEnabledBETA = true
+                ))
+            )
         }
     }
 }

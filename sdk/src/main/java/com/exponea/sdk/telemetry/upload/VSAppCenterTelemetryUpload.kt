@@ -3,6 +3,7 @@ package com.exponea.sdk.telemetry.upload
 import android.content.Context
 import android.os.Build
 import android.util.Base64
+import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
@@ -32,7 +33,7 @@ internal class VSAppCenterTelemetryUpload(
 ) : TelemetryUpload {
     companion object {
         private const val DEFAULT_UPLOAD_URL = "https://in.appcenter.ms/logs?Api-Version=1.0.0"
-        private const val APP_SECRET = "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
+        private const val APP_SECRET = BuildConfig.telemetryVSAppCenterAppSecret
 
         private val jsonMediaType: MediaType = MediaType.parse("application/json")!!
         private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")

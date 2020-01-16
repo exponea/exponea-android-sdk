@@ -41,7 +41,7 @@ internal data class VSAppCenterAPIErrorLog(
     val processId: Int = 0, // this is required by swagger, but we have no reasonable value for it
     val processName: String = "" // this is required by swagger, but we have no reasonable value for it
 ) : VSAppCenterAPILog {
-    override val type: String = "managedError"
+    override val type: String = if (fatal) "managedError" else "handledError"
 }
 
 internal data class VSAppCenterAPIErrorAttachmentLog(

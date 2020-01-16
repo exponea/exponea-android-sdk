@@ -100,7 +100,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                 exception.stackTrace = arrayOf(StackTraceElement("mock-class", "mock-method", "mock-file.java", 123))
                 val crashLog = CrashLog(
                     id = "ca46cb38-3c0f-46fb-91ef-5c5345619af7",
-                    fatal = false,
+                    fatal = true,
                     errorData = TelemetryUtility.getErrorData(exception),
                     timestampMS = 1574155789000,
                     launchTimestampMS = 1573644923000,
@@ -116,7 +116,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     "userId":"mock-user-id",
                     "device": $exceptedDevice,
                     "timestamp":"2019-11-19T09:29:49Z",
-                    "fatal":false,
+                    "fatal":true,
                     "exception": {
                         "type":"java.lang.Exception",
                         "message":"Test exception",
@@ -158,7 +158,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
             },
             """ {"logs":[
                 {
-                    "type":"managedError",
+                    "type":"handledError",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "sid":"mock-run-id",
                     "userId":"mock-user-id",

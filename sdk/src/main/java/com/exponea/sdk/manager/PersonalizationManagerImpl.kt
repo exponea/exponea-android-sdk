@@ -3,7 +3,6 @@ package com.exponea.sdk.manager
 import android.content.Context
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.Constants
@@ -21,7 +20,9 @@ import java.util.Date
  */
 
 internal class PersonalizationManagerImpl(
-    private val context: Context
+    private val context: Context,
+    private val fetchManager: FetchManager,
+    private val fileManager: FileManager
 ) : PersonalizationManager {
 
     private var preferencesIds: MutableList<String> = mutableListOf()
@@ -52,7 +53,7 @@ internal class PersonalizationManagerImpl(
         onFailure: (Result<FetchError>) -> Unit
     ) {
 
-        Exponea.component.fetchManager.fetchBannerConfiguration(
+        fetchManager.fetchBannerConfiguration(
                 projectToken = projectToken,
                 customerIds = customerIds,
                 onSuccess = onSuccess,
@@ -68,7 +69,7 @@ internal class PersonalizationManagerImpl(
 
         val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
 
-        Exponea.component.fetchManager.fetchBanner(
+        fetchManager.fetchBanner(
                 projectToken = projectToken,
                 bannerConfig = banner,
                 onSuccess = {
@@ -96,7 +97,7 @@ internal class PersonalizationManagerImpl(
             onSuccess = {
                 if (canShowBanner(it.results)) {
                     val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
-                    Exponea.component.fetchManager.fetchBanner(projectToken, banner, onSuccess, onFailure)
+                    fetchManager.fetchBanner(projectToken, banner, onSuccess, onFailure)
                 }
             },
             onFailure = {
@@ -145,12 +146,12 @@ internal class PersonalizationManagerImpl(
 
     private fun saveHtml(data: BannerResult): Boolean {
         data.html?.let {
-            Exponea.component.fileManager.createFile(
+            fileManager.createFile(
                     filename = Constants.General.bannerFilename,
                     type = Constants.General.bannerFilenameExt
             )
 
-            Exponea.component.fileManager.writeToFile(
+            fileManager.writeToFile(
                     filename = Constants.General.bannerFullFilename,
                     text = it
             )

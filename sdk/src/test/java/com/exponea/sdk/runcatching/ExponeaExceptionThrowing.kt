@@ -1,10 +1,17 @@
 package com.exponea.sdk.runcatching
 
 import com.exponea.sdk.ExponeaComponent
+import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import io.mockk.every
+import io.mockk.mockkConstructor
 
 object ExponeaExceptionThrowing {
     class TestPurposeException : Exception("Exception for test purposes")
+
+    fun prepareExponeaToThrow() {
+        mockkConstructor(ExponeaComponent::class)
+        mockkConstructor(BackgroundTimerManagerImpl::class)
+    }
 
     fun makeExponeaThrow() {
         // let's mock every manager in ExponeaComponent
@@ -20,5 +27,9 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<ExponeaComponent>().fetchManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().fileManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().networkManager } throws TestPurposeException()
+
+        // This will cause onSessionStart/Stop to throw exception
+        every { anyConstructed<BackgroundTimerManagerImpl>().startTimer() } throws TestPurposeException()
+        every { anyConstructed<BackgroundTimerManagerImpl>().stopTimer() } throws TestPurposeException()
     }
 }

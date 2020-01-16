@@ -19,6 +19,7 @@ internal class EventManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
+    private val flushManager: FlushManager,
     private val inAppMessageManager: InAppMessageManager
 ) : EventManager {
 
@@ -53,7 +54,7 @@ internal class EventManagerImpl(
 
         // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
         if (Exponea.flushMode == FlushMode.IMMEDIATE) {
-            Exponea.component.flushManager.flushData()
+            flushManager.flushData()
         }
     }
 

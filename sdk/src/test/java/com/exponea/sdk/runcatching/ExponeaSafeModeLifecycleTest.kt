@@ -3,11 +3,9 @@ package com.exponea.sdk.runcatching
 import android.app.Activity
 import android.os.Bundle
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.mockkConstructor
-import io.mockk.unmockkConstructor
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -22,14 +20,14 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
 
     @Before
     fun before() {
-        mockkConstructor(ExponeaComponent::class)
+        ExponeaExceptionThrowing.prepareExponeaToThrow()
         controller = Robolectric.buildActivity(TestActivity::class.java)
         controller.create()
     }
 
     @After
     fun after() {
-        unmockkConstructor(ExponeaComponent::class)
+        unmockkAll()
     }
 
     @Test

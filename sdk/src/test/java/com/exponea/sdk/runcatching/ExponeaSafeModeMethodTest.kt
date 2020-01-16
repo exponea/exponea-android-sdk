@@ -2,10 +2,8 @@ package com.exponea.sdk.runcatching
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.mockkConstructor
-import io.mockk.unmockkConstructor
+import io.mockk.unmockkAll
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import org.junit.After
@@ -29,12 +27,12 @@ internal class ExponeaSafeModeMethodTest(
 
     @Before
     fun before() {
-        mockkConstructor(ExponeaComponent::class)
+        ExponeaExceptionThrowing.prepareExponeaToThrow()
     }
 
     @After
     fun after() {
-        unmockkConstructor(ExponeaComponent::class)
+        unmockkAll()
         waitUntilFlushed()
     }
 

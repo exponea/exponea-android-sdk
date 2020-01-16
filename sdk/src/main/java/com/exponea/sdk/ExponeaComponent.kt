@@ -71,10 +71,12 @@ internal class ExponeaComponent(
 
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
+
     // Repositories
     internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(
             preferences
     )
+
     private val uniqueIdentifierRepository: UniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(
             preferences
     )
@@ -86,22 +88,34 @@ internal class ExponeaComponent(
     internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(
             preferences
     )
+
     internal val eventRepository: EventRepository = EventRepositoryImpl()
+
     internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
+
     internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(gson, preferences)
+
     internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, gson)
+
     internal val inAppMessageDisplayStateRepository = InAppMessageDisplayStateRepositoryImpl(preferences, gson)
+
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
+
     // Api Service
     internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
 
     // Managers
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService)
-    internal val backgroundTimerManager: BackgroundTimerManager =
-        BackgroundTimerManagerImpl(context, exponeaConfiguration)
+
+    internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(
+        context, exponeaConfiguration
+    )
+
     internal val serviceManager: ServiceManager = ServiceManagerImpl()
+
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
+
     internal val inAppMessageManager: InAppMessageManager
     init {
         inAppMessageManager = if (exponeaConfiguration.inAppMessagesEnabledBETA) {
@@ -117,18 +131,30 @@ internal class ExponeaComponent(
             DisabledInAppMessageManagerImpl()
         }
     }
-    internal val eventManager: EventManager =
-        EventManagerImpl(context, exponeaConfiguration, eventRepository, customerIdsRepository, inAppMessageManager)
+
     internal val flushManager: FlushManager =
         FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
-    internal val fcmManager: FcmManager =
-        FcmManagerImpl(context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository)
+
+    internal val eventManager: EventManager = EventManagerImpl(
+        context, exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, inAppMessageManager
+    )
+
+    internal val fcmManager: FcmManager = FcmManagerImpl(
+        context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository
+    )
+
     internal val fileManager: FileManager = FileManagerImpl()
-    internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(context)
-    internal val sessionManager: SessionManager = SessionManagerImpl(context, preferences, eventManager)
+
+    internal val personalizationManager: PersonalizationManager = PersonalizationManagerImpl(
+        context, fetchManager, fileManager
+    )
+
+    internal val sessionManager: SessionManager = SessionManagerImpl(
+        context, preferences, campaignRepository, eventManager, backgroundTimerManager
+    )
 
     fun anonymize() {
-        val firebaseToken = Exponea.component.firebaseTokenRepository.get()
+        val firebaseToken = firebaseTokenRepository.get()
         fcmManager.trackFcmToken(" ")
         campaignRepository.clear()
         inAppMessagesCache.clear()

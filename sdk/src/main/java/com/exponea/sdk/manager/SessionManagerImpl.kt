@@ -7,6 +7,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.toDate
@@ -14,7 +15,9 @@ import com.exponea.sdk.util.toDate
 internal class SessionManagerImpl(
     context: Context,
     private val prefs: ExponeaPreferences,
-    private val eventManager: EventManager
+    private val campaignRepository: CampaignRepository,
+    private val eventManager: EventManager,
+    private val backgroundTimerManager: BackgroundTimerManager
 ) : SessionManager() {
     var application = context as Application
     private var isListenerActive = false
@@ -64,7 +67,7 @@ internal class SessionManagerImpl(
      */
     override fun onSessionStart() {
         // Cancel background timer if set
-        Exponea.component.backgroundTimerManager.stopTimer()
+        backgroundTimerManager.stopTimer()
         val now = currentTimeSeconds()
         Logger.d(this, "Session start ${now.toDate()}")
 
@@ -74,10 +77,7 @@ internal class SessionManagerImpl(
         if (lastTimeStarted == -1.0 || lastTimeFinished == -1.0) {
             prefs.setDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
-            return
-        }
-
-        if (!canBeResumed(now)) {
+        } else if (!canBeResumed(now)) {
             Logger.d(this, "New Session Started: ${now.toDate()}")
 
             // Finish Tracking old session
@@ -87,6 +87,7 @@ internal class SessionManagerImpl(
             prefs.setDouble(PREF_SESSION_START, now)
             trackSessionStart(now)
         }
+        campaignRepository.clear()
     }
 
     /**
@@ -97,7 +98,7 @@ internal class SessionManagerImpl(
         Logger.d(this, "Session end ${now.toDate()}")
         prefs.setDouble(PREF_SESSION_END, now)
         // Start background timer to track end of the session
-        Exponea.component.backgroundTimerManager.startTimer()
+        backgroundTimerManager.startTimer()
     }
 
     /**
@@ -111,7 +112,7 @@ internal class SessionManagerImpl(
             prefs.setDouble(PREF_SESSION_START, timestamp)
         }
         val properties = DeviceProperties(application).toHashMap()
-        Exponea.component.campaignRepository.get()?.let { event ->
+        campaignRepository.get()?.let { event ->
             properties["location"] = event.completeUrl
             properties["utm_source"] = event.source.orEmpty()
             properties["utm_campaign"] = event.campaign.orEmpty()

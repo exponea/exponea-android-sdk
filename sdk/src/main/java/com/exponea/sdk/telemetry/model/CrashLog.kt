@@ -16,6 +16,7 @@ internal data class CrashLog(
     constructor(
         e: Throwable,
         fatal: Boolean,
+        date: Date,
         launchDate: Date,
         runId: String,
         logs: List<String>? = null
@@ -23,7 +24,7 @@ internal data class CrashLog(
         id = UUID.randomUUID().toString(),
         errorData = TelemetryUtility.getErrorData(e),
         fatal = fatal,
-        timestampMS = System.currentTimeMillis(),
+        timestampMS = date.time,
         launchTimestampMS = launchDate.time,
         runId = runId,
         logs = logs

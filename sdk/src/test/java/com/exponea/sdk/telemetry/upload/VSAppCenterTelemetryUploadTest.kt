@@ -245,7 +245,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         val exception = Exception("Test exception")
         exception.stackTrace = arrayOf()
         waitForIt {
-            upload.uploadCrashLog(CrashLog(exception, true, Date(), "mock-run-id")) { result ->
+            upload.uploadCrashLog(CrashLog(exception, true, Date(), Date(), "mock-run-id")) { result ->
                 it.assertTrue(result.isSuccess)
                 it()
             }

@@ -15,6 +15,7 @@ internal class CrashManager(
 ) : Thread.UncaughtExceptionHandler {
     companion object {
         const val MAX_LOG_MESSAGES = 100
+        const val LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 15 // 15 days
     }
     private var oldHandler: Thread.UncaughtExceptionHandler? = null
     private var latestLogMessages: LinkedList<String> = LinkedList()
@@ -34,7 +35,14 @@ internal class CrashManager(
 
     fun handleException(e: Throwable, fatal: Boolean) {
         try {
-            val crashLog = CrashLog(e, fatal, launchDate, runId, latestLogMessages.toMutableList())
+            val crashLog = CrashLog(
+                e,
+                fatal,
+                Date(),
+                launchDate,
+                runId,
+                latestLogMessages.toMutableList()
+            )
             if (fatal) { // app is crashing, save exception, process it later
                 if (TelemetryUtility.isSDKRelated(e)) {
                     Logger.i(this, "Fatal exception is sdk related, saving for later upload.")
@@ -60,6 +68,10 @@ internal class CrashManager(
     private fun uploadCrashLogs() {
         try {
             storage.getAllCrashLogs().map { crashLog ->
+                if (System.currentTimeMillis() - crashLog.timestampMS > LOG_RETENTION_MS) {
+                    storage.deleteCrashLog(crashLog)
+                    return@map
+                }
                 Logger.i(this, "Uploading crash log ${crashLog.id}")
                 upload.uploadCrashLog(crashLog) { result ->
                     Logger.i(this, "Crash log upload ${if (result.isSuccess) "succeeded" else "failed" }")

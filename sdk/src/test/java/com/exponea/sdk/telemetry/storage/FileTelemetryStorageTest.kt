@@ -25,7 +25,7 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
         unmockkAll()
     }
 
-    fun getMockCrashLog(): CrashLog = CrashLog(Exception("Boom!"), true, Date(), "mock-run-id")
+    fun getMockCrashLog(): CrashLog = CrashLog(Exception("Boom!"), true, Date(), Date(), "mock-run-id")
 
     @Test
     fun `should return empty result without stored crash logs`() {

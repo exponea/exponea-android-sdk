@@ -147,7 +147,7 @@ internal class VSAppCenterTelemetryUpload(
 
         return VSAppCenterAPIDevice(
             appNamespace,
-            appVersion,
+            "$appNamespace-$appVersion",
             appBuild,
             sdkName = "ExponeaSDK.android",
             sdkVersion = sdkVersion,

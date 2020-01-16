@@ -22,7 +22,7 @@ Download via Gradle:
 
 ```groovy
 dependencies {
-  compile 'com.exponea.sdk:sdk:2.6.2'
+  implementation 'com.exponea.sdk:sdk:2.6.2'
 }
 ```
 

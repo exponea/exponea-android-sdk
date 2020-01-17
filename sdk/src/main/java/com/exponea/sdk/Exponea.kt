@@ -232,7 +232,7 @@ object Exponea {
         return@runCatching true
     }.returnOnException { false }
 
-    fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
+    @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.context = context
         if (isInitialized) {
             Logger.e(this, "Exponea SDK is already initialized!")
@@ -251,10 +251,10 @@ object Exponea {
         Paper.init(context)
 
         this.configuration = configuration
-        isInitialized = true
         ExponeaConfigRepository.set(context, configuration)
         FirebaseApp.initializeApp(context)
         initializeSdk()
+        isInitialized = true
     }.logOnException()
 
     /**

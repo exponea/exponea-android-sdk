@@ -664,7 +664,7 @@ object Exponea {
      */
     private fun trackFirebaseToken() {
         if (isAutoPushNotification) {
-            this.component.fcmManager.trackFcmToken(component.firebaseTokenRepository.get())
+            this.component.fcmManager.trackFcmToken(component.firebaseTokenRepository.get(), tokenTrackFrequency)
         }
     }
 

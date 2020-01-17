@@ -155,7 +155,7 @@ internal class ExponeaComponent(
 
     fun anonymize() {
         val firebaseToken = firebaseTokenRepository.get()
-        fcmManager.trackFcmToken(" ")
+        fcmManager.trackFcmToken(" ", Exponea.tokenTrackFrequency)
         campaignRepository.clear()
         inAppMessagesCache.clear()
         inAppMessageDisplayStateRepository.clear()
@@ -164,6 +164,6 @@ internal class ExponeaComponent(
         customerIdsRepository.clear()
         sessionManager.reset()
         sessionManager.trackSessionStart(currentTimeSeconds())
-        fcmManager.trackFcmToken(firebaseToken)
+        fcmManager.trackFcmToken(firebaseToken, Exponea.tokenTrackFrequency)
     }
 }

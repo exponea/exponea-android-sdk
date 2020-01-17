@@ -1,11 +1,12 @@
 package com.exponea.sdk.manager
 
 import android.app.NotificationManager
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationPayload
 import com.google.firebase.messaging.RemoteMessage
 
 internal interface FcmManager {
-    fun trackFcmToken(token: String? = null)
+    fun trackFcmToken(token: String? = null, tokenTrackFrequency: ExponeaConfiguration.TokenFrequency)
     fun handleRemoteMessage(
         message: RemoteMessage?,
         manager: NotificationManager,

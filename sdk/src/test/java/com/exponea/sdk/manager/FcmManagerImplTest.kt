@@ -9,6 +9,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
@@ -17,29 +18,39 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.slot
 import io.mockk.spyk
+import io.mockk.verify
 import kotlin.test.assertEquals
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
 internal class FcmManagerImplTest {
 
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager
+    private lateinit var firebaseTokenRepository: FirebaseTokenRepository
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        firebaseTokenRepository = spyk(FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)))
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
-            FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
+            firebaseTokenRepository,
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+    }
+
+    @After
+    fun tearDown() {
+        firebaseTokenRepository.clear()
     }
 
     @Test
@@ -76,5 +87,36 @@ internal class FcmManagerImplTest {
             NotificationAction("notification", null, "app://mock-url-2"),
             intent2.extras.get(ExponeaPushReceiver.EXTRA_ACTION_INFO)
         )
+    }
+
+    @Test
+    fun `should track token in ON_TOKEN_CHANGE mode`() {
+        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
+        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
+        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
+        verify(exactly = 1) { firebaseTokenRepository.set("token", any()) }
+        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
+    }
+
+    @Test
+    fun `should track token in DAILY mode`() {
+        // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912
+        ShadowSystemClock.setNanoTime(System.currentTimeMillis() * 1000 * 1000)
+        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.DAILY)
+        verify(exactly = 1) { firebaseTokenRepository.set("token", any()) }
+        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY)
+        verify(exactly = 0) { firebaseTokenRepository.set("other_token", any()) }
+        firebaseTokenRepository.set("token", System.currentTimeMillis() - 24 * 60 * 60 * 1000)
+        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY)
+        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
+    }
+
+    @Test
+    fun `should track token in EVERY_LAUNCH mode`() {
+        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
+        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
+        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
+        verify(exactly = 2) { firebaseTokenRepository.set("token", any()) }
+        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
     }
 }

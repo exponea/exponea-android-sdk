@@ -38,10 +38,10 @@ internal class FcmManagerImpl(
 ) : FcmManager {
     private val requestCodeGenerator: Random = Random()
 
-    override fun trackFcmToken(token: String?) {
+    override fun trackFcmToken(token: String?, tokenTrackFrequency: ExponeaConfiguration.TokenFrequency) {
         val lastTrackDateInMilliseconds =
-            firebaseTokenRepository.getLastTrackDateInMilliseconds() ?: System.currentTimeMillis()
-        val shouldUpdateToken = when (Exponea.tokenTrackFrequency) {
+            firebaseTokenRepository.getLastTrackDateInMilliseconds() ?: 0
+        val shouldUpdateToken = when (tokenTrackFrequency) {
             ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != firebaseTokenRepository.get()
             ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
             ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
@@ -53,7 +53,7 @@ internal class FcmManagerImpl(
             return
         }
 
-        Logger.d(this, "Token not update: shouldUpdateToken $shouldUpdateToken - token $token")
+        Logger.d(this, "Token was not updated: shouldUpdateToken $shouldUpdateToken - token $token")
     }
 
     override fun handleRemoteMessage(

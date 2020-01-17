@@ -103,8 +103,8 @@ internal fun String?.adjustUrl(): String? {
     }
 }
 
-fun Intent?.isDeeplinkIntent(): Boolean {
-    return Intent.ACTION_VIEW == this?.action && data?.toString()?.startsWith("http", true) == true
+fun Intent?.isViewUrlIntent(schemePrefix: String): Boolean {
+    return Intent.ACTION_VIEW == this?.action && data?.scheme?.startsWith(schemePrefix, true) == true
 }
 
 fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {

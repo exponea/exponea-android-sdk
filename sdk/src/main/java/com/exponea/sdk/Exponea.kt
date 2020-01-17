@@ -38,7 +38,7 @@ import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
-import com.exponea.sdk.util.isDeeplinkIntent
+import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
 import com.google.firebase.FirebaseApp
@@ -720,7 +720,7 @@ object Exponea {
             Logger.d(this, "Newly initiated")
             init(appContext, config)
         }
-        if (!intent.isDeeplinkIntent()) {
+        if (!intent.isViewUrlIntent("http")) {
             return false
         }
         val event = CampaignClickInfo(intent!!.data!!)

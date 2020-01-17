@@ -11,7 +11,7 @@ import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.isDeeplinkIntent
+import com.exponea.sdk.util.isViewUrlIntent
 import kotlinx.android.synthetic.main.activity_main.navigation
 import kotlinx.android.synthetic.main.activity_main.toolbar
 
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Examples"
 
-        if (intent.isDeeplinkIntent()) {
+        if (intent.isViewUrlIntent("http") || intent.isViewUrlIntent("exponea")) {
             Toast.makeText(this, "Deep link received from ${intent?.data?.host}, " +
                     "path is ${intent?.data?.path}", Toast.LENGTH_LONG).show()
         }

@@ -57,7 +57,12 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
     @After
     fun unmock() {
-        unmockkAll()
+        // mockk has a problem when it sometimes throws an exception, in that case just try again
+        try {
+            unmockkAll()
+        } catch (error: ConcurrentModificationException) {
+            unmock()
+        }
     }
 
     @Test

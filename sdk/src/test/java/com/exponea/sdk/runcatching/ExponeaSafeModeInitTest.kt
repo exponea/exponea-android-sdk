@@ -1,6 +1,7 @@
 package com.exponea.sdk.runcatching
 
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
@@ -34,10 +35,10 @@ internal class ExponeaSafeModeInitTest(
 
     @Test
     fun callInitWithoutExceptionWithSafeModeEnabled() {
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.safeModeEnabled = true
         lambda()
         assertTrue(Exponea.isInitialized)
-        waitUntilFlushed()
     }
 
     @Test
@@ -46,10 +47,10 @@ internal class ExponeaSafeModeInitTest(
         every {
             anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.safeModeEnabled = true
         lambda()
         assertFalse(Exponea.isInitialized)
-        waitUntilFlushed()
     }
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
@@ -58,10 +59,10 @@ internal class ExponeaSafeModeInitTest(
         every {
             anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.safeModeEnabled = false
         assertFalse(Exponea.isInitialized)
         lambda()
         assertFalse(Exponea.isInitialized)
-        waitUntilFlushed()
     }
 }

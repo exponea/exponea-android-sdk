@@ -46,7 +46,6 @@ internal class CampaignSessionTests_004 : CampaignSessionTests_Base() {
         assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
         assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
         assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
-        waitUntilFlushed()
     }
 
     /**

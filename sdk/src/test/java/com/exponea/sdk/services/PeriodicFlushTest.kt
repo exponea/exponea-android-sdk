@@ -67,9 +67,8 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
     @Test
     fun `worker should flush in periodic mode`() {
         mockkConstructor(FlushManagerImpl::class)
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.PERIOD
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         var flushCalled = false
         every {
@@ -86,9 +85,8 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
     @Test
     fun `worker should fail and not flush in manual mode`() {
         mockkConstructor(FlushManagerImpl::class)
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         var flushCalled = false
         every {
@@ -104,17 +102,16 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Test
     fun `should start periodic flush when flushMode is period`() {
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.PERIOD
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         assertNotNull(getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME))
     }
 
     @Test
     fun `should not start periodic flush when flushMode isn't period`() {
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
 
         FlushMode.values().forEach { flushMode ->
             if (flushMode == FlushMode.PERIOD) return@forEach
@@ -125,9 +122,8 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Test
     fun `should stop periodic flush`() {
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.PERIOD
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         assertNotNull(getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME))
         assertEquals(getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME)?.state, WorkInfo.State.ENQUEUED)
@@ -150,11 +146,9 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
             Exponea.component.flushManager.onFlushFinishListener?.invoke()
         }
 
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
-        flushCalls = 0
-
         Exponea.flushMode = FlushMode.PERIOD
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        flushCalls = 0
 
         for (i in 1..5) {
             testDriver.setAllConstraintsMet(getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME)!!.id)
@@ -165,9 +159,8 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Test // it's not possible to check periodicity of tasks in work manager, let's just check new task was queued
     fun `should enqueue new task when flushPeriod changes`() {
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.PERIOD
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         val oldTaskId = getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME)!!.id
         Exponea.flushPeriod = FlushPeriod(1, TimeUnit.DAYS)
         val newTaskId = getUniqueWorkInfo(ExponeaPeriodicFlushWorker.WORK_NAME)!!.id

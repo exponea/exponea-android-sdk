@@ -59,9 +59,8 @@ internal class FlushStressTest : ExponeaSDKTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
         skipInstallEvent()
-        Exponea.init(context, configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
 
         repo = Exponea.component.eventRepository
         service = ExponeaMockService(true)

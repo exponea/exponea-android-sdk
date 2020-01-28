@@ -78,9 +78,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     @Before
     fun prepareForTest() {
         skipInstallEvent()
-        Exponea.init(context, configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
 
         eventRepository = Exponea.component.eventRepository
         campaignRepository = Exponea.component.campaignRepository

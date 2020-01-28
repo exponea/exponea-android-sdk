@@ -15,13 +15,6 @@ import org.junit.Before
 
 internal open class ExponeaSDKTest {
     companion object {
-        @Synchronized fun waitUntilFlushed() {
-            waitForIt {
-                Exponea.component.flushManager.onFlushFinishListener = { it() }
-                if (!Exponea.component.flushManager.isRunning) it()
-            }
-        }
-
         fun skipInstallEvent() {
             DeviceInitiatedRepositoryImpl(ExponeaPreferencesImpl(
                 ApplicationProvider.getApplicationContext()

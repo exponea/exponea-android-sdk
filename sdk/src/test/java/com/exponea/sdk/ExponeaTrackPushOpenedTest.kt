@@ -6,6 +6,7 @@ import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -175,8 +176,8 @@ internal class ExponeaTrackPushOpenedTest(
         mockkConstructor(EventManagerImpl::class)
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, FlushManagerTest.configuration)
-        waitUntilFlushed()
     }
 
     @After

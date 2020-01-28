@@ -68,9 +68,8 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             skipInstallEvent()
-            Exponea.init(applicationContext)
-            waitUntilFlushed()
             Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(applicationContext)
         }
     }
 }

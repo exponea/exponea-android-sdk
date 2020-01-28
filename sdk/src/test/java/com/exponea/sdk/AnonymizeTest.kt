@@ -22,9 +22,8 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     fun init() {
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        Exponea.init(context, FlushManagerTest.configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, FlushManagerTest.configuration)
     }
 
     @Test

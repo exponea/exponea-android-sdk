@@ -58,9 +58,8 @@ internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
 
         fun initExponea(context: Context) {
             skipInstallEvent()
-            Exponea.init(context, configuration)
-            waitUntilFlushed()
             Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(context, configuration)
         }
 
         fun createDeeplinkIntent() = Intent().apply {

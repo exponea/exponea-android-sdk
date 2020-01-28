@@ -3,6 +3,7 @@ package com.exponea.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -14,8 +15,8 @@ internal class TokenTrackingFrequencyTest : ExponeaSDKTest() {
 
     private fun setupConfiguration(configuration: ExponeaConfiguration) {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
-        waitUntilFlushed()
     }
 
     @Test

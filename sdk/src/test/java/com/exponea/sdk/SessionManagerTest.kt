@@ -46,9 +46,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
         skipInstallEvent()
-        Exponea.init(context, configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
         Exponea.isAutomaticSessionTracking = false
 
         sm = Exponea.component.sessionManager

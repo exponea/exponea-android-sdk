@@ -52,9 +52,8 @@ internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
     @Before
     fun prepareForTest() {
         skipInstallEvent()
-        Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
 
         repo = Exponea.component.eventRepository
     }
@@ -91,6 +90,5 @@ internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/track/v2/projects/TestTokem/customers", request.path)
-        waitUntilFlushed()
     }
 }

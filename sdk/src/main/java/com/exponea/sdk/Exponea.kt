@@ -58,7 +58,7 @@ object Exponea {
     var flushMode: FlushMode = Constants.Flush.defaultFlushMode
         set(value) = runCatching {
             field = value
-            onFlushModeChanged()
+            if (isInitialized) onFlushModeChanged()
         }.logOnException()
 
     /**
@@ -67,7 +67,7 @@ object Exponea {
     var flushPeriod: FlushPeriod = Constants.Flush.defaultFlushPeriod
         set(value) = runCatching {
             field = value
-            onFlushPeriodChanged()
+            if (isInitialized) onFlushPeriodChanged()
         }.logOnException()
 
     /**

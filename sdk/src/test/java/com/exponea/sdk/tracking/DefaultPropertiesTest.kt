@@ -48,9 +48,8 @@ internal class DefaultPropertiesTest : ExponeaSDKTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         skipInstallEvent()
-        Exponea.init(context, CONFIG)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, CONFIG)
 
         repo = Exponea.component.eventRepository
 

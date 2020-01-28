@@ -2,6 +2,7 @@ package com.exponea.sdk.runcatching
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.unmockkAll
 import kotlin.reflect.KFunction
@@ -33,7 +34,6 @@ internal class ExponeaSafeModeMethodTest(
     @After
     fun after() {
         unmockkAll()
-        waitUntilFlushed()
     }
 
     @Test
@@ -46,6 +46,7 @@ internal class ExponeaSafeModeMethodTest(
     @Test
     fun callAfterInitWithSafeModeEnabled() {
         skipInstallEvent()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = true
         ExponeaExceptionThrowing.makeExponeaThrow()
@@ -55,6 +56,7 @@ internal class ExponeaSafeModeMethodTest(
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
+        Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext())
         Exponea.safeModeEnabled = false
         ExponeaExceptionThrowing.makeExponeaThrow()

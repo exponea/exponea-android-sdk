@@ -8,6 +8,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.waitForIt
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockWebServer
@@ -53,9 +54,8 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
     fun prepareForTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         skipInstallEvent()
-        Exponea.init(context, configuration)
-        waitUntilFlushed()
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
     }
 
     @Test
@@ -67,8 +67,10 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
         Exponea.trackPaymentEvent(
                 purchasedItem = payment
         )
-        Exponea.flushData()
-        waitUntilFlushed()
+        waitForIt {
+            Exponea.component.flushManager.onFlushFinishListener = { it() }
+            Exponea.component.flushManager.flushData()
+        }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 

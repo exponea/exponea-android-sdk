@@ -6,6 +6,8 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 
 internal fun Exponea.reset() {
+    flushMode = Constants.Flush.defaultFlushMode
+    flushPeriod = Constants.Flush.defaultFlushPeriod
     if (!isInitialized) return
     component.campaignRepository.clear()
     component.customerIdsRepository.clear()
@@ -19,8 +21,6 @@ internal fun Exponea.reset() {
     component.backgroundTimerManager.stopTimer()
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
         .edit().clear().commit()
-    flushMode = Constants.Flush.defaultFlushMode
-    flushPeriod = Constants.Flush.defaultFlushPeriod
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
     telemetry = null

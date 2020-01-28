@@ -49,19 +49,20 @@ internal class InAppMessageTest {
             id: String? = null,
             dateFilter: DateFilter? = null,
             trigger: InAppMessageTrigger? = null,
-            frequency: String? = null
+            frequency: String? = null,
+            imageUrl: String? = null
         ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
                 name = "Test serving in-app message",
-                messageType = "modal",
+                rawMessageType = "modal",
                 rawFrequency = frequency ?: "unknown",
                 variantId = 0,
                 variantName = "Variant A",
                 trigger = trigger ?: InAppMessageTrigger(type = "event", eventType = "session_start"),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 payload = InAppMessagePayload(
-                    imageUrl = "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
+                    imageUrl = imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
                     title = "filip.vozar@exponea.com",
                     titleTextColor = "#000000",
                     titleTextSize = "22px",

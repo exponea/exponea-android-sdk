@@ -68,7 +68,7 @@ internal class InAppMessageManagerImplTest {
         every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
-        every { presenter.show(any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any()) } returns mockk()
         manager = InAppMessageManagerImpl(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(),
@@ -139,6 +139,15 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage()
         )
         assertEquals(null, manager.getRandom("session_start"))
+    }
+
+    @Test
+    fun `should get message if bitmap is blank`() {
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(imageUrl = ""),
+            InAppMessageTest.getInAppMessage()
+        )
+        assertEquals(InAppMessageTest.getInAppMessage(imageUrl = ""), manager.getRandom("session_start"))
     }
 
     @Test
@@ -252,7 +261,7 @@ internal class InAppMessageManagerImplTest {
         val actionCallbackSlot = slot<() -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
         every {
-            presenter.show(any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
         runBlocking { manager.showRandom("session_start", delegate).join() }
@@ -272,7 +281,7 @@ internal class InAppMessageManagerImplTest {
         val actionCallbackSlot = slot<() -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
         every {
-            presenter.show(any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
         runBlocking {
@@ -294,7 +303,7 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         val actionCallbackSlot = slot<() -> Unit>()
-        every { presenter.show(any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
 
         runBlocking { manager.showRandom("session_start", spyk()).join() }
         Robolectric.flushForegroundThreadScheduler()

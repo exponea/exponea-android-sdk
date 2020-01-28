@@ -24,7 +24,7 @@ import kotlinx.android.synthetic.main.in_app_message_dialog.linearLayoutBackgrou
 import kotlinx.android.synthetic.main.in_app_message_dialog.textViewBody
 import kotlinx.android.synthetic.main.in_app_message_dialog.textViewTitle
 
-internal class InAppMessageDialog : Dialog {
+internal class InAppMessageDialog : InAppMessageView, Dialog {
     private val payload: InAppMessagePayload
     private val onButtonClick: () -> Unit
     private var onDismiss: (() -> Unit)?

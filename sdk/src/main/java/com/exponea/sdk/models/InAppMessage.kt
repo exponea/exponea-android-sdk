@@ -11,7 +11,7 @@ internal data class InAppMessage(
     @SerializedName("name")
     val name: String,
     @SerializedName("message_type")
-    val messageType: String,
+    val rawMessageType: String,
     @SerializedName("frequency")
     val rawFrequency: String,
     @SerializedName("payload")
@@ -32,6 +32,16 @@ internal data class InAppMessage(
             } catch (e: Throwable) {
                 Logger.e(this, "Unknown in-app-message frequency $rawFrequency. $e")
                 null
+            }
+        }
+
+    val messageType: InAppMessageType
+        get() {
+            return try {
+                InAppMessageType.valueOf(rawMessageType.toUpperCase())
+            } catch (e: Throwable) {
+                Logger.e(this, "Unknown in-app-message type $rawMessageType. $e")
+                InAppMessageType.DIALOG
             }
         }
 
@@ -130,4 +140,9 @@ enum class InAppMessageFrequency(val value: String) {
     ONLY_ONCE("only_once"),
     ONCE_PER_VISIT("once_per_visit"),
     UNTIL_VISITOR_INTERACTS("until_visitor_interacts")
+}
+
+enum class InAppMessageType(val value: String) {
+    DIALOG("modal"),
+    ALERT("alert")
 }

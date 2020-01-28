@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
+import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessageDialogPresenter(context: Context) {
@@ -35,29 +36,43 @@ internal class InAppMessageDialogPresenter(context: Context) {
     }
 
     fun show(
+        messageType: InAppMessageType,
         payload: InAppMessagePayload,
-        image: Bitmap,
+        image: Bitmap?,
         actionCallback: () -> Unit,
         dismissedCallback: () -> Unit
-    ): InAppMessageDialog? = runCatching {
+    ): InAppMessageView? = runCatching {
         if (presenting) {
             return null
         }
-        val dialog = InAppMessageDialog(
-            currentActivity ?: return null,
-            payload,
-            image,
-            {
-                presenting = false
-                actionCallback()
-            },
-            {
-                presenting = false
-                dismissedCallback()
-            }
-        )
-        dialog.show()
+        val presenterActionCallback = {
+            presenting = false
+            actionCallback()
+        }
+        val presenterDismissedCallback = {
+            presenting = false
+            dismissedCallback()
+        }
+        val inAppMessageView = when (messageType) {
+            InAppMessageType.DIALOG -> InAppMessageDialog(
+                currentActivity ?: return null,
+                payload,
+                image ?: return null,
+                presenterActionCallback,
+                presenterDismissedCallback
+            )
+            InAppMessageType.ALERT -> InAppMessageAlert(
+                currentActivity ?: return null,
+                payload,
+                presenterActionCallback,
+                presenterDismissedCallback
+            )
+        }
         presenting = true
-        return dialog
-    }.returnOnException { null }
+        inAppMessageView.show()
+        return inAppMessageView
+    }.returnOnException {
+        presenting = false
+        null
+    }
 }

@@ -54,8 +54,9 @@ internal class InAppMessageDialogPresenter(context: Context) {
             dismissedCallback()
         }
         val inAppMessageView = when (messageType) {
-            InAppMessageType.DIALOG -> InAppMessageDialog(
+            InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
                 currentActivity ?: return null,
+                messageType == InAppMessageType.FULLSCREEN,
                 payload,
                 image ?: return null,
                 presenterActionCallback,

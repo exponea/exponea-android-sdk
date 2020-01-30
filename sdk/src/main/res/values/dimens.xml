@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="exponea_sdk_in_app_message_window_corner_radius">15dp</dimen>
+    <dimen name="exponea_sdk_in_app_message_fullscreen_padding">10dp</dimen>
+    <dimen name="exponea_sdk_in_app_message_dialog_padding">20dp</dimen>
 </resources>

@@ -41,7 +41,7 @@ internal data class InAppMessage(
                 InAppMessageType.valueOf(rawMessageType.toUpperCase())
             } catch (e: Throwable) {
                 Logger.e(this, "Unknown in-app-message type $rawMessageType. $e")
-                InAppMessageType.DIALOG
+                InAppMessageType.MODAL
             }
         }
 
@@ -143,6 +143,7 @@ enum class InAppMessageFrequency(val value: String) {
 }
 
 enum class InAppMessageType(val value: String) {
-    DIALOG("modal"),
-    ALERT("alert")
+    MODAL("modal"),
+    ALERT("alert"),
+    FULLSCREEN("fullscreen")
 }

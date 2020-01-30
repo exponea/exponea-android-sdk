@@ -19,6 +19,7 @@ internal class InAppMessageDialogTest {
         val payload = InAppMessageTest.getInAppMessage().payload
         val dialog = InAppMessageDialog(
             ApplicationProvider.getApplicationContext<Context>(),
+            true,
             payload,
             BitmapFactory.decodeFile("mock-file"),
             {},

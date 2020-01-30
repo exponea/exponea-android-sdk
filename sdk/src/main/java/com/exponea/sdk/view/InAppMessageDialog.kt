@@ -12,7 +12,9 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.widget.RelativeLayout
 import androidx.annotation.DrawableRes
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
@@ -20,11 +22,14 @@ import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonClose
 import kotlinx.android.synthetic.main.in_app_message_dialog.imageViewImage
+import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogContainer
+import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogRoot
 import kotlinx.android.synthetic.main.in_app_message_dialog.linearLayoutBackground
 import kotlinx.android.synthetic.main.in_app_message_dialog.textViewBody
 import kotlinx.android.synthetic.main.in_app_message_dialog.textViewTitle
 
 internal class InAppMessageDialog : InAppMessageView, Dialog {
+    private val fullScreen: Boolean
     private val payload: InAppMessagePayload
     private val onButtonClick: () -> Unit
     private var onDismiss: (() -> Unit)?
@@ -32,11 +37,13 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     constructor(
         context: Context,
+        fullScreen: Boolean,
         payload: InAppMessagePayload,
         image: Bitmap,
         onButtonClick: () -> Unit,
         onDismiss: () -> Unit
     ) : super(context) {
+        this.fullScreen = fullScreen
         this.payload = payload
         this.bitmap = image
         this.onButtonClick = onButtonClick
@@ -46,6 +53,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setupFullscreen()
         setupImage()
         setupCloseButton()
         setupTitleText()
@@ -56,6 +64,26 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         setOnDismissListener {
             this.onDismiss?.invoke()
         }
+    }
+
+    private fun setupFullscreen() {
+        // setup padding
+        val padding = if (fullScreen) {
+            context.resources.getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_fullscreen_padding)
+        } else {
+            context.resources.getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_dialog_padding)
+        }
+        inAppMessageDialogContainer.setPadding(padding, padding, padding, padding)
+
+        // setup dialog max. width
+        val params = inAppMessageDialogRoot.layoutParams as ConstraintLayout.LayoutParams
+        if (fullScreen) params.matchConstraintMaxWidth = -1
+
+        // setup image height
+        imageViewImage.layoutParams = RelativeLayout.LayoutParams(
+            RelativeLayout.LayoutParams.MATCH_PARENT,
+            if (fullScreen) RelativeLayout.LayoutParams.MATCH_PARENT else RelativeLayout.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun setupImage() {

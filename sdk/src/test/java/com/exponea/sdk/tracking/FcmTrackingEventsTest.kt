@@ -91,11 +91,10 @@ internal class FcmTrackingEventsTest : ExponeaSDKTest() {
 
         // Flush this event and check it was sent successfully
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
-            Exponea.flushData()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
@@ -116,11 +115,10 @@ internal class FcmTrackingEventsTest : ExponeaSDKTest() {
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
-            Exponea.flushData()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

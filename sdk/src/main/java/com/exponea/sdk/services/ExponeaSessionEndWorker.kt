@@ -26,13 +26,11 @@ internal class ExponeaSessionEndWorker(
 
         try {
             Exponea.component.sessionManager.trackSessionEnd()
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Logger.d(this, "doWork -> Starting flushing data")
+            Exponea.flushData {
                 Logger.d(this, "doWork -> Finished")
                 countDownLatch.countDown()
             }
-
-            Logger.d(this, "doWork -> Starting flushing data")
-            Exponea.component.flushManager.flushData()
 
             try {
                 countDownLatch.await()

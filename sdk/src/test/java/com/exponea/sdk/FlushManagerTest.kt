@@ -19,7 +19,6 @@ import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.spyk
 import io.mockk.verify
-import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
@@ -78,11 +77,10 @@ internal class FlushManagerTest : ExponeaSDKTest() {
             properties = properties
         )
         waitForIt {
-            manager.onFlushFinishListener = {
+            manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
-            manager.flushData()
         }
     }
 
@@ -101,11 +99,10 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         manager = FlushManagerImpl(configuration, repo, service, noInternetManager)
 
         waitForIt {
-            manager.onFlushFinishListener = {
+            manager.flushData { _ ->
                 it.assertEquals(1, repo.all().size)
                 it()
             }
-            manager.flushData()
         }
     }
 
@@ -124,11 +121,10 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         )
 
         waitForIt {
-            manager.onFlushFinishListener = {
+            manager.flushData { result ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
-            manager.flushData()
         }
     }
 
@@ -142,16 +138,16 @@ internal class FlushManagerTest : ExponeaSDKTest() {
             properties = properties
         )
 
-        val lock = CountDownLatch(1)
-        manager.onFlushFinishListener = {
-            lock.countDown()
+        waitForIt {
+            var done = 0
+            for (i in 1..10) {
+                thread(start = true) {
+                    manager.flushData {
+                        if (++done == 10) it()
+                    }
+                }
+            }
         }
-
-        for (i in 1..10) {
-            thread(start = true) { manager.flushData() }
-        }
-
-        lock.await()
 
         verify(exactly = 1) {
             service.postEvent(any(), any())

@@ -233,12 +233,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     private fun flushDataSync() {
-        waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
-                it()
-            }
-            Exponea.flushData()
-        }
+        waitForIt { Exponea.flushData { _ -> it() } }
     }
 
     private fun createDeeplinkIntent() = Intent().apply {

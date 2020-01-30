@@ -93,11 +93,10 @@ internal class FlushStressTest : ExponeaSDKTest() {
                 assertEquals(repo.all().size, insertedCount)
                 insertedCount = 0
                 waitForIt {
-                    manager.onFlushFinishListener = {
+                    manager.flushData { _ ->
                         it.assertEquals(0, repo.all().size)
                         it()
                     }
-                    manager.flushData()
                 }
             }
         }

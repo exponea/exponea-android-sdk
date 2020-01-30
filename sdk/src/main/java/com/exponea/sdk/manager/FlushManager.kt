@@ -1,10 +1,12 @@
 package com.exponea.sdk.manager
 
+typealias FlushFinishedCallback = (Result<Unit>) -> Unit
+
 internal interface FlushManager {
-    var onFlushFinishListener: (() -> Unit)?
+
     val isRunning: Boolean
     /**
      * Starts flushing all events to Exponea
      */
-    fun flushData()
+    fun flushData(onFlushFinished: FlushFinishedCallback? = null)
 }

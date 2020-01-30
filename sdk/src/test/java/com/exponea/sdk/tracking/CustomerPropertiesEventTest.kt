@@ -81,11 +81,10 @@ internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
         )
 
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.component.flushManager.flushData { _ ->
                 assertEquals(0, repo.all().size)
                 it()
             }
-            Exponea.component.flushManager.flushData()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

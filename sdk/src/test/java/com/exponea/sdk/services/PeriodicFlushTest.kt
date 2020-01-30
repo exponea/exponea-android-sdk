@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.FlushFinishedCallback
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -16,6 +17,7 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkConstructor
+import io.mockk.slot
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
@@ -71,11 +73,10 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         var flushCalled = false
-        every {
-            anyConstructed<FlushManagerImpl>().flushData()
-        } answers {
+        val slot = slot<FlushFinishedCallback>()
+        every { anyConstructed<FlushManagerImpl>().flushData(capture(slot)) } answers {
             flushCalled = true
-            Exponea.component.flushManager.onFlushFinishListener?.invoke()
+            slot.captured.invoke(Result.success(Unit))
         }
 
         assertEquals(WorkInfo.State.SUCCEEDED, executeWork().state)
@@ -89,11 +90,10 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
 
         var flushCalled = false
-        every {
-            anyConstructed<FlushManagerImpl>().flushData()
-        } answers {
+        val slot = slot<FlushFinishedCallback>()
+        every { anyConstructed<FlushManagerImpl>().flushData(capture(slot)) } answers {
             flushCalled = true
-            Exponea.component.flushManager.onFlushFinishListener?.invoke()
+            slot.captured.invoke(Result.success(Unit))
         }
 
         assertEquals(WorkInfo.State.FAILED, executeWork().state)
@@ -139,11 +139,10 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
         mockkConstructor(FlushManagerImpl::class)
         var flushCalls = 0
-        every {
-            anyConstructed<FlushManagerImpl>().flushData()
-        } answers {
+        val slot = slot<FlushFinishedCallback>()
+        every { anyConstructed<FlushManagerImpl>().flushData(capture(slot)) } answers {
             flushCalls++
-            Exponea.component.flushManager.onFlushFinishListener?.invoke()
+            slot.captured.invoke(Result.success(Unit))
         }
 
         Exponea.flushMode = FlushMode.PERIOD

@@ -28,11 +28,10 @@ internal class ExponeaPeriodicFlushWorker(
         }
         runCatching {
             val countDownLatch = CountDownLatch(1)
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData {
                 // Once our flushing is done we want to tell the system that we finished and we should reschedule
                 countDownLatch.countDown()
             }
-            Exponea.component.flushManager.flushData()
             try {
                 countDownLatch.await()
             } catch (e: InterruptedException) {

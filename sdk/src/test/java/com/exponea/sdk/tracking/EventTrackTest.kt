@@ -84,11 +84,10 @@ internal class EventTrackTest : ExponeaSDKTest() {
         )
 
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData { _ ->
                 assertEquals(0, repo.all().size)
                 it()
             }
-            Exponea.flushData()
         }
 
         val request = server.takeRequest()
@@ -107,12 +106,11 @@ internal class EventTrackTest : ExponeaSDKTest() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData { _ ->
                 assertEquals(1, repo.all().size)
                 assertEquals(1, repo.all()[0].tries)
                 it()
             }
-            Exponea.flushData()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)
@@ -137,11 +135,10 @@ internal class EventTrackTest : ExponeaSDKTest() {
         ExponeaMockServer.setResponseError(server, "tracking/track_event_failed.json")
 
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = {
+            Exponea.flushData { _ ->
                 assertEquals(0, repo.all().size)
                 it()
             }
-            Exponea.flushData()
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

@@ -299,17 +299,13 @@ object Exponea {
      * Manually push all events to Exponea
      */
 
-    fun flushData() = runCatching {
+    fun flushData(onFlushFinished: ((kotlin.Result<Unit>) -> Unit)? = null) = runCatching {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
+            onFlushFinished?.invoke(kotlin.Result.failure(Exception("Exponea SDK was not initialized properly!")))
             return
         }
-        if (component.flushManager.isRunning) {
-            Logger.w(this, "Cannot flush, Job service is already in progress")
-            return
-        }
-
-        component.flushManager.flushData()
+        component.flushManager.flushData(onFlushFinished)
     }.logOnException()
 
     /**

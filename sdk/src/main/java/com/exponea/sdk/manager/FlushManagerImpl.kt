@@ -19,22 +19,24 @@ internal class FlushManagerImpl(
     private val exponeaService: ExponeaService,
     private val connectionManager: ConnectionManager
 ) : FlushManager {
-    override var onFlushFinishListener: (() -> Unit)? = null
     @Volatile override var isRunning: Boolean = false
         private set
 
-    override fun flushData() {
+    override fun flushData(onFlushFinished: FlushFinishedCallback?) {
         synchronized(this) {
-            if (isRunning) return
+            if (isRunning) {
+                onFlushFinished?.invoke(Result.failure(Exception("Flushing already in progress")))
+                return
+            }
             isRunning = true
         }
-        flushDataInternal()
+        flushDataInternal(onFlushFinished)
     }
 
-    private fun flushDataInternal() {
+    private fun flushDataInternal(onFlushFinished: FlushFinishedCallback?) {
         if (!connectionManager.isConnectedToInternet()) {
-            Logger.d(this, "Internet connection is not available, skipping flushing")
-            onFlushFinishListener?.invoke()
+            Logger.d(this, "Internet connection is not available, skipping flush")
+            onFlushFinished?.invoke(Result.failure(Exception("Internet connection is not available.")))
             isRunning = false
             return
         }
@@ -46,7 +48,7 @@ internal class FlushManagerImpl(
 
         if (firstEvent != null) {
             Logger.i(this, "Flushing Event: ${firstEvent.id}")
-            trySendingEvent(firstEvent)
+            trySendingEvent(firstEvent, onFlushFinished)
         } else {
             Logger.i(this, "No events left to flush: ${allEvents.size}")
             eventRepository.all().forEach {
@@ -54,14 +56,18 @@ internal class FlushManagerImpl(
                 eventRepository.update(it)
             }
             isRunning = false
-            onFlushFinishListener?.invoke()
+            onFlushFinished?.invoke(Result.success(Unit))
         }
     }
 
-    private fun trySendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>) {
+    private fun trySendingEvent(
+        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        onFlushFinished: FlushFinishedCallback?
+    ) {
         updateBeforeSend(databaseObject)
-        routeSendingEvent(databaseObject)
-                ?.enqueue(handleResponse(databaseObject), handleFailure(databaseObject)
+        routeSendingEvent(databaseObject)?.enqueue(
+            handleResponse(databaseObject, onFlushFinished),
+            handleFailure(databaseObject, onFlushFinished)
         )
     }
 
@@ -80,10 +86,10 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun handleFailure(databaseObject: DatabaseStorageObject<ExportedEventType>): (
-        Call,
-        IOException
-    ) -> Unit {
+    private fun handleFailure(
+        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        onFlushFinished: FlushFinishedCallback?
+    ): (Call, IOException) -> Unit {
         return { _, ioException ->
             Logger.e(
                     this@FlushManagerImpl,
@@ -91,13 +97,15 @@ internal class FlushManagerImpl(
                     ioException
             )
             onEventSentFailed(databaseObject)
+            // Once done continue and try to flush the rest of events
+            flushDataInternal(onFlushFinished)
         }
     }
 
-    private fun handleResponse(databaseObject: DatabaseStorageObject<ExportedEventType>): (
-        Call,
-        Response
-    ) -> Unit {
+    private fun handleResponse(
+        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        onFlushFinished: FlushFinishedCallback?
+    ): (Call, Response) -> Unit {
         return { _, response ->
             val responseCode = response.code()
             Logger.d(this, "Response Code: $responseCode")
@@ -110,7 +118,7 @@ internal class FlushManagerImpl(
                 else -> onEventSentFailed(databaseObject)
             }
             // Once done continue and try to flush the rest of events
-            flushDataInternal()
+            flushDataInternal(onFlushFinished)
         }
     }
 

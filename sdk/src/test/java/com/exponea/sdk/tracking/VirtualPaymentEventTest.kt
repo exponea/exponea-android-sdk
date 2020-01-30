@@ -68,8 +68,7 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
                 purchasedItem = payment
         )
         waitForIt {
-            Exponea.component.flushManager.onFlushFinishListener = { it() }
-            Exponea.component.flushManager.flushData()
+            Exponea.component.flushManager.flushData { it() }
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

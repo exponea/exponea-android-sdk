@@ -10,12 +10,13 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
-import android.widget.RelativeLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
+import com.exponea.sdk.models.TextPosition
 import com.exponea.sdk.util.setBackgroundColor
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonClose
@@ -51,6 +52,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setupPositions()
         setupFullscreen()
         setupImage()
         setupCloseButton()
@@ -73,18 +75,85 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         }
         inAppMessageDialogContainer.setPadding(padding, padding, padding, padding)
 
-        // setup dialog max. width
-        val params = inAppMessageDialogRoot.layoutParams as ConstraintLayout.LayoutParams
-        if (fullScreen) params.matchConstraintMaxWidth = -1
+        val rootParams = inAppMessageDialogRoot.layoutParams as ConstraintLayout.LayoutParams
+        val imageParams = imageViewImage.layoutParams as ConstraintLayout.LayoutParams
+        if (fullScreen) {
+            // remove constraint on dialog max. width
+            rootParams.matchConstraintMaxWidth = -1
 
-        // setup image height
-        imageViewImage.layoutParams = RelativeLayout.LayoutParams(
-            RelativeLayout.LayoutParams.MATCH_PARENT,
-            if (fullScreen) RelativeLayout.LayoutParams.MATCH_PARENT else RelativeLayout.LayoutParams.WRAP_CONTENT
-        )
+            // let image height take up whole screen
+            rootParams.height = ConstraintLayout.LayoutParams.MATCH_PARENT
+            imageParams.height = 0
+        }
+    }
+
+    private fun setupPositions() {
+        var constraintSet = ConstraintSet()
+        constraintSet.clone(inAppMessageDialogRoot)
+        constraintSet.removeFromVerticalChain(linearLayoutBackground.id)
+        constraintSet.removeFromVerticalChain(imageViewImage.id)
+
+        if (payload.isTextOverImage == true) { // image is from top to bottom, text is either top or bottom
+            constraintSet.connect(
+                imageViewImage.id,
+                ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.TOP,
+                0
+            )
+            constraintSet.connect(
+                imageViewImage.id,
+                ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.BOTTOM,
+                0
+            )
+            constraintSet.connect(
+                linearLayoutBackground.id,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                0
+            )
+        } else {
+            // which element is at top
+            constraintSet.connect(
+                if (payload.textPosition == TextPosition.BOTTOM) imageViewImage.id else linearLayoutBackground.id,
+                ConstraintSet.TOP,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.TOP,
+                0
+            )
+            // 2-way connection between bottom and top of elements
+            constraintSet.connect(
+                imageViewImage.id,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                linearLayoutBackground.id,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
+                0
+            )
+            constraintSet.connect(
+                linearLayoutBackground.id,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
+                imageViewImage.id,
+                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                0
+            )
+            // which element is at bottom
+            constraintSet.connect(
+                if (payload.textPosition == TextPosition.BOTTOM) linearLayoutBackground.id else imageViewImage.id,
+                ConstraintSet.BOTTOM,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.BOTTOM,
+                0
+            )
+        }
+        constraintSet.applyTo(inAppMessageDialogRoot)
     }
 
     private fun setupImage() {
+        imageViewImage.isOnTop = payload.textPosition == TextPosition.BOTTOM
+        imageViewImage.textOverImage = payload.isTextOverImage == true
         imageViewImage.setImageBitmap(bitmap)
     }
 
@@ -135,10 +204,17 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     private fun setupWindow() {
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        linearLayoutBackground.setBackgroundColor(
-            R.drawable.in_app_message_dialog_background,
-            parseColor(payload.backgroundColor, Color.WHITE)
-        )
+        if (payload.isTextOverImage == true) {
+            linearLayoutBackground.setBackgroundColor(Color.TRANSPARENT)
+        } else {
+            val backgroundDrawable = if (payload.textPosition == TextPosition.BOTTOM)
+                R.drawable.in_app_message_dialog_background_bottom
+                else R.drawable.in_app_message_dialog_background_top
+            linearLayoutBackground.setBackgroundColor(
+                backgroundDrawable,
+                parseColor(payload.backgroundColor, Color.WHITE)
+            )
+        }
 
         window.attributes.width = WindowManager.LayoutParams.MATCH_PARENT
         window.setDimAmount(0.1f)

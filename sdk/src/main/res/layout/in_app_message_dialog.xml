@@ -3,14 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/inAppMessageDialogContainer"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     >
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/inAppMessageDialogRoot"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -18,36 +17,32 @@
         app:layout_constraintWidth_max="600dp"
         >
 
-        <RelativeLayout
+        <Button
+            android:id="@+id/buttonClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="32dp"
+            android:text="×"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="-10dp"
+            android:layout_marginRight="0dp"
+            android:minHeight="40dp"
+            android:minWidth="40dp"
+            android:padding="0dp"
+            android:background="@android:color/transparent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <com.exponea.sdk.view.InAppMessageDialogImageView
+            android:id="@+id/imageViewImage"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            >
-            <com.exponea.sdk.view.InAppMessageDialogImageView
-                android:id="@+id/imageViewImage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scaleType="centerCrop"
-                android:adjustViewBounds="true" />
-
-            <Button
-                android:id="@+id/buttonClose"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="32dp"
-                android:text="×"
-                android:layout_alignParentRight="true"
-                android:layout_marginTop="-5dp"
-                android:layout_marginRight="0dp"
-                android:minHeight="40dp"
-                android:minWidth="40dp"
-                android:paddingLeft="0dp"
-                android:paddingRight="0dp"
-                android:paddingTop="0dp"
-                android:padding="0dp"
-                android:background="@android:color/transparent" />
-
-        </RelativeLayout>
+            android:layout_height="wrap_content"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
             android:id="@+id/linearLayoutBackground"
@@ -58,7 +53,11 @@
             android:paddingBottom="20dp"
             android:paddingLeft="30dp"
             android:paddingRight="30dp"
-            android:background="@drawable/in_app_message_dialog_background"
+            android:background="@drawable/in_app_message_dialog_background_bottom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/imageViewImage"
+            app:layout_constraintBottom_toBottomOf="parent"
             >
 
             <TextView
@@ -90,5 +89,5 @@
                 android:textAllCaps="false"
                 android:background="@drawable/in_app_message_dialog_button" />
         </LinearLayout>
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -112,8 +112,15 @@ internal data class InAppMessagePayload(
     @SerializedName("background_color")
     val backgroundColor: String? = null,
     @SerializedName("close_button_color")
-    val closeButtonColor: String? = null
+    val closeButtonColor: String? = null,
+    @SerializedName("text_position")
+    val rawTextPosition: String? = null,
+    @SerializedName("text_over_image")
+    val isTextOverImage: Boolean? = null
 ) {
+    val textPosition: TextPosition
+        get() = if (rawTextPosition == "top") TextPosition.TOP else TextPosition.BOTTOM
+
     companion object {
         fun parseFontSize(fontSize: String?, defaultValue: Float): Float {
             if (fontSize == null) return defaultValue
@@ -149,4 +156,8 @@ enum class InAppMessageType(val value: String) {
     ALERT("alert"),
     FULLSCREEN("fullscreen"),
     SLIDE_IN("slide_in")
+}
+
+enum class TextPosition {
+    TOP, BOTTOM
 }

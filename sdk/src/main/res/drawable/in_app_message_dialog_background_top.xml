@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#ffffff"/>
+    <corners
+        android:topLeftRadius="@dimen/exponea_sdk_in_app_message_dialog_corner_radius"
+        android:topRightRadius="@dimen/exponea_sdk_in_app_message_dialog_corner_radius"/>
+</shape>
+

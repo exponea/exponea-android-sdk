@@ -116,10 +116,16 @@ internal data class InAppMessagePayload(
     @SerializedName("text_position")
     val rawTextPosition: String? = null,
     @SerializedName("text_over_image")
-    val isTextOverImage: Boolean? = null
+    val isTextOverImage: Boolean? = null,
+    @SerializedName("message_position")
+    val rawMessagePosition: String? = null
+
 ) {
     val textPosition: TextPosition
         get() = if (rawTextPosition == "top") TextPosition.TOP else TextPosition.BOTTOM
+
+    val messagePosition: MessagePosition
+        get() = if (rawMessagePosition == "bottom") MessagePosition.BOTTOM else MessagePosition.TOP
 
     companion object {
         fun parseFontSize(fontSize: String?, defaultValue: Float): Float {
@@ -159,5 +165,9 @@ enum class InAppMessageType(val value: String) {
 }
 
 enum class TextPosition {
+    TOP, BOTTOM
+}
+
+enum class MessagePosition {
     TOP, BOTTOM
 }

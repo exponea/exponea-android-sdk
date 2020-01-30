@@ -21,6 +21,7 @@ import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
+import com.exponea.sdk.models.MessagePosition
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
 
@@ -63,14 +64,20 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     override fun show() {
         contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-        contentView.translationY = -contentView.measuredHeight.toFloat()
+        contentView.translationY =
+            (if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1) * contentView.measuredHeight.toFloat()
         contentView
             .animate()
             .setDuration(ANIMATION_DURATION)
             .translationY(0f)
             .start()
 
-        showAtLocation(activity.window.decorView.rootView, Gravity.TOP, 0, 0)
+        showAtLocation(
+            activity.window.decorView.rootView,
+            if (payload.messagePosition == MessagePosition.BOTTOM) Gravity.BOTTOM else Gravity.TOP,
+            0,
+            0
+        )
         setupSwipeToDismiss()
         Handler(Looper.getMainLooper()).postDelayed({ if (isShowing) dismiss() }, DISPLAY_DURATION)
     }
@@ -81,7 +88,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         contentView
             .animate()
             .setDuration(ANIMATION_DURATION)
-            .translationY(-contentView.measuredHeight.toFloat())
+            .translationY(
+                (if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1) *
+                    contentView.measuredHeight.toFloat()
+            )
             .setListener(object : Animator.AnimatorListener {
                 override fun onAnimationEnd(animation: Animator?) { superDismiss() }
                 override fun onAnimationCancel(animation: Animator?) { superDismiss() }

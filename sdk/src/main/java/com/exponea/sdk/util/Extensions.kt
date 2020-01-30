@@ -6,7 +6,11 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.PorterDuff
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import androidx.annotation.DrawableRes
 import com.exponea.sdk.Exponea
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -143,3 +147,16 @@ fun Result<Unit>.logOnException() {
 
 val JsonElement.asOptionalString: String?
     get() = if (this.isJsonNull) null else this.asString
+
+@Suppress("DEPRECATION")
+fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
+    val drawable = if (Build.VERSION.SDK_INT >= 21)
+        context.resources.getDrawable(backgroundId, null)
+    else context.resources.getDrawable(backgroundId)
+    drawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
+    if (Build.VERSION.SDK_INT >= 16) {
+        background = drawable
+    } else {
+        setBackgroundDrawable(drawable)
+    }
+}

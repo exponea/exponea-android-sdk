@@ -145,5 +145,6 @@ enum class InAppMessageFrequency(val value: String) {
 enum class InAppMessageType(val value: String) {
     MODAL("modal"),
     ALERT("alert"),
-    FULLSCREEN("fullscreen")
+    FULLSCREEN("fullscreen"),
+    SLIDE_IN("slide_in")
 }

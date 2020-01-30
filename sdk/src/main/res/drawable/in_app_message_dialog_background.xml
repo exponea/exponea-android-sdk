@@ -2,7 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="#ffffff"/>
     <corners
-        android:bottomLeftRadius="@dimen/exponea_sdk_in_app_message_window_corner_radius"
-        android:bottomRightRadius="@dimen/exponea_sdk_in_app_message_window_corner_radius"/>
+        android:bottomLeftRadius="@dimen/exponea_sdk_in_app_message_dialog_corner_radius"
+        android:bottomRightRadius="@dimen/exponea_sdk_in_app_message_dialog_corner_radius"/>
 </shape>
 

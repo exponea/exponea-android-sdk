@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessageType
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessageDialogPresenter(context: Context) {
@@ -68,9 +69,22 @@ internal class InAppMessageDialogPresenter(context: Context) {
                 presenterActionCallback,
                 presenterDismissedCallback
             )
+            InAppMessageType.SLIDE_IN -> InAppMessageSlideIn(
+                currentActivity ?: return null,
+                payload,
+                image ?: return null,
+                presenterActionCallback,
+                presenterDismissedCallback
+            )
         }
         presenting = true
-        inAppMessageView.show()
+        try {
+            inAppMessageView.show()
+        } catch (e: Throwable) {
+            Logger.w(this, "Showing in-app message failed $e.")
+            presenting = false
+            return null
+        }
         return inAppMessageView
     }.returnOnException {
         presenting = false

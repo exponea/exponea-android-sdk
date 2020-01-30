@@ -4,21 +4,18 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.View
 import android.view.WindowManager
 import android.widget.RelativeLayout
-import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
+import com.exponea.sdk.util.setBackgroundColor
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonClose
 import kotlinx.android.synthetic.main.in_app_message_dialog.imageViewImage
@@ -112,8 +109,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private fun setupButton() {
         buttonAction.text = payload.buttonText
         buttonAction.setTextColor(parseColor(payload.buttonTextColor, Color.BLACK))
-        setBackgroundColor(
-            buttonAction,
+        buttonAction.setBackgroundColor(
             R.drawable.in_app_message_dialog_button,
             parseColor(payload.buttonBackgroundColor, Color.LTGRAY)
         )
@@ -126,26 +122,12 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     private fun setupWindow() {
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        setBackgroundColor(
-            linearLayoutBackground,
+        linearLayoutBackground.setBackgroundColor(
             R.drawable.in_app_message_dialog_background,
             parseColor(payload.backgroundColor, Color.WHITE)
         )
 
         window.attributes.width = WindowManager.LayoutParams.MATCH_PARENT
         window.setDimAmount(0.1f)
-    }
-
-    @Suppress("DEPRECATION")
-    private fun setBackgroundColor(view: View, @DrawableRes backgroundId: Int, color: Int) {
-        val drawable = if (Build.VERSION.SDK_INT >= 21)
-            context.resources.getDrawable(backgroundId, null)
-        else context.resources.getDrawable(backgroundId)
-        drawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
-        if (Build.VERSION.SDK_INT >= 16) {
-            view.background = drawable
-        } else {
-            view.setBackgroundDrawable(drawable)
-        }
     }
 }

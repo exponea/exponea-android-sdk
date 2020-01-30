@@ -10,6 +10,7 @@ import kotlin.test.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.Robolectric
 import org.robolectric.Robolectric.buildActivity
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -59,6 +60,7 @@ internal class InAppMessageDialogPresenterTest(
         assertNotNull(presented)
         assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
         presented.dismiss()
+        Robolectric.flushForegroundThreadScheduler() // skip animations
         assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 }

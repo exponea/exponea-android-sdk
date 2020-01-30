@@ -117,6 +117,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     private fun setupTitleText() {
         val textViewTitle = contentView.findViewById<TextView>(R.id.textViewTitle)
+        if (payload.title.isNullOrEmpty()) {
+            textViewTitle.visibility = View.GONE
+            return
+        }
         textViewTitle.text = payload.title
         textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
         textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
@@ -124,6 +128,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     private fun setupBodyText() {
         val textViewBody = contentView.findViewById<TextView>(R.id.textViewBody)
+        if (payload.bodyText.isNullOrEmpty()) {
+            textViewBody.visibility = View.GONE
+            return
+        }
         textViewBody.text = payload.bodyText
         textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
         textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
@@ -131,6 +139,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     private fun setupButton() {
         val buttonAction = contentView.findViewById<Button>(R.id.buttonAction)
+        if (payload.buttonText.isNullOrEmpty()) {
+            buttonAction.visibility = View.GONE
+            return
+        }
         buttonAction.text = payload.buttonText
         buttonAction.setTextColor(parseColor(payload.buttonTextColor, Color.BLACK))
         buttonAction.setBackgroundColor(

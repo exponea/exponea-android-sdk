@@ -73,19 +73,19 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun preloadImages(messages: List<InAppMessage>) {
-        bitmapCache.clearExcept(messages.map { it.payload.imageUrl }.filter { it.isNotBlank() })
+        bitmapCache.clearExcept(messages.mapNotNull { it.payload.imageUrl }.filter { it.isNotBlank() })
         messages.forEach {
-            if (it.payload.imageUrl.isNotBlank()) bitmapCache.preload(it.payload.imageUrl)
+            if (!it.payload.imageUrl.isNullOrEmpty()) bitmapCache.preload(it.payload.imageUrl)
         }
     }
 
     private fun hasImageFor(message: InAppMessage): Boolean {
-        return bitmapCache.has(message.payload.imageUrl)
+        return message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
     }
 
     override fun getRandom(eventType: String): InAppMessage? {
         val messages = inAppMessagesCache.get().filter {
-            (it.payload.imageUrl.isBlank() || hasImageFor(it)) &&
+            hasImageFor(it) &&
             it.applyDateFilter(System.currentTimeMillis() / 1000) &&
             it.applyEventFilter(eventType) &&
             it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
@@ -100,7 +100,7 @@ internal class InAppMessageManagerImpl(
         return GlobalScope.launch {
             val message = getRandom(eventType)
             if (message != null) {
-                val bitmap = if (message.payload.imageUrl.isNotBlank())
+                val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
                     bitmapCache.get(message.payload.imageUrl) ?: return@launch
                     else null
                 Handler(Looper.getMainLooper()).post {

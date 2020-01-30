@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.WindowManager
 import android.widget.RelativeLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -88,12 +89,20 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupTitleText() {
+        if (payload.title.isNullOrEmpty()) {
+            textViewTitle.visibility = View.GONE
+            return
+        }
         textViewTitle.text = payload.title
         textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
         textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
     }
 
     private fun setupBodyText() {
+        if (payload.bodyText.isNullOrEmpty()) {
+            textViewBody.visibility = View.GONE
+            return
+        }
         textViewBody.text = payload.bodyText
         textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
         textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
@@ -107,6 +116,10 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupButton() {
+        if (payload.bodyText.isNullOrEmpty()) {
+            buttonAction.visibility = View.GONE
+            return
+        }
         buttonAction.text = payload.buttonText
         buttonAction.setTextColor(parseColor(payload.buttonTextColor, Color.BLACK))
         buttonAction.setBackgroundColor(

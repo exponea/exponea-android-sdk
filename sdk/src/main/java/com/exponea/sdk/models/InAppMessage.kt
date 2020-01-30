@@ -86,36 +86,37 @@ internal data class InAppMessageTrigger(
 
 internal data class InAppMessagePayload(
     @SerializedName("image_url")
-    val imageUrl: String,
+    val imageUrl: String? = null,
     @SerializedName("title")
-    val title: String,
+    val title: String? = null,
     @SerializedName("title_text_color")
-    val titleTextColor: String,
+    val titleTextColor: String? = null,
     @SerializedName("title_text_size")
-    val titleTextSize: String,
+    val titleTextSize: String? = null,
     @SerializedName("body_text")
-    val bodyText: String,
+    val bodyText: String? = null,
     @SerializedName("body_text_color")
-    val bodyTextColor: String,
+    val bodyTextColor: String? = null,
     @SerializedName("body_text_size")
-    val bodyTextSize: String,
+    val bodyTextSize: String? = null,
     @SerializedName("button_text")
-    val buttonText: String,
+    val buttonText: String? = null,
     @SerializedName("button_type")
-    val buttonType: String,
+    val buttonType: String? = null,
     @SerializedName("button_link")
-    val buttonLink: String,
+    val buttonLink: String? = null,
     @SerializedName("button_text_color")
-    val buttonTextColor: String,
+    val buttonTextColor: String? = null,
     @SerializedName("button_background_color")
-    val buttonBackgroundColor: String,
+    val buttonBackgroundColor: String? = null,
     @SerializedName("background_color")
-    val backgroundColor: String,
+    val backgroundColor: String? = null,
     @SerializedName("close_button_color")
-    val closeButtonColor: String
+    val closeButtonColor: String? = null
 ) {
     companion object {
-        fun parseFontSize(fontSize: String, defaultValue: Float): Float {
+        fun parseFontSize(fontSize: String?, defaultValue: Float): Float {
+            if (fontSize == null) return defaultValue
             try {
                 return fontSize.replace("px", "").toFloat()
             } catch (e: Throwable) {
@@ -124,7 +125,8 @@ internal data class InAppMessagePayload(
             }
         }
 
-        fun parseColor(color: String, defaultValue: Int): Int {
+        fun parseColor(color: String?, defaultValue: Int): Int {
+            if (color == null) return defaultValue
             try {
                 return Color.parseColor(color)
             } catch (e: Throwable) {

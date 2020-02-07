@@ -18,9 +18,11 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.exponea.sdk.R
+import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
+import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.MessagePosition
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
@@ -33,7 +35,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     private val activity: Activity
     private val payload: InAppMessagePayload
-    private val onButtonClick: () -> Unit
+    private val onButtonClick: (InAppMessagePayloadButton) -> Unit
     private var onDismiss: (() -> Unit)?
     private val bitmap: Bitmap
 
@@ -41,7 +43,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         activity: Activity,
         payload: InAppMessagePayload,
         image: Bitmap,
-        onButtonClick: () -> Unit,
+        onButtonClick: (InAppMessagePayloadButton) -> Unit,
         onDismiss: () -> Unit
     ) : super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) {
         this.activity = activity
@@ -57,7 +59,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         setupImage()
         setupTitleText()
         setupBodyText()
-        setupButton()
+        setupButtons()
 
         setOnDismissListener { this.onDismiss?.invoke() }
     }
@@ -147,22 +149,32 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
     }
 
-    private fun setupButton() {
-        val buttonAction = contentView.findViewById<Button>(R.id.buttonAction)
-        if (payload.buttonText.isNullOrEmpty()) {
+    private fun setupButtons() {
+        val button1Payload = if (payload.buttons != null && payload.buttons.isNotEmpty()) payload.buttons[0] else null
+        val button2Payload = if (payload.buttons != null && payload.buttons.count() > 1) payload.buttons[1] else null
+        setupButton(contentView.findViewById<Button>(R.id.buttonAction1), button1Payload)
+        setupButton(contentView.findViewById<Button>(R.id.buttonAction2), button2Payload)
+    }
+
+    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?) {
+        if (buttonPayload == null) {
             buttonAction.visibility = View.GONE
             return
         }
-        buttonAction.text = payload.buttonText
-        buttonAction.setTextColor(parseColor(payload.buttonTextColor, Color.BLACK))
+        buttonAction.text = buttonPayload.buttonText
+        buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))
         buttonAction.setBackgroundColor(
             R.drawable.in_app_message_slide_in_button,
-            parseColor(payload.buttonBackgroundColor, Color.LTGRAY)
+            parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
         )
-        buttonAction.setOnClickListener {
-            onButtonClick()
-            onDismiss = null // clear the dismiss listener, we called the button listener
-            dismiss()
+        if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
+            buttonAction.setOnClickListener { dismiss() }
+        } else {
+            buttonAction.setOnClickListener {
+                onButtonClick(buttonPayload)
+                onDismiss = null // clear the dismiss listener, we called the button listener
+                dismiss()
+            }
         }
     }
 }

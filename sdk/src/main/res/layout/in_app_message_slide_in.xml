@@ -42,19 +42,37 @@
                 android:layout_gravity="start"
                 android:textAlignment="textStart"
                 android:layout_marginTop="5dp" />
-
-            <Button
-                android:id="@+id/buttonAction"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Action"
                 android:layout_marginTop="5dp"
-                style="?android:attr/borderlessButtonStyle"
-                android:minHeight="0dp"
-                android:minWidth="0dp"
-                android:padding="5dp"
-                android:textAllCaps="false"
-                android:background="@drawable/in_app_message_slide_in_button" />
+                android:orientation="horizontal"
+                android:gravity="start"
+                >
+                <Button
+                    android:id="@+id/buttonAction1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Action"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:padding="5dp"
+                    android:textAllCaps="false"
+                    android:background="@drawable/in_app_message_slide_in_button" />
+                <Button
+                    android:id="@+id/buttonAction2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:text="Action"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:padding="5dp"
+                    android:textAllCaps="false"
+                    android:background="@drawable/in_app_message_slide_in_button" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

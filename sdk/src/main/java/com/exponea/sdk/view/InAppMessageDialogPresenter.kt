@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
+import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
@@ -40,15 +41,15 @@ internal class InAppMessageDialogPresenter(context: Context) {
         messageType: InAppMessageType,
         payload: InAppMessagePayload,
         image: Bitmap?,
-        actionCallback: () -> Unit,
+        actionCallback: (InAppMessagePayloadButton) -> Unit,
         dismissedCallback: () -> Unit
     ): InAppMessageView? = runCatching {
         if (presenting) {
             return null
         }
-        val presenterActionCallback = {
+        val presenterActionCallback = { button: InAppMessagePayloadButton ->
             presenting = false
-            actionCallback()
+            actionCallback(button)
         }
         val presenterDismissedCallback = {
             presenting = false

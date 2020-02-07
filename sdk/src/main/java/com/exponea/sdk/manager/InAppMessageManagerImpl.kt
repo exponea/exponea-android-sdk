@@ -10,6 +10,8 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageButtonType
+import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
@@ -108,11 +110,11 @@ internal class InAppMessageManagerImpl(
                         messageType = message.messageType,
                         payload = message.payload,
                         image = bitmap,
-                        actionCallback = {
+                        actionCallback = { button ->
                             displayStateRepository.setInteracted(message, Date())
                             trackingDelegate.track(message, "click", true)
                             Logger.i(this, "In-app message button clicked!")
-                            processInAppMessageAction(message)
+                            processInAppMessageAction(button)
                         },
                         dismissedCallback = {
                             trackingDelegate.track(message, "close", false)
@@ -127,12 +129,12 @@ internal class InAppMessageManagerImpl(
         }
     }
 
-    private fun processInAppMessageAction(message: InAppMessage) {
-        if (message.payload.buttonType == "deep-link") { // there are no other actions right now, add enum later
+    private fun processInAppMessageAction(button: InAppMessagePayloadButton) {
+        if (button.buttonType == InAppMessageButtonType.DEEPLINK) {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    data = Uri.parse(message.payload.buttonLink)
+                    data = Uri.parse(button.buttonLink)
                 }
             )
         }

@@ -28,6 +28,6 @@ internal class InAppMessageDialogTest {
         dialog.show()
         assertEquals(payload.title, dialog.findViewById<TextView>(R.id.textViewTitle).text)
         assertEquals(payload.bodyText, dialog.findViewById<TextView>(R.id.textViewBody).text)
-        assertEquals(payload.buttonText, dialog.findViewById<Button>(R.id.buttonAction).text)
+        assertEquals(payload.buttons!![0].buttonText, dialog.findViewById<Button>(R.id.buttonAction1).text)
     }
 }

@@ -12,6 +12,7 @@ import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageFrequency
+import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.InAppMessageTrigger
 import com.exponea.sdk.models.Result
@@ -258,7 +259,7 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         val delegate = spyk<InAppMessageTrackingDelegate>()
-        val actionCallbackSlot = slot<() -> Unit>()
+        val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
         every {
             presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
@@ -268,7 +269,7 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
-        actionCallbackSlot.captured.invoke()
+        actionCallbackSlot.captured.invoke(InAppMessageTest.getInAppMessage().payload.buttons!![0])
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setInteracted(any(), any()) }
     }
 
@@ -278,7 +279,7 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         val delegate = spyk<InAppMessageTrackingDelegate>()
-        val actionCallbackSlot = slot<() -> Unit>()
+        val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
         every {
             presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
@@ -291,7 +292,7 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
-        actionCallbackSlot.captured.invoke()
+        actionCallbackSlot.captured.invoke(InAppMessageTest.getInAppMessage().payload.buttons!![0])
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true) }
         dismissedCallbackSlot.captured.invoke()
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
@@ -302,17 +303,18 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        val actionCallbackSlot = slot<() -> Unit>()
+        val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         every { presenter.show(any(), any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
 
         runBlocking { manager.showRandom("session_start", spyk()).join() }
         Robolectric.flushForegroundThreadScheduler()
 
         val activity = Activity()
+        val button = InAppMessageTest.getInAppMessage().payload.buttons!![0]
         assertNull(shadowOf(activity).nextStartedActivityForResult)
-        actionCallbackSlot.captured.invoke()
+        actionCallbackSlot.captured.invoke(button)
         assertEquals(
-            InAppMessageTest.getInAppMessage().payload.buttonLink,
+            button.buttonLink,
             shadowOf(activity).nextStartedActivityForResult.intent.data.toString()
         )
     }

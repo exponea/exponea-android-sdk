@@ -10,16 +10,21 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import com.exponea.sdk.R
+import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
+import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.TextPosition
 import com.exponea.sdk.util.setBackgroundColor
-import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction
+import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction1
+import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction2
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonClose
+import kotlinx.android.synthetic.main.in_app_message_dialog.buttonSpace
 import kotlinx.android.synthetic.main.in_app_message_dialog.imageViewImage
 import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogContainer
 import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogRoot
@@ -30,7 +35,7 @@ import kotlinx.android.synthetic.main.in_app_message_dialog.textViewTitle
 internal class InAppMessageDialog : InAppMessageView, Dialog {
     private val fullScreen: Boolean
     private val payload: InAppMessagePayload
-    private val onButtonClick: () -> Unit
+    private val onButtonClick: (InAppMessagePayloadButton) -> Unit
     private var onDismiss: (() -> Unit)?
     private val bitmap: Bitmap
 
@@ -39,7 +44,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         fullScreen: Boolean,
         payload: InAppMessagePayload,
         image: Bitmap,
-        onButtonClick: () -> Unit,
+        onButtonClick: (InAppMessagePayloadButton) -> Unit,
         onDismiss: () -> Unit
     ) : super(context) {
         this.fullScreen = fullScreen
@@ -58,7 +63,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         setupCloseButton()
         setupTitleText()
         setupBodyText()
-        setupButton()
+        setupButtons()
         setupWindow()
 
         setOnDismissListener {
@@ -184,21 +189,33 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))
     }
 
-    private fun setupButton() {
-        if (payload.bodyText.isNullOrEmpty()) {
+    private fun setupButtons() {
+        val button1Payload = if (payload.buttons != null && payload.buttons.isNotEmpty()) payload.buttons[0] else null
+        val button2Payload = if (payload.buttons != null && payload.buttons.count() > 1) payload.buttons[1] else null
+        setupButton(buttonAction1, button1Payload)
+        setupButton(buttonAction2, button2Payload)
+    }
+
+    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?) {
+        if (buttonPayload == null) {
+            buttonSpace.visibility = View.GONE
             buttonAction.visibility = View.GONE
             return
         }
-        buttonAction.text = payload.buttonText
-        buttonAction.setTextColor(parseColor(payload.buttonTextColor, Color.BLACK))
+        buttonAction.text = buttonPayload.buttonText
+        buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))
         buttonAction.setBackgroundColor(
             R.drawable.in_app_message_dialog_button,
-            parseColor(payload.buttonBackgroundColor, Color.LTGRAY)
+            parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
         )
-        buttonAction.setOnClickListener {
-            onButtonClick()
-            onDismiss = null // clear the dismiss listener, we called the button listener
-            dismiss()
+        if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
+            buttonAction.setOnClickListener { dismiss() }
+        } else {
+            buttonAction.setOnClickListener {
+                onButtonClick(buttonPayload)
+                onDismiss = null // clear the dismiss listener, we called the button listener
+                dismiss()
+            }
         }
     }
 

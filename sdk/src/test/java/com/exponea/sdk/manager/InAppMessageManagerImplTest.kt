@@ -60,6 +60,7 @@ internal class InAppMessageManagerImplTest {
         fetchManager = mockk()
         messagesCache = mockk()
         every { messagesCache.set(any()) } just Runs
+        every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
         bitmapCache = mockk()
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
@@ -117,6 +118,19 @@ internal class InAppMessageManagerImplTest {
                 it()
             }
         }
+    }
+
+    @Test
+    fun `should reload messages on session start`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        waitForIt { manager.preload { _ -> it() } }
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        manager.sessionStarted(Date())
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        manager.sessionStarted(Date(Date().time + InAppMessageManagerImpl.REFRESH_CACHE_AFTER * 2))
+        verify(exactly = 2) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 
     @Test

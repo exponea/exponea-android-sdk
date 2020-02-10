@@ -60,6 +60,10 @@ internal class InAppMessageManagerImpl(
     private val bitmapCache: InAppMessageBitmapCache = InAppMessageBitmapCacheImpl(context),
     private val presenter: InAppMessageDialogPresenter = InAppMessageDialogPresenter(context)
 ) : InAppMessageManager {
+    companion object {
+        const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
+    }
+
     private var sessionStartDate = Date()
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
@@ -81,6 +85,9 @@ internal class InAppMessageManagerImpl(
 
     override fun sessionStarted(sessionStartDate: Date) {
         this.sessionStartDate = sessionStartDate
+        if (inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < sessionStartDate.time) {
+            preload()
+        }
     }
 
     private fun preloadImages(messages: List<InAppMessage>) {

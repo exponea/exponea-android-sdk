@@ -46,4 +46,8 @@ internal class InAppMessagesCacheImpl(
         }
         return arrayListOf()
     }
+
+    override fun getTimestamp(): Long {
+        return storageFile.lastModified()
+    }
 }

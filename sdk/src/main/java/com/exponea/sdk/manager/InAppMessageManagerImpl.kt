@@ -30,11 +30,20 @@ import kotlinx.coroutines.launch
 internal class DisabledInAppMessageManagerImpl() : InAppMessageManager {
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {}
 
-    override fun getRandom(eventType: String): InAppMessage? {
+    override fun getRandom(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?
+    ): InAppMessage? {
         return null
     }
 
-    override fun showRandom(eventType: String, trackingDelegate: InAppMessageTrackingDelegate): Job {
+    override fun showRandom(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?,
+        trackingDelegate: InAppMessageTrackingDelegate
+    ): Job {
         return Job()
     }
 
@@ -64,7 +73,7 @@ internal class InAppMessageManagerImpl(
                 callback?.invoke(Result.success(Unit))
             },
             onFailure = {
-                Logger.e(this, "Preloading in-app messages failed.")
+                Logger.e(this, "Preloading in-app messages failed. ${it.results.message}")
                 callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
             }
         )
@@ -85,11 +94,11 @@ internal class InAppMessageManagerImpl(
         return message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
     }
 
-    override fun getRandom(eventType: String): InAppMessage? {
+    override fun getRandom(eventType: String, properties: Map<String, Any?>, timestamp: Double?): InAppMessage? {
         val messages = inAppMessagesCache.get().filter {
             hasImageFor(it) &&
             it.applyDateFilter(System.currentTimeMillis() / 1000) &&
-            it.applyEventFilter(eventType) &&
+            it.applyEventFilter(eventType, properties, timestamp) &&
             it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
         return if (messages.isNotEmpty()) messages.random() else null
@@ -97,10 +106,12 @@ internal class InAppMessageManagerImpl(
 
     override fun showRandom(
         eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?,
         trackingDelegate: InAppMessageTrackingDelegate
     ): Job {
         return GlobalScope.launch {
-            val message = getRandom(eventType)
+            val message = getRandom(eventType, properties, timestamp)
             if (message != null) {
                 val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
                     bitmapCache.get(message.payload.imageUrl) ?: return@launch

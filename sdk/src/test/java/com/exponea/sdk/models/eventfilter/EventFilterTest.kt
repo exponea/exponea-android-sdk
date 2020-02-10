@@ -49,7 +49,7 @@ internal class EventFilterTest {
     fun `should throw on invalid operands`() {
         val payload = """
         {
-            "type":"banner",
+            "event_type":"banner",
             "filter":[
                 {
                     "attribute":{
@@ -86,7 +86,7 @@ internal class EventFilterTest {
     fun `should deserialize payload from server`() {
         val data = """
             {
-                "type":"banner",
+                "event_type":"banner",
                 "filter":[
                     {
                         "attribute":{

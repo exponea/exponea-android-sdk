@@ -1,7 +1,5 @@
-package com.exponea.sdk
+package com.exponea.sdk.util
 
-import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -9,13 +7,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExponeaComponentTest : ExponeaSDKTest() {
+internal class ExponeaGsonTest : ExponeaSDKTest() {
     @Test
-    fun `gson should serialize obscure number values`() {
-        val gson = ExponeaComponent(ExponeaConfiguration(), ApplicationProvider.getApplicationContext()).gson
+    fun `should serialize obscure number values`() {
         assertEquals(
             """{"zero":0.0,"inf":"Infinity","pi":3.14159,"-inf":"-Infinity","nan":"NaN"}""",
-            gson.toJson(hashMapOf(
+            ExponeaGson.instance.toJson(hashMapOf(
                 "pi" to 3.14159f,
                 "zero" to 0.0f,
                 "inf" to Float.POSITIVE_INFINITY,
@@ -25,7 +22,7 @@ internal class ExponeaComponentTest : ExponeaSDKTest() {
         )
         assertEquals(
             """{"zero":0.0,"inf":"Infinity","pi":3.14159,"-inf":"-Infinity","nan":"NaN"}""",
-            gson.toJson(hashMapOf(
+            ExponeaGson.instance.toJson(hashMapOf(
                 "pi" to 3.14159,
                 "zero" to 0.0,
                 "inf" to Double.POSITIVE_INFINITY,

@@ -48,26 +48,12 @@ import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.currentTimeSeconds
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializer
-import com.google.gson.reflect.TypeToken
 internal class ExponeaComponent(
     exponeaConfiguration: ExponeaConfiguration,
     context: Context
 ) {
-    // Gson Deserializer
-    // - NaN and Infinity are serialized as strings, Gson fails to serialize them, it can do it but Exponea servers
-    //   fail to process the JSON afterwards. This way devs know there is something going on and find the issue
-    internal val gson = GsonBuilder()
-        .registerTypeAdapter(object : TypeToken<Double>() {}.type, JsonSerializer<Double> { src, _, _ ->
-            if (src.isInfinite() || src.isNaN()) { JsonPrimitive(src.toString()) } else { JsonPrimitive(src) }
-        })
-        .registerTypeAdapter(object : TypeToken<Float>() {}.type, JsonSerializer<Float> { src, _, _ ->
-            if (src.isInfinite() || src.isNaN()) { JsonPrimitive(src.toString()) } else { JsonPrimitive(src) }
-        })
-        .create()
 
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
@@ -82,7 +68,7 @@ internal class ExponeaComponent(
     )
 
     internal val customerIdsRepository: CustomerIdsRepository = CustomerIdsRepositoryImpl(
-            gson, uniqueIdentifierRepository, preferences
+            ExponeaGson.instance, uniqueIdentifierRepository, preferences
     )
 
     internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(
@@ -93,20 +79,21 @@ internal class ExponeaComponent(
 
     internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
 
-    internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(gson, preferences)
+    internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
 
-    internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, gson)
+    internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, ExponeaGson.instance)
 
-    internal val inAppMessageDisplayStateRepository = InAppMessageDisplayStateRepositoryImpl(preferences, gson)
+    internal val inAppMessageDisplayStateRepository =
+        InAppMessageDisplayStateRepositoryImpl(preferences, ExponeaGson.instance)
 
     // Network Handler
     internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
 
     // Api Service
-    internal val exponeaService: ExponeaService = ExponeaServiceImpl(gson, networkManager)
+    internal val exponeaService: ExponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
 
     // Managers
-    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService)
+    internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, ExponeaGson.instance)
 
     internal val backgroundTimerManager: BackgroundTimerManager = BackgroundTimerManagerImpl(
         context, exponeaConfiguration

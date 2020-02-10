@@ -5,7 +5,6 @@ import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
-import com.exponea.sdk.models.CustomerRecommendationDeserializer
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.CustomerRecommendationResponse
 import com.exponea.sdk.models.FetchError
@@ -14,7 +13,7 @@ import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
-import com.google.gson.GsonBuilder
+import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import okhttp3.Call
@@ -22,13 +21,9 @@ import okhttp3.Callback
 import okhttp3.Response
 
 internal class FetchManagerImpl(
-    private val api: ExponeaService
+    private val api: ExponeaService,
+    private val gson: Gson
 ) : FetchManager {
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(
-            CustomerRecommendation::class.java,
-            CustomerRecommendationDeserializer()
-        ).create()
 
     private fun <T> getFetchCallback(
         resultType: TypeToken<Result<T>>, // gson needs to know the type of result, T gets erased at compile time

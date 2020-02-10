@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.ExponeaGson
 import okhttp3.MediaType
 import okhttp3.ResponseBody
 import okhttp3.mockwebserver.MockWebServer
@@ -59,7 +60,10 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     @Test
     fun `should process fetch consents response`() {
         waitForIt {
-            FetchManagerImpl(ExponeaMockService(true, getResponse(consentsResponse))).fetchConsents(
+            FetchManagerImpl(
+                ExponeaMockService(true, getResponse(consentsResponse)),
+                ExponeaGson.instance
+            ).fetchConsents(
                 "mock-project-token",
                 onSuccess = { result ->
                     it.assertEquals(1, result.results.size)
@@ -74,7 +78,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     @Test
     fun `should call onFailure when server returns invalid json`() {
         waitForIt {
-            FetchManagerImpl(ExponeaMockService(true, getResponse("{{{{"))).fetchConsents(
+            FetchManagerImpl(ExponeaMockService(true, getResponse("{{{{")), ExponeaGson.instance).fetchConsents(
                 "mock-project-token",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -85,7 +89,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     @Test
     fun `should call onFailure when server returns empty json`() {
         waitForIt {
-            FetchManagerImpl(ExponeaMockService(true, getResponse("{}"))).fetchConsents(
+            FetchManagerImpl(ExponeaMockService(true, getResponse("{}")), ExponeaGson.instance).fetchConsents(
                 "mock-project-token",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -96,7 +100,10 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     @Test
     fun `should call onFailure when server returns error code`() {
         waitForIt {
-            FetchManagerImpl(ExponeaMockService(false, getResponse(consentsResponse))).fetchConsents(
+            FetchManagerImpl(
+                ExponeaMockService(false, getResponse(consentsResponse)),
+                ExponeaGson.instance
+            ).fetchConsents(
                 "mock-project-token",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }

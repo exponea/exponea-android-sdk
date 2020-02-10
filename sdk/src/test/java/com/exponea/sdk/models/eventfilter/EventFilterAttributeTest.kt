@@ -1,5 +1,6 @@
 package com.exponea.sdk.models.eventfilter
 
+import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonParseException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -9,7 +10,7 @@ import org.junit.Test
 internal class EventFilterAttributeTest {
     @Test
     fun `should parse property attribute`() {
-        val attribute = EventFilter.gson.fromJson(
+        val attribute = ExponeaGson.instance.fromJson(
             """{"type":"property","property":"os_version"}""",
             EventFilterAttribute::class.java
         )
@@ -19,7 +20,7 @@ internal class EventFilterAttributeTest {
 
     @Test
     fun `should parse timestamp attribute`() {
-        val attribute = EventFilter.gson.fromJson(
+        val attribute = ExponeaGson.instance.fromJson(
             """{"type":"timestamp"}""",
             EventFilterAttribute::class.java
         )
@@ -28,7 +29,7 @@ internal class EventFilterAttributeTest {
 
     @Test(expected = JsonParseException::class)
     fun `should thrown on unknown attribute type`() {
-        EventFilter.gson.fromJson(
+        ExponeaGson.instance.fromJson(
             """{"type":"mock_type"}""",
             EventFilterAttribute::class.java
         )

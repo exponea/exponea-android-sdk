@@ -6,6 +6,7 @@ import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonPrimitive
 import okhttp3.MediaType
 import okhttp3.ResponseBody
@@ -31,7 +32,10 @@ internal class FetchManagerRecommendationTest {
         expectedErrorResult: Result<FetchError>? = null
     ) {
         waitForIt {
-            FetchManagerImpl(ExponeaMockService(true, getResponse(mockResponse))).fetchRecommendation(
+            FetchManagerImpl(
+                ExponeaMockService(true, getResponse(mockResponse)),
+                ExponeaGson.instance
+            ).fetchRecommendation(
                 "mock-project-token",
                 CustomerRecommendationRequest(
                     customerIds = hashMapOf("cookie" to "mock-cookie"),

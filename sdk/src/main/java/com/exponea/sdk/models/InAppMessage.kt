@@ -1,5 +1,7 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.models.eventfilter.EventFilter
+import com.exponea.sdk.models.eventfilter.EventFilterEvent
 import com.exponea.sdk.util.Logger
 import com.google.gson.annotations.SerializedName
 import java.util.Date
@@ -20,7 +22,7 @@ internal data class InAppMessage(
     @SerializedName("variant_name")
     val variantName: String,
     @SerializedName("trigger")
-    val trigger: InAppMessageTrigger,
+    val trigger: EventFilter?,
     @SerializedName("date_filter")
     val dateFilter: DateFilter
 ) {
@@ -57,8 +59,13 @@ internal data class InAppMessage(
         return true
     }
 
-    fun applyEventFilter(eventType: String): Boolean {
-        return trigger.type == "event" && trigger.eventType == eventType
+    fun applyEventFilter(eventType: String, properties: Map<String, Any?>, timestamp: Double?): Boolean {
+        return try {
+            trigger?.passes(EventFilterEvent(eventType, properties, timestamp)) ?: false
+        } catch (e: Throwable) {
+            Logger.e(this, "Applying event filter failed. $e")
+            false
+        }
     }
 
     fun applyFrequencyFilter(displayState: InAppMessageDisplayState, sessionStartDate: Date): Boolean {
@@ -75,13 +82,6 @@ internal data class InAppMessage(
         }
     }
 }
-
-internal data class InAppMessageTrigger(
-    @SerializedName("type")
-    val type: String?,
-    @SerializedName("event_type")
-    val eventType: String?
-)
 
 enum class InAppMessageFrequency(val value: String) {
     ALWAYS("always"),

@@ -1,6 +1,6 @@
 package com.exponea.sdk.models.eventfilter
 
-import com.google.gson.GsonBuilder
+import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.annotations.SerializedName
 
 data class EventFilterEvent(
@@ -10,20 +10,14 @@ data class EventFilterEvent(
 )
 
 data class EventFilter(
-    @SerializedName("type")
+    @SerializedName("event_type")
     val eventType: String,
     @SerializedName("filter")
     val filter: List<EventPropertyFilter>
 ) {
     companion object {
-        internal val gson = GsonBuilder()
-            .registerTypeHierarchyAdapter(EventFilterOperator::class.java, EventFilterOperatorSerializer())
-            .registerTypeHierarchyAdapter(EventFilterOperator::class.java, EventFilterOperatorDeserializer())
-            .registerTypeAdapterFactory(EventFilterAttribute.typeAdapterFactory)
-            .registerTypeAdapterFactory(EventFilterConstraint.typeAdapterFactory)
-            .create()
-
-        internal fun deserialize(data: String): EventFilter = gson.fromJson(data, EventFilter::class.java)
+        internal fun deserialize(data: String): EventFilter =
+            ExponeaGson.instance.fromJson(data, EventFilter::class.java)
     }
 
     fun passes(event: EventFilterEvent): Boolean {
@@ -31,7 +25,7 @@ data class EventFilter(
         return filter.all { it.passes(event) }
     }
 
-    fun serialize(): String = gson.toJson(this)
+    fun serialize(): String = ExponeaGson.instance.toJson(this)
 }
 
 data class EventPropertyFilter(

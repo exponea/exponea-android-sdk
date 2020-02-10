@@ -81,7 +81,12 @@ internal class EventManagerImpl(
             inAppMessageManager.sessionStarted(Date((timestamp ?: currentTimeSeconds()).toLong() * 1000))
         }
         if (eventType != null) {
-            inAppMessageManager.showRandom(eventType, EventManagerInAppMessageTrackingDelegate(context, this))
+            inAppMessageManager.showRandom(
+                eventType,
+                properties,
+                timestamp,
+                EventManagerInAppMessageTrackingDelegate(context, this)
+            )
         }
     }
 }

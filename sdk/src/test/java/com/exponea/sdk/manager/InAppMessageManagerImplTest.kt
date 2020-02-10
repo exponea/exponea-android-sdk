@@ -14,8 +14,10 @@ import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageFrequency
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageTest
-import com.exponea.sdk.models.InAppMessageTrigger
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.eventfilter.EventFilter
+import com.exponea.sdk.models.eventfilter.EventPropertyFilter
+import com.exponea.sdk.models.eventfilter.StringConstraint
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
@@ -120,7 +122,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get null if no messages available`() {
         every { messagesCache.get() } returns arrayListOf()
-        assertNull(manager.getRandom("testEvent"))
+        assertNull(manager.getRandom("testEvent", hashMapOf(), null))
     }
 
     @Test
@@ -130,7 +132,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage()
         )
         every { bitmapCache.has(any()) } returns true
-        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom("session_start"))
+        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -139,7 +141,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(),
             InAppMessageTest.getInAppMessage()
         )
-        assertEquals(null, manager.getRandom("session_start"))
+        assertEquals(null, manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -148,7 +150,10 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(imageUrl = ""),
             InAppMessageTest.getInAppMessage()
         )
-        assertEquals(InAppMessageTest.getInAppMessage(imageUrl = ""), manager.getRandom("session_start"))
+        assertEquals(
+            InAppMessageTest.getInAppMessage(imageUrl = ""),
+            manager.getRandom("session_start", hashMapOf(), null)
+        )
     }
 
     @Test
@@ -161,48 +166,57 @@ internal class InAppMessageManagerImplTest {
         val currentTime = (System.currentTimeMillis() / 1000).toInt()
 
         setupStoredEvent(DateFilter(true, null, null))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, null, currentTime - 100))
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, null, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, currentTime + 100, null))
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, currentTime - 100, null))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, currentTime - 100, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(true, currentTime + 100, currentTime + 100))
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
 
         setupStoredEvent(DateFilter(false, currentTime + 100, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
     fun `should apply event filter`() {
         every { bitmapCache.has(any()) } returns true
-        val setupStoredEvent = { trigger: InAppMessageTrigger ->
+        val setupStoredEvent = { trigger: EventFilter ->
             every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(trigger = trigger))
         }
 
-        setupStoredEvent(InAppMessageTrigger(type = null, eventType = null))
-        assertNull(manager.getRandom("session_start"))
+        setupStoredEvent(EventFilter(eventType = "", filter = arrayListOf()))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
 
-        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "session_start"))
-        assertNotNull(manager.getRandom("session_start"))
+        setupStoredEvent(EventFilter(eventType = "session_start", filter = arrayListOf()))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
 
-        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
-        assertNull(manager.getRandom("session_start"))
+        setupStoredEvent(EventFilter(eventType = "payment", filter = arrayListOf()))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
 
-        setupStoredEvent(InAppMessageTrigger(type = "event", eventType = "payment"))
-        assertNotNull(manager.getRandom("payment"))
+        setupStoredEvent(
+            EventFilter(
+                eventType = "payment",
+                filter = arrayListOf(
+                    EventPropertyFilter.property("property", StringConstraint.startsWith("val"))
+                )
+            )
+        )
+        assertNull(manager.getRandom("payment", hashMapOf(), null))
+        assertNull(manager.getRandom("payment", hashMapOf("property" to "something"), null))
+        assertNotNull(manager.getRandom("payment", hashMapOf("property" to "value"), null))
     }
 
     @Test
@@ -212,8 +226,8 @@ internal class InAppMessageManagerImplTest {
         )
         every { bitmapCache.has(any()) } returns true
 
-        assertNotNull(manager.getRandom("session_start"))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -222,9 +236,9 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
         )
         every { bitmapCache.has(any()) } returns true
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -233,11 +247,11 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
         )
         every { bitmapCache.has(any()) } returns true
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), Date(1000))
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -248,9 +262,9 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns true
         manager.sessionStarted(Date(1000))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1500), null)
-        assertNull(manager.getRandom("session_start"))
+        assertNull(manager.getRandom("session_start", hashMapOf(), null))
         manager.sessionStarted(Date(2000))
-        assertNotNull(manager.getRandom("session_start"))
+        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -265,7 +279,7 @@ internal class InAppMessageManagerImplTest {
             presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
-        runBlocking { manager.showRandom("session_start", delegate).join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate).join() }
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
@@ -286,7 +300,7 @@ internal class InAppMessageManagerImplTest {
         } returns mockk()
 
         runBlocking {
-            manager.showRandom("session_start", delegate).join()
+            manager.showRandom("session_start", hashMapOf(), null, delegate).join()
         }
 
         Robolectric.flushForegroundThreadScheduler()
@@ -306,7 +320,7 @@ internal class InAppMessageManagerImplTest {
         val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         every { presenter.show(any(), any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
 
-        runBlocking { manager.showRandom("session_start", spyk()).join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk()).join() }
         Robolectric.flushForegroundThreadScheduler()
 
         val activity = Activity()

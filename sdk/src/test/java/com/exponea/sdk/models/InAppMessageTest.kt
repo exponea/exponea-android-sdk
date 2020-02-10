@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.models.eventfilter.EventFilter
 import com.google.gson.Gson
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -38,8 +39,8 @@ internal class InAppMessageTest {
             "variant_id": 0,
             "variant_name": "Variant A",
             "trigger": {
-                "type": "event",
-                "event_type": "session_start"
+                "event_type": "session_start",
+                "filter": []
             },
             "date_filter": {
                 "enabled": false,
@@ -52,7 +53,7 @@ internal class InAppMessageTest {
         fun getInAppMessage(
             id: String? = null,
             dateFilter: DateFilter? = null,
-            trigger: InAppMessageTrigger? = null,
+            trigger: EventFilter? = null,
             frequency: String? = null,
             imageUrl: String? = null
         ): InAppMessage {
@@ -63,7 +64,7 @@ internal class InAppMessageTest {
                 rawFrequency = frequency ?: "unknown",
                 variantId = 0,
                 variantName = "Variant A",
-                trigger = trigger ?: InAppMessageTrigger(type = "event", eventType = "session_start"),
+                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 payload = InAppMessagePayload(
                     imageUrl = imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",

@@ -1,5 +1,6 @@
 package com.exponea.sdk.models.eventfilter
 
+import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonParseException
 import junit.framework.Assert.assertEquals
 import org.junit.Test
@@ -12,7 +13,7 @@ internal class EventFilterConstraintTest {
     internal class EventFiltercontraintSerializationTest {
         @Test(expected = JsonParseException::class)
         fun `should thrown on unknown constraint type`() {
-            EventFilter.gson.fromJson(
+            ExponeaGson.instance.fromJson(
                 """{"type":"mock_type","operator":"is set","operands":[]}""",
                 EventFilterConstraint::class.java
             )
@@ -164,12 +165,15 @@ internal class EventFilterConstraintTest {
 
         @Test
         fun `should serialize`() {
-            assertEquals(serializedConstraint, EventFilter.gson.toJson(constraint))
+            assertEquals(serializedConstraint, ExponeaGson.instance.toJson(constraint))
         }
 
         @Test
         fun `should deserialize`() {
-            assertEquals(constraint, EventFilter.gson.fromJson(serializedConstraint, EventFilterConstraint::class.java))
+            assertEquals(
+                constraint,
+                ExponeaGson.instance.fromJson(serializedConstraint, EventFilterConstraint::class.java)
+            )
         }
     }
 }

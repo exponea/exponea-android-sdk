@@ -14,6 +14,7 @@ import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageFrequency
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.models.eventfilter.EventPropertyFilter
@@ -25,6 +26,7 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -32,6 +34,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import io.mockk.verifySequence
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -111,6 +114,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(InAppMessageTest.getInAppMessage()))
             )
         }
+        every { bitmapCache.preload(any(), any()) } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
+
         waitForIt {
             manager.preload { result ->
                 it.assertTrue(result.isSuccess)
@@ -328,6 +335,9 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
@@ -335,7 +345,8 @@ internal class InAppMessageManagerImplTest {
             presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate).join() }
+        waitForIt { manager.preload { it() } }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
@@ -348,6 +359,9 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<() -> Unit>()
@@ -355,9 +369,9 @@ internal class InAppMessageManagerImplTest {
             presenter.show(any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
-        runBlocking {
-            manager.showRandom("session_start", hashMapOf(), null, delegate).join()
-        }
+        waitForIt { manager.preload { it() } }
+
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
@@ -373,10 +387,13 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
         val actionCallbackSlot = slot<(InAppMessagePayloadButton) -> Unit>()
         every { presenter.show(any(), any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
-
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk()).join() }
+        waitForIt { manager.preload { it() } }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.flushForegroundThreadScheduler()
 
         val activity = Activity()
@@ -413,5 +430,46 @@ internal class InAppMessageManagerImplTest {
         assertEquals(false, propertiesSlot.captured["interaction"])
         assertEquals(0, propertiesSlot.captured["variant_id"])
         assertEquals("Variant A", propertiesSlot.captured["variant_name"])
+    }
+
+    @Test
+    fun `should preload pending message image first and show it`() {
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("session_start", arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        val otherMessage1 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("other_event", arrayListOf()),
+            imageUrl = "other_image_url_1"
+        )
+        val otherMessage2 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("other_event", arrayListOf()),
+            imageUrl = "other_image_url_2"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage, otherMessage1, otherMessage2)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+
+        manager.showRandom("session_start", hashMapOf(), null, spyk())
+
+        waitForIt { manager.preload { _ -> it() } }
+
+        verifySequence {
+            messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
+            bitmapCache.clearExcept(arrayListOf("pending_image_url", "other_image_url_1", "other_image_url_2"))
+            messagesCache.get()
+            bitmapCache.preload("pending_image_url", any())
+            bitmapCache.get("pending_image_url")
+            presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any())
+            bitmapCache.preload("other_image_url_1", any())
+            bitmapCache.preload("other_image_url_2", any())
+        }
+        confirmVerified(messagesCache, bitmapCache, presenter)
     }
 }

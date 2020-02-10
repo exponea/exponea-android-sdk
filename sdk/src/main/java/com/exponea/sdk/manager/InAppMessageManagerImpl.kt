@@ -19,10 +19,18 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+internal data class InAppMessageShowRequest(
+    val eventType: String,
+    val properties: Map<String, Any?>,
+    val timestamp: Double?,
+    val trackingDelegate: InAppMessageTrackingDelegate,
+    val requestedAt: Long
+)
 internal class InAppMessageManagerImpl(
     private val context: Context,
     private val configuration: ExponeaConfiguration,
@@ -35,22 +43,28 @@ internal class InAppMessageManagerImpl(
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
+        const val MAX_PENDING_MESSAGE_AGE = 1000 * 3 // time window to show pending message after preloading
     }
+
+    private var preloaded = false
+    private var pendingShowRequests: List<InAppMessageShowRequest> = arrayListOf()
 
     private var sessionStartDate = Date()
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
+        preloaded = false
         fetchManager.fetchInAppMessages(
             projectToken = configuration.projectToken,
             customerIds = customerIdsRepository.get(),
             onSuccess = { result ->
-                Logger.i(this, "In-app messages preloaded successfully.")
                 inAppMessagesCache.set(result.results)
-                preloadImages(result.results)
-                callback?.invoke(Result.success(Unit))
+                Logger.i(this, "In-app messages preloaded successfully, preloading images.")
+                preloadImageAndShowPending(result.results, callback)
             },
             onFailure = {
                 Logger.e(this, "Preloading in-app messages failed. ${it.results.message}")
+                preloaded = true // even though this failed, we can try to use cached data from another run
+                showPendingMessage()
                 callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
             }
         )
@@ -63,11 +77,78 @@ internal class InAppMessageManagerImpl(
         }
     }
 
-    private fun preloadImages(messages: List<InAppMessage>) {
+    private fun preloadImageAndShowPending(messages: List<InAppMessage>, callback: ((Result<Unit>) -> Unit)?) {
         bitmapCache.clearExcept(messages.mapNotNull { it.payload.imageUrl }.filter { it.isNotBlank() })
-        messages.forEach {
-            if (!it.payload.imageUrl.isNullOrEmpty()) bitmapCache.preload(it.payload.imageUrl)
+        var shouldWaitWithPreload = false
+        if (pendingShowRequests.isNotEmpty()) {
+            Logger.i(this, "Attempt to show pending in-app message before loading all images.")
+            val message = pickPendingMessage(false)
+            if (message != null) {
+                val imageUrl = message.second.payload.imageUrl
+                if (imageUrl.isNullOrEmpty()) {
+                    showPendingMessage(message)
+                } else {
+                    shouldWaitWithPreload = true
+                    Logger.i(this, "First preload pending in-app message image, load rest later.")
+                    bitmapCache.preload(imageUrl) {
+                        showPendingMessage(message)
+                        preloadImagesAfterPendingShown(messages.filter { it != message.second }, callback)
+                    }
+                }
+            }
         }
+        if (!shouldWaitWithPreload) {
+            preloadImagesAfterPendingShown(messages, callback)
+        }
+    }
+
+    private fun preloadImagesAfterPendingShown(messages: List<InAppMessage>, callback: ((Result<Unit>) -> Unit)?) {
+        val onPreloaded = {
+            preloaded = true
+            showPendingMessage()
+            Logger.i(this, "All in-app message images loaded.")
+            callback?.invoke(Result.success(Unit))
+        }
+        var toPreload = AtomicInteger(messages.size)
+        messages.forEach {
+            if (!it.payload.imageUrl.isNullOrEmpty()) {
+                bitmapCache.preload(it.payload.imageUrl) {
+                    toPreload.getAndDecrement()
+                    if (toPreload.get() == 0) {
+                        onPreloaded()
+                    }
+                }
+            } else {
+                toPreload.getAndDecrement()
+            }
+        }
+        if (toPreload.get() == 0) {
+            onPreloaded()
+        }
+    }
+
+    private fun pickPendingMessage(requireImageLoaded: Boolean): Pair<InAppMessageShowRequest, InAppMessage>? {
+        var pendingMessages: List<Pair<InAppMessageShowRequest, InAppMessage>> = arrayListOf()
+        pendingShowRequests
+            .filter { it.requestedAt + MAX_PENDING_MESSAGE_AGE > System.currentTimeMillis() }
+            .forEach { request ->
+                getFilteredMessages(request.eventType, request.properties, request.timestamp, requireImageLoaded)
+                    .forEach { message ->
+                        pendingMessages += request to message
+                    }
+            }
+
+        val highestPriority = pendingMessages.mapNotNull { it.second.priority }.max() ?: 0
+        pendingMessages = pendingMessages.filter { it.second.priority ?: 0 >= highestPriority }
+        return if (pendingMessages.isNotEmpty()) pendingMessages.random() else null
+    }
+
+    private fun showPendingMessage(pickedMessage: Pair<InAppMessageShowRequest, InAppMessage>? = null) {
+        val message = pickedMessage ?: pickPendingMessage(true)
+        if (message != null) {
+            show(message.second, message.first.trackingDelegate)
+        }
+        pendingShowRequests = arrayListOf()
     }
 
     private fun hasImageFor(message: InAppMessage): Boolean {
@@ -77,10 +158,11 @@ internal class InAppMessageManagerImpl(
     override fun getFilteredMessages(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?
+        timestamp: Double?,
+        requireImageLoaded: Boolean
     ): List<InAppMessage> {
-        var messages = inAppMessagesCache.get().filter {
-            hasImageFor(it) &&
+        val messages = inAppMessagesCache.get().filter {
+            (!requireImageLoaded || hasImageFor(it)) &&
             it.applyDateFilter(System.currentTimeMillis() / 1000) &&
             it.applyEventFilter(eventType, properties, timestamp) &&
             it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
@@ -92,9 +174,10 @@ internal class InAppMessageManagerImpl(
     override fun getRandom(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?
+        timestamp: Double?,
+        requireImageLoaded: Boolean
     ): InAppMessage? {
-        val messages = getFilteredMessages(eventType, properties, timestamp)
+        val messages = getFilteredMessages(eventType, properties, timestamp, requireImageLoaded)
         return if (messages.isNotEmpty()) messages.random() else null
     }
 
@@ -103,33 +186,50 @@ internal class InAppMessageManagerImpl(
         properties: Map<String, Any?>,
         timestamp: Double?,
         trackingDelegate: InAppMessageTrackingDelegate
-    ): Job {
-        return GlobalScope.launch {
-            val message = getRandom(eventType, properties, timestamp)
-            if (message != null) {
-                val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
-                    bitmapCache.get(message.payload.imageUrl) ?: return@launch
-                    else null
-                Handler(Looper.getMainLooper()).post {
-                    val presented = presenter.show(
-                        messageType = message.messageType,
-                        payload = message.payload,
-                        image = bitmap,
-                        actionCallback = { button ->
-                            displayStateRepository.setInteracted(message, Date())
-                            trackingDelegate.track(message, "click", true)
-                            Logger.i(this, "In-app message button clicked!")
-                            processInAppMessageAction(button)
-                        },
-                        dismissedCallback = {
-                            trackingDelegate.track(message, "close", false)
-                        }
-                    )
-                    if (presented != null) {
-                        displayStateRepository.setDisplayed(message, Date())
-                        trackingDelegate.track(message, "show", false)
-                    }
+
+    ): Job? {
+        if (preloaded) {
+            return GlobalScope.launch {
+                val message = getRandom(eventType, properties, timestamp)
+                if (message != null) {
+                    show(message, trackingDelegate)
                 }
+            }
+        } else {
+            Logger.i(this, "Add pending in-app message for event type $eventType to be shown after data is loaded")
+            pendingShowRequests += InAppMessageShowRequest(
+                eventType,
+                properties,
+                timestamp,
+                trackingDelegate,
+                System.currentTimeMillis()
+            )
+            return null
+        }
+    }
+
+    private fun show(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+        val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
+            bitmapCache.get(message.payload.imageUrl) ?: return
+            else null
+        Handler(Looper.getMainLooper()).post {
+            val presented = presenter.show(
+                messageType = message.messageType,
+                payload = message.payload,
+                image = bitmap,
+                actionCallback = { button ->
+                    displayStateRepository.setInteracted(message, Date())
+                    trackingDelegate.track(message, "click", true)
+                    Logger.i(this, "In-app message button clicked!")
+                    processInAppMessageAction(button)
+                },
+                dismissedCallback = {
+                    trackingDelegate.track(message, "close", false)
+                }
+            )
+            if (presented != null) {
+                displayStateRepository.setDisplayed(message, Date())
+                trackingDelegate.track(message, "show", false)
             }
         }
     }

@@ -10,13 +10,15 @@ internal interface InAppMessageManager {
     fun getFilteredMessages(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?
+        timestamp: Double?,
+        requireImageLoaded: Boolean = true
     ): List<InAppMessage>
 
     fun getRandom(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?
+        timestamp: Double?,
+        requireImageLoaded: Boolean = true
     ): InAppMessage?
 
     fun showRandom(
@@ -24,7 +26,7 @@ internal interface InAppMessageManager {
         properties: Map<String, Any?>,
         timestamp: Double?,
         trackingDelegate: InAppMessageTrackingDelegate
-    ): Job
+    ): Job?
 
     fun sessionStarted(sessionStartDate: Date)
 }

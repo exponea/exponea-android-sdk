@@ -217,6 +217,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         }
 
         window.attributes.width = WindowManager.LayoutParams.MATCH_PARENT
-        window.setDimAmount(0.1f)
+        window.attributes.height = WindowManager.LayoutParams.MATCH_PARENT
+        window.setDimAmount(0.5f)
     }
 }

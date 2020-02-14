@@ -38,6 +38,14 @@ internal class DisabledInAppMessageManagerImpl() : InAppMessageManager {
         return null
     }
 
+    override fun getFilteredMessages(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?
+    ): List<InAppMessage> {
+        return arrayListOf()
+    }
+
     override fun showRandom(
         eventType: String,
         properties: Map<String, Any?>,
@@ -101,13 +109,27 @@ internal class InAppMessageManagerImpl(
         return message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
     }
 
-    override fun getRandom(eventType: String, properties: Map<String, Any?>, timestamp: Double?): InAppMessage? {
-        val messages = inAppMessagesCache.get().filter {
+    override fun getFilteredMessages(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?
+    ): List<InAppMessage> {
+        var messages = inAppMessagesCache.get().filter {
             hasImageFor(it) &&
             it.applyDateFilter(System.currentTimeMillis() / 1000) &&
             it.applyEventFilter(eventType, properties, timestamp) &&
             it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
+        val highestPriority = messages.mapNotNull { it.priority }.max() ?: 0
+        return messages.filter { it.priority ?: 0 >= highestPriority }
+    }
+
+    override fun getRandom(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?
+    ): InAppMessage? {
+        val messages = getFilteredMessages(eventType, properties, timestamp)
         return if (messages.isNotEmpty()) messages.random() else null
     }
 

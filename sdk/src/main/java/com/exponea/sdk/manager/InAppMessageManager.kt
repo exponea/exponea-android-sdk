@@ -7,6 +7,12 @@ import kotlinx.coroutines.Job
 internal interface InAppMessageManager {
     fun preload(callback: ((Result<Unit>) -> Unit)? = null)
 
+    fun getFilteredMessages(
+        eventType: String,
+        properties: Map<String, Any?>,
+        timestamp: Double?
+    ): List<InAppMessage>
+
     fun getRandom(
         eventType: String,
         properties: Map<String, Any?>,

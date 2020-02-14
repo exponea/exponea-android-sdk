@@ -234,6 +234,48 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    fun `should filter by priority`() {
+        every { bitmapCache.has(any()) } returns true
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(id = "1"),
+            InAppMessageTest.getInAppMessage(id = "2"),
+            InAppMessageTest.getInAppMessage(id = "3")
+        )
+        assertEquals(
+            manager.getFilteredMessages("session_start", hashMapOf(), null),
+            arrayListOf(
+                InAppMessageTest.getInAppMessage(id = "1"),
+                InAppMessageTest.getInAppMessage(id = "2"),
+                InAppMessageTest.getInAppMessage(id = "3")
+            )
+        )
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(id = "1", priority = 0),
+            InAppMessageTest.getInAppMessage(id = "2"),
+            InAppMessageTest.getInAppMessage(id = "3", priority = -1)
+        )
+        assertEquals(
+            manager.getFilteredMessages("session_start", hashMapOf(), null),
+            arrayListOf(
+                InAppMessageTest.getInAppMessage(id = "1", priority = 0),
+                InAppMessageTest.getInAppMessage(id = "2")
+                )
+        )
+        every { messagesCache.get() } returns arrayListOf(
+            InAppMessageTest.getInAppMessage(id = "1", priority = 2),
+            InAppMessageTest.getInAppMessage(id = "2", priority = 2),
+            InAppMessageTest.getInAppMessage(id = "3", priority = 1)
+        )
+        assertEquals(
+            manager.getFilteredMessages("session_start", hashMapOf(), null),
+            arrayListOf(
+                InAppMessageTest.getInAppMessage(id = "1", priority = 2),
+                InAppMessageTest.getInAppMessage(id = "2", priority = 2)
+            )
+        )
+    }
+
+    @Test
     fun `should apply 'always' frequency filter`() {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ALWAYS.value)

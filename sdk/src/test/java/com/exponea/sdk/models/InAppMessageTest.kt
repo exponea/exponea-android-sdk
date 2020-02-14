@@ -55,7 +55,8 @@ internal class InAppMessageTest {
             dateFilter: DateFilter? = null,
             trigger: EventFilter? = null,
             frequency: String? = null,
-            imageUrl: String? = null
+            imageUrl: String? = null,
+            priority: Int? = null
         ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
@@ -66,6 +67,7 @@ internal class InAppMessageTest {
                 variantName = "Variant A",
                 trigger = trigger ?: EventFilter("session_start", arrayListOf()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
+                priority = priority,
                 payload = InAppMessagePayload(
                     imageUrl = imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
                     title = "filip.vozar@exponea.com",

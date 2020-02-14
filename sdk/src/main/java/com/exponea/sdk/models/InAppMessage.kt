@@ -24,7 +24,9 @@ internal data class InAppMessage(
     @SerializedName("trigger")
     val trigger: EventFilter?,
     @SerializedName("date_filter")
-    val dateFilter: DateFilter
+    val dateFilter: DateFilter,
+    @SerializedName("load_priority")
+    val priority: Int?
 ) {
     val frequency: InAppMessageFrequency?
         get() {

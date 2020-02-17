@@ -9,7 +9,7 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 27
         versionCode 32
         versionName "2.6.2"
@@ -53,7 +53,7 @@ dependencies {
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:3.12.1'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:17.5.0'
+    implementation 'com.google.firebase:firebase-messaging:20.1.0'
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.1.0"
 

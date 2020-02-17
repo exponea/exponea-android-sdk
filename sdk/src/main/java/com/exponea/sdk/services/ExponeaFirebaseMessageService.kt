@@ -18,14 +18,14 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
-    override fun onMessageReceived(message: RemoteMessage?) {
+    override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         runCatching {
             onMessageReceivedUnsafe(message)
         }.logOnException()
     }
 
-    private fun onMessageReceivedUnsafe(message: RemoteMessage?) {
+    private fun onMessageReceivedUnsafe(message: RemoteMessage) {
         Logger.d(this, "Push Notification received at ${currentTimeSeconds().toDate()}.")
 
         if (!Exponea.isInitialized) {
@@ -42,14 +42,14 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
         Exponea.handleRemoteMessage(message, notificationManager)
     }
 
-    override fun onNewToken(token: String?) {
+    override fun onNewToken(token: String) {
         super.onNewToken(token)
         runCatching {
             onNewTokenUnsafe(token)
         }.logOnException()
     }
 
-    private fun onNewTokenUnsafe(token: String?) {
+    private fun onNewTokenUnsafe(token: String) {
         if (!Exponea.isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext) ?: return
             Looper.prepare()

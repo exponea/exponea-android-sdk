@@ -154,9 +154,5 @@ fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
         context.resources.getDrawable(backgroundId, null)
     else context.resources.getDrawable(backgroundId)
     drawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
-    if (Build.VERSION.SDK_INT >= 16) {
-        background = drawable
-    } else {
-        setBackgroundDrawable(drawable)
-    }
+    background = drawable
 }

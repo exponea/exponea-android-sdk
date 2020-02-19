@@ -89,6 +89,8 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             // let image height take up whole screen
             rootParams.height = ConstraintLayout.LayoutParams.MATCH_PARENT
             imageParams.height = 0
+        } else {
+            imageParams.constrainedHeight = true
         }
     }
 

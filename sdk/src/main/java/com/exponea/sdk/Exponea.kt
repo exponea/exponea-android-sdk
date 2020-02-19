@@ -41,6 +41,7 @@ import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
+import com.exponea.sdk.view.InAppMessagePresenter
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
 
@@ -745,4 +746,11 @@ object Exponea {
         )
         return true
     }.returnOnException { false }
+
+    // used by InAppMessageActivity to get currently displayed message
+    internal val presentedInAppMessage: InAppMessagePresenter.PresentedMessage?
+        get() {
+            if (!isInitialized) return null
+            return component.inAppMessagePresenter.presentedMessage
+        }
 }

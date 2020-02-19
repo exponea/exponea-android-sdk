@@ -41,6 +41,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
+import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
@@ -50,6 +51,8 @@ import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.view.InAppMessagePresenter
+
 internal class ExponeaComponent(
     exponeaConfiguration: ExponeaConfiguration,
     context: Context
@@ -103,6 +106,7 @@ internal class ExponeaComponent(
 
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
 
+    internal val inAppMessagePresenter = InAppMessagePresenter(context)
     internal val inAppMessageManager: InAppMessageManager
     init {
         inAppMessageManager = if (exponeaConfiguration.inAppMessagesEnabledBETA) {
@@ -112,7 +116,9 @@ internal class ExponeaComponent(
                 customerIdsRepository,
                 inAppMessagesCache,
                 fetchManager,
-                inAppMessageDisplayStateRepository
+                inAppMessageDisplayStateRepository,
+                InAppMessageBitmapCacheImpl(context),
+                inAppMessagePresenter
             )
         } else {
             DisabledInAppMessageManagerImpl()

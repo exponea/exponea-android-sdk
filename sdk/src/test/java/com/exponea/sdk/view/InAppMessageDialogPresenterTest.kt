@@ -30,36 +30,36 @@ internal class InAppMessageDialogPresenterTest(
 
     @Test
     fun `should not show dialog without activity`() {
-        val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
+        val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 
     @Test
     fun `should show dialog with activity`() {
-        val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
+        val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
         assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 
     @Test
     fun `should not show dialog after activity is paused`() {
-        val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
+        val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
         val presented = presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {})
         assertNotNull(presented)
-        presented.dismiss()
+        presented.dismissedCallback()
         buildActivity(MockActivity::class.java).setup().resume().pause()
         assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }
 
     @Test
     fun `should only show one dialog at a time`() {
-        val presenter = InAppMessageDialogPresenter(ApplicationProvider.getApplicationContext())
+        val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(MockActivity::class.java).setup().resume()
         val presented = presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {})
         assertNotNull(presented)
         assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
-        presented.dismiss()
+        presented.dismissedCallback()
         Robolectric.flushForegroundThreadScheduler() // skip animations
         assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), {}, {}))
     }

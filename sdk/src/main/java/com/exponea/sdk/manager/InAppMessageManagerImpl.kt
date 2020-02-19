@@ -14,11 +14,10 @@ import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.view.InAppMessageDialogPresenter
+import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -65,8 +64,8 @@ internal class InAppMessageManagerImpl(
     private val inAppMessagesCache: InAppMessagesCache,
     private val fetchManager: FetchManager,
     private val displayStateRepository: InAppMessageDisplayStateRepository,
-    private val bitmapCache: InAppMessageBitmapCache = InAppMessageBitmapCacheImpl(context),
-    private val presenter: InAppMessageDialogPresenter = InAppMessageDialogPresenter(context)
+    private val bitmapCache: InAppMessageBitmapCache,
+    private val presenter: InAppMessagePresenter
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh

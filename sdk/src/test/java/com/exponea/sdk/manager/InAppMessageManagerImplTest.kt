@@ -23,7 +23,7 @@ import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
-import com.exponea.sdk.view.InAppMessageDialogPresenter
+import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -52,7 +52,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     private lateinit var messagesCache: InAppMessagesCache
     private lateinit var bitmapCache: InAppMessageBitmapCache
-    private lateinit var presenter: InAppMessageDialogPresenter
+    private lateinit var presenter: InAppMessagePresenter
     private lateinit var manager: InAppMessageManagerImpl
 
     @Before

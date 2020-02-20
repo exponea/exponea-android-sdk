@@ -121,7 +121,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         )
 
         waitForIt {
-            manager.flushData { result ->
+            manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }

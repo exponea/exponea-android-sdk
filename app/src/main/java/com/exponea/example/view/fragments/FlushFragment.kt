@@ -1,6 +1,9 @@
 package com.exponea.example.view.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +12,8 @@ import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.fragment_flush.*
+import kotlinx.android.synthetic.main.fragment_flush.progressBar
+import kotlinx.android.synthetic.main.fragment_flush.settingsBtnFlush
 
 class FlushFragment : BaseFragment() {
     override fun onCreateView(
@@ -28,7 +32,19 @@ class FlushFragment : BaseFragment() {
         trackPage(Constants.ScreenNames.settingsScreen)
 
         settingsBtnFlush.setOnClickListener {
-            Exponea.flushData()
+            progressBar.visibility = View.VISIBLE
+            Exponea.flushData { result ->
+                if (!this.isVisible) return@flushData
+                Handler(Looper.getMainLooper()).post {
+                    progressBar.visibility = View.INVISIBLE
+                    AlertDialog.Builder(context)
+                        .setTitle(if (result.isSuccess) "Flush successful" else "Flush failed")
+                        .setMessage(if (result.isFailure) result.exceptionOrNull()?.localizedMessage else null)
+                        .setPositiveButton("OK") { _, _ -> }
+                        .create()
+                        .show()
+                }
+            }
         }
     }
 }

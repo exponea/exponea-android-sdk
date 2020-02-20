@@ -56,7 +56,13 @@ internal class FlushManagerImpl(
                 eventRepository.update(it)
             }
             isRunning = false
-            onFlushFinished?.invoke(Result.success(Unit))
+            if (allEvents.isEmpty()) {
+                onFlushFinished?.invoke(Result.success(Unit))
+            } else {
+                onFlushFinished?.invoke(
+                    Result.failure(Exception("Failed to upload ${allEvents.size} events."))
+                )
+            }
         }
     }
 

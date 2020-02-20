@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.QueueDispatcher
 
 internal object ExponeaMockServer {
 
@@ -35,5 +36,17 @@ internal object ExponeaMockServer {
         mockResponse.setResponseCode(errorCode)
 
         server.enqueue(mockResponse)
+    }
+
+    fun createServer(defaultResponse: MockResponse? = null): MockWebServer {
+        val server = MockWebServer()
+        val dispatcher = QueueDispatcher()
+        if (defaultResponse != null) {
+            dispatcher.setFailFast(defaultResponse)
+        } else {
+            dispatcher.setFailFast(true)
+        }
+        server.setDispatcher(dispatcher)
+        return server
     }
 }

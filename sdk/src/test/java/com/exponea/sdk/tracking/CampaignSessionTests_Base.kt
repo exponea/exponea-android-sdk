@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -13,7 +14,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.AfterClass
 import org.junit.Before
@@ -38,7 +38,7 @@ internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
                 "&xnpe_cmp=" + XNPE_CMP
 
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        val server = ExponeaMockServer.createServer()
 
         @BeforeClass
         @JvmStatic

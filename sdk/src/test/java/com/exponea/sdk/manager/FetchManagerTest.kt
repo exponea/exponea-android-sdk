@@ -18,7 +18,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
 
     @Before
     fun before() {
-        server = MockWebServer()
+        server = ExponeaMockServer.createServer()
     }
 
     @After

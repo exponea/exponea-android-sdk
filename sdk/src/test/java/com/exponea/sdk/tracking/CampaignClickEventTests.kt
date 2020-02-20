@@ -42,7 +42,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         @BeforeClass
         @JvmStatic
         fun setup() {
-            server = MockWebServer()
+            server = ExponeaMockServer.createServer()
             configuration.projectToken = "TestToken"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")

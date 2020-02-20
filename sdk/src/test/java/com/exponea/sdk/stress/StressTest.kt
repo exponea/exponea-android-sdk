@@ -3,6 +3,7 @@ package com.exponea.sdk.stress
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.DeviceProperties
@@ -21,7 +22,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
@@ -34,7 +34,7 @@ internal class StressTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        val server = ExponeaMockServer.createServer()
         const val stressCount = 1000
 
         @BeforeClass

@@ -19,7 +19,6 @@ import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import java.util.Random
 import kotlin.test.assertEquals
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
@@ -31,7 +30,7 @@ import org.robolectric.RobolectricTestRunner
 internal class FlushStressTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        val server = ExponeaMockServer.createServer()
         const val stressCount = 500
 
         @BeforeClass

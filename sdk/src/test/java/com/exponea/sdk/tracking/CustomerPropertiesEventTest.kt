@@ -32,7 +32,7 @@ internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
         @BeforeClass
         @JvmStatic
         fun setup() {
-            server = MockWebServer()
+            server = ExponeaMockServer.createServer()
             configuration.projectToken = "TestTokem"
             configuration.authorization = "TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")

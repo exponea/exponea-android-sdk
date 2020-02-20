@@ -20,7 +20,6 @@ import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.concurrent.thread
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
@@ -33,7 +32,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
 
     companion object {
         val configuration = ExponeaConfiguration()
-        val server = MockWebServer()
+        val server = ExponeaMockServer.createServer()
 
         @BeforeClass
         @JvmStatic

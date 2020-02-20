@@ -1,6 +1,7 @@
 package com.exponea.sdk.telemetry
 
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
@@ -42,7 +43,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     @Before
     fun before() {
         unmockkConstructor(VSAppCenterTelemetryUpload::class)
-        server = MockWebServer()
+        server = ExponeaMockServer.createServer()
         upload = VSAppCenterTelemetryUpload(
             context = ApplicationProvider.getApplicationContext(),
             installId = "mock-install-id",

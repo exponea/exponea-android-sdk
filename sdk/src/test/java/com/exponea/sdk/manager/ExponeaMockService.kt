@@ -12,14 +12,13 @@ import okhttp3.ResponseBody
 import okhttp3.mock.HttpCodes.HTTP_200_OK
 import okhttp3.mock.HttpCodes.HTTP_400_BAD_REQUEST
 import okhttp3.mock.MockInterceptor
-import okhttp3.mockwebserver.MockWebServer
 
 internal class ExponeaMockService(
     private val success: Boolean,
     private val response: ResponseBody? = null
 ) : ExponeaService {
 
-    private val server = MockWebServer()
+    private val server = ExponeaMockServer.createServer()
     private val dummyUrl = server.url("/").toString()
 
     override fun postCampaignClick(projectToken: String, event: ExportedEventType): Call {

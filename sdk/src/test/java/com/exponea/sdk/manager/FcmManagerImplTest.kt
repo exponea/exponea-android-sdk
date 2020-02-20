@@ -16,6 +16,7 @@ import com.exponea.sdk.services.ExponeaPushReceiver
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkClass
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
@@ -38,10 +39,13 @@ internal class FcmManagerImplTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        val eventManager = mockkClass(EventManagerImpl::class)
+        every { eventManager.track(any(), any(), any(), any()) } just Runs
         firebaseTokenRepository = spyk(FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)))
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
+            eventManager,
             firebaseTokenRepository,
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )

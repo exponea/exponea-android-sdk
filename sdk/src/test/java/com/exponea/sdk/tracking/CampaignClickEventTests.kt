@@ -11,6 +11,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.Gson
@@ -81,8 +82,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
-        eventRepository = Exponea.component.eventRepository
-        campaignRepository = Exponea.component.campaignRepository
+        eventRepository = Exponea.componentForTesting.eventRepository
+        campaignRepository = Exponea.componentForTesting.campaignRepository
 
         eventRepository.clear()
         campaignRepository.clear()

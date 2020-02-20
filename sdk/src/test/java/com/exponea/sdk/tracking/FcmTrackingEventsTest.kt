@@ -8,6 +8,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.waitForIt
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -54,7 +55,7 @@ internal class FcmTrackingEventsTest : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
-        repo = Exponea.component.eventRepository
+        repo = Exponea.componentForTesting.eventRepository
 
         // Clean event repository for testing purposes
         repo.clear()

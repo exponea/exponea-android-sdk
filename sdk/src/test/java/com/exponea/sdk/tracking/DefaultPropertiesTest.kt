@@ -8,6 +8,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.util.currentTimeSeconds
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -51,7 +52,7 @@ internal class DefaultPropertiesTest : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, CONFIG)
 
-        repo = Exponea.component.eventRepository
+        repo = Exponea.componentForTesting.eventRepository
 
         // Clean event repository for testing purposes
         repo.clear()

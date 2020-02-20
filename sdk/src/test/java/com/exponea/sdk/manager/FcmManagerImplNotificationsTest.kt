@@ -21,6 +21,7 @@ import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkClass
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
@@ -267,6 +268,7 @@ internal class FcmManagerImplNotificationsTest(
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
+            mockkClass(EventManagerImpl::class),
             FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )

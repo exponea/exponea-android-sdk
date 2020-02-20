@@ -13,6 +13,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.tracking.CustomerPropertiesEventTest
 import com.exponea.sdk.util.currentTimeSeconds
 import java.util.Random
@@ -63,7 +64,7 @@ internal class StressTest : ExponeaSDKTest() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
-        repo = Exponea.component.eventRepository
+        repo = Exponea.componentForTesting.eventRepository
     }
 
     @Test

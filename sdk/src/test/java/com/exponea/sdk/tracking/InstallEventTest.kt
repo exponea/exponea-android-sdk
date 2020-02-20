@@ -9,6 +9,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.waitForIt
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -55,13 +56,13 @@ internal class InstallEventTest : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
-        repo = Exponea.component.eventRepository
+        repo = Exponea.componentForTesting.eventRepository
     }
 
     @Test
     fun testInstallEventAdded_ShouldSuccess() {
 
-        Exponea.component.deviceInitiatedRepository.set(false)
+        Exponea.componentForTesting.deviceInitiatedRepository.set(false)
         Exponea.trackInstallEvent()
 
         // The only event tracked by now should be install_event
@@ -72,14 +73,14 @@ internal class InstallEventTest : ExponeaSDKTest() {
     @Test
     fun sendInstallEvenTest_ShouldPass() {
 
-        Exponea.component.deviceInitiatedRepository.set(false)
+        Exponea.componentForTesting.deviceInitiatedRepository.set(false)
         Exponea.trackInstallEvent()
 
         ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
         waitForIt {
             Exponea.flushData { _ ->
-                it.assertEquals(0, Exponea.component.eventRepository.all().size)
+                it.assertEquals(0, Exponea.componentForTesting.eventRepository.all().size)
                 it()
             }
         }

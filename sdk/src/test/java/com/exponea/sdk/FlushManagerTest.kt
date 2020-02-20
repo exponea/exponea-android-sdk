@@ -15,6 +15,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.spyk
@@ -62,8 +63,8 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
-        repo = Exponea.component.eventRepository
-        manager = Exponea.component.flushManager
+        repo = Exponea.componentForTesting.eventRepository
+        manager = Exponea.componentForTesting.flushManager
     }
 
     @Test

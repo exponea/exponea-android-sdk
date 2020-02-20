@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -28,14 +29,14 @@ internal class CampaignSessionTests_001 : CampaignSessionTests_Base() {
         controller.create()
 
         assertTrue(Exponea.isInitialized)
-        val campaignEvent = Exponea.component.campaignRepository.get()
+        val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
-        assertTrue(Exponea.component.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
+        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
 
         controller.resume()
 
-        assertNull(Exponea.component.campaignRepository.get())
-        val sessionEvent = Exponea.component.eventRepository.all().find {
+        assertNull(Exponea.componentForTesting.campaignRepository.get())
+        val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.item.type == Constants.EventTypes.sessionStart
         }?.item
         assertNotNull(sessionEvent)

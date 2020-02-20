@@ -6,6 +6,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.util.currentTimeSeconds
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -29,7 +30,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     @Test
     fun testAnonymize() {
         val testFirebaseToken = "TEST_FIREBASE_TOKEN"
-        val previousId = Exponea.component.customerIdsRepository.get().cookie
+        val previousId = Exponea.componentForTesting.customerIdsRepository.get().cookie
 
         Exponea.trackEvent(
                 eventType = "test",
@@ -38,17 +39,17 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         )
         Exponea.trackPushToken(testFirebaseToken)
 
-        val previousFirebaseToken = Exponea.component.firebaseTokenRepository.get()
+        val previousFirebaseToken = Exponea.componentForTesting.firebaseTokenRepository.get()
 
         Exponea.anonymize()
 
-        val newFirebaseToken = Exponea.component.firebaseTokenRepository.get()
+        val newFirebaseToken = Exponea.componentForTesting.firebaseTokenRepository.get()
         assertEquals(previousFirebaseToken, newFirebaseToken)
 
-        val newId = Exponea.component.customerIdsRepository.get().cookie
+        val newId = Exponea.componentForTesting.customerIdsRepository.get().cookie
         assertNotEquals(previousId, newId)
 
-        val list = Exponea.component.eventRepository.all()
+        val list = Exponea.componentForTesting.eventRepository.all()
         assertEquals(list.size, 2)
 
         val typeList = list.map {

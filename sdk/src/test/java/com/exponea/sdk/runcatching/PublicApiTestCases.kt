@@ -121,7 +121,7 @@ internal object PublicApiTestCases {
                 Exponea.trackPaymentEvent(1.0, purchasedItem)
             }
         ),
-        Pair(
+        Pair<KFunction1<String, Unit>, () -> Any>(
             Exponea::trackPushToken,
             { Exponea.trackPushToken("mock-push-token") }
         ),

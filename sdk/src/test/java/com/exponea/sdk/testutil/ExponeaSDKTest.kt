@@ -36,7 +36,7 @@ internal open class ExponeaSDKTest {
 
     @After
     fun resetExponea() {
-        if (Exponea.isInitialized && Exponea.component.flushManager.isRunning) {
+        if (Exponea.isInitialized && Exponea.componentForTesting.flushManager.isRunning) {
             // Database is shared between Exponea instances, FlushingManager is not
             // If flushing is ongoing after test is done, it can flush events from another test
             // You can use waitUntilFlushed() to fix this

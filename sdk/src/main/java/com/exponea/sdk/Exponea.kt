@@ -49,7 +49,7 @@ object Exponea {
 
     private lateinit var context: Context
     private lateinit var configuration: ExponeaConfiguration
-    internal lateinit var component: ExponeaComponent
+    private lateinit var component: ExponeaComponent
     internal var telemetry: TelemetryManager? = null
 
     /**
@@ -417,22 +417,31 @@ object Exponea {
         component.sessionManager.trackSessionEnd(timestamp)
     }.logOnException()
 
+    // Called by background ExponeaSessionEndWorker
+    internal fun trackAutomaticSessionEnd() = runCatching {
+        component.sessionManager.trackSessionEnd()
+    }.logOnException()
+
     /**
      * Manually track FCM Token to Exponea API.
      */
 
     fun trackPushToken(fcmToken: String) = runCatching {
+        trackPushToken(
+            fcmToken,
+            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH // always track it when tracking manually
+        )
+    }.logOnException()
+
+    internal fun trackPushToken(
+        fcmToken: String,
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency
+    ) = runCatching {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
             return
         }
-        component.firebaseTokenRepository.set(fcmToken, System.currentTimeMillis())
-        val properties = PropertiesList(hashMapOf("google_push_notification_id" to fcmToken))
-        component.eventManager.track(
-            eventType = Constants.EventTypes.push,
-            properties = properties.properties,
-            type = EventType.PUSH_TOKEN
-        )
+        component.fcmManager.trackFcmToken(fcmToken, tokenTrackFrequency)
     }.logOnException()
 
     /**

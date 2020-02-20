@@ -9,6 +9,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import io.mockk.every
 import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
@@ -50,8 +51,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         Exponea.init(context, configuration)
         Exponea.isAutomaticSessionTracking = false
 
-        sm = Exponea.component.sessionManager
-        prefs = Exponea.component.preferences
+        sm = Exponea.componentForTesting.sessionManager
+        prefs = Exponea.componentForTesting.preferences
     }
 
     @After

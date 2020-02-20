@@ -25,7 +25,7 @@ internal class ExponeaSessionEndWorker(
         }
 
         try {
-            Exponea.component.sessionManager.trackSessionEnd()
+            Exponea.trackAutomaticSessionEnd()
             Logger.d(this, "doWork -> Starting flushing data")
             Exponea.flushData {
                 Logger.d(this, "doWork -> Finished")

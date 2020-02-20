@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
 import com.exponea.sdk.manager.NotificationTestPayloads
@@ -21,6 +22,7 @@ import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkClass
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
@@ -152,6 +154,7 @@ internal class ExponeaPushReceiverNotificationsTest(
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
+            mockkClass(EventManagerImpl::class),
             FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )

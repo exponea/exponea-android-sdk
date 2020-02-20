@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -35,14 +36,14 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
         secondRun.create()
 
         assertTrue(Exponea.isInitialized)
-        val campaignEvent = Exponea.component.campaignRepository.get()
+        val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
-        assertTrue(Exponea.component.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
+        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
 
         secondRun.resume()
 
-        assertNull(Exponea.component.campaignRepository.get())
-        val sessionEvent = Exponea.component.eventRepository.all().find {
+        assertNull(Exponea.componentForTesting.campaignRepository.get())
+        val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.item.type == Constants.EventTypes.sessionStart
         }?.item
         assertNotNull(sessionEvent)
@@ -53,11 +54,11 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
         assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
         assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
 
-        val hasAnySessionEnd = Exponea.component.eventRepository.all().any {
+        val hasAnySessionEnd = Exponea.componentForTesting.eventRepository.all().any {
             it.item.type == Constants.EventTypes.sessionEnd
         }
         assertFalse(hasAnySessionEnd)
-        val sessionStartEvents = Exponea.component.eventRepository.all().filter {
+        val sessionStartEvents = Exponea.componentForTesting.eventRepository.all().filter {
             it.item.type == Constants.EventTypes.sessionStart
         }
         assertEquals(1, sessionStartEvents.size)

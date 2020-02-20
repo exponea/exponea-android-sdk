@@ -127,7 +127,7 @@ internal class ExponeaComponent(
     )
 
     internal val fcmManager: FcmManager = FcmManagerImpl(
-        context, exponeaConfiguration, firebaseTokenRepository, pushNotificationRepository
+        context, exponeaConfiguration, eventManager, firebaseTokenRepository, pushNotificationRepository
     )
 
     internal val fileManager: FileManager = FileManagerImpl()

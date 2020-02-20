@@ -16,6 +16,7 @@ object ExponeaExceptionThrowing {
     fun makeExponeaThrow() {
         // let's mock every manager in ExponeaComponent
         // to make sure any public method throws
+        every { anyConstructed<ExponeaComponent>().anonymize() } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().eventManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().sessionManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().connectionManager } throws TestPurposeException()

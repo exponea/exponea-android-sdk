@@ -8,6 +8,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.waitForIt
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -68,7 +69,7 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
                 purchasedItem = payment
         )
         waitForIt {
-            Exponea.component.flushManager.flushData { it() }
+            Exponea.componentForTesting.flushManager.flushData { it() }
         }
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)

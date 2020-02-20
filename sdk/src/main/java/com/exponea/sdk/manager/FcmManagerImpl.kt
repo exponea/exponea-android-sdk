@@ -16,9 +16,12 @@ import android.os.Looper
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.services.ExponeaPushReceiver
@@ -33,6 +36,7 @@ import kotlin.concurrent.thread
 internal class FcmManagerImpl(
     private val context: Context,
     private val configuration: ExponeaConfiguration,
+    private val eventManager: EventManager,
     private val firebaseTokenRepository: FirebaseTokenRepository,
     private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
@@ -49,7 +53,12 @@ internal class FcmManagerImpl(
 
         if (token != null && shouldUpdateToken) {
             firebaseTokenRepository.set(token, System.currentTimeMillis())
-            Exponea.trackPushToken(token)
+            val properties = PropertiesList(hashMapOf("google_push_notification_id" to token))
+            eventManager.track(
+                eventType = Constants.EventTypes.push,
+                properties = properties.properties,
+                type = EventType.PUSH_TOKEN
+            )
             return
         }
 

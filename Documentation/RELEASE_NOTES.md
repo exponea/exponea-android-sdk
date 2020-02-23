@@ -1,4 +1,9 @@
 ## Release Notes
+## Release Notes for 2.6.3
+#### February 20, 2020
+* Features
+  * Updated Firebase messaging library to version 2.1.0
+  * Updated minimum SDK version to 16 as recommended by Google
 
 ## Release Notes for 2.6.2
 #### January 10, 2020

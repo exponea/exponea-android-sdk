@@ -5,7 +5,6 @@ import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.ConnectionManagerImpl
-import com.exponea.sdk.manager.DisabledInAppMessageManagerImpl
 import com.exponea.sdk.manager.EventManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
@@ -107,23 +106,16 @@ internal class ExponeaComponent(
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
 
     internal val inAppMessagePresenter = InAppMessagePresenter(context)
-    internal val inAppMessageManager: InAppMessageManager
-    init {
-        inAppMessageManager = if (exponeaConfiguration.inAppMessagesEnabledBETA) {
-            InAppMessageManagerImpl(
-                context,
-                exponeaConfiguration,
-                customerIdsRepository,
-                inAppMessagesCache,
-                fetchManager,
-                inAppMessageDisplayStateRepository,
-                InAppMessageBitmapCacheImpl(context),
-                inAppMessagePresenter
-            )
-        } else {
-            DisabledInAppMessageManagerImpl()
-        }
-    }
+    internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
+        context,
+        exponeaConfiguration,
+        customerIdsRepository,
+        inAppMessagesCache,
+        fetchManager,
+        inAppMessageDisplayStateRepository,
+        InAppMessageBitmapCacheImpl(context),
+        inAppMessagePresenter
+    )
 
     internal val flushManager: FlushManager =
         FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)

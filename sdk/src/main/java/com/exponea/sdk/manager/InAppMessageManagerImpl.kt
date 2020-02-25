@@ -23,40 +23,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/**
- * Until we're ready to release in-app messages, we need to be able to disable the feature completely
- */
-internal class DisabledInAppMessageManagerImpl() : InAppMessageManager {
-    override fun preload(callback: ((Result<Unit>) -> Unit)?) {}
-
-    override fun getRandom(
-        eventType: String,
-        properties: Map<String, Any?>,
-        timestamp: Double?
-    ): InAppMessage? {
-        return null
-    }
-
-    override fun getFilteredMessages(
-        eventType: String,
-        properties: Map<String, Any?>,
-        timestamp: Double?
-    ): List<InAppMessage> {
-        return arrayListOf()
-    }
-
-    override fun showRandom(
-        eventType: String,
-        properties: Map<String, Any?>,
-        timestamp: Double?,
-        trackingDelegate: InAppMessageTrackingDelegate
-    ): Job {
-        return Job()
-    }
-
-    override fun sessionStarted(sessionStartDate: Date) {}
-}
-
 internal class InAppMessageManagerImpl(
     private val context: Context,
     private val configuration: ExponeaConfiguration,

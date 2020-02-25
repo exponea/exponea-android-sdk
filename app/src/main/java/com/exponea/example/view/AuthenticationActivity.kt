@@ -15,7 +15,12 @@ import com.exponea.example.utils.onTextChanged
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import kotlinx.android.synthetic.main.activity_authentication.*
+import kotlinx.android.synthetic.main.activity_authentication.button
+import kotlinx.android.synthetic.main.activity_authentication.editTextApiUrl
+import kotlinx.android.synthetic.main.activity_authentication.editTextAuthCode
+import kotlinx.android.synthetic.main.activity_authentication.editTextProjectToken
+import kotlinx.android.synthetic.main.activity_authentication.editTextRegisteredIds
+import kotlinx.android.synthetic.main.activity_authentication.toolbar
 
 class AuthenticationActivity : AppCompatActivity() {
 
@@ -69,7 +74,6 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
         configuration.defaultProperties["thisIsADefaultStringProperty"] = "This is a default string value"
         configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
-        configuration.inAppMessagesEnabledBETA = true
 
         // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {

@@ -193,15 +193,13 @@ internal class TelemetryUtilityTest {
                     "pushChannelName" to "Exponea [default]",
                     "automaticPushNotification" to "false",
                     "pushNotificationImportance" to "3 [default]",
-                    "inAppMessagesEnabledBETA" to "true",
                     "sessionTimeout" to "20.0 [default]",
                     "contentType" to "application/json [default]"
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
                     projectToken = "mock_project_token",
                     projectTokenRouteMap = hashMapOf(EventType.INSTALL to arrayListOf("mock_project_id")),
-                    automaticPushNotification = false,
-                    inAppMessagesEnabledBETA = true
+                    automaticPushNotification = false
                 ))
             )
         }

@@ -18,4 +18,4 @@ There you can view or edit you `API Base URL` and `Project Token`
 ![](pics/config3.png)
 
 
-4. Follow [this guide](https://docs.exponea.com/reference#basic-authentication) in order to get your Authorization Token
+4. Follow [this guide](https://docs.exponea.com/reference#access-keys) in order to get your Authorization Token

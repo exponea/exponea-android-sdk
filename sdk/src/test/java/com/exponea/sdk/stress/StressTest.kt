@@ -42,7 +42,7 @@ internal class StressTest : ExponeaSDKTest() {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestTokenAuthentication"
+            configuration.authorization = "Token TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }

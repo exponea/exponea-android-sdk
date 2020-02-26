@@ -45,7 +45,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         fun setup() {
             server = ExponeaMockServer.createServer()
             configuration.projectToken = "TestToken"
-            configuration.authorization = "TestTokenAuthentication"
+            configuration.authorization = "Token TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
             configuration.automaticSessionTracking = false

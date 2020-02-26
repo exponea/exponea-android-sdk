@@ -32,7 +32,7 @@ internal class DefaultPropertiesTest : ExponeaSDKTest() {
         @JvmStatic
         fun setup() {
             CONFIG.projectToken = "TestTokem"
-            CONFIG.authorization = "TestTokenAuthentication"
+            CONFIG.authorization = "Token TestTokenAuthentication"
             CONFIG.defaultProperties.putAll(DEFAULT_PROPS)
         }
 

@@ -1,5 +1,6 @@
 package com.exponea.example.view
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -82,7 +83,17 @@ class AuthenticationActivity : AppCompatActivity() {
 
         // Start our SDK
         // Exponea.initFromFile(App.instance)
-        Exponea.init(App.instance, configuration)
+        try {
+            Exponea.init(App.instance, configuration)
+        } catch (e: Exception) {
+            AlertDialog.Builder(this)
+                .setTitle("Error configuring SDK")
+                .setMessage(e.localizedMessage)
+                .setPositiveButton("OK") { _, _ -> }
+                .create()
+                .show()
+            return
+        }
 
         // Set up our flushing
         Exponea.flushMode = FlushMode.IMMEDIATE

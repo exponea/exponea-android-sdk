@@ -39,7 +39,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
         fun setup() {
             configuration.baseURL = server.url("/").toString()
             configuration.projectToken = "projectToken"
-            configuration.authorization = "projectAuthorization"
+            configuration.authorization = "Token projectAuthorization"
         }
 
         @AfterClass

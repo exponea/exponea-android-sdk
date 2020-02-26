@@ -39,7 +39,7 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
         fun setup() {
             server = ExponeaMockServer.createServer()
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestTokenAuthentication"
+            configuration.authorization = "Token TestTokenAuthentication"
             configuration.baseURL = server.url("").toString().substringBeforeLast("/")
             configuration.maxTries = 10
         }
@@ -75,6 +75,6 @@ internal class VirtualPaymentEventTest : ExponeaSDKTest() {
         val request = server.takeRequest(5, TimeUnit.SECONDS)
 
         assertEquals("/track/v2/projects/TestTokem/customers/events", request.path)
-        assertEquals(request.getHeader("Authorization"), "TestTokenAuthentication")
+        assertEquals(request.getHeader("Authorization"), "Token TestTokenAuthentication")
     }
 }

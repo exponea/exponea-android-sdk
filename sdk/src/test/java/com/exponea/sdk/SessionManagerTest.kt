@@ -34,7 +34,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         @JvmStatic
         fun setup() {
             configuration.projectToken = "TestTokem"
-            configuration.authorization = "TestTokenAuthentication"
+            configuration.authorization = "Token TestTokenAuthentication"
             configuration.sessionTimeout = 5.0
         }
     }

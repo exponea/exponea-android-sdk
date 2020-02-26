@@ -1,6 +1,7 @@
 package com.exponea.sdk.models
 
 import android.app.NotificationManager
+import com.exponea.sdk.exceptions.InvalidConfigurationException
 
 data class ExponeaConfiguration(
     /** Default project token. */
@@ -59,5 +60,22 @@ data class ExponeaConfiguration(
         EVERY_LAUNCH,
         /** Tracked once on days where the user opens the app */
         DAILY
+    }
+
+    fun validate() {
+        if (authorization?.startsWith("Basic ") == true) {
+            throw InvalidConfigurationException("""
+                Basic authentication is not supported by mobile SDK for security reasons.
+                Use Token authentication instead.
+                For more details see https://docs.exponea.com/reference#section-public-key
+                """.trimIndent()
+            )
+        } else if (authorization?.startsWith("Token ") == false) {
+            throw InvalidConfigurationException("""
+                Use 'Token <access token>' as authorization for SDK.
+                For more details see https://docs.exponea.com/reference#section-public-key
+                """.trimIndent()
+            )
+        }
     }
 }

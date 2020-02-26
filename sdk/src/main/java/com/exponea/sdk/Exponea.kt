@@ -212,11 +212,9 @@ object Exponea {
         if (configuration != null) {
             init(context, configuration)
         } else {
-            throw InvalidConfigurationException()
+            throw InvalidConfigurationException("Unable to locate/initiate configuration")
         }
     }.returnOnException { t ->
-        // Due to backward compatibility, we have to rethrow exception for invalid configuration
-        // Other exceptions are logged and swallowed
         if (t is InvalidConfigurationException) {
             throw t
         }
@@ -230,7 +228,12 @@ object Exponea {
         this.context = context
         initFromFile(context)
         return@runCatching true
-    }.returnOnException { false }
+    }.returnOnException { t ->
+        if (t is InvalidConfigurationException) {
+            throw t
+        }
+        false
+    }
 
     @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.context = context
@@ -238,6 +241,8 @@ object Exponea {
             Logger.e(this, "Exponea SDK is already initialized!")
             return
         }
+
+        configuration.validate()
 
         Logger.i(this, "Init")
 
@@ -253,6 +258,12 @@ object Exponea {
         FirebaseApp.initializeApp(context)
         initializeSdk()
         isInitialized = true
+    }.run {
+        val exception = exceptionOrNull()
+        if (exception is InvalidConfigurationException) {
+            throw exception
+        }
+        this
     }.logOnException()
 
     /**

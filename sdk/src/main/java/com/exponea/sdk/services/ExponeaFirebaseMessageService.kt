@@ -2,9 +2,7 @@ package com.exponea.sdk.services
 
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Looper
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
@@ -27,19 +25,12 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
 
     private fun onMessageReceivedUnsafe(message: RemoteMessage) {
         Logger.d(this, "Push Notification received at ${currentTimeSeconds().toDate()}.")
-
-        if (!Exponea.isInitialized) {
-            val config = ExponeaConfigRepository.get(applicationContext)
-            if (config != null) {
-                Exponea.init(applicationContext, config)
+        Exponea.autoInitialize(applicationContext) {
+            if (!Exponea.isAutoPushNotification) {
+                return@autoInitialize
             }
+            Exponea.handleRemoteMessage(message, notificationManager)
         }
-
-        if (!Exponea.isAutoPushNotification) {
-            return
-        }
-
-        Exponea.handleRemoteMessage(message, notificationManager)
     }
 
     override fun onNewToken(token: String) {
@@ -50,15 +41,12 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
     }
 
     private fun onNewTokenUnsafe(token: String) {
-        if (!Exponea.isInitialized) {
-            val config = ExponeaConfigRepository.get(applicationContext) ?: return
-            Looper.prepare()
-            Exponea.init(applicationContext, config)
+        Exponea.autoInitialize(applicationContext) {
+            if (!Exponea.isAutoPushNotification) {
+                return@autoInitialize
+            }
+            Logger.d(this, "Firebase Token Refreshed")
+            Exponea.trackPushToken(token, Exponea.tokenTrackFrequency)
         }
-        if (!Exponea.isAutoPushNotification) {
-            return
-        }
-        Logger.d(this, "Firebase Token Refreshed")
-        Exponea.trackPushToken(token, Exponea.tokenTrackFrequency)
     }
 }

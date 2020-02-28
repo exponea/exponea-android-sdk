@@ -136,15 +136,13 @@ object Exponea {
      */
     var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
         set(value) = runCatching {
-            if (!isInitialized) {
-                Logger.e(this, "SDK not initialized")
-                return
-            }
-            field = value
-            val storeData = component.pushNotificationRepository.getExtraData()
-            if (storeData != null) {
-                field?.invoke(storeData)
-                component.pushNotificationRepository.clearExtraData()
+            requireInitialized {
+                field = value
+                val storeData = component.pushNotificationRepository.getExtraData()
+                if (storeData != null) {
+                    field?.invoke(storeData)
+                    component.pushNotificationRepository.clearExtraData()
+                }
             }
         }.logOnException()
 
@@ -273,15 +271,13 @@ object Exponea {
      */
 
     fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.customerIdsRepository.set(customerIds)
+            component.eventManager.track(
+                properties = properties.properties,
+                type = EventType.TRACK_CUSTOMER
+            )
         }
-        component.customerIdsRepository.set(customerIds)
-        component.eventManager.track(
-            properties = properties.properties,
-            type = EventType.TRACK_CUSTOMER
-        )
     }.logOnException()
 
     /**
@@ -295,16 +291,14 @@ object Exponea {
         timestamp: Double? = currentTimeSeconds(),
         eventType: String?
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.eventManager.track(
+                properties = properties.properties,
+                timestamp = timestamp,
+                eventType = eventType,
+                type = EventType.TRACK_EVENT
+            )
         }
-        component.eventManager.track(
-            properties = properties.properties,
-            timestamp = timestamp,
-            eventType = eventType,
-            type = EventType.TRACK_EVENT
-        )
     }.logOnException()
 
     /**
@@ -312,12 +306,11 @@ object Exponea {
      */
 
     fun flushData(onFlushFinished: ((kotlin.Result<Unit>) -> Unit)? = null) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
+        requireInitialized(notInitializedBlock = {
             onFlushFinished?.invoke(kotlin.Result.failure(Exception("Exponea SDK was not initialized properly!")))
-            return
+        }) {
+            component.flushManager.flushData(onFlushFinished)
         }
-        component.flushManager.flushData(onFlushFinished)
     }.logOnException()
 
     /**
@@ -329,18 +322,16 @@ object Exponea {
         onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            // TODO map banners id's
+            val customerIds = component.customerIdsRepository.get()
+            component.personalizationManager.getWebLayer(
+                customerIds = customerIds,
+                projectToken = configuration.projectToken,
+                onSuccess = onSuccess,
+                onFailure = onFailure
+            )
         }
-        // TODO map banners id's
-        val customerIds = component.customerIdsRepository.get()
-        component.personalizationManager.getWebLayer(
-            customerIds = customerIds,
-            projectToken = configuration.projectToken,
-            onSuccess = onSuccess,
-            onFailure = onFailure
-        )
     }.logOnException()
 
     /**
@@ -352,15 +343,13 @@ object Exponea {
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
-        component.fetchManager.fetchConsents(
+        requireInitialized {
+            component.fetchManager.fetchConsents(
                 projectToken = configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
-        )
+            )
+        }
     }.logOnException()
 
     /**
@@ -374,20 +363,18 @@ object Exponea {
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            val customer = component.customerIdsRepository.get()
+            component.fetchManager.fetchRecommendation(
+                projectToken = configuration.projectToken,
+                recommendationRequest = CustomerRecommendationRequest(
+                    customerIds = customer.toHashMap().filter { e -> e.value != null },
+                    options = recommendationOptions
+                ),
+                onSuccess = onSuccess,
+                onFailure = onFailure
+            )
         }
-        val customer = component.customerIdsRepository.get()
-        component.fetchManager.fetchRecommendation(
-            projectToken = configuration.projectToken,
-            recommendationRequest = CustomerRecommendationRequest(
-                customerIds = customer.toHashMap().filter { e -> e.value != null },
-                options = recommendationOptions
-            ),
-            onSuccess = onSuccess,
-            onFailure = onFailure
-        )
     }.logOnException()
 
     /**
@@ -395,18 +382,16 @@ object Exponea {
      * @param timestamp - determines session start time ( in seconds )
      */
     fun trackSessionStart(timestamp: Double = currentTimeSeconds()) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            if (isAutomaticSessionTracking) {
+                Logger.w(
+                    component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on "
+                )
+                return@requireInitialized
+            }
+            component.sessionManager.trackSessionStart(timestamp)
         }
-        if (isAutomaticSessionTracking) {
-            Logger.w(
-                component.sessionManager,
-                "Can't manually track session, since automatic tracking is on "
-            )
-            return
-        }
-        component.sessionManager.trackSessionStart(timestamp)
     }.logOnException()
 
     /**
@@ -414,19 +399,17 @@ object Exponea {
      * @param timestamp - determines session end time ( in seconds )
      */
     fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
-        if (isAutomaticSessionTracking) {
-            Logger.w(
-                component.sessionManager,
-                "Can't manually track session, since automatic tracking is on "
-            )
-            return
-        }
+        requireInitialized {
+            if (isAutomaticSessionTracking) {
+                Logger.w(
+                    component.sessionManager,
+                    "Can't manually track session, since automatic tracking is on "
+                )
+                return@requireInitialized
+            }
 
-        component.sessionManager.trackSessionEnd(timestamp)
+            component.sessionManager.trackSessionEnd(timestamp)
+        }
     }.logOnException()
 
     // Called by background ExponeaSessionEndWorker
@@ -449,11 +432,9 @@ object Exponea {
         fcmToken: String,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.fcmManager.trackFcmToken(fcmToken, tokenTrackFrequency)
         }
-        component.fcmManager.trackFcmToken(fcmToken, tokenTrackFrequency)
     }.logOnException()
 
     /**
@@ -464,20 +445,18 @@ object Exponea {
         data: NotificationData? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            val properties = PropertiesList(
+                hashMapOf("status" to "delivered", "platform" to "android")
+            )
+            data?.getTrackingData()?.forEach { properties[it.key] = it.value }
+            component.eventManager.track(
+                eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
+                properties = properties.properties,
+                type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
+                timestamp = timestamp
+            )
         }
-        val properties = PropertiesList(
-            hashMapOf("status" to "delivered", "platform" to "android")
-        )
-        data?.getTrackingData()?.forEach { properties[it.key] = it.value }
-        component.eventManager.track(
-            eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
-            properties = properties.properties,
-            type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
-            timestamp = timestamp
-        )
     }.logOnException()
 
     /**
@@ -489,25 +468,23 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
-        }
-        val properties = PropertiesList(
-            hashMapOf(
-                "status" to "clicked",
-                "platform" to "android",
-                "url" to (actionData?.url ?: "app"),
-                "cta" to (actionData?.actionName ?: "notification")
+        requireInitialized {
+            val properties = PropertiesList(
+                hashMapOf(
+                    "status" to "clicked",
+                    "platform" to "android",
+                    "url" to (actionData?.url ?: "app"),
+                    "cta" to (actionData?.actionName ?: "notification")
+                )
             )
-        )
-        data?.getTrackingData()?.forEach { properties[it.key] = it.value }
-        component.eventManager.track(
-            eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
-            properties = properties.properties,
-            type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
-            timestamp = timestamp
-        )
+            data?.getTrackingData()?.forEach { properties[it.key] = it.value }
+            component.eventManager.track(
+                eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
+                properties = properties.properties,
+                type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
+                timestamp = timestamp
+            )
+        }
     }.logOnException()
 
     /**
@@ -516,14 +493,12 @@ object Exponea {
      */
 
     fun showBanners(customerIds: CustomerIds) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.personalizationManager.showBanner(
+                projectToken = configuration.projectToken,
+                customerIds = customerIds
+            )
         }
-        component.personalizationManager.showBanner(
-            projectToken = configuration.projectToken,
-            customerIds = customerIds
-        )
     }.logOnException()
 
     /**
@@ -535,18 +510,16 @@ object Exponea {
         timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            val properties = purchasedItem.toHashMap()
+            properties.putAll(DeviceProperties(context).toHashMap())
+            component.eventManager.track(
+                eventType = Constants.EventTypes.payment,
+                timestamp = timestamp,
+                properties = properties,
+                type = EventType.PAYMENT
+            )
         }
-        val properties = purchasedItem.toHashMap()
-        properties.putAll(DeviceProperties(context).toHashMap())
-        component.eventManager.track(
-            eventType = Constants.EventTypes.payment,
-            timestamp = timestamp,
-            properties = properties,
-            type = EventType.PAYMENT
-        )
     }.logOnException()
 
     /**
@@ -560,13 +533,35 @@ object Exponea {
         manager: NotificationManager,
         showNotification: Boolean = true
     ) = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.fcmManager.handleRemoteMessage(message, manager, showNotification)
         }
-        component.fcmManager.handleRemoteMessage(message, manager, showNotification)
     }.logOnException()
 
+    internal fun <T> requireInitialized(notInitializedBlock: (() -> T)? = null, initializedBlock: () -> T): T? {
+        if (!isInitialized) {
+            Logger.e(this, "Exponea SDK was not initialized properly!")
+            return notInitializedBlock?.invoke() ?: null
+        }
+        return initializedBlock()
+    }
+
+    // extra function without return type for Unit, above method would have return type Unit?
+    internal fun requireInitialized(notInitializedBlock: (() -> Unit)? = null, initializedBlock: () -> Unit) {
+        requireInitialized<Unit>(notInitializedBlock, initializedBlock)
+    }
+
+    internal fun <T> autoInitialize(applicationContext: Context, initializedBlock: () -> T): T? {
+        if (!isInitialized) {
+            val config = ExponeaConfigRepository.get(applicationContext)
+            if (config == null) {
+                Logger.e(this, "Unable to automatically initialize Exponea SDK!")
+                return null
+            }
+            init(applicationContext, config)
+        }
+        return requireInitialized(initializedBlock = initializedBlock)
+    }
     // Private Helpers
 
     /**
@@ -715,11 +710,9 @@ object Exponea {
     }
 
     fun anonymize() = runCatching {
-        if (!isInitialized) {
-            Logger.e(this, "Exponea SDK was not initialized properly!")
-            return
+        requireInitialized {
+            component.anonymize()
         }
-        component.anonymize()
     }.logOnException()
 
     /**
@@ -728,34 +721,27 @@ object Exponea {
      * is returned.
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
-        if (!isInitialized) {
-            val config = ExponeaConfigRepository.get(appContext)
-            if (config == null) {
-                Logger.e(this, "Cannot track campaign intent, unable to automatically initialize Exponea SDK!")
-                return false
+        return autoInitialize(appContext) {
+            if (!intent.isViewUrlIntent("http")) {
+                return@autoInitialize false
             }
-            Logger.d(this, "Newly initiated")
-            init(appContext, config)
-        }
-        if (!intent.isViewUrlIntent("http")) {
-            return false
-        }
-        val event = CampaignClickInfo(intent!!.data!!)
-        if (!event.isValid()) {
-            Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
-            return false
-        }
-        component.campaignRepository.set(event)
-        component.eventManager.track(
-            eventType = Constants.EventTypes.push,
-            properties = hashMapOf(
+            val event = CampaignClickInfo(intent!!.data!!)
+            if (!event.isValid()) {
+                Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
+                return@autoInitialize false
+            }
+            component.campaignRepository.set(event)
+            component.eventManager.track(
+                eventType = Constants.EventTypes.push,
+                properties = hashMapOf(
                     "timestamp" to event.createdAt,
                     "platform" to "Android",
                     "url" to event.completeUrl
-            ),
-            type = EventType.CAMPAIGN_CLICK
-        )
-        return true
+                ),
+                type = EventType.CAMPAIGN_CLICK
+            )
+            return@autoInitialize true
+        } ?: false
     }.returnOnException { false }
 
     // used by InAppMessageActivity to get currently displayed message

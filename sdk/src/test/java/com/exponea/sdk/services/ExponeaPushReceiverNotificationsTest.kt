@@ -12,9 +12,11 @@ import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
 import com.exponea.sdk.manager.NotificationTestPayloads
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -151,6 +153,10 @@ internal class ExponeaPushReceiverNotificationsTest(
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+
+        Exponea.flushMode = FlushMode.MANUAL
+        ExponeaConfigRepository.set(context, ExponeaConfiguration()) // we'll just store config, it will auto-initialize
+
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),

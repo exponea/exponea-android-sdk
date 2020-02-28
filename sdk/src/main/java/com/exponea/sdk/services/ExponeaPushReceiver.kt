@@ -9,7 +9,6 @@ import android.net.Uri
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
-import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.logOnException
 
@@ -70,24 +69,17 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         }
 
         val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
-        if (!Exponea.isInitialized) {
-            val config = ExponeaConfigRepository.get(context)
-            config?.let {
-                Logger.d(this, "Newly initiated")
-                Exponea.init(context.applicationContext, config)
-            }
-        }
-
-        Exponea.trackClickedPush(
+        Exponea.autoInitialize(context) {
+            Exponea.trackClickedPush(
                 data = data,
                 actionData = action
-        )
+            )
+            // After clicking the notification button (action), dismiss it
+            dismissNotification(context, intent)
 
-        // After clicking the notification button (action), dismiss it
-        dismissNotification(context, intent)
-
-        // And close the notification tray
-        closeNotificationTray(context)
+            // And close the notification tray
+            closeNotificationTray(context)
+        }
     }
 
     private fun dismissNotification(context: Context, intent: Intent) {

@@ -1,4 +1,12 @@
 ## Release Notes
+## Release Notes for 2.7.0
+#### March 02, 2020
+* Features
+  * New in-app messages - display rich messages when app starts or an event is tracked - even when offline. This SDK is fully ready for the feature when it is publicly available soon.
+* Bug Fixes
+  * Fixed: Rare internal database thread-safety related crash.
+
+
 ## Release Notes for 2.6.3
 #### February 20, 2020
 * Features

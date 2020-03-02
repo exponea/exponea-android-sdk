@@ -1,5 +1,6 @@
 package com.exponea.example.view.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +10,7 @@ import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.fragment_anonymize.*
+import kotlinx.android.synthetic.main.fragment_anonymize.btnAnonymize
 
 class AnonymizeFragment : BaseFragment() {
 
@@ -30,6 +31,12 @@ class AnonymizeFragment : BaseFragment() {
         (activity as AppCompatActivity).supportActionBar?.subtitle = "anonymize"
         btnAnonymize.setOnClickListener {
             Exponea.anonymize()
+            AlertDialog.Builder(context)
+                .setTitle("Customer anonymized")
+                .setMessage("Stored customer data cleared.")
+                .setPositiveButton("OK") { _, _ -> }
+                .create()
+                .show()
         }
     }
 }

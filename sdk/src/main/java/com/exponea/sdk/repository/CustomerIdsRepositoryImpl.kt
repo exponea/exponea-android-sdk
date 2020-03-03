@@ -19,11 +19,12 @@ internal class CustomerIdsRepositoryImpl(
     override fun get(): CustomerIds {
         val uuid = uuidRepo.get()
         val json = prefs.getString(PREFS_CUSTOMERIDS, "{}")
+        // customer ids used to be 'Any?'. They can still be in DB, let's convert them to 'String?'
         val type = object : TypeToken<HashMap<String, Any?>>() {}.type
         val ids = gson.fromJson<HashMap<String, Any?>>(json, type)
         return CustomerIds().apply {
             cookie = uuid
-            externalIds = ids
+            externalIds = HashMap(ids.mapValues { it.value as? String })
         }
     }
 

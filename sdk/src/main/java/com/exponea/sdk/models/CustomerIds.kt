@@ -3,7 +3,7 @@ package com.exponea.sdk.models
 import com.exponea.sdk.util.Logger
 
 data class CustomerIds(
-    internal var externalIds: HashMap<String, Any?> = hashMapOf()
+    internal var externalIds: HashMap<String, String?> = hashMapOf()
 ) {
 
     init {
@@ -20,7 +20,7 @@ data class CustomerIds(
         this.cookie = cookie
     }
 
-    fun withId(key: String, value: Any?): CustomerIds {
+    fun withId(key: String, value: String?): CustomerIds {
         if (key == COOKIE) {
             Logger.e(this, "Changing cookie is not allowed")
             return this
@@ -29,12 +29,12 @@ data class CustomerIds(
         return this
     }
 
-    internal fun toHashMap(): HashMap<String, Any?> {
+    internal fun toHashMap(): HashMap<String, String?> {
         if (cookie.isNullOrEmpty()) {
             Logger.e(this, "Empty cookie")
         }
         return externalIds.apply {
-            set(COOKIE, cookie as Any?)
+            set(COOKIE, cookie)
         }
     }
 }

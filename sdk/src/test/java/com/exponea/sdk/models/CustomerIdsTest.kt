@@ -11,12 +11,12 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
 
     @Test
     fun testConstructor() {
-        val mapWithoutCookie = hashMapOf<String, Any?>(
+        val mapWithoutCookie = hashMapOf<String, String?>(
                 "registered" to "email",
                 "phone" to "132132131"
         )
 
-        val mapWithCookie = hashMapOf<String, Any?>(
+        val mapWithCookie = hashMapOf<String, String?>(
                 "registered" to "email",
                 "phone" to "132132131",
                 "cookie" to "Cookie"

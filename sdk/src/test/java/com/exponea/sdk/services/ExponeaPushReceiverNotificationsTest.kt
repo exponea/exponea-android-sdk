@@ -10,7 +10,6 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
-import com.exponea.sdk.manager.NotificationTestPayloads
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
@@ -20,6 +19,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every

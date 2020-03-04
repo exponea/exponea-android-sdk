@@ -1,10 +1,11 @@
-package com.exponea.sdk.manager
+package com.exponea.sdk.testutil.mocks
 
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
+import com.exponea.sdk.testutil.ExponeaMockServer
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request

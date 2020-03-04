@@ -1,11 +1,11 @@
 package com.exponea.sdk.models
 
-import com.exponea.sdk.manager.NotificationTestPayloads.ACTIONS_NOTIFICATION
-import com.exponea.sdk.manager.NotificationTestPayloads.BASIC_NOTIFICATION
-import com.exponea.sdk.manager.NotificationTestPayloads.BROWSER_NOTIFICATION
-import com.exponea.sdk.manager.NotificationTestPayloads.DEEPLINK_NOTIFICATION
-import com.exponea.sdk.manager.NotificationTestPayloads.PRODUCTION_NOTIFICATION
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.ACTIONS_NOTIFICATION
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.BASIC_NOTIFICATION
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.BROWSER_NOTIFICATION
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.PRODUCTION_NOTIFICATION
 import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -1,6 +1,8 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
 import okhttp3.MediaType

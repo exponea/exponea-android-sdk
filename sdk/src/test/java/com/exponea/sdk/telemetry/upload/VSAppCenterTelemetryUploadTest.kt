@@ -1,11 +1,11 @@
 package com.exponea.sdk.telemetry
 
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.manager.ExponeaMockServer
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import com.google.gson.JsonElement

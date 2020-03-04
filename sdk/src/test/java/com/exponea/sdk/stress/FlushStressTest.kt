@@ -3,9 +3,7 @@ package com.exponea.sdk.stress
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.ConnectionManagerMock
-import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.manager.ExponeaMockService
+import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
@@ -14,10 +12,14 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
+import io.mockk.every
+import io.mockk.mockk
 import java.util.Random
 import kotlin.test.assertEquals
 import org.junit.AfterClass
@@ -58,13 +60,15 @@ internal class FlushStressTest : ExponeaSDKTest() {
     fun init() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
+        val connectedManager = mockk<ConnectionManager>()
+        every { connectedManager.isConnectedToInternet() } returns true
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
         repo = Exponea.componentForTesting.eventRepository
         service = ExponeaMockService(true)
-        manager = FlushManagerImpl(configuration, repo, service, ConnectionManagerMock)
+        manager = FlushManagerImpl(configuration, repo, service, connectedManager)
         repo.clear()
     }
 

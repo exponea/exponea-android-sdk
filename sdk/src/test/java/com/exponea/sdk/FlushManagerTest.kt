@@ -2,22 +2,23 @@ package com.exponea.sdk
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.manager.ConnectionManagerMock
-import com.exponea.sdk.manager.ExponeaMockServer
-import com.exponea.sdk.manager.ExponeaMockService
+import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
-import com.exponea.sdk.manager.NoInternetConnectionManagerMock
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.concurrent.thread
@@ -87,8 +88,8 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun flushEvents_ShouldFail_WithNoInternetConnection() {
         val service = ExponeaMockService(false)
-        val noInternetManager = NoInternetConnectionManagerMock
-
+        val notConnectedManager = mockk<ConnectionManager>()
+        every { notConnectedManager.isConnectedToInternet() } returns false
         Exponea.trackEvent(
             eventType = Constants.EventTypes.sessionStart,
             timestamp = currentTimeSeconds(),
@@ -96,7 +97,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         )
 
         // change the manager instance to one without internet access
-        manager = FlushManagerImpl(configuration, repo, service, noInternetManager)
+        manager = FlushManagerImpl(configuration, repo, service, notConnectedManager)
 
         waitForIt {
             manager.flushData { _ ->
@@ -131,7 +132,9 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun `should only flush once`() {
         val service = spyk(ExponeaMockService(true))
-        manager = FlushManagerImpl(configuration, repo, service, ConnectionManagerMock)
+        val connectedManager = mockk<ConnectionManager>()
+        every { connectedManager.isConnectedToInternet() } returns true
+        manager = FlushManagerImpl(configuration, repo, service, connectedManager)
         Exponea.trackEvent(
             eventType = "my event",
             timestamp = currentTimeSeconds(),

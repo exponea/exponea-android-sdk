@@ -2,7 +2,7 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.manager.ExponeaMockServer
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import java.io.File
 import kotlin.test.assertEquals

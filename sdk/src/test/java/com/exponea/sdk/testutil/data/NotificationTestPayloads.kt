@@ -1,4 +1,4 @@
-package com.exponea.sdk.manager
+package com.exponea.sdk.testutil.data
 
 internal object NotificationTestPayloads {
     /* ktlint-disable max-line-length */

@@ -1,4 +1,4 @@
-package com.exponea.sdk.manager
+package com.exponea.sdk.testutil
 
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

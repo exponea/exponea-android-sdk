@@ -17,6 +17,7 @@ import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every

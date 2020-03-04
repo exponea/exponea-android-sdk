@@ -5,6 +5,7 @@ import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonPrimitive

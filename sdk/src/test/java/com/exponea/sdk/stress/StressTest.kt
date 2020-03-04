@@ -34,7 +34,7 @@ import org.robolectric.RobolectricTestRunner
 internal class StressTest : ExponeaSDKTest() {
 
     companion object {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(automaticSessionTracking = false)
         val server = ExponeaMockServer.createServer()
         const val stressCount = 1000
 

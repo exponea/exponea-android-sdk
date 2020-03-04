@@ -48,11 +48,11 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
         }?.item
         assertNotNull(sessionEvent)
         assertNotNull(sessionEvent.properties)
-        assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])
-        assertEquals(campaignEvent.source, sessionEvent.properties!!["utm_source"])
-        assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
-        assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
-        assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
+        assertNull(sessionEvent.properties!!["location"])
+        assertNull(sessionEvent.properties!!["utm_source"])
+        assertNull(sessionEvent.properties!!["utm_campaign"])
+        assertNull(sessionEvent.properties!!["utm_content"])
+        assertNull(sessionEvent.properties!!["utm_term"])
 
         val hasAnySessionEnd = Exponea.componentForTesting.eventRepository.all().any {
             it.item.type == Constants.EventTypes.sessionEnd

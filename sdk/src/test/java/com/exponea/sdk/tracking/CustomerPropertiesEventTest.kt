@@ -25,7 +25,7 @@ import org.robolectric.RobolectricTestRunner
 internal class CustomerPropertiesEventTest : ExponeaSDKTest() {
 
     companion object {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(automaticSessionTracking = false)
         val customerIds = CustomerIds().withId("registered", "john@doe.com")
         val properties = PropertiesList(hashMapOf("first_name" to "NewName"))
         lateinit var server: MockWebServer

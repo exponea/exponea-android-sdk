@@ -19,6 +19,8 @@ internal class SessionManagerImpl(
     private val eventManager: EventManager,
     private val backgroundTimerManager: BackgroundTimerManager
 ) : SessionManager() {
+    private val initTime = currentTimeSeconds()
+
     var application = context as Application
     private var isListenerActive = false
 
@@ -81,7 +83,7 @@ internal class SessionManagerImpl(
             Logger.d(this, "New Session Started: ${now.toDate()}")
 
             // Finish Tracking old session
-            trackSessionEnd(now)
+            trackSessionEnd(lastTimeFinished)
 
             // Start Tracking new session
             prefs.setDouble(PREF_SESSION_START, now)
@@ -95,6 +97,12 @@ internal class SessionManagerImpl(
      */
     override fun onSessionEnd() {
         val now = currentTimeSeconds()
+        // session is ending and we never called session start
+        // we'll create a session start equal to creation time of SessionManager
+        if (prefs.getDouble(PREF_SESSION_START, -1.0) == -1.0) {
+            prefs.setDouble(PREF_SESSION_START, initTime)
+            trackSessionStart(initTime)
+        }
         Logger.d(this, "Session end ${now.toDate()}")
         prefs.setDouble(PREF_SESSION_END, now)
         // Start background timer to track end of the session

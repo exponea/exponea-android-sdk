@@ -25,7 +25,7 @@ import org.robolectric.RobolectricTestRunner
 internal class InstallEventTest : ExponeaSDKTest() {
 
     companion object {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(automaticSessionTracking = false)
         lateinit var server: MockWebServer
 
         @BeforeClass

@@ -33,7 +33,7 @@ import org.robolectric.RobolectricTestRunner
 internal class FlushManagerTest : ExponeaSDKTest() {
 
     companion object {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(automaticSessionTracking = false)
         val server = ExponeaMockServer.createServer()
 
         @BeforeClass

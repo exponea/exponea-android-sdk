@@ -3,6 +3,7 @@ package com.exponea.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -24,7 +25,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, FlushManagerTest.configuration)
+        Exponea.init(context, ExponeaConfiguration())
     }
 
     @Test

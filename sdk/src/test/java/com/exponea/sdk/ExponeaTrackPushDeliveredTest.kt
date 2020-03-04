@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationData
@@ -120,7 +121,7 @@ internal class ExponeaTrackPushDeliveredTest(
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, FlushManagerTest.configuration)
+        Exponea.init(context, ExponeaConfiguration())
     }
 
     @After

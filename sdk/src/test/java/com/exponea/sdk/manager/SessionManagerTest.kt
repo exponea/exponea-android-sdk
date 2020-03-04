@@ -1,13 +1,10 @@
-package com.exponea.sdk
+package com.exponea.sdk.manager
 
 import android.app.Activity
 import android.content.Context
 import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.manager.BackgroundTimerManager
-import com.exponea.sdk.manager.EventManager
-import com.exponea.sdk.manager.SessionManager
-import com.exponea.sdk.manager.SessionManagerImpl
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepository

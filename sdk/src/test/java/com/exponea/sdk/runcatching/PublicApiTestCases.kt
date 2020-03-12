@@ -12,9 +12,12 @@ import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.google.firebase.messaging.RemoteMessage
 import kotlin.reflect.KFunction
 import kotlin.reflect.KFunction1
 import kotlin.reflect.KFunction2
+import kotlin.reflect.KFunction3
+import kotlin.reflect.KFunction4
 
 internal object PublicApiTestCases {
     val properties = arrayOf(
@@ -81,12 +84,22 @@ internal object PublicApiTestCases {
                 Exponea.handleCampaignIntent(intent, ApplicationProvider.getApplicationContext())
             }
         ),
-        Pair(
+        Pair<KFunction3<RemoteMessage?, NotificationManager, Boolean, Unit>, () -> Any>(
+            @Suppress("DEPRECATION")
             Exponea::handleRemoteMessage,
             {
-                val notificationManager = ApplicationProvider.getApplicationContext<Context>()
-                    .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val context = ApplicationProvider.getApplicationContext<Context>()
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                @Suppress("DEPRECATION")
                 Exponea.handleRemoteMessage(null, notificationManager, false)
+            }
+        ),
+        Pair<KFunction4<Context, RemoteMessage?, NotificationManager, Boolean, Unit>, () -> Any>(
+            Exponea::handleRemoteMessage,
+            {
+                val context = ApplicationProvider.getApplicationContext<Context>()
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                Exponea.handleRemoteMessage(context, null, notificationManager, false)
             }
         ),
         Pair(

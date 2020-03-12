@@ -14,7 +14,7 @@ internal class ExponeaSessionEndWorker(
 
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")
-        return Exponea.autoInitialize(applicationContext) {
+        return Exponea.autoInitialize<Result>(applicationContext) {
             val countDownLatch = CountDownLatch(1)
             try {
                 Exponea.trackAutomaticSessionEnd()

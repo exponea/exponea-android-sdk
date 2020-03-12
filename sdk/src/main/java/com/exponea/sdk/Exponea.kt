@@ -506,10 +506,34 @@ object Exponea {
 
     /**
      * Handles the notification payload from FirebaseMessagingService
+     * @param applicationContext application context required to auto-initialize ExponeaSDK
      * @param message the RemoteMessage payload received from Firebase
      * @param manager the system notification manager instance
      * @param showNotification indicates if the SDK should display the notification or just track it
      */
+    fun handleRemoteMessage(
+        applicationContext: Context,
+        message: RemoteMessage?,
+        manager: NotificationManager,
+        showNotification: Boolean = true
+    ) = runCatching {
+        autoInitialize(applicationContext) {
+            component.fcmManager.handleRemoteMessage(message, manager, showNotification)
+        }
+    }.logOnException()
+
+    /**
+     * Handles the notification payload from FirebaseMessagingService
+     * @param message the RemoteMessage payload received from Firebase
+     * @param manager the system notification manager instance
+     * @param showNotification indicates if the SDK should display the notification or just track it
+     */
+    @Deprecated(
+        message = "When app is not running we need to autoinitialize the sdk.",
+        replaceWith = ReplaceWith(
+            expression = "Exponea.handleRemoteMessage(applicationContext, message, manager, showNotification)"
+        )
+    )
     fun handleRemoteMessage(
         message: RemoteMessage?,
         manager: NotificationManager,
@@ -544,6 +568,11 @@ object Exponea {
         }
         return requireInitialized(initializedBlock = initializedBlock)
     }
+
+    internal fun autoInitialize(applicationContext: Context, initializedBlock: () -> Unit) {
+        autoInitialize<Unit>(applicationContext, initializedBlock)
+    }
+
     // Private Helpers
 
     /**
@@ -706,7 +735,7 @@ object Exponea {
      * is returned.
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
-        return autoInitialize(appContext) {
+        return autoInitialize<Boolean>(appContext) {
             if (!intent.isViewUrlIntent("http")) {
                 return@autoInitialize false
             }

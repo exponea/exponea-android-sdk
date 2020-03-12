@@ -29,7 +29,7 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
             if (!Exponea.isAutoPushNotification) {
                 return@autoInitialize
             }
-            Exponea.handleRemoteMessage(message, notificationManager)
+            Exponea.handleRemoteMessage(applicationContext, message, notificationManager)
         }
     }
 

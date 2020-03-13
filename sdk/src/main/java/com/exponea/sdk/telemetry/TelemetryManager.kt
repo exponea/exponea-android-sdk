@@ -4,6 +4,7 @@ import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.telemetry.storage.TelemetryStorage
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
@@ -49,7 +50,7 @@ internal class TelemetryManager(val context: Context, userId: String? = null) {
         }
     }
 
-    fun reportEvent(name: String, properties: MutableMap<String, String> = hashMapOf()) {
+    fun reportEvent(eventType: EventType, properties: MutableMap<String, String> = hashMapOf()) {
         val appInfo = TelemetryUtility.getAppInfo(context)
         val mutableProperties = properties.toMutableMap()
         mutableProperties.putAll(hashMapOf(
@@ -60,13 +61,13 @@ internal class TelemetryManager(val context: Context, userId: String? = null) {
             "appNameVersionSdkVersion"
                 to "${appInfo.packageName} - ${appInfo.versionName} - SDK ${BuildConfig.VERSION_NAME}"
         ))
-        telemetryUpload.uploadEventLog(EventLog(name, mutableProperties, runId)) {
+        telemetryUpload.uploadEventLog(EventLog(eventType.value, mutableProperties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
     }
 
     fun reportInitEvent(configuration: ExponeaConfiguration) {
-        reportEvent("init", TelemetryUtility.formatConfigurationForTracking(configuration))
+        reportEvent(EventType.INIT, TelemetryUtility.formatConfigurationForTracking(configuration))
     }
 
     fun reportCaughtException(e: Throwable) {

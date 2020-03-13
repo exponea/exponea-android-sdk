@@ -331,6 +331,7 @@ object Exponea {
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_PERSONALIZATION)
         }
     }.logOnException()
 
@@ -349,6 +350,7 @@ object Exponea {
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_CONSENTS)
         }
     }.logOnException()
 
@@ -374,6 +376,7 @@ object Exponea {
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_RECOMMENDATION)
         }
     }.logOnException()
 
@@ -498,6 +501,7 @@ object Exponea {
                 projectToken = configuration.projectToken,
                 customerIds = customerIds
             )
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_BANNER)
         }
     }.logOnException()
 

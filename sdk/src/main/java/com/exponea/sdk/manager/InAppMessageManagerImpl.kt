@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
@@ -230,6 +231,10 @@ internal class InAppMessageManagerImpl(
             if (presented != null) {
                 displayStateRepository.setDisplayed(message, Date())
                 trackingDelegate.track(message, "show", false)
+                Exponea.telemetry?.reportEvent(
+                    com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
+                    hashMapOf("messageType" to message.rawMessageType)
+                )
             }
         }
     }

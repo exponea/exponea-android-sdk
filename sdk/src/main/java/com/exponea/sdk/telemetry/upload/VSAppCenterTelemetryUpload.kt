@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Base64
 import com.exponea.sdk.BuildConfig
+import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
@@ -131,24 +132,12 @@ internal class VSAppCenterTelemetryUpload(
     }
 
     private fun getAPIDevice(): VSAppCenterAPIDevice {
-        var appNamespace = "unknown package"
-        var appVersion = "unknown version"
-        var appBuild = "unknown build"
-        try {
-            val packageManager = context.packageManager
-            val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
-            appNamespace = packageInfo.packageName
-            appVersion = packageInfo.versionName
-            @Suppress("DEPRECATION")
-            appBuild = packageInfo.versionCode.toString()
-        } catch (e: Exception) {
-            // do nothing
-        }
+        val appInfo = TelemetryUtility.getAppInfo(context)
 
         return VSAppCenterAPIDevice(
-            appNamespace,
-            "$appNamespace-$appVersion",
-            appBuild,
+            appInfo.packageName,
+            "${appInfo.packageName}-${appInfo.versionName}",
+            appInfo.versionCode,
             sdkName = "ExponeaSDK.android",
             sdkVersion = sdkVersion,
             osName = "Android",

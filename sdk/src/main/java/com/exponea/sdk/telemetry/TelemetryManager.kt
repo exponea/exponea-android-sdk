@@ -12,7 +12,7 @@ import com.exponea.sdk.util.Logger
 import java.util.Date
 import java.util.UUID
 
-internal class TelemetryManager(context: Context, userId: String? = null) {
+internal class TelemetryManager(val context: Context, userId: String? = null) {
     companion object {
         const val TELEMETRY_PREFS_KEY = "EXPONEA_TELEMETRY"
         const val INSTALL_ID_KEY = "INSTALL_ID"
@@ -49,18 +49,24 @@ internal class TelemetryManager(context: Context, userId: String? = null) {
         }
     }
 
-    fun reportEvent(name: String, properties: Map<String, String>) {
-        telemetryUpload.uploadEventLog(EventLog(name, properties, runId)) {
+    fun reportEvent(name: String, properties: MutableMap<String, String> = hashMapOf()) {
+        val appInfo = TelemetryUtility.getAppInfo(context)
+        val mutableProperties = properties.toMutableMap()
+        mutableProperties.putAll(hashMapOf(
+            "sdkVersion" to BuildConfig.VERSION_NAME,
+            "appName" to appInfo.packageName,
+            "appVersion" to appInfo.versionName,
+            "appNameVersion" to "${appInfo.packageName} - ${appInfo.versionName}",
+            "appNameVersionSdkVersion"
+                to "${appInfo.packageName} - ${appInfo.versionName} - SDK ${BuildConfig.VERSION_NAME}"
+        ))
+        telemetryUpload.uploadEventLog(EventLog(name, mutableProperties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
     }
 
     fun reportInitEvent(configuration: ExponeaConfiguration) {
-        val data = hashMapOf(
-            "sdkVersion" to BuildConfig.VERSION_NAME
-        )
-        data.putAll(TelemetryUtility.formatConfigurationForTracking(configuration))
-        reportEvent("init", data)
+        reportEvent("init", TelemetryUtility.formatConfigurationForTracking(configuration))
     }
 
     fun reportCaughtException(e: Throwable) {

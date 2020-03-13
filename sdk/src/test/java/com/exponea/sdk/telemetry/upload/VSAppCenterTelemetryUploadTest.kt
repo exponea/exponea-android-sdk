@@ -31,7 +31,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
     private val exceptedDevice = """{
         "appNamespace":"com.exponea.sdk.test",
         "appVersion":"com.exponea.sdk.test-unknown version",
-        "appBuild":"unknown build",
+        "appBuild":"0",
         "sdkName":"ExponeaSDK.android",
         "sdkVersion":"1.0.0",
         "osName":"Android",

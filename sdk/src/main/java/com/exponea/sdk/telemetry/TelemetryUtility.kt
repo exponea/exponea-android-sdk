@@ -1,5 +1,6 @@
 package com.exponea.sdk.telemetry
 
+import android.content.Context
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
@@ -94,5 +95,26 @@ object TelemetryUtility {
             "tokenTrackFrequency"
                 to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency)
         )
+    }
+
+    internal data class AppInfo(
+        val packageName: String,
+        val versionName: String,
+        val versionCode: String
+    )
+
+    internal fun getAppInfo(context: Context): AppInfo {
+        try {
+            val packageManager = context.packageManager
+            val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
+            @Suppress("DEPRECATION")
+            return AppInfo(
+                packageInfo.packageName,
+                packageInfo.versionName ?: "unknown version",
+                packageInfo.versionCode.toString()
+            )
+        } catch (e: Exception) {
+            return AppInfo("unknown package", "unknown version", "unknown version code")
+        }
     }
 }

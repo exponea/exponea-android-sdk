@@ -15,7 +15,7 @@ For push notifications to work, you need a working Firebase project. The followi
 
 ### Add Firebase to Your App
 
-When It's coming to setting up Firebase inside you application, you have options
+When it comes to setting up Firebase inside you application, you have multiple options
 
 #### Using Firebase Assistant inside Android Studio
   1. To open the Firebase Assistant in Android Studio:
@@ -31,7 +31,7 @@ When It's coming to setting up Firebase inside you application, you have options
   3. When prompted, enter your app's **package name**. It's important to enter the package name your app is using; this can only be set when you add an app to your Firebase project.
   4. During the process, you'll download a `google-services.json` file. You can download this file again at any time.
   5. Add rules to your root-level build.gradle file, to include the google-services plugin and the Google's Maven repository:
-  ```
+  ``` gradle
   buildscript {
       // ...
       dependencies {
@@ -52,7 +52,7 @@ When It's coming to setting up Firebase inside you application, you have options
 
 6. Then, in your module Gradle file (usually the app/build.gradle), add the apply plugin line at the bottom of the file to enable the Gradle plugin:
 
-  ```
+  ``` gradle
   apply plugin: 'com.android.application'
 
   android {
@@ -81,24 +81,80 @@ Once you have configured Firebase you it need to obtained **Google Cloud Messagi
 to help you configure Exponea web APP
 
 
-## 🔍 Automatic track Push Notification
+## 🔍 Automatic tracking of Push Notifications
 
-In the Exponea SDK configuration, you can enable or disable the automatic push notification tracking setting the Boolean value to the `isAutoPushNotification` property and setting up the desired frequency to the `tokenTrackFrequency`.
+In the [Exponea SDK configuration](CONFIG.md), you can enable or disable the automatic push notification tracking by setting the Boolean value to the `automaticPushNotification` property and potentially setting up the desired frequency to the `tokenTrackFrequency`(default value is ON_TOKEN_CHANGE).
 
-If the `isAutoPushNotification` is enabled, then the SDK will add track the "campaign" event with the correct properties.
+With `automaticPushNotification` enabled, the SDK will correctly display push notifications and track a "campaign" event for every delivered/opened push notification with the correct properties.
 
-In case you decide to deactivate the automatic push notification, you can still track this event manually.
+## 🔍 Responding to Push notifications
+
+When creating notification using Exponea Web App, you can choose from 3 different actions to be used when tapping the notification or additional buttons on notification.
+
+### 1. Open app
+Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED` that you can respond to in any application. Most common use case is opening your app and starting an activity. To do this, you need to setup a BroadcastReceiver in your Android manifest that will respond to intents with action `com.exponea.sdk.action.PUSH_CLICKED`.
+
+``` xml
+<receiver
+    android:name=".services.MyReceiver"
+    android:enabled="true"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
+    </intent-filter>
+</receiver>
+```
+
+In the BroadcastReceiver you should launch your activity. Campaign data is included in the intent as `ExponeaPushReceiver.EXTRA_DATA`.
+``` kotlin
+class MyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        // Extract payload data
+        val data = intent.getParcelableExtra<NotificationData>(
+          ExponeaPushReceiver.EXTRA_DATA
+        )
+        Log.i("Receiver", "Payload: $data")
+        // Process the data if you need to
+
+        // Start an activity
+        val launchIntent = Intent(context, MainActivity::class.java)
+        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(context, launchIntent, null)
+    }
+}
+```
+
+### 2. Deep link
+Deep link action creates "view" intent that contains the url specified when setting up this action. To respond to this intent, create intent filter on the activity that should handle it in your Android manifest file. More information can be found in the [official Android documentation](https://developer.android.com/training/app-links/deep-linking).
+``` xml
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+
+    <!-- Accepts URIs that begin with "my-schema://”-->
+    <data android:scheme="my-schema" />
+</intent-filter>
+```
+
+
+### 3. Open web browser
+Open web browser is handled automatically by the SDK and no work is required from the developer to handle it.
+
+## 🔍 Manual tracking of Push Notifications
+In case you decide to deactivate the automatic push notification, you can still track events manually.
 
 #### Track Push Token (FCM)
 
-```
+``` kotlin
 fun trackPushToken(
         fcmToken: String
 )
 ```
 #### 💻 Usage
 
-```
+``` kotlin
 Exponea.trackPushToken(
         fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
 )
@@ -106,7 +162,7 @@ Exponea.trackPushToken(
 
 #### Track Delivered Push Notification
 
-```
+``` kotlin
 fun trackDeliveredPush(
         data: NotificationData? = null,
         timestamp: Double? = null
@@ -115,16 +171,24 @@ fun trackDeliveredPush(
 
 #### 💻 Usage
 
-```
+``` kotlin
+// create NotificationData from your push payload
+val notificationData = NotificationData(
+    subject = "my subject",
+    campaignName = "My campaign",
+    actionName = "my-action",
+    platform = "android",
+    ...
+)
 Exponea.trackDeliveredPush(
-        data = /** get NotificationData from push payload **//
+        data = notificationData
         timestamp = currentTimeSeconds()
 )
 ```
 
 #### Track Clicked Push Notification
 
-```
+``` kotlin
 fun trackClickedPush(
         data: NotificationData? = null,
         timestamp: Double? = null
@@ -133,18 +197,26 @@ fun trackClickedPush(
 
 #### 💻 Usage
 
-```
+``` kotlin
+// create NotificationData from your push payload
+val notificationData = NotificationData(
+    subject = "my subject",
+    campaignName = "My campaign",
+    actionName = "my-action",
+    platform = "android",
+    ...
+)
 Exponea.trackClickedPush(
-        data = /** get NotificationData from push payload**//
+        data = notificationData
         timestamp = currentTimeSeconds()
 )
 ```
 ## 🔍 Tracking notification extra data
-  Some notifications can have an extra data payload. Whenever a notification arrives the Exponea SDK can inform you about that received that via a `notificationCallback`. The extras are a `Map<String, String>`.
+  Some notifications can have an extra data payload. Whenever a notification arrives the Exponea SDK will call `notificationCallback` that you can set on the `Exponea` object. The extras are a `Map<String, String>`.
 
 #### 💻 Usage
 
-```
+``` kotlin
 Exponea.notificationDataCallback = {
      extra -> //handle the extras value
 }

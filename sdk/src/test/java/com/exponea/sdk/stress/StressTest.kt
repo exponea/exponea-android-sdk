@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -14,7 +15,6 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
-import com.exponea.sdk.tracking.CustomerPropertiesEventTest
 import com.exponea.sdk.util.currentTimeSeconds
 import java.util.Random
 import kotlin.coroutines.CoroutineContext
@@ -124,8 +124,8 @@ internal class StressTest : ExponeaSDKTest() {
         // Track event
         for (i in 0 until stressCount) {
             Exponea.identifyCustomer(
-                customerIds = CustomerPropertiesEventTest.customerIds,
-                properties = CustomerPropertiesEventTest.properties
+                customerIds = CustomerIds().withId("registered", "john@doe.com"),
+                properties = PropertiesList(hashMapOf("first_name" to "NewName"))
             )
         }
         assertEquals(stressCount, repo.all().size)

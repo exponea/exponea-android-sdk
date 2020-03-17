@@ -1,7 +1,8 @@
-package com.exponea.sdk
+package com.exponea.sdk.tracking
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
@@ -177,8 +178,9 @@ internal class ExponeaTrackPushOpenedTest(
         mockkConstructor(EventManagerImpl::class)
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, configuration)
     }
 
     @After

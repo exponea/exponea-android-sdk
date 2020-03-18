@@ -100,6 +100,7 @@ internal class FcmManagerImpl(
                 .setChannelId(configuration.pushChannelId)
                 .setSmallIcon(getPushIconRes())
                 .setStyle(NotificationCompat.BigTextStyle().bigText(payload.message))
+        configuration.pushAccentColor?.let { notification.color = it }
 
         handlePayloadImage(notification, payload)
         handlePayloadSound(notification, payload)

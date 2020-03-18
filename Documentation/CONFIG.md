@@ -6,38 +6,56 @@ It's possible to initialize the configuration through a ExponeaConfiguration obj
 ../app/src/main/assets/exponea_configuration.json).
 
 ### Configuration Class
-```
+``` kotlin
 data class ExponeaConfiguration(
   // Default project token.
   var projectToken: String = "",
+
   // Map event types and project tokens to be send to Exponea API.
   var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
+
   // Authorization http header.
   var authorization: String? = null,
+
   // Base url for http requests to Exponea API.
   var baseURL: String = Constants.Repository.baseURL,
+
   // Content type value to make http requests.
   var contentType: String = Constants.Repository.contentType,
+
   // Maximum retries value to flush data to api.
   var maxTries: Int = 10,
+
   // Timeout session value considered for app usage.
   var sessionTimeout: Double = 20.0,
+
   // Flag to control automatic session tracking
   var automaticSessionTracking: Boolean = true,
+
   // Flag to control if the App will handle push notifications automatically.
   var automaticPushNotification: Boolean = true,
+
   // Icon to be showed in push notifications.
   var pushIcon: Int? = null,
+
+  // Accent color of push notification icon and buttons
+  var pushAccentColor: Int? = null,
+
   // Channel name for push notifications. Only for API level 26+.
   var pushChannelName: String = "Exponea",
+
   // Channel description for push notifications. Only for API level 26+.
   var pushChannelDescription: String = "Notifications",
+
   // Channel ID for push notifications. Only for API level 26+.
   var pushChannelId: String = "0",
+
   // Notification importance for the notification channel. Only for API level 26+.
   var pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
+
   /** A list of properties to be added to all tracking events */
   var defaultProperties: HashMap<String, Any> = hashMapOf(),
+
   /** How ofter the token is tracked */
   var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
 )
@@ -52,7 +70,7 @@ data class ExponeaConfiguration(
 
 Eg:
 
-```
+``` kotlin
 var projectTokenRouteMap = hashMapOf<EventType, MutableList<String>> (
         Pair(EventType.TRACK_CUSTOMER, mutableListOf("ProjectTokenA", "ProjectTokenB")),
         Pair(EventType.TRACK_EVENT, mutableListOf("ProjectTokenA", "ProjectTokenC"))
@@ -102,6 +120,10 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### pushIcon
 
 * Icon to be displayed when show a push notification.
+
+#### pushAccentColor
+
+* Accent color of push notification. Changes color of small icon and notification buttons. e.g. `Color.GREEN`
 
 #### pushChannelName
 

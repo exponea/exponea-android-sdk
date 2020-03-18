@@ -50,7 +50,12 @@ internal class CrashManager(
                 }
             } else { // we should have time to immediately upload the exception
                 upload.uploadCrashLog(crashLog) { result ->
-                    Logger.i(this, "Crash log upload ${if (result.isSuccess) "succeeded" else "failed"}")
+                    if (result.isSuccess) {
+                        Logger.i(this, "Crash log upload succeeded.")
+                    } else {
+                        Logger.i(this, "Crash log upload failed, will retry later.")
+                        storage.saveCrashLog(crashLog)
+                    }
                 }
             }
         } catch (e: Exception) {

@@ -55,6 +55,28 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should upload handled exception`() {
+        every { upload.uploadCrashLog(any(), any()) } answers {
+            secondArg<(Result<Unit>) -> Unit>().invoke(Result.success(Unit))
+        }
+        crashManager.handleException(Exception("Boom!"), false)
+        verify(exactly = 1) { upload.uploadCrashLog(any(), any()) }
+        verify(exactly = 0) { storage.saveCrashLog(any()) }
+    }
+
+    @Test
+    fun `should save handled exception if upload fails`() {
+        every { upload.uploadCrashLog(any(), any()) } answers {
+            secondArg<(Result<Unit>) -> Unit>().invoke(Result.failure(Exception("Upload failed")))
+        }
+        crashManager.handleException(Exception("Boom!"), false)
+        verify(exactly = 1) {
+            upload.uploadCrashLog(any(), any())
+            storage.saveCrashLog(any())
+        }
+    }
+
+    @Test
     fun `should not save unhandled exception unrelated to SDK`() {
         crashManager.start()
         val exception = Exception("Mock exception")

@@ -36,7 +36,7 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
     override fun clearExcept(urls: List<String>) {
         val keepFileNames = HashSet(urls.map { getFileName(it) })
         val files = directory.listFiles()
-        files.forEach { file ->
+        files?.forEach { file ->
             if (!keepFileNames.contains(file.name)) {
                 file.delete()
             }

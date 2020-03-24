@@ -18,6 +18,7 @@ import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
@@ -78,7 +79,10 @@ internal class InAppMessageManagerImpl(
         }
     }
 
-    private fun preloadImageAndShowPending(messages: List<InAppMessage>, callback: ((Result<Unit>) -> Unit)?) {
+    private fun preloadImageAndShowPending(
+        messages: List<InAppMessage>,
+        callback: ((Result<Unit>) -> Unit)?
+    ) = runCatching {
         bitmapCache.clearExcept(messages.mapNotNull { it.payload.imageUrl }.filter { it.isNotBlank() })
         var shouldWaitWithPreload = false
         if (pendingShowRequests.isNotEmpty()) {
@@ -101,9 +105,12 @@ internal class InAppMessageManagerImpl(
         if (!shouldWaitWithPreload) {
             preloadImagesAfterPendingShown(messages, callback)
         }
-    }
+    }.logOnException()
 
-    private fun preloadImagesAfterPendingShown(messages: List<InAppMessage>, callback: ((Result<Unit>) -> Unit)?) {
+    private fun preloadImagesAfterPendingShown(
+        messages: List<InAppMessage>,
+        callback: ((Result<Unit>) -> Unit)?
+    ) = runCatching {
         val onPreloaded = {
             preloaded = true
             showPendingMessage()
@@ -126,7 +133,7 @@ internal class InAppMessageManagerImpl(
         if (toPreload.get() == 0) {
             onPreloaded()
         }
-    }
+    }.logOnException()
 
     private fun pickPendingMessage(requireImageLoaded: Boolean): Pair<InAppMessageShowRequest, InAppMessage>? {
         var pendingMessages: List<Pair<InAppMessageShowRequest, InAppMessage>> = arrayListOf()

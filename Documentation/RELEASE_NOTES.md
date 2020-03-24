@@ -1,11 +1,19 @@
 ## Release Notes
+## Release Notes for 2.7.1
+#### March 24, 2020
+* Features
+  * Push notification accent color setting - you can now set ExponeaConfiguration property `pushAccentColor` to change color of push notification title and buttons.
+  * Improved documentation on handling push notifications and flushing setup.
+* Bug Fixes
+  * Fixed: Occasional crash during in-app message preload.
+  * Fixed: Push notifications deeplinking issue. In some rare cases, push notification with deeplink would not open correctly.
+
 ## Release Notes for 2.7.0
 #### March 02, 2020
 * Features
   * New in-app messages - display rich messages when app starts or an event is tracked - even when offline. This SDK is fully ready for the feature when it is publicly available soon.
 * Bug Fixes
   * Fixed: Rare internal database thread-safety related crash.
-
 
 ## Release Notes for 2.6.3
 #### February 20, 2020

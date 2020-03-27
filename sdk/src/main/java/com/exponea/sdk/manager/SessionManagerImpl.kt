@@ -21,7 +21,7 @@ internal class SessionManagerImpl(
 ) : SessionManager() {
     private val initTime = currentTimeSeconds()
 
-    var application = context as Application
+    var application = context.applicationContext as Application
     private var isListenerActive = false
 
     companion object {

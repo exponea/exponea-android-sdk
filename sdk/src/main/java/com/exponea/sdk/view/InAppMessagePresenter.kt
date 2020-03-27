@@ -64,7 +64,7 @@ internal class InAppMessagePresenter(val context: Context) {
      * We have application context from SDK init, we'll hook into app lifecycle.
      */
     init {
-        (context as Application).registerActivityLifecycleCallbacks(
+        (context.applicationContext as Application).registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityPaused(activity: Activity?) {
                     if (activity == currentActivity) currentActivity = null

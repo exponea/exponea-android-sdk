@@ -236,8 +236,7 @@ object Exponea {
     @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.context = context
         if (isInitialized) {
-            Logger.e(this, "Exponea SDK is already initialized!")
-            return
+            Logger.i(this, "Exponea SDK is already initialized! Removing previous Exponea configuration and resetting everything.")
         }
 
         configuration.validate()

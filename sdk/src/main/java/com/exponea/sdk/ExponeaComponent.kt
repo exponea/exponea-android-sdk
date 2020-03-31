@@ -23,7 +23,9 @@ import com.exponea.sdk.manager.ServiceManager
 import com.exponea.sdk.manager.ServiceManagerImpl
 import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandler
@@ -38,6 +40,7 @@ import com.exponea.sdk.repository.DeviceInitiatedRepository
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
@@ -53,8 +56,8 @@ import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.view.InAppMessagePresenter
 
 internal class ExponeaComponent(
-    exponeaConfiguration: ExponeaConfiguration,
-    context: Context
+    var exponeaConfiguration: ExponeaConfiguration,
+    val context: Context
 ) {
 
     // Preferences
@@ -138,17 +141,29 @@ internal class ExponeaComponent(
         context, preferences, campaignRepository, eventManager, backgroundTimerManager
     )
 
-    fun anonymize() {
+    fun anonymize(
+        exponeaProject: ExponeaProject,
+        projectRouteMap: Map<EventType, List<ExponeaProject>> = hashMapOf()
+    ) {
         val firebaseToken = firebaseTokenRepository.get()
         fcmManager.trackFcmToken(" ", Exponea.tokenTrackFrequency)
+        deviceInitiatedRepository.set(false)
         campaignRepository.clear()
         inAppMessagesCache.clear()
         inAppMessageDisplayStateRepository.clear()
-        eventRepository.clear()
         uniqueIdentifierRepository.clear()
         customerIdsRepository.clear()
         sessionManager.reset()
+
+        exponeaConfiguration.baseURL = exponeaProject.baseUrl
+        exponeaConfiguration.projectToken = exponeaProject.projectToken
+        exponeaConfiguration.authorization = exponeaProject.authorization
+        exponeaConfiguration.projectRouteMap = projectRouteMap
+        ExponeaConfigRepository.set(context, exponeaConfiguration)
+
+        Exponea.trackInstallEvent()
         sessionManager.trackSessionStart(currentTimeSeconds())
         fcmManager.trackFcmToken(firebaseToken, Exponea.tokenTrackFrequency)
+        inAppMessageManager.preload()
     }
 }

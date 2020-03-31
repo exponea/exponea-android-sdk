@@ -21,6 +21,7 @@ import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.FlushMode.APP_CLOSE
@@ -713,9 +714,12 @@ object Exponea {
         component.deviceInitiatedRepository.set(true)
     }
 
-    fun anonymize() = runCatching {
+    fun anonymize(
+        exponeaProject: ExponeaProject = configuration.mainExponeaProject,
+        projectRouteMap: Map<EventType, List<ExponeaProject>> = configuration.projectRouteMap
+    ) = runCatching {
         requireInitialized {
-            component.anonymize()
+            component.anonymize(exponeaProject, projectRouteMap)
         }
     }.logOnException()
 

@@ -63,6 +63,7 @@ data class ExponeaConfiguration(
 #### projectToken
 
 * Is your project token which can be found in the Exponea APP ```Project``` -> ```Overview```
+* If you need to switch project settings during runtime of the application, you can use [Anonymize feature](./ANONYMIZE.md)
 
 #### projectRouteMap
 

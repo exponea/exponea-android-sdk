@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
@@ -129,12 +130,17 @@ internal class FlushManagerImpl(
     }
 
     private fun routeSendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>): Call? {
+        val exponeaProject = ExponeaProject(
+            configuration.baseURL,
+            databaseObject.projectId,
+            configuration.authorization
+        )
         return exponeaService.let {
             when (databaseObject.route) {
-                Route.TRACK_EVENTS -> it.postEvent(databaseObject.projectId, databaseObject.item)
+                Route.TRACK_EVENTS -> it.postEvent(exponeaProject, databaseObject.item)
                 Route.TRACK_CUSTOMERS,
-                Route.CUSTOMERS_PROPERTY -> it.postCustomer(databaseObject.projectId, databaseObject.item)
-                Route.TRACK_CAMPAIGN -> it.postCampaignClick(databaseObject.projectId, databaseObject.item)
+                Route.CUSTOMERS_PROPERTY -> it.postCustomer(exponeaProject, databaseObject.item)
+                Route.TRACK_CAMPAIGN -> it.postCampaignClick(exponeaProject, databaseObject.item)
                 else -> {
                     Logger.e(this, "Couldn't find properly route")
                     return null

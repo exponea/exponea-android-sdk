@@ -5,6 +5,7 @@ import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CampaignClickEvent
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.google.gson.Gson
 import okhttp3.Call
@@ -14,45 +15,45 @@ internal class ExponeaServiceImpl(
     private val networkManager: NetworkHandler
 ) : ExponeaService {
 
-    override fun postCampaignClick(projectToken: String, event: ExportedEventType): Call {
-        return doPost(ApiEndPoint.EndPointName.TRACK_CAMPAIGN, projectToken, CampaignClickEvent(event))
+    override fun postCampaignClick(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_CAMPAIGN, CampaignClickEvent(event))
     }
 
-    override fun postEvent(projectToken: String, event: ExportedEventType): Call {
-        return doPost(ApiEndPoint.EndPointName.TRACK_EVENTS, projectToken, event)
+    override fun postEvent(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_EVENTS, event)
     }
 
-    override fun postCustomer(projectToken: String, event: ExportedEventType): Call {
-        return doPost(ApiEndPoint.EndPointName.TRACK_CUSTOMERS, projectToken, event)
+    override fun postCustomer(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_CUSTOMERS, event)
     }
 
     override fun postFetchAttributes(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         attributesRequest: CustomerAttributesRequest
     ): Call {
-        return doPost(ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES, projectToken, attributesRequest)
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES, attributesRequest)
     }
 
-    override fun getBannerConfiguration(projectToken: String): Call {
+    override fun getBannerConfiguration(exponeaProject: ExponeaProject): Call {
         val endPoint = ApiEndPoint(
                 ApiEndPoint.EndPointName.CONFIGURE_BANNER,
-                projectToken
+                exponeaProject.projectToken
         ).toString()
-        return networkManager.get(endPoint, null)
+        return networkManager.get(exponeaProject.baseUrl + endPoint, exponeaProject.authorization)
     }
 
-    override fun postFetchBanner(projectToken: String, banner: Banner): Call {
-        return doPost(ApiEndPoint.EndPointName.SHOW_BANNER, projectToken, banner)
+    override fun postFetchBanner(exponeaProject: ExponeaProject, banner: Banner): Call {
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.SHOW_BANNER, banner)
     }
 
-    override fun postFetchConsents(projectToken: String): Call {
-        return doPost(ApiEndPoint.EndPointName.CONSENTS, projectToken, null)
+    override fun postFetchConsents(exponeaProject: ExponeaProject): Call {
+        return doPost(exponeaProject, ApiEndPoint.EndPointName.CONSENTS, null)
     }
 
-    override fun postFetchInAppMessages(projectToken: String, customerIds: CustomerIds): Call {
+    override fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call {
         return doPost(
+            exponeaProject,
             ApiEndPoint.EndPointName.IN_APP_MESSAGES,
-            projectToken,
             hashMapOf(
                 "customer_ids" to customerIds.toHashMap(),
                 "device" to "android"
@@ -61,12 +62,12 @@ internal class ExponeaServiceImpl(
     }
 
     private fun doPost(
+        exponeaProject: ExponeaProject,
         endPointName: ApiEndPoint.EndPointName,
-        projectToken: String,
         bodyContent: Any?
     ): Call {
-        val endpoint = ApiEndPoint(endPointName, projectToken).toString()
+        val endpoint = ApiEndPoint(endPointName, exponeaProject.projectToken).toString()
         val jsonBody = bodyContent?.let { gson.toJson(it) }
-        return networkManager.post(endpoint, jsonBody)
+        return networkManager.post(exponeaProject.baseUrl + endpoint, exponeaProject.authorization, jsonBody)
     }
 }

@@ -44,6 +44,9 @@ data class ExponeaConfiguration(
     var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
 ) {
 
+    val mainExponeaProject
+        get() = ExponeaProject(baseURL, projectToken, authorization)
+
     enum class HttpLoggingLevel {
         /** No logs. */
         NONE,

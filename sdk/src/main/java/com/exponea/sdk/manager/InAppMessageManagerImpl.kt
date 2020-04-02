@@ -56,7 +56,7 @@ internal class InAppMessageManagerImpl(
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
         preloaded = false
         fetchManager.fetchInAppMessages(
-            projectToken = configuration.projectToken,
+            exponeaProject = configuration.mainExponeaProject,
             customerIds = customerIdsRepository.get(),
             onSuccess = { result ->
                 inAppMessagesCache.set(result.results)

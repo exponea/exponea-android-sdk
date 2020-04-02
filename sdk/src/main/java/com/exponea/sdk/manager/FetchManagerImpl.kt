@@ -7,6 +7,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.CustomerRecommendationResponse
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Personalization
@@ -65,12 +66,12 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchBannerConfiguration(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.getBannerConfiguration(projectToken).enqueue(
+        api.getBannerConfiguration(exponeaProject).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<Personalization>>>() {},
                 onSuccess,
@@ -80,12 +81,12 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchBanner(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         bannerConfig: Banner,
         onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchBanner(projectToken, bannerConfig).enqueue(
+        api.postFetchBanner(exponeaProject, bannerConfig).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<BannerResult>>>() {},
                 onSuccess,
@@ -95,11 +96,11 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchConsents(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchConsents(projectToken).enqueue(
+        api.postFetchConsents(exponeaProject).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<Consent>>>() {},
                 onSuccess,
@@ -109,12 +110,12 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchRecommendation(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         recommendationRequest: CustomerRecommendationRequest,
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchAttributes(projectToken, recommendationRequest).enqueue(
+        api.postFetchAttributes(exponeaProject, recommendationRequest).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>>>() {},
                 { result: Result<ArrayList<CustomerRecommendationResponse>> ->
@@ -135,12 +136,12 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchInAppMessages(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchInAppMessages(projectToken, customerIds).enqueue(
+        api.postFetchInAppMessages(exponeaProject, customerIds).enqueue(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<InAppMessage>>>() {},
                 onSuccess,

@@ -3,6 +3,6 @@ package com.exponea.sdk.network
 import okhttp3.Call
 
 internal interface NetworkHandler {
-    fun post(endpoint: String, body: String?): Call
-    fun get(endpoint: String, body: String?): Call
+    fun post(url: String, authorization: String?, body: String?): Call
+    fun get(url: String, authorization: String?): Call
 }

@@ -3,6 +3,7 @@ package com.exponea.sdk.testutil.mocks
 import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -22,38 +23,38 @@ internal class ExponeaMockService(
     private val server = ExponeaMockServer.createServer()
     private val dummyUrl = server.url("/").toString()
 
-    override fun postCampaignClick(projectToken: String, event: ExportedEventType): Call {
+    override fun postCampaignClick(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postEvent(projectToken: String, event: ExportedEventType): Call {
+    override fun postEvent(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postCustomer(projectToken: String, event: ExportedEventType): Call {
+    override fun postCustomer(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchConsents(projectToken: String): Call {
+    override fun postFetchConsents(exponeaProject: ExponeaProject): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
     override fun postFetchAttributes(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         attributesRequest: CustomerAttributesRequest
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun getBannerConfiguration(projectToken: String): Call {
+    override fun getBannerConfiguration(exponeaProject: ExponeaProject): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchBanner(projectToken: String, banner: Banner): Call {
+    override fun postFetchBanner(exponeaProject: ExponeaProject, banner: Banner): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchInAppMessages(projectToken: String, customerIds: CustomerIds): Call {
+    override fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

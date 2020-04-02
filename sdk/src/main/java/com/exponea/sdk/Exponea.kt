@@ -326,8 +326,8 @@ object Exponea {
             // TODO map banners id's
             val customerIds = component.customerIdsRepository.get()
             component.personalizationManager.getWebLayer(
+                exponeaProject = configuration.mainExponeaProject,
                 customerIds = customerIds,
-                projectToken = configuration.projectToken,
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
@@ -346,7 +346,7 @@ object Exponea {
     ) = runCatching {
         requireInitialized {
             component.fetchManager.fetchConsents(
-                projectToken = configuration.projectToken,
+                exponeaProject = configuration.mainExponeaProject,
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
@@ -368,7 +368,7 @@ object Exponea {
         requireInitialized {
             val customer = component.customerIdsRepository.get()
             component.fetchManager.fetchRecommendation(
-                projectToken = configuration.projectToken,
+                exponeaProject = configuration.mainExponeaProject,
                 recommendationRequest = CustomerRecommendationRequest(
                     customerIds = customer.toHashMap().filter { e -> e.value != null },
                     options = recommendationOptions
@@ -498,7 +498,7 @@ object Exponea {
     fun showBanners(customerIds: CustomerIds) = runCatching {
         requireInitialized {
             component.personalizationManager.showBanner(
-                projectToken = configuration.projectToken,
+                exponeaProject = configuration.mainExponeaProject,
                 customerIds = customerIds
             )
             telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_BANNER)

@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
@@ -66,7 +67,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(consentsResponse)),
                 ExponeaGson.instance
             ).fetchConsents(
-                "mock-project-token",
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { result ->
                     it.assertEquals(1, result.results.size)
                     it.assertEquals(false, result.results[0].legitimateInterest)
@@ -81,7 +82,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns invalid json`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("{{{{")), ExponeaGson.instance).fetchConsents(
-                "mock-project-token",
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -92,7 +93,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns empty json`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("{}")), ExponeaGson.instance).fetchConsents(
-                "mock-project-token",
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -106,7 +107,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(false, getResponse(consentsResponse)),
                 ExponeaGson.instance
             ).fetchConsents(
-                "mock-project-token",
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )

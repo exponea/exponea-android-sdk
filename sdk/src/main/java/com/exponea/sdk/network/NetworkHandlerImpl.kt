@@ -27,16 +27,7 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
         return Interceptor {
             var request = it.request()
 
-            Logger.d(this, "Server address: ${exponeaConfiguration.baseURL}")
-
-            request = request.newBuilder()
-                    .addHeader("Content-Type", Constants.Repository.contentType)
-                    .addHeader("Authorization", "${exponeaConfiguration.authorization}")
-                    .build()
-
-            if (exponeaConfiguration.authorization?.contains("Basic") == true) {
-                Logger.e(this, "Error: Basic authentication is deprecated. Use Token authentication instead.")
-            }
+            Logger.d(this, "Server address: ${request.url().host()}")
 
             return@Interceptor try {
                 it.proceed(request)
@@ -78,25 +69,31 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
                 .build()
     }
 
-    override fun post(endpoint: String, body: String?): Call {
-        val requestBuilder = Request.Builder()
-                .url(exponeaConfiguration.baseURL + endpoint)
+    private fun request(method: String, url: String, authorization: String?, body: String?): Call {
+        val requestBuilder = Request.Builder().url(url)
+
+        requestBuilder.addHeader("Content-Type", Constants.Repository.contentType)
+        if (authorization != null) {
+            requestBuilder.addHeader("Authorization", authorization)
+        }
 
         if (body != null) {
+            when (method) {
+                "GET" -> requestBuilder.get()
+                "POST" -> requestBuilder.post(RequestBody.create(mediaTypeJson, body))
+                else -> throw RuntimeException("Http method $method not supported.")
+            }
             requestBuilder.post(RequestBody.create(mediaTypeJson, body))
         }
 
         return networkClient.newCall(requestBuilder.build())
     }
 
-    override fun get(endpoint: String, body: String?): Call {
-        val requestBuilder = Request.Builder()
-                .url(exponeaConfiguration.baseURL + endpoint)
+    override fun post(url: String, authorization: String?, body: String?): Call {
+        return request("POST", url, authorization, body)
+    }
 
-        if (body != null) {
-            requestBuilder.method("GET", RequestBody.create(mediaTypeJson, body))
-        }
-
-        return networkClient.newCall(requestBuilder.build())
+    override fun get(url: String, authorization: String?): Call {
+        return request("GET", url, authorization, null)
     }
 }

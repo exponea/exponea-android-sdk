@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.CustomerRecommendationRequest
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
@@ -37,7 +38,7 @@ internal class FetchManagerRecommendationTest {
                 ExponeaMockService(true, getResponse(mockResponse)),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                "mock-project-token",
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerRecommendationRequest(
                     customerIds = hashMapOf("cookie" to "mock-cookie"),
                     options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)

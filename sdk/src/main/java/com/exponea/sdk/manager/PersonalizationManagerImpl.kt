@@ -7,6 +7,7 @@ import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.Personalization
 import com.exponea.sdk.models.Result
@@ -27,13 +28,13 @@ internal class PersonalizationManagerImpl(
 
     private var preferencesIds: MutableList<String> = mutableListOf()
 
-    override fun showBanner(projectToken: String, customerIds: CustomerIds) {
+    override fun showBanner(exponeaProject: ExponeaProject, customerIds: CustomerIds) {
         getBannersConfiguration(
-                projectToken = projectToken,
+                exponeaProject = exponeaProject,
                 customerIds = customerIds,
                 onSuccess = {
                     if (canShowBanner(it.results)) {
-                        getPersonalization(projectToken, customerIds)
+                        getPersonalization(exponeaProject, customerIds)
                     }
                 },
                 onFailure = {
@@ -47,14 +48,14 @@ internal class PersonalizationManagerImpl(
      */
 
     override fun getBannersConfiguration(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<Personalization>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
 
         fetchManager.fetchBannerConfiguration(
-                projectToken = projectToken,
+                exponeaProject = exponeaProject,
                 customerIds = customerIds,
                 onSuccess = onSuccess,
                 onFailure = onFailure
@@ -65,12 +66,12 @@ internal class PersonalizationManagerImpl(
      * Call the fetch manager and get the banner.
      */
 
-    override fun getPersonalization(projectToken: String, customerIds: CustomerIds) {
+    override fun getPersonalization(exponeaProject: ExponeaProject, customerIds: CustomerIds) {
 
         val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
 
         fetchManager.fetchBanner(
-                projectToken = projectToken,
+                exponeaProject = exponeaProject,
                 bannerConfig = banner,
                 onSuccess = {
                     val data = it.results.first()
@@ -86,18 +87,18 @@ internal class PersonalizationManagerImpl(
      * Fetches personalized banners
      */
     override fun getWebLayer(
-        projectToken: String,
+        exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
         getBannersConfiguration(
-            projectToken = projectToken,
+            exponeaProject = exponeaProject,
             customerIds = customerIds,
             onSuccess = {
                 if (canShowBanner(it.results)) {
                     val banner = Banner(customerIds = customerIds, personalizationIds = preferencesIds)
-                    fetchManager.fetchBanner(projectToken, banner, onSuccess, onFailure)
+                    fetchManager.fetchBanner(exponeaProject, banner, onSuccess, onFailure)
                 }
             },
             onFailure = {

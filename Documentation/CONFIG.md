@@ -12,7 +12,7 @@ data class ExponeaConfiguration(
   var projectToken: String = "",
 
   // Map event types and project tokens to be send to Exponea API.
-  var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
+  var projectRouteMap: Map<EventType, List<ExponeaProject>> = mapOf()
 
   // Authorization http header.
   var authorization: String? = null,
@@ -64,16 +64,21 @@ data class ExponeaConfiguration(
 
 * Is your project token which can be found in the Exponea APP ```Project``` -> ```Overview```
 
-#### projectTokenRouteMap
+#### projectRouteMap
 
-* In case you have more than one project token to track for one event, you should provide which "Routes" (tracking events) each project token should be track.
+* In case you have more than one project to track for one event, you should provide which "Routes" (tracking events) each project token should be track.
 
 Eg:
 
 ``` kotlin
-var projectTokenRouteMap = hashMapOf<EventType, MutableList<String>> (
-        Pair(EventType.TRACK_CUSTOMER, mutableListOf("ProjectTokenA", "ProjectTokenB")),
-        Pair(EventType.TRACK_EVENT, mutableListOf("ProjectTokenA", "ProjectTokenC"))
+var projectRouteMap = mapOf<EventType, List<ExponeaProject>> (
+    EventType.TRACK_CUSTOMER to listOf(
+        ExponeaProject(
+            "https://api.exponea.com",
+            "project-token",
+            "Token authorization-token"
+        )
+    )
 )
 ```
 

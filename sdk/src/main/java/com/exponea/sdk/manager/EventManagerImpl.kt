@@ -26,15 +26,6 @@ internal class EventManagerImpl(
     fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
         Logger.d(this, "addEventToQueue")
 
-        // Get our default token
-        val defaultToken = configuration.projectToken
-        // Load our token map
-        var routeTokenMap = configuration.projectTokenRouteMap[eventType] ?: arrayListOf()
-        // Add our default token to our token map
-        routeTokenMap.add(defaultToken)
-        // Remove all non unique ids
-        routeTokenMap = routeTokenMap.distinct().toMutableList()
-
         val route = when (eventType) {
             EventType.TRACK_CUSTOMER -> Route.TRACK_CUSTOMERS
             EventType.PUSH_TOKEN -> Route.TRACK_CUSTOMERS
@@ -42,11 +33,14 @@ internal class EventManagerImpl(
             else -> Route.TRACK_EVENTS
         }
 
-        for (projectId in routeTokenMap) {
+        var projects = arrayListOf(configuration.mainExponeaProject)
+        projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
+        for (project in projects.distinct()) {
             val databaseStorageObject = DatabaseStorageObject(
-                    projectId = projectId,
+                    projectId = project.projectToken,
                     item = event,
-                    route = route
+                    route = route,
+                    exponeaProject = project
             )
             Logger.d(this, "Added Event To Queue: ${databaseStorageObject.id}")
             eventRepository.add(databaseStorageObject)

@@ -6,6 +6,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -78,15 +79,21 @@ internal class EventManagerTest : ExponeaSDKTest() {
             ),
             addedEvents.first().item
         )
-        assertEquals("mock-project-token", addedEvents.first().projectId)
+        assertEquals(
+            ExponeaProject("https://api.exponea.com", "mock-project-token", null),
+            addedEvents.first().exponeaProject
+        )
     }
 
     @Test
-    fun `should track event for all project tokens`() {
+    fun `should track event for all projects`() {
         setup(
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
-                projectTokenRouteMap = hashMapOf(EventType.INSTALL to arrayListOf("token1", "token2"))
+                projectRouteMap = hashMapOf(EventType.INSTALL to arrayListOf(
+                    ExponeaProject("mock_base_url1.com", "token1", "mock_auth"),
+                    ExponeaProject("mock_base_url2.com", "token2", "mock_auth")
+                ))
             ),
             FlushMode.MANUAL
         )
@@ -97,9 +104,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         assertEquals(3, addedEvents.size)
-        assertEquals("token1", addedEvents[0].projectId)
-        assertEquals("token2", addedEvents[1].projectId)
-        assertEquals("mock-project-token", addedEvents[2].projectId)
+        assertEquals(
+            ExponeaProject("https://api.exponea.com", "mock-project-token", null),
+            addedEvents[0].exponeaProject
+        )
+        assertEquals(
+            ExponeaProject("mock_base_url1.com", "token1", "mock_auth"),
+            addedEvents[1].exponeaProject
+        )
+        assertEquals(
+            ExponeaProject("mock_base_url2.com", "token2", "mock_auth"),
+            addedEvents[2].exponeaProject
+        )
     }
 
     @Test

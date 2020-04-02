@@ -6,8 +6,8 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 data class ExponeaConfiguration(
     /** Default project token. */
     var projectToken: String = "",
-    /** Map event types and project tokens to be send to Exponea API. */
-    var projectTokenRouteMap: HashMap<EventType, MutableList<String>> = hashMapOf(),
+    /** Map event types and projects to be send to Exponea API. */
+    var projectRouteMap: Map<EventType, List<ExponeaProject>> = mapOf(),
     /** Authorization http header. */
     var authorization: String? = null,
     /** Base url for http requests to Exponea API. */

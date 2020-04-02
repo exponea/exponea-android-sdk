@@ -130,7 +130,8 @@ internal class FlushManagerImpl(
     }
 
     private fun routeSendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>): Call? {
-        val exponeaProject = ExponeaProject(
+        // for older event in database without exponeaProject, fallback to current configuration data
+        val exponeaProject = databaseObject.exponeaProject ?: ExponeaProject(
             configuration.baseURL,
             databaseObject.projectId,
             configuration.authorization

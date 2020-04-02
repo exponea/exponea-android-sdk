@@ -1,22 +1,32 @@
 ## 🌋 Project Mapping
 
-Exponea SDK has the ability to track multiple project tokens for specifics event type to your project.
+Exponea SDK has the ability to track events of specified event types into multiple projects.
 
-We provided a configuration where you can inform what event types should be identifyed by a list of project tokens.
+Configuration contains a map where you can specify event types and projects into which you'd like to track events. A project is identified by it's baseUrl, project token and authorization token.
+
+Events are always tracked into default project and to all projects that you specify in the mapping.
 
 Eg:
 
-If you want to identify the project tokens `TOKEN_001` and `TOKEN_002` for the event type `TRACK_CUSTOMER` you should configure the `projectTokenRouteMap` in the configuration object as:
+If you want to track push notification opened events to projects `project-a` and `project-b` you should configure the `projectRouteMap` in the configuration object as:
 
-```
-var projectTokenRouteMap = hashMapOf<EventType, MutableList<String>> (
-        Pair(EventType.TRACK_CUSTOMER, mutableListOf("TOKEN_001", "TOKEN_002"))
+``` kotlin
+val configuration = ExponeaConfiguration(
+    baseURL = "https://api.exponea.com",
+    projectToken = "default-project",
+    authorization = "Token some-token",
+    projectRouteMap = mapOf(
+        EventType.PUSH_OPENED to listOf(
+            ExponeaProject("https://api.exponea.com", "project-a", "Token token-a"),
+            ExponeaProject("https://api.exponea.com", "project-b", "Token token-b")
+        )
+    )
 )
 ```
 
-When the Exponea SDK will flush this event to the Exponea API, the event will be fired twice with the same parameters, just changing the project token, which means that you will see the same event in the project `TOKEN_001` and `TOKEN_002`.
+When push notification is opened, Exponea SDK will track the event three times with the same parameters, just changing the project. Which means that you will see the same event in the projects `default-project`, `project-a` and `project-b`.
 
-You can map as many projects tokens you want for the specifics event types:
+Project mapping can be used for these specific event types:
 
 ```
 enum class EventType {

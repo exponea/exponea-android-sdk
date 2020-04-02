@@ -4,6 +4,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.database.ExponeaDatabaseImpl
 import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
@@ -21,7 +22,6 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
 
     companion object {
         const val DB_NAME = "TestDatabase"
-        const val MOCK_PROJECT_ID = "projectId"
     }
 
     class Person(
@@ -32,8 +32,9 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     private lateinit var db: ExponeaDatabase<DatabaseStorageObject<Person>>
     private val mockData = DatabaseStorageObject(
         item = Person("first name", "second name"),
-        projectId = MOCK_PROJECT_ID,
-        route = Route.TRACK_EVENTS
+        projectId = "mock_project_id",
+        route = Route.TRACK_EVENTS,
+        exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
     )
 
     @Before
@@ -84,8 +85,9 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
                         db.add(
                             DatabaseStorageObject(
                                 item = Person("first name $i $x", "second name"),
-                                projectId = MOCK_PROJECT_ID,
-                                route = Route.TRACK_EVENTS
+                                projectId = "mock_project_id",
+                                route = Route.TRACK_EVENTS,
+                                exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
                             )
                         )
                     }

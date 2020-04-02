@@ -2,6 +2,7 @@ package com.exponea.sdk.telemetry
 
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -179,7 +180,7 @@ internal class TelemetryUtilityTest {
             assertEquals(
                 hashMapOf(
                     "projectToken" to "[REDACTED]",
-                    "projectTokenRouteMap" to "[REDACTED]",
+                    "projectRouteMap" to "[REDACTED]",
                     "automaticSessionTracking" to "true [default]",
                     "maxTries" to "10 [default]",
                     "pushIcon" to "null [default]",
@@ -198,7 +199,9 @@ internal class TelemetryUtilityTest {
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
                     projectToken = "mock_project_token",
-                    projectTokenRouteMap = hashMapOf(EventType.INSTALL to arrayListOf("mock_project_id")),
+                    projectRouteMap = hashMapOf(EventType.INSTALL to arrayListOf(
+                        ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                    )),
                     automaticPushNotification = false
                 ))
             )

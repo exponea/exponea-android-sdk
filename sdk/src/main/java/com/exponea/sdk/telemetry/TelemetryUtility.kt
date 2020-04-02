@@ -62,8 +62,8 @@ object TelemetryUtility {
         return hashMapOf(
             "projectToken"
                 to if (configuration.projectToken.isNotBlank()) "[REDACTED]" else "",
-            "projectTokenRouteMap"
-                to if (configuration.projectTokenRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
+            "projectRouteMap"
+                to if (configuration.projectRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
             "baseURL"
                 to formatConfigurationProperty(ExponeaConfiguration::baseURL),
             "httpLoggingLevel"

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
@@ -41,35 +42,56 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         manager = FlushManagerImpl(configuration, repo, service, connectionManager)
     }
 
-    private fun createTestEvent() {
+    private fun createTestEvent(includeProject: Boolean) {
         repo.add(DatabaseStorageObject(
-            projectId = "mock-project-id",
+            projectId = "old-project-id",
             item = ExportedEventType(
                 type = "test_event",
                 timestamp = System.currentTimeMillis() / 1000.0,
                 customerIds = hashMapOf(),
                 properties = hashMapOf("property" to "value")
             ),
-            route = Route.TRACK_EVENTS
+            route = Route.TRACK_EVENTS,
+            exponeaProject = if (includeProject)
+                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                else null
         ))
     }
 
     @Test
     fun `should flush event`() {
         setup(connected = true, serviceSuccess = true)
-        createTestEvent()
+        createTestEvent(true)
         waitForIt {
             manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
         }
+        verify {
+            service.postEvent(ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"), any())
+        }
+    }
+
+    @Test
+    fun `should flush old event without exponea project`() {
+        setup(connected = true, serviceSuccess = true)
+        createTestEvent(false)
+        waitForIt {
+            manager.flushData { _ ->
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+        }
+        verify {
+            service.postEvent(ExponeaProject("https://api.exponea.com", "old-project-id", null), any())
+        }
     }
 
     @Test
     fun `should fail to flush without internet connection`() {
         setup(connected = false, serviceSuccess = true)
-        createTestEvent()
+        createTestEvent(true)
         every { connectionManager.isConnectedToInternet() } returns false
         waitForIt {
             manager.flushData { _ ->
@@ -83,7 +105,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun `should increase tries on flush failure`() {
         setup(connected = true, serviceSuccess = false)
-        createTestEvent()
+        createTestEvent(true)
 
         waitForIt {
             manager.flushData { _ ->
@@ -97,7 +119,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun `should delete event on max tries reached`() {
         setup(connected = true, serviceSuccess = false)
-        createTestEvent()
+        createTestEvent(true)
 
         val event = repo.all().first()
         event.tries = 10
@@ -114,7 +136,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun `should only flush once`() {
         setup(connected = true, serviceSuccess = false)
-        createTestEvent()
+        createTestEvent(true)
 
         waitForIt {
             var done = 0

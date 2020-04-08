@@ -107,7 +107,7 @@ internal class InAppMessagePresenter(val context: Context) {
         when (messageType) {
             InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {
                 val intent = Intent(context, InAppMessageActivity::class.java)
-                context.startActivity(intent)
+                activity.startActivity(intent)
             }
             InAppMessageType.SLIDE_IN -> {
                 getView(

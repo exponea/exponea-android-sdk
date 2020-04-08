@@ -37,7 +37,8 @@ internal fun Call.enqueue(
 }
 
 internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
-    (this as Application).registerActivityLifecycleCallbacks(object :
+    val application = this.applicationContext as Application
+    application.registerActivityLifecycleCallbacks(object :
             Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
         override fun onActivityResumed(activity: Activity?) {

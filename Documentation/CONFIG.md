@@ -20,9 +20,6 @@ data class ExponeaConfiguration(
   // Base url for http requests to Exponea API.
   var baseURL: String = Constants.Repository.baseURL,
 
-  // Content type value to make http requests.
-  var contentType: String = Constants.Repository.contentType,
-
   // Maximum retries value to flush data to api.
   var maxTries: Int = 10,
 
@@ -94,11 +91,6 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 
 * If you have you custom base URL, you can set up this property.
 * Default value `https://api.exponea.com`
-
-#### contentType
-
-* Content type value to make http requests.
-* Default value `application/json`
 
 #### maxTries
 

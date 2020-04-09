@@ -68,8 +68,6 @@ object TelemetryUtility {
                 to formatConfigurationProperty(ExponeaConfiguration::baseURL),
             "httpLoggingLevel"
                 to formatConfigurationProperty(ExponeaConfiguration::httpLoggingLevel),
-            "contentType"
-                to formatConfigurationProperty(ExponeaConfiguration::contentType),
             "maxTries"
                 to formatConfigurationProperty(ExponeaConfiguration::maxTries),
             "sessionTimeout"

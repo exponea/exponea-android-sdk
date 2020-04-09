@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.7.2
+#### April 09, 2020
+* Features
+  * Switching projects in `anonymize()` method. If you need to switch projects, you can use `anonymize()` method to create a new customer and start fresh tracking into a new project. Please see [ANONYMIZE.md](./ANONYMIZE.md) for more information.
+* Bug Fixes
+  * Fixed: When the app was opened from a push notifications, in-app messages would not initialize properly and would not show until the app is restarted.
+  * Fixed: When the SDK was initialized with the application context instead of the activity context, in-app messages would not show properly.
+  * Fixed: Tracking to multiple projects. It now requires both project token and authorization token. Please see [PROJECT_MAPPING.md](./PROJECT_MAPPING.md).
+
+
 ## Release Notes for 2.7.1
 #### March 24, 2020
 * Features

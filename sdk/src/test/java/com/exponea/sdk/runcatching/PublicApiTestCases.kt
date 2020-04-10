@@ -50,10 +50,6 @@ internal object PublicApiTestCases {
             { Exponea.anonymize() }
         ),
         Pair(
-            Exponea::showBanners,
-            { Exponea.showBanners(CustomerIds()) }
-        ),
-        Pair(
             Exponea::identifyCustomer,
             { Exponea.identifyCustomer(CustomerIds(), PropertiesList(hashMapOf())) }
         ),
@@ -64,10 +60,6 @@ internal object PublicApiTestCases {
         Pair(
             Exponea::getConsents,
             { Exponea.getConsents({}, {}) }
-        ),
-        Pair(
-            Exponea::getPersonalizationWebLayer,
-            { Exponea.getPersonalizationWebLayer({}, {}) }
         ),
         Pair(
             Exponea::handleCampaignIntent,

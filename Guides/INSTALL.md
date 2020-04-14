@@ -5,7 +5,7 @@
 2. Add ExponeaSDK dependency and sync your project
 ```groovy
 dependencies {
-    compile 'com.exponea.sdk:sdk:1.1.7'
+    implementation 'com.exponea.sdk:sdk:2.7.2'
 }
 ```
 3. After synchronisation is complete, you can start using SDK
@@ -86,7 +86,7 @@ If you are using configuration from file you code above could be simplified
 ```
 override fun onCreate(){
     super.onCreate()    
-    Exponea.initFromFile(this)
+    Exponea.init(this)
 }
 ```
 

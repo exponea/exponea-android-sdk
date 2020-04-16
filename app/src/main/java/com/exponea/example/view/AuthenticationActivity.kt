@@ -3,12 +3,9 @@ package com.exponea.example.view
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
-import com.exponea.example.BuildConfig
 import com.exponea.example.R
 import com.exponea.example.utils.isVaildUrl
 import com.exponea.example.utils.isValid
@@ -46,23 +43,6 @@ class AuthenticationActivity : AppCompatActivity() {
             } else {
                 initSdk()
             }
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.auth_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        return when (item?.itemId) {
-            R.id.button_fill_fields -> {
-                editTextAuthCode.setText(BuildConfig.AuthorizationToken)
-                editTextProjectToken.setText(BuildConfig.DefaultProjectToken)
-                editTextApiUrl.setText(BuildConfig.DefaultApiUrl)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 

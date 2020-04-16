@@ -12,10 +12,6 @@ android {
         versionCode 41
         versionName "2.7.2"
         vectorDrawables.useSupportLibrary = true
-
-        buildConfigField "String", "AuthorizationToken", "\"Token oy5ue7s1w0wedcz1uqf4x15jesucdfnujy9tm6ig7su3wuykvoixnpl37lek9bgr\""
-        buildConfigField "String", "DefaultProjectToken", "\"b7a5ab42-91fb-11e9-a458-0a580a20155b\""
-        buildConfigField "String", "DefaultApiUrl", "\"https://api-analytics.5.gdev.exponea.com\""
     }
     buildTypes {
         release {

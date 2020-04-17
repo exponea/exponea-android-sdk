@@ -1,0 +1,77 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'io.codearte.nexus-staging'
+
+ext["signing.keyId"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_KEY_ID')
+ext["signing.password"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_PASSWORD')
+ext["signing.secretKeyRingFile"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_SECRET_KEY_RING_FILE')
+ext["ossrhUsername"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_USERNAME')
+ext["ossrhPassword"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_PASSWORD')
+
+task androidSourcesJar(type: Jar) {
+    classifier 'sources'
+    from android.sourceSets.main.java.source
+}
+
+nexusStaging {
+    packageGroup = 'com.exponea'
+    username = ossrhUsername
+    password = ossrhPassword
+}
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            sdk(MavenPublication) {
+                from components.release
+                groupId 'com.exponea.sdk'
+                artifactId 'sdk'
+                version android.defaultConfig.versionName
+
+                artifact androidSourcesJar
+
+                pom {
+                    name = 'Exponea Sdk Library'
+                    packaging 'aar'
+                    description = 'Exponea Sdk Library'
+                    url = 'https://github.com/exponea/exponea-android-sdk'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'exponea'
+                            name = 'Exponea'
+                            email = 'contact@exponea.com'
+                        }
+                    }
+                    scm {
+                        url = 'https://github.com/exponea/exponea-android-sdk/tree/master'
+                        connection = 'scm:https://github.com/exponea/exponea-android-sdk.git'
+                    }
+                    issueManagement {
+                        system = 'GitHub issues'
+                        url = 'https://github.com/exponea/exponea-android-sdk/issues'
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                name = 'sonatype'
+                url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                credentials {
+                    username ossrhUsername
+                    password ossrhPassword
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications
+}

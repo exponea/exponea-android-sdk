@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'maven'
 apply plugin: 'kotlin-android-extensions'
-apply from: 'maven-push.gradle'
+apply from: 'publish-maven.gradle'
 apply from: '../jacoco.gradle'
 
 android {
@@ -76,18 +76,4 @@ dependencies {
     testImplementation "io.mockk:mockk:1.9.3"
     // WorkManager testing
     testImplementation 'androidx.work:work-testing:2.3.4'
-}
-
-task installArchives(type: Upload) {
-    group = "maven"
-    description "Installs the artifacts to the local Maven repository."
-    configuration = configurations['archives']
-    repositories {
-        mavenDeployer {
-            pom.groupId = 'com.exponea.sdk'
-            pom.artifactId = 'sdk'
-            pom.version = '1.1-LOCAL'
-            repository url: repositories.mavenLocal().url
-        }
-    }
 }

@@ -53,34 +53,64 @@ internal data class InAppMessage(
             return true
         }
         if (dateFilter.fromDate != null && dateFilter.fromDate > currentTimeSeconds) {
+            Logger.i(this, "Message '${this.name}' outside of date range.")
             return false
         }
         if (dateFilter.toDate != null && dateFilter.toDate < currentTimeSeconds) {
+            Logger.i(this, "Message '${this.name}' outside of date range.")
             return false
         }
         return true
     }
 
     fun applyEventFilter(eventType: String, properties: Map<String, Any?>, timestamp: Double?): Boolean {
-        return try {
-            trigger?.passes(EventFilterEvent(eventType, properties, timestamp)) ?: false
+        try {
+            if (trigger == null) {
+                Logger.i(this, "No event trigger found for message '${this.name}'.")
+                return false
+            }
+            val passes = trigger.passes(EventFilterEvent(eventType, properties, timestamp))
+            if (!passes) {
+                Logger.i(
+                    this,
+                    "Message '${this.name}' failed event filter. " +
+                        "Message filter: ${this.trigger.serialize()} " +
+                        "Event type: $eventType properties: $properties timestamp: $timestamp"
+                )
+            }
+            return passes
         } catch (e: Throwable) {
-            Logger.e(this, "Applying event filter failed. $e")
-            false
+            Logger.e(this, "Applying event filter for message '${this.name}' failed. $e")
+            return false
         }
     }
 
     fun applyFrequencyFilter(displayState: InAppMessageDisplayState, sessionStartDate: Date): Boolean {
-        return when (frequency) {
+        when (frequency) {
             InAppMessageFrequency.ALWAYS ->
-                true
-            InAppMessageFrequency.ONLY_ONCE ->
-                displayState.displayed == null
-            InAppMessageFrequency.ONCE_PER_VISIT ->
-                displayState.displayed == null || displayState.displayed.before(sessionStartDate)
-            InAppMessageFrequency.UNTIL_VISITOR_INTERACTS ->
-                displayState.interacted == null
-            else -> true
+                return true
+            InAppMessageFrequency.ONLY_ONCE -> {
+                val shouldDisplay = displayState.displayed == null
+                if (!shouldDisplay) {
+                    Logger.i(this, "Message '${this.name}' already displayed.")
+                }
+                return shouldDisplay
+            }
+            InAppMessageFrequency.ONCE_PER_VISIT -> {
+                val shouldDisplay = displayState.displayed == null || displayState.displayed.before(sessionStartDate)
+                if (!shouldDisplay) {
+                    Logger.i(this, "Message '${this.name}' already displayed in this session.")
+                }
+                return shouldDisplay
+            }
+            InAppMessageFrequency.UNTIL_VISITOR_INTERACTS -> {
+                val shouldDisplay = displayState.interacted == null
+                if (!shouldDisplay) {
+                    Logger.i(this, "Message '${this.name}' already interacted with.")
+                }
+                return shouldDisplay
+            }
+            else -> return true
         }
     }
 }

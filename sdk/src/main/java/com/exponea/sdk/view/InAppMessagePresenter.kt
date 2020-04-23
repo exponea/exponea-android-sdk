@@ -9,6 +9,7 @@ import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessagePresenter(val context: Context) {
@@ -89,8 +90,14 @@ internal class InAppMessagePresenter(val context: Context) {
         actionCallback: (InAppMessagePayloadButton) -> Unit,
         dismissedCallback: () -> Unit
     ): PresentedMessage? = runCatching {
+        Logger.i(this, "Attempting to present in-app message.")
         val activity = currentActivity
-        if (presentedMessage != null || activity == null) {
+        if (presentedMessage != null) {
+            Logger.i(this, "Already presenting another in-app message.")
+            return null
+        }
+        if (activity == null) {
+            Logger.w(this, "No activity available to present in-app message.")
             return null
         }
         val presenterActionCallback = { button: InAppMessagePayloadButton ->
@@ -120,8 +127,10 @@ internal class InAppMessagePresenter(val context: Context) {
                 )?.show()
             }
         }
+        Logger.i(this, "In-app message presented.")
         return presentedMessage
     }.returnOnException {
+        Logger.w(this, "Presenting in-app message failed. $it")
         presentedMessage = null
         null
     }

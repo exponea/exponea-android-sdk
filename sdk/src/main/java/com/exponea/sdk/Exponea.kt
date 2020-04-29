@@ -54,6 +54,16 @@ object Exponea {
     internal var telemetry: TelemetryManager? = null
 
     /**
+     * Cookie of the current customer. Null before the SDK is initialized
+     */
+    val customerCookie: String?
+        get() = runCatching {
+            return if (isInitialized) component.customerIdsRepository.get().cookie else null
+        }.returnOnException {
+            null
+        }
+
+    /**
      * Defines which mode the library should flush out events
      */
     var flushMode: FlushMode = Constants.Flush.defaultFlushMode

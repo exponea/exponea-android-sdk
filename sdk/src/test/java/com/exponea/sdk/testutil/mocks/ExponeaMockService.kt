@@ -1,6 +1,5 @@
 package com.exponea.sdk.testutil.mocks
 
-import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaProject
@@ -43,14 +42,6 @@ internal class ExponeaMockService(
         exponeaProject: ExponeaProject,
         attributesRequest: CustomerAttributesRequest
     ): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun getBannerConfiguration(exponeaProject: ExponeaProject): Call {
-        return if (success) mockSuccessCall() else mockFailCall()
-    }
-
-    override fun postFetchBanner(exponeaProject: ExponeaProject, banner: Banner): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

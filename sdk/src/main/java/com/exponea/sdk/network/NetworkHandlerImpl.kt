@@ -1,6 +1,5 @@
 package com.exponea.sdk.network
 
-import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 import okhttp3.Call
@@ -72,7 +71,7 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
     private fun request(method: String, url: String, authorization: String?, body: String?): Call {
         val requestBuilder = Request.Builder().url(url)
 
-        requestBuilder.addHeader("Content-Type", Constants.Repository.contentType)
+        requestBuilder.addHeader("Content-Type", "application/json")
         if (authorization != null) {
             requestBuilder.addHeader("Authorization", authorization)
         }

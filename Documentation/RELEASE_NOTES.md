@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.7.3
+#### May 01, 2020
+* Features
+  * Retrieve the cookie of the current customer used for tracking by calling `Exponea.customerCookie`.
+  * Improved logging for in-app messages explaining why each message should/shouldn’t be displayed.
+* Bug Fixes
+  * Fixed: Updated Gradle and removed unused dependencies.
+  * Removed: Legacy banners implementation that wasn’t working properly
+
+
 ## Release Notes for 2.7.2
 #### April 09, 2020
 * Features

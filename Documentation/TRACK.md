@@ -1,6 +1,12 @@
-## 🔍 Track Events
+## 🔍 Tracking
+Exponea SDK allows you to track events that occur while using the app and add properties of your customer. When SDK is first initialized we generate a cookie for the customer that will be used for all the tracking. You can retrieve that cookie using `Exponea.customerCookie`.
 
-You can define any event types for each of your project based on your business model or your current goals. If you have product e-commerce website, your basic customer journey will probably/most likely be:
+> If you need to reset the tracking and start fresh with a new user, you can use [Anonymize](./ANONYMIZE.md) functionality.
+
+## 🔍 Tracking Events
+> Some events are tracked automatically. We track installation event once for every customer and when `automaticSessionTracking` is enabled in [ExponeaConfiguration](./CONFIG.md) we automatically track session events.
+
+You can define any event types for each of your projects based on your business model or your current goals. If you have product e-commerce website, your basic customer journey will probably/most likely be:
 
 * Visiting your App
 * Searching for specific product
@@ -37,7 +43,7 @@ Exponea.trackEvent(
 
 ## 🔍 Default Properties
 
-It's possible to set values in the [`ExponeaConfiguration`](../Documentation/CONFIG.md) to be sent in every tracking event. Notice that those values will be overwritten if the tracking event has properties with the same key name.
+It's possible to set values in the [ExponeaConfiguration](../Documentation/CONFIG.md) to be sent in every tracking event. Notice that those values will be overwritten if the tracking event has properties with the same key name.
 
 #### 💻 Usage
 
@@ -51,7 +57,7 @@ configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
 Exponea.init(App.instance, configuration)
 ```
 
-## 🔍 Customer Properties
+## 🔍 Tracking Customer Properties
 
 #### identify Customer
 

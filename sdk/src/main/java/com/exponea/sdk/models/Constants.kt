@@ -6,24 +6,6 @@ internal object Constants {
     // Network
     object Repository {
         val baseURL: String = "https://api.exponea.com"
-        val contentType: String = "application/json"
-        val headerContentType: String = "content-type"
-        val headerAccept: String = "accept"
-        val headerContentLenght: String = "content-length"
-        val headerAuthorization: String = "authorization"
-    }
-
-    // Keys for plist files and userdefaults
-    object Keys {
-        val token: String = "exponeaProjectIdKey"
-        val authorization: String = "exponeaAuthorization"
-        val launchedBefore: String = "launchedBefore"
-        val sessionStarted: String = "sessionStarted"
-        val sessionEnded: String = "sessionEnded"
-        val timeout: String = "sessionTimeout"
-        val autoSessionTrack: String = "automaticSessionTrack"
-        val appVersion: String = "CFBundleShortVersionString"
-        val baseURL: String = "exponeaBaseURL"
     }
 
     // SDK Info
@@ -50,7 +32,6 @@ internal object Constants {
 
     // General constants
     object General {
-        val GooglePlay: String = "Google Play Store"
         val bannerFilename: String = "personalization"
         val bannerFilenameExt: String = "html"
         val bannerFullFilename: String = "personalization.html"

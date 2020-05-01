@@ -1,7 +1,6 @@
 package com.exponea.sdk.network
 
 import com.exponea.sdk.models.ApiEndPoint
-import com.exponea.sdk.models.Banner
 import com.exponea.sdk.models.CampaignClickEvent
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
@@ -32,18 +31,6 @@ internal class ExponeaServiceImpl(
         attributesRequest: CustomerAttributesRequest
     ): Call {
         return doPost(exponeaProject, ApiEndPoint.EndPointName.CUSTOMERS_ATTRIBUTES, attributesRequest)
-    }
-
-    override fun getBannerConfiguration(exponeaProject: ExponeaProject): Call {
-        val endPoint = ApiEndPoint(
-                ApiEndPoint.EndPointName.CONFIGURE_BANNER,
-                exponeaProject.projectToken
-        ).toString()
-        return networkManager.get(exponeaProject.baseUrl + endPoint, exponeaProject.authorization)
-    }
-
-    override fun postFetchBanner(exponeaProject: ExponeaProject, banner: Banner): Call {
-        return doPost(exponeaProject, ApiEndPoint.EndPointName.SHOW_BANNER, banner)
     }
 
     override fun postFetchConsents(exponeaProject: ExponeaProject): Call {

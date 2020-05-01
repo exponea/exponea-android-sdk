@@ -10,7 +10,6 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.ConfigurationFileManager
-import com.exponea.sdk.models.BannerResult
 import com.exponea.sdk.models.CampaignClickInfo
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
@@ -53,6 +52,16 @@ object Exponea {
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
     internal var telemetry: TelemetryManager? = null
+
+    /**
+     * Cookie of the current customer. Null before the SDK is initialized
+     */
+    val customerCookie: String?
+        get() = runCatching {
+            return if (isInitialized) component.customerIdsRepository.get().cookie else null
+        }.returnOnException {
+            null
+        }
 
     /**
      * Defines which mode the library should flush out events
@@ -315,28 +324,6 @@ object Exponea {
     }.logOnException()
 
     /**
-     * Fetches banners web representation
-     * @param onSuccess - success callback, when data is ready
-     * @param onFailure - failure callback, in case of errors
-     */
-    fun getPersonalizationWebLayer(
-        onSuccess: (Result<ArrayList<BannerResult>>) -> Unit,
-        onFailure: (Result<FetchError>) -> Unit
-    ) = runCatching {
-        requireInitialized {
-            // TODO map banners id's
-            val customerIds = component.customerIdsRepository.get()
-            component.personalizationManager.getWebLayer(
-                exponeaProject = configuration.mainExponeaProject,
-                customerIds = customerIds,
-                onSuccess = onSuccess,
-                onFailure = onFailure
-            )
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_PERSONALIZATION)
-        }
-    }.logOnException()
-
-    /**
      * Fetch the list of your existing consent categories.
      * @param onSuccess - success callback, when data is ready
      * @param onFailure - failure callback, in case of errors
@@ -488,21 +475,6 @@ object Exponea {
                 type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
                 timestamp = timestamp
             )
-        }
-    }.logOnException()
-
-    /**
-     * Opens a WebView showing the personalized page with the
-     * banners for a specific customer.
-     */
-
-    fun showBanners(customerIds: CustomerIds) = runCatching {
-        requireInitialized {
-            component.personalizationManager.showBanner(
-                exponeaProject = configuration.mainExponeaProject,
-                customerIds = customerIds
-            )
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_BANNER)
         }
     }.logOnException()
 

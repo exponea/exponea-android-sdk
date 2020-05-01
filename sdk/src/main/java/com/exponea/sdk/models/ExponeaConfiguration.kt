@@ -14,8 +14,6 @@ data class ExponeaConfiguration(
     var baseURL: String = Constants.Repository.baseURL,
     /** Level of HTTP logging, default value is BODY. */
     var httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.BODY,
-    /** Content type value to make http requests. */
-    var contentType: String = Constants.Repository.contentType,
     /** Maximum retries value to flush data to api. */
     var maxTries: Int = 10,
     /** Timeout session value considered for app usage. */

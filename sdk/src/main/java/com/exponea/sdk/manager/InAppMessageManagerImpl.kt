@@ -160,7 +160,11 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun hasImageFor(message: InAppMessage): Boolean {
-        return message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
+        val result = message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
+        if (!result) {
+            Logger.i(this, "Image not available for ${message.name}")
+        }
+        return result
     }
 
     override fun getFilteredMessages(
@@ -169,14 +173,23 @@ internal class InAppMessageManagerImpl(
         timestamp: Double?,
         requireImageLoaded: Boolean
     ): List<InAppMessage> {
-        val messages = inAppMessagesCache.get().filter {
+        var messages = inAppMessagesCache.get()
+        Logger.i(
+            this,
+            "Picking in-app message for eventType $eventType. " +
+                "${messages.size} messages available: ${messages.map { it.name } }."
+        )
+        messages = messages.filter {
             (!requireImageLoaded || hasImageFor(it)) &&
             it.applyDateFilter(System.currentTimeMillis() / 1000) &&
             it.applyEventFilter(eventType, properties, timestamp) &&
             it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
+        Logger.i(this, "${messages.size} messages available after filtering. Picking highest priority message.")
         val highestPriority = messages.mapNotNull { it.priority }.max() ?: 0
-        return messages.filter { it.priority ?: 0 >= highestPriority }
+        messages = messages.filter { it.priority ?: 0 >= highestPriority }
+        Logger.i(this, "Got ${messages.size} messages with highest priority. ${messages.map { it.name } }")
+        return messages
     }
 
     override fun getRandom(
@@ -186,6 +199,9 @@ internal class InAppMessageManagerImpl(
         requireImageLoaded: Boolean
     ): InAppMessage? {
         val messages = getFilteredMessages(eventType, properties, timestamp, requireImageLoaded)
+        if (messages.size > 1) {
+            Logger.i(this, "Multiple candidate messages found, picking at random.")
+        }
         return if (messages.isNotEmpty()) messages.random() else null
     }
 
@@ -196,15 +212,17 @@ internal class InAppMessageManagerImpl(
         trackingDelegate: InAppMessageTrackingDelegate
 
     ): Job? {
+        Logger.i(this, "Requesting to show in-app message for event type $eventType")
         if (preloaded) {
             return GlobalScope.launch {
+                Logger.i(this, "In-app message data preloaded, picking a message to display")
                 val message = getRandom(eventType, properties, timestamp)
                 if (message != null) {
                     show(message, trackingDelegate)
                 }
             }
         } else {
-            Logger.i(this, "Add pending in-app message for event type $eventType to be shown after data is loaded")
+            Logger.i(this, "Add pending in-app message to be shown after data is loaded")
             pendingShowRequests += InAppMessageShowRequest(
                 eventType,
                 properties,
@@ -217,9 +235,11 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun show(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+        Logger.i(this, "Attempting to show in-app message '${message.name}'")
         val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
             bitmapCache.get(message.payload.imageUrl) ?: return
             else null
+        Logger.i(this, "Posting show to main thread.")
         Handler(Looper.getMainLooper()).post {
             val presented = presenter.show(
                 messageType = message.messageType,

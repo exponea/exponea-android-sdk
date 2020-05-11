@@ -1,23 +1,23 @@
 package com.exponea.sdk.repository
 
-import com.exponea.sdk.models.CampaignClickInfo
+import com.exponea.sdk.models.CampaignData
 
 /**
- * Repository for storing a single CampaignClickInfo.
+ * Repository for storing a single CampaignData.
  */
 internal interface CampaignRepository {
     /**
-     * Returns CampaignClickInfo if exists and lives shorter than Exponea.campaignTTL
+     * Returns CampaignData if exists and lives shorter than Exponea.campaignTTL
      */
-    fun get(): CampaignClickInfo?
+    fun get(): CampaignData?
 
     /**
-     * Store (and replace if already exists) a CampaignClickInfo.
+     * Store (and replace if already exists) a CampaignData.
      */
-    fun set(clickInfo: CampaignClickInfo)
+    fun set(campaignData: CampaignData)
 
     /**
-     * Remove CampaignClickInfo from repository if exists. Returns TRUE on success, FALSE on any error.
+     * Remove CampaignData from repository if exists. Returns TRUE on success, FALSE on any error.
      */
     fun clear(): Boolean
 }

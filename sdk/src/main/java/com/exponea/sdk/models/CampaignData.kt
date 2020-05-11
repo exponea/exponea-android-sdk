@@ -5,9 +5,9 @@ import android.text.TextUtils
 import com.exponea.sdk.util.currentTimeSeconds
 
 /**
- * Info holder retrieved from Android Deeplink Intent Uri and push notifications.
+ * Campaign data retrieved from Android Deeplink Intent Uri or push notifications.
  */
-internal data class CampaignClickInfo(
+internal data class CampaignData(
     var source: String?,
     var campaign: String?,
     var content: String?,

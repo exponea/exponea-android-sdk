@@ -10,7 +10,7 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.ConfigurationFileManager
-import com.exponea.sdk.models.CampaignClickInfo
+import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
@@ -705,7 +705,7 @@ object Exponea {
             if (!intent.isViewUrlIntent("http")) {
                 return@autoInitialize false
             }
-            val campaignData = CampaignClickInfo(intent!!.data!!)
+            val campaignData = CampaignData(intent!!.data!!)
             if (!campaignData.isValid()) {
                 Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
                 return@autoInitialize false

@@ -1,7 +1,7 @@
 package com.exponea.sdk.repository
 
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CampaignClickInfo
+import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.Gson
@@ -14,8 +14,8 @@ internal class CampaignRepositoryImpl(
 
     private val key = "ExponeaCampaign"
 
-    override fun set(clickInfo: CampaignClickInfo) {
-        val json = gson.toJson(clickInfo)
+    override fun set(campaignData: CampaignData) {
+        val json = gson.toJson(campaignData)
         preferences.setString(key, json)
     }
 
@@ -23,13 +23,12 @@ internal class CampaignRepositoryImpl(
         return preferences.remove(key)
     }
 
-    override fun get(): CampaignClickInfo? {
-        val eventAsJson = preferences.getString(key, "")
-        val eventInfo = gson.fromJson(eventAsJson, CampaignClickInfo::class.java)
-        if (eventInfo != null && abs(currentTimeSeconds() - eventInfo.createdAt) > Exponea.campaignTTL) {
+    override fun get(): CampaignData? {
+        val data = gson.fromJson(preferences.getString(key, ""), CampaignData::class.java)
+        if (data != null && abs(currentTimeSeconds() - data.createdAt) > Exponea.campaignTTL) {
             clear()
             return null
         }
-        return eventInfo
+        return data
     }
 }

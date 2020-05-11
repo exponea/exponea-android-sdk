@@ -27,7 +27,8 @@
             android:name=".services.ExponeaPushReceiver"
             android:enabled="true"
             android:exported="false">
-            <intent-filter>
+            <!-- we need this to be called before the app is opened to process campaign data inside the notification -->
+            <intent-filter android:priority="999">
                 <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
                 <action android:name="com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED" />
                 <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />

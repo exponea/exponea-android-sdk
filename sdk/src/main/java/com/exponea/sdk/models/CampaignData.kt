@@ -16,8 +16,8 @@ data class CampaignData(
     var medium: String? = null,
     var term: String? = null,
     var payload: String? = null,
-    val createdAt: Double = currentTimeSeconds(),
-    val completeUrl: String? = null
+    var createdAt: Double = currentTimeSeconds(),
+    var completeUrl: String? = null
 ) : Parcelable {
     internal constructor(campaignMap: Map<String, String>) : this(
         source = campaignMap["utm_source"],

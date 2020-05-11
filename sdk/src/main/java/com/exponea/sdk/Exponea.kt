@@ -468,6 +468,11 @@ object Exponea {
                     "cta" to (actionData?.actionName ?: "notification")
                 )
             )
+            if (data != null) {
+                // we'll consider the campaign data as just created - for expiration handling
+                data.campaignData.createdAt = currentTimeSeconds()
+                component.campaignRepository.set(data.campaignData)
+            }
             data?.getTrackingData()?.forEach { properties[it.key] = it.value }
             component.eventManager.track(
                 eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,

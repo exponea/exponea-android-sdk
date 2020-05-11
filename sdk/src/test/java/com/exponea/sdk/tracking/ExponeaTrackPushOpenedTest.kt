@@ -12,6 +12,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -196,6 +197,7 @@ internal class ExponeaTrackPushOpenedTest(
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
         } just Runs
         Exponea.trackClickedPush(notificationData, actionData)
+        assertEquals(notificationData?.campaignData, Exponea.componentForTesting.campaignRepository.get())
         assertEquals(eventName, eventSlot.captured.type)
         assertEquals(eventProperties, eventSlot.captured.properties)
         assertEquals(eventType, eventTypeSlot.captured)

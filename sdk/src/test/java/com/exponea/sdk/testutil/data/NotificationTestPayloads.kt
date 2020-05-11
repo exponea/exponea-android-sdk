@@ -35,7 +35,7 @@ internal object NotificationTestPayloads {
             {"action":"deeplink","title":"Action 2 title","url":"http:\/\/deeplink?search=something"},
             {"action":"browser","title":"Action 3 title","url":"http:\/\/google.com?search=something"}
         ]""",
-        "url_params" to "[]",
+        "url_params" to """{"utm_campaign":"Testing mobile push","utm_medium":"mobile_push_notification","utm_source":"exponea"}""",
         "title" to "Notification title",
         "attributes" to """{
             "campaign_name":"Wassil's push",

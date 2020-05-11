@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_BUTTON
@@ -23,11 +24,13 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.junit.After
@@ -82,13 +85,13 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.contentIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.BASIC_NOTIFICATION
                     )
 
                     assertNull(it.actions)
                 },
-                expectedTrackingData = null
+                expectedTrackingData = NotificationData()
             ),
 
             TestCase(
@@ -103,13 +106,13 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.contentIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "app://test"),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.DEEPLINK_NOTIFICATION
                     )
 
                     assertNull(it.actions)
                 },
-                expectedTrackingData = null
+                expectedTrackingData = NotificationData()
             ),
 
             TestCase(
@@ -124,13 +127,13 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.contentIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "http://google.com"),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.BROWSER_NOTIFICATION
                     )
 
                     assertNull(it.actions)
                 },
-                expectedTrackingData = null
+                expectedTrackingData = NotificationData()
             ),
 
             TestCase(
@@ -145,7 +148,7 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.contentIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
 
@@ -155,7 +158,7 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.actions[0].actionIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                     assertEquals("Action 2 title", it.actions[1].title)
@@ -163,7 +166,7 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.actions[1].actionIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "app://deeplink"),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                     assertEquals("Action 3 title", it.actions[2].title)
@@ -171,11 +174,11 @@ internal class FcmManagerImplNotificationsTest(
                         shadowOf(it.actions[2].actionIntent).savedIntent,
                         ExponeaPushReceiver.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com"),
-                        null,
+                        NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
                     )
                 },
-                expectedTrackingData = null
+                expectedTrackingData = NotificationData()
             ),
 
             TestCase(
@@ -194,7 +197,12 @@ internal class FcmManagerImplNotificationsTest(
                         platform = "android",
                         language = "",
                         subject = "Notification title",
-                        recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
+                        recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                        campaignData = CampaignData(
+                            source = "exponea",
+                            campaign = "Testing mobile push",
+                            medium = "mobile_push_notification"
+                        )
                     )
                     assertEquals("Notification title", shadowOf(it).contentTitle)
                     assertEquals("Notification text", shadowOf(it).contentText)
@@ -243,7 +251,12 @@ internal class FcmManagerImplNotificationsTest(
                     platform = "android",
                     language = "",
                     subject = "Notification title",
-                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
+                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    campaignData = CampaignData(
+                        source = "exponea",
+                        campaign = "Testing mobile push",
+                        medium = "mobile_push_notification"
+                    )
                 )
             )
         )
@@ -276,6 +289,7 @@ internal class FcmManagerImplNotificationsTest(
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
+        mockkConstructor(Date::class)
     }
 
     @After
@@ -293,7 +307,8 @@ internal class FcmManagerImplNotificationsTest(
     fun handleRemoteMessageTest() {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
-
+        val expectedCreationTime = expectedTrackingData!!.campaignData.createdAt * 1000
+        every { anyConstructed<Date>().time } returns expectedCreationTime.toLong() // mock current time
         manager.handleRemoteMessage(getRemoteMessage(notificationPayload), notificationManager, true)
 
         verify(exactly = 1) {

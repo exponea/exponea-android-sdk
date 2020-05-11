@@ -21,7 +21,14 @@ internal class NotificationDataTest : ExponeaSDKTest() {
             platform = "mock platform",
             language = "mock language",
             recipient = "mock recipient",
-            subject = "mock title"
+            subject = "mock title",
+            campaignData = CampaignData(
+                source = "mock source",
+                campaign = "mock campaign",
+                medium = "mock medium",
+                content = "mock content",
+                term = "mock term"
+            )
         )
 
     @Test
@@ -76,7 +83,12 @@ internal class NotificationDataTest : ExponeaSDKTest() {
                 "platform" to "mock platform",
                 "language" to "mock language",
                 "recipient" to "mock recipient",
-                "subject" to "mock title"
+                "subject" to "mock title",
+                "utm_source" to "mock source",
+                "utm_medium" to "mock medium",
+                "utm_campaign" to "mock campaign",
+                "utm_content" to "mock content",
+                "utm_term" to "mock term"
             ),
             getMockNotificationData().getTrackingData()
         )

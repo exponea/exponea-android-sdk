@@ -15,7 +15,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val sound: String? = rawData["sound"]
     val buttons: ArrayList<ActionPayload>? = parseActions(rawData["actions"])
     val notificationAction: ActionPayload = parseMainAction(rawData["action"], rawData["url"])
-    val notificationData: NotificationData? = parseNotificationData(rawData)
+    val notificationData: NotificationData = parseNotificationData(rawData)
     val attributes: Map<String, String>? = parseAttributes(rawData["attributes"])
 
     data class ActionPayload(
@@ -29,9 +29,13 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
         /**
          * Parse notification data to use for tracking purposes
          */
-        private fun parseNotificationData(data: Map<String, String>): NotificationData? {
-            val dataString = data["data"] ?: data["attributes"]
-            return gson.fromJson(dataString, NotificationData::class.java)
+        private fun parseNotificationData(data: Map<String, String>): NotificationData {
+            val dataMap: Map<String, Any> = gson.fromJson(data["data"] ?: data["attributes"] ?: "{}")
+            val campaignMap: Map<String, String> = gson.fromJson(data["url_params"] ?: "{}")
+            return NotificationData(
+                dataMap,
+                campaignMap
+            )
         }
 
         /**

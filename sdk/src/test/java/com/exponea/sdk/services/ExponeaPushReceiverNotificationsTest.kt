@@ -10,6 +10,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
+import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
@@ -25,11 +26,13 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.util.Date
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -62,7 +65,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "basic notification",
                 notificationPayload = NotificationTestPayloads.BASIC_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             ),
 
@@ -70,7 +73,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with deeplink",
                 notificationPayload = NotificationTestPayloads.DEEPLINK_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("notification", null, "app://test")
             ),
 
@@ -78,7 +81,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with web url",
                 notificationPayload = NotificationTestPayloads.BROWSER_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("notification", null, "http://google.com")
             ),
 
@@ -86,7 +89,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with actions",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             ),
 
@@ -94,7 +97,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with actions using first action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[0].actionIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("button", "Action 1 title", null)
             ),
 
@@ -102,7 +105,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with actions using second action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[1].actionIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("button", "Action 2 title", "app://deeplink")
             ),
 
@@ -110,7 +113,7 @@ internal class ExponeaPushReceiverNotificationsTest(
                 name = "notification with actions using third action",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
                 intentGetter = { shadowOf(it.actions[2].actionIntent).savedIntent },
-                expectedTrackingData = null,
+                expectedTrackingData = NotificationData(),
                 expectedTrackingActionData = NotificationAction("button", "Action 3 title", "http://google.com")
             ),
 
@@ -129,7 +132,12 @@ internal class ExponeaPushReceiverNotificationsTest(
                     platform = "android",
                     language = "",
                     subject = "Notification title",
-                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
+                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    campaignData = CampaignData(
+                        source = "exponea",
+                        campaign = "Testing mobile push",
+                        medium = "mobile_push_notification"
+                    )
                 ),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             )
@@ -168,6 +176,7 @@ internal class ExponeaPushReceiverNotificationsTest(
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
         every { Exponea.trackClickedPush(any(), any(), any()) } just Runs
+        mockkConstructor(Date::class)
     }
 
     @After
@@ -185,6 +194,8 @@ internal class ExponeaPushReceiverNotificationsTest(
     fun onReceiveTest() {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        val expectedCreationTime = expectedTrackingData!!.campaignData.createdAt * 1000
+        every { anyConstructed<Date>().time } returns expectedCreationTime.toLong() // mock current time
         manager.handleRemoteMessage(getRemoteMessage(notificationPayload), notificationManager, true)
 
         ExponeaPushReceiver().onReceive(

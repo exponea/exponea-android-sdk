@@ -14,23 +14,40 @@ data class NotificationData(
     val platform: String? = null,
     val language: String? = null,
     val recipient: String? = null,
-    val subject: String? = null
+    val subject: String? = null,
+    val campaignData: CampaignData = CampaignData()
 ) : Parcelable {
     val hasCustomEventType: Boolean = !(eventType?.isBlank() ?: true)
 
+    internal constructor(dataMap: Map<String, Any>, campaignMap: Map<String, String>) : this(
+        dataMap["event_type"] as? String,
+        dataMap["campaign_id"] as? String,
+        dataMap["campaign_name"] as? String,
+        (dataMap["action_id"] as? Double)?.toLong(),
+        dataMap["action_name"] as? String,
+        dataMap["action_type"] as? String,
+        dataMap["campaign_policy"] as? String,
+        dataMap["platform"] as? String,
+        dataMap["language"] as? String,
+        dataMap["recipient"] as? String,
+        dataMap["subject"] as? String,
+        CampaignData(campaignMap)
+    )
+
     constructor(parcel: Parcel) : this(
-            eventType = parcel.readString(),
-            campaignId = parcel.readString(),
-            campaignName = parcel.readString(),
-            actionId = parcel.readValue(Long::class.java.classLoader) as? Long,
-            actionName = parcel.readString(),
-            actionType = parcel.readString(),
-            campaignPolicy = parcel.readString(),
-            platform = parcel.readString(),
-            language = parcel.readString(),
-            recipient = parcel.readString(),
-            subject = parcel.readString()
-        )
+        eventType = parcel.readString(),
+        campaignId = parcel.readString(),
+        campaignName = parcel.readString(),
+        actionId = parcel.readValue(Long::class.java.classLoader) as? Long,
+        actionName = parcel.readString(),
+        actionType = parcel.readString(),
+        campaignPolicy = parcel.readString(),
+        platform = parcel.readString(),
+        language = parcel.readString(),
+        recipient = parcel.readString(),
+        subject = parcel.readString(),
+        campaignData = parcel.readValue(CampaignData::class.java.classLoader) as CampaignData
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(eventType)
@@ -44,6 +61,7 @@ data class NotificationData(
         parcel.writeString(language)
         parcel.writeString(recipient)
         parcel.writeString(subject)
+        parcel.writeValue(campaignData)
     }
 
     fun getTrackingData(): Map<String, Any?> {
@@ -58,7 +76,9 @@ data class NotificationData(
             "language" to language,
             "recipient" to recipient,
             "subject" to subject
-        )
+        ).also {
+            it.putAll(campaignData?.getTrackingData())
+        }
     }
 
     override fun describeContents(): Int {

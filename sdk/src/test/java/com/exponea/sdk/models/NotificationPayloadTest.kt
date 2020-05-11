@@ -6,7 +6,13 @@ import com.exponea.sdk.testutil.data.NotificationTestPayloads.BASIC_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.BROWSER_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.PRODUCTION_NOTIFICATION
+import io.mockk.every
+import io.mockk.mockkConstructor
+import io.mockk.unmockkAll
+import java.util.Date
 import kotlin.test.assertEquals
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
@@ -36,7 +42,7 @@ internal class NotificationPayloadTest(
                     assertEquals(null, it.sound)
                     assertEquals(null, it.buttons)
                     assertEquals(NotificationPayload.ActionPayload(), it.notificationAction)
-                    assertEquals(null, it.notificationData)
+                    assertEquals(NotificationData(), it.notificationData)
                     assertEquals(null, it.attributes)
                 }
             ),
@@ -54,7 +60,7 @@ internal class NotificationPayloadTest(
                         NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
                         it.notificationAction
                     )
-                    assertEquals(null, it.notificationData)
+                    assertEquals(NotificationData(), it.notificationData)
                     assertEquals(null, it.attributes)
                 }
             ),
@@ -72,7 +78,7 @@ internal class NotificationPayloadTest(
                         NotificationPayload.ActionPayload(NotificationPayload.Actions.DEEPLINK, "app://test"),
                         it.notificationAction
                     )
-                    assertEquals(null, it.notificationData)
+                    assertEquals(NotificationData(), it.notificationData)
                     assertEquals(null, it.attributes)
                 }
             ),
@@ -90,7 +96,7 @@ internal class NotificationPayloadTest(
                         NotificationPayload.ActionPayload(NotificationPayload.Actions.BROWSER, "http://google.com"),
                         it.notificationAction
                     )
-                    assertEquals(null, it.notificationData)
+                    assertEquals(NotificationData(), it.notificationData)
                     assertEquals(null, it.attributes)
                 }
             ),
@@ -127,7 +133,7 @@ internal class NotificationPayloadTest(
                         NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
                         it.notificationAction
                     )
-                    assertEquals(null, it.notificationData)
+                    assertEquals(NotificationData(), it.notificationData)
                     assertEquals(null, it.attributes)
                 }
             ),
@@ -176,7 +182,12 @@ internal class NotificationPayloadTest(
                             subject = "Notification title",
                             platform = "android",
                             language = "",
-                            recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
+                            recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                            campaignData = CampaignData(
+                                source = "exponea",
+                                campaign = "Testing mobile push",
+                                medium = "mobile_push_notification"
+                            )
                         ),
                         it.notificationData
                     )
@@ -212,6 +223,18 @@ internal class NotificationPayloadTest(
                 )
             }
         }
+    }
+
+    @Before
+    fun setup() {
+        mockkConstructor(Date::class)
+        every { anyConstructed<Date>().time } returns 10 * 1000 // mock current time
+    }
+
+    @After
+    fun unmock() {
+        // mockk has a problem when it sometimes throws an exception, in that case just try again
+        try { unmockkAll() } catch (error: ConcurrentModificationException) { unmock() }
     }
 
     @Test

@@ -705,19 +705,20 @@ object Exponea {
             if (!intent.isViewUrlIntent("http")) {
                 return@autoInitialize false
             }
-            val event = CampaignClickInfo(intent!!.data!!)
-            if (!event.isValid()) {
+            val campaignData = CampaignClickInfo(intent!!.data!!)
+            if (!campaignData.isValid()) {
                 Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
                 return@autoInitialize false
             }
-            component.campaignRepository.set(event)
+            component.campaignRepository.set(campaignData)
+            val properties = hashMapOf(
+                "platform" to "Android",
+                "timestamp" to campaignData.createdAt
+            )
+            properties.putAll(campaignData.getTrackingData())
             component.eventManager.track(
                 eventType = Constants.EventTypes.push,
-                properties = hashMapOf(
-                    "timestamp" to event.createdAt,
-                    "platform" to "Android",
-                    "url" to event.completeUrl
-                ),
+                properties = properties,
                 type = EventType.CAMPAIGN_CLICK
             )
             return@autoInitialize true

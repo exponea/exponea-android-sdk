@@ -5,7 +5,7 @@ import android.text.TextUtils
 import com.exponea.sdk.util.currentTimeSeconds
 
 /**
- * Info holder retrieved from Android Deeplink Intent Uri.
+ * Info holder retrieved from Android Deeplink Intent Uri and push notifications.
  */
 internal data class CampaignClickInfo(
     var source: String?,
@@ -29,4 +29,16 @@ internal data class CampaignClickInfo(
     )
 
     fun isValid() = !TextUtils.isEmpty(payload)
+
+    fun getTrackingData(): Map<String, String> {
+        return hashMapOf(
+            "url" to completeUrl,
+            "location" to completeUrl, // we used to track this in session start, we should keep it around
+            "utm_source" to source.orEmpty(),
+            "utm_medium" to medium.orEmpty(),
+            "utm_campaign" to campaign.orEmpty(),
+            "utm_content" to content.orEmpty(),
+            "utm_term" to term.orEmpty()
+        )
+    }
 }

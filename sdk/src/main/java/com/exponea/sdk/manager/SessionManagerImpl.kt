@@ -120,13 +120,7 @@ internal class SessionManagerImpl(
             prefs.setDouble(PREF_SESSION_START, timestamp)
         }
         val properties = DeviceProperties(application).toHashMap()
-        campaignRepository.get()?.let { event ->
-            properties["location"] = event.completeUrl
-            properties["utm_source"] = event.source.orEmpty()
-            properties["utm_campaign"] = event.campaign.orEmpty()
-            properties["utm_content"] = event.content.orEmpty()
-            properties["utm_term"] = event.term.orEmpty()
-        }
+        properties.putAll(campaignRepository.get()?.getTrackingData() ?: hashMapOf())
         eventManager.track(
             eventType = Constants.EventTypes.sessionStart,
             timestamp = timestamp,

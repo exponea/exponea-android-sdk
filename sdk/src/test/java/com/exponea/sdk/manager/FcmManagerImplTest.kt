@@ -12,7 +12,9 @@ import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
+import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
+import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -91,6 +93,19 @@ internal class FcmManagerImplTest {
             NotificationAction("notification", null, "app://mock-url-2"),
             intent2.extras.get(ExponeaPushReceiver.EXTRA_ACTION_INFO)
         )
+    }
+
+    @Test
+    fun `should not show subsequent notifications with same id`() {
+        val notification = RemoteMessage.Builder("1")
+            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+            .build()
+        manager.handleRemoteMessage(notification, notificationManager, true)
+        manager.handleRemoteMessage(notification, notificationManager, true)
+        verify(exactly = 1) { notificationManager.notify(any(), any()) }
+        notification.data["notification_id"] = "2"
+        manager.handleRemoteMessage(notification, notificationManager, true)
+        verify(exactly = 2) { notificationManager.notify(any(), any()) }
     }
 
     @Test

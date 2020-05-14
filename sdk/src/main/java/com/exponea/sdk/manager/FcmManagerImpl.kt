@@ -41,6 +41,7 @@ internal class FcmManagerImpl(
     private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
     private val requestCodeGenerator: Random = Random()
+    private var lastPushNotificationId: Int? = null
 
     override fun trackFcmToken(token: String?, tokenTrackFrequency: ExponeaConfiguration.TokenFrequency) {
         val lastTrackDateInMilliseconds =
@@ -86,8 +87,13 @@ internal class FcmManagerImpl(
 
         Exponea.trackDeliveredPush(data = payload.notificationData)
 
-        if (showNotification && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
-            showNotification(manager, payload)
+        if (payload.notificationId == lastPushNotificationId) {
+            Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
+        } else {
+            lastPushNotificationId = payload.notificationId
+            if (showNotification && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
+                showNotification(manager, payload)
+            }
         }
     }
 

@@ -135,7 +135,7 @@ internal class NotificationPayloadTest(
                 "notification from production",
                 PRODUCTION_NOTIFICATION,
                 {
-                    assertEquals(0, it.notificationId)
+                    assertEquals(1, it.notificationId)
                     assertEquals("Notification title", it.title)
                     assertEquals("Notification text", it.message)
                     assertEquals(null, it.image)

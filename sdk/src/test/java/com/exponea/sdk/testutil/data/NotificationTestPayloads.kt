@@ -28,6 +28,7 @@ internal object NotificationTestPayloads {
     )
 
     val PRODUCTION_NOTIFICATION = hashMapOf(
+        "notification_id" to "1",
         "action" to "app",
         "actions" to """[
             {"action":"app","title":"Action 1 title"},

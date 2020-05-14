@@ -181,7 +181,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 "notification from production",
                 NotificationTestPayloads.PRODUCTION_NOTIFICATION,
-                0,
+                1,
                 {
                     val notificationData = NotificationData(
                         eventType = "campaign",

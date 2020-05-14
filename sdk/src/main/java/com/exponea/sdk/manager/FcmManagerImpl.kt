@@ -91,7 +91,8 @@ internal class FcmManagerImpl(
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
         } else {
             lastPushNotificationId = payload.notificationId
-            if (showNotification && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
+            callNotificationDataCallback(payload)
+            if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
                 showNotification(manager, payload)
             }
         }
@@ -112,7 +113,6 @@ internal class FcmManagerImpl(
         handlePayloadSound(manager, notification, payload)
         handlePayloadButtons(notification, payload)
         handlePayloadNotificationAction(notification, payload)
-        handlePayloadAttributes(payload)
 
         manager.notify(payload.notificationId, notification.build())
     }
@@ -215,7 +215,7 @@ internal class FcmManagerImpl(
         }
     }
 
-    private fun handlePayloadAttributes(messageData: NotificationPayload) {
+    private fun callNotificationDataCallback(messageData: NotificationPayload) {
         if (messageData.attributes != null) {
             if (Exponea.notificationDataCallback == null) {
                 pushNotificationRepository.setExtraData(messageData.attributes)

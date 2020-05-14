@@ -6,6 +6,7 @@ import com.exponea.sdk.testutil.data.NotificationTestPayloads.BASIC_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.BROWSER_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.PRODUCTION_NOTIFICATION
+import com.exponea.sdk.testutil.data.NotificationTestPayloads.SILENT_NOTIFICATION
 import io.mockk.every
 import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
@@ -208,6 +209,24 @@ internal class NotificationPayloadTest(
                         ),
                         it.attributes
                     )
+                }
+            ),
+            TestCase(
+                "silent notification",
+                SILENT_NOTIFICATION,
+                {
+                    assertEquals(0, it.notificationId)
+                    assertEquals("Silent push", it.title)
+                    assertEquals("", it.message)
+                    assertEquals(null, it.image)
+                    assertEquals(null, it.sound)
+                    assertEquals(null, it.buttons)
+                    assertEquals(
+                        NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
+                        it.notificationAction
+                    )
+                    assertEquals(NotificationData(), it.notificationData)
+                    assertEquals(mapOf("silent_test" to "value"), it.attributes)
                 }
             )
         )

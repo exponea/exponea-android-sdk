@@ -15,6 +15,7 @@ import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_NOTIFICAT
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
+import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -45,19 +46,24 @@ internal class FcmManagerImplNotificationsTest(
     name: String,
     private val notificationPayload: Map<String, String>,
     private val expectedTrackingData: NotificationData?,
+    private val expectNotificationCreated: Boolean,
     private val expectedNotificationId: Int,
-    private val expectedNotificationMatcher: (Notification) -> Unit
+    private val expectedNotificationMatcher: (Notification) -> Unit,
+    private val expectedNotificationData: Map<String, String>?
 ) : ExponeaSDKTest() {
     private lateinit var manager: FcmManager
+    private lateinit var pushNotificationRepository: PushNotificationRepository
     private lateinit var notificationManager: NotificationManager
 
     companion object {
         data class TestCase(
             val name: String,
             val notificationPayload: Map<String, String>,
+            val expectNotificationCreated: Boolean,
             val expectedNotificationId: Int,
             val expectedNotificationMatcher: (Notification) -> Unit,
-            val expectedTrackingData: NotificationData?
+            val expectedTrackingData: NotificationData?,
+            val expectedNotificationData: Map<String, String>? = null
         )
 
         private fun validateIntent(
@@ -77,6 +83,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 name = "basic notification",
                 notificationPayload = NotificationTestPayloads.BASIC_NOTIFICATION,
+                expectNotificationCreated = true,
                 expectedNotificationId = 0,
                 expectedNotificationMatcher = {
                     assertEquals("push title", shadowOf(it).contentTitle)
@@ -97,6 +104,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 name = "notification with deeplink",
                 notificationPayload = NotificationTestPayloads.DEEPLINK_NOTIFICATION,
+                expectNotificationCreated = true,
                 expectedNotificationId = 0,
                 expectedNotificationMatcher = {
                     assertEquals("push title", shadowOf(it).contentTitle)
@@ -118,6 +126,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 name = "notification with web url",
                 notificationPayload = NotificationTestPayloads.BROWSER_NOTIFICATION,
+                expectNotificationCreated = true,
                 expectedNotificationId = 0,
                 expectedNotificationMatcher = {
                     assertEquals("push title", shadowOf(it).contentTitle)
@@ -139,6 +148,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 name = "notification with actions",
                 notificationPayload = NotificationTestPayloads.ACTIONS_NOTIFICATION,
+                expectNotificationCreated = true,
                 expectedNotificationId = 0,
                 expectedNotificationMatcher = {
                     assertEquals("push title", shadowOf(it).contentTitle)
@@ -184,6 +194,7 @@ internal class FcmManagerImplNotificationsTest(
             TestCase(
                 "notification from production",
                 NotificationTestPayloads.PRODUCTION_NOTIFICATION,
+                true,
                 1,
                 {
                     val notificationData = NotificationData(
@@ -257,7 +268,30 @@ internal class FcmManagerImplNotificationsTest(
                         campaign = "Testing mobile push",
                         medium = "mobile_push_notification"
                     )
+                ),
+                mapOf(
+                    "campaign_name" to "Wassil's push",
+                    "event_type" to "campaign",
+                    "action_id" to "2",
+                    "action_type" to "mobile notification",
+                    "campaign_policy" to "",
+                    "subject" to "Notification title",
+                    "action_name" to "Unnamed mobile push",
+                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    "some property" to "some value",
+                    "language" to "",
+                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                    "platform" to "android"
                 )
+            ),
+            TestCase(
+                name = "silent notification",
+                notificationPayload = NotificationTestPayloads.SILENT_NOTIFICATION,
+                expectNotificationCreated = false,
+                expectedNotificationId = 0,
+                expectedNotificationMatcher = {},
+                expectedTrackingData = NotificationData(),
+                expectedNotificationData = mapOf("silent_test" to "value")
             )
         )
 
@@ -269,8 +303,10 @@ internal class FcmManagerImplNotificationsTest(
                     it.name,
                     it.notificationPayload,
                     it.expectedTrackingData,
+                    it.expectNotificationCreated,
                     it.expectedNotificationId,
-                    it.expectedNotificationMatcher
+                    it.expectedNotificationMatcher,
+                    it.expectedNotificationData
                 )
             }
         }
@@ -279,12 +315,13 @@ internal class FcmManagerImplNotificationsTest(
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        pushNotificationRepository = PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
             FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+            pushNotificationRepository
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)
@@ -312,9 +349,14 @@ internal class FcmManagerImplNotificationsTest(
         manager.handleRemoteMessage(getRemoteMessage(notificationPayload), notificationManager, true)
 
         verify(exactly = 1) {
-            notificationManager.notify(expectedNotificationId, any())
             Exponea.trackDeliveredPush(expectedTrackingData, any())
         }
-        expectedNotificationMatcher(notificationSlot.captured)
+        verify(exactly = (if (expectNotificationCreated) 1 else 0)) {
+            notificationManager.notify(expectedNotificationId, any())
+        }
+        if (expectNotificationCreated) {
+            expectedNotificationMatcher(notificationSlot.captured)
+        }
+        assertEquals(expectedNotificationData, pushNotificationRepository.getExtraData())
     }
 }

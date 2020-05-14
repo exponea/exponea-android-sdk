@@ -9,6 +9,7 @@ import org.json.JSONArray
 
 internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val notificationId: Int = rawData["notification_id"]?.toInt() ?: 0
+    val silent: Boolean = rawData["silent"] == "true"
     val title: String = rawData["title"] ?: ""
     val message: String = rawData["message"] ?: ""
     val image: String? = rawData["image"]

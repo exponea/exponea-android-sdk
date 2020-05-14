@@ -53,5 +53,12 @@ internal object NotificationTestPayloads {
         }""",
         "message" to "Notification text"
     )
+
+    val SILENT_NOTIFICATION = hashMapOf(
+        "title" to "Silent push",
+        "action" to "app",
+        "silent" to "true",
+        "attributes" to """{ "silent_test": "value" }"""
+    )
     /* ktlint-enable== max-line-length */
 }

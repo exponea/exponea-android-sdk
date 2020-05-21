@@ -109,7 +109,7 @@ internal class FcmManagerImpl(
         configuration.pushAccentColor?.let { notification.color = it }
 
         handlePayloadImage(notification, payload)
-        handlePayloadSound(notification, payload)
+        handlePayloadSound(manager, notification, payload)
         handlePayloadButtons(notification, payload)
         handlePayloadNotificationAction(notification, payload)
         handlePayloadAttributes(payload)
@@ -165,6 +165,7 @@ internal class FcmManagerImpl(
     }
 
     private fun handlePayloadSound(
+        manager: NotificationManager,
         notification: NotificationCompat.Builder,
         messageData: NotificationPayload
     ) {
@@ -178,8 +179,14 @@ internal class FcmManagerImpl(
         ) {
             soundUri = Uri.parse("""android.resource://${context.packageName}/raw/${messageData.sound}""")
         }
-        // Manually play the notification sound
-        RingtoneManager.getRingtone(context, soundUri)?.also { it.play() }
+
+        // Since sounds should be set on a channel and we want to
+        // change them per notification, we have to play sound manually
+        // We only play sound on older devices without do not disturb mode or then DnD is off
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+            manager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
+            RingtoneManager.getRingtone(context, soundUri)?.play()
+        }
     }
 
     private fun handlePayloadButtons(

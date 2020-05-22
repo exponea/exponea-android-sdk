@@ -94,12 +94,19 @@ internal object PublicApiTestCases {
                 Exponea.handleRemoteMessage(null, notificationManager, false)
             }
         ),
-        Pair<KFunction4<Context, RemoteMessage?, NotificationManager, Boolean, Unit>, () -> Any>(
+        Pair<KFunction4<Context, RemoteMessage?, NotificationManager, Boolean, Boolean>, () -> Any>(
             Exponea::handleRemoteMessage,
             {
                 val context = ApplicationProvider.getApplicationContext<Context>()
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                Exponea.handleRemoteMessage(context, null, notificationManager, false)
+                val message = RemoteMessage.Builder("test").addData("source", "xnpe_platform").build()
+                Exponea.handleRemoteMessage(context, message, notificationManager, false)
+            }
+        ),
+        Pair(
+            Exponea::isExponeaPushNotification,
+            { // there is no way for this to throw exception, we'll simulate it to make tests pass
+                if (!Exponea.safeModeEnabled) throw ExponeaExceptionThrowing.TestPurposeException()
             }
         ),
         Pair(

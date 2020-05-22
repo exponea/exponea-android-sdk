@@ -504,23 +504,34 @@ object Exponea {
         }
     }.logOnException()
 
+    fun isExponeaPushNotification(message: RemoteMessage?): Boolean {
+        if (message == null) return false
+        return message.data["source"] == "xnpe_platform"
+    }
+
     /**
-     * Handles the notification payload from FirebaseMessagingService
+     * Handles Exponea notification payload from FirebaseMessagingService.
+     * Does not handle non-Exponea notifications, just returns false for them so you can process them yourself.
      * @param applicationContext application context required to auto-initialize ExponeaSDK
      * @param message the RemoteMessage payload received from Firebase
      * @param manager the system notification manager instance
      * @param showNotification indicates if the SDK should display the notification or just track it
+     *
+     * @return true if notification is coming from Exponea servers, false otherwise.
      */
     fun handleRemoteMessage(
         applicationContext: Context,
         message: RemoteMessage?,
         manager: NotificationManager,
         showNotification: Boolean = true
-    ) = runCatching {
+    ): Boolean = runCatching {
+        if (!isExponeaPushNotification(message)) return@runCatching false
+
         autoInitialize(applicationContext) {
             component.fcmManager.handleRemoteMessage(message, manager, showNotification)
         }
-    }.logOnException()
+        return true
+    }.returnOnException { true }
 
     /**
      * Handles the notification payload from FirebaseMessagingService

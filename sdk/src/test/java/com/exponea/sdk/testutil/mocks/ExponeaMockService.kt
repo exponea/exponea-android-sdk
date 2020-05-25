@@ -78,4 +78,8 @@ internal class ExponeaMockService(
 
         return okHttpClient.newCall(Request.Builder().url(dummyUrl).get().build())
     }
+
+    override fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
 }

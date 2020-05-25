@@ -181,7 +181,7 @@ internal class ExponeaPushReceiverNotificationsTest(
 
     @After
     fun tearDown() {
-        unmockkAll()
+        try { unmockkAll() } catch (error: ConcurrentModificationException) { tearDown() }
     }
 
     private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {

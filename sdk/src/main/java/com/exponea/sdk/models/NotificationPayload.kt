@@ -77,7 +77,8 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     enum class Actions(val value: String) {
         APP("app"),
         BROWSER("browser"),
-        DEEPLINK("deeplink");
+        DEEPLINK("deeplink"),
+        SELFCHECK("self-check");
 
         companion object {
             fun find(value: String?) = Actions.values().find { it.value == value }

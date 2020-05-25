@@ -186,7 +186,7 @@ internal class ExponeaTrackPushOpenedTest(
 
     @After
     fun after() {
-        unmockkAll()
+        try { unmockkAll() } catch (error: ConcurrentModificationException) { after() }
     }
 
     @Test

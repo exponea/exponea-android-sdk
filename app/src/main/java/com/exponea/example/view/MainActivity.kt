@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set log level before first call to SDK function
         Exponea.loggerLevel = Logger.Level.DEBUG
-
+        Exponea.checkPushSetup = true
         Exponea.handleCampaignIntent(intent, applicationContext)
 
         if (Exponea.isInitialized) {

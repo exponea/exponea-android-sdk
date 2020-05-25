@@ -48,6 +48,18 @@ internal class ExponeaServiceImpl(
         )
     }
 
+    override fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call {
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.EndPointName.PUSH_SELF_CHECK,
+            hashMapOf(
+                "platform" to "android",
+                "customer_ids" to customerIds.toHashMap(),
+                "push_notification_id" to pushToken
+            )
+        )
+    }
+
     private fun doPost(
         exponeaProject: ExponeaProject,
         endPointName: ApiEndPoint.EndPointName,

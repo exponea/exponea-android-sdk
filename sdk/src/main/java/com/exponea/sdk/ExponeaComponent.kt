@@ -1,5 +1,6 @@
 package com.exponea.sdk
 
+import android.app.Application
 import android.content.Context
 import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
@@ -15,6 +16,8 @@ import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppMessageManager
 import com.exponea.sdk.manager.InAppMessageManagerImpl
+import com.exponea.sdk.manager.PushNotificationSelfCheckManager
+import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
 import com.exponea.sdk.manager.ServiceManager
 import com.exponea.sdk.manager.ServiceManagerImpl
 import com.exponea.sdk.manager.SessionManager
@@ -130,6 +133,16 @@ internal class ExponeaComponent(
     internal val sessionManager: SessionManager = SessionManagerImpl(
         context, preferences, campaignRepository, eventManager, backgroundTimerManager
     )
+
+    internal val pushNotificationSelfCheckManager: PushNotificationSelfCheckManager =
+        PushNotificationSelfCheckManagerImpl(
+            context.applicationContext as Application,
+            exponeaConfiguration,
+            customerIdsRepository,
+            firebaseTokenRepository,
+            flushManager,
+            exponeaService
+        )
 
     fun anonymize(
         exponeaProject: ExponeaProject,

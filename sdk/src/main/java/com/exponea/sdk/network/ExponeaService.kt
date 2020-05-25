@@ -13,4 +13,5 @@ internal interface ExponeaService {
     fun postFetchConsents(exponeaProject: ExponeaProject): Call
     fun postCampaignClick(exponeaProject: ExponeaProject, event: ExportedEventType): Call
     fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call
+    fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call
 }

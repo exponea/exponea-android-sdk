@@ -31,7 +31,8 @@ internal object PublicApiTestCases {
         Pair(Exponea::tokenTrackFrequency, Constants.Token.defaultTokenFrequency),
         Pair(Exponea::isInitialized, false),
         Pair(Exponea::notificationDataCallback, null),
-        Pair(Exponea::customerCookie, null)
+        Pair(Exponea::customerCookie, null),
+        Pair(Exponea::checkPushSetup, false)
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(

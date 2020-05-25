@@ -85,6 +85,11 @@ internal class FcmManagerImpl(
 
         val payload = NotificationPayload(HashMap(message.data))
 
+        if (payload.notificationAction.action == NotificationPayload.Actions.SELFCHECK) {
+            Exponea.selfCheckPushReceived()
+            return
+        }
+
         Exponea.trackDeliveredPush(data = payload.notificationData)
 
         if (payload.notificationId == lastPushNotificationId) {

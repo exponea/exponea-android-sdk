@@ -206,6 +206,15 @@ object Exponea {
         }
 
     /**
+     * To help developers with integration, we can automatically check push notification setup
+     * when application is started in debug mode.
+     * When integrating push notifications(or when testing), we
+     * advise you to turn this feature on before initializing the SDK.
+     * Self-check only runs in debug mode and does not do anything in release builds.
+     */
+    var checkPushSetup: Boolean = false
+
+    /**
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
@@ -621,6 +630,10 @@ object Exponea {
         )
 
         component.inAppMessageManager.preload()
+
+        if (checkPushSetup && context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            component.pushNotificationSelfCheckManager.start()
+        }
     }
 
     /**
@@ -776,4 +789,8 @@ object Exponea {
             if (!isInitialized) return null
             return component.inAppMessagePresenter.presentedMessage
         }
+
+    internal fun selfCheckPushReceived() {
+        component.pushNotificationSelfCheckManager.selfCheckPushReceived()
+    }
 }

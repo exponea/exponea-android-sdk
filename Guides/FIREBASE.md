@@ -1,4 +1,4 @@
-# Exponea Web App And Firebase Configuration
+# Exponea web app push notification configuration
 
   1. Go to your project's Firebase Console and navigate to Project Settings using cog icon
 
@@ -8,17 +8,16 @@
 
   ![](pics/push2.png)
 
-  3. Locate **Server Key** property, thats your Google Cloud Messaging key, which
-  you will have to provide to **Exponea Web app**
+  3. Locate **Server Key** property, thats your Firebase Cloud Messaging API Key, which you will setup in **Exponea Web app**
 
   ![](pics/push3.png)
 
 
-  5. Go to [Exponea Web App](https://app.exponea.com), login and naviagate to Project Settings
+  5. Go to [Exponea Web App](https://app.exponea.com), login and navigate to Project Settings
 
   ![](pics/push4.png)
 
-  6. Navigate to `Channels->Push notifications`. Locate GCM API Key input field and
+  6. Navigate to `Channels->Push notifications`. Locate FCM API Key input field and
   pass value you have copied from **Firebase**
 
 

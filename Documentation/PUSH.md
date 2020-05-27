@@ -1,102 +1,58 @@
-## 📣  Push Notification
+## 📣  Push Notifications
 
-Exponea SDK allows you to easily create complex scenarios which you can use to send push notifications directly to your customers. The following section explains how to enable receiving push notifications.
+Exponea allows you to easily create complex scenarios which you can use to send push notifications directly to your customers. The following section explains how to enable push notifications.
 
-For push notifications to work, you need a working Firebase project. The following steps shows you how to create one. If you already have created a Firebase project and you have your **project number (or sender ID)** and **Google Cloud Messaging API key (or Server Key)**, you may skip this part of the tutorial and proceed directly to enabling of the push notifications in the Exponea SDK.
+## Quick start
 
-### Setting Up  Firebase project
+For push notifications to work, you'll need to setup a few things:
+- create a Firebase project
+- integrate Firebase into your application 
+- set the Firebase server key in the Exponea web app
+- add a broadcast listener for opening push notifications
 
-### Create your project
-1. In your preferred browser, navigate to [Firebase Console](https://console.firebase.google.com/u/0/)
-2. Create a Firebase project in the Firebase console, if you don't already have one. Click Add project. If you already have an existing Google project associated with your mobile app, select it from the Project name drop down menu. Otherwise, enter a project name to create a new project.
-3. Optional: Edit your Project ID. Your project is given a unique ID automatically, and it's used in publicly visible Firebase features such as database URLs and your Firebase Hosting subdomain. You can change it now if you want to use a specific subdomain.
-4. Follow the remaining setup steps and click Create project (or Add Firebase if you're using an existing project) to begin provisioning resources for your project. This typically takes a few minutes. When the process completes, you'll be taken to the project overview.
+We've created a [Quick start guide](../Guides/PUSH_QUICKSTART.md) that will guide you through these steps.
 
-
-### Add Firebase to Your App
-
-When it comes to setting up Firebase inside you application, you have multiple options
-
-#### Using Firebase Assistant inside Android Studio
-  1. To open the Firebase Assistant in Android Studio:
-  **Click Tools**  > **Firebase** to open the `Assistant window`.
-  2. Click **Cloud Messaging** , then click the provided tutorial link **Set Up Cloud Messaging**.
-  3. Click the **Connect** button to Firebase button to connect to Firebase and add the necessary code to your app.
-  4.  Click the **Add FCM to your App** button to allow `gradle` add needed dependencies for you
-  5. That's it! You're good to go, check out [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
-
-#### Manually add Firebase
-  1. Open you Project and navigate to `Project overview -> Project Settings`
-  2. Click Add Firebase to your Android app and follow the setup steps. If you're importing an existing Google project, this may happen automatically and you can just download the config file.
-  3. When prompted, enter your app's **package name**. It's important to enter the package name your app is using; this can only be set when you add an app to your Firebase project.
-  4. During the process, you'll download a `google-services.json` file. You can download this file again at any time.
-  5. Add rules to your root-level build.gradle file, to include the google-services plugin and the Google's Maven repository:
-  ``` gradle
-  buildscript {
-      // ...
-      dependencies {
-          // ...
-          classpath 'com.google.gms:google-services:4.0.1' // google-services plugin
-      }
-  }
-
-  allprojects {
-      // ...
-      repositories {
-          // ...
-          google() // Google's Maven repository
-      }
-  }
-  )
-  ```
-
-6. Then, in your module Gradle file (usually the app/build.gradle), add the apply plugin line at the bottom of the file to enable the Gradle plugin:
-
-  ``` gradle
-  apply plugin: 'com.android.application'
-
-  android {
-    // ...
-  }
-
-  dependencies {
-    // ...
-    implementation 'com.google.firebase:firebase-core:16.0.1'
-    implementation 'com.google.firebase:firebase-messaging:17.0.0'
-
-    // Getting a "Could not find" error? Make sure you have
-    // added the Google maven respository to your root build.gradle
-  }
-
-  // ADD THIS AT THE BOTTOM
-  apply plugin: 'com.google.gms.google-services'
-
-  ```
-
-7. That's should be it! Check out [Firebase Docs](https://firebase.google.com/docs/android/setup?authuser=0) if you have any questions
-
-
-  ### Confuring Exponea Web App
-Once you have configured Firebase you it need to obtained **Google Cloud Messaging API key**. You can find in your Firebase Project's Settings. See [this guide](../Guides/FIREBASE.md)
-to help you configure Exponea web APP
-
-
-## 🔍 Automatic tracking of Push Notifications
+## Automatic tracking of Push Notifications
 
 In the [Exponea SDK configuration](CONFIG.md), you can enable or disable the automatic push notification tracking by setting the Boolean value to the `automaticPushNotification` property and potentially setting up the desired frequency to the `tokenTrackFrequency`(default value is ON_TOKEN_CHANGE).
 
-With `automaticPushNotification` enabled, the SDK will correctly display push notifications and track a "campaign" event for every delivered/opened push notification with the correct properties.
+With `automaticPushNotification` enabled, the SDK will correctly display push notifications from Exponea and track a "campaign" event for every delivered/opened push notification with the correct properties.
 
-## 🔍 Responding to Push notifications
+## Other push providers / custom FirebaseMessagingService
+
+Our automatic tracking relies on our implementation of FirebaseMessagingService.
+In case you want to use your own FirebaseMessagingService, you have to call Exponea methods for handling push notifications and token yourself.
+``` kotlin
+class ExampleFirebaseMessageService: FirebaseMessagingService() {
+
+    private val notificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    override fun onMessageReceived(message: RemoteMessage) {
+        if (!Exponea.handleRemoteMessage(applicationContext, message, notificationManager)) {
+            // push notification is from another push provider
+        }
+    }
+
+    override fun onNewToken(token: String) {
+        Exponea.trackPushToken(token)
+    }
+}
+```
+
+Exponea SDK will only handle push notification messages coming from Exponea servers. You can also use helper method `Exponea.isExponeaPushNotification()`.
+
+## Responding to Push notifications
 
 When creating notification using Exponea Web App, you can choose from 3 different actions to be used when tapping the notification or additional buttons on notification.
 
 ### 1. Open app
-Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED` that you can respond to in any application. Most common use case is opening your app and starting an activity. To do this, you need to setup a BroadcastReceiver in your Android manifest that will respond to intents with action `com.exponea.sdk.action.PUSH_CLICKED`.
+Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED`. To respond to it, you need to setup a BroadcastReceiver in your Android manifest.
 
 ``` xml
 <receiver
-    android:name=".services.MyReceiver"
+    android:name="MyReceiver"
     android:enabled="true"
     android:exported="true">
     <intent-filter>
@@ -105,7 +61,7 @@ Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLI
 </receiver>
 ```
 
-In the BroadcastReceiver you should launch your activity. Campaign data is included in the intent as `ExponeaPushReceiver.EXTRA_DATA`.
+In the BroadcastReceiver you can launch a corresponding activity(e.g. your main activity). Campaign data is included in the intent as `ExponeaPushReceiver.EXTRA_DATA`.
 ``` kotlin
 class MyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -113,7 +69,6 @@ class MyReceiver : BroadcastReceiver() {
         val data = intent.getParcelableExtra<NotificationData>(
           ExponeaPushReceiver.EXTRA_DATA
         )
-        Log.i("Receiver", "Payload: $data")
         // Process the data if you need to
 
         // Start an activity
@@ -138,12 +93,29 @@ Deep link action creates "view" intent that contains the url specified when sett
 </intent-filter>
 ```
 
-
 ### 3. Open web browser
 Open web browser is handled automatically by the SDK and no work is required from the developer to handle it.
 
-## 🔍 Manual tracking of Push Notifications
-In case you decide to deactivate the automatic push notification, you can still track events manually.
+## Handling notification payload extra data
+  You can setup notifications to contain extra data payload. Whenever a notification arrives the Exponea SDK will call `notificationCallback` that you can set on the `Exponea` object. The extras are a `Map<String, String>`.
+
+#### 💻 Usage
+
+``` kotlin
+Exponea.notificationDataCallback = {
+     extra -> //handle the extras value
+}
+```
+
+Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
+
+> If your app is not running in the background, the SDK will auto-initialize when push notification is received. In this case, `Exponea.notificationDataCallback` is not set, so the callback will be called after you attach the listener(next app start). If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`. 
+
+## Silent push notifications
+Exponea web app allows you to setup silent push notifications, that are not displayed to the user. The SDK tracks `campaign` event when the push notification is delivered, just like for regular notifications. There is no opening for those notifications, but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handling notification payload extra data](#Handling-notification-payload-extra-data).
+
+## Manual tracking of Push Notifications
+In case you decide to deactivate the automatic push notification, or wish to track push notifications from other providers, you can still track events manually.
 
 #### Track Push Token (FCM)
 
@@ -211,15 +183,3 @@ Exponea.trackClickedPush(
         timestamp = currentTimeSeconds()
 )
 ```
-## 🔍 Tracking notification extra data
-  Some notifications can have an extra data payload. Whenever a notification arrives the Exponea SDK will call `notificationCallback` that you can set on the `Exponea` object. The extras are a `Map<String, String>`.
-
-#### 💻 Usage
-
-``` kotlin
-Exponea.notificationDataCallback = {
-     extra -> //handle the extras value
-}
-```
-
-Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.

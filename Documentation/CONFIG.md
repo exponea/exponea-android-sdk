@@ -85,7 +85,8 @@ For detailed information, please go to [Project Mapping documentation](../Docume
 #### authorization
 
 * Supported by token authentication.
-* For more information, please click [here](https://docs.exponea.com/v2/reference#token-authentication)
+* Format `"Token <token>"` where `<token>` is an Exponea **public** key.
+* For more information, please see [Exponea API documentation](https://docs.exponea.com/reference#access-keys)
 
 #### baseURL
 

@@ -12,10 +12,6 @@
 
 ![](pics/config2.png)
 
-3. In settings, navigate to Project/AccessManagement
-There you can view or edit you `API Base URL` and `Project Token`
+3. In settings, navigate to Project Settings/Access Management/API. On this page you can get your `API Base URL` and `Project Token`. You'll need a **Public group** `Authorization token` to configure Exponea SDK. More information about access keys can be found in [Exponea API Reference](https://docs.exponea.com/reference#access-keys)
 
 ![](pics/config3.png)
-
-
-4. Follow [this guide](https://docs.exponea.com/reference#access-keys) in order to get your Authorization Token

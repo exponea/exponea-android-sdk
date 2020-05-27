@@ -8,12 +8,11 @@ This section will help you to integrate Exponea SDK into your application
  ## 📝 [Events/Users Tracking Guide](./TRACKING.md)
 Lean how to track events using Exponea
 
-## 📣 [Push Notifications Setup](../Documentation/PUSH.md)
+## 📣 [Push Notifications Setup](./PUSH_QUICKSTART.md)
  Attract new users to your Application using push notifications
 
-
 ## [Sending Push Notifications](./PUSH_SEND.md)
-  Learn how to customize, send and handle Push Notifications
+  Learn how to customize and send Push Notifications from Exponea web app
 
  ## Custom function
 

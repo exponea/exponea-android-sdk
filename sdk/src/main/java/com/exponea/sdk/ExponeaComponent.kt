@@ -1,6 +1,5 @@
 package com.exponea.sdk
 
-import android.app.Application
 import android.content.Context
 import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
@@ -136,7 +135,7 @@ internal class ExponeaComponent(
 
     internal val pushNotificationSelfCheckManager: PushNotificationSelfCheckManager =
         PushNotificationSelfCheckManagerImpl(
-            context.applicationContext as Application,
+            context,
             exponeaConfiguration,
             customerIdsRepository,
             firebaseTokenRepository,

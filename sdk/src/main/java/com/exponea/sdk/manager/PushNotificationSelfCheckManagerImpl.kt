@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -16,6 +17,7 @@ import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isResumedActivity
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -29,7 +31,7 @@ import okhttp3.Callback
 import okhttp3.Response
 
 internal class PushNotificationSelfCheckManagerImpl(
-    private val application: Application,
+    context: Context,
     private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
     private val tokenRepository: FirebaseTokenRepository,
@@ -48,7 +50,8 @@ internal class PushNotificationSelfCheckManagerImpl(
 
     data class SelfCheckResponse(val success: Boolean)
 
-    private var currentResumedActivity: Activity? = null
+    private var application = context.applicationContext as Application
+    private var currentResumedActivity: Activity? = if (context.isResumedActivity()) context as? Activity else null
     private var selfCheckPushReceived: Boolean = false
 
     private val lifecycleListener = object : Application.ActivityLifecycleCallbacks {

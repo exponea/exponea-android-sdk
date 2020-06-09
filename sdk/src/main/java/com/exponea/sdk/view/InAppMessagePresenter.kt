@@ -10,6 +10,7 @@ import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
 
 internal class InAppMessagePresenter(val context: Context) {
@@ -63,8 +64,12 @@ internal class InAppMessagePresenter(val context: Context) {
     /**
      * In order to display the message, we need context of current activity / know that the app is foregrounded.
      * We have application context from SDK init, we'll hook into app lifecycle.
+     * If the SDK was initialized with resumed activity, we'll start using that activity.
      */
     init {
+        if (context.isResumedActivity()) {
+            currentActivity = context as? Activity
+        }
         val application = context.applicationContext as Application
         application.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {

@@ -3,12 +3,14 @@ package com.exponea.sdk.manager
 import android.app.Activity
 import android.content.Context
 import android.preference.PreferenceManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.mocks.MockApplication
 import io.mockk.Runs
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -25,11 +27,16 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = MockApplication::class)
 internal class SessionManagerTest : ExponeaSDKTest() {
     private lateinit var sm: SessionManager
     private lateinit var eventManager: EventManager
+    private lateinit var backgroundTimer: BackgroundTimerManager
+    private lateinit var campaignRepository: CampaignRepository
+    private lateinit var prefs: ExponeaPreferencesImpl
 
     @Before
     fun prepareForTest() {
@@ -43,16 +50,16 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         eventManager = mockk()
         every { eventManager.track(any(), any(), any(), any()) } just Runs
 
-        val backgroundTimer = mockk<BackgroundTimerManager>()
+        backgroundTimer = mockk<BackgroundTimerManager>()
         every { backgroundTimer.startTimer() } just Runs
         every { backgroundTimer.stopTimer() } just Runs
 
-        val campaignRepository = mockk<CampaignRepository>()
+        campaignRepository = mockk<CampaignRepository>()
         every { campaignRepository.get() } returns null
         every { campaignRepository.clear() } returns true
 
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
-        val prefs = ExponeaPreferencesImpl(context)
+        prefs = ExponeaPreferencesImpl(context)
 
         sm = SessionManagerImpl(context, prefs, campaignRepository, eventManager, backgroundTimer)
     }
@@ -80,11 +87,28 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track session start if initialized after onResume`() {
+    fun `should track session start on pause if initialized after onResume with Activity`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.resume()
         sm.startSessionListener()
+        verify(exactly = 0) {
+            eventManager.track("session_start", any(), any(), EventType.SESSION_START)
+        }
+        // the session manager is initialized with application context, we have to pause for session start to be tracked
         controller.pause()
+        verify(exactly = 1) {
+            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+        }
+        confirmVerified(eventManager)
+    }
+
+    @Test
+    fun `should track session start immediately if initialized after onResume with AppCompatActivity`() {
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).create()
+        controller.resume()
+        // if we intitialize session manager with resumed activity, it will track session start right away
+        sm = SessionManagerImpl(controller.get(), prefs, campaignRepository, eventManager, backgroundTimer)
+        sm.startSessionListener()
         verify(exactly = 1) {
             eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
         }

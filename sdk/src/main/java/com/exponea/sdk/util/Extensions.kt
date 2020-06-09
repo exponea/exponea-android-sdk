@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import com.exponea.sdk.Exponea
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -157,3 +159,8 @@ fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
     drawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
     background = drawable
 }
+
+fun Context.isResumedActivity(): Boolean = runCatching {
+    val activity = this as? AppCompatActivity ?: return false
+    return activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+}.returnOnException { false }

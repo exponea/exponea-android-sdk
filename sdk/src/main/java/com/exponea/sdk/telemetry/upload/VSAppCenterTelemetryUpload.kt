@@ -8,6 +8,7 @@ import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.util.isReactNativeSDK
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -32,7 +33,6 @@ internal class VSAppCenterTelemetryUpload(
 ) : TelemetryUpload {
     companion object {
         private const val DEFAULT_UPLOAD_URL = "https://in.appcenter.ms/logs?Api-Version=1.0.0"
-        private const val APP_SECRET = BuildConfig.telemetryVSAppCenterAppSecret
 
         private val jsonMediaType: MediaType = MediaType.parse("application/json")!!
         private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -40,6 +40,23 @@ internal class VSAppCenterTelemetryUpload(
             isoDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         }
     }
+
+    private val APP_SECRET: String
+        get() {
+            return if (context.isReactNativeSDK()) {
+                if (BuildConfig.DEBUG) {
+                    "8308ba5f-319a-452e-99eb-826a0714e344"
+                } else {
+                    "0be0c184-73d2-49d2-aa90-31c3895c2c54"
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    "19dca50b-3467-488b-b1fa-47fb9258901a"
+                } else {
+                    "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
+                }
+            }
+        }
 
     private val networkClient = OkHttpClient()
 

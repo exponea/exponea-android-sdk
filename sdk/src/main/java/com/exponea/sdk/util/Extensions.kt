@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.PorterDuff
 import android.os.Build
@@ -163,4 +164,9 @@ fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
 fun Context.isResumedActivity(): Boolean = runCatching {
     val activity = this as? AppCompatActivity ?: return false
     return activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+}.returnOnException { false }
+
+fun Context.isReactNativeSDK(): Boolean = runCatching {
+    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+    return appInfo.metaData["ExponeaReactNativeSDK"] == true
 }.returnOnException { false }

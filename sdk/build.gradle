@@ -28,12 +28,10 @@ android {
 
     buildTypes {
         release {
-            buildConfigField "String", "telemetryVSAppCenterAppSecret", "\"67e2bde9-3c20-4259-b8e4-428b4f89ca8d\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
-            buildConfigField "String", "telemetryVSAppCenterAppSecret", "\"19dca50b-3467-488b-b1fa-47fb9258901a\""
             testCoverageEnabled  true
         }
     }

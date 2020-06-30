@@ -1,4 +1,9 @@
 ## Release Notes
+## Release Notes for 2.7.4
+#### June 30, 2020
+* Features
+  * When initialized with instance of resumed `AppCompatActivity`, the SDK now automatically starts the session and displays in-app message (if applicable). Before, the SDK would perform these actions after next activity resume.
+
 ## Release Notes for 2.7.3
 #### May 01, 2020
 * Features

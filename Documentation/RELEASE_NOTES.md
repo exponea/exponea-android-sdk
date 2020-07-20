@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.8.0
+#### July 20, 2020
+* Features
+  * Silent push notifications support. You're now able to send background updates to your application and respond to them using `Exponea.notificationDataCallback`. Delivery of silent push notifications is tracked to Exponea backend.
+  * When the application is started from a push notification, resulting session will contain UTM parameters.
+  * Updated push notifications documentation and self-check mechanism to make notifications integration easier.
+* Bug Fixes
+  * Fixed: Push notification sound is no longer played in `Do not Disturb` mode
+
+
 ## Release Notes for 2.7.4
 #### June 30, 2020
 * Features

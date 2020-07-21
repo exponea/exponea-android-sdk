@@ -104,6 +104,7 @@ internal class VSAppCenterTelemetryUpload(
             override fun onResponse(call: Call, response: Response) {
                 // even if server rejects the log we call it a success - it was processed
                 callback(Result.success(Unit))
+                response.close()
             }
         })
     }

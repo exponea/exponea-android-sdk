@@ -49,13 +49,17 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val file = createTempFile()
-                    response.body()?.byteStream()?.copyTo(file.outputStream())
+                    with(file.outputStream()) {
+                        response.body()?.byteStream()?.copyTo(this)
+                        this.close()
+                    }
                     file.renameTo(File(directory, getFileName(url)))
                     callback?.invoke(true)
                 } else {
                     Logger.w(this, "Error while preloading in-app message image. Server responded ${response.code()}")
                     callback?.invoke(false)
                 }
+                response.close()
             }
 
             override fun onFailure(call: Call, e: IOException) {

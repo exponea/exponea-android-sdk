@@ -126,6 +126,7 @@ internal class FlushManagerImpl(
             }
             // Once done continue and try to flush the rest of events
             flushDataInternal(onFlushFinished)
+            response.close()
         }
     }
 

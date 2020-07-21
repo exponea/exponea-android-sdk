@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -268,12 +269,16 @@ internal class InAppMessageManagerImpl(
 
     private fun processInAppMessageAction(button: InAppMessagePayloadButton) {
         if (button.buttonType == InAppMessageButtonType.DEEPLINK) {
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    data = Uri.parse(button.buttonLink)
-                }
-            )
+            try {
+                context.startActivity(
+                    Intent(Intent.ACTION_VIEW).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        data = Uri.parse(button.buttonLink)
+                    }
+                )
+            } catch (e: ActivityNotFoundException) {
+                Logger.e(this, "Unable to perform deeplink", e)
+            }
         }
     }
 }

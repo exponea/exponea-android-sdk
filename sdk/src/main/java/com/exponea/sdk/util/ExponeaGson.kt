@@ -12,7 +12,7 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 
-class ExponeaGson {
+internal class ExponeaGson {
     companion object {
         internal val instance = GsonBuilder()
             // NaN and Infinity are serialized as strings.

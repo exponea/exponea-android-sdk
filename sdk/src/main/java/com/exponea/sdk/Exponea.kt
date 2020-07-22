@@ -750,6 +750,7 @@ object Exponea {
     ) = runCatching {
         requireInitialized {
             component.anonymize(exponeaProject, projectRouteMap)
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
         }
     }.logOnException()
 

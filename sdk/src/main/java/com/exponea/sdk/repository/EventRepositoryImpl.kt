@@ -8,6 +8,10 @@ import com.exponea.sdk.models.ExportedEventType
 internal class EventRepositoryImpl(context: Context) : EventRepository {
     private val database = ExponeaDatabaseImpl<ExportedEventType>(context, "EventDatabase")
 
+    override fun count(): Int {
+        return database.count()
+    }
+
     override fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>> {
         return database.all()
     }

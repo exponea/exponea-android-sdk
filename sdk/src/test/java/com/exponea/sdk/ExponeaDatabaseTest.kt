@@ -75,6 +75,13 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should count items`() {
+        assertEquals(0, db.count())
+        db.add(mockData)
+        assertEquals(1, db.count())
+    }
+
+    @Test
     fun `should add items from multiple threads`() {
         waitForIt {
             val threadCount = 10

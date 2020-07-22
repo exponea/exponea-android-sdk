@@ -179,7 +179,6 @@ internal class TelemetryUtilityTest {
         fun `should format configuration`() {
             assertEquals(
                 hashMapOf(
-                    "projectToken" to "[REDACTED]",
                     "projectRouteMap" to "[REDACTED]",
                     "automaticSessionTracking" to "true [default]",
                     "maxTries" to "10 [default]",

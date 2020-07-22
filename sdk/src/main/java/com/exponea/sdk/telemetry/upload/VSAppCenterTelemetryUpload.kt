@@ -8,6 +8,7 @@ import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isReactNativeSDK
 import com.google.gson.Gson
 import java.io.IOException
@@ -33,6 +34,7 @@ internal class VSAppCenterTelemetryUpload(
 ) : TelemetryUpload {
     companion object {
         private const val DEFAULT_UPLOAD_URL = "https://in.appcenter.ms/logs?Api-Version=1.0.0"
+        private const val MAX_EVENT_PROPERTIES = 20
 
         private val jsonMediaType: MediaType = MediaType.parse("application/json")!!
         private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -61,6 +63,13 @@ internal class VSAppCenterTelemetryUpload(
     private val networkClient = OkHttpClient()
 
     override fun uploadEventLog(log: EventLog, callback: (Result<Unit>) -> Unit) {
+        if (log.properties.count() > MAX_EVENT_PROPERTIES) {
+            if (BuildConfig.DEBUG) {
+                throw RuntimeException("VS only accepts up to 20 event properties, ${log.properties.count()} provided.")
+            } else {
+                Logger.e(this, "VS only accepts up to 20 event properties, ${log.properties.count()} provided.")
+            }
+        }
         upload(VSAppCenterAPIRequestData(logs = arrayListOf(getAPIEventLog(log))), callback)
     }
 

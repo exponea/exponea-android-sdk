@@ -602,6 +602,11 @@ object Exponea {
     private fun initializeSdk() {
         this.component = ExponeaComponent(this.configuration, context)
 
+        telemetry?.reportEvent(
+            com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,
+            hashMapOf("count" to component.eventRepository.count().toString())
+        )
+
         initWorkManager()
 
         if (flushMode == PERIOD) startPeriodicFlushService()

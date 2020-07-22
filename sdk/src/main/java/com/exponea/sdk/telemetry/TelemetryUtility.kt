@@ -60,8 +60,6 @@ object TelemetryUtility {
             "${property.get(configuration)}${if (isDefault(property)) " [default]" else ""}"
         }
         return hashMapOf(
-            "projectToken"
-                to if (configuration.projectToken.isNotBlank()) "[REDACTED]" else "",
             "projectRouteMap"
                 to if (configuration.projectRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
             "baseURL"

@@ -6,5 +6,6 @@ enum class EventType(val value: String) {
     FETCH_CONSENTS("fetchConsents"),
     SHOW_IN_APP_MESSAGE("showInAppMessage"),
     SELF_CHECK("selfCheck"),
-    ANONYMIZE("anonymize")
+    ANONYMIZE("anonymize"),
+    EVENT_COUNT("eventCount")
 }

@@ -32,6 +32,10 @@ internal class ExponeaDatabaseImpl<T>(
         return list
     }
 
+    override fun count(): Int {
+        return book.allKeys.size
+    }
+
     override fun add(item: DatabaseStorageObject<T>): Boolean = synchronized(this) {
         return try {
             book.write(item.id, item)

@@ -5,6 +5,7 @@ import com.exponea.sdk.models.ExportedEventType
 
 internal interface EventRepository {
     fun all(): ArrayList<DatabaseStorageObject<ExportedEventType>>
+    fun count(): Int
     fun add(item: DatabaseStorageObject<ExportedEventType>): Boolean
     fun update(item: DatabaseStorageObject<ExportedEventType>): Boolean
     fun get(id: String): DatabaseStorageObject<ExportedEventType>?

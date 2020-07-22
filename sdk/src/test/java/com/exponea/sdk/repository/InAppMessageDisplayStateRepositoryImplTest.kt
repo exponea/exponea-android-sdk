@@ -3,8 +3,11 @@ package com.exponea.sdk.repository
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.Gson
+import java.text.SimpleDateFormat
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import kotlin.test.assertEquals
@@ -16,14 +19,13 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageDisplayStateRepositoryImplTest {
     private lateinit var repo: InAppMessageDisplayStateRepository
+    private lateinit var prefs: ExponeaPreferences
     private val message = InAppMessageTest.getInAppMessage()
 
     @Before
     fun before() {
-        repo = InAppMessageDisplayStateRepositoryImpl(
-            ExponeaPreferencesImpl(ApplicationProvider.getApplicationContext()),
-            Gson()
-        )
+        prefs = ExponeaPreferencesImpl(ApplicationProvider.getApplicationContext())
+        repo = InAppMessageDisplayStateRepositoryImpl(prefs, ExponeaGson.instance)
     }
 
     @Test
@@ -51,6 +53,37 @@ internal class InAppMessageDisplayStateRepositoryImplTest {
             Gson()
         )
         assertEquals(InAppMessageDisplayState(now, null), repo.get(message))
+    }
+
+    @Test
+    fun `should read data in old format`() {
+        prefs.setString(
+            InAppMessageDisplayStateRepositoryImpl.KEY,
+            """{"mock-id":{"displayed":"Jul 22, 2020 12:21:56 PM"}}"""
+        )
+        assertEquals(
+            SimpleDateFormat(InAppMessageDisplayStateRepositoryImpl.LEGACY_DATE_FORMAT)
+                .parse("Jul 22, 2020 12:21:56 PM"),
+            repo.get(InAppMessageTest.getInAppMessage("mock-id")).displayed
+        )
+        assertEquals(null, repo.get(InAppMessageTest.getInAppMessage("mock-id")).interacted)
+    }
+
+    @Test
+    fun `should provide default for unreadable date format`() {
+        prefs.setString(
+            InAppMessageDisplayStateRepositoryImpl.KEY,
+            """{
+                "mock-id":{"displayed":"Jul 22, 2020 12:21:56 PM"},
+                "mock-id2":{"displayed":"Jul 22, 2020 12:21:56"}
+            }"""
+        )
+        assertEquals(
+            SimpleDateFormat(InAppMessageDisplayStateRepositoryImpl.LEGACY_DATE_FORMAT)
+                .parse("Jul 22, 2020 12:21:56 PM"),
+            repo.get(InAppMessageTest.getInAppMessage("mock-id")).displayed
+        )
+        assertEquals(Date(0), repo.get(InAppMessageTest.getInAppMessage("mock-id2")).displayed)
     }
 
     @Test

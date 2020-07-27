@@ -240,31 +240,35 @@ internal class InAppMessageManagerImpl(
         val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
             bitmapCache.get(message.payload.imageUrl) ?: return
             else null
-        Logger.i(this, "Posting show to main thread.")
-        Handler(Looper.getMainLooper()).post {
-            val presented = presenter.show(
-                messageType = message.messageType,
-                payload = message.payload,
-                image = bitmap,
-                actionCallback = { button ->
-                    displayStateRepository.setInteracted(message, Date())
-                    trackingDelegate.track(message, "click", true)
-                    Logger.i(this, "In-app message button clicked!")
-                    processInAppMessageAction(button)
-                },
-                dismissedCallback = {
-                    trackingDelegate.track(message, "close", false)
-                }
-            )
-            if (presented != null) {
-                displayStateRepository.setDisplayed(message, Date())
-                trackingDelegate.track(message, "show", false)
-                Exponea.telemetry?.reportEvent(
-                    com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-                    hashMapOf("messageType" to message.rawMessageType)
+        Logger.i(this, "Posting show to main thread with delay ${message.delay ?: 0}ms.")
+        Handler(Looper.getMainLooper()).postDelayed(
+            {
+                val presented = presenter.show(
+                    messageType = message.messageType,
+                    payload = message.payload,
+                    image = bitmap,
+                    timeout = message.timeout,
+                    actionCallback = { button ->
+                        displayStateRepository.setInteracted(message, Date())
+                        trackingDelegate.track(message, "click", true)
+                        Logger.i(this, "In-app message button clicked!")
+                        processInAppMessageAction(button)
+                    },
+                    dismissedCallback = {
+                        trackingDelegate.track(message, "close", false)
+                    }
                 )
-            }
-        }
+                if (presented != null) {
+                    displayStateRepository.setDisplayed(message, Date())
+                    trackingDelegate.track(message, "show", false)
+                    Exponea.telemetry?.reportEvent(
+                        com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
+                        hashMapOf("messageType" to message.rawMessageType)
+                    )
+                }
+            },
+            message.delay ?: 0
+        )
     }
 
     private fun processInAppMessageAction(button: InAppMessagePayloadButton) {

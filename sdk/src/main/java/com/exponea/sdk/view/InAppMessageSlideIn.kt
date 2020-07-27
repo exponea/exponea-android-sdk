@@ -4,8 +4,6 @@ import android.animation.Animator
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Handler
-import android.os.Looper
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -30,7 +28,6 @@ import com.google.android.material.behavior.SwipeDismissBehavior
 internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     companion object {
         const val ANIMATION_DURATION = 250L
-        const val DISPLAY_DURATION = 4000L
     }
 
     private val activity: Activity
@@ -38,6 +35,9 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
     private var onDismiss: (() -> Unit)?
     private val bitmap: Bitmap
+
+    override val isPresented: Boolean
+        get() = isShowing
 
     constructor(
         activity: Activity,
@@ -81,7 +81,6 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
             0
         )
         setupSwipeToDismiss()
-        Handler(Looper.getMainLooper()).postDelayed({ if (isShowing) dismiss() }, DISPLAY_DURATION)
     }
 
     override fun dismiss() {

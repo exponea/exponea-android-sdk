@@ -46,7 +46,9 @@ internal class InAppMessageTest {
                 "enabled": false,
                 "from_date": null,
                 "to_date": null
-            }
+            },
+            "load_delay": 2000,
+            "close_timeout": 1000
         }
         """
 
@@ -56,7 +58,9 @@ internal class InAppMessageTest {
             trigger: EventFilter? = null,
             frequency: String? = null,
             imageUrl: String? = null,
-            priority: Int? = null
+            priority: Int? = null,
+            timeout: Long? = null,
+            delay: Long? = null
         ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
@@ -68,6 +72,8 @@ internal class InAppMessageTest {
                 trigger = trigger ?: EventFilter("session_start", arrayListOf()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 priority = priority,
+                delay = delay,
+                timeout = timeout,
                 payload = InAppMessagePayload(
                     imageUrl = imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
                     title = "filip.vozar@exponea.com",
@@ -94,6 +100,6 @@ internal class InAppMessageTest {
 
     @Test
     fun `should parse in-app message from json`() {
-        assertEquals(getInAppMessage(), Gson().fromJson(json, InAppMessage::class.java))
+        assertEquals(getInAppMessage(timeout = 1000, delay = 2000), Gson().fromJson(json, InAppMessage::class.java))
     }
 }

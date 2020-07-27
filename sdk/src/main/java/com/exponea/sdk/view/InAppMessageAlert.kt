@@ -9,6 +9,8 @@ import com.exponea.sdk.models.InAppMessagePayloadButton
 
 internal class InAppMessageAlert : InAppMessageView {
     val dialog: AlertDialog
+    override val isPresented: Boolean
+        get() = dialog.isShowing
 
     constructor(
         context: Context,

@@ -39,6 +39,9 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private var onDismiss: (() -> Unit)?
     private val bitmap: Bitmap
 
+    override val isPresented: Boolean
+        get() = isShowing
+
     constructor(
         context: Context,
         fullScreen: Boolean,

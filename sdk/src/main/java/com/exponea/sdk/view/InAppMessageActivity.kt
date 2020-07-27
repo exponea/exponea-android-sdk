@@ -17,6 +17,7 @@ internal class InAppMessageActivity : AppCompatActivity() {
             presenting.messageType,
             presenting.payload,
             presenting.image,
+            presenting.timeout,
             { button ->
                 presenting.actionCallback(button)
                 finish()

@@ -26,7 +26,11 @@ internal data class InAppMessage(
     @SerializedName("date_filter")
     val dateFilter: DateFilter,
     @SerializedName("load_priority")
-    val priority: Int?
+    val priority: Int?,
+    @SerializedName("load_delay")
+    val delay: Long?,
+    @SerializedName("close_timeout")
+    val timeout: Long?
 ) {
     val frequency: InAppMessageFrequency?
         get() {

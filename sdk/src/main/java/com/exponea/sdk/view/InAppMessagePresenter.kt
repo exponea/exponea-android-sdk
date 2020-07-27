@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
@@ -18,6 +20,7 @@ internal class InAppMessagePresenter(val context: Context) {
         val messageType: InAppMessageType,
         val payload: InAppMessagePayload,
         val image: Bitmap?,
+        val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
         val dismissedCallback: (() -> Unit)
     )
@@ -28,10 +31,12 @@ internal class InAppMessagePresenter(val context: Context) {
             messageType: InAppMessageType,
             payload: InAppMessagePayload,
             image: Bitmap?,
+            timeout: Long?,
             actionCallback: (InAppMessagePayloadButton) -> Unit,
             dismissedCallback: () -> Unit
         ): InAppMessageView? {
-            return when (messageType) {
+            var messageTimeout = timeout
+            val view = when (messageType) {
                 InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
                     activity,
                     messageType == InAppMessageType.FULLSCREEN,
@@ -46,14 +51,25 @@ internal class InAppMessagePresenter(val context: Context) {
                     actionCallback,
                     dismissedCallback
                 )
-                InAppMessageType.SLIDE_IN -> InAppMessageSlideIn(
-                    activity,
-                    payload,
-                    image ?: return null,
-                    actionCallback,
-                    dismissedCallback
+                InAppMessageType.SLIDE_IN -> {
+                    // slide-in message has 4 second auto-dismiss default
+                    if (timeout == null) messageTimeout = 4000
+                    InAppMessageSlideIn(
+                        activity,
+                        payload,
+                        image ?: return null,
+                        actionCallback,
+                        dismissedCallback
+                    )
+                }
+            }
+            if (messageTimeout != null) {
+                Handler(Looper.getMainLooper()).postDelayed(
+                    { if (view.isPresented) { view.dismiss() } },
+                    messageTimeout
                 )
             }
+            return view
         }
     }
 
@@ -92,6 +108,7 @@ internal class InAppMessagePresenter(val context: Context) {
         messageType: InAppMessageType,
         payload: InAppMessagePayload,
         image: Bitmap?,
+        timeout: Long?,
         actionCallback: (InAppMessagePayloadButton) -> Unit,
         dismissedCallback: () -> Unit
     ): PresentedMessage? = runCatching {
@@ -114,7 +131,7 @@ internal class InAppMessagePresenter(val context: Context) {
             dismissedCallback()
         }
         presentedMessage =
-            PresentedMessage(messageType, payload, image, presenterActionCallback, presenterDismissedCallback)
+            PresentedMessage(messageType, payload, image, timeout, presenterActionCallback, presenterDismissedCallback)
 
         when (messageType) {
             InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {
@@ -127,6 +144,7 @@ internal class InAppMessagePresenter(val context: Context) {
                     messageType,
                     payload,
                     image,
+                    timeout,
                     presenterActionCallback,
                     presenterDismissedCallback
                 )?.show()

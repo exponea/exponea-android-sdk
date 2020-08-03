@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Title"
-                android:textAlignment="center"
+                android:gravity="center"
                 android:layout_gravity="center_horizontal"
                 android:textStyle="bold"
                 android:layout_marginTop="20dp" />
@@ -75,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="body"
-                android:textAlignment="center"
+                android:gravity="center"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp" />
 

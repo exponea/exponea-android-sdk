@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:text="Title"
                 android:layout_gravity="start"
-                android:textAlignment="textStart"
+                android:gravity="start"
                 android:textStyle="bold" />
 
             <TextView
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:text="body"
                 android:layout_gravity="start"
-                android:textAlignment="textStart"
+                android:gravity="start"
                 android:layout_marginTop="5dp" />
             <LinearLayout
                 android:layout_width="match_parent"

@@ -59,6 +59,7 @@ Then you can start using all supported features:
 * [Fetch Data](./Documentation/FETCH.md)
 * [Payments](./Documentation/PAYMENT.md)
 * [Anonymize](./Documentation/ANONYMIZE.md)
+* [In-app messages](./Documentation/IN_APP_MESSAGES.md)
 
 ## 🔗 Useful links
 

@@ -1,4 +1,15 @@
 ## Release Notes
+## Release Notes for 2.8.1
+#### August 07, 2020
+* Features
+  * Support for new in-app message delay and timeout fields soon to be available in Exponea web app.
+  * Troubleshooting guide for [In-app messages](IN_APP_MESSAGES.md).
+* Bug Fixes
+  * Fixed: Opening a deeplink that couldn't be handled inside in-app message would cause the application to crash. Now, an error is logged.
+  * Fixed: In-app message text was not correctly centered.
+  * Fixed: Serialization issue in in-app messages would prevent some in-app messages from being displayed. 
+  * Fixed: String mode errors with unclosed closable resources.
+
 ## Release Notes for 2.8.0
 #### July 20, 2020
 * Features

@@ -3,45 +3,41 @@
 
 1. Open `build.gradle` file located in your project folder
 2. Add ExponeaSDK dependency and sync your project
-```groovy
-dependencies {
-    implementation 'com.exponea.sdk:sdk:2.8.1'
-}
-```
-3. After synchronisation is complete, you can start using SDK
+    ```groovy
+    dependencies {
+        implementation 'com.exponea.sdk:sdk:2.8.1'
+    }
+    ```
+3. After synchronization is complete, you can start using the SDK.
 
 
 ## Configuration
- In order to use ExponeaSDK you have to initize and configure it first
+ In order to use ExponeaSDK you have to initialize it with a configuration that connects the SDK to your web application and sets up individual SDK features. You can configure your Exponea instance either in code (preferred) or using *.json* configuration file.
 
-
-You can configure you Exponea instance either in code or using
-.json configuarion file.
-Minimal configuarion requires you to provide `Authorization Token`, `Project Token` and `Base URL`
-You can find these parameteres in `Exponea console`.
+Minimal configuration requires you to provide `Authorization Token`, `Project Token` and `Base URL`.
+You can find these parameters in `Exponea web application`.
 
 > [How do I get these parameters?](./CONFIGURATION.md)
 
 
 ##### Using Code
-```
-        // Init your exponea configuration
-        val configuration = ExponeaConfiguration()
+``` kotlin
+// Init your exponea configuration
+val configuration = ExponeaConfiguration()
 
-        // Set Authorization Token
-        configuration.authorization = authorizationToken
+// Set Authorization Token
+configuration.authorization = authorizationToken
 
-        // Set Project Token
-        configuration.projectToken = projectToken
+// Set Project Token
+configuration.projectToken = projectToken
 
-        // Set Base URL
-        configuration.baseURL = apiUrl
+// Set Base URL
+configuration.baseURL = apiUrl
 ```
 
 
 ##### Using Configuration file
-You can also use .json file in order to provide your configuration. The SDK searches for a file called
-`exponea_configuration.json` that must be inside the "assets" folder of your application
+The SDK searches for a file called `exponea_configuration.json` that must be inside the "assets" folder of your application
 ```
 {
   "projectToken": "place your project token here",
@@ -54,27 +50,30 @@ You can also use .json file in order to provide your configuration. The SDK sear
 
 > [Learn more about how you can configure ExponeaSDK](../Documentation/CONFIG.md)
 
+## Initializing
 
-After configuration is taken care of, it is time to initize ExponeaSDK. Best place to initize it will be in you Application `onCreate()` method as requires your's application `Context`. Application is a the class for maintaining global application state. It's usually looks similar to this ( along with our SDK initilization code ). Heres a basic SDK initization example
+#### In an Application subclass
+Once you have your configuration ready, it is time to initialize ExponeaSDK. Best place for initialization is in your Application `onCreate()` method - it's called only once and very early in the application lifecycle. Application is the class for maintaining global application state. It usually looks similar to this (along with our SDK initialization code).
+``` kotlin
+class MyApplication : Application() {
+  override fun onCreate(){
+    super.onCreate()
 
-```
- class MyApplication : Application() {
-   override fun onCreate(){
-     super.onCreate()
+    // TODO Your implementation here
+    val configuration = ExponeaConfiguration()
 
-     // TODO Your implementation here
-     val configuration = ExponeaConfiguration()
+    configuration.authorization = "Token jlk5askvxss99asmnbgayrks333"
+    configuration.projectToken = "47b5cc2c-e661-11e8-bb95-0a580a201692"
+    configuration.baseURL = "https://api.exponea.com"
 
-     configuration.authorization = "Token jlk5askvxss99asmnbgayrks333"
-     configuration.projectToken = "47b5cc2c-e661-11e8-bb95-0a580a201692"
-     configuration.baseURL = "https://api.exponea.com"
-
-     // Sdk initization
-      Exponea.init(this, configuration)
-   }
+    // Sdk initialization
+    Exponea.init(this, configuration)
+    // or just Exponea.init(this) if using configuration file
+  }
 }
 ```
-And it also must be registered `AndroidManafifest.xml` like so:
+
+You'll need to register the custom application class in your `AndroidManifest.xml`:
 ```xml
 <application
        android:name=".MyApplication">
@@ -82,22 +81,10 @@ And it also must be registered `AndroidManafifest.xml` like so:
 </application>
  ```
 
-If you are using configuration from file you code above could be simplified
-```
-override fun onCreate(){
-    super.onCreate()    
-    Exponea.init(this)
-}
-```
+#### In an Activity
+You may decide that start of your application is not the best time to initialize Exponea SDK (e.g. for performance reasons). You can also initialize Exponea from any `Activity`, but it's important to do so as early as possible. Ideal place is your activity's `onCreate` method.
 
-> You can also initize Exponea from any `Fragment` or `Activity`, just remember to pass `Context` of the `Application`
+The SDK hooks into application lifecycle to e.g. track sessions, so we need to keep track of activities `onResume` callbacks. If you need to initialize the SDK after the activity has been resumed, do so with the `context` of the current activity.
 
- ```
-  // In Fragment
-   Exponea.init(contex.applicationContext, configuration)
-
-   // In Activity
-   Exponea.init(applicationContext, configuration)
-```
-
-That's it! Your are now able to use Exponea in your application!
+## That's it!
+Your are now able to use Exponea in your application!

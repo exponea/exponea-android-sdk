@@ -108,7 +108,6 @@ internal class ExponeaComponent(
 
     internal val inAppMessagePresenter = InAppMessagePresenter(context)
     internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
-        context,
         exponeaConfiguration,
         customerIdsRepository,
         inAppMessagesCache,

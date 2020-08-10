@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -35,7 +36,6 @@ internal data class InAppMessageShowRequest(
     val requestedAt: Long
 )
 internal class InAppMessageManagerImpl(
-    private val context: Context,
     private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
     private val inAppMessagesCache: InAppMessagesCache,
@@ -248,11 +248,11 @@ internal class InAppMessageManagerImpl(
                     payload = message.payload,
                     image = bitmap,
                     timeout = message.timeout,
-                    actionCallback = { button ->
+                    actionCallback = { activity, button ->
                         displayStateRepository.setInteracted(message, Date())
                         trackingDelegate.track(message, "click", true)
                         Logger.i(this, "In-app message button clicked!")
-                        processInAppMessageAction(button)
+                        processInAppMessageAction(activity, button)
                     },
                     dismissedCallback = {
                         trackingDelegate.track(message, "close", false)
@@ -271,10 +271,10 @@ internal class InAppMessageManagerImpl(
         )
     }
 
-    private fun processInAppMessageAction(button: InAppMessagePayloadButton) {
+    private fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
         if (button.buttonType == InAppMessageButtonType.DEEPLINK) {
             try {
-                context.startActivity(
+                activity.startActivity(
                     Intent(Intent.ACTION_VIEW).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         data = Uri.parse(button.buttonLink)

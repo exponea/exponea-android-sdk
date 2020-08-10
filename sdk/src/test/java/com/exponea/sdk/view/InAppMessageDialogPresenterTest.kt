@@ -8,6 +8,7 @@ import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.testutil.mocks.MockApplication
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.verify
@@ -41,44 +42,52 @@ internal class InAppMessageDialogPresenterTest(
     fun `should not show dialog without resumed activity`() {
         buildActivity(AppCompatActivity::class.java).setup()
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
-        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {}))
     }
 
     @Test
     fun `should show dialog once and activity is resumed`() {
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
-        assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNotNull(
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+        )
     }
 
     @Test
     fun `should show dialog when initialized with resumed activity`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
         val presenter = InAppMessagePresenter(activity.get())
-        assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNotNull(
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+        )
     }
 
     @Test
     fun `should not show dialog after activity is paused`() {
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
-        val presented = presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {})
+        val presented =
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         assertNotNull(presented)
         presented.dismissedCallback()
         buildActivity(AppCompatActivity::class.java).setup().resume().pause()
-        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {}))
     }
 
     @Test
     fun `should only show one dialog at a time`() {
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
-        val presented = presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {})
+        val presented =
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         assertNotNull(presented)
-        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {}))
         presented.dismissedCallback()
         Robolectric.flushForegroundThreadScheduler() // skip animations
-        assertNotNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, {}, {}))
+        assertNotNull(
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+        )
     }
 
     @Test
@@ -91,7 +100,7 @@ internal class InAppMessageDialogPresenterTest(
         val presenter = InAppMessagePresenter(activity.get())
         val dismiss = spyk<() -> Unit>()
         val presented =
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), 1234, {}, dismiss)
+            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), 1234, mockk(), dismiss)
 
         mockkObject(Exponea)
         every { Exponea.presentedInAppMessage } returns presented

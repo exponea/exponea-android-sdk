@@ -15,13 +15,14 @@ import com.exponea.sdk.util.currentTimeSeconds
 import java.util.Date
 
 internal class EventManagerImpl(
-    private val context: Context,
+    context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
     private val flushManager: FlushManager,
     private val inAppMessageManager: InAppMessageManager
 ) : EventManager {
+    private val inAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(context, this)
 
     fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
         Logger.d(this, "addEventToQueue")
@@ -79,7 +80,7 @@ internal class EventManagerImpl(
                 eventType,
                 properties,
                 timestamp,
-                EventManagerInAppMessageTrackingDelegate(context, this)
+                inAppMessageTrackingDelegate
             )
         }
     }

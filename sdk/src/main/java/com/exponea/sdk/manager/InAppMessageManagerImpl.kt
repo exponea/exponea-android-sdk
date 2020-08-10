@@ -288,9 +288,11 @@ internal class InAppMessageManagerImpl(
 }
 
 internal class EventManagerInAppMessageTrackingDelegate(
-    private val context: Context,
+    context: Context,
     private val eventManager: EventManager
 ) : InAppMessageTrackingDelegate {
+    private val deviceProperties = DeviceProperties(context)
+
     override fun track(message: InAppMessage, action: String, interaction: Boolean) {
         val properties = hashMapOf(
             "action" to action,
@@ -303,7 +305,7 @@ internal class EventManagerInAppMessageTrackingDelegate(
             "variant_id" to message.variantId,
             "variant_name" to message.variantName
         )
-        properties.putAll(DeviceProperties(context).toHashMap())
+        properties.putAll(deviceProperties.toHashMap())
 
         eventManager.track(
             eventType = Constants.EventTypes.banner,

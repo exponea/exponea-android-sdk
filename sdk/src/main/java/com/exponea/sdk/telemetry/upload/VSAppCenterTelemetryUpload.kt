@@ -1,6 +1,6 @@
 package com.exponea.sdk.telemetry.upload
 
-import android.content.Context
+import android.app.Application
 import android.os.Build
 import android.util.Base64
 import com.exponea.sdk.BuildConfig
@@ -26,7 +26,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 
 internal class VSAppCenterTelemetryUpload(
-    private val context: Context,
+    application: Application,
     private val installId: String,
     private val sdkVersion: String,
     private val userId: String,
@@ -43,23 +43,22 @@ internal class VSAppCenterTelemetryUpload(
         }
     }
 
-    private val APP_SECRET: String
-        get() {
-            return if (context.isReactNativeSDK()) {
-                if (BuildConfig.DEBUG) {
-                    "8308ba5f-319a-452e-99eb-826a0714e344"
-                } else {
-                    "0be0c184-73d2-49d2-aa90-31c3895c2c54"
-                }
+    private val APP_SECRET: String =
+        if (application.isReactNativeSDK()) {
+            if (BuildConfig.DEBUG) {
+                "8308ba5f-319a-452e-99eb-826a0714e344"
             } else {
-                if (BuildConfig.DEBUG) {
-                    "19dca50b-3467-488b-b1fa-47fb9258901a"
-                } else {
-                    "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
-                }
+                "0be0c184-73d2-49d2-aa90-31c3895c2c54"
+            }
+        } else {
+            if (BuildConfig.DEBUG) {
+                "19dca50b-3467-488b-b1fa-47fb9258901a"
+            } else {
+                "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
             }
         }
 
+    private val appInfo = TelemetryUtility.getAppInfo(application)
     private val networkClient = OkHttpClient()
 
     override fun uploadEventLog(log: EventLog, callback: (Result<Unit>) -> Unit) {
@@ -159,8 +158,6 @@ internal class VSAppCenterTelemetryUpload(
     }
 
     private fun getAPIDevice(): VSAppCenterAPIDevice {
-        val appInfo = TelemetryUtility.getAppInfo(context)
-
         return VSAppCenterAPIDevice(
             appInfo.packageName,
             "${appInfo.packageName}-${appInfo.versionName}",

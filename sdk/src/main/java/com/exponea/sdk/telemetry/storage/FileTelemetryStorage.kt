@@ -1,18 +1,18 @@
 package com.exponea.sdk.telemetry.storage
 
-import android.content.Context
+import android.app.Application
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.google.gson.Gson
 import java.io.File
 
-internal class FileTelemetryStorage(private val context: Context) : TelemetryStorage {
+internal class FileTelemetryStorage(private val application: Application) : TelemetryStorage {
     companion object {
         const val CRASHLOG_FILE_PREFIX = "exponeasdk_crashlog_"
         const val DIRECTORY = "exponeasdk_telemetry_storage"
     }
 
     private fun getLogsDirectory(): File? {
-        val directory = File(context.cacheDir, DIRECTORY)
+        val directory = File(application.cacheDir, DIRECTORY)
         if (directory.exists()) {
             return directory
         }

@@ -45,7 +45,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         unmockkConstructor(VSAppCenterTelemetryUpload::class)
         server = ExponeaMockServer.createServer()
         upload = VSAppCenterTelemetryUpload(
-            context = ApplicationProvider.getApplicationContext(),
+            application = ApplicationProvider.getApplicationContext(),
             installId = "mock-install-id",
             sdkVersion = "1.0.0",
             userId = "mock-user-id",

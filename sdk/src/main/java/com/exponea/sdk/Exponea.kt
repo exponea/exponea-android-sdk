@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -266,7 +267,7 @@ object Exponea {
         if (Looper.myLooper() == null)
             Looper.prepare()
 
-        telemetry = TelemetryManager(context)
+        telemetry = TelemetryManager(context.applicationContext as Application)
         telemetry?.start()
         telemetry?.reportInitEvent(configuration)
 

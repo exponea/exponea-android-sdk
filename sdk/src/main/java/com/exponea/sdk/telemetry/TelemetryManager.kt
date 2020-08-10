@@ -1,6 +1,6 @@
 package com.exponea.sdk.telemetry
 
-import android.content.Context
+import android.app.Application
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.EventLog
@@ -13,17 +13,18 @@ import com.exponea.sdk.util.Logger
 import java.util.Date
 import java.util.UUID
 
-internal class TelemetryManager(val context: Context, userId: String? = null) {
+internal class TelemetryManager(application: Application, userId: String? = null) {
     companion object {
         const val TELEMETRY_PREFS_KEY = "EXPONEA_TELEMETRY"
         const val INSTALL_ID_KEY = "INSTALL_ID"
     }
 
-    private var runId = UUID.randomUUID().toString()
+    private val appInfo = TelemetryUtility.getAppInfo(application)
+    private val runId = UUID.randomUUID().toString()
     private var installId: String
     init {
         try {
-            val prefs = context.getSharedPreferences(TELEMETRY_PREFS_KEY, 0)
+            val prefs = application.getSharedPreferences(TELEMETRY_PREFS_KEY, 0)
             installId = prefs.getString(INSTALL_ID_KEY, null) ?: UUID.randomUUID().toString()
             if (!prefs.contains(INSTALL_ID_KEY)) {
                 prefs.edit().putString(INSTALL_ID_KEY, installId).commit()
@@ -33,9 +34,9 @@ internal class TelemetryManager(val context: Context, userId: String? = null) {
         }
     }
 
-    private val telemetryStorage: TelemetryStorage = FileTelemetryStorage(context)
+    private val telemetryStorage: TelemetryStorage = FileTelemetryStorage(application)
     private val telemetryUpload: TelemetryUpload = VSAppCenterTelemetryUpload(
-        context,
+        application,
         installId,
         BuildConfig.VERSION_NAME,
         userId ?: installId
@@ -51,7 +52,6 @@ internal class TelemetryManager(val context: Context, userId: String? = null) {
     }
 
     fun reportEvent(eventType: EventType, properties: MutableMap<String, String> = hashMapOf()) {
-        val appInfo = TelemetryUtility.getAppInfo(context)
         val mutableProperties = properties.toMutableMap()
         mutableProperties.putAll(hashMapOf(
             "sdkVersion" to BuildConfig.VERSION_NAME,

@@ -175,8 +175,6 @@ internal class FcmManagerImpl(
         notification: NotificationCompat.Builder,
         messageData: NotificationPayload
     ) {
-        // remove default notification sound
-        notification.setSound(null)
         // set the uri for the default sound
         var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         // if the raw file exists, use it as custom sound
@@ -186,12 +184,40 @@ internal class FcmManagerImpl(
             soundUri = Uri.parse("""android.resource://${application.packageName}/raw/${messageData.sound}""")
         }
 
-        // Since sounds should be set on a channel and we want to
-        // change them per notification, we have to play sound manually
-        // We only play sound on older devices without do not disturb mode or then DnD is off
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-            manager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
-            RingtoneManager.getRingtone(application, soundUri)?.play()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // on older versions of Android, we can set sound directly on the notification
+            Logger.d(this, "Setting notification sound directly on notification since device is pre-Oreo")
+            notification.setSound(soundUri)
+        } else {
+            // Since sounds should be set on a channel on newer OS and we want to
+            // change them per notification, we have to play sound manually
+            // We only play sound if the notification should be displayed
+            var shouldPlaySound = true
+
+            // if DnD is on
+            if (manager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL) {
+                Logger.d(this, "Won't play notification sound, DnD mode is on")
+                shouldPlaySound = false
+            }
+
+            // if application is not allowed to show notifications
+            if (!manager.areNotificationsEnabled()) {
+                Logger.d(this, "Won't play notification sound, notifications are not allowed")
+                shouldPlaySound = false
+            }
+
+            // if the notification channel is blocked
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                val channel = manager.getNotificationChannel(configuration.pushChannelId)
+                if (channel.importance == NotificationManager.IMPORTANCE_NONE) {
+                    Logger.d(this, "Won't play notification sound, channel is blocked.")
+                    shouldPlaySound = false
+                }
+            }
+
+            if (shouldPlaySound) {
+                RingtoneManager.getRingtone(application, soundUri)?.play()
+            }
         }
     }
 

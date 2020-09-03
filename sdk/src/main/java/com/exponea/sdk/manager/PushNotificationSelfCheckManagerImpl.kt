@@ -37,7 +37,7 @@ internal class PushNotificationSelfCheckManagerImpl(
     private val tokenRepository: FirebaseTokenRepository,
     private val flushManager: FlushManager,
     private val exponeaService: ExponeaService,
-    private val operationsTimeout: Long = 3000
+    private val operationsTimeout: Long = 5000
 ) : PushNotificationSelfCheckManager {
     companion object {
         val steps = arrayListOf(

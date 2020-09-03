@@ -117,8 +117,14 @@ internal class ExponeaComponent(
         inAppMessagePresenter
     )
 
-    internal val flushManager: FlushManager =
-        FlushManagerImpl(exponeaConfiguration, eventRepository, exponeaService, connectionManager)
+    internal val flushManager: FlushManager = FlushManagerImpl(
+        exponeaConfiguration,
+        eventRepository,
+        exponeaService,
+        connectionManager,
+        // once customer is identified(and potentially merged with another), refresh the in-app messages
+        { inAppMessageManager.preload() }
+    )
 
     internal val eventManager: EventManager = EventManagerImpl(
         context, exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, inAppMessageManager

@@ -39,7 +39,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         service = spyk(ExponeaMockService(serviceSuccess))
         repo = EventRepositoryImpl(context)
         repo.clear()
-        manager = FlushManagerImpl(configuration, repo, service, connectionManager)
+        manager = FlushManagerImpl(configuration, repo, service, connectionManager, {})
     }
 
     private fun createTestEvent(includeProject: Boolean) {

@@ -18,7 +18,8 @@ internal class FlushManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val exponeaService: ExponeaService,
-    private val connectionManager: ConnectionManager
+    private val connectionManager: ConnectionManager,
+    private val customerIdentifiedHandler: () -> Unit
 ) : FlushManager {
     @Volatile override var isRunning: Boolean = false
         private set
@@ -140,8 +141,7 @@ internal class FlushManagerImpl(
         return exponeaService.let {
             when (databaseObject.route) {
                 Route.TRACK_EVENTS -> it.postEvent(exponeaProject, databaseObject.item)
-                Route.TRACK_CUSTOMERS,
-                Route.CUSTOMERS_PROPERTY -> it.postCustomer(exponeaProject, databaseObject.item)
+                Route.TRACK_CUSTOMERS -> it.postCustomer(exponeaProject, databaseObject.item)
                 Route.TRACK_CAMPAIGN -> it.postCampaignClick(exponeaProject, databaseObject.item)
                 else -> {
                     Logger.e(this, "Couldn't find properly route")
@@ -153,6 +153,9 @@ internal class FlushManagerImpl(
 
     private fun onEventSentSuccess(databaseObject: DatabaseStorageObject<ExportedEventType>) {
         Logger.d(this, "onEventSentSuccess: ${databaseObject.id}")
+        if (databaseObject.route == Route.TRACK_CUSTOMERS) {
+            customerIdentifiedHandler()
+        }
         eventRepository.remove(databaseObject.id)
     }
 

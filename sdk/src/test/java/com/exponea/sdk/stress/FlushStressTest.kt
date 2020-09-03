@@ -68,7 +68,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
 
         repo = Exponea.componentForTesting.eventRepository
         service = ExponeaMockService(true)
-        manager = FlushManagerImpl(configuration, repo, service, connectedManager)
+        manager = FlushManagerImpl(configuration, repo, service, connectedManager, {})
         repo.clear()
     }
 

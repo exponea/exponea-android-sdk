@@ -29,6 +29,7 @@ internal object PublicApiTestCases {
         Pair(Exponea::loggerLevel, Constants.Logger.defaultLoggerLevel),
         Pair(Exponea::sessionTimeout, Constants.Session.defaultTimeout),
         Pair(Exponea::tokenTrackFrequency, Constants.Token.defaultTokenFrequency),
+        Pair(Exponea::defaultProperties, hashMapOf<String, Any>()),
         Pair(Exponea::isInitialized, false),
         Pair(Exponea::notificationDataCallback, null),
         Pair(Exponea::customerCookie, null),

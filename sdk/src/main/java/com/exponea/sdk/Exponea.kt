@@ -184,6 +184,18 @@ object Exponea {
         }.logOnException()
 
     /**
+     * Default properties to be tracked with all events.
+     * Provide default properties in configuration, they're exposed here for run-time configuration.
+     */
+    var defaultProperties: HashMap<String, Any>
+        get() = runCatching {
+            configuration.defaultProperties
+        }.returnOnException { hashMapOf() }
+        set(value) = runCatching {
+            configuration.defaultProperties = value
+        }.logOnException()
+
+    /**
      * Any exception in SDK will be logged and swallowed if flag is enabled, otherwise
      * the exception will be rethrown.
      * If we have application context and the application is debuggable, then safe mode is `disabled`.

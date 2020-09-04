@@ -34,12 +34,13 @@ import java.util.Random
 import kotlin.concurrent.thread
 
 internal class FcmManagerImpl(
-    private val context: Context,
+    context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventManager: EventManager,
     private val firebaseTokenRepository: FirebaseTokenRepository,
     private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
+    private val application = context.applicationContext
     private val requestCodeGenerator: Random = Random()
     private var lastPushNotificationId: Int? = null
 
@@ -106,7 +107,7 @@ internal class FcmManagerImpl(
     override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
         Logger.d(this, "showNotification")
 
-        val notification = NotificationCompat.Builder(context, configuration.pushChannelId)
+        val notification = NotificationCompat.Builder(application, configuration.pushChannelId)
                 .setContentText(payload.message)
                 .setContentTitle(payload.title)
                 .setChannelId(configuration.pushChannelId)
@@ -161,7 +162,7 @@ internal class FcmManagerImpl(
         var smallIconRes = configuration.pushIcon ?: android.R.drawable.ic_dialog_info
 
         try {
-            context.resources.getResourceName(smallIconRes)
+            application.resources.getResourceName(smallIconRes)
         } catch (exception: Resources.NotFoundException) {
             Logger.e(this, "Invalid icon resource: $smallIconRes")
             smallIconRes = android.R.drawable.ic_dialog_info
@@ -180,9 +181,9 @@ internal class FcmManagerImpl(
         var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         // if the raw file exists, use it as custom sound
         if (messageData.sound != null &&
-            context.resources.getIdentifier(messageData.sound, "raw", context.packageName) != 0
+            application.resources.getIdentifier(messageData.sound, "raw", application.packageName) != 0
         ) {
-            soundUri = Uri.parse("""android.resource://${context.packageName}/raw/${messageData.sound}""")
+            soundUri = Uri.parse("""android.resource://${application.packageName}/raw/${messageData.sound}""")
         }
 
         // Since sounds should be set on a channel and we want to
@@ -190,7 +191,7 @@ internal class FcmManagerImpl(
         // We only play sound on older devices without do not disturb mode or then DnD is off
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
             manager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
-            RingtoneManager.getRingtone(context, soundUri)?.play()
+            RingtoneManager.getRingtone(application, soundUri)?.play()
         }
     }
 
@@ -234,7 +235,7 @@ internal class FcmManagerImpl(
 
     private fun getPushReceiverIntent(payload: NotificationPayload): Intent {
         return ExponeaPushReceiver.getClickIntent(
-            context,
+            application,
             payload.notificationId,
             payload.notificationData,
             payload.rawData
@@ -253,20 +254,20 @@ internal class FcmManagerImpl(
         return when (action) {
             NotificationPayload.Actions.APP -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
-                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
 
             NotificationPayload.Actions.BROWSER -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_URL_CLICKED
-                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
             NotificationPayload.Actions.DEEPLINK -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED
-                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
             else -> {
                 actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
-                PendingIntent.getBroadcast(context, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
         }
     }

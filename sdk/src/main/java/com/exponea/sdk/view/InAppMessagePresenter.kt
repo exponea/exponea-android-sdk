@@ -15,7 +15,7 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
 
-internal class InAppMessagePresenter(val context: Context) {
+internal class InAppMessagePresenter(context: Context) {
     class PresentedMessage(
         val messageType: InAppMessageType,
         val payload: InAppMessagePayload,
@@ -135,7 +135,7 @@ internal class InAppMessagePresenter(val context: Context) {
 
         when (messageType) {
             InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {
-                val intent = Intent(context, InAppMessageActivity::class.java)
+                val intent = Intent(activity, InAppMessageActivity::class.java)
                 activity.startActivity(intent)
             }
             InAppMessageType.SLIDE_IN -> {

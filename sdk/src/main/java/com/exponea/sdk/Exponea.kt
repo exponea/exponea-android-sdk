@@ -49,7 +49,7 @@ import com.google.firebase.messaging.RemoteMessage
 @SuppressLint("StaticFieldLeak")
 object Exponea {
 
-    private lateinit var context: Context
+    private lateinit var application: Application
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
     internal var telemetry: TelemetryManager? = null
@@ -207,8 +207,8 @@ object Exponea {
     internal var safeModeEnabled: Boolean
         get() {
             safeModeOverride?.let { return it }
-            return if (this::context.isInitialized) {
-                context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0
+            return if (this::application.isInitialized) {
+                application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0
             } else {
                 Logger.w(this, "No context available, defaulting to enabled safe mode")
                 true
@@ -234,7 +234,6 @@ object Exponea {
     @Deprecated("use init(context) instead")
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
-        this.context = context
         // Try to parse our file
         val configuration = ConfigurationFileManager.getConfigurationFromDefaultFile(context)
 
@@ -255,7 +254,6 @@ object Exponea {
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
     fun init(context: Context): Boolean = runCatching {
-        this.context = context
         initFromFile(context)
         return@runCatching true
     }.returnOnException { t ->
@@ -266,7 +264,7 @@ object Exponea {
     }
 
     @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
-        this.context = context
+        this.application = context.applicationContext as Application
         if (isInitialized) {
             Logger.e(this, "Exponea SDK is already initialized!")
             return
@@ -286,7 +284,7 @@ object Exponea {
         this.configuration = configuration
         ExponeaConfigRepository.set(context, configuration)
         FirebaseApp.initializeApp(context)
-        initializeSdk()
+        initializeSdk(context)
         isInitialized = true
     }.run {
         val exception = exceptionOrNull()
@@ -516,7 +514,7 @@ object Exponea {
     ) = runCatching {
         requireInitialized {
             val properties = purchasedItem.toHashMap()
-            properties.putAll(DeviceProperties(context).toHashMap())
+            properties.putAll(DeviceProperties(application).toHashMap())
             component.eventManager.track(
                 eventType = Constants.EventTypes.payment,
                 timestamp = timestamp,
@@ -612,7 +610,7 @@ object Exponea {
      * Initialize and start all services and automatic configurations.
      */
 
-    private fun initializeSdk() {
+    private fun initializeSdk(context: Context) {
         this.component = ExponeaComponent(this.configuration, context)
 
         telemetry?.reportEvent(
@@ -620,7 +618,7 @@ object Exponea {
             hashMapOf("count" to component.eventRepository.count().toString())
         )
 
-        initWorkManager()
+        initWorkManager(context)
 
         if (flushMode == PERIOD) startPeriodicFlushService()
 
@@ -657,7 +655,7 @@ object Exponea {
     /**
      * Initialize the WorkManager instance
      */
-    private fun initWorkManager() {
+    private fun initWorkManager(context: Context) {
         try {
             WorkManager.initialize(context, Configuration.Builder().build())
         } catch (e: Exception) {
@@ -699,7 +697,7 @@ object Exponea {
             Logger.w(this, "Flush mode is not period -> Not starting periodic flush service")
             return
         }
-        component.serviceManager.startPeriodicFlush(context, flushPeriod)
+        component.serviceManager.startPeriodicFlush(application, flushPeriod)
     }
 
     /**
@@ -708,7 +706,7 @@ object Exponea {
 
     private fun stopPeriodicFlushService() {
         Logger.d(this, "stopPeriodicFlushService")
-        component.serviceManager.stopPeriodicFlush(context)
+        component.serviceManager.stopPeriodicFlush(application)
     }
 
     /**
@@ -748,7 +746,7 @@ object Exponea {
             return
         }
 
-        val properties = DeviceProperties(context).toHashMap()
+        val properties = DeviceProperties(application).toHashMap()
         campaign?.let { properties["campaign"] = it }
         campaignId?.let { properties["campaign_id"] = it }
         link?.let { properties["link"] = it }

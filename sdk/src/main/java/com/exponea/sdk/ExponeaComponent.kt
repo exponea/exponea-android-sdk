@@ -55,8 +55,9 @@ import com.exponea.sdk.view.InAppMessagePresenter
 
 internal class ExponeaComponent(
     var exponeaConfiguration: ExponeaConfiguration,
-    val context: Context
+    context: Context
 ) {
+    private val application = context.applicationContext
 
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
@@ -166,7 +167,7 @@ internal class ExponeaComponent(
         exponeaConfiguration.projectToken = exponeaProject.projectToken
         exponeaConfiguration.authorization = exponeaProject.authorization
         exponeaConfiguration.projectRouteMap = projectRouteMap
-        ExponeaConfigRepository.set(context, exponeaConfiguration)
+        ExponeaConfigRepository.set(application, exponeaConfiguration)
 
         Exponea.trackInstallEvent()
         sessionManager.trackSessionStart(currentTimeSeconds())

@@ -6,7 +6,8 @@ import android.preference.PreferenceManager
 import android.provider.Settings
 
 @SuppressLint("RegisteredID")
-class RegisteredIdManager(private val context: Context) {
+class RegisteredIdManager(context: Context) {
+    private val application = context.applicationContext
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
     companion object {
@@ -17,7 +18,7 @@ class RegisteredIdManager(private val context: Context) {
         get() {
             var id = prefs.getString(PREF_REGID, "")
             if (id.isEmpty()) {
-                id = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
+                id = Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
             }
             return id
         }

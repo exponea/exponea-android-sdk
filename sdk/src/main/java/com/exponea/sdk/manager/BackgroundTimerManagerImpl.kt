@@ -16,16 +16,17 @@ import java.util.concurrent.TimeUnit
  * Handles background session tracking
  */
 internal class BackgroundTimerManagerImpl(
-    private val context: Context,
+    context: Context,
     private val configuration: ExponeaConfiguration
 ) : BackgroundTimerManager {
+    val application = context.applicationContext
     private val keyUniqueName = "KeyUniqueName"
 
     /**
      * Method will setup a timer  for a time period obtained from configuration
      */
     override fun startTimer() {
-        ExponeaConfigRepository.set(context, configuration)
+        ExponeaConfigRepository.set(application, configuration)
         val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
@@ -39,7 +40,7 @@ internal class BackgroundTimerManagerImpl(
 
         // Enqueue request
         WorkManager
-                .getInstance(context)
+                .getInstance(application)
                 .beginUniqueWork(
                         keyUniqueName,
                         ExistingWorkPolicy.REPLACE,
@@ -56,7 +57,7 @@ internal class BackgroundTimerManagerImpl(
     override fun stopTimer() {
         Logger.d(this, "BackgroundTimerManagerImpl.stop() -> cancelling all work")
         WorkManager
-                .getInstance(context)
+                .getInstance(application)
                 .cancelUniqueWork(keyUniqueName)
     }
 }

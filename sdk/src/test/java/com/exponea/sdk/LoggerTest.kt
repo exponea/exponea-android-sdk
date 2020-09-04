@@ -4,10 +4,8 @@ import android.util.Log
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.Logger
 import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlin.test.assertEquals
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -91,11 +89,6 @@ internal class LoggerTest : ExponeaSDKTest() {
     @Before
     fun before() {
         mockkStatic(Log::class)
-    }
-
-    @After
-    fun after() {
-        unmockkAll()
     }
 
     private fun logMockMessageOnAllLevels() {

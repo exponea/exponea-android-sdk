@@ -14,10 +14,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
 import io.mockk.slot
-import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlin.test.assertEquals
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,11 +31,6 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
-    }
-
-    @After
-    fun after() {
-        unmockkAll()
     }
 
     @Test

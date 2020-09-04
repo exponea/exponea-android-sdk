@@ -10,12 +10,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,11 +42,6 @@ internal class ExceptionHandlingTest : ExponeaSDKTest() {
         every { Log.e(LOGTAG_TO_WATCH, any(), any()) } answers {
             errorLogCount++
         }
-    }
-
-    @After
-    fun release() {
-        unmockkStatic(Log::class)
     }
 
     @Test

@@ -18,10 +18,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
-import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,16 +60,6 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         prefs = ExponeaPreferencesImpl(context)
 
         sm = SessionManagerImpl(context, prefs, campaignRepository, eventManager, backgroundTimer)
-    }
-
-    @After
-    fun unmock() {
-        // mockk has a problem when it sometimes throws an exception, in that case just try again
-        try {
-            unmockkAll()
-        } catch (error: ConcurrentModificationException) {
-            unmock()
-        }
     }
 
     @Test

@@ -6,11 +6,9 @@ import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
 import io.mockk.mockkConstructor
-import io.mockk.unmockkConstructor
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
@@ -26,11 +24,6 @@ internal class ExponeaSafeModeInitTest(
         fun data(): List<Array<out Any?>> {
             return PublicApiTestCases.initMethods.map { arrayOf(it.first, it.second) }
         }
-    }
-
-    @After
-    fun after() {
-        unmockkConstructor(TelemetryManager::class)
     }
 
     @Test

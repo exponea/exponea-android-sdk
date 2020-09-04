@@ -10,6 +10,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 
@@ -35,6 +36,17 @@ internal open class ExponeaSDKTest {
     }
 
     @After
+    fun afterExponeaTest() {
+        // we need to enforce the order here, first unmock, then resetExponea
+        unmockAllSafely()
+        resetExponea()
+    }
+
+    fun unmockAllSafely() {
+        // mockk has a problem when it sometimes throws an exception, in that case just try again
+        try { unmockkAll() } catch (error: ConcurrentModificationException) { unmockAllSafely() }
+    }
+
     fun resetExponea() {
         if (Exponea.isInitialized && Exponea.componentForTesting.flushManager.isRunning) {
             // Database is shared between Exponea instances, FlushingManager is not

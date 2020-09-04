@@ -29,12 +29,10 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -327,11 +325,6 @@ internal class FcmManagerImplNotificationsTest(
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
         mockkConstructor(Date::class)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkAll()
     }
 
     private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {

@@ -33,7 +33,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import io.mockk.verify
 import io.mockk.verifySequence
 import java.util.Date
@@ -42,7 +41,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -88,11 +86,6 @@ internal class InAppMessageManagerImplTest {
             presenter
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
-    }
-
-    @After
-    fun after() {
-        unmockkAll()
     }
 
     @Test

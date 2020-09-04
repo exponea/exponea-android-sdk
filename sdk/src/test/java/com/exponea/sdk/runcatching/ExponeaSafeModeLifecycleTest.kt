@@ -5,8 +5,6 @@ import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,11 +21,6 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
         ExponeaExceptionThrowing.prepareExponeaToThrow()
         controller = Robolectric.buildActivity(TestActivity::class.java)
         controller.create()
-    }
-
-    @After
-    fun after() {
-        unmockkAll()
     }
 
     @Test

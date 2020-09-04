@@ -9,10 +9,8 @@ import com.exponea.sdk.testutil.data.NotificationTestPayloads.PRODUCTION_NOTIFIC
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.SILENT_NOTIFICATION
 import io.mockk.every
 import io.mockk.mockkConstructor
-import io.mockk.unmockkAll
 import java.util.Date
 import kotlin.test.assertEquals
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -248,12 +246,6 @@ internal class NotificationPayloadTest(
     fun setup() {
         mockkConstructor(Date::class)
         every { anyConstructed<Date>().time } returns 10 * 1000 // mock current time
-    }
-
-    @After
-    fun unmock() {
-        // mockk has a problem when it sometimes throws an exception, in that case just try again
-        try { unmockkAll() } catch (error: ConcurrentModificationException) { unmock() }
     }
 
     @Test

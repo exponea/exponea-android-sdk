@@ -7,24 +7,17 @@ import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
 import io.mockk.mockkConstructor
-import io.mockk.unmockkAll
 import java.io.File
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class FileTelemetryStorageTest : ExponeaSDKTest() {
-    @After
-    fun after() {
-        unmockkAll()
-    }
-
     fun getMockCrashLog(): CrashLog = CrashLog(Exception("Boom!"), true, Date(), Date(), "mock-run-id")
 
     @Test

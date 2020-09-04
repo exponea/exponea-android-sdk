@@ -30,10 +30,8 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -177,11 +175,6 @@ internal class ExponeaPushReceiverNotificationsTest(
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
         every { Exponea.trackClickedPush(any(), any(), any()) } just Runs
         mockkConstructor(Date::class)
-    }
-
-    @After
-    fun tearDown() {
-        try { unmockkAll() } catch (error: ConcurrentModificationException) { tearDown() }
     }
 
     private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {

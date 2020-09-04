@@ -4,10 +4,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.unmockkAll
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,11 +27,6 @@ internal class ExponeaSafeModeMethodTest(
     @Before
     fun before() {
         ExponeaExceptionThrowing.prepareExponeaToThrow()
-    }
-
-    @After
-    fun after() {
-        unmockkAll()
     }
 
     @Test

@@ -13,8 +13,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkConstructor
-import io.mockk.unmockkConstructor
-import org.junit.After
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
@@ -75,10 +73,5 @@ internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
         mockkConstructor(FlushManagerImpl::class)
         // flush data does nothing - we want to observe the events in DB
         every { anyConstructed<FlushManagerImpl>().flushData() } just Runs
-    }
-
-    @After
-    fun unmockFlush() {
-        unmockkConstructor(FlushManagerImpl::class)
     }
 }

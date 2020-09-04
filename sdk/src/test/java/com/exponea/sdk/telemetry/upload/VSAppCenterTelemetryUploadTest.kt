@@ -42,6 +42,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
 
     @Before
     fun before() {
+        // this is mocked by default in ExponeaSDKTest
         unmockkConstructor(VSAppCenterTelemetryUpload::class)
         server = ExponeaMockServer.createServer()
         upload = VSAppCenterTelemetryUpload(

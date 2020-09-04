@@ -59,13 +59,23 @@ class ExponeaPushReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             ACTION_CLICKED -> Unit
-            ACTION_DEEPLINK_CLICKED ->
-                PendingIntent.getActivity(
+            ACTION_DEEPLINK_CLICKED -> {
+                val pendingIntent = PendingIntent.getActivity(
                     context,
                     Random.nextInt(),
                     buttonClickedIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT
-                ).send()
+                )
+                try {
+                    pendingIntent.send()
+                } catch (e: PendingIntent.CanceledException) {
+                    Logger.e(
+                        this,
+                        "Unable to handle deep-link. Make sure the deeplink schema you specified on Exponea web app" +
+                            " is registered in AndroidManifest."
+                    )
+                }
+            }
             ACTION_URL_CLICKED -> context.startActivity(buttonClickedIntent)
         }
 

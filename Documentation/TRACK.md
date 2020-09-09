@@ -57,6 +57,8 @@ configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
 Exponea.init(App.instance, configuration)
 ```
 
+> Once Exponea is configured, you can also change default properties setting `Exponea.defaultProperties`.
+
 ## 🔍 Tracking Customer Properties
 
 #### identify Customer

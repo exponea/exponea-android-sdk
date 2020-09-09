@@ -1,4 +1,15 @@
 ## Release Notes
+## Release Notes for 2.8.2
+#### September 09, 2020
+* Features
+  * Default properties that are tracked with every event can be changed at runtime by setting `Exponea.defaultProperties` property.
+  * In-app messages definitions are re-downloaded every time the customer is identified. After customer identification, the set of in-app messages available for the customer may change due to targeting.
+  
+* Bug Fixes
+  * Fixed: Notification sound was played when the app notifications were disabled or the notification channel was muted. SDK now respects these settings + “Do not disturb” setting.
+  * Fixed: When the SDK was initialized with activity context, this context was stored causing memory leak - the activity could not be garbage collected. The SDK now only stores application context.
+
+
 ## Release Notes for 2.8.1
 #### August 07, 2020
 * Features

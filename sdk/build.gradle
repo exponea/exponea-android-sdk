@@ -42,7 +42,7 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Database
-    implementation 'io.paperdb:paperdb:2.6'
+    implementation 'io.paperdb:paperdb:2.7.1'
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:3.12.1'
     // Deserialization

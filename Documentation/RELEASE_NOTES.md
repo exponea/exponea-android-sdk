@@ -1,4 +1,10 @@
 ## Release Notes
+## Release Notes for 2.8.3
+#### October 06, 2020
+* Features
+  * Paper DB updated to version 2.7.1 that should fix rare crashes.
+  * When Firebase is initialized before Exponea SDK, push notification token is stored until Exponea is initialized.
+
 ## Release Notes for 2.8.2
 #### September 09, 2020
 * Features

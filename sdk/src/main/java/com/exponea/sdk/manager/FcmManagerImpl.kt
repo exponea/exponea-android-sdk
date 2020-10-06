@@ -45,12 +45,17 @@ internal class FcmManagerImpl(
     private var lastPushNotificationId: Int? = null
 
     override fun trackFcmToken(token: String?, tokenTrackFrequency: ExponeaConfiguration.TokenFrequency) {
-        val lastTrackDateInMilliseconds =
-            firebaseTokenRepository.getLastTrackDateInMilliseconds() ?: 0
-        val shouldUpdateToken = when (tokenTrackFrequency) {
-            ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != firebaseTokenRepository.get()
-            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
-            ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
+        val shouldUpdateToken = run {
+            val lastTrackDateInMilliseconds = firebaseTokenRepository.getLastTrackDateInMilliseconds()
+            if (lastTrackDateInMilliseconds == null) { // if the token wasn't ever tracked, track it
+                true
+            } else {
+                when (tokenTrackFrequency) {
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != firebaseTokenRepository.get()
+                    ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
+                    ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
+                }
+            }
         }
 
         if (token != null && shouldUpdateToken) {

@@ -3,6 +3,7 @@ package com.exponea.sdk.services
 import android.app.NotificationManager
 import android.content.Context
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.repository.FirebaseTokenRepositoryProvider
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
@@ -41,12 +42,19 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
     }
 
     private fun onNewTokenUnsafe(token: String) {
-        Exponea.autoInitialize(applicationContext) {
-            if (!Exponea.isAutoPushNotification) {
-                return@autoInitialize
+        Logger.d(this, "Received push notification token")
+        Exponea.autoInitialize(applicationContext,
+            {
+                Logger.d(this, "Exponea cannot be auto-initialized, token will be tracked once Exponea is initialized")
+                FirebaseTokenRepositoryProvider.get(applicationContext).set(token, 0)
+            },
+            {
+                if (!Exponea.isAutoPushNotification) {
+                    return@autoInitialize
+                }
+                Logger.d(this, "Firebase Token Refreshed")
+                Exponea.trackPushToken(token, Exponea.tokenTrackFrequency)
             }
-            Logger.d(this, "Firebase Token Refreshed")
-            Exponea.trackPushToken(token, Exponea.tokenTrackFrequency)
-        }
+        )
     }
 }

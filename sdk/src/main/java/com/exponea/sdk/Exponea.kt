@@ -588,20 +588,30 @@ object Exponea {
         requireInitialized<Unit>(notInitializedBlock, initializedBlock)
     }
 
-    internal fun <T> autoInitialize(applicationContext: Context, initializedBlock: () -> T): T? {
+    internal fun <T> autoInitialize(
+        applicationContext: Context,
+        notInitializedBlock: (() -> T)? = null,
+        initializedBlock: () -> T
+    ): T? {
         if (!isInitialized) {
             val config = ExponeaConfigRepository.get(applicationContext)
             if (config == null) {
-                Logger.e(this, "Unable to automatically initialize Exponea SDK!")
-                return null
+                if (notInitializedBlock == null) { // only log this if we don't have fallback
+                    Logger.e(this, "Unable to automatically initialize Exponea SDK!")
+                }
+                return notInitializedBlock?.invoke() ?: null
             }
             init(applicationContext, config)
         }
         return requireInitialized(initializedBlock = initializedBlock)
     }
 
-    internal fun autoInitialize(applicationContext: Context, initializedBlock: () -> Unit) {
-        autoInitialize<Unit>(applicationContext, initializedBlock)
+    internal fun autoInitialize(
+        applicationContext: Context,
+        notInitializedBlock: (() -> Unit)? = null,
+        initializedBlock: () -> Unit
+    ) {
+        autoInitialize<Unit>(applicationContext, notInitializedBlock, initializedBlock)
     }
 
     // Private Helpers

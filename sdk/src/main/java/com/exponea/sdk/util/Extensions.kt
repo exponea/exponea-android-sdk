@@ -170,3 +170,8 @@ fun Context.isReactNativeSDK(): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
     return appInfo.metaData["ExponeaReactNativeSDK"] == true
 }.returnOnException { false }
+
+fun Context.isCapacitorSDK(): Boolean = runCatching {
+    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+    return appInfo.metaData["ExponeaCapacitorSDK"] == true
+}.returnOnException { false }

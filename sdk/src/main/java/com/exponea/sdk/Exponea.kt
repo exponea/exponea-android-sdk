@@ -43,7 +43,6 @@ import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.view.InAppMessagePresenter
-import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.RemoteMessage
 
 @SuppressLint("StaticFieldLeak")
@@ -283,7 +282,6 @@ object Exponea {
 
         this.configuration = configuration
         ExponeaConfigRepository.set(context, configuration)
-        FirebaseApp.initializeApp(context)
         initializeSdk(context)
         isInitialized = true
     }.run {

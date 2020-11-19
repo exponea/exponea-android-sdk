@@ -23,6 +23,14 @@ With `automaticPushNotification` enabled, the SDK will correctly display push no
 Our automatic tracking relies on our implementation of FirebaseMessagingService.
 In case you want to use your own FirebaseMessagingService, you have to call Exponea methods for handling push notifications and token yourself.
 ``` kotlin
+package com.exponea.example
+
+import android.app.NotificationManager
+import android.content.Context
+import com.exponea.sdk.Exponea
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+
 class ExampleFirebaseMessageService: FirebaseMessagingService() {
 
     private val notificationManager by lazy {

@@ -123,6 +123,7 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### pushAccentColor
 
 * Accent color of push notification. Changes color of small icon and notification buttons. e.g. `Color.GREEN`
+    > This is a color id, not a resource id. When using colors from resources you have to get the resource first: `context.resources.getColor(R.color.something)`
 
 #### pushChannelName
 

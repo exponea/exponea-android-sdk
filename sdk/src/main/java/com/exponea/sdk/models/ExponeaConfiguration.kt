@@ -26,7 +26,9 @@ data class ExponeaConfiguration(
     var automaticPushNotification: Boolean = Constants.PushNotif.defaultAutomaticListening,
     /** Icon to be showed in push notifications. */
     var pushIcon: Int? = null,
-    /** Accent color of push notification icon and buttons */
+    /** Accent color of push notification icon and buttons.
+     * A color id, not resource id is expected here, e.g. context.resources.getColor(R.color.something)
+     */
     var pushAccentColor: Int? = null,
     /** Channel name for push notifications. Only for API level 26+. */
     var pushChannelName: String = "Exponea",

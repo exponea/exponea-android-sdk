@@ -1,4 +1,11 @@
 ## Release Notes
+## Release Notes for 2.9.0
+#### November 20, 2020
+* Features
+  * Removed Firebase default init override. By default Firebase initializes before the application is started using FirebaseInitProvider. Our SDK was removing this initializer and manually creating Firebase app when the Exponea SDK was initialized, to make Firebase token tracking easier. This has caused issues in React Native, where other packages rely on the default Firebase initializer. In 2.8.3 we made a change that remembers Firebase token until Exponea SDK is initialized, so there is no point in overriding default Firebase initializer any more. 
+  * Documentation improvements
+
+
 ## Release Notes for 2.8.3
 #### October 06, 2020
 * Features

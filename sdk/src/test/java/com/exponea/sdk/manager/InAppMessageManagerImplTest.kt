@@ -123,11 +123,21 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
-    fun `should reload messages on session start`() {
+    fun `should always preload messages on first session start`() {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        waitForIt { manager.preload { _ -> it() } }
+        messagesCache.set(arrayListOf())
+        manager.sessionStarted(Date()) // it will load data because this is first session
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should preload messages on session start`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        manager.sessionStarted(Date())
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
         manager.sessionStarted(Date())
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
@@ -314,6 +324,9 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should apply 'once_per_visit' frequency filter`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
         )

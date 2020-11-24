@@ -53,6 +53,9 @@ internal class InAppMessageManagerImpl(
     private var pendingShowRequests: List<InAppMessageShowRequest> = arrayListOf()
 
     private var sessionStartDate = Date()
+    // we'll always preload in-app messages on session start for newly created instances
+    // it helps with testing - when you kill the app, you'll always get new in-app messages
+    private var firstSession = true
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
         preloaded = false
@@ -75,7 +78,8 @@ internal class InAppMessageManagerImpl(
 
     override fun sessionStarted(sessionStartDate: Date) {
         this.sessionStartDate = sessionStartDate
-        if (inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < sessionStartDate.time) {
+        if (firstSession || inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < sessionStartDate.time) {
+            firstSession = false
             preload()
         }
     }

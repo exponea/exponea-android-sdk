@@ -653,8 +653,6 @@ object Exponea {
             }
         )
 
-        component.inAppMessageManager.preload()
-
         if (checkPushSetup && context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             component.pushNotificationSelfCheckManager.start()
         }

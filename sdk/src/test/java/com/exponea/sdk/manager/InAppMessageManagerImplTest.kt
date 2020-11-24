@@ -372,7 +372,7 @@ internal class InAppMessageManagerImplTest {
 
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
         actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload.buttons!![0])
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true) }
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true, "Action") }
         dismissedCallbackSlot.captured.invoke()
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
     }

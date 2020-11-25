@@ -3,6 +3,7 @@ package com.exponea.sdk.runcatching
 import android.app.Activity
 import android.os.Bundle
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import org.junit.Before
@@ -62,7 +63,7 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
             super.onCreate(savedInstanceState)
             skipInstallEvent()
             Exponea.flushMode = FlushMode.MANUAL
-            Exponea.init(applicationContext)
+            Exponea.init(applicationContext, ExponeaConfiguration())
         }
     }
 }

@@ -230,7 +230,7 @@ object Exponea {
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
-    @Deprecated("use init(context) instead")
+    @Deprecated("Json configuration is deprecated")
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
         // Try to parse our file
@@ -252,7 +252,9 @@ object Exponea {
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
+    @Deprecated("Json configuration is deprecated")
     fun init(context: Context): Boolean = runCatching {
+        @Suppress("DEPRECATION")
         initFromFile(context)
         return@runCatching true
     }.returnOnException { t ->
@@ -460,7 +462,7 @@ object Exponea {
             )
             data?.getTrackingData()?.forEach { properties[it.key] = it.value }
             component.eventManager.track(
-                eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
+                eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
                 properties = properties.properties,
                 type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
                 timestamp = timestamp
@@ -493,7 +495,7 @@ object Exponea {
             }
             data?.getTrackingData()?.forEach { properties[it.key] = it.value }
             component.eventManager.track(
-                eventType = if (data?.hasCustomEventType == true) data?.eventType else Constants.EventTypes.push,
+                eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
                 properties = properties.properties,
                 type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
                 timestamp = timestamp
@@ -576,7 +578,7 @@ object Exponea {
     internal fun <T> requireInitialized(notInitializedBlock: (() -> T)? = null, initializedBlock: () -> T): T? {
         if (!isInitialized) {
             Logger.e(this, "Exponea SDK was not initialized properly!")
-            return notInitializedBlock?.invoke() ?: null
+            return notInitializedBlock?.invoke()
         }
         return initializedBlock()
     }
@@ -597,7 +599,7 @@ object Exponea {
                 if (notInitializedBlock == null) { // only log this if we don't have fallback
                     Logger.e(this, "Unable to automatically initialize Exponea SDK!")
                 }
-                return notInitializedBlock?.invoke() ?: null
+                return notInitializedBlock?.invoke()
             }
             init(applicationContext, config)
         }

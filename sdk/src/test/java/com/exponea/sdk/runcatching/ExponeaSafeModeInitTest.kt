@@ -15,6 +15,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModeInitTest(
+    @Suppress("UNUSED_PARAMETER")
     method: KFunction<Any>,
     val lambda: () -> Any
 ) : ExponeaSDKTest() {

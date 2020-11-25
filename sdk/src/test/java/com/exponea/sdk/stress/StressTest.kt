@@ -20,6 +20,7 @@ import java.util.Random
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -131,9 +132,9 @@ internal class StressTest : ExponeaSDKTest() {
         assertEquals(stressCount, repo.all().size)
     }
 
+    @ObsoleteCoroutinesApi
     @Test
     fun testTrackThreadsStressed() {
-
         val coroutineList = mutableListOf<CoroutineContext>()
         for (i in 0 until 5) {
             coroutineList += newSingleThreadContext(i.toString())

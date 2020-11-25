@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertNotEquals
@@ -20,14 +21,14 @@ internal class ExponeaTest : ExponeaSDKTest() {
     @Test
     fun `should get customer cookie after initialized`() {
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         assertNotNull(Exponea.customerCookie)
     }
 
     @Test
     fun `should get current customer cookie after anonymize`() {
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         val cookie1 = Exponea.customerCookie
         assertNotNull(cookie1)
         Exponea.anonymize()

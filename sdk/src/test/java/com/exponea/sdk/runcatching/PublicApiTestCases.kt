@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.exponea.sdk.runcatching
 
 import android.app.NotificationManager

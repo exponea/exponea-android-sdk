@@ -77,7 +77,7 @@ data class NotificationData(
             "recipient" to recipient,
             "subject" to subject
         ).also {
-            it.putAll(campaignData?.getTrackingData())
+            it.putAll(campaignData.getTrackingData())
         }
     }
 

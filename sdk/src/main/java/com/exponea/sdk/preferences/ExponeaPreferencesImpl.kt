@@ -20,7 +20,7 @@ internal class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
     }
 
     override fun getString(key: String, default: String): String {
-        return sharedPreferences.getString(key, default)
+        return sharedPreferences.getString(key, default) ?: default
     }
 
     override fun getBoolean(key: String, default: Boolean): Boolean {

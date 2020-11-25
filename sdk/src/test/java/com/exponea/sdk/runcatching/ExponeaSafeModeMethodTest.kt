@@ -2,6 +2,7 @@ package com.exponea.sdk.runcatching
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.reflect.KFunction
@@ -13,6 +14,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModeMethodTest(
+    @Suppress("UNUSED_PARAMETER")
     method: KFunction<Any>,
     val lambda: () -> Any
 ) : ExponeaSDKTest() {
@@ -40,7 +42,7 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeEnabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         Exponea.safeModeEnabled = true
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
@@ -50,7 +52,7 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         Exponea.safeModeEnabled = false
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()

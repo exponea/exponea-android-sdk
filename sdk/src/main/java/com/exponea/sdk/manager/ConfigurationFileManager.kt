@@ -20,13 +20,10 @@ internal object ConfigurationFileManager {
     private fun readContentFromDefaultFile(context: Context): String? {
         return try {
             val configurationFileName = "exponea_configuration.json"
-            var inputStream = javaClass.classLoader.getResourceAsStream(configurationFileName)
-
-            if (inputStream == null)
-                inputStream = context.assets.open(configurationFileName)
-
+            val inputStream =
+                javaClass.classLoader?.getResourceAsStream(configurationFileName)
+                    ?: context.assets.open(configurationFileName)
             val buffer = inputStream.bufferedReader()
-
             val inputString = buffer.use { it.readText() }
             Logger.d(this, "Configuration file successfully loaded")
             inputString

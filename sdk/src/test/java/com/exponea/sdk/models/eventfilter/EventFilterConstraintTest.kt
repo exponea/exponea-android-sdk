@@ -2,7 +2,7 @@ package com.exponea.sdk.models.eventfilter
 
 import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonParseException
-import junit.framework.Assert.assertEquals
+import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.experimental.runners.Enclosed
 import org.junit.runner.RunWith
@@ -22,7 +22,9 @@ internal class EventFilterConstraintTest {
 
     @RunWith(ParameterizedRobolectricTestRunner::class)
     internal class EventFilterConstraintCaseTest(
+        @Suppress("UNUSED_PARAMETER")
         constraintType: String,
+        @Suppress("UNUSED_PARAMETER")
         operatorName: String,
         val constraint: EventFilterConstraint,
         val serializedConstraint: String

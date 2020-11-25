@@ -92,7 +92,7 @@ internal class EventFilterOperatorSerializer : JsonSerializer<EventFilterOperato
         typeOfSrc: Type,
         context: JsonSerializationContext
     ): JsonElement {
-        return JsonPrimitive(src?.name)
+        return JsonPrimitive(src.name)
     }
 }
 

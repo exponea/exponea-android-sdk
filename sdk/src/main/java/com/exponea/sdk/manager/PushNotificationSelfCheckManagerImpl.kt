@@ -196,11 +196,11 @@ internal class PushNotificationSelfCheckManagerImpl(
             pushToken
         ).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                val response = ExponeaGson.instance.fromJson<SelfCheckResponse>(
+                val parsedResponse = ExponeaGson.instance.fromJson<SelfCheckResponse>(
                     response.body()?.string(),
                     SelfCheckResponse::class.java
                 )
-                continuation.resume(response.success)
+                continuation.resume(parsedResponse.success)
             }
             override fun onFailure(call: Call, e: IOException) {
                 continuation.resume(false)

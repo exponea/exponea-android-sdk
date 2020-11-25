@@ -39,7 +39,7 @@ internal class ExponeaFirebaseMessageServiceTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track token when Exponea is initialized`() {
-        Exponea.init(context)
+        Exponea.init(context, ExponeaConfiguration())
         service.onNewToken("mock token")
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -70,7 +70,7 @@ internal class ExponeaFirebaseMessageServiceTest() : ExponeaSDKTest() {
         service.onNewToken("mock token")
         assertEquals("mock token", FirebaseTokenRepositoryProvider.get(context).get())
         assertNull(FirebaseTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
-        Exponea.init(context)
+        Exponea.init(context, ExponeaConfiguration())
         verify {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",

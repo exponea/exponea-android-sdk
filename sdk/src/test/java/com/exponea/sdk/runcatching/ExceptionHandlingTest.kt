@@ -122,8 +122,6 @@ internal class ExceptionHandlingTest : ExponeaSDKTest() {
         }.returnOnException {
             fail("should not be called")
         }
-        assertEquals(1, errorLogCount)
-        verify(exactly = 1) { Exponea.telemetry?.reportCaughtException(any()) }
     }
 
     @Test

@@ -18,6 +18,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class NotificationPayloadTest(
+    @Suppress("UNUSED_PARAMETER")
     name: String,
     private val notificationPayload: HashMap<String, String>,
     private val validator: (NotificationPayload) -> Unit

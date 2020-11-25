@@ -47,7 +47,7 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
 
         assertEquals("campaign", eventSlot.captured.type)
         assertEquals(
-            hashMapOf("google_push_notification_id" to "test-google-push-token") as HashMap<String, Any>,
+            hashMapOf<String, Any>("google_push_notification_id" to "test-google-push-token"),
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)

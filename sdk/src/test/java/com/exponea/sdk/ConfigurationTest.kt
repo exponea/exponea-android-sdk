@@ -51,6 +51,7 @@ internal class ConfigurationTest : ExponeaSDKTest() {
     fun `should initialize SDK from file`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
+        @Suppress("DEPRECATION")
         Exponea.initFromFile(context)
         assertEquals(Exponea.isInitialized, true)
     }

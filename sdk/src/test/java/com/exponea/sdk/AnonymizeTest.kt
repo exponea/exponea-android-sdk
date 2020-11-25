@@ -32,7 +32,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     ) {
         assertEquals(expectedEventType, event.item.type)
         assertEquals(expectedProject, event.exponeaProject)
-        assertEquals(hashMapOf("cookie" to expectedUserId) as HashMap<String, String?>, event.item.customerIds)
+        assertEquals(hashMapOf<String, String?>("cookie" to expectedUserId), event.item.customerIds)
         if (expectedProperties != null) assertEquals(expectedProperties, event.item.properties)
     }
 
@@ -70,13 +70,13 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         events.sortBy { it.item.timestamp }
         assertEquals(events.size, 8)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-        checkEvent(events[1], "test", initialProject, userId!!, hashMapOf("name" to "test"))
-        checkEvent(events[2], Constants.EventTypes.push, initialProject, userId!!, hashMapOf(PUSH_KEY to "push_token"))
+        checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
+        checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to "push_token"))
         // anonymize is called. We clear push token in old user and track initial events for new user
-        checkEvent(events[3], Constants.EventTypes.push, initialProject, userId!!, hashMapOf(PUSH_KEY to " "))
+        checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
         checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[5], Constants.EventTypes.sessionStart, newProject, newUserId!!, null)
-        checkEvent(events[6], Constants.EventTypes.push, newProject, newUserId!!, hashMapOf(PUSH_KEY to "push_token"))
-        checkEvent(events[7], "test", newProject, newUserId!!, hashMapOf("name" to "test"))
+        checkEvent(events[5], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+        checkEvent(events[6], Constants.EventTypes.push, newProject, newUserId, hashMapOf(PUSH_KEY to "push_token"))
+        checkEvent(events[7], "test", newProject, newUserId, hashMapOf("name" to "test"))
     }
 }

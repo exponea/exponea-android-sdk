@@ -41,6 +41,7 @@ import org.robolectric.Shadows.shadowOf
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class FcmManagerImplNotificationsTest(
+    @Suppress("UNUSED_PARAMETER")
     name: String,
     private val notificationPayload: Map<String, String>,
     private val expectedTrackingData: NotificationData?,
@@ -72,9 +73,9 @@ internal class FcmManagerImplNotificationsTest(
             expectedPayload: HashMap<String, String>
         ) {
             assertEquals(expectedAction, intent.action)
-            assertEquals(expectedNotificationAction, intent.extras.get(ExponeaPushReceiver.EXTRA_ACTION_INFO))
-            assertEquals(expectedNotificationData, intent.extras.get(ExponeaPushReceiver.EXTRA_DATA))
-            assertEquals(expectedPayload, intent.extras.get(ExponeaPushReceiver.EXTRA_CUSTOM_DATA))
+            assertEquals(expectedNotificationAction, intent.extras?.get(ExponeaPushReceiver.EXTRA_ACTION_INFO))
+            assertEquals(expectedNotificationData, intent.extras?.get(ExponeaPushReceiver.EXTRA_DATA))
+            assertEquals(expectedPayload, intent.extras?.get(ExponeaPushReceiver.EXTRA_CUSTOM_DATA))
         }
 
         private val testCases = arrayListOf(

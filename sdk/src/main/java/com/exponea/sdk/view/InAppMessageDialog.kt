@@ -225,7 +225,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupWindow() {
-        window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         if (payload.isTextOverImage == true) {
             linearLayoutBackground.setBackgroundColor(Color.TRANSPARENT)
         } else {
@@ -238,8 +238,8 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             )
         }
 
-        window.attributes.width = WindowManager.LayoutParams.MATCH_PARENT
-        window.attributes.height = WindowManager.LayoutParams.MATCH_PARENT
-        window.setDimAmount(0.5f)
+        window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
+        window?.attributes?.height = WindowManager.LayoutParams.MATCH_PARENT
+        window?.setDimAmount(0.5f)
     }
 }

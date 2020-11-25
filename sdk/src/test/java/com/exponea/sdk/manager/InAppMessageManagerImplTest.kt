@@ -409,7 +409,7 @@ internal class InAppMessageManagerImplTest {
         actionCallbackSlot.captured.invoke(mockActivity, button)
         assertEquals(
             button.buttonLink,
-            shadowOf(mockActivity).nextStartedActivityForResult.intent.data.toString()
+            shadowOf(mockActivity).nextStartedActivityForResult.intent.data?.toString()
         )
     }
 

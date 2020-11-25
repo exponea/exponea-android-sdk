@@ -65,11 +65,11 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         upload.uploadSessionStart("mock-run-id") {}
         val request = server.takeRequest()
         // timestamp and id changes with every requests, let's check other properties
-        val payload = JsonParser().parse(request.body.readString(Charset.defaultCharset()))
+        val payload = JsonParser.parseString(request.body.readString(Charset.defaultCharset()))
         val payloadEvent = payload.asJsonObject["logs"].asJsonArray[0].asJsonObject
         assertEquals("startSession", payloadEvent["type"].asString)
         assertEquals("mock-run-id", payloadEvent["sid"].asString)
-        assertEquals(JsonParser().parse(exceptedDevice), payloadEvent["device"].asJsonObject)
+        assertEquals(JsonParser.parseString(exceptedDevice), payloadEvent["device"].asJsonObject)
     }
 
     private fun runUploadTest(
@@ -86,10 +86,10 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         }
         val request = server.takeRequest()
         assertEquals("mock-install-id", request.getHeader("Install-ID"))
-        var jsonRequest = JsonParser().parse(request.body.readString(Charset.defaultCharset()))
+        val jsonRequest = JsonParser.parseString(request.body.readString(Charset.defaultCharset()))
         if (requestPreprocessor != null) requestPreprocessor(jsonRequest)
         assertEquals(
-            JsonParser().parse(expectedRequest),
+            JsonParser.parseString(expectedRequest),
             jsonRequest
         )
     }

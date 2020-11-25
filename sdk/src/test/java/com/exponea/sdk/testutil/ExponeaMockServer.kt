@@ -14,7 +14,7 @@ internal object ExponeaMockServer {
 
     fun setResponseSuccess(server: MockWebServer, responseFile: String) {
 
-        val content = this.javaClass.classLoader.getResource(responseFile).readText()
+        val content = this.javaClass.classLoader?.getResource(responseFile)?.readText()
 
         mockResponse.clearHeaders()
         mockResponse.setBody(content)
@@ -29,7 +29,7 @@ internal object ExponeaMockServer {
 
     fun setResponseError(server: MockWebServer, responseFile: String, errorCode: Int = 400) {
 
-        val content = this.javaClass.classLoader.getResource(responseFile).readText()
+        val content = this.javaClass.classLoader?.getResource(responseFile)?.readText()
 
         mockResponse.clearHeaders()
         mockResponse.setBody(content)

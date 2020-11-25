@@ -133,6 +133,7 @@ internal class FlushManagerImpl(
 
     private fun routeSendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>): Call? {
         // for older event in database without exponeaProject, fallback to current configuration data
+        @Suppress("DEPRECATION")
         val exponeaProject = databaseObject.exponeaProject ?: ExponeaProject(
             configuration.baseURL,
             databaseObject.projectId,

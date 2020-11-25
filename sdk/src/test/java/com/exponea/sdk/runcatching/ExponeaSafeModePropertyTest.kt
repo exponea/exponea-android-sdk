@@ -12,6 +12,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModePropertyTest(
+    @Suppress("UNUSED_PARAMETER")
     name: String,
     val property: KProperty0<Any?>,
     val value: Any?

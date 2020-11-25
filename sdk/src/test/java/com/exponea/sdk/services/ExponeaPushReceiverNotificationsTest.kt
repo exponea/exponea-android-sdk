@@ -40,6 +40,7 @@ import org.robolectric.Shadows.shadowOf
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaPushReceiverNotificationsTest(
+    @Suppress("UNUSED_PARAMETER")
     name: String,
     private val notificationPayload: Map<String, String>,
     private val intentGetter: (notification: Notification) -> Intent,

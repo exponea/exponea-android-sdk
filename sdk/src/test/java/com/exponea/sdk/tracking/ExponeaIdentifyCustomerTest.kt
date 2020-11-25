@@ -51,7 +51,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         }
 
         assertEquals(
-            hashMapOf("first_name" to "NewName") as HashMap<String, Any>,
+            hashMapOf<String, Any>("first_name" to "NewName"),
             eventSlot.captured.properties
         )
         assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))

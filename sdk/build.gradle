@@ -51,16 +51,16 @@ dependencies {
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:3.12.1'
     // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:20.1.5'
+    implementation 'com.google.firebase:firebase-messaging:21.0.0'
     // Google WorkManager
-    implementation "androidx.work:work-runtime-ktx:2.3.4"
+    implementation "androidx.work:work-runtime-ktx:2.4.0"
     // View for in-app messages
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.android.material:material:1.2.1'
 
     // Base Test
     testImplementation 'junit:junit:4.12'
-    testImplementation 'androidx.test:core:1.2.0'
+    testImplementation 'androidx.test:core:1.3.0'
     // Kotlin jUnit
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.2.40'
     // Networking Testing
@@ -69,9 +69,9 @@ dependencies {
     // Improved Unit Testing
     testImplementation "org.robolectric:robolectric:4.2"
     // Co-Routines
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4'
     // Mockk
     testImplementation "io.mockk:mockk:1.9.3"
     // WorkManager testing
-    testImplementation 'androidx.work:work-testing:2.3.4'
+    testImplementation 'androidx.work:work-testing:2.4.0'
 }

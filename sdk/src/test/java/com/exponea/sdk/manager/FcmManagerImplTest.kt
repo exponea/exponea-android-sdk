@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
@@ -164,6 +165,17 @@ internal class FcmManagerImplTest {
             .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
             .build()
         every { notificationManager.currentInterruptionFilter } returns NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        manager.handleRemoteMessage(notification, notificationManager, true)
+        assertNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should not play sound when channel doesn't exist`() {
+        val notification = RemoteMessage.Builder("1")
+            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+            .build()
+        every { notificationManager.getNotificationChannel(any()) } returns null
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertNull(ShadowRingtone.lastRingtone)
     }

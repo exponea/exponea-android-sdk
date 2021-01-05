@@ -211,13 +211,14 @@ internal class FcmManagerImpl(
                 shouldPlaySound = false
             }
 
-            // if the notification channel is blocked
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                val channel = manager.getNotificationChannel(configuration.pushChannelId)
-                if (channel.importance == NotificationManager.IMPORTANCE_NONE) {
-                    Logger.d(this, "Won't play notification sound, channel is blocked.")
-                    shouldPlaySound = false
-                }
+            // if the notification channel is blocked/deleted
+            val channel = manager.getNotificationChannel(configuration.pushChannelId)
+            if (channel == null) {
+                Logger.d(this, "Won't play notification sound, channel not found.")
+                shouldPlaySound = false
+            } else if (channel.importance == NotificationManager.IMPORTANCE_NONE) {
+                Logger.d(this, "Won't play notification sound, channel is blocked.")
+                shouldPlaySound = false
             }
 
             if (shouldPlaySound) {

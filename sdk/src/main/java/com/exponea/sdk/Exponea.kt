@@ -264,6 +264,10 @@ object Exponea {
         false
     }
 
+    /**
+     * This is the main init method that should be called to initialize Exponea SDK
+     * It's also called when the SDK is auto-initialized
+     */
     @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.application = context.applicationContext as Application
         if (isInitialized) {
@@ -273,7 +277,7 @@ object Exponea {
 
         configuration.validate()
 
-        Logger.i(this, "Init")
+        Logger.i(this, "Initializing Exponea SDK version ${BuildConfig.VERSION_NAME}")
 
         if (Looper.myLooper() == null)
             Looper.prepare()

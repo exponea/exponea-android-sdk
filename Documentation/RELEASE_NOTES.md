@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.9.1
+#### January 07, 2021
+* Features
+  * In-app message clicked event now contains property `text` with label of the button that was interacted with.
+  * In-app messages are only preloaded when a new session is started. To ensure that you get fresh in-app messages while testing, kill the app between runs.
+  * Updated dependencies, moved all libraries to AndroidX.
+* Bug Fixes
+  * Fixed: Crash occurring when push notification is received and the notification channel provided in configuration doesn't exist.
+
+
 ## Release Notes for 2.9.0
 #### November 20, 2020
 * Features

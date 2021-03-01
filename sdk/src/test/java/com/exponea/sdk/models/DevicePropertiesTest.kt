@@ -22,7 +22,7 @@ internal class DevicePropertiesTest {
                 osName = "Android",
                 osVersion = Build.VERSION.RELEASE,
                 sdk = "AndroidSDK",
-                sdkVersion = BuildConfig.VERSION_NAME,
+                sdkVersion = BuildConfig.EXPONEA_VERSION_NAME,
                 deviceModel = Build.MODEL,
                 deviceType = "mobile",
                 appVersion = ""

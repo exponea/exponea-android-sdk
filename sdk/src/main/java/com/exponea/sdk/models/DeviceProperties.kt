@@ -26,7 +26,7 @@ internal data class DeviceProperties(
         osName = Constants.DeviceInfo.osName,
         osVersion = Build.VERSION.RELEASE,
         sdk = Constants.DeviceInfo.sdk,
-        sdkVersion = BuildConfig.VERSION_NAME,
+        sdkVersion = BuildConfig.EXPONEA_VERSION_NAME,
         deviceModel = Build.MODEL,
         deviceType = getDeviceType(context),
         appVersion = context.getAppVersion(context)

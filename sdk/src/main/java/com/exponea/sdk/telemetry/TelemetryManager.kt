@@ -38,7 +38,7 @@ internal class TelemetryManager(application: Application, userId: String? = null
     private val telemetryUpload: TelemetryUpload = VSAppCenterTelemetryUpload(
         application,
         installId,
-        BuildConfig.VERSION_NAME,
+        BuildConfig.EXPONEA_VERSION_NAME,
         userId ?: installId
     )
 
@@ -54,12 +54,12 @@ internal class TelemetryManager(application: Application, userId: String? = null
     fun reportEvent(eventType: EventType, properties: MutableMap<String, String> = hashMapOf()) {
         val mutableProperties = properties.toMutableMap()
         mutableProperties.putAll(hashMapOf(
-            "sdkVersion" to BuildConfig.VERSION_NAME,
+            "sdkVersion" to BuildConfig.EXPONEA_VERSION_NAME,
             "appName" to appInfo.packageName,
             "appVersion" to appInfo.versionName,
             "appNameVersion" to "${appInfo.packageName} - ${appInfo.versionName}",
             "appNameVersionSdkVersion"
-                to "${appInfo.packageName} - ${appInfo.versionName} - SDK ${BuildConfig.VERSION_NAME}"
+                to "${appInfo.packageName} - ${appInfo.versionName} - SDK ${BuildConfig.EXPONEA_VERSION_NAME}"
         ))
         telemetryUpload.uploadEventLog(EventLog(eventType.value, mutableProperties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")

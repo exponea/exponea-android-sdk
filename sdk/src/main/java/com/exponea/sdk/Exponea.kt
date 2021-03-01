@@ -277,7 +277,7 @@ object Exponea {
 
         configuration.validate()
 
-        Logger.i(this, "Initializing Exponea SDK version ${BuildConfig.VERSION_NAME}")
+        Logger.i(this, "Initializing Exponea SDK version ${BuildConfig.EXPONEA_VERSION_NAME}")
 
         if (Looper.myLooper() == null)
             Looper.prepare()

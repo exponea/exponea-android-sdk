@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 44
-        versionName "2.9.1"
+        buildConfigField "String", "EXPONEA_VERSION_NAME", '"2.9.1"'
+        buildConfigField "int", "EXPONEA_VERSION_CODE", "44"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
     }

@@ -1,4 +1,10 @@
 ## Release Notes
+## Release Notes for 2.9.2
+#### March 02, 2021
+* Bug Fixes
+  * Fixed: The SDK would not compile when using gradle build tools version 4.X.X.
+
+
 ## Release Notes for 2.9.1
 #### January 07, 2021
 * Features

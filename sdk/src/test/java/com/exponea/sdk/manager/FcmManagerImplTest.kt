@@ -198,7 +198,7 @@ internal class FcmManagerImplTest {
     fun `should show payload image`() {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
-        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
         payload["image"] = "https://via.placeholder.com/150"
         val notification = RemoteMessage.Builder("1").setData(payload).build()
         manager.handleRemoteMessage(notification, notificationManager, true)

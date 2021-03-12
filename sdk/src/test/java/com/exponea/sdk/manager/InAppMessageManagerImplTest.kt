@@ -271,7 +271,7 @@ internal class InAppMessageManagerImplTest {
             arrayListOf(
                 InAppMessageTest.getInAppMessage(id = "1", priority = 0),
                 InAppMessageTest.getInAppMessage(id = "2")
-                )
+            )
         )
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(id = "1", priority = 2),
@@ -358,7 +358,7 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
-        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload.buttons!![0])
+        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setInteracted(any(), any()) }
     }
 
@@ -384,7 +384,7 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
-        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload.buttons!![0])
+        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true, "Action") }
         dismissedCallbackSlot.captured.invoke()
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
@@ -404,7 +404,7 @@ internal class InAppMessageManagerImplTest {
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.flushForegroundThreadScheduler()
 
-        val button = InAppMessageTest.getInAppMessage().payload.buttons!![0]
+        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         assertNull(shadowOf(mockActivity).nextStartedActivityForResult)
         actionCallbackSlot.captured.invoke(mockActivity, button)
         assertEquals(
@@ -473,7 +473,7 @@ internal class InAppMessageManagerImplTest {
             messagesCache.get()
             bitmapCache.preload("pending_image_url", any())
             bitmapCache.get("pending_image_url")
-            presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any())
+            presenter.show(InAppMessageType.MODAL, pendingMessage.payload!!, any(), any(), any(), any())
             bitmapCache.preload("other_image_url_1", any())
             bitmapCache.preload("other_image_url_2", any())
         }
@@ -495,11 +495,11 @@ internal class InAppMessageManagerImplTest {
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         verify(exactly = 0) {
-            presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), any(), any(), any())
         }
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.MILLISECONDS)
         verify(exactly = 1) {
-            presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), any(), any(), any())
         }
     }
 
@@ -518,7 +518,30 @@ internal class InAppMessageManagerImplTest {
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.flushForegroundThreadScheduler()
         verify {
-            presenter.show(InAppMessageType.MODAL, message.payload, any(), 1234, any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), 1234, any(), any())
         }
+    }
+
+    @Test
+    fun `should track control group message without showing it`() {
+        val message = InAppMessageTest.getInAppMessage(
+            payload = null,
+            variantId = -1,
+            variantName = "Control group",
+            timeout = 1234
+        )
+        val delegate = spyk<InAppMessageTrackingDelegate>()
+        every { messagesCache.get() } returns arrayListOf(message)
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        every { presenter.show(any(), any(), any(), any(), any(), any()) } returns mockk()
+        waitForIt { manager.preload { it() } }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate) }
+        Robolectric.flushForegroundThreadScheduler()
+        verify(exactly = 1) { delegate.track(message, "show", false) }
+        verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any()) }
     }
 }

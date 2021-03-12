@@ -88,13 +88,17 @@ internal class InAppMessageManagerImpl(
         messages: List<InAppMessage>,
         callback: ((Result<Unit>) -> Unit)?
     ) = runCatching {
-        bitmapCache.clearExcept(messages.mapNotNull { it.payload.imageUrl }.filter { it.isNotBlank() })
+        bitmapCache.clearExcept(
+            messages.mapNotNull { it.payload }
+                .mapNotNull { it.imageUrl }
+                .filter { it.isNotBlank() }
+        )
         var shouldWaitWithPreload = false
         if (pendingShowRequests.isNotEmpty()) {
             Logger.i(this, "Attempt to show pending in-app message before loading all images.")
             val message = pickPendingMessage(false)
             if (message != null) {
-                val imageUrl = message.second.payload.imageUrl
+                val imageUrl = message.second.payload?.imageUrl
                 if (imageUrl.isNullOrEmpty()) {
                     showPendingMessage(message)
                 } else {
@@ -124,8 +128,9 @@ internal class InAppMessageManagerImpl(
         }
         var toPreload = AtomicInteger(messages.size)
         messages.forEach {
-            if (!it.payload.imageUrl.isNullOrEmpty()) {
-                bitmapCache.preload(it.payload.imageUrl) {
+            val imageUrl = it.payload?.imageUrl
+            if (!imageUrl.isNullOrEmpty()) {
+                bitmapCache.preload(imageUrl) {
                     toPreload.getAndDecrement()
                     if (toPreload.get() == 0) {
                         onPreloaded()
@@ -165,7 +170,8 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun hasImageFor(message: InAppMessage): Boolean {
-        val result = message.payload.imageUrl.isNullOrEmpty() || bitmapCache.has(message.payload.imageUrl)
+        val imageUrl = message.payload?.imageUrl
+        val result = imageUrl.isNullOrEmpty() || bitmapCache.has(imageUrl)
         if (!result) {
             Logger.i(this, "Image not available for ${message.name}")
         }
@@ -186,9 +192,9 @@ internal class InAppMessageManagerImpl(
         )
         messages = messages.filter {
             (!requireImageLoaded || hasImageFor(it)) &&
-            it.applyDateFilter(System.currentTimeMillis() / 1000) &&
-            it.applyEventFilter(eventType, properties, timestamp) &&
-            it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
+                it.applyDateFilter(System.currentTimeMillis() / 1000) &&
+                it.applyEventFilter(eventType, properties, timestamp) &&
+                it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
         Logger.i(this, "${messages.size} messages available after filtering. Picking highest priority message.")
         val highestPriority = messages.mapNotNull { it.priority }.max() ?: 0
@@ -240,10 +246,20 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun show(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+        if (message.variantId == -1 && message.payload == null) {
+            Logger.i(this, "Only logging in-app message for control group '${message.name}'")
+            trackShowEvent(message, trackingDelegate)
+            return
+        }
+        if (message.payload == null) {
+            Logger.i(this, "Not showing message with empty payload '${message.name}'")
+            return
+        }
         Logger.i(this, "Attempting to show in-app message '${message.name}'")
-        val bitmap = if (!message.payload.imageUrl.isNullOrBlank())
-            bitmapCache.get(message.payload.imageUrl) ?: return
-            else null
+        val imageUrl = message.payload.imageUrl
+        val bitmap = if (!imageUrl.isNullOrBlank())
+            bitmapCache.get(imageUrl) ?: return
+        else null
         Logger.i(this, "Posting show to main thread with delay ${message.delay ?: 0}ms.")
         Handler(Looper.getMainLooper()).postDelayed(
             {
@@ -263,15 +279,19 @@ internal class InAppMessageManagerImpl(
                     }
                 )
                 if (presented != null) {
-                    displayStateRepository.setDisplayed(message, Date())
-                    trackingDelegate.track(message, "show", false)
-                    Exponea.telemetry?.reportEvent(
-                        com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-                        hashMapOf("messageType" to message.rawMessageType)
-                    )
+                    trackShowEvent(message, trackingDelegate)
                 }
             },
             message.delay ?: 0
+        )
+    }
+
+    private fun trackShowEvent(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+        displayStateRepository.setDisplayed(message, Date())
+        trackingDelegate.track(message, "show", false)
+        Exponea.telemetry?.reportEvent(
+            com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
+            hashMapOf("messageType" to message.rawMessageType)
         )
     }
 

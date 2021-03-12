@@ -42,7 +42,8 @@ internal class InAppMessageDialogPresenterTest(
     fun `should not show dialog without resumed activity`() {
         buildActivity(AppCompatActivity::class.java).setup()
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
-        assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {}))
+        val image = BitmapFactory.decodeFile("mock-file")
+        assertNull(presenter.show(inAppMessageType, payload!!, image, null, mockk(), {}))
     }
 
     @Test
@@ -50,7 +51,7 @@ internal class InAppMessageDialogPresenterTest(
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
         assertNotNull(
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+            presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         )
     }
 
@@ -59,7 +60,7 @@ internal class InAppMessageDialogPresenterTest(
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
         val presenter = InAppMessagePresenter(activity.get())
         assertNotNull(
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+            presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         )
     }
 
@@ -68,7 +69,7 @@ internal class InAppMessageDialogPresenterTest(
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+            presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         assertNotNull(presented)
         presented.dismissedCallback()
         buildActivity(AppCompatActivity::class.java).setup().resume().pause()
@@ -80,7 +81,7 @@ internal class InAppMessageDialogPresenterTest(
         val presenter = InAppMessagePresenter(ApplicationProvider.getApplicationContext())
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
+            presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), null, mockk(), {})
         assertNotNull(presented)
         assertNull(presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), null, mockk(), {}))
         presented.dismissedCallback()
@@ -100,7 +101,7 @@ internal class InAppMessageDialogPresenterTest(
         val presenter = InAppMessagePresenter(activity.get())
         val dismiss = spyk<() -> Unit>()
         val presented =
-            presenter.show(inAppMessageType, payload, BitmapFactory.decodeFile("mock-file"), 1234, mockk(), dismiss)
+            presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), 1234, mockk(), dismiss)
 
         mockkObject(Exponea)
         every { Exponea.presentedInAppMessage } returns presented

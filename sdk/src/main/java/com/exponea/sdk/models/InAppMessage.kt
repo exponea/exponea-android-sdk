@@ -16,7 +16,7 @@ internal data class InAppMessage(
     @SerializedName("frequency")
     val rawFrequency: String,
     @SerializedName("payload")
-    val payload: InAppMessagePayload,
+    val payload: InAppMessagePayload?,
     @SerializedName("variant_id")
     val variantId: Int,
     @SerializedName("variant_name")

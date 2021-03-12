@@ -96,6 +96,34 @@ internal class InAppMessageTest {
                 )
             )
         }
+
+        fun getInAppMessage(
+            id: String? = null,
+            dateFilter: DateFilter? = null,
+            trigger: EventFilter? = null,
+            frequency: String? = null,
+            payload: InAppMessagePayload? = null,
+            variantId: Int = 0,
+            variantName: String? = null,
+            priority: Int? = null,
+            timeout: Long? = null,
+            delay: Long? = null
+        ): InAppMessage {
+            return InAppMessage(
+                id = id ?: "5dd86f44511946ea55132f29",
+                name = "Test serving in-app message",
+                rawMessageType = "modal",
+                rawFrequency = frequency ?: "unknown",
+                variantId = variantId,
+                variantName = variantName ?: "Variant A",
+                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
+                dateFilter = dateFilter ?: DateFilter(false, null, null),
+                priority = priority,
+                delay = delay,
+                timeout = timeout,
+                payload = payload
+            )
+        }
     }
 
     @Test

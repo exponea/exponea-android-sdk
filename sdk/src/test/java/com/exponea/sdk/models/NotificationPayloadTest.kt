@@ -204,7 +204,8 @@ internal class NotificationPayloadTest(
                             "some property" to "some value",
                             "language" to "",
                             "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                            "platform" to "android"
+                            "platform" to "android",
+                            "sent_timestamp" to "1614585422.20"
                         ),
                         it.attributes
                     )

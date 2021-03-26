@@ -74,6 +74,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             ExportedEventType(
                 "test-event",
                 123.0,
+                null,
                 hashMapOf("cookie" to "mock-cookie"),
                 hashMapOf("prop" to "value")
             ),
@@ -156,6 +157,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             ExportedEventType(
                 "test-event",
                 123.0,
+                null,
                 hashMapOf("cookie" to "mock-cookie"),
                 hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
             ),
@@ -178,6 +180,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             ExportedEventType(
                 "test-event",
                 123.0,
+                null,
                 hashMapOf("cookie" to "mock-cookie"),
                 hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
             ),
@@ -187,6 +190,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             ExportedEventType(
                 "test-event",
                 123.0,
+                null,
                 hashMapOf("cookie" to "mock-cookie"),
                 hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
             ),

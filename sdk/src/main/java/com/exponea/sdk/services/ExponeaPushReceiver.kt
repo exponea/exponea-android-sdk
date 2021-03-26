@@ -10,6 +10,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 import kotlin.random.Random
 
@@ -23,17 +24,20 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         const val EXTRA_DATA = "NotificationData"
         const val EXTRA_CUSTOM_DATA = "NotificationCustomData"
         const val EXTRA_ACTION_INFO = "notification_action"
+        const val EXTRA_DELIVERED_TIMESTAMP = "NotificationDeliveredTimestamp"
 
         fun getClickIntent(
             context: Context,
             id: Int,
             data: NotificationData?,
-            messageData: HashMap<String, String>
+            messageData: HashMap<String, String>,
+            deliveredTimestamp: Double?
         ): Intent {
             return Intent(ACTION_CLICKED).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
                 putExtra(EXTRA_CUSTOM_DATA, messageData)
+                putExtra(EXTRA_DELIVERED_TIMESTAMP, deliveredTimestamp)
                 `package` = context.packageName
             }
         }
@@ -45,7 +49,11 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         }.logOnException()
     }
 
-    private fun onReceiveUnsafe(context: Context, intent: Intent) {
+    fun onReceiveUnsafe(
+        context: Context,
+        intent: Intent,
+        timestamp: Double = currentTimeSeconds()
+    ) {
         Logger.i(this, "Push notification clicked")
 
         val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
@@ -80,10 +88,19 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         }
 
         val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
+        val deliveredTimestamp = intent.getDoubleExtra(EXTRA_DELIVERED_TIMESTAMP, 0.0)
+        val clickedTimestamp: Double
+
+        clickedTimestamp = if (deliveredTimestamp != null && timestamp <= deliveredTimestamp) {
+            deliveredTimestamp + 1
+        } else {
+            timestamp
+        }
         Exponea.autoInitialize(context) {
             Exponea.trackClickedPush(
                 data = data,
-                actionData = action
+                actionData = action,
+                timestamp = clickedTimestamp
             )
             // After clicking the notification button (action), dismiss it
             dismissNotification(context, intent)

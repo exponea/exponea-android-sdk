@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
@@ -15,10 +16,13 @@ import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -42,20 +46,24 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         manager = FlushManagerImpl(configuration, repo, service, connectionManager, {})
     }
 
-    private fun createTestEvent(includeProject: Boolean) {
-        repo.add(DatabaseStorageObject(
-            projectId = "old-project-id",
-            item = ExportedEventType(
-                type = "test_event",
-                timestamp = System.currentTimeMillis() / 1000.0,
-                customerIds = hashMapOf(),
-                properties = hashMapOf("property" to "value")
-            ),
-            route = Route.TRACK_EVENTS,
-            exponeaProject = if (includeProject)
-                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+    private fun createTestEvent(includeProject: Boolean, type: String? = "test_event"): ExportedEventType {
+        val event = ExportedEventType(
+            type = type,
+            timestamp = System.currentTimeMillis() / 1000.0,
+            customerIds = hashMapOf(),
+            properties = hashMapOf("property" to "value")
+        )
+        repo.add(
+            DatabaseStorageObject(
+                projectId = "old-project-id",
+                item = event,
+                route = Route.TRACK_EVENTS,
+                exponeaProject = if (includeProject)
+                    ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
                 else null
-        ))
+            )
+        )
+        return event
     }
 
     @Test
@@ -152,5 +160,47 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         verify(exactly = 1) {
             service.postEvent(any(), any())
         }
+    }
+
+    @Test
+    fun `should post age when tracking events`() {
+        setup(connected = true, serviceSuccess = true)
+        createTestEvent(true)
+        waitForIt {
+            manager.flushData { _ ->
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+        }
+        val eventSlot = slot<ExportedEventType>()
+        verify {
+            service.postEvent(
+                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),
+                capture(eventSlot)
+            )
+        }
+        assertNotNull(eventSlot.captured.age)
+        assertNull(eventSlot.captured.timestamp)
+    }
+
+    @Test
+    fun `should post timestamp when tracking push notifications`() {
+        setup(connected = true, serviceSuccess = true)
+        createTestEvent(true, type = Constants.EventTypes.push)
+        waitForIt {
+            manager.flushData { _ ->
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
+        }
+        val eventSlot = slot<ExportedEventType>()
+        verify {
+            service.postEvent(
+                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),
+                capture(eventSlot)
+            )
+        }
+        assertNull(eventSlot.captured.age)
+        assertNotNull(eventSlot.captured.timestamp)
     }
 }

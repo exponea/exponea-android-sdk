@@ -7,6 +7,7 @@ internal data class ExportedEventType(
     @SerializedName("event_type")
     var type: String? = null,
     var timestamp: Double? = currentTimeSeconds(),
+    var age: Double? = null,
     @SerializedName("customer_ids")
     var customerIds: HashMap<String, String?>? = null,
     @SerializedName("properties")

@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
@@ -11,6 +12,7 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
 import java.io.IOException
+import kotlin.Result
 import okhttp3.Call
 import okhttp3.Response
 
@@ -44,6 +46,7 @@ internal class FlushManagerImpl(
         }
 
         val allEvents = eventRepository.all()
+        allEvents.sortBy { it.item.timestamp }
         Logger.d(this, "flushEvents: Count ${allEvents.size}")
 
         val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
@@ -90,6 +93,16 @@ internal class FlushManagerImpl(
                     }
                 }
             }
+            Route.TRACK_EVENTS -> {
+                if (databaseObject.item.type != Constants.EventTypes.push) {
+                    // do not use age for push notifications
+                    // timestamp can be modified to preserve sent->delivered->clicked order
+                    databaseObject.item.timestamp?.let { timestamp ->
+                        databaseObject.item.age = currentTimeSeconds().minus(timestamp)
+                        databaseObject.item.timestamp = null
+                    }
+                }
+            }
             else -> { /* do nothing */ }
         }
     }
@@ -100,9 +113,9 @@ internal class FlushManagerImpl(
     ): (Call, IOException) -> Unit {
         return { _, ioException ->
             Logger.e(
-                    this@FlushManagerImpl,
-                    "Sending Event Failed ${databaseObject.id}",
-                    ioException
+                this@FlushManagerImpl,
+                "Sending Event Failed ${databaseObject.id}",
+                ioException
             )
             onEventSentFailed(databaseObject)
             // Once done continue and try to flush the rest of events

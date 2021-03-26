@@ -75,7 +75,8 @@ internal class FcmManagerImpl(
     override fun handleRemoteMessage(
         message: RemoteMessage?,
         manager: NotificationManager,
-        showNotification: Boolean
+        showNotification: Boolean,
+        timestamp: Double
     ) {
 
         Logger.d(this, "handleRemoteMessage")
@@ -90,13 +91,23 @@ internal class FcmManagerImpl(
         }
 
         val payload = NotificationPayload(HashMap(message.data))
+        val sentTimestamp = message.sentTime.toDouble() / 1000
+        // replace with this, when API will sent the value
+        // val sentTimestamp = payload.attributes?.get("sent_timestamp")?.toDouble()
+
+        val deliveredTimestamp = if (sentTimestamp != null && timestamp <= sentTimestamp) {
+            sentTimestamp + 1
+        } else {
+            timestamp
+        }
+        payload.deliveredTimestamp = deliveredTimestamp
 
         if (payload.notificationAction.action == NotificationPayload.Actions.SELFCHECK) {
             Exponea.selfCheckPushReceived()
             return
         }
 
-        Exponea.trackDeliveredPush(data = payload.notificationData)
+        Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
 
         if (payload.notificationId == lastPushNotificationId) {
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
@@ -113,11 +124,11 @@ internal class FcmManagerImpl(
         Logger.d(this, "showNotification")
 
         val notification = NotificationCompat.Builder(application, configuration.pushChannelId)
-                .setContentText(payload.message)
-                .setContentTitle(payload.title)
-                .setChannelId(configuration.pushChannelId)
-                .setSmallIcon(getPushIconRes())
-                .setStyle(NotificationCompat.BigTextStyle().bigText(payload.message))
+            .setContentText(payload.message)
+            .setContentTitle(payload.title)
+            .setChannelId(configuration.pushChannelId)
+            .setSmallIcon(getPushIconRes())
+            .setStyle(NotificationCompat.BigTextStyle().bigText(payload.message))
         configuration.pushAccentColor?.let { notification.color = it }
 
         handlePayloadImage(notification, payload)
@@ -270,7 +281,8 @@ internal class FcmManagerImpl(
             application,
             payload.notificationId,
             payload.notificationData,
-            payload.rawData
+            payload.rawData,
+            payload.deliveredTimestamp
         )
     }
 

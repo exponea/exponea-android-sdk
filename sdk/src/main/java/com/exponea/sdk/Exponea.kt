@@ -458,7 +458,7 @@ object Exponea {
 
     fun trackDeliveredPush(
         data: NotificationData? = null,
-        timestamp: Double? = currentTimeSeconds()
+        timestamp: Double = currentTimeSeconds()
     ) = runCatching {
         requireInitialized {
             val properties = PropertiesList(

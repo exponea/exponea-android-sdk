@@ -49,7 +49,8 @@ internal object NotificationTestPayloads {
             "some property":"some value",
             "language":"",
             "campaign_id":"5db9ab54b073dfb424ccfa6f",
-            "platform":"android"
+            "platform":"android",
+            "sent_timestamp":1614585422.20
         }""",
         "message" to "Notification text"
     )

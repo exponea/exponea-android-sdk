@@ -136,7 +136,9 @@ internal class ExponeaPushReceiverNotificationsTest(
                         source = "exponea",
                         campaign = "Testing mobile push",
                         medium = "mobile_push_notification"
-                    )
+                    ),
+                    sentTimestamp = 1614585422.20,
+                    type = "push"
                 ),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             )

@@ -212,7 +212,9 @@ internal class FcmManagerImplNotificationsTest(
                             source = "exponea",
                             campaign = "Testing mobile push",
                             medium = "mobile_push_notification"
-                        )
+                        ),
+                        sentTimestamp = 1614585422.20,
+                        type = "push"
                     )
                     assertEquals("Notification title", shadowOf(it).contentTitle)
                     assertEquals("Notification text", shadowOf(it).contentText)
@@ -266,7 +268,9 @@ internal class FcmManagerImplNotificationsTest(
                         source = "exponea",
                         campaign = "Testing mobile push",
                         medium = "mobile_push_notification"
-                    )
+                    ),
+                    sentTimestamp = 1614585422.20,
+                    type = "push"
                 ),
                 mapOf(
                     "campaign_name" to "Wassil's push",
@@ -281,7 +285,8 @@ internal class FcmManagerImplNotificationsTest(
                     "language" to "",
                     "campaign_id" to "5db9ab54b073dfb424ccfa6f",
                     "platform" to "android",
-                    "sent_timestamp" to "1614585422.20"
+                    "sent_timestamp" to "1614585422.20",
+                    "type" to "push"
                 )
             ),
             TestCase(

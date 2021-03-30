@@ -15,6 +15,8 @@ data class NotificationData(
     val language: String? = null,
     val recipient: String? = null,
     val subject: String? = null,
+    val sentTimestamp: Double? = null,
+    val type: String? = null,
     val campaignData: CampaignData = CampaignData()
 ) : Parcelable {
     val hasCustomEventType: Boolean = !(eventType?.isBlank() ?: true)
@@ -31,6 +33,8 @@ data class NotificationData(
         dataMap["language"] as? String,
         dataMap["recipient"] as? String,
         dataMap["subject"] as? String,
+        dataMap["sent_timestamp"] as? Double,
+        dataMap["type"] as? String,
         CampaignData(campaignMap)
     )
 
@@ -46,6 +50,8 @@ data class NotificationData(
         language = parcel.readString(),
         recipient = parcel.readString(),
         subject = parcel.readString(),
+        sentTimestamp = parcel.readValue(Double::class.java.classLoader) as? Double,
+        type = parcel.readString(),
         campaignData = parcel.readValue(CampaignData::class.java.classLoader) as CampaignData
     )
 
@@ -61,6 +67,8 @@ data class NotificationData(
         parcel.writeString(language)
         parcel.writeString(recipient)
         parcel.writeString(subject)
+        parcel.writeValue(sentTimestamp)
+        parcel.writeString(type)
         parcel.writeValue(campaignData)
     }
 
@@ -75,7 +83,9 @@ data class NotificationData(
             "platform" to platform,
             "language" to language,
             "recipient" to recipient,
-            "subject" to subject
+            "subject" to subject,
+            "sent_timestamp" to sentTimestamp,
+            "type" to type
         ).also {
             it.putAll(campaignData.getTrackingData())
         }

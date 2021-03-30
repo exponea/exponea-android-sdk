@@ -199,7 +199,8 @@ internal class FcmManagerImplTest {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
         val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-        payload["image"] = "https://via.placeholder.com/150"
+        payload["image"] = "https://raw.githubusercontent.com/exponea/" +
+            "exponea-android-sdk/develop/Documentation/logo_yellow.png"
         val notification = RemoteMessage.Builder("1").setData(payload).build()
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertNotNull(shadowOf(notificationSlot.captured).bigPicture)

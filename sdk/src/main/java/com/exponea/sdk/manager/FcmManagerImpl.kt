@@ -91,9 +91,7 @@ internal class FcmManagerImpl(
         }
 
         val payload = NotificationPayload(HashMap(message.data))
-        val sentTimestamp = message.sentTime.toDouble() / 1000
-        // replace with this, when API will sent the value
-        // val sentTimestamp = payload.attributes?.get("sent_timestamp")?.toDouble()
+        val sentTimestamp = payload.notificationData.sentTimestamp
 
         val deliveredTimestamp = if (sentTimestamp != null && timestamp <= sentTimestamp) {
             sentTimestamp + 1

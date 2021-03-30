@@ -187,7 +187,9 @@ internal class NotificationPayloadTest(
                                 source = "exponea",
                                 campaign = "Testing mobile push",
                                 medium = "mobile_push_notification"
-                            )
+                            ),
+                            sentTimestamp = 1614585422.20,
+                            type = "push"
                         ),
                         it.notificationData
                     )
@@ -205,7 +207,8 @@ internal class NotificationPayloadTest(
                             "language" to "",
                             "campaign_id" to "5db9ab54b073dfb424ccfa6f",
                             "platform" to "android",
-                            "sent_timestamp" to "1614585422.20"
+                            "sent_timestamp" to "1614585422.20",
+                            "type" to "push"
                         ),
                         it.attributes
                     )

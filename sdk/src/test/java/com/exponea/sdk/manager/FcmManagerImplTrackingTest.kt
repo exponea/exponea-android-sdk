@@ -57,38 +57,38 @@ internal class FcmManagerImplTrackingTest(
         private val testCases = arrayListOf(
             TestCase(
                 name = "sent -> delivered -> clicked",
-                deliveredTimestamp = 1614585424.20,
-                clickedTimestamp = 1614585426.20,
+                deliveredTimestamp = SENT_TIMESTAMP + 2,
+                clickedTimestamp = SENT_TIMESTAMP + 4,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "sent -> clicked -> delivered",
-                deliveredTimestamp = 1614585426.20,
-                clickedTimestamp = 1614585424.20,
+                deliveredTimestamp = SENT_TIMESTAMP + 4,
+                clickedTimestamp = SENT_TIMESTAMP + 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "delivered -> sent -> clicked",
-                deliveredTimestamp = 1614585420.20,
-                clickedTimestamp = 1614585424.20,
+                deliveredTimestamp = SENT_TIMESTAMP - 2,
+                clickedTimestamp = SENT_TIMESTAMP + 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "clicked -> sent -> delivered",
-                deliveredTimestamp = 1614585424.20,
-                clickedTimestamp = 1614585420.20,
+                deliveredTimestamp = SENT_TIMESTAMP + 2,
+                clickedTimestamp = SENT_TIMESTAMP - 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "delivered -> clicked -> sent",
-                deliveredTimestamp = 1614585418.20,
-                clickedTimestamp = 1614585420.20,
+                deliveredTimestamp = SENT_TIMESTAMP - 4,
+                clickedTimestamp = SENT_TIMESTAMP - 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "clicked -> delivered -> sent",
-                deliveredTimestamp = 1614585420.20,
-                clickedTimestamp = 1614585418.20,
+                deliveredTimestamp = SENT_TIMESTAMP - 2,
+                clickedTimestamp = SENT_TIMESTAMP - 4,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(

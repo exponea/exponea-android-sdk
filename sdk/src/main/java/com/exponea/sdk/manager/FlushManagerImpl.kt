@@ -45,8 +45,7 @@ internal class FlushManagerImpl(
             return
         }
 
-        val allEvents = eventRepository.all()
-        allEvents.sortBy { it.item.timestamp }
+        val allEvents = eventRepository.all().sortedBy { it.item.timestamp }
         Logger.d(this, "flushEvents: Count ${allEvents.size}")
 
         val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }

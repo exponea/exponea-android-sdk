@@ -91,7 +91,7 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         val deliveredTimestamp = intent.getDoubleExtra(EXTRA_DELIVERED_TIMESTAMP, 0.0)
         val clickedTimestamp: Double
 
-        clickedTimestamp = if (deliveredTimestamp != null && timestamp <= deliveredTimestamp) {
+        clickedTimestamp = if (timestamp <= deliveredTimestamp) {
             deliveredTimestamp + 1
         } else {
             timestamp

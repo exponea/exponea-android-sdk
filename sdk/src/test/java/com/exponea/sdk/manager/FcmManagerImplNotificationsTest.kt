@@ -297,6 +297,98 @@ internal class FcmManagerImplNotificationsTest(
                 expectedNotificationMatcher = {},
                 expectedTrackingData = NotificationData(),
                 expectedNotificationData = mapOf("silent_test" to "value")
+            ),
+            TestCase(
+                "production notification without sent_imestamp and type",
+                NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE,
+                true,
+                1,
+                {
+                    val notificationData = NotificationData(
+                        eventType = "campaign",
+                        campaignId = "5db9ab54b073dfb424ccfa6f",
+                        campaignName = "Wassil's push",
+                        actionId = 2,
+                        actionName = "Unnamed mobile push",
+                        actionType = "mobile notification",
+                        campaignPolicy = "",
+                        platform = "android",
+                        language = "",
+                        subject = "Notification title",
+                        recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                        campaignData = CampaignData(
+                            source = "exponea",
+                            campaign = "Testing mobile push",
+                            medium = "mobile_push_notification"
+                        )
+                    )
+                    assertEquals("Notification title", shadowOf(it).contentTitle)
+                    assertEquals("Notification text", shadowOf(it).contentText)
+                    validateIntent(
+                        shadowOf(it.contentIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_CLICKED,
+                        NotificationAction(ACTION_TYPE_NOTIFICATION),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
+                    )
+                    assertEquals(3, it.actions.size)
+                    assertEquals("Action 1 title", it.actions[0].title)
+                    validateIntent(
+                        shadowOf(it.actions[0].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
+                    )
+                    assertEquals("Action 2 title", it.actions[1].title)
+                    validateIntent(
+                        shadowOf(it.actions[1].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "http://deeplink?search=something"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
+                    )
+                    assertEquals("Action 3 title", it.actions[2].title)
+                    validateIntent(
+                        shadowOf(it.actions[2].actionIntent).savedIntent,
+                        ExponeaPushReceiver.ACTION_URL_CLICKED,
+                        NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com?search=something"),
+                        notificationData,
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
+                    )
+                },
+                NotificationData(
+                    eventType = "campaign",
+                    campaignId = "5db9ab54b073dfb424ccfa6f",
+                    campaignName = "Wassil's push",
+                    actionId = 2,
+                    actionName = "Unnamed mobile push",
+                    actionType = "mobile notification",
+                    campaignPolicy = "",
+                    platform = "android",
+                    language = "",
+                    subject = "Notification title",
+                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    campaignData = CampaignData(
+                        source = "exponea",
+                        campaign = "Testing mobile push",
+                        medium = "mobile_push_notification"
+                    )
+                ),
+                mapOf(
+                    "campaign_name" to "Wassil's push",
+                    "event_type" to "campaign",
+                    "action_id" to "2",
+                    "action_type" to "mobile notification",
+                    "campaign_policy" to "",
+                    "subject" to "Notification title",
+                    "action_name" to "Unnamed mobile push",
+                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    "some property" to "some value",
+                    "language" to "",
+                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                    "platform" to "android"
+                )
             )
         )
 

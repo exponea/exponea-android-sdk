@@ -156,4 +156,31 @@ internal class FcmManagerImplTrackingTest(
         assertTrue { clickedTimestampSlot.captured > deliveredTimestampSlot.captured }
         assertTrue { deliveredTimestampSlot.captured > SENT_TIMESTAMP }
     }
+
+    @Test
+    fun `should track delivered and clicked events correctly when send_timestamp is missing`() {
+        val notification = RemoteMessage.Builder("1")
+            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE)
+            .build()
+        val deliveredTimestampSlot = slot<Double>()
+        val clickedTimestampSlot = slot<Double>()
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+
+        manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
+        verify(exactly = 1) {
+            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+        }
+        ExponeaPushReceiver().onReceiveUnsafe(
+            context,
+            intentGetter(notificationSlot.captured),
+            clickedTimestamp
+        )
+        verify(exactly = 1) {
+            Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
+        }
+        // when set_timestamp is not sent from server, we can not guarantee
+        // sent -> delivered -> clicked order, only delivered -> clicked order
+        assertTrue { clickedTimestampSlot.captured > deliveredTimestampSlot.captured }
+    }
 }

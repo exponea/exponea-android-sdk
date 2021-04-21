@@ -1,8 +1,11 @@
 ## Release Notes
-## Release Notes for 2.9.2
-#### March 02, 2021
+## Release Notes for 2.9.3
+#### April 21, 2021
+* Features
+  * Push notifications events are now chronologically synced (the event with status `sent` always occurs before the event with status `delivered`). 
 * Bug Fixes
-  * Fixed: The SDK would not compile when using gradle build tools version 4.X.X.
+  * Fixed: The Exponea Android SDK no longer depends on version properties in BuildConfig class as they are no longer available since Gradle Plugin 4.1.
+  * Fixed: In-app messages with A/B testing now properly handle the control group.
 
 
 ## Release Notes for 2.9.1

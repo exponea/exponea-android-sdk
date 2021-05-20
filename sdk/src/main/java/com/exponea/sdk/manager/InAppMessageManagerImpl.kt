@@ -50,15 +50,20 @@ internal class InAppMessageManagerImpl(
     }
 
     private var preloaded = false
+    private var preloadInProgress = false
     private var pendingShowRequests: List<InAppMessageShowRequest> = arrayListOf()
 
     private var sessionStartDate = Date()
-    // we'll always preload in-app messages on session start for newly created instances
-    // it helps with testing - when you kill the app, you'll always get new in-app messages
-    private var firstSession = true
+
+    @Synchronized
+    override fun preloadIfNeeded(timestamp: Double) {
+        if (shouldPreload(timestamp)) {
+            preloadStarted()
+            preload()
+        }
+    }
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
-        preloaded = false
         fetchManager.fetchInAppMessages(
             exponeaProject = configuration.mainExponeaProject,
             customerIds = customerIdsRepository.get(),
@@ -69,19 +74,32 @@ internal class InAppMessageManagerImpl(
             },
             onFailure = {
                 Logger.e(this, "Preloading in-app messages failed. ${it.results.message}")
-                preloaded = true // even though this failed, we can try to use cached data from another run
+                preloadFinished()
                 showPendingMessage()
                 callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
             }
         )
     }
 
+    private fun preloadStarted() {
+        preloaded = false
+        preloadInProgress = true
+    }
+
+    private fun preloadFinished() {
+        preloaded = true
+        preloadInProgress = false
+    }
+
+    private fun shouldPreload(timestamp: Double): Boolean {
+        if (preloadInProgress) {
+            return false
+        }
+        return !preloaded || inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < timestamp
+    }
+
     override fun sessionStarted(sessionStartDate: Date) {
         this.sessionStartDate = sessionStartDate
-        if (firstSession || inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < sessionStartDate.time) {
-            firstSession = false
-            preload()
-        }
     }
 
     private fun preloadImageAndShowPending(
@@ -121,7 +139,7 @@ internal class InAppMessageManagerImpl(
         callback: ((Result<Unit>) -> Unit)?
     ) = runCatching {
         val onPreloaded = {
-            preloaded = true
+            preloadFinished()
             showPendingMessage()
             Logger.i(this, "All in-app message images loaded.")
             callback?.invoke(Result.success(Unit))

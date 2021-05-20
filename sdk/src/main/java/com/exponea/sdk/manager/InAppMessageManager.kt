@@ -29,6 +29,7 @@ internal interface InAppMessageManager {
     ): Job?
 
     fun sessionStarted(sessionStartDate: Date)
+    fun preloadIfNeeded(timestamp: Double)
 }
 
 internal interface InAppMessageTrackingDelegate {

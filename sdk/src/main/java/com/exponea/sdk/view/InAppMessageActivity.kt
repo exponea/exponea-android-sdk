@@ -30,6 +30,7 @@ internal class InAppMessageActivity : AppCompatActivity() {
         if (inAppMessageView != null) {
             inAppMessageView.show()
         } else {
+            presenting.failedCallback()
             finish()
         }
     }

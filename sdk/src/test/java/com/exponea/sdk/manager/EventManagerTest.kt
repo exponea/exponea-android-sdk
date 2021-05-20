@@ -50,6 +50,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         inAppMessageManager = mockk()
         every { inAppMessageManager.showRandom(any(), any(), any(), any()) } returns null
         every { inAppMessageManager.sessionStarted(any()) } just Runs
+        every { inAppMessageManager.preloadIfNeeded(any()) } just Runs
 
         manager = EventManagerImpl(
             ApplicationProvider.getApplicationContext(),
@@ -67,6 +68,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.preloadIfNeeded(any())
             inAppMessageManager.showRandom(any(), any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
@@ -101,6 +103,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.INSTALL)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.preloadIfNeeded(any())
             inAppMessageManager.showRandom(any(), any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
@@ -126,6 +129,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         verify {
             eventRepo.add(any())
             flushManager.flushData(any())
+            inAppMessageManager.preloadIfNeeded(any())
             inAppMessageManager.showRandom(any(), any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
@@ -137,6 +141,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.preloadIfNeeded(any())
             inAppMessageManager.sessionStarted(any())
             inAppMessageManager.showRandom(any(), any(), any(), any())
         }

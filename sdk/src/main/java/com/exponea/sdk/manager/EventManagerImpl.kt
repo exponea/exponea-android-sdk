@@ -72,8 +72,11 @@ internal class EventManagerImpl(
 
         addEventToQueue(event, type)
 
+        val eventTimestamp = timestamp ?: currentTimeSeconds()
+        inAppMessageManager.preloadIfNeeded(eventTimestamp)
+
         if (type == EventType.SESSION_START) {
-            inAppMessageManager.sessionStarted(Date((timestamp ?: currentTimeSeconds()).toLong() * 1000))
+            inAppMessageManager.sessionStarted(Date((eventTimestamp).toLong() * 1000))
         }
         if (eventType != null) {
             inAppMessageManager.showRandom(

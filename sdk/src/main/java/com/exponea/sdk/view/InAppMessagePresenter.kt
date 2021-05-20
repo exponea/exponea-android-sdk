@@ -22,7 +22,8 @@ internal class InAppMessagePresenter(context: Context) {
         val image: Bitmap?,
         val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
-        val dismissedCallback: (() -> Unit)
+        val dismissedCallback: (() -> Unit),
+        val failedCallback: (() -> Unit)
     )
 
     companion object {
@@ -130,8 +131,19 @@ internal class InAppMessagePresenter(context: Context) {
             presentedMessage = null
             dismissedCallback()
         }
+        val failedCallback = {
+            presentedMessage = null
+        }
         presentedMessage =
-            PresentedMessage(messageType, payload, image, timeout, presenterActionCallback, presenterDismissedCallback)
+            PresentedMessage(
+                messageType,
+                payload,
+                image,
+                timeout,
+                presenterActionCallback,
+                presenterDismissedCallback,
+                failedCallback
+            )
 
         when (messageType) {
             InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {

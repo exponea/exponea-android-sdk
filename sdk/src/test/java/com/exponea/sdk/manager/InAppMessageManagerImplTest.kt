@@ -21,6 +21,7 @@ import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.models.eventfilter.EventPropertyFilter
 import com.exponea.sdk.models.eventfilter.StringConstraint
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
@@ -36,6 +37,9 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifySequence
 import java.util.Date
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -123,25 +127,85 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
-    fun `should always preload messages on first session start`() {
+    fun `should always preload messages on first event`() {
+        val eventManager = getEventManager()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
-        manager.sessionStarted(Date()) // it will load data because this is first session
+
+        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+    }
+
+    private fun getEventManager(): EventManager {
+        val customerIdsRepo = mockk<CustomerIdsRepository>()
+        every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
+        val eventRepo = mockk<EventRepository>()
+        every { eventRepo.add(any()) } returns true
+        val flushManager = mockk<FlushManager>()
+        every { flushManager.flushData(any()) } just Runs
+        val eventManager = EventManagerImpl(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            eventRepo,
+            customerIdsRepo,
+            flushManager,
+            manager
+        )
+        return eventManager
+    }
+
+    @Test
+    fun `should preload only once when tracking from more threads`() {
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        every { messagesCache.get() } returns arrayListOf()
+        messagesCache.set(arrayListOf())
+
+        val numberOfThreads = 5
+        val service: ExecutorService = Executors.newFixedThreadPool(10)
+        val latch = CountDownLatch(numberOfThreads)
+
+        for (i in 0 until numberOfThreads) {
+            service.submit {
+                eventManager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+                latch.countDown()
+            }
+        }
+        latch.await()
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `should preload messages only once`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        manager.preloadIfNeeded(Date().time.toDouble())
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        manager.preloadIfNeeded(Date().time.toDouble())
+        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        manager.preloadIfNeeded(Date().time.toDouble())
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `should preload messages on session start`() {
+    fun `should refresh messages only after expiration`() {
+        val eventManager = getEventManager()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        manager.sessionStarted(Date())
+        every { messagesCache.get() } returns arrayListOf()
+
+        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
-        manager.sessionStarted(Date())
+        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
-        manager.sessionStarted(Date(Date().time + InAppMessageManagerImpl.REFRESH_CACHE_AFTER * 2))
+        val expiredTimestamp = (Date().time + InAppMessageManagerImpl.REFRESH_CACHE_AFTER * 2).toDouble()
+        eventManager.track("test-event", expiredTimestamp, hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify(exactly = 2) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 

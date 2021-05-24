@@ -6,9 +6,11 @@ import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageDisplayState
@@ -134,7 +136,7 @@ internal class InAppMessageManagerImplTest {
         }
         messagesCache.set(arrayListOf())
 
-        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 
@@ -179,6 +181,45 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
         }
 
+    @Test
+    fun `should always track trigger events regardless on in app message preload state`() {
+        val customerIdsRepo = mockk<CustomerIdsRepository>()
+        every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
+        val eventRepo = mockk<EventRepository>()
+        val flushManager = mockk<FlushManager>()
+        every { flushManager.flushData(any()) } just Runs
+        val eventManager = EventManagerImpl(
+                ApplicationProvider.getApplicationContext(),
+                ExponeaConfiguration(projectToken = "mock-project-token"),
+                eventRepo,
+                customerIdsRepo,
+                flushManager,
+                manager
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        every { messagesCache.get() } returns arrayListOf()
+
+        var addedEvents: java.util.ArrayList<DatabaseStorageObject<ExportedEventType>> = arrayListOf()
+        every { eventRepo.add(capture(addedEvents)) } returns true
+
+        val numberOfThreads = 5
+        val service: ExecutorService = Executors.newFixedThreadPool(10)
+        val latch = CountDownLatch(numberOfThreads)
+
+        for (i in 0 until numberOfThreads) {
+            service.submit {
+                eventManager.track("test-event-$i", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+                latch.countDown()
+            }
+        }
+        latch.await()
+        assertEquals(
+                addedEvents.size,
+                numberOfThreads
+        )
+    }
     @Test
     fun `should preload messages only once`() {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {

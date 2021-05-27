@@ -61,6 +61,8 @@ Then you can start using all supported features:
 * [Anonymize](./Documentation/ANONYMIZE.md)
 * [In-app messages](./Documentation/IN_APP_MESSAGES.md)
 
+If facing any issues, look for **Troubleshooting** section in the respective document.
+
 ## 🔗 Useful links
 
 * [Exponea Developer Hub](https://developers.exponea.com)

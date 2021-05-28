@@ -1,4 +1,13 @@
 ## Release Notes
+## Release Notes for 2.9.4
+#### May 28, 2021
+* Features
+  * Documentation improvements
+* Bug Fixes
+  * Fixed: In-app messages now initialize properly after killing the application.
+  * Fixed: In-app message without the image is no longer blocking other in-app messages from showing,
+
+
 ## Release Notes for 2.9.3
 #### April 21, 2021
 * Features

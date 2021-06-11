@@ -17,7 +17,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val buttons: ArrayList<ActionPayload>? = parseActions(rawData["actions"])
     val notificationAction: ActionPayload = parseMainAction(rawData["action"], rawData["url"])
     val notificationData: NotificationData = parseNotificationData(rawData)
-    val attributes: Map<String, String>? = parseAttributes(rawData["attributes"])
+    val attributes: Map<String, Any>? = parseAttributes(rawData["attributes"])
     var deliveredTimestamp: Double? = null
 
     data class ActionPayload(
@@ -32,7 +32,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
          * Parse notification data to use for tracking purposes
          */
         private fun parseNotificationData(data: Map<String, String>): NotificationData {
-            val dataMap: Map<String, Any> = gson.fromJson(data["data"] ?: data["attributes"] ?: "{}")
+            val dataMap: HashMap<String, Any> = gson.fromJson(data["data"] ?: data["attributes"] ?: "{}")
             val campaignMap: Map<String, String> = gson.fromJson(data["url_params"] ?: "{}")
             return NotificationData(
                 dataMap,
@@ -43,7 +43,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
         /**
          * Parse the extra attributes that can be send in the notification
          */
-        private fun parseAttributes(attributeJson: String?): Map<String, String>? {
+        private fun parseAttributes(attributeJson: String?): Map<String, Any>? {
             return if (attributeJson == null) null else gson.fromJson(attributeJson)
         }
 

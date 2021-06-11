@@ -70,6 +70,7 @@ internal class InAppMessageManagerImplTest {
         messagesCache = mockk()
         every { messagesCache.set(any()) } just Runs
         every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
+        every { messagesCache.get() } returns arrayListOf()
         bitmapCache = mockk()
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
@@ -199,7 +200,6 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        every { messagesCache.get() } returns arrayListOf()
 
         var addedEvents: java.util.ArrayList<DatabaseStorageObject<ExportedEventType>> = arrayListOf()
         every { eventRepo.add(capture(addedEvents)) } returns true

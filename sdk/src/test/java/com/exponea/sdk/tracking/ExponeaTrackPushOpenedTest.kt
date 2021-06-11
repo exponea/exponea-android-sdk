@@ -59,7 +59,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom event type",
-                NotificationData(eventType = "my_push_event"),
+                NotificationData(hashMapOf("event_type" to "my_push_event")),
                 null,
                 "my_push_event",
                 hashMapOf(
@@ -72,7 +72,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "empty event type",
-                NotificationData(eventType = ""),
+                NotificationData(hashMapOf("event_type" to "")),
                 null,
                 Constants.EventTypes.push,
                 hashMapOf(
@@ -111,7 +111,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom platform",
-                NotificationData(platform = "custom platform"),
+                NotificationData(hashMapOf("platform" to "custom platform")),
                 null,
                 Constants.EventTypes.push,
                 hashMapOf(
@@ -124,18 +124,18 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "full data",
-                NotificationData(
-                    campaignId = "mock campaign id",
-                    campaignName = "mock campaign name",
-                    actionId = 123456,
-                    actionName = "mock action name",
-                    actionType = "mock action type",
-                    campaignPolicy = "mock campaign policy",
-                    platform = "mock platform",
-                    language = "mock language",
-                    recipient = "mock recipient",
-                    subject = "mock title"
-                ),
+                    NotificationData(hashMapOf(
+                            "campaign_id" to "mock campaign id",
+                            "campaign_name" to "mock campaign name",
+                            "action_id" to 123456,
+                            "action_name" to "mock action name",
+                            "action_type" to "mock action type",
+                            "campaign_policy" to "mock campaign policy",
+                            "platform" to "mock platform",
+                            "language" to "mock language",
+                            "recipient" to "mock recipient",
+                            "subject" to "mock title"
+                    )),
                 NotificationAction("mock action type", "mock action name", "mock action url"),
                 Constants.EventTypes.push,
                 hashMapOf(
@@ -144,7 +144,7 @@ internal class ExponeaTrackPushOpenedTest(
                     "url" to "mock action url",
                     "campaign_id" to "mock campaign id",
                     "campaign_name" to "mock campaign name",
-                    "action_id" to 123456L,
+                    "action_id" to 123456,
                     "action_name" to "mock action name",
                     "action_type" to "mock action type",
                     "campaign_policy" to "mock campaign policy",
@@ -154,7 +154,90 @@ internal class ExponeaTrackPushOpenedTest(
                     "subject" to "mock title"
                 ),
                 EventType.PUSH_OPENED
-            )
+            ),
+            TestCase(
+                "nested attributes",
+                NotificationData(hashMapOf(
+                        "campaign_id" to "mock campaign id",
+                        "campaign_name" to "mock campaign name",
+                        "action_id" to 123456,
+                        "action_name" to "mock action name",
+                        "action_type" to "mock action type",
+                        "campaign_policy" to "mock campaign policy",
+                        "platform" to "mock platform",
+                        "language" to "mock language",
+                        "recipient" to "mock recipient",
+                        "subject" to "mock title",
+                        "product_list" to arrayListOf(
+                                hashMapOf(
+                                        "item_id" to "1234",
+                                        "item_quantity" to 3
+                                ),
+                                hashMapOf(
+                                        "item_id" to "2345",
+                                        "item_quantity" to 2
+                                ),
+                                hashMapOf(
+                                        "item_id" to "6789",
+                                        "item_quantity" to 1
+                                )
+                        ),
+                        "product_ids" to arrayListOf("1234", "2345", "6789"),
+                        "push_content" to hashMapOf(
+                                "title" to "Hey!",
+                                "actions" to arrayListOf(
+                                        hashMapOf(
+                                                "title" to "Action 1 title",
+                                                "action" to "app"
+                                        )
+                                ),
+                                "message" to "We have a great deal for you today, don't miss it!"
+                        )
+                )),
+                NotificationAction("mock action type", "mock action name", "mock action url"),
+                Constants.EventTypes.push,
+                hashMapOf(
+                        "status" to "clicked",
+                        "cta" to "mock action name",
+                        "url" to "mock action url",
+                        "campaign_id" to "mock campaign id",
+                        "campaign_name" to "mock campaign name",
+                        "action_id" to 123456,
+                        "action_name" to "mock action name",
+                        "action_type" to "mock action type",
+                        "campaign_policy" to "mock campaign policy",
+                        "platform" to "mock platform",
+                        "language" to "mock language",
+                        "recipient" to "mock recipient",
+                        "subject" to "mock title",
+                        "product_list" to arrayListOf(
+                                hashMapOf(
+                                        "item_id" to "1234",
+                                        "item_quantity" to 3
+                                ),
+                                hashMapOf(
+                                        "item_id" to "2345",
+                                        "item_quantity" to 2
+                                ),
+                                hashMapOf(
+                                        "item_id" to "6789",
+                                        "item_quantity" to 1
+                                )
+                        ),
+                        "product_ids" to arrayListOf("1234", "2345", "6789"),
+                        "push_content" to hashMapOf(
+                                "title" to "Hey!",
+                                "actions" to arrayListOf(
+                                        hashMapOf(
+                                                "title" to "Action 1 title",
+                                                "action" to "app"
+                                        )
+                                ),
+                                "message" to "We have a great deal for you today, don't miss it!"
+                        )
+                ),
+                EventType.PUSH_OPENED
+        )
         )
 
         @JvmStatic

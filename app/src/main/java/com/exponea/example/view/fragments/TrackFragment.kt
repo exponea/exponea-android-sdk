@@ -94,7 +94,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackPushClicked() {
         Exponea.trackClickedPush(
-                NotificationData("campaing_id", "Campaign Name")
+                NotificationData(hashMapOf("campaign_id" to "id"))
         )
     }
 
@@ -115,7 +115,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackPushDelivered() {
         Exponea.trackDeliveredPush(
-                data = NotificationData("campaing_id", "Campaign Name")
+                data = NotificationData(hashMapOf("campaign_id" to "id"))
         )
     }
 

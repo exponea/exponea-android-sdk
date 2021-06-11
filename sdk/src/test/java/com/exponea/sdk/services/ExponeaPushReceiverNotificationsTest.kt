@@ -10,7 +10,6 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
-import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
@@ -121,24 +120,25 @@ internal class ExponeaPushReceiverNotificationsTest(
                 NotificationTestPayloads.PRODUCTION_NOTIFICATION,
                 intentGetter = { shadowOf(it.contentIntent).savedIntent },
                 expectedTrackingData = NotificationData(
-                    eventType = "campaign",
-                    campaignId = "5db9ab54b073dfb424ccfa6f",
-                    campaignName = "Wassil's push",
-                    actionId = 2,
-                    actionName = "Unnamed mobile push",
-                    actionType = "mobile notification",
-                    campaignPolicy = "",
-                    platform = "android",
-                    language = "",
-                    subject = "Notification title",
-                    recipient = "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
-                    campaignData = CampaignData(
-                        source = "exponea",
-                        campaign = "Testing mobile push",
-                        medium = "mobile_push_notification"
-                    ),
-                    sentTimestamp = 1614585422.20,
-                    type = "push"
+                        dataMap = hashMapOf("event_type" to "campaign",
+                                "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                "campaign_name" to "Wassil's push",
+                                "action_id" to 2.0,
+                                "action_name" to "Unnamed mobile push",
+                                "action_type" to "mobile notification",
+                                "campaign_policy" to "",
+                                "platform" to "android",
+                                "language" to "",
+                                "subject" to "Notification title",
+                                "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                                "sent_timestamp" to 1614585422.20,
+                                "type" to "push"
+                        ),
+                        campaignMap = mapOf(
+                                "utm_source" to "exponea",
+                                "utm_campaign" to "Testing mobile push",
+                                "utm_medium" to "mobile_push_notification"
+                        )
                 ),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             )

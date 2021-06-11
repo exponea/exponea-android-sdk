@@ -90,7 +90,10 @@ internal class FcmManagerImpl(
             pushNotificationRepository.set(true)
         }
 
-        val payload = NotificationPayload(HashMap(message.data))
+        var data = HashMap(message.data)
+        // data["attributes"] = "{\"new_key\": 3534646246.3461352351235134742574634 ,\"another\": {\"nested_one\": 3534646246.3461352351235134742574634,\"nested_two\":\"hi this is string value\"}}"
+
+        val payload = NotificationPayload(data)
         val sentTimestamp = payload.notificationData.sentTimestamp
 
         val deliveredTimestamp = if (sentTimestamp != null && timestamp <= sentTimestamp) {

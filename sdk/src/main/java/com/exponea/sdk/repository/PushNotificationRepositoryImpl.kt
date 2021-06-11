@@ -19,15 +19,15 @@ internal class PushNotificationRepositoryImpl(
         preferences.setBoolean(KEY, boolean)
     }
 
-    override fun getExtraData(): Map<String, String>? {
+    override fun getExtraData(): Map<String, Any>? {
         val dataString = preferences.getString(KEY_EXTRA_DATA, "")
         if (dataString.isEmpty()) {
             return null
         }
-        return Gson().fromJson(dataString)
+        return Gson().fromJson<HashMap<String, Any>>(dataString)
     }
 
-    override fun setExtraData(data: Map<String, String>) {
+    override fun setExtraData(data: Map<String, Any>) {
         val dataString = Gson().toJson(data)
         preferences.setString(KEY_EXTRA_DATA, dataString)
     }

@@ -144,7 +144,7 @@ object Exponea {
      * If a previous data was received and no listener was attached to the callback,
      * that data i'll be dispatched as soon as a listener is attached
      */
-    var notificationDataCallback: ((data: Map<String, String>) -> Unit)? = null
+    var notificationDataCallback: ((data: Map<String, Any>) -> Unit)? = null
         set(value) = runCatching {
             requireInitialized {
                 field = value

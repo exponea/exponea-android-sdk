@@ -10,27 +10,53 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class NotificationDataTest : ExponeaSDKTest() {
     private fun getMockNotificationData() =
-        NotificationData(
-            eventType = "mock event type",
-            campaignId = "mock campaign id",
-            campaignName = "mock campaign name",
-            actionId = 123456,
-            actionName = "mock action name",
-            actionType = "mock action type",
-            campaignPolicy = "mock campaign policy",
-            platform = "mock platform",
-            language = "mock language",
-            recipient = "mock recipient",
-            subject = "mock title",
-            sentTimestamp = 1614585422.20,
-            type = "push",
-            campaignData = CampaignData(
-                source = "mock source",
-                campaign = "mock campaign",
-                medium = "mock medium",
-                content = "mock content",
-                term = "mock term"
+        NotificationData(dataMap = hashMapOf(
+            "event_type" to "mock event type",
+            "campaign_id" to "mock campaign id",
+            "campaign_name" to "mock campaign name",
+            "action_id" to 123456,
+            "action_name" to "mock action name",
+            "action_type" to "mock action type",
+            "campaign_policy" to "mock campaign policy",
+            "platform" to "mock platform",
+            "language" to "mock language",
+            "recipient" to "mock recipient",
+            "subject" to "mock title",
+            "sent_timestamp" to 1614585422.20,
+            "type" to "push",
+            "product_list" to arrayListOf(
+                hashMapOf(
+                        "item_id" to "1234",
+                        "item_quantity" to 3
+                ),
+                hashMapOf(
+                        "item_id" to "2345",
+                        "item_quantity" to 2
+                ),
+                hashMapOf(
+                        "item_id" to "6789",
+                        "item_quantity" to 1
+                )
+            ),
+            "product_ids" to arrayListOf("1234", "2345", "6789"),
+            "push_content" to hashMapOf(
+                    "title" to "Hey!",
+                    "actions" to arrayListOf(
+                            hashMapOf(
+                                    "title" to "Action 1 title",
+                                    "action" to "app"
+                            )
+                    ),
+                    "message" to "We have a great deal for you today, don't miss it!"
             )
+        ),
+                campaignMap = mapOf(
+                        "utm_source" to "mock source",
+                        "utm_campaign" to "mock campaign",
+                        "utm_medium" to "mock medium",
+                        "utm_content" to "mock content",
+                        "utm_term" to "mock term"
+                )
         )
 
     @Test
@@ -56,20 +82,7 @@ internal class NotificationDataTest : ExponeaSDKTest() {
     @Test
     fun `should serialize empty data for tracking`() {
         assertEquals(
-            hashMapOf(
-                "campaign_id" to null,
-                "campaign_name" to null,
-                "action_id" to null,
-                "action_name" to null,
-                "action_type" to null,
-                "campaign_policy" to null,
-                "platform" to null,
-                "language" to null,
-                "recipient" to null,
-                "subject" to null,
-                "sent_timestamp" to null,
-                "type" to null
-            ),
+            hashMapOf(),
             NotificationData().getTrackingData()
         )
     }
@@ -80,7 +93,7 @@ internal class NotificationDataTest : ExponeaSDKTest() {
             hashMapOf(
                 "campaign_id" to "mock campaign id",
                 "campaign_name" to "mock campaign name",
-                "action_id" to 123456L,
+                "action_id" to 123456,
                 "action_name" to "mock action name",
                 "action_type" to "mock action type",
                 "campaign_policy" to "mock campaign policy",
@@ -94,7 +107,32 @@ internal class NotificationDataTest : ExponeaSDKTest() {
                 "utm_content" to "mock content",
                 "utm_term" to "mock term",
                 "sent_timestamp" to 1614585422.20,
-                "type" to "push"
+                "type" to "push",
+                "product_list" to arrayListOf(
+                    hashMapOf(
+                            "item_id" to "1234",
+                            "item_quantity" to 3
+                    ),
+                    hashMapOf(
+                            "item_id" to "2345",
+                            "item_quantity" to 2
+                    ),
+                    hashMapOf(
+                            "item_id" to "6789",
+                            "item_quantity" to 1
+                    )
+                ),
+                "product_ids" to arrayListOf("1234", "2345", "6789"),
+                "push_content" to hashMapOf(
+                        "title" to "Hey!",
+                        "actions" to arrayListOf(
+                                hashMapOf(
+                                        "title" to "Action 1 title",
+                                        "action" to "app"
+                                )
+                        ),
+                        "message" to "We have a great deal for you today, don't miss it!"
+                    )
             ),
             getMockNotificationData().getTrackingData()
         )

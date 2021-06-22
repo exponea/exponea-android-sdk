@@ -79,4 +79,41 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         checkEvent(events[6], Constants.EventTypes.push, newProject, newUserId, hashMapOf(PUSH_KEY to "push_token"))
         checkEvent(events[7], "test", newProject, newUserId, hashMapOf("name" to "test"))
     }
+
+    @Test
+    fun `should not track session start on anonymize when automaticSessionTracking is off`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val initialProject = ExponeaProject("https://base-url.com", "project_token", "Token auth")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(
+                baseURL = initialProject.baseUrl,
+                projectToken = initialProject.projectToken,
+                authorization = initialProject.authorization,
+                automaticSessionTracking = false)
+        )
+        val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+        Exponea.trackEvent(
+                eventType = "test",
+                properties = PropertiesList(hashMapOf("name" to "test")),
+                timestamp = currentTimeSeconds()
+        )
+
+        val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
+        Exponea.anonymize(exponeaProject = newProject)
+        val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+        Exponea.trackEvent(
+                eventType = "test",
+                properties = PropertiesList(hashMapOf("name" to "test")),
+                timestamp = currentTimeSeconds()
+        )
+
+        val events = Exponea.componentForTesting.eventRepository.all()
+        events.sortBy { it.item.timestamp }
+        assertEquals(events.size, 5)
+        checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
+        checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
+        checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
+        checkEvent(events[3], Constants.EventTypes.installation, newProject, newUserId!!, null)
+        checkEvent(events[4], "test", newProject, newUserId, hashMapOf("name" to "test"))
+    }
 }

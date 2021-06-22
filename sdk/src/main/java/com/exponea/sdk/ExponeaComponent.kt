@@ -170,7 +170,9 @@ internal class ExponeaComponent(
         ExponeaConfigRepository.set(application, exponeaConfiguration)
 
         Exponea.trackInstallEvent()
-        sessionManager.trackSessionStart(currentTimeSeconds())
+        if (exponeaConfiguration.automaticSessionTracking) {
+            sessionManager.trackSessionStart(currentTimeSeconds())
+        }
         fcmManager.trackFcmToken(firebaseToken, Exponea.tokenTrackFrequency)
         inAppMessageManager.preload()
     }

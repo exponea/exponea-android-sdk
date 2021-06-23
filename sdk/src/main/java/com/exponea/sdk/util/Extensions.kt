@@ -12,8 +12,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.DrawableRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import com.exponea.sdk.Exponea
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -162,8 +162,9 @@ fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
 }
 
 fun Context.isResumedActivity(): Boolean = runCatching {
-    val activity = this as? AppCompatActivity ?: return false
-    return activity.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+    if (this !is Activity) return false
+    val lifecycleOwner = this as? LifecycleOwner ?: return false
+    return lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
 }.returnOnException { false }
 
 fun Context.isReactNativeSDK(): Boolean = runCatching {

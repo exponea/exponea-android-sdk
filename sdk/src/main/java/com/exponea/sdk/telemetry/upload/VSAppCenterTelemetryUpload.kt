@@ -10,6 +10,7 @@ import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isCapacitorSDK
+import com.exponea.sdk.util.isFlutterSDK
 import com.exponea.sdk.util.isReactNativeSDK
 import com.google.gson.Gson
 import java.io.IOException
@@ -56,6 +57,12 @@ internal class VSAppCenterTelemetryUpload(
                 "0dd0c2f1-9f7c-4230-9de8-083b7f236b8e"
             } else {
                 "c942008a-ab47-42e3-82b0-5cbafb068344"
+            }
+        } else if (application.isFlutterSDK()) {
+            if (BuildConfig.DEBUG) {
+                "a9113118-71d1-48d2-8780-a1df74e5e5fc"
+            } else {
+                "05eaf27b-3955-4151-a524-f423615efeb2"
             }
         } else {
             if (BuildConfig.DEBUG) {

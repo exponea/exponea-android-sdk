@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -149,17 +150,28 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     }
 
     private fun setupButtons() {
+        val buttonsCount = if (payload.buttons != null) payload.buttons.count() else 0
         val button1Payload = if (payload.buttons != null && payload.buttons.isNotEmpty()) payload.buttons[0] else null
         val button2Payload = if (payload.buttons != null && payload.buttons.count() > 1) payload.buttons[1] else null
-        setupButton(contentView.findViewById<Button>(R.id.buttonAction1), button1Payload)
-        setupButton(contentView.findViewById<Button>(R.id.buttonAction2), button2Payload)
+        setupButton(contentView.findViewById<Button>(R.id.buttonAction1), button1Payload, buttonsCount)
+        setupButton(contentView.findViewById<Button>(R.id.buttonAction2), button2Payload, buttonsCount)
     }
 
-    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?) {
+    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?, buttonsCount: Int) {
         if (buttonPayload == null) {
             buttonAction.visibility = View.GONE
             return
         }
+        if (buttonsCount == 2) {
+            buttonAction.maxWidth = activity.resources
+                    .getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_max_buttons_width)
+        }
+        if (buttonsCount == 1) {
+            buttonAction.maxWidth = activity.resources
+                    .getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_max_button_width)
+        }
+        buttonAction.maxLines = 1
+        buttonAction.ellipsize = TextUtils.TruncateAt.END
         buttonAction.text = buttonPayload.buttonText
         buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))
         buttonAction.setBackgroundColor(

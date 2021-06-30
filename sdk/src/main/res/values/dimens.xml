@@ -4,4 +4,6 @@
     <dimen name="exponea_sdk_in_app_message_slide_in_corner_radius">5dp</dimen>
     <dimen name="exponea_sdk_in_app_message_fullscreen_padding">10dp</dimen>
     <dimen name="exponea_sdk_in_app_message_dialog_padding">20dp</dimen>
+    <dimen name="exponea_sdk_in_app_message_max_button_width">300dp</dimen>
+    <dimen name="exponea_sdk_in_app_message_max_buttons_width">140dp</dimen>
 </resources>

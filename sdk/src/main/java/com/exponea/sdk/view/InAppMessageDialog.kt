@@ -195,17 +195,26 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupButtons() {
+        val buttonsCount = if (payload.buttons != null) payload.buttons.count() else 0
         val button1Payload = if (payload.buttons != null && payload.buttons.isNotEmpty()) payload.buttons[0] else null
         val button2Payload = if (payload.buttons != null && payload.buttons.count() > 1) payload.buttons[1] else null
-        setupButton(buttonAction1, button1Payload)
-        setupButton(buttonAction2, button2Payload)
+        setupButton(buttonAction1, button1Payload, buttonsCount)
+        setupButton(buttonAction2, button2Payload, buttonsCount)
     }
 
-    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?) {
+    private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?, buttonsCount: Int) {
         if (buttonPayload == null) {
             buttonSpace.visibility = View.GONE
             buttonAction.visibility = View.GONE
             return
+        }
+        if (buttonsCount == 2) {
+            buttonAction.maxWidth = context.resources
+                    .getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_max_buttons_width)
+        }
+        if (buttonsCount == 1) {
+            buttonAction.maxWidth = context.resources
+                    .getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_max_button_width)
         }
         buttonAction.text = buttonPayload.buttonText
         buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))

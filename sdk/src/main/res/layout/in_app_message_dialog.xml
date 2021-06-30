@@ -51,8 +51,8 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:paddingBottom="20dp"
-            android:paddingLeft="30dp"
-            android:paddingRight="30dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
             android:background="@drawable/in_app_message_dialog_background_bottom"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -87,40 +87,44 @@
                 >
                 <Space
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"/>
+                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content" />
                 <Button
                     android:id="@+id/buttonAction1"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="30dp"
                     android:text="Action"
                     android:layout_marginTop="20dp"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
-                    android:minWidth="300px"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:minWidth="100dp"
                     style="?android:attr/borderlessButtonStyle"
                     android:textAllCaps="false"
-                    android:background="@drawable/in_app_message_dialog_button" />
+                    android:background="@drawable/in_app_message_dialog_button"
+                    android:ellipsize="end"
+                    android:lines="1"/>
                 <Space
                     android:id="@+id/buttonSpace"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_width="wrap_content"/>
                 <Button
                     android:id="@+id/buttonAction2"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="30dp"
                     android:text="Action"
                     android:layout_marginTop="20dp"
-                    android:minWidth="300px"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
+                    android:minWidth="100dp"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
                     style="?android:attr/borderlessButtonStyle"
                     android:textAllCaps="false"
-                    android:background="@drawable/in_app_message_dialog_button" />
+                    android:background="@drawable/in_app_message_dialog_button"
+                    android:ellipsize="end"
+                    android:lines="1"/>
                 <Space
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_width="wrap_content"/>
             </LinearLayout>
         </LinearLayout>

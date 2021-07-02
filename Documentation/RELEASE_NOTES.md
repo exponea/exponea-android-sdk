@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.9.5
+#### July 02, 2021
+* Features
+  * Flexible event attributes in mobile push notifications. Custom tracking attributes added into push notification payload are automatically included in the events as properties.
+* Bug Fixes
+  * Fixed: Session start is no longer tracked on anonymizing when automatic session tracking is off.
+  * Fixed: In-app message buttons with long text are no longer pushed outside the window.
+
+
+
 ## Release Notes for 2.9.4
 #### May 28, 2021
 * Features

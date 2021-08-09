@@ -44,12 +44,12 @@ dependencies {
     // Database
     implementation 'io.paperdb:paperdb:2.7.1'
     // Networking
-    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     // Deserialization
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
     // Google Firebase Cloud Message
     implementation 'com.google.firebase:firebase-messaging:21.0.0'
     // Google WorkManager

@@ -42,7 +42,7 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Database
-    implementation 'io.paperdb:paperdb:2.7.1'
+    implementation 'io.github.pilgr:paperdb:2.7.1'
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     // Deserialization
@@ -65,7 +65,7 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.2.40'
     // Networking Testing
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
-    testImplementation 'com.github.gmazzo:okhttp-mock:1.1.0'
+    testImplementation 'com.github.gmazzo:okhttp-mock:1.4.1'
     // Improved Unit Testing
     testImplementation "org.robolectric:robolectric:4.2"
     // Co-Routines

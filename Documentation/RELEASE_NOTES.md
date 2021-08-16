@@ -1,4 +1,11 @@
 ## Release Notes
+## Release Notes for 2.9.6
+#### August 16, 2021
+* Features
+  * JCenter removed
+  * OkHttp updated
+
+
 ## Release Notes for 2.9.5
 #### July 02, 2021
 * Features

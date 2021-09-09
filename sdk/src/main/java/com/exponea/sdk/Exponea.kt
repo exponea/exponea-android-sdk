@@ -772,12 +772,20 @@ object Exponea {
         component.deviceInitiatedRepository.set(true)
     }
 
+    /**
+     * Xamarin SDK binding library does not support default value parameters
+     * so this method accepts nulls and replaces them with the default value internally.
+     * Please do not modify.
+     */
     fun anonymize(
-        exponeaProject: ExponeaProject = configuration.mainExponeaProject,
-        projectRouteMap: Map<EventType, List<ExponeaProject>> = configuration.projectRouteMap
+        exponeaProject: ExponeaProject? = configuration.mainExponeaProject,
+        projectRouteMap: Map<EventType, List<ExponeaProject>>? = configuration.projectRouteMap
     ) = runCatching {
         requireInitialized {
-            component.anonymize(exponeaProject, projectRouteMap)
+            component.anonymize(
+                    exponeaProject ?: configuration.mainExponeaProject,
+                    projectRouteMap ?: configuration.projectRouteMap
+            )
             telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
         }
     }.logOnException()

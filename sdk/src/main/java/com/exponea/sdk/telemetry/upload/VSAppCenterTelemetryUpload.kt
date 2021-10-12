@@ -8,10 +8,7 @@ import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
-import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.isCapacitorSDK
-import com.exponea.sdk.util.isFlutterSDK
-import com.exponea.sdk.util.isReactNativeSDK
+import com.exponea.sdk.util.*
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -64,6 +61,8 @@ internal class VSAppCenterTelemetryUpload(
             } else {
                 "05eaf27b-3955-4151-a524-f423615efeb2"
             }
+        } else if (application.isXamarinSDK()) {
+            "0b7cbf35-00cd-4a36-b2a1-c4c51450ec31"
         } else {
             if (BuildConfig.DEBUG) {
                 "19dca50b-3467-488b-b1fa-47fb9258901a"

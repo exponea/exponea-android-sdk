@@ -181,3 +181,8 @@ fun Context.isFlutterSDK(): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
     return appInfo.metaData["ExponeaFlutterSDK"] == true
 }.returnOnException { false }
+
+fun Context.isXamarinSDK(): Boolean = runCatching {
+    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+    return appInfo.metaData["ExponeaXamarinSDK"] == true
+}.returnOnException { false }

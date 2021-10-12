@@ -340,9 +340,10 @@ internal class EventManagerInAppMessageTrackingDelegate(
             "action" to action,
             "banner_id" to message.id,
             "banner_name" to message.name,
-            "banner_type" to message.messageType,
+            "banner_type" to message.messageType.value,
             "interaction" to interaction,
             "os" to "Android",
+            "platform" to "Android",
             "type" to "in-app message",
             "variant_id" to message.variantId,
             "variant_name" to message.variantName

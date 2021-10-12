@@ -9,15 +9,15 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
-import com.exponea.sdk.repository.FirebaseTokenRepository
-import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepository
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
-import com.google.firebase.messaging.RemoteMessage
+import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -44,19 +44,19 @@ internal class FcmManagerImplTest {
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager
     private lateinit var eventManager: EventManager
-    private lateinit var firebaseTokenRepository: FirebaseTokenRepository
+    private lateinit var pushTokenRepository: PushTokenRepository
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext<Context>()
         eventManager = mockkClass(EventManagerImpl::class)
         every { eventManager.track(any(), any(), any(), any()) } just Runs
-        firebaseTokenRepository = spyk(FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)))
+        pushTokenRepository = spyk(PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)))
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
             eventManager,
-            firebaseTokenRepository,
+            pushTokenRepository,
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
@@ -64,7 +64,7 @@ internal class FcmManagerImplTest {
 
     @After
     fun tearDown() {
-        firebaseTokenRepository.clear()
+        pushTokenRepository.clear()
     }
 
     @Test
@@ -105,54 +105,50 @@ internal class FcmManagerImplTest {
 
     @Test
     fun `should not show subsequent notifications with same id`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
+        val notification = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
         manager.handleRemoteMessage(notification, notificationManager, true)
         manager.handleRemoteMessage(notification, notificationManager, true)
         verify(exactly = 1) { notificationManager.notify(any(), any()) }
-        notification.data["notification_id"] = "2"
+        notification["notification_id"] = "2"
         manager.handleRemoteMessage(notification, notificationManager, true)
         verify(exactly = 2) { notificationManager.notify(any(), any()) }
     }
 
     @Test
     fun `should track token in ON_TOKEN_CHANGE mode`() {
-        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
-        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
-        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE)
-        verify(exactly = 1) { firebaseTokenRepository.set("token", any()) }
-        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.set("token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
     }
 
     @Test
     fun `should track token in DAILY mode`() {
         // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912
         ShadowSystemClock.setNanoTime(System.currentTimeMillis() * 1000 * 1000)
-        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.DAILY)
-        verify(exactly = 1) { firebaseTokenRepository.set("token", any()) }
-        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY)
-        verify(exactly = 0) { firebaseTokenRepository.set("other_token", any()) }
-        firebaseTokenRepository.set("token", System.currentTimeMillis() - 24 * 60 * 60 * 1000)
-        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY)
-        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.set("token", any(), TokenType.FCM) }
+        manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
+        verify(exactly = 0) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
+        pushTokenRepository.set("token", System.currentTimeMillis() - 24 * 60 * 60 * 1000, TokenType.FCM)
+        manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
     }
 
     @Test
     fun `should track token in EVERY_LAUNCH mode`() {
-        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
-        manager.trackFcmToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
-        manager.trackFcmToken("other_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH)
-        verify(exactly = 2) { firebaseTokenRepository.set("token", any()) }
-        verify(exactly = 1) { firebaseTokenRepository.set("other_token", any()) }
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        verify(exactly = 2) { pushTokenRepository.set("token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
     }
 
     @Test
     @Config(shadows = [ShadowRingtone::class])
     fun `should play default sound`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
         assertEquals("content://settings/system/notification_sound", ShadowRingtone.lastRingtone?.withUri.toString())
@@ -161,9 +157,7 @@ internal class FcmManagerImplTest {
     @Test
     @Config(shadows = [ShadowRingtone::class])
     fun `should not play sound in DnD mode`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         every { notificationManager.currentInterruptionFilter } returns NotificationManager.INTERRUPTION_FILTER_PRIORITY
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertNull(ShadowRingtone.lastRingtone)
@@ -172,9 +166,7 @@ internal class FcmManagerImplTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
     fun `should not play sound when channel doesn't exist`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         every { notificationManager.getNotificationChannel(any()) } returns null
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertNull(ShadowRingtone.lastRingtone)
@@ -185,8 +177,7 @@ internal class FcmManagerImplTest {
     fun `should play sound from notification payload`() {
         val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         payload["sound"] = "mock-sound.mp3"
-        val notification = RemoteMessage.Builder("1").setData(payload).build()
-        manager.handleRemoteMessage(notification, notificationManager, true)
+        manager.handleRemoteMessage(payload, notificationManager, true)
         assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
         assertEquals(
             "android.resource://com.exponea.sdk.test/raw/mock-sound.mp3",
@@ -201,8 +192,7 @@ internal class FcmManagerImplTest {
         val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
         payload["image"] = "https://raw.githubusercontent.com/exponea/" +
             "exponea-android-sdk/develop/Documentation/logo_yellow.png"
-        val notification = RemoteMessage.Builder("1").setData(payload).build()
-        manager.handleRemoteMessage(notification, notificationManager, true)
+        manager.handleRemoteMessage(payload, notificationManager, true)
         assertNotNull(shadowOf(notificationSlot.captured).bigPicture)
     }
 
@@ -213,15 +203,12 @@ internal class FcmManagerImplTest {
             context,
             ExponeaConfiguration(pushIcon = 123),
             eventManager,
-            firebaseTokenRepository,
+            pushTokenRepository,
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
-        manager.handleRemoteMessage(notification, notificationManager, true)
+        manager.handleRemoteMessage(NotificationTestPayloads.PRODUCTION_NOTIFICATION, notificationManager, true)
         @Suppress("DEPRECATION")
         assertEquals(123, notificationSlot.captured.icon)
     }

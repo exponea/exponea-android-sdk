@@ -12,11 +12,12 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
-import com.exponea.sdk.repository.FirebaseTokenRepository
+import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.isResumedActivity
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -34,7 +35,7 @@ internal class PushNotificationSelfCheckManagerImpl(
     context: Context,
     private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
-    private val tokenRepository: FirebaseTokenRepository,
+    private val tokenRepository: PushTokenRepository,
     private val flushManager: FlushManager,
     private val exponeaService: ExponeaService,
     private val operationsTimeout: Long = 5000
@@ -94,7 +95,7 @@ internal class PushNotificationSelfCheckManagerImpl(
         }
         Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "1"))
         Logger.i(this, "Requesting self-check push notification.")
-        if (!requestSelfCheckPush(pushToken)) {
+        if (!requestSelfCheckPush(pushToken, tokenRepository.getLastTokenType())) {
             showResult(
                 1,
                 "Unable to send self-check push notification from Exponea. " +
@@ -189,18 +190,26 @@ internal class PushNotificationSelfCheckManagerImpl(
         return token
     }
 
-    suspend fun requestSelfCheckPush(pushToken: String): Boolean = suspendCoroutine { continuation ->
+    private suspend fun requestSelfCheckPush(
+        pushToken: String,
+        tokenType: TokenType
+    ): Boolean = suspendCoroutine { continuation ->
         exponeaService.postPushSelfCheck(
             configuration.mainExponeaProject,
             customerIdsRepository.get(),
-            pushToken
+            pushToken,
+            tokenType
         ).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                val parsedResponse = ExponeaGson.instance.fromJson<SelfCheckResponse>(
-                    response.body()?.string(),
-                    SelfCheckResponse::class.java
-                )
-                continuation.resume(parsedResponse.success)
+                if (response.isSuccessful) {
+                    val parsedResponse = ExponeaGson.instance.fromJson<SelfCheckResponse>(
+                        response.body()?.string(),
+                        SelfCheckResponse::class.java
+                    )
+                    continuation.resume(parsedResponse.success)
+                } else {
+                    continuation.resume(false)
+                }
             }
             override fun onFailure(call: Call, e: IOException) {
                 continuation.resume(false)

@@ -35,15 +35,17 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.PushTokenRepositoryProvider
+import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.view.InAppMessagePresenter
-import com.google.firebase.messaging.RemoteMessage
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -108,7 +110,7 @@ object Exponea {
             startSessionTracking(value)
         }.logOnException()
 
-    internal val pushChannelId: String?
+    internal val pushChannelId: String
         get() = configuration.pushChannelId
 
     /**
@@ -436,22 +438,35 @@ object Exponea {
     }.logOnException()
 
     /**
-     * Manually track FCM Token to Exponea API.
+     * Manually track Fcm Token to Exponea API.
      */
 
-    fun trackPushToken(fcmToken: String) = runCatching {
+    fun trackPushToken(token: String) = runCatching {
         trackPushToken(
-            fcmToken,
-            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH // always track it when tracking manually
+            token,
+            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            TokenType.FCM
         )
     }.logOnException()
 
-    internal fun trackPushToken(
+    /**
+     * Manually track Hms Token to Exponea API.
+     */
+    fun trackHmsPushToken(token: String) = runCatching {
+        trackPushToken(
+            token,
+            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            TokenType.HMS
+        )
+    }.logOnException()
+
+    private fun trackPushToken(
         fcmToken: String,
-        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
+        tokenType: TokenType
     ) = runCatching {
         requireInitialized {
-            component.fcmManager.trackFcmToken(fcmToken, tokenTrackFrequency)
+            component.fcmManager.trackToken(fcmToken, tokenTrackFrequency, tokenType)
         }
     }.logOnException()
 
@@ -531,16 +546,16 @@ object Exponea {
         }
     }.logOnException()
 
-    fun isExponeaPushNotification(message: RemoteMessage?): Boolean {
-        if (message == null) return false
-        return message.data["source"] == "xnpe_platform"
+    fun isExponeaPushNotification(messageData: Map<String, String>?): Boolean {
+        if (messageData == null) return false
+        return messageData["source"] == Constants.PushNotif.source
     }
 
     /**
-     * Handles Exponea notification payload from FirebaseMessagingService.
+     * Handles Exponea notification payload.
      * Does not handle non-Exponea notifications, just returns false for them so you can process them yourself.
      * @param applicationContext application context required to auto-initialize ExponeaSDK
-     * @param message the RemoteMessage payload received from Firebase
+     * @param messageData the message payload
      * @param manager the system notification manager instance
      * @param showNotification indicates if the SDK should display the notification or just track it
      *
@@ -548,39 +563,24 @@ object Exponea {
      */
     fun handleRemoteMessage(
         applicationContext: Context,
-        message: RemoteMessage?,
+        messageData: Map<String, String>?,
         manager: NotificationManager,
         showNotification: Boolean = true
     ): Boolean = runCatching {
-        if (!isExponeaPushNotification(message)) return@runCatching false
-
-        autoInitialize(applicationContext) {
-            component.fcmManager.handleRemoteMessage(message, manager, showNotification)
+        if (!isExponeaPushNotification(messageData)) return@runCatching false
+        if (!MessagingUtils.areNotificationsBlockedForTheApp(applicationContext)) {
+            autoInitialize(applicationContext) {
+                if (!isAutoPushNotification) {
+                    return@autoInitialize
+                }
+                component.fcmManager.handleRemoteMessage(messageData, manager, showNotification)
+            }
+        } else {
+            Logger.i(this, "Notification delivery not handled," +
+                    " notifications for the app are turned off in the settings")
         }
         return true
     }.returnOnException { true }
-
-    /**
-     * Handles the notification payload from FirebaseMessagingService
-     * @param message the RemoteMessage payload received from Firebase
-     * @param manager the system notification manager instance
-     * @param showNotification indicates if the SDK should display the notification or just track it
-     */
-    @Deprecated(
-        message = "When app is not running we need to autoinitialize the sdk.",
-        replaceWith = ReplaceWith(
-            expression = "Exponea.handleRemoteMessage(applicationContext, message, manager, showNotification)"
-        )
-    )
-    fun handleRemoteMessage(
-        message: RemoteMessage?,
-        manager: NotificationManager,
-        showNotification: Boolean = true
-    ) = runCatching {
-        requireInitialized {
-            component.fcmManager.handleRemoteMessage(message, manager, showNotification)
-        }
-    }.logOnException()
 
     internal fun <T> requireInitialized(notInitializedBlock: (() -> T)? = null, initializedBlock: () -> T): T? {
         if (!isInitialized) {
@@ -591,7 +591,7 @@ object Exponea {
     }
 
     // extra function without return type for Unit, above method would have return type Unit?
-    internal fun requireInitialized(notInitializedBlock: (() -> Unit)? = null, initializedBlock: () -> Unit) {
+    private fun requireInitialized(notInitializedBlock: (() -> Unit)? = null, initializedBlock: () -> Unit) {
         requireInitialized<Unit>(notInitializedBlock, initializedBlock)
     }
 
@@ -643,7 +643,7 @@ object Exponea {
 
         trackInstallEvent()
 
-        trackFirebaseToken()
+        trackSavedToken()
 
         startSessionTracking(configuration.automaticSessionTracking)
 
@@ -659,7 +659,7 @@ object Exponea {
                 if (flushMode == PERIOD) {
                     flushMode = APP_CLOSE
                     // Flush data when app is closing for flush mode periodic.
-                    Exponea.component.flushManager.flushData()
+                    component.flushManager.flushData()
                 }
             }
         )
@@ -742,9 +742,12 @@ object Exponea {
     /**
      * Send the firebase token
      */
-    private fun trackFirebaseToken() {
+    private fun trackSavedToken() {
         if (isAutoPushNotification) {
-            this.component.fcmManager.trackFcmToken(component.firebaseTokenRepository.get(), tokenTrackFrequency)
+            this.component.fcmManager.trackToken(
+                component.pushTokenRepository.get(),
+                tokenTrackFrequency,
+                component.pushTokenRepository.getLastTokenType())
         }
     }
 
@@ -834,5 +837,40 @@ object Exponea {
 
     internal fun selfCheckPushReceived() {
         component.pushNotificationSelfCheckManager.selfCheckPushReceived()
+    }
+
+    /**
+     * Use this method to track push token, when new token is obtained in firebase messaging service
+     */
+    fun handleNewToken(context: Context, token: String) {
+        handleNewTokenInternal(context, token, TokenType.FCM)
+    }
+
+    /**
+     * Use this method to track push token, when new token is obtained in huawei messaging service
+     */
+    fun handleNewHmsToken(context: Context, token: String) {
+        handleNewTokenInternal(context, token, TokenType.HMS)
+    }
+
+    private fun handleNewTokenInternal(context: Context, token: String, tokenType: TokenType) {
+        runCatching {
+            Logger.d(this, "Received push notification token")
+            autoInitialize(context,
+                {
+                    Logger.d(
+                        this,
+                        "Exponea cannot be auto-initialized, token will be tracked once Exponea is initialized")
+                    PushTokenRepositoryProvider.get(context).set(token, 0, tokenType)
+                },
+                {
+                    if (!isAutoPushNotification) {
+                        return@autoInitialize
+                    }
+                    Logger.d(this, "Token Refreshed")
+                    trackPushToken(token, tokenTrackFrequency, tokenType)
+                }
+            )
+        }.logOnException()
     }
 }

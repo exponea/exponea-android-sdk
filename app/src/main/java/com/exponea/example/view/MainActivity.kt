@@ -45,9 +45,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun replaceFragment(fragment: androidx.fragment.app.Fragment): Boolean {
         supportFragmentManager
-                ?.beginTransaction()
-                ?.replace(R.id.container, fragment)
-                ?.commit()
+                .beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit()
         return true
     }
 

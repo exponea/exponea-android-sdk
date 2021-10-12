@@ -14,11 +14,9 @@ import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
-import com.google.firebase.messaging.RemoteMessage
 import kotlin.reflect.KFunction
 import kotlin.reflect.KFunction1
 import kotlin.reflect.KFunction2
-import kotlin.reflect.KFunction3
 import kotlin.reflect.KFunction4
 
 internal object PublicApiTestCases {
@@ -40,119 +38,101 @@ internal object PublicApiTestCases {
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(
         Pair<KFunction1<Context, Boolean>, () -> Any>(
-            Exponea::init,
-            { Exponea.init(ApplicationProvider.getApplicationContext()) }
-        ),
+            Exponea::init
+        ) { Exponea.init(ApplicationProvider.getApplicationContext()) },
         Pair<KFunction2<Context, ExponeaConfiguration, Unit>, () -> Any>(
-            Exponea::init,
-            { Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration()) }
-        ),
+            Exponea::init
+        ) { Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration()) },
         Pair<KFunction<Any>, () -> Any>(
-            Exponea::initFromFile,
-            { Exponea.init(ApplicationProvider.getApplicationContext()) }
-        )
+            Exponea::initFromFile
+        ) { Exponea.init(ApplicationProvider.getApplicationContext()) }
     )
 
     val methods = arrayOf(
-        Pair(Exponea::anonymize,
-            { Exponea.anonymize() }
-        ),
+        Pair(Exponea::anonymize
+        ) { Exponea.anonymize() },
         Pair(
-            Exponea::identifyCustomer,
-            { Exponea.identifyCustomer(CustomerIds(), PropertiesList(hashMapOf())) }
-        ),
+            Exponea::identifyCustomer
+        ) { Exponea.identifyCustomer(CustomerIds(), PropertiesList(hashMapOf())) },
         Pair(
-            Exponea::flushData,
-            { Exponea.flushData() }
-        ),
+            Exponea::flushData
+        ) { Exponea.flushData() },
         Pair(
-            Exponea::getConsents,
-            { Exponea.getConsents({}, {}) }
-        ),
+            Exponea::getConsents
+        ) { Exponea.getConsents({}, {}) },
         Pair(
-            Exponea::handleCampaignIntent,
-            {
-                val campaignId = "http://example.com/route/to/campaing" +
+            Exponea::handleCampaignIntent
+        ) {
+            val campaignId = "http://example.com/route/to/campaing" +
                     "?utm_source=mock-utm-source" +
                     "&utm_campaign=mock-utm-campaign" +
                     "&utm_content=mock-utm-content" +
                     "&utm_medium=mock-utm-medium" +
                     "&utm_term=mock-utm-term" +
                     "&xnpe_cmp=mock-xnpe-xmp"
-                val intent = Intent().apply {
-                    this.action = Intent.ACTION_VIEW
-                    this.addCategory(Intent.CATEGORY_DEFAULT)
-                    this.addCategory(Intent.CATEGORY_BROWSABLE)
-                    this.data = Uri.parse(campaignId)
-                }
-                Exponea.handleCampaignIntent(intent, ApplicationProvider.getApplicationContext())
+            val intent = Intent().apply {
+                this.action = Intent.ACTION_VIEW
+                this.addCategory(Intent.CATEGORY_DEFAULT)
+                this.addCategory(Intent.CATEGORY_BROWSABLE)
+                this.data = Uri.parse(campaignId)
             }
-        ),
-        Pair<KFunction3<RemoteMessage?, NotificationManager, Boolean, Unit>, () -> Any>(
-            @Suppress("DEPRECATION")
-            Exponea::handleRemoteMessage,
-            {
-                val context = ApplicationProvider.getApplicationContext<Context>()
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                @Suppress("DEPRECATION")
-                Exponea.handleRemoteMessage(null, notificationManager, false)
-            }
-        ),
-        Pair<KFunction4<Context, RemoteMessage?, NotificationManager, Boolean, Boolean>, () -> Any>(
-            Exponea::handleRemoteMessage,
-            {
-                val context = ApplicationProvider.getApplicationContext<Context>()
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val message = RemoteMessage.Builder("test").addData("source", "xnpe_platform").build()
-                Exponea.handleRemoteMessage(context, message, notificationManager, false)
-            }
-        ),
+            Exponea.handleCampaignIntent(intent, ApplicationProvider.getApplicationContext())
+        },
+        Pair<KFunction4<Context, Map<String, String>, NotificationManager, Boolean, Boolean>, () -> Any>(
+            Exponea::handleRemoteMessage
+        ) {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val messageData = mapOf(Pair("source", Constants.PushNotif.source))
+            Exponea.handleRemoteMessage(context, messageData, notificationManager, false)
+        },
+        Pair<KFunction1<Map<String, String>, Boolean>, () -> Any>(
+            Exponea::isExponeaPushNotification
+        ) { // there is no way for this to throw exception, we'll simulate it to make tests pass
+            if (!Exponea.safeModeEnabled) throw ExponeaExceptionThrowing.TestPurposeException()
+        },
         Pair(
-            Exponea::isExponeaPushNotification,
-            { // there is no way for this to throw exception, we'll simulate it to make tests pass
-                if (!Exponea.safeModeEnabled) throw ExponeaExceptionThrowing.TestPurposeException()
-            }
-        ),
+            Exponea::trackClickedPush
+        ) { Exponea.trackClickedPush() },
         Pair(
-            Exponea::trackClickedPush,
-            { Exponea.trackClickedPush() }
-        ),
+            Exponea::trackDeliveredPush
+        ) { Exponea.trackDeliveredPush() },
         Pair(
-            Exponea::trackDeliveredPush,
-            { Exponea.trackDeliveredPush() }
-        ),
+            Exponea::trackEvent
+        ) { Exponea.trackEvent(PropertiesList(hashMapOf()), null, null) },
         Pair(
-            Exponea::trackEvent,
-            { Exponea.trackEvent(PropertiesList(hashMapOf()), null, null) }
-        ),
-        Pair(
-            Exponea::trackPaymentEvent,
-            {
-                val purchasedItem = PurchasedItem(
-                    1.0,
-                    "eur",
-                    "mock-payment-system",
-                    "mock-product-id",
-                    "mock-product-title"
-                )
-                Exponea.trackPaymentEvent(1.0, purchasedItem)
-            }
-        ),
+            Exponea::trackPaymentEvent
+        ) {
+            val purchasedItem = PurchasedItem(
+                1.0,
+                "eur",
+                "mock-payment-system",
+                "mock-product-id",
+                "mock-product-title"
+            )
+            Exponea.trackPaymentEvent(1.0, purchasedItem)
+        },
         Pair<KFunction1<String, Unit>, () -> Any>(
-            Exponea::trackPushToken,
-            { Exponea.trackPushToken("mock-push-token") }
-        ),
+            Exponea::trackPushToken
+        ) { Exponea.trackPushToken("mock-push-token") },
+        Pair<KFunction1<String, Unit>, () -> Any>(
+            Exponea::trackHmsPushToken
+        ) { Exponea.trackHmsPushToken("mock-push-token") },
         Pair(
-            Exponea::trackSessionEnd,
-            { Exponea.trackSessionEnd() }
-        ),
+            Exponea::trackSessionEnd
+        ) { Exponea.trackSessionEnd() },
         Pair(
-            Exponea::trackSessionStart,
-            { Exponea.trackSessionStart() }
-        ),
+            Exponea::trackSessionStart
+        ) { Exponea.trackSessionStart() },
         Pair(
-            Exponea::fetchRecommendation,
-            { Exponea.fetchRecommendation(CustomerRecommendationOptions("", true), {}, {}) }
-        )
+            Exponea::fetchRecommendation
+        ) { Exponea.fetchRecommendation(CustomerRecommendationOptions("", true), {}, {}) },
+        Pair<KFunction2<Context, String, Unit>, () -> Any>(
+            Exponea::handleNewToken
+        ) { Exponea.handleNewToken(ApplicationProvider.getApplicationContext(), "mock-push-token") },
+        Pair<KFunction2<Context, String, Unit>, () -> Any>(
+            Exponea::handleNewHmsToken
+        ) { Exponea.handleNewHmsToken(ApplicationProvider.getApplicationContext(), "mock-push-token") }
+
     )
 }

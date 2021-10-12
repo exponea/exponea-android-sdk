@@ -6,6 +6,7 @@ import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.util.TokenType
 import com.google.gson.Gson
 import okhttp3.Call
 
@@ -48,12 +49,17 @@ internal class ExponeaServiceImpl(
         )
     }
 
-    override fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call {
+    override fun postPushSelfCheck(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        pushToken: String,
+        tokenType: TokenType
+    ): Call {
         return doPost(
             exponeaProject,
             ApiEndPoint.EndPointName.PUSH_SELF_CHECK,
             hashMapOf(
-                "platform" to "android",
+                "platform" to tokenType.selfCheckProperty,
                 "customer_ids" to customerIds.toHashMap(),
                 "push_notification_id" to pushToken
             )

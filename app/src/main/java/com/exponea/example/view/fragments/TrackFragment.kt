@@ -1,5 +1,6 @@
 package com.exponea.example.view.fragments
 
+import TokenTracker
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,7 +21,6 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
-import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.fragment_track.buttonCustomEvent
 import kotlinx.android.synthetic.main.fragment_track.buttonTrackClicked
 import kotlinx.android.synthetic.main.fragment_track.buttonTrackDelivered
@@ -65,7 +65,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         buttonTrackClicked.setOnClickListener { trackPushClicked() }
         buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
-        buttonTrackToken.setOnClickListener { trackFCMToken() }
+        buttonTrackToken.setOnClickListener { trackToken() }
 
         buttonUpdateProperties.setOnClickListener {
             TrackCustomAttributesDialog.show(childFragmentManager) {
@@ -122,10 +122,8 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     /**
      * Method to handle token tracking
      */
-    private fun trackFCMToken() {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-            Exponea.trackPushToken(it.token)
-        }
+    private fun trackToken() {
+        TokenTracker().trackToken(context)
     }
 
     /**

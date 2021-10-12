@@ -1,7 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'com.google.gms.google-services'
+
+if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().contains("gms")) {
+    apply plugin: 'com.google.gms.google-services'
+}
+if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().contains("hms")) {
+    apply plugin: 'com.huawei.agconnect'
+}
 
 android {
     compileSdkVersion 28
@@ -13,10 +19,33 @@ android {
         versionName "2.9.7"
         vectorDrawables.useSupportLibrary = true
     }
+    signingConfigs {
+        config {
+            // Set the parameters based on the actual signing information.
+            storeFile file('Exponea.jks')
+            storePassword 'Exponea'
+            keyPassword 'Exponea'
+            keyAlias 'key0'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.config
+        }
         release {
+            signingConfig signingConfigs.config
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "messagingService"
+    productFlavors {
+        gms {
+            dimension = "messagingService"
+        }
+        hms {
+            dimension = "messagingService"
         }
     }
 }
@@ -26,7 +55,9 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'com.google.firebase:firebase-messaging:21.0.0'
+    gmsImplementation 'com.google.firebase:firebase-messaging:21.0.0'
+    hmsImplementation 'com.huawei.agconnect:agconnect-core:1.5.2.300'
+    hmsImplementation 'com.huawei.hms:push:5.3.0.304'
 
     implementation project(path: ':sdk')
 }

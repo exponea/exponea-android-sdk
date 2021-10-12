@@ -10,12 +10,11 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
-import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -122,7 +121,7 @@ internal class FcmManagerImplTrackingTest(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
-            FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
+            PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
@@ -133,9 +132,7 @@ internal class FcmManagerImplTrackingTest(
 
     @Test
     fun `should track delivered and clicked events with correct timestamps`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-            .build()
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         val deliveredTimestampSlot = slot<Double>()
         val clickedTimestampSlot = slot<Double>()
         val notificationSlot = slot<Notification>()
@@ -159,9 +156,7 @@ internal class FcmManagerImplTrackingTest(
 
     @Test
     fun `should track delivered and clicked events correctly when send_timestamp is missing`() {
-        val notification = RemoteMessage.Builder("1")
-            .setData(NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE)
-            .build()
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
         val deliveredTimestampSlot = slot<Double>()
         val clickedTimestampSlot = slot<Double>()
         val notificationSlot = slot<Notification>()

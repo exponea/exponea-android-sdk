@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
@@ -16,11 +15,10 @@ import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
-import com.google.firebase.messaging.RemoteMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -170,7 +168,7 @@ internal class ExponeaPushReceiverNotificationsTest(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
-            FirebaseTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
+            PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
@@ -180,19 +178,13 @@ internal class ExponeaPushReceiverNotificationsTest(
         mockkConstructor(Date::class)
     }
 
-    private fun getRemoteMessage(notification: Map<String, String>): RemoteMessage {
-        val messageBundle = Bundle()
-        notification.entries.forEach { messageBundle.putString(it.key, it.value) }
-        return RemoteMessage(messageBundle)
-    }
-
     @Test
     fun onReceiveTest() {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
         val expectedCreationTime = expectedTrackingData!!.campaignData.createdAt * 1000
         every { anyConstructed<Date>().time } returns expectedCreationTime.toLong() // mock current time
-        manager.handleRemoteMessage(getRemoteMessage(notificationPayload), notificationManager, true)
+        manager.handleRemoteMessage(notificationPayload, notificationManager, true)
 
         ExponeaPushReceiver().onReceive(
             ApplicationProvider.getApplicationContext(),

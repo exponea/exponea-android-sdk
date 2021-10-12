@@ -6,12 +6,13 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.testutil.ExponeaMockServer
+import com.exponea.sdk.util.TokenType
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
-import okhttp3.mock.HttpCodes.HTTP_200_OK
-import okhttp3.mock.HttpCodes.HTTP_400_BAD_REQUEST
+import okhttp3.mock.HttpCode.HTTP_200_OK
+import okhttp3.mock.HttpCode.HTTP_400_BAD_REQUEST
 import okhttp3.mock.MockInterceptor
 
 internal class ExponeaMockService(
@@ -79,7 +80,12 @@ internal class ExponeaMockService(
         return okHttpClient.newCall(Request.Builder().url(dummyUrl).get().build())
     }
 
-    override fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call {
+    override fun postPushSelfCheck(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        pushToken: String,
+        tokenType: TokenType
+    ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 }

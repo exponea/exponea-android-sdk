@@ -1,55 +1,39 @@
+
 ## 📣  Push Notifications
 
-Exponea allows you to easily create complex scenarios which you can use to send push notifications directly to your customers. The following section explains how to enable push notifications.
+Exponea allows you to easily create complex scenarios which you can use to send push notifications directly to your customers. The following section explains how to integrate push notifications into your app.
 
-## Quick start
+- [Standard (Firebase) integration](#standard-firebase-integration)
+- [Huawei integration](#huawei-integration)
 
-For push notifications to work, you'll need to setup a few things:
+
+## Standard (Firebase) integration
+
+For firebase push notifications to work, you'll need to setup a few things:
 - create a Firebase project
 - integrate Firebase into your application 
 - set the Firebase server key in the Exponea web app
+- add and register firebase messaging service
 - add a broadcast listener for opening push notifications
 
-We've created a [Quick start guide](../Guides/PUSH_QUICKSTART.md) that will guide you through these steps.
+We've created a [Firebase quick start guide](../Guides/PUSH_QUICKSTART_FIREBASE.md) that will guide you through these steps.
+
+## Huawei integration
+For huawei push notifications to work, you'll need to setup a few things:
+- register for a Huawei developer account
+- create a new Huawei app
+- enter Huawei credentials in the Exponea web app
+- integrate the Huawei messaging SDK into your app
+- add and register huawei messaging service
+- add a broadcast listener for opening push notifications
+
+We've created a [Huawei quick start guide](../Guides/PUSH_QUICKSTART_HUAWEI.md) that will guide you through these steps.
 
 ## Automatic tracking of Push Notifications
 
 In the [Exponea SDK configuration](CONFIG.md), you can enable or disable the automatic push notification tracking by setting the Boolean value to the `automaticPushNotification` property and potentially setting up the desired frequency to the `tokenTrackFrequency`(default value is ON_TOKEN_CHANGE).
 
 With `automaticPushNotification` enabled, the SDK will correctly display push notifications from Exponea and track a "campaign" event for every delivered/opened push notification with the correct properties.
-
-## Other push providers / custom FirebaseMessagingService
-
-Our automatic tracking relies on our implementation of FirebaseMessagingService.
-In case you want to use your own FirebaseMessagingService, you have to call Exponea methods for handling push notifications and token yourself.
-``` kotlin
-package com.exponea.example
-
-import android.app.NotificationManager
-import android.content.Context
-import com.exponea.sdk.Exponea
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
-
-class ExampleFirebaseMessageService: FirebaseMessagingService() {
-
-    private val notificationManager by lazy {
-        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    }
-
-    override fun onMessageReceived(message: RemoteMessage) {
-        if (!Exponea.handleRemoteMessage(applicationContext, message, notificationManager)) {
-            // push notification is from another push provider
-        }
-    }
-
-    override fun onNewToken(token: String) {
-        Exponea.trackPushToken(token)
-    }
-}
-```
-
-Exponea SDK will only handle push notification messages coming from Exponea servers. You can also use helper method `Exponea.isExponeaPushNotification()`.
 
 ## Responding to Push notifications
 
@@ -129,14 +113,14 @@ In case you decide to deactivate the automatic push notification, or wish to tra
 
 ``` kotlin
 fun trackPushToken(
-        fcmToken: String
+        token: String
 )
 ```
 #### 💻 Usage
 
 ``` kotlin
 Exponea.trackPushToken(
-        fcmToken = "382d4221-3441-44b7-a676-3eb5f515157f"
+        token = "382d4221-3441-44b7-a676-3eb5f515157f"
 )
 ```
 

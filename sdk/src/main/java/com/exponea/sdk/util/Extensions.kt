@@ -167,22 +167,24 @@ fun Context.isResumedActivity(): Boolean = runCatching {
     return lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
 }.returnOnException { false }
 
-fun Context.isReactNativeSDK(): Boolean = runCatching {
-    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    return appInfo.metaData["ExponeaReactNativeSDK"] == true
-}.returnOnException { false }
+fun Context.isReactNativeSDK(): Boolean {
+    return isOtherSDK("ExponeaReactNativeSDK")
+}
 
-fun Context.isCapacitorSDK(): Boolean = runCatching {
-    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    return appInfo.metaData["ExponeaCapacitorSDK"] == true
-}.returnOnException { false }
+fun Context.isCapacitorSDK(): Boolean {
+    return isOtherSDK("ExponeaCapacitorSDK")
+}
 
-fun Context.isFlutterSDK(): Boolean = runCatching {
-    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    return appInfo.metaData["ExponeaFlutterSDK"] == true
-}.returnOnException { false }
+fun Context.isFlutterSDK(): Boolean {
+    return isOtherSDK("ExponeaFlutterSDK")
+}
 
-fun Context.isXamarinSDK(): Boolean = runCatching {
+fun Context.isXamarinSDK(): Boolean {
+    return isOtherSDK("ExponeaXamarinSDK")
+}
+
+private fun Context.isOtherSDK(sdk: String): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    return appInfo.metaData["ExponeaXamarinSDK"] == true
+    if (appInfo.metaData == null) return false
+    return appInfo.metaData[sdk] == true
 }.returnOnException { false }

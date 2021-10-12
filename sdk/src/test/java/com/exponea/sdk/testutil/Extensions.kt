@@ -14,7 +14,7 @@ internal fun Exponea.reset() {
     componentForTesting.customerIdsRepository.clear()
     componentForTesting.deviceInitiatedRepository.set(false)
     componentForTesting.eventRepository.clear()
-    componentForTesting.firebaseTokenRepository.clear()
+    componentForTesting.pushTokenRepository.clear()
     componentForTesting.pushNotificationRepository.set(false)
 
     componentForTesting.sessionManager.stopSessionListener()

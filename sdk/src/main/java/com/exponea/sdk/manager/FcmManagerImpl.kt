@@ -22,12 +22,12 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
-import com.exponea.sdk.repository.FirebaseTokenRepository
 import com.exponea.sdk.repository.PushNotificationRepository
+import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
-import com.google.firebase.messaging.RemoteMessage
 import java.io.IOException
 import java.net.URL
 import java.util.Random
@@ -37,30 +37,34 @@ internal class FcmManagerImpl(
     context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventManager: EventManager,
-    private val firebaseTokenRepository: FirebaseTokenRepository,
+    private val pushTokenRepository: PushTokenRepository,
     private val pushNotificationRepository: PushNotificationRepository
 ) : FcmManager {
     private val application = context.applicationContext
     private val requestCodeGenerator: Random = Random()
     private var lastPushNotificationId: Int? = null
 
-    override fun trackFcmToken(token: String?, tokenTrackFrequency: ExponeaConfiguration.TokenFrequency) {
+    override fun trackToken(
+        token: String?,
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
+        tokenType: TokenType?
+    ) {
         val shouldUpdateToken = run {
-            val lastTrackDateInMilliseconds = firebaseTokenRepository.getLastTrackDateInMilliseconds()
+            val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
             if (lastTrackDateInMilliseconds == null) { // if the token wasn't ever tracked, track it
                 true
             } else {
                 when (tokenTrackFrequency) {
-                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != firebaseTokenRepository.get()
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != pushTokenRepository.get()
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
                 }
             }
         }
 
-        if (token != null && shouldUpdateToken) {
-            firebaseTokenRepository.set(token, System.currentTimeMillis())
-            val properties = PropertiesList(hashMapOf("google_push_notification_id" to token))
+        if (token != null && tokenType != null && shouldUpdateToken) {
+            pushTokenRepository.set(token, System.currentTimeMillis(), tokenType)
+            val properties = PropertiesList(hashMapOf(tokenType.apiProperty to token))
             eventManager.track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,
@@ -73,7 +77,7 @@ internal class FcmManagerImpl(
     }
 
     override fun handleRemoteMessage(
-        message: RemoteMessage?,
+        messageData: Map<String, String>?,
         manager: NotificationManager,
         showNotification: Boolean,
         timestamp: Double
@@ -81,7 +85,7 @@ internal class FcmManagerImpl(
 
         Logger.d(this, "handleRemoteMessage")
 
-        if (message == null) return
+        if (messageData == null) return
 
         // Configure the notification channel for push notifications on API 26+
         // This configuration runs only once.
@@ -90,8 +94,7 @@ internal class FcmManagerImpl(
             pushNotificationRepository.set(true)
         }
 
-        var data = HashMap(message.data)
-        val payload = NotificationPayload(data)
+        val payload = NotificationPayload(HashMap(messageData))
         val sentTimestamp = payload.notificationData.sentTimestamp
 
         val deliveredTimestamp = if (sentTimestamp != null && timestamp <= sentTimestamp) {

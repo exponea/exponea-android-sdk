@@ -39,17 +39,18 @@ import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.repository.FirebaseTokenRepository
-import com.exponea.sdk.repository.FirebaseTokenRepositoryImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepository
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.util.ExponeaGson
+import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.view.InAppMessagePresenter
 
@@ -81,7 +82,7 @@ internal class ExponeaComponent(
 
     internal val eventRepository: EventRepository = EventRepositoryImpl(context, preferences)
 
-    internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
+    internal val pushTokenRepository: PushTokenRepository = PushTokenRepositoryImpl(preferences)
 
     internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
 
@@ -132,7 +133,7 @@ internal class ExponeaComponent(
     )
 
     internal val fcmManager: FcmManager = FcmManagerImpl(
-        context, exponeaConfiguration, eventManager, firebaseTokenRepository, pushNotificationRepository
+        context, exponeaConfiguration, eventManager, pushTokenRepository, pushNotificationRepository
     )
 
     internal val sessionManager: SessionManager = SessionManagerImpl(
@@ -144,7 +145,7 @@ internal class ExponeaComponent(
             context,
             exponeaConfiguration,
             customerIdsRepository,
-            firebaseTokenRepository,
+            pushTokenRepository,
             flushManager,
             exponeaService
         )
@@ -153,8 +154,11 @@ internal class ExponeaComponent(
         exponeaProject: ExponeaProject,
         projectRouteMap: Map<EventType, List<ExponeaProject>> = hashMapOf()
     ) {
-        val firebaseToken = firebaseTokenRepository.get()
-        fcmManager.trackFcmToken(" ", Exponea.tokenTrackFrequency)
+        val token = pushTokenRepository.get()
+        val tokenType = pushTokenRepository.getLastTokenType()
+
+        fcmManager.trackToken(" ", Exponea.tokenTrackFrequency, TokenType.FCM)
+        fcmManager.trackToken(" ", Exponea.tokenTrackFrequency, TokenType.HMS)
         deviceInitiatedRepository.set(false)
         campaignRepository.clear()
         inAppMessagesCache.clear()
@@ -173,7 +177,7 @@ internal class ExponeaComponent(
         if (exponeaConfiguration.automaticSessionTracking) {
             sessionManager.trackSessionStart(currentTimeSeconds())
         }
-        fcmManager.trackFcmToken(firebaseToken, Exponea.tokenTrackFrequency)
+        fcmManager.trackToken(token, Exponea.tokenTrackFrequency, tokenType)
         inAppMessageManager.preload()
     }
 }

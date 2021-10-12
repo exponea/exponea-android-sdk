@@ -3,6 +3,7 @@ import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.util.TokenType
 import okhttp3.Call
 
 internal interface ExponeaService {
@@ -12,5 +13,10 @@ internal interface ExponeaService {
     fun postFetchConsents(exponeaProject: ExponeaProject): Call
     fun postCampaignClick(exponeaProject: ExponeaProject, event: Event): Call
     fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call
-    fun postPushSelfCheck(exponeaProject: ExponeaProject, customerIds: CustomerIds, pushToken: String): Call
+    fun postPushSelfCheck(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        pushToken: String,
+        tokenType: TokenType
+    ): Call
 }

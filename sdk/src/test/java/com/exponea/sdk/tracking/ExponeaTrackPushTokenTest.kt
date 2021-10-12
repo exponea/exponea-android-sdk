@@ -40,7 +40,7 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
         } just Runs
-        Exponea.trackPushToken(fcmToken = "test-google-push-token")
+        Exponea.trackPushToken(token = "test-google-push-token")
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
         }

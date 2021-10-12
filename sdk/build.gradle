@@ -10,7 +10,7 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 27
         buildConfigField "String", "EXPONEA_VERSION_NAME", '"2.9.7"'
         buildConfigField "int", "EXPONEA_VERSION_CODE", "50"
@@ -40,6 +40,12 @@ android {
         }
     }
 
+    kapt {
+        arguments {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
+    }
+
     testOptions.unitTests.includeAndroidResources = true
 }
 
@@ -61,8 +67,7 @@ dependencies {
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
-    // Google Firebase Cloud Message
-    implementation 'com.google.firebase:firebase-messaging:21.0.0'
+
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.4.0"
     // View for in-app messages

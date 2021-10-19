@@ -8,7 +8,11 @@ import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
-import com.exponea.sdk.util.*
+import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isCapacitorSDK
+import com.exponea.sdk.util.isFlutterSDK
+import com.exponea.sdk.util.isReactNativeSDK
+import com.exponea.sdk.util.isXamarinSDK
 import com.google.gson.Gson
 import java.io.IOException
 import java.text.SimpleDateFormat

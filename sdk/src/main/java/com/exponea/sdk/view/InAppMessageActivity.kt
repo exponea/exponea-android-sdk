@@ -4,6 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 
 internal class InAppMessageActivity : AppCompatActivity() {
+
+    private var presentedMessageView: InAppMessageView? = null
+
     override fun onResume() {
         super.onResume()
 
@@ -29,9 +32,17 @@ internal class InAppMessageActivity : AppCompatActivity() {
         )
         if (inAppMessageView != null) {
             inAppMessageView.show()
+            presentedMessageView = inAppMessageView
         } else {
             presenting.failedCallback()
             finish()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        val messageViewToDestroy = presentedMessageView ?: return
+        messageViewToDestroy.dismiss()
+        presentedMessageView = null
     }
 }

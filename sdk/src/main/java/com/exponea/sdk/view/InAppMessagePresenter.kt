@@ -14,6 +14,7 @@ import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
+import java.lang.Exception
 
 internal class InAppMessagePresenter(context: Context) {
     class PresentedMessage(
@@ -66,7 +67,18 @@ internal class InAppMessagePresenter(context: Context) {
             }
             if (messageTimeout != null) {
                 Handler(Looper.getMainLooper()).postDelayed(
-                    { if (view.isPresented) { view.dismiss() } },
+                    {
+                        if (view.isPresented) {
+                            try {
+                                view.dismiss()
+                            } catch (ex: Exception) {
+                                Logger.i(
+                                        this,
+                                        "InAppMessageActivity is probably already destroyed," +
+                                                " skipping dialog dismiss")
+                            }
+                        }
+                    },
                     messageTimeout
                 )
             }

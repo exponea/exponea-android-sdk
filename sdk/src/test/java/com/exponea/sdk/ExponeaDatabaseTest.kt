@@ -1,10 +1,10 @@
 package com.exponea.sdk
 
+import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.database.ExponeaDatabase
-import com.exponea.sdk.database.ExponeaDatabaseImpl
-import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
@@ -24,14 +24,10 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
         const val DB_NAME = "TestDatabase"
     }
 
-    class Person(
-        var firstName: String,
-        var lastName: String
-    )
-
-    private lateinit var db: ExponeaDatabase<DatabaseStorageObject<Person>>
-    private val mockData = DatabaseStorageObject(
-        item = Person("first name", "second name"),
+    private lateinit var db: ExponeaDatabase
+    private val mockData = ExportedEventType(
+        properties = hashMapOf(Pair("key", "value")),
+        age = 1.234,
         projectId = "mock_project_id",
         route = Route.TRACK_EVENTS,
         exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
@@ -39,46 +35,44 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
 
     @Before
     fun init() {
-        db = ExponeaDatabaseImpl(ApplicationProvider.getApplicationContext(), DB_NAME)
+        db = Room.databaseBuilder(
+                ApplicationProvider.getApplicationContext(),
+                ExponeaDatabase::class.java, DB_NAME
+        ).enableMultiInstanceInvalidation()
+        .allowMainThreadQueries().build()
     }
 
     @Test
-    fun `should add item`() {
-        assertEquals(true, db.add(mockData))
+    fun `should add item with correct count`() {
+        assertEquals(db.count(), 0)
+        db.add(mockData)
+        assertEquals(db.count(), 1)
     }
 
     @Test
     fun `should get item`() {
         db.add(mockData)
         db.get(mockData.id)?.let {
-            assertEquals("first name", it.item.firstName)
-            assertEquals("second name", it.item.lastName)
+            assertEquals("value", it.properties?.get("key"))
         }
     }
 
     @Test
     fun `should update item`() {
         db.add(mockData)
-        mockData.item.firstName = "anotherFirstName"
+        mockData.age = 2.345
         db.update(item = mockData)
         db.get(mockData.id)?.let {
-            assertEquals("anotherFirstName", it.item.firstName)
+            assertEquals(2.345, it.age)
         }
     }
 
     @Test
     fun `should remove item`() {
-        assertEquals(true, db.add(mockData))
-        assertEquals(true, db.remove(mockData.id))
+        db.add(mockData)
+        db.remove(mockData.id)
         val item = db.get(mockData.id)
         assertTrue { item == null }
-    }
-
-    @Test
-    fun `should count items`() {
-        assertEquals(0, db.count())
-        db.add(mockData)
-        assertEquals(1, db.count())
     }
 
     @Test
@@ -90,8 +84,8 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
                 thread {
                     for (x in 1..10) {
                         db.add(
-                            DatabaseStorageObject(
-                                item = Person("first name $i $x", "second name"),
+                            ExportedEventType(
+                                customerIds = hashMapOf(Pair("first name $i $x", "second name")),
                                 projectId = "mock_project_id",
                                 route = Route.TRACK_EVENTS,
                                 exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
@@ -109,6 +103,18 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     @After
     @Test
     fun denit() {
-        assertEquals(true, db.clear())
+        for (x in 1..10) {
+            db.add(
+                    ExportedEventType(
+                            customerIds = hashMapOf(Pair("first name $x", "second name")),
+                            projectId = "mock_project_id",
+                            route = Route.TRACK_EVENTS,
+                            exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                    )
+            )
+        }
+        db.clear()
+        assertEquals(db.count(), 0)
+        assertTrue(db.all().isEmpty())
     }
 }

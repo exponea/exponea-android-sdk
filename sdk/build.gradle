@@ -4,6 +4,7 @@ apply plugin: 'maven'
 apply plugin: 'kotlin-android-extensions'
 apply from: 'publish-maven.gradle'
 apply from: '../jacoco.gradle'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 28
@@ -45,8 +46,12 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Database
-    implementation 'io.github.pilgr:paperdb:2.7.1'
-    // Networking
+    implementation("androidx.room:room-runtime:2.1.0")
+    annotationProcessor("androidx.room:room-compiler:2.1.0")
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:2.1.0")
+
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     // Deserialization
     implementation 'com.google.code.gson:gson:2.8.6'

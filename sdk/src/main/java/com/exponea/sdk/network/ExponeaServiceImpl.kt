@@ -4,8 +4,8 @@ import com.exponea.sdk.models.ApiEndPoint
 import com.exponea.sdk.models.CampaignClickEvent
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
 import com.google.gson.Gson
 import okhttp3.Call
 
@@ -14,15 +14,15 @@ internal class ExponeaServiceImpl(
     private val networkManager: NetworkHandler
 ) : ExponeaService {
 
-    override fun postCampaignClick(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postCampaignClick(exponeaProject: ExponeaProject, event: Event): Call {
         return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_CAMPAIGN, CampaignClickEvent(event))
     }
 
-    override fun postEvent(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postEvent(exponeaProject: ExponeaProject, event: Event): Call {
         return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_EVENTS, event)
     }
 
-    override fun postCustomer(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postCustomer(exponeaProject: ExponeaProject, event: Event): Call {
         return doPost(exponeaProject, ApiEndPoint.EndPointName.TRACK_CUSTOMERS, event)
     }
 

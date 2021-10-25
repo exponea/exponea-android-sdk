@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -145,7 +144,7 @@ internal class InAppMessageManagerImplTest {
         val customerIdsRepo = mockk<CustomerIdsRepository>()
         every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
         val eventRepo = mockk<EventRepository>()
-        every { eventRepo.add(any()) } returns true
+        every { eventRepo.add(any()) } just Runs
         val flushManager = mockk<FlushManager>()
         every { flushManager.flushData(any()) } just Runs
         val eventManager = EventManagerImpl(
@@ -201,8 +200,8 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
 
-        var addedEvents: java.util.ArrayList<DatabaseStorageObject<ExportedEventType>> = arrayListOf()
-        every { eventRepo.add(capture(addedEvents)) } returns true
+        var addedEvents: java.util.ArrayList<ExportedEventType> = arrayListOf()
+        every { eventRepo.add(capture(addedEvents)) } just Runs
 
         val numberOfThreads = 5
         val service: ExecutorService = Executors.newFixedThreadPool(10)

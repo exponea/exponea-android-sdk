@@ -38,14 +38,14 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
-        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
+        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         secondRun.resume()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
-            it.item.type == Constants.EventTypes.sessionStart
-        }?.item
+            it.type == Constants.EventTypes.sessionStart
+        }
         assertNotNull(sessionEvent)
         assertNotNull(sessionEvent.properties)
         assertNull(sessionEvent.properties!!["location"])
@@ -55,11 +55,11 @@ internal class CampaignSessionTests_006 : CampaignSessionTests_Base() {
         assertNull(sessionEvent.properties!!["utm_term"])
 
         val hasAnySessionEnd = Exponea.componentForTesting.eventRepository.all().any {
-            it.item.type == Constants.EventTypes.sessionEnd
+            it.type == Constants.EventTypes.sessionEnd
         }
         assertFalse(hasAnySessionEnd)
         val sessionStartEvents = Exponea.componentForTesting.eventRepository.all().filter {
-            it.item.type == Constants.EventTypes.sessionStart
+            it.type == Constants.EventTypes.sessionStart
         }
         assertEquals(1, sessionStartEvents.size)
     }

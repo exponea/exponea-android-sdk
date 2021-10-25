@@ -5,7 +5,7 @@ internal data class CampaignClickEvent(
     var age: Double,
     var properties: PlatformProperty
 ) {
-    internal constructor(source: ExportedEventType) : this (
+    internal constructor(source: Event) : this (
             url = source.properties!!["url"]!! as String,
             age = source.properties!!["age"]!! as Double,
             properties = PlatformProperty(PlatformProperty.ANDROID_PLATFORM)

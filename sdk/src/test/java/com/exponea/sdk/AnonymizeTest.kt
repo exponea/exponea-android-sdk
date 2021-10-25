@@ -3,7 +3,6 @@ package com.exponea.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
@@ -12,6 +11,7 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.util.currentTimeSeconds
+import kotlin.collections.HashMap
 import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,16 +24,16 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     }
 
     private fun checkEvent(
-        event: DatabaseStorageObject<ExportedEventType>,
+        event: ExportedEventType,
         expectedEventType: String?,
         expectedProject: ExponeaProject,
         expectedUserId: String,
         expectedProperties: HashMap<String, Any>? = null
     ) {
-        assertEquals(expectedEventType, event.item.type)
+        assertEquals(expectedEventType, event.type)
         assertEquals(expectedProject, event.exponeaProject)
-        assertEquals(hashMapOf<String, String?>("cookie" to expectedUserId), event.item.customerIds)
-        if (expectedProperties != null) assertEquals(expectedProperties, event.item.properties)
+        assertEquals(hashMapOf<String, String?>("cookie" to expectedUserId), event.customerIds)
+        if (expectedProperties != null) assertEquals(expectedProperties, event.properties)
     }
 
     @Test
@@ -67,7 +67,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
 
         val events = Exponea.componentForTesting.eventRepository.all()
-        events.sortBy { it.item.timestamp }
+        events.sortedBy { it.timestamp }
         assertEquals(events.size, 8)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
@@ -108,7 +108,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         )
 
         val events = Exponea.componentForTesting.eventRepository.all()
-        events.sortBy { it.item.timestamp }
+        events.sortedBy { it.timestamp }
         assertEquals(events.size, 5)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))

@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -45,7 +45,7 @@ internal class ExponeaTrackVirtualPaymentTest : ExponeaSDKTest() {
 
     @Test
     fun `should track virtual payment`() {
-        val eventSlot = slot<ExportedEventType>()
+        val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))

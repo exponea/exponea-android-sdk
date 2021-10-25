@@ -31,14 +31,14 @@ internal class CampaignSessionTests_001 : CampaignSessionTests_Base() {
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
-        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.item.type == Constants.EventTypes.push })
+        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         controller.resume()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
-            it.item.type == Constants.EventTypes.sessionStart
-        }?.item
+            it.type == Constants.EventTypes.sessionStart
+        }
         assertNotNull(sessionEvent)
         assertNotNull(sessionEvent.properties)
         assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])

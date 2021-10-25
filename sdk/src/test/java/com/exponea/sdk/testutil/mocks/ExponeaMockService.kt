@@ -2,8 +2,8 @@ package com.exponea.sdk.testutil.mocks
 
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.testutil.ExponeaMockServer
 import okhttp3.Call
@@ -22,15 +22,15 @@ internal class ExponeaMockService(
     private val server = ExponeaMockServer.createServer()
     private val dummyUrl = server.url("/").toString()
 
-    override fun postCampaignClick(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postCampaignClick(exponeaProject: ExponeaProject, event: Event): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postEvent(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postEvent(exponeaProject: ExponeaProject, event: Event): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postCustomer(exponeaProject: ExponeaProject, event: ExportedEventType): Call {
+    override fun postCustomer(exponeaProject: ExponeaProject, event: Event): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 

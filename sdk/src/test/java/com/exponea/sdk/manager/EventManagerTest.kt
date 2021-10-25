@@ -3,12 +3,12 @@ package com.exponea.sdk.manager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -31,7 +31,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var inAppMessageManager: InAppMessageManager
     lateinit var manager: EventManagerImpl
 
-    lateinit var addedEvents: ArrayList<DatabaseStorageObject<ExportedEventType>>
+    lateinit var addedEvents: ArrayList<ExportedEventType>
 
     fun setup(configuration: ExponeaConfiguration, flushMode: FlushMode) {
         mockkObject(Exponea)
@@ -39,7 +39,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
         eventRepo = mockk()
         addedEvents = arrayListOf()
-        every { eventRepo.add(capture(addedEvents)) } returns true
+        every { eventRepo.add(capture(addedEvents)) } just Runs
 
         val customerIdsRepo = mockk<CustomerIdsRepository>()
         every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
@@ -72,19 +72,22 @@ internal class EventManagerTest : ExponeaSDKTest() {
             inAppMessageManager.showRandom(any(), any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
+        val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEventType(
-                "test-event",
-                123.0,
-                null,
-                hashMapOf("cookie" to "mock-cookie"),
-                hashMapOf("prop" to "value")
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value"),
+                exponeaProject = ExponeaProject(
+                        "https://api.exponea.com",
+                        "mock-project-token",
+                        null),
+                projectId = "mock-project-token",
+                route = Route.TRACK_EVENTS
             ),
-            addedEvents.first().item
-        )
-        assertEquals(
-            ExponeaProject("https://api.exponea.com", "mock-project-token", null),
-            addedEvents.first().exponeaProject
+            firstAddedEvent
         )
     }
 
@@ -158,15 +161,21 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEventType(
-                "test-event",
-                123.0,
-                null,
-                hashMapOf("cookie" to "mock-cookie"),
-                hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
-            ),
-            addedEvents.first().item
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "mock-project-token",
+                        authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_EVENTS
+            ), firstAddedEvent
         )
     }
 
@@ -181,25 +190,42 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        val firstEvent = addedEvents[0]
+        val secondEvent = addedEvents[1]
         assertEquals(
             ExportedEventType(
-                "test-event",
-                123.0,
-                null,
-                hashMapOf("cookie" to "mock-cookie"),
-                hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
+                id = firstEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                route = Route.TRACK_EVENTS,
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                projectId = "mock-project-token",
+                exponeaProject = ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "mock-project-token",
+                        authorization = null)
             ),
-            addedEvents[0].item
+            firstEvent
         )
         assertEquals(
-            ExportedEventType(
-                "test-event",
-                123.0,
-                null,
-                hashMapOf("cookie" to "mock-cookie"),
-                hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2")
-            ),
-            addedEvents[1].item
+                ExportedEventType(
+                        id = secondEvent.id,
+                        type = "test-event",
+                        timestamp = 123.0,
+                        route = Route.TRACK_EVENTS,
+                        customerIds = hashMapOf("cookie" to "mock-cookie"),
+                        properties = hashMapOf(
+                                "prop" to "value",
+                                "default-prop1" to "value1",
+                                "default-prop2" to "value2"),
+                        exponeaProject = ExponeaProject(
+                                baseUrl = "https://api.exponea.com",
+                                projectToken = "mock-project-token",
+                                authorization = null),
+                        projectId = "mock-project-token"
+                ),
+            secondEvent
         )
     }
 }

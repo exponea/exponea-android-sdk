@@ -1,7 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
@@ -45,7 +45,7 @@ internal class FlushManagerImpl(
             return
         }
 
-        val allEvents = eventRepository.all().sortedBy { it.item.timestamp }
+        val allEvents = eventRepository.all().sortedBy { it.timestamp }
         Logger.d(this, "flushEvents: Count ${allEvents.size}")
 
         val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
@@ -71,21 +71,21 @@ internal class FlushManagerImpl(
     }
 
     private fun trySendingEvent(
-        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        exportedEvent: ExportedEventType,
         onFlushFinished: FlushFinishedCallback?
     ) {
-        updateBeforeSend(databaseObject)
-        routeSendingEvent(databaseObject)?.enqueue(
-            handleResponse(databaseObject, onFlushFinished),
-            handleFailure(databaseObject, onFlushFinished)
+        updateBeforeSend(exportedEvent)
+        routeSendingEvent(exportedEvent)?.enqueue(
+            handleResponse(exportedEvent, onFlushFinished),
+            handleFailure(exportedEvent, onFlushFinished)
         )
     }
 
-    private fun updateBeforeSend(databaseObject: DatabaseStorageObject<ExportedEventType>) {
-        when (databaseObject.route) {
+    private fun updateBeforeSend(exportedEvent: ExportedEventType) {
+        when (exportedEvent.route) {
             Route.TRACK_CAMPAIGN -> {
                 // campaign event needs to recalculate 'age' property from 'timestamp' before posting
-                databaseObject.item.properties?.let { properties ->
+                exportedEvent.properties?.let { properties ->
                     if (properties.containsKey("timestamp")) {
                         properties["age"] = currentTimeSeconds() - (properties["timestamp"] as Double)
                         properties.remove("timestamp")
@@ -93,12 +93,12 @@ internal class FlushManagerImpl(
                 }
             }
             Route.TRACK_EVENTS -> {
-                if (databaseObject.item.type != Constants.EventTypes.push) {
+                if (exportedEvent.type != Constants.EventTypes.push) {
                     // do not use age for push notifications
                     // timestamp can be modified to preserve sent->delivered->clicked order
-                    databaseObject.item.timestamp?.let { timestamp ->
-                        databaseObject.item.age = currentTimeSeconds().minus(timestamp)
-                        databaseObject.item.timestamp = null
+                    exportedEvent.timestamp?.let { timestamp ->
+                        exportedEvent.age = currentTimeSeconds().minus(timestamp)
+                        exportedEvent.timestamp = null
                     }
                 }
             }
@@ -107,35 +107,35 @@ internal class FlushManagerImpl(
     }
 
     private fun handleFailure(
-        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        exportedEvent: ExportedEventType,
         onFlushFinished: FlushFinishedCallback?
     ): (Call, IOException) -> Unit {
         return { _, ioException ->
             Logger.e(
                 this@FlushManagerImpl,
-                "Sending Event Failed ${databaseObject.id}",
+                "Sending Event Failed ${exportedEvent.id}",
                 ioException
             )
-            onEventSentFailed(databaseObject)
+            onEventSentFailed(exportedEvent)
             // Once done continue and try to flush the rest of events
             flushDataInternal(onFlushFinished)
         }
     }
 
     private fun handleResponse(
-        databaseObject: DatabaseStorageObject<ExportedEventType>,
+        exportedEvent: ExportedEventType,
         onFlushFinished: FlushFinishedCallback?
     ): (Call, Response) -> Unit {
         return { _, response ->
             val responseCode = response.code()
             Logger.d(this, "Response Code: $responseCode")
             when (response.code()) {
-                in 200..299 -> onEventSentSuccess(databaseObject)
+                in 200..299 -> onEventSentSuccess(exportedEvent)
                 in 500..599 -> {
-                    databaseObject.shouldBeSkipped = true
-                    eventRepository.update(databaseObject)
+                    exportedEvent.shouldBeSkipped = true
+                    eventRepository.update(exportedEvent)
                 }
-                else -> onEventSentFailed(databaseObject)
+                else -> onEventSentFailed(exportedEvent)
             }
             // Once done continue and try to flush the rest of events
             flushDataInternal(onFlushFinished)
@@ -143,19 +143,26 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun routeSendingEvent(databaseObject: DatabaseStorageObject<ExportedEventType>): Call? {
+    private fun routeSendingEvent(exportedEvent: ExportedEventType): Call? {
         // for older event in database without exponeaProject, fallback to current configuration data
         @Suppress("DEPRECATION")
-        val exponeaProject = databaseObject.exponeaProject ?: ExponeaProject(
+        val exponeaProject = exportedEvent.exponeaProject ?: ExponeaProject(
             configuration.baseURL,
-            databaseObject.projectId,
+                exportedEvent.projectId,
             configuration.authorization
         )
+        val simpleEvent = Event(
+                type = exportedEvent.type,
+                timestamp = exportedEvent.timestamp,
+                age = exportedEvent.age,
+                customerIds = exportedEvent.customerIds,
+                properties = exportedEvent.properties
+        )
         return exponeaService.let {
-            when (databaseObject.route) {
-                Route.TRACK_EVENTS -> it.postEvent(exponeaProject, databaseObject.item)
-                Route.TRACK_CUSTOMERS -> it.postCustomer(exponeaProject, databaseObject.item)
-                Route.TRACK_CAMPAIGN -> it.postCampaignClick(exponeaProject, databaseObject.item)
+            when (exportedEvent.route) {
+                Route.TRACK_EVENTS -> it.postEvent(exponeaProject, simpleEvent)
+                Route.TRACK_CUSTOMERS -> it.postCustomer(exponeaProject, simpleEvent)
+                Route.TRACK_CAMPAIGN -> it.postCampaignClick(exponeaProject, simpleEvent)
                 else -> {
                     Logger.e(this, "Couldn't find properly route")
                     return null
@@ -164,22 +171,22 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun onEventSentSuccess(databaseObject: DatabaseStorageObject<ExportedEventType>) {
-        Logger.d(this, "onEventSentSuccess: ${databaseObject.id}")
-        if (databaseObject.route == Route.TRACK_CUSTOMERS) {
+    private fun onEventSentSuccess(exportedEvent: ExportedEventType) {
+        Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
+        if (exportedEvent.route == Route.TRACK_CUSTOMERS) {
             customerIdentifiedHandler()
         }
-        eventRepository.remove(databaseObject.id)
+        eventRepository.remove(exportedEvent.id)
     }
 
-    private fun onEventSentFailed(databaseObject: DatabaseStorageObject<ExportedEventType>) {
-        Logger.d(this, "Event ${databaseObject.id} failed")
-        databaseObject.tries++
-        databaseObject.shouldBeSkipped = true
-        if (databaseObject.tries >= configuration.maxTries) {
-            eventRepository.remove(databaseObject.id)
+    private fun onEventSentFailed(exportedEvent: ExportedEventType) {
+        Logger.d(this, "Event ${exportedEvent.id} failed")
+        exportedEvent.tries++
+        exportedEvent.shouldBeSkipped = true
+        if (exportedEvent.tries >= configuration.maxTries) {
+            eventRepository.remove(exportedEvent.id)
         } else {
-            eventRepository.update(databaseObject)
+            eventRepository.update(exportedEvent)
         }
     }
 }

@@ -5,7 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
-import com.exponea.sdk.models.DatabaseStorageObject
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
@@ -100,9 +99,9 @@ internal class StressTest : ExponeaSDKTest() {
         var sessionStartRepoCount = 0
         var sessionEndRepoCount = 0
         var installRepoCount = 0
-        val unknownList = mutableListOf<DatabaseStorageObject<ExportedEventType>>()
+        val unknownList = mutableListOf<ExportedEventType>()
         repo.all().forEach {
-            when (it.item.type) {
+            when (it.type) {
                 Constants.EventTypes.installation -> installRepoCount++
                 Constants.EventTypes.sessionEnd -> sessionEndRepoCount++
                 Constants.EventTypes.sessionStart -> sessionStartRepoCount++

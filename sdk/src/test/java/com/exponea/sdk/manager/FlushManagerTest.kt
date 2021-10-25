@@ -3,7 +3,7 @@ package com.exponea.sdk.manager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
-import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEventType
@@ -48,21 +48,17 @@ internal class FlushManagerTest : ExponeaSDKTest() {
 
     private fun createTestEvent(includeProject: Boolean, type: String? = "test_event"): ExportedEventType {
         val event = ExportedEventType(
-            type = type,
-            timestamp = System.currentTimeMillis() / 1000.0,
-            customerIds = hashMapOf(),
-            properties = hashMapOf("property" to "value")
-        )
-        repo.add(
-            DatabaseStorageObject(
                 projectId = "old-project-id",
-                item = event,
+                type = type,
+                timestamp = System.currentTimeMillis() / 1000.0,
+                customerIds = hashMapOf(),
+                properties = hashMapOf("property" to "value"),
                 route = Route.TRACK_EVENTS,
                 exponeaProject = if (includeProject)
                     ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
                 else null
-            )
         )
+        repo.add(event)
         return event
     }
 
@@ -172,7 +168,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 it()
             }
         }
-        val eventSlot = slot<ExportedEventType>()
+        val eventSlot = slot<Event>()
         verify {
             service.postEvent(
                 ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),
@@ -193,7 +189,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 it()
             }
         }
-        val eventSlot = slot<ExportedEventType>()
+        val eventSlot = slot<Event>()
         verify {
             service.postEvent(
                 ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),

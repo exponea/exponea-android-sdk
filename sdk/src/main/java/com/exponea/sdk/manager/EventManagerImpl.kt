@@ -2,7 +2,7 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.DatabaseStorageObject
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEventType
@@ -24,7 +24,7 @@ internal class EventManagerImpl(
 ) : EventManager {
     private val inAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(context, this)
 
-    fun addEventToQueue(event: ExportedEventType, eventType: EventType) {
+    fun addEventToQueue(event: Event, eventType: EventType) {
         Logger.d(this, "addEventToQueue")
 
         val route = when (eventType) {
@@ -37,14 +37,18 @@ internal class EventManagerImpl(
         var projects = arrayListOf(configuration.mainExponeaProject)
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
         for (project in projects.distinct()) {
-            val databaseStorageObject = DatabaseStorageObject(
+            val exportedEvent = ExportedEventType(
+                    type = event.type,
+                    timestamp = event.timestamp,
+                    age = event.age,
+                    customerIds = event.customerIds,
+                    properties = event.properties,
                     projectId = project.projectToken,
-                    item = event,
                     route = route,
                     exponeaProject = project
             )
-            Logger.d(this, "Added Event To Queue: ${databaseStorageObject.id}")
-            eventRepository.add(databaseStorageObject)
+            Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
+            eventRepository.add(exportedEvent)
         }
 
         // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
@@ -63,7 +67,7 @@ internal class EventManagerImpl(
         trackedProperties.putAll(configuration.defaultProperties)
         trackedProperties.putAll(properties)
 
-        val event = ExportedEventType(
+        val event = Event(
             type = eventType,
             timestamp = timestamp,
             customerIds = customerIdsRepository.get().toHashMap(),

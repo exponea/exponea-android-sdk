@@ -96,7 +96,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
         val storedEvents = eventRepository.all()
         assertEquals(1, storedEvents.size)
-        assertEquals(Constants.EventTypes.push, storedEvents.first().item.type)
+        assertEquals(Constants.EventTypes.push, storedEvents.first().type)
     }
 
     @Test
@@ -150,12 +150,12 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
         val storedEvent = eventRepository.all().first()
 
-        assertTrue(storedEvent.item.properties!!.contains("timestamp"))
-        assertTrue(storedEvent.item.properties!!.contains("platform"))
-        assertTrue(storedEvent.item.properties!!.contains("url"))
+        assertTrue(storedEvent.properties!!.contains("timestamp"))
+        assertTrue(storedEvent.properties!!.contains("platform"))
+        assertTrue(storedEvent.properties!!.contains("url"))
 
-        assertEquals(CAMPAIGN_URL, storedEvent.item.properties!!["url"])
-        assertEquals("Android", storedEvent.item.properties!!["platform"])
+        assertEquals(CAMPAIGN_URL, storedEvent.properties!!["url"])
+        assertEquals("Android", storedEvent.properties!!["platform"])
     }
 
     @Test
@@ -202,8 +202,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertEquals(2, storedEvents.size)
 
         val sessionEvent = storedEvents.first {
-            Constants.EventTypes.sessionStart == it.item.type
-        }.item
+            Constants.EventTypes.sessionStart == it.type
+        }
 
         assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])
         assertEquals(campaignEvent.source, sessionEvent.properties!!["utm_source"])

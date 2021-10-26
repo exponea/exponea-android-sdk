@@ -1,7 +1,11 @@
 package com.exponea.sdk.services
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationManagerCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.repository.FirebaseTokenRepositoryProvider
 import com.exponea.sdk.util.Logger
@@ -27,11 +31,36 @@ internal class ExponeaFirebaseMessageService : FirebaseMessagingService() {
     private fun onMessageReceivedUnsafe(message: RemoteMessage) {
         Logger.d(this, "Push Notification received at ${currentTimeSeconds().toDate()}.")
         Exponea.autoInitialize(applicationContext) {
-            if (!Exponea.isAutoPushNotification) {
-                return@autoInitialize
+            if (!areNotificationsBlockedForExponea()) {
+                if (!Exponea.isAutoPushNotification) {
+                    return@autoInitialize
+                }
+                Exponea.handleRemoteMessage(applicationContext, message, notificationManager)
+            } else {
+                Logger.i(this, "Notification delivery not handled," +
+                        " notifications for the app are turned off in the settings")
             }
-            Exponea.handleRemoteMessage(applicationContext, message, notificationManager)
         }
+    }
+
+    internal fun areNotificationsBlockedForExponea(): Boolean {
+        val notificationManager = NotificationManagerCompat.from(applicationContext)
+        if (!notificationManager.areNotificationsEnabled()) return true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val exponeaNotificationChannel =
+                Exponea.pushChannelId?.let { notificationManager.getNotificationChannel(it) }
+            return exponeaNotificationChannel?.isChannelBlocked(notificationManager) == true
+        }
+        return true
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun NotificationChannel.isChannelBlocked(notificationManager: NotificationManagerCompat): Boolean {
+        if (importance == NotificationManager.IMPORTANCE_NONE) return true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return notificationManager.getNotificationChannelGroup(group)?.isBlocked == true
+        }
+        return true
     }
 
     override fun onNewToken(token: String) {

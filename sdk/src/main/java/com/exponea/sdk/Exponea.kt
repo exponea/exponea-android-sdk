@@ -108,6 +108,9 @@ object Exponea {
             startSessionTracking(value)
         }.logOnException()
 
+    internal val pushChannelId: String?
+        get() = configuration.pushChannelId
+
     /**
      * Check if our library has been properly initialized
      */

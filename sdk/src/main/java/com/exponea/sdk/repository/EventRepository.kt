@@ -1,13 +1,14 @@
 package com.exponea.sdk.repository
 
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 
 internal interface EventRepository {
-    fun all(): List<ExportedEventType>
+    fun all(): List<ExportedEvent>
     fun count(): Int
-    fun add(item: ExportedEventType)
-    fun update(item: ExportedEventType)
-    fun get(id: String): ExportedEventType?
+    fun add(item: ExportedEvent)
+    fun update(item: ExportedEvent)
+    fun get(id: String): ExportedEvent?
     fun remove(id: String)
     fun clear()
+    fun tryToMigrateFromPaper()
 }

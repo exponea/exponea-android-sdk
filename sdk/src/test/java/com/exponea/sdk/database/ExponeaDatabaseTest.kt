@@ -1,10 +1,9 @@
-package com.exponea.sdk
+package com.exponea.sdk.database
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
@@ -25,7 +24,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     }
 
     private lateinit var db: ExponeaDatabase
-    private val mockData = ExportedEventType(
+    private val mockData = ExportedEvent(
         properties = hashMapOf(Pair("key", "value")),
         age = 1.234,
         projectId = "mock_project_id",
@@ -84,7 +83,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
                 thread {
                     for (x in 1..10) {
                         db.add(
-                            ExportedEventType(
+                            ExportedEvent(
                                 customerIds = hashMapOf(Pair("first name $i $x", "second name")),
                                 projectId = "mock_project_id",
                                 route = Route.TRACK_EVENTS,
@@ -100,12 +99,20 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
         assertEquals(100, db.all().size)
     }
 
+    @Test
+    fun `should not delete anything on empty id`() {
+        db.add(mockData)
+        assertEquals(db.count(), 1)
+        db.remove("")
+        assertEquals(db.count(), 1)
+    }
+
     @After
     @Test
     fun denit() {
         for (x in 1..10) {
             db.add(
-                    ExportedEventType(
+                    ExportedEvent(
                             customerIds = hashMapOf(Pair("first name $x", "second name")),
                             projectId = "mock_project_id",
                             route = Route.TRACK_EVENTS,

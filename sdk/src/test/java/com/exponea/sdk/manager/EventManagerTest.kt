@@ -6,7 +6,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -31,7 +31,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var inAppMessageManager: InAppMessageManager
     lateinit var manager: EventManagerImpl
 
-    lateinit var addedEvents: ArrayList<ExportedEventType>
+    lateinit var addedEvents: ArrayList<ExportedEvent>
 
     fun setup(configuration: ExponeaConfiguration, flushMode: FlushMode) {
         mockkObject(Exponea)
@@ -74,7 +74,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         val firstAddedEvent = addedEvents.first()
         assertEquals(
-            ExportedEventType(
+            ExportedEvent(
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
@@ -163,7 +163,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         val firstAddedEvent = addedEvents.first()
         assertEquals(
-            ExportedEventType(
+            ExportedEvent(
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
@@ -193,7 +193,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         val firstEvent = addedEvents[0]
         val secondEvent = addedEvents[1]
         assertEquals(
-            ExportedEventType(
+            ExportedEvent(
                 id = firstEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
@@ -209,7 +209,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             firstEvent
         )
         assertEquals(
-                ExportedEventType(
+                ExportedEvent(
                         id = secondEvent.id,
                         type = "test-event",
                         timestamp = 123.0,

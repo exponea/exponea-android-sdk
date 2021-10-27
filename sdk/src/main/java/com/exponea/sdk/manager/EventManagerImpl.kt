@@ -5,7 +5,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -37,7 +37,7 @@ internal class EventManagerImpl(
         var projects = arrayListOf(configuration.mainExponeaProject)
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
         for (project in projects.distinct()) {
-            val exportedEvent = ExportedEventType(
+            val exportedEvent = ExportedEvent(
                     type = event.type,
                     timestamp = event.timestamp,
                     age = event.age,

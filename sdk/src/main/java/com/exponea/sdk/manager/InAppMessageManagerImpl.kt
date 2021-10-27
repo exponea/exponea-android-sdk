@@ -288,7 +288,7 @@ internal class InAppMessageManagerImpl(
                     timeout = message.timeout,
                     actionCallback = { activity, button ->
                         displayStateRepository.setInteracted(message, Date())
-                        trackingDelegate.track(message, "click", true, button.buttonText)
+                        trackingDelegate.track(message, "click", true, button.buttonText, button.buttonLink)
                         Logger.i(this, "In-app message button clicked!")
                         processInAppMessageAction(activity, button)
                     },
@@ -335,7 +335,7 @@ internal class EventManagerInAppMessageTrackingDelegate(
 ) : InAppMessageTrackingDelegate {
     private val deviceProperties = DeviceProperties(context)
 
-    override fun track(message: InAppMessage, action: String, interaction: Boolean, text: String?) {
+    override fun track(message: InAppMessage, action: String, interaction: Boolean, text: String?, link: String?) {
         val properties = hashMapOf(
             "action" to action,
             "banner_id" to message.id,
@@ -350,6 +350,9 @@ internal class EventManagerInAppMessageTrackingDelegate(
         properties.putAll(deviceProperties.toHashMap())
         if (text != null) {
             properties["text"] = text
+        }
+        if (link != null) {
+            properties["link"] = link
         }
 
         eventManager.track(

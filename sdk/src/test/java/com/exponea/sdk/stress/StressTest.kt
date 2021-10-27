@@ -7,7 +7,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
@@ -99,7 +99,7 @@ internal class StressTest : ExponeaSDKTest() {
         var sessionStartRepoCount = 0
         var sessionEndRepoCount = 0
         var installRepoCount = 0
-        val unknownList = mutableListOf<ExportedEventType>()
+        val unknownList = mutableListOf<ExportedEvent>()
         repo.all().forEach {
             when (it.type) {
                 Constants.EventTypes.installation -> installRepoCount++

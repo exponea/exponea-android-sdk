@@ -33,5 +33,5 @@ internal interface InAppMessageManager {
 }
 
 internal interface InAppMessageTrackingDelegate {
-    fun track(message: InAppMessage, action: String, interaction: Boolean, text: String? = null)
+    fun track(message: InAppMessage, action: String, interaction: Boolean, text: String? = null, link: String? = null)
 }

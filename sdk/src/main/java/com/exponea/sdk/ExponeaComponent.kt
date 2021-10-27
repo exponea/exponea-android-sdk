@@ -79,7 +79,7 @@ internal class ExponeaComponent(
             preferences
     )
 
-    internal val eventRepository: EventRepository = EventRepositoryImpl(context)
+    internal val eventRepository: EventRepository = EventRepositoryImpl(context, preferences)
 
     internal val firebaseTokenRepository: FirebaseTokenRepository = FirebaseTokenRepositoryImpl(preferences)
 

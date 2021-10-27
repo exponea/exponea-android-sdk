@@ -4,7 +4,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
@@ -71,7 +71,7 @@ internal class FlushManagerImpl(
     }
 
     private fun trySendingEvent(
-        exportedEvent: ExportedEventType,
+        exportedEvent: ExportedEvent,
         onFlushFinished: FlushFinishedCallback?
     ) {
         updateBeforeSend(exportedEvent)
@@ -81,7 +81,7 @@ internal class FlushManagerImpl(
         )
     }
 
-    private fun updateBeforeSend(exportedEvent: ExportedEventType) {
+    private fun updateBeforeSend(exportedEvent: ExportedEvent) {
         when (exportedEvent.route) {
             Route.TRACK_CAMPAIGN -> {
                 // campaign event needs to recalculate 'age' property from 'timestamp' before posting
@@ -107,7 +107,7 @@ internal class FlushManagerImpl(
     }
 
     private fun handleFailure(
-        exportedEvent: ExportedEventType,
+        exportedEvent: ExportedEvent,
         onFlushFinished: FlushFinishedCallback?
     ): (Call, IOException) -> Unit {
         return { _, ioException ->
@@ -123,7 +123,7 @@ internal class FlushManagerImpl(
     }
 
     private fun handleResponse(
-        exportedEvent: ExportedEventType,
+        exportedEvent: ExportedEvent,
         onFlushFinished: FlushFinishedCallback?
     ): (Call, Response) -> Unit {
         return { _, response ->
@@ -143,7 +143,7 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun routeSendingEvent(exportedEvent: ExportedEventType): Call? {
+    private fun routeSendingEvent(exportedEvent: ExportedEvent): Call? {
         // for older event in database without exponeaProject, fallback to current configuration data
         @Suppress("DEPRECATION")
         val exponeaProject = exportedEvent.exponeaProject ?: ExponeaProject(
@@ -171,7 +171,7 @@ internal class FlushManagerImpl(
         }
     }
 
-    private fun onEventSentSuccess(exportedEvent: ExportedEventType) {
+    private fun onEventSentSuccess(exportedEvent: ExportedEvent) {
         Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
         if (exportedEvent.route == Route.TRACK_CUSTOMERS) {
             customerIdentifiedHandler()
@@ -179,7 +179,7 @@ internal class FlushManagerImpl(
         eventRepository.remove(exportedEvent.id)
     }
 
-    private fun onEventSentFailed(exportedEvent: ExportedEventType) {
+    private fun onEventSentFailed(exportedEvent: ExportedEvent) {
         Logger.d(this, "Event ${exportedEvent.id} failed")
         exportedEvent.tries++
         exportedEvent.shouldBeSkipped = true

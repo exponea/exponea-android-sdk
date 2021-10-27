@@ -9,7 +9,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageDisplayState
@@ -200,7 +200,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
 
-        var addedEvents: java.util.ArrayList<ExportedEventType> = arrayListOf()
+        var addedEvents: java.util.ArrayList<ExportedEvent> = arrayListOf()
         every { eventRepo.add(capture(addedEvents)) } just Runs
 
         val numberOfThreads = 5
@@ -489,7 +489,14 @@ internal class InAppMessageManagerImplTest {
 
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
         actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "click", true, "Action") }
+        verify(exactly = 1) {
+            delegate.track(
+                InAppMessageTest.getInAppMessage(),
+                "click",
+                true,
+                "Action",
+                "https://someaddress.com")
+        }
         dismissedCallbackSlot.captured.invoke()
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
     }

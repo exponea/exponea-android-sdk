@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEventType
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -24,7 +24,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     }
 
     private fun checkEvent(
-        event: ExportedEventType,
+        event: ExportedEvent,
         expectedEventType: String?,
         expectedProject: ExponeaProject,
         expectedUserId: String,

@@ -36,7 +36,7 @@
 
                 <data
                     android:scheme="https"
-                    android:host="panaxeo.com"
+                    android:host="old.panaxeo.com"
                     android:pathPattern="/exponea/.*" />
             </intent-filter>
         </activity>

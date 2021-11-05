@@ -119,7 +119,10 @@ class ExponeaPushReceiver : BroadcastReceiver() {
     }
 
     private fun closeNotificationTray(context: Context) {
-        val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
-        context.sendBroadcast(it)
+        // target version is hardcoded until compileSDKversion is increased
+        if (context.applicationInfo.targetSdkVersion <= 30) {
+            val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+            context.sendBroadcast(it)
+        }
     }
 }

@@ -24,7 +24,10 @@ android {
 
     kotlinOptions { jvmTarget = "1.8" }
 
-    lintOptions { disable "InvalidPeriodicWorkRequestInterval" } // there is a bug in lint
+    lintOptions {
+        disable "InvalidPeriodicWorkRequestInterval" // there is a bug in lint
+        warning "MissingPermission"
+    }
 
     buildTypes {
         release {

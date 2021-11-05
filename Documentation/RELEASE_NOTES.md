@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 2.9.7
+#### November 05, 2021
+* Features
+  * Url for in-app message banner click event is now tracked as link attribute - [Issue #39](https://github.com/exponea/exponea-android-sdk/issues/39)
+  * PaperDb database was replaced with the Room database, and migration was implemented. Migration will be tried only once, and if some problem with PaperDB occurs, it will be skipped. Migration will also happen only if the number of events in the database does not exceed a thousand events. This is for performance reasons and because we consider having a thousand events in the database an anomaly since they should be flushed frequently.
+* Bug Fixes
+  * Fixed: Delivered push notification event is no longer tracked if a user has notifications turned off and push notification arrives in the background.
+  * Fixed: Exception, when autoclose is enabled for the in-app message and the Activity is no longer available on message close, was fixed.
+
+
 ## Release Notes for 2.9.6
 #### August 16, 2021
 * Features

@@ -12,7 +12,7 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryImpl
-import com.exponea.sdk.services.ExponeaPushReceiver
+import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
@@ -94,12 +94,12 @@ internal class FcmManagerImplTest {
 
         assertEquals(
             NotificationAction("notification", null, "app://mock-url-1"),
-            intent1.extras?.get(ExponeaPushReceiver.EXTRA_ACTION_INFO)
+            intent1.extras?.get(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO)
         )
 
         assertEquals(
             NotificationAction("notification", null, "app://mock-url-2"),
-            intent2.extras?.get(ExponeaPushReceiver.EXTRA_ACTION_INFO)
+            intent2.extras?.get(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO)
         )
     }
 
@@ -174,13 +174,26 @@ internal class FcmManagerImplTest {
 
     @Test
     @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class])
-    fun `should play sound from notification payload`() {
+    fun `should play sound from notification payload for sound name with extension`() {
         val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         payload["sound"] = "mock-sound.mp3"
         manager.handleRemoteMessage(payload, notificationManager, true)
         assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
         assertEquals(
-            "android.resource://com.exponea.sdk.test/raw/mock-sound.mp3",
+            "android.resource://com.exponea.sdk.test/raw/mock-sound",
+            ShadowRingtone.lastRingtone?.withUri.toString()
+        )
+    }
+
+    @Test
+    @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class])
+    fun `should play sound from notification payload for sound name without extension`() {
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        payload["sound"] = "mock-sound"
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertEquals(
+            "android.resource://com.exponea.sdk.test/raw/mock-sound",
             ShadowRingtone.lastRingtone?.withUri.toString()
         )
     }

@@ -12,9 +12,13 @@
             android:theme="@style/Theme.InAppMessageActivity"
             android:screenOrientation="sensor" />
 
-        <receiver
-            android:name=".services.ExponeaPushReceiver"
+        <activity
+            android:name=".services.ExponeaPushTrackingActivity"
             android:enabled="true"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false">
             <!-- we need this to be called before the app is opened to process campaign data inside the notification -->
             <intent-filter android:priority="999">
@@ -22,7 +26,7 @@
                 <action android:name="com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED" />
                 <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />
             </intent-filter>
-        </receiver>
+        </activity>
     </application>
 
 </manifest>

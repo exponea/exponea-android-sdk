@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,7 +12,6 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.PushTokenRepository
-import com.exponea.sdk.services.ExponeaPushReceiver
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
@@ -44,8 +42,7 @@ internal class PushNotificationSelfCheckManagerImpl(
         val steps = arrayListOf(
             "Track push token",
             "Request push notification",
-            "Receive push notification",
-            "Check `open app` intent filter"
+            "Receive push notification"
         )
     }
 
@@ -116,17 +113,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             return
         }
         Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "3"))
-        Logger.i(this, "Checking BroadcastReceiver for `open app` action.")
-        if (!hasPushOpenedBroadcastReceiver(application)) {
-            showResult(
-                3,
-                "Broadcast listener for intent `${ExponeaPushReceiver.ACTION_CLICKED}`" +
-                    " required for `open app` action not set."
-            )
-            return
-        }
-        Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "4"))
-        showResult(4, "You are now ready to receive push notifications from Exponea.")
+        showResult(3, "You are now ready to receive push notifications from Exponea.")
     }
 
     suspend fun showResult(step: Int, message: String) {
@@ -160,15 +147,6 @@ internal class PushNotificationSelfCheckManagerImpl(
             stepsStatus += "${if (doneStep < step) "\u2713" else "\u2717"} ${steps[doneStep]} \n"
         }
         return stepsStatus
-    }
-
-    fun hasPushOpenedBroadcastReceiver(application: Application): Boolean {
-        application.packageManager.queryBroadcastReceivers(Intent(ExponeaPushReceiver.ACTION_CLICKED), 0).forEach {
-            if (it.activityInfo.name != "com.exponea.sdk.services.ExponeaPushReceiver") {
-                return true
-            }
-        }
-        return false
     }
 
     suspend fun waitForPushToken(): String? {

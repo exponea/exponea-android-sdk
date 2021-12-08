@@ -16,7 +16,7 @@ internal class MessagingUtils {
             if (!notificationManager.areNotificationsEnabled()) return true
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val exponeaNotificationChannel =
-                    Exponea.pushChannelId?.let { notificationManager.getNotificationChannel(it) }
+                    Exponea.pushChannelId.let { notificationManager.getNotificationChannel(it) }
                 return exponeaNotificationChannel?.isChannelBlocked(notificationManager) == true
             }
             return true

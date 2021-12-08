@@ -1,20 +1,18 @@
 package com.exponea.sdk.services
 
+import android.app.Activity
 import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
-import kotlin.random.Random
 
-class ExponeaPushReceiver : BroadcastReceiver() {
+internal class ExponeaPushTrackingActivity : Activity() {
 
     companion object {
         const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"
@@ -33,23 +31,26 @@ class ExponeaPushReceiver : BroadcastReceiver() {
             messageData: HashMap<String, String>,
             deliveredTimestamp: Double?
         ): Intent {
-            return Intent(ACTION_CLICKED).apply {
+            return Intent(context, ExponeaPushTrackingActivity::class.java).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
                 putExtra(EXTRA_CUSTOM_DATA, messageData)
                 putExtra(EXTRA_DELIVERED_TIMESTAMP, deliveredTimestamp)
+                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 `package` = context.packageName
             }
         }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         runCatching {
-            onReceiveUnsafe(context, intent)
+            processPushClick(this, intent)
         }.logOnException()
+        finish()
     }
 
-    fun onReceiveUnsafe(
+    fun processPushClick(
         context: Context,
         intent: Intent,
         timestamp: Double = currentTimeSeconds()
@@ -57,41 +58,12 @@ class ExponeaPushReceiver : BroadcastReceiver() {
         Logger.i(this, "Push notification clicked")
 
         val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
-        val buttonClickedIntent = Intent(Intent.ACTION_VIEW)
-        buttonClickedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val url = action?.url
-        Logger.d(this, "Interaction: $intent")
-
-        if (url != null && url.isNotEmpty())
-            buttonClickedIntent.data = Uri.parse(url)
-
-        when (intent.action) {
-            ACTION_CLICKED -> Unit
-            ACTION_DEEPLINK_CLICKED -> {
-                val pendingIntent = PendingIntent.getActivity(
-                    context,
-                    Random.nextInt(),
-                    buttonClickedIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                )
-                try {
-                    pendingIntent.send()
-                } catch (e: PendingIntent.CanceledException) {
-                    Logger.e(
-                        this,
-                        "Unable to handle deep-link. Make sure the deeplink schema you specified on Exponea web app" +
-                            " is registered in AndroidManifest."
-                    )
-                }
-            }
-            ACTION_URL_CLICKED -> context.startActivity(buttonClickedIntent)
-        }
+        Logger.d(this, "Interaction: $action")
 
         val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
         val deliveredTimestamp = intent.getDoubleExtra(EXTRA_DELIVERED_TIMESTAMP, 0.0)
-        val clickedTimestamp: Double
 
-        clickedTimestamp = if (timestamp <= deliveredTimestamp) {
+        val clickedTimestamp: Double = if (timestamp <= deliveredTimestamp) {
             deliveredTimestamp + 1
         } else {
             timestamp

@@ -24,10 +24,11 @@ import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushTokenRepository
-import com.exponea.sdk.services.ExponeaPushReceiver
+import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
+import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.util.Random
@@ -109,11 +110,10 @@ internal class FcmManagerImpl(
             return
         }
 
-        Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
-
         if (payload.notificationId == lastPushNotificationId) {
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
         } else {
+            Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
             lastPushNotificationId = payload.notificationId
             callNotificationDataCallback(payload)
             if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
@@ -195,11 +195,18 @@ internal class FcmManagerImpl(
     ) {
         // set the uri for the default sound
         var soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        // if the raw file exists, use it as custom sound
-        if (messageData.sound != null &&
-            application.resources.getIdentifier(messageData.sound, "raw", application.packageName) != 0
-        ) {
-            soundUri = Uri.parse("""android.resource://${application.packageName}/raw/${messageData.sound}""")
+        if (messageData.sound != null) {
+            val soundFileName: String = if (File(messageData.sound).extension.isEmpty()) {
+                messageData.sound
+            } else {
+                File(messageData.sound).nameWithoutExtension
+            }
+            // if the raw file exists, use it as custom sound
+            if (application.resources.getIdentifier(soundFileName, "raw", application.packageName) != 0) {
+                soundUri = Uri.parse(
+                    """android.resource://${application.packageName}/raw/$soundFileName"""
+                )
+            }
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -246,10 +253,14 @@ internal class FcmManagerImpl(
     ) {
         if (payload.buttons != null) {
             // if we have a button payload, verify each button action
-            payload.buttons.forEach {
-                val info = NotificationAction(NotificationAction.ACTION_TYPE_BUTTON, it.title, it.url.adjustUrl())
-                val pi = generateActionPendingIntent(payload, it.action, info, requestCodeGenerator.nextInt())
-                notification.addAction(0, it.title, pi)
+            for (button in payload.buttons) {
+                val info = NotificationAction(
+                    NotificationAction.ACTION_TYPE_BUTTON,
+                    button.title,
+                    button.url.adjustUrl()
+                )
+                val pi = generateActionPendingIntent(payload, button.action, info, requestCodeGenerator.nextInt())
+                notification.addAction(0, button.title, pi)
             }
         }
     }
@@ -279,7 +290,7 @@ internal class FcmManagerImpl(
     }
 
     private fun getPushReceiverIntent(payload: NotificationPayload): Intent {
-        return ExponeaPushReceiver.getClickIntent(
+        return ExponeaPushTrackingActivity.getClickIntent(
             application,
             payload.notificationId,
             payload.notificationData,
@@ -294,27 +305,83 @@ internal class FcmManagerImpl(
         actionInfo: NotificationAction,
         requestCode: Int
     ): PendingIntent? {
-        val actionIntent = getPushReceiverIntent(payload)
-        actionIntent.putExtra(ExponeaPushReceiver.EXTRA_ACTION_INFO, actionInfo)
+        val trackingIntent = getPushReceiverIntent(payload)
+        trackingIntent.putExtra(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {
             NotificationPayload.Actions.APP -> {
-                actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
-                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_CLICKED
+                val launchIntent: Intent? = getIntentAppOpen(application)
+                PendingIntent.getActivities(
+                    application,
+                    requestCode,
+                    arrayOf(launchIntent, trackingIntent),
+                    getPendingIntentFlags()
+                )
             }
-
             NotificationPayload.Actions.BROWSER -> {
-                actionIntent.action = ExponeaPushReceiver.ACTION_URL_CLICKED
-                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_URL_CLICKED
+
+                val browserIntent = Intent(Intent.ACTION_VIEW)
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val url = actionInfo.url
+                if (url != null && url.isNotEmpty()) browserIntent.data = Uri.parse(url)
+                PendingIntent.getActivities(
+                    application,
+                    requestCode,
+                    arrayOf(browserIntent, trackingIntent),
+                    getPendingIntentFlags()
+                )
             }
             NotificationPayload.Actions.DEEPLINK -> {
-                actionIntent.action = ExponeaPushReceiver.ACTION_DEEPLINK_CLICKED
-                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED
+                val deeplinkIntent = Intent(Intent.ACTION_VIEW)
+                deeplinkIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val url = actionInfo.url
+                if (url != null && url.isNotEmpty()) deeplinkIntent.data = Uri.parse(url)
+                PendingIntent.getActivities(
+                    application,
+                    requestCode,
+                    arrayOf(deeplinkIntent, trackingIntent),
+                    getPendingIntentFlags()
+                )
             }
             else -> {
-                actionIntent.action = ExponeaPushReceiver.ACTION_CLICKED
-                PendingIntent.getBroadcast(application, requestCode, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_CLICKED
+                val launchIntent: Intent? = getIntentAppOpen(application)
+                PendingIntent.getActivities(
+                    application,
+                    requestCode,
+                    arrayOf(launchIntent, trackingIntent),
+                    getPendingIntentFlags()
+                )
             }
+        }
+    }
+
+    private fun getIntentAppOpen(context: Context): Intent? {
+
+        val launchIntent =
+            context.packageManager.getLaunchIntentForPackage(
+                context.packageName
+            )
+                ?: return null
+
+        // Removing "package" from the intent treats the app as if it was started externally
+        // and prevents another instance of the Activity from being created.
+        launchIntent.setPackage(null)
+        launchIntent.flags =
+            Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+
+        return launchIntent
+    }
+
+    private fun getPendingIntentFlags(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
         }
     }
 

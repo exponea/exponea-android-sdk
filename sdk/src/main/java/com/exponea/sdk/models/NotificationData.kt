@@ -92,12 +92,14 @@ data class NotificationData(
             for (i in 0 until mapSize) {
                 val key = parcel.readString()
                 val value = parcel.readSerializable()
-                if (value is String && value == MAP_SIZE_EXTRA) {
-                    map[key] = readMapFromParcel(parcel)
-                } else if (value is String && value == ARRAY_SIZE_EXTRA) {
-                    map[key] = readArrayFromParcel(parcel)
-                } else {
-                    map[key] = value
+                if (key != null) {
+                    if (value is String && value == MAP_SIZE_EXTRA) {
+                        map[key] = readMapFromParcel(parcel)
+                    } else if (value is String && value == ARRAY_SIZE_EXTRA) {
+                        map[key] = readArrayFromParcel(parcel)
+                    } else {
+                        map[key] = value
+                    }
                 }
             }
             return map

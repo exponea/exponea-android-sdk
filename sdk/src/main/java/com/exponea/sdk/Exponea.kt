@@ -482,7 +482,11 @@ object Exponea {
             val properties = PropertiesList(
                 hashMapOf("status" to "delivered", "platform" to "android")
             )
-            data?.getTrackingData()?.forEach { properties[it.key] = it.value }
+            if (data?.getTrackingData() != null) {
+                for (item in data.getTrackingData()) {
+                    properties[item.key] = item.value
+                }
+            }
             component.eventManager.track(
                 eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
                 properties = properties.properties,
@@ -515,7 +519,11 @@ object Exponea {
                 data.campaignData.createdAt = currentTimeSeconds()
                 component.campaignRepository.set(data.campaignData)
             }
-            data?.getTrackingData()?.forEach { properties[it.key] = it.value }
+            if (data?.getTrackingData() != null) {
+                for (item in data.getTrackingData()) {
+                    properties[item.key] = item.value
+                }
+            }
             component.eventManager.track(
                 eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
                 properties = properties.properties,
@@ -814,10 +822,9 @@ object Exponea {
                 return@autoInitialize false
             }
             component.campaignRepository.set(campaignData)
-            val properties = hashMapOf(
-                "platform" to "Android",
-                "timestamp" to campaignData.createdAt
-            )
+            val properties = HashMap<String, Any>()
+            properties["platform"] = "Android"
+            properties["timestamp"] = campaignData.createdAt
             properties.putAll(campaignData.getTrackingData())
             component.eventManager.track(
                 eventType = Constants.EventTypes.push,

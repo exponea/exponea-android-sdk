@@ -144,9 +144,9 @@ internal class InAppMessageManagerImpl(
             Logger.i(this, "All in-app message images loaded.")
             callback?.invoke(Result.success(Unit))
         }
-        var toPreload = AtomicInteger(messages.size)
-        messages.forEach {
-            val imageUrl = it.payload?.imageUrl
+        val toPreload = AtomicInteger(messages.size)
+        for (message in messages) {
+            val imageUrl = message.payload?.imageUrl
             if (!imageUrl.isNullOrEmpty()) {
                 bitmapCache.preload(imageUrl) {
                     toPreload.getAndDecrement()
@@ -168,13 +168,18 @@ internal class InAppMessageManagerImpl(
         pendingShowRequests
             .filter { it.requestedAt + MAX_PENDING_MESSAGE_AGE > System.currentTimeMillis() }
             .forEach { request ->
-                getFilteredMessages(request.eventType, request.properties, request.timestamp, requireImageLoaded)
-                    .forEach { message ->
+                val messages = getFilteredMessages(
+                    request.eventType,
+                    request.properties,
+                    request.timestamp,
+                    requireImageLoaded
+                )
+                for (message in messages) {
                         pendingMessages += request to message
                     }
             }
 
-        val highestPriority = pendingMessages.mapNotNull { it.second.priority }.max() ?: 0
+        val highestPriority = pendingMessages.mapNotNull { it.second.priority }.maxOrNull() ?: 0
         pendingMessages = pendingMessages.filter { it.second.priority ?: 0 >= highestPriority }
         return if (pendingMessages.isNotEmpty()) pendingMessages.random() else null
     }
@@ -215,7 +220,7 @@ internal class InAppMessageManagerImpl(
                 it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
         Logger.i(this, "${messages.size} messages available after filtering. Picking highest priority message.")
-        val highestPriority = messages.mapNotNull { it.priority }.max() ?: 0
+        val highestPriority = messages.mapNotNull { it.priority }.maxOrNull() ?: 0
         messages = messages.filter { it.priority ?: 0 >= highestPriority }
         Logger.i(this, "Got ${messages.size} messages with highest priority. ${messages.map { it.name } }")
         return messages
@@ -336,7 +341,9 @@ internal class EventManagerInAppMessageTrackingDelegate(
     private val deviceProperties = DeviceProperties(context)
 
     override fun track(message: InAppMessage, action: String, interaction: Boolean, text: String?, link: String?) {
-        val properties = hashMapOf(
+        val properties = HashMap<String, Any>()
+        properties.putAll(
+            hashMapOf(
             "action" to action,
             "banner_id" to message.id,
             "banner_name" to message.name,
@@ -347,7 +354,7 @@ internal class EventManagerInAppMessageTrackingDelegate(
             "type" to "in-app message",
             "variant_id" to message.variantId,
             "variant_name" to message.variantName
-        )
+        ))
         properties.putAll(deviceProperties.toHashMap())
         if (text != null) {
             properties["text"] = text

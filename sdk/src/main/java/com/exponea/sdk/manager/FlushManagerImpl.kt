@@ -55,9 +55,9 @@ internal class FlushManagerImpl(
             trySendingEvent(firstEvent, onFlushFinished)
         } else {
             Logger.i(this, "No events left to flush: ${allEvents.size}")
-            eventRepository.all().forEach {
-                it.shouldBeSkipped = false
-                eventRepository.update(it)
+            for (event in eventRepository.all()) {
+                event.shouldBeSkipped = false
+                eventRepository.update(event)
             }
             isRunning = false
             if (allEvents.isEmpty()) {

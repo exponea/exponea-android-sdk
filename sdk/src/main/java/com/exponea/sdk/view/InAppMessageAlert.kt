@@ -21,11 +21,13 @@ internal class InAppMessageAlert : InAppMessageView {
         val builder = AlertDialog.Builder(context)
         builder.setTitle(payload.title)
         builder.setMessage(payload.bodyText)
-        payload.buttons?.forEach {
-            if (it.buttonType == InAppMessageButtonType.CANCEL) {
-                builder.setNegativeButton(it.buttonText) { _, _ -> dismiss() }
-            } else {
-                builder.setPositiveButton(it.buttonText) { _, _ -> onButtonClick(it) }
+        if (payload.buttons != null) {
+            for (button in payload.buttons) {
+                if (button.buttonType == InAppMessageButtonType.CANCEL) {
+                    builder.setNegativeButton(button.buttonText) { _, _ -> dismiss() }
+                } else {
+                    builder.setPositiveButton(button.buttonText) { _, _ -> onButtonClick(button) }
+                }
             }
         }
         // according to docs, dismissListener covers all dismiss options, cancelListener "most" of them.

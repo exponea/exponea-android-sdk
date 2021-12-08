@@ -9,14 +9,14 @@ data class PurchasedItem(
     var receipt: String? = null
 ) {
     fun toHashMap(): HashMap<String, Any> {
-        val hashMap = hashMapOf(
+        val hashMap = HashMap<String, Any>()
+        hashMap.putAll(hashMapOf(
                 Pair("brutto", value),
                 Pair("currency", currency),
                 Pair("payment_system", paymentSystem),
                 Pair("item_id", productId),
                 Pair("product_title", productTitle)
-        )
-
+        ))
         receipt?.let { hashMap["receipt"] = it }
 
         return hashMap

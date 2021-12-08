@@ -10,47 +10,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
+        <activity android:exported="true"
             android:name=".view.MainActivity"
             android:screenOrientation="sensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- Accepts URIs that begin with "exponea://”-->
-                <data android:scheme="exponea" />
-            </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
                     android:scheme="https"
                     android:host="old.panaxeo.com"
-                    android:pathPattern="/exponea/.*" />
+                    android:pathPattern="/exponea/.*"/>
             </intent-filter>
         </activity>
         <activity
             android:name=".view.AuthenticationActivity"
             android:screenOrientation="sensor" />
-
-        <receiver
-            android:name=".services.MyReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

@@ -2,8 +2,8 @@ package com.exponea.example.managers
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.preference.PreferenceManager
 import android.provider.Settings
+import androidx.preference.PreferenceManager
 
 @SuppressLint("RegisteredID")
 class RegisteredIdManager(context: Context) {
@@ -14,10 +14,10 @@ class RegisteredIdManager(context: Context) {
         const val PREF_REGID = "RegID"
     }
 
-    var registeredID: String = prefs.getString(PREF_REGID, "")
+    var registeredID: String? = prefs.getString(PREF_REGID, "")
         get() {
             var id = prefs.getString(PREF_REGID, "")
-            if (id.isEmpty()) {
+            if (id == null || id.isEmpty()) {
                 id = Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
             }
             return id

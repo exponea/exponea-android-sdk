@@ -12,7 +12,7 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryImpl
-import com.exponea.sdk.services.ExponeaPushReceiver
+import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import io.mockk.Runs
@@ -142,7 +142,7 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 1) {
             Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
         }
-        ExponeaPushReceiver().onReceiveUnsafe(
+        ExponeaPushTrackingActivity().processPushClick(
             context,
             intentGetter(notificationSlot.captured),
             clickedTimestamp
@@ -166,7 +166,7 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 1) {
             Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
         }
-        ExponeaPushReceiver().onReceiveUnsafe(
+        ExponeaPushTrackingActivity().processPushClick(
             context,
             intentGetter(notificationSlot.captured),
             clickedTimestamp

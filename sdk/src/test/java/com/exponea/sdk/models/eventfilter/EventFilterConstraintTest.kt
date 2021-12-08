@@ -39,113 +39,113 @@ internal class EventFilterConstraintTest {
                 // string
                 TestCase(
                     StringConstraint.isSet,
-                    """{"type":"string","operator":"is set","operands":[]}"""
+                    """{"operator":"is set","operands":[],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.isNotSet,
-                    """{"type":"string","operator":"is not set","operands":[]}"""
+                    """{"operator":"is not set","operands":[],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.hasValue,
-                    """{"type":"string","operator":"has value","operands":[]}"""
+                    """{"operator":"has value","operands":[],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.hasNoValue,
-                    """{"type":"string","operator":"has no value","operands":[]}"""
+                    """{"operator":"has no value","operands":[],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.equals("other"),
-                    """{"type":"string","operator":"equals","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"equals","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.doesNotEqual("other"),
-                    """{"type":"string","operator":"does not equal","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"does not equal","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.isIn(arrayListOf("other")),
-                    """{"type":"string","operator":"in","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"in","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.notIn(arrayListOf("other")),
-                    """{"type":"string","operator":"not in","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"not in","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.contains("other"),
-                    """{"type":"string","operator":"contains","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"contains","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.doesNotContain("other"),
-                    """{"type":"string","operator":"does not contain","operands":[{"type":"constant","value":"other"}]}""" // ktlint-disable max-line-length
+                    """{"operator":"does not contain","operands":[{"value":"other","type":"constant"}],"type":"string"}""" // ktlint-disable max-line-length
                 ),
                 TestCase(
                     StringConstraint.startsWith("other"),
-                    """{"type":"string","operator":"starts with","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"starts with","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.endsWith("other"),
-                    """{"type":"string","operator":"ends with","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"ends with","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 TestCase(
                     StringConstraint.regex("other"),
-                    """{"type":"string","operator":"regex","operands":[{"type":"constant","value":"other"}]}"""
+                    """{"operator":"regex","operands":[{"value":"other","type":"constant"}],"type":"string"}"""
                 ),
                 // number
                 TestCase(
                     NumberConstraint.isSet,
-                    """{"type":"number","operator":"is set","operands":[]}"""
+                    """{"operator":"is set","operands":[],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.isNotSet,
-                    """{"type":"number","operator":"is not set","operands":[]}"""
+                    """{"operator":"is not set","operands":[],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.hasValue,
-                    """{"type":"number","operator":"has value","operands":[]}"""
+                    """{"operator":"has value","operands":[],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.hasNoValue,
-                    """{"type":"number","operator":"has no value","operands":[]}"""
+                    """{"operator":"has no value","operands":[],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.equalTo(123),
-                    """{"type":"number","operator":"equal to","operands":[{"type":"constant","value":"123"}]}"""
+                    """{"operator":"equal to","operands":[{"value":"123","type":"constant"}],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.lessThan(123.0),
-                    """{"type":"number","operator":"less than","operands":[{"type":"constant","value":"123.0"}]}"""
+                    """{"operator":"less than","operands":[{"value":"123.0","type":"constant"}],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.greaterThan(123.0),
-                    """{"type":"number","operator":"greater than","operands":[{"type":"constant","value":"123.0"}]}"""
+                    """{"operator":"greater than","operands":[{"value":"123.0","type":"constant"}],"type":"number"}"""
                 ),
                 TestCase(
                     NumberConstraint.inBetween(1, 2),
-                    """{"type":"number","operator":"in between","operands":[{"type":"constant","value":"1"},{"type":"constant","value":"2"}]}""" // ktlint-disable max-line-length
+                    """{"operator":"in between","operands":[{"value":"1","type":"constant"},{"value":"2","type":"constant"}],"type":"number"}""" // ktlint-disable max-line-length
                 ),
                 TestCase(
                     NumberConstraint.notBetween(1.123, 2.345),
-                    """{"type":"number","operator":"not between","operands":[{"type":"constant","value":"1.123"},{"type":"constant","value":"2.345"}]}""" // ktlint-disable max-line-length
+                    """{"operator":"not between","operands":[{"value":"1.123","type":"constant"},{"value":"2.345","type":"constant"}],"type":"number"}""" // ktlint-disable max-line-length
                 ),
                 // boolean
                 TestCase(
                     BooleanConstraint.isSet,
-                    """{"type":"boolean","operator":"is set","value":"true"}"""
+                    """{"operator":"is set","value":"true","type":"boolean"}"""
                 ),
                 TestCase(
                     BooleanConstraint.isNotSet,
-                    """{"type":"boolean","operator":"is not set","value":"true"}"""
+                    """{"operator":"is not set","value":"true","type":"boolean"}"""
                 ),
                 TestCase(
                     BooleanConstraint.hasValue,
-                    """{"type":"boolean","operator":"has value","value":"true"}"""
+                    """{"operator":"has value","value":"true","type":"boolean"}"""
                 ),
                 TestCase(
                     BooleanConstraint.hasNoValue,
-                    """{"type":"boolean","operator":"has no value","value":"true"}"""
+                    """{"operator":"has no value","value":"true","type":"boolean"}"""
                 ),
                 TestCase(
                     BooleanConstraint.itIs(false),
-                    """{"type":"boolean","operator":"is","value":"false"}"""
+                    """{"operator":"is","value":"false","type":"boolean"}"""
                 )
             )
 

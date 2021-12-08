@@ -40,36 +40,7 @@ With `automaticPushNotification` enabled, the SDK will correctly display push no
 When creating notification using Exponea Web App, you can choose from 3 different actions to be used when tapping the notification or additional buttons on notification.
 
 ### 1. Open app
-Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED`. To respond to it, you need to setup a BroadcastReceiver in your Android manifest.
-
-``` xml
-<receiver
-    android:name="MyReceiver"
-    android:enabled="true"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
-    </intent-filter>
-</receiver>
-```
-
-In the BroadcastReceiver you can launch a corresponding activity(e.g. your main activity). Campaign data is included in the intent as `ExponeaPushReceiver.EXTRA_DATA`.
-``` kotlin
-class MyReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        // Extract payload data
-        val data = intent.getParcelableExtra<NotificationData>(
-          ExponeaPushReceiver.EXTRA_DATA
-        )
-        // Process the data if you need to
-
-        // Start an activity
-        val launchIntent = Intent(context, MainActivity::class.java)
-        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(context, launchIntent, null)
-    }
-}
-```
+Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED`. SDK automatically responds to it by opening the launcher activity of your app. Previous SDK versions (<=2.9.7) required the creation of your own broadcast receiver to handle the open action, but since notification trampolining (opening activity from a receiver or a service) is no longer allowed since Android S, your activity intent will be opened directly from the notification, and this receiver is no longer needed on the application side.
 
 ### 2. Deep link
 Deep link action creates "view" intent that contains the url specified when setting up this action. To respond to this intent, create intent filter on the activity that should handle it in your Android manifest file. More information can be found in the [official Android documentation](https://developer.android.com/training/app-links/deep-linking).

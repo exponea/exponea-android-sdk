@@ -35,7 +35,7 @@ internal data class InAppMessage(
     val frequency: InAppMessageFrequency?
         get() {
             return try {
-                InAppMessageFrequency.valueOf(rawFrequency.toUpperCase())
+                InAppMessageFrequency.valueOf(rawFrequency.uppercase())
             } catch (e: Throwable) {
                 Logger.e(this, "Unknown in-app-message frequency $rawFrequency. $e")
                 null
@@ -45,7 +45,7 @@ internal data class InAppMessage(
     val messageType: InAppMessageType
         get() {
             return try {
-                InAppMessageType.valueOf(rawMessageType.toUpperCase())
+                InAppMessageType.valueOf(rawMessageType.uppercase())
             } catch (e: Throwable) {
                 Logger.e(this, "Unknown in-app-message type $rawMessageType. $e")
                 InAppMessageType.MODAL

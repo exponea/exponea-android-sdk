@@ -90,51 +90,6 @@ If you run the app after completing the setup, the SDK should track push token t
 
 > **Quick Tip:** It may take a minute for the message service to wake up properly. If sending push fails, try restarting the app. If the issue persists after 2-3 retries, review your setup.
 
-## Setting up intent filters for opening push notification
-To react to push notifications from Exponea, you need to set up an intent filter for the default notification action `Open app`. You can also set up deep linking by following [detailed push notification documentation](../Documentation/PUSH.md).
-
-Open app action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED`. To respond to it, you need to set up a BroadcastReceiver in your Android manifest.
-
-``` xml
-<receiver
-    android:name="MyReceiver"
-    android:enabled="true"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
-    </intent-filter>
-</receiver>
-```
-
-In the BroadcastReceiver you can launch a corresponding activity(e.g., your main activity). Campaign data is included in the intent as `ExponeaPushReceiver.EXTRA_DATA`.
-``` kotlin
-package com.exponea.example.services
-
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
-import com.exponea.example.view.MainActivity
-import com.exponea.sdk.models.NotificationData
-import com.exponea.sdk.services.ExponeaPushReceiver
-
-class MyReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        // Extract payload data
-        val data = intent.getParcelableExtra<NotificationData>(
-          ExponeaPushReceiver.EXTRA_DATA
-        )
-        // Process the data if you need to
-
-        // Start an activity
-        val launchIntent = Intent(context, MainActivity::class.java)
-        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(context, launchIntent, null)
-    }
-}
-```
-
  #### Checklist:
  - send a test push notification from Exponea to the device and tap on it. Your broadcast receiver should be called.
 

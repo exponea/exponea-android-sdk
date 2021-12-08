@@ -13,8 +13,7 @@ To send a one-off test push notification, you'll need to setup your test user fi
   ![](pics/send2.png)
 
 3. This will open a **Campaign Builder** where you can specify when/how your push notification is triggered
-You will need to choose a trigger and action type. To locate mobile push notification action
-use **Actions->Others** and choose **Mobile Push Notifications** in pop-up menu
+You will need to choose a trigger and action type. If **Mobile Push Notifications** is not visible in actions, add it with opening **Actions->Others** and choose **Mobile Push Notifications** in pop-up menu.
 
   ![](pics/send3.png)
 
@@ -23,7 +22,7 @@ use **Actions->Others** and choose **Mobile Push Notifications** in pop-up menu
 
 4. This will open notification builder. There you can specify **Title** (1) and **Message** (2) for your notification. There is a **Preview** (4) on the right side that will show the notification is gonna look like. There is also an option to specify an **Image (6)** you want to display and **Sound (9)** that will be played when notification is received.
 
-> When specifying the sound, provide sound name without extension
+> When using SDK version less than 3.0.0, please make sure to provide a sound file name without extension.
 
 ![](pics/send5.png)
 

@@ -36,7 +36,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
-internal class ExponeaPushReceiverNotificationsTest(
+internal class ExponeaPushTrackingActivityNotificationsTest(
     @Suppress("UNUSED_PARAMETER")
     name: String,
     private val notificationPayload: Map<String, String>,
@@ -186,10 +186,9 @@ internal class ExponeaPushReceiverNotificationsTest(
         every { anyConstructed<Date>().time } returns expectedCreationTime.toLong() // mock current time
         manager.handleRemoteMessage(notificationPayload, notificationManager, true)
 
-        ExponeaPushReceiver().onReceive(
+        ExponeaPushTrackingActivity().processPushClick(
             ApplicationProvider.getApplicationContext(),
-            intentGetter(notificationSlot.captured)
-        )
+            intentGetter(notificationSlot.captured))
         verify(exactly = 1) {
             Exponea.trackClickedPush(expectedTrackingData, expectedTrackingActionData, any())
         }

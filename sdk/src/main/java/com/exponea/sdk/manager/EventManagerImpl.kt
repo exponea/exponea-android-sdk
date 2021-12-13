@@ -77,10 +77,19 @@ internal class EventManagerImpl(
         addEventToQueue(event, type)
 
         val eventTimestamp = timestamp ?: currentTimeSeconds()
-        inAppMessageManager.preloadIfNeeded(eventTimestamp)
+        val eventTimestampInMillis = eventTimestamp * 1000
+
+        // do not initiate in-app preload on push events and session_end event
+        // user may not even end up in the app and in-app fetch would run unnecessarily
+        if (type != EventType.PUSH_DELIVERED &&
+            type != EventType.PUSH_OPENED &&
+            type != EventType.SESSION_END
+        ) {
+            inAppMessageManager.preloadIfNeeded(eventTimestampInMillis)
+        }
 
         if (type == EventType.SESSION_START) {
-            inAppMessageManager.sessionStarted(Date((eventTimestamp).toLong() * 1000))
+            inAppMessageManager.sessionStarted(Date(eventTimestampInMillis.toLong()))
         }
         if (eventType != null) {
             inAppMessageManager.showRandom(

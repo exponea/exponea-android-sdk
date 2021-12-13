@@ -27,6 +27,7 @@ import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -140,6 +141,20 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `should not preload messages on push events and session-end`() {
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        messagesCache.set(arrayListOf())
+
+        eventManager.track("delivered", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.PUSH_DELIVERED)
+        eventManager.track("click", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.PUSH_OPENED)
+        eventManager.track("sessionEnd", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_END)
+        verify(exactly = 0) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+    }
+
     private fun getEventManager(): EventManager {
         val customerIdsRepo = mockk<CustomerIdsRepository>()
         every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
@@ -240,9 +255,9 @@ internal class InAppMessageManagerImplTest {
         }
         every { messagesCache.get() } returns arrayListOf()
 
-        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        eventManager.track("test-event", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
-        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        eventManager.track("test-event", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
         val expiredTimestamp = (Date().time + InAppMessageManagerImpl.REFRESH_CACHE_AFTER * 2).toDouble()
         eventManager.track("test-event", expiredTimestamp, hashMapOf("prop" to "value"), EventType.SESSION_START)

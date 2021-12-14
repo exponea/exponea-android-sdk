@@ -45,35 +45,39 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
 
     override fun preload(url: String, callback: ((Boolean) -> Unit)?) {
         if (!has(url)) {
-            val request = Request.Builder().url(url).build()
-            httpClient.newCall(request).enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.isSuccessful) {
-                        val file = createTempFile()
-                        with(file.outputStream()) {
-                            response.body()?.byteStream()?.copyTo(this)
-                            this.close()
-                        }
-                        file.renameTo(File(directory, getFileName(url)))
-                        callback?.invoke(true)
-                    } else {
-                        Logger.w(
-                            this,
-                            "Error while preloading in-app message image. Server responded ${response.code()}"
-                        )
-                        callback?.invoke(false)
-                    }
-                    response.close()
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    Logger.w(this, "Error while preloading in-app message image $e")
-                    callback?.invoke(false)
-                }
-            })
+            downloadImage(url, callback)
         } else {
             callback?.invoke(true)
         }
+    }
+
+    fun downloadImage(url: String, callback: ((Boolean) -> Unit)?) {
+        val request = Request.Builder().url(url).build()
+        httpClient.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val file = createTempFile()
+                    with(file.outputStream()) {
+                        response.body()?.byteStream()?.copyTo(this)
+                        this.close()
+                    }
+                    file.renameTo(File(directory, getFileName(url)))
+                    callback?.invoke(true)
+                } else {
+                    Logger.w(
+                        this,
+                        "Error while preloading in-app message image. Server responded ${response.code()}"
+                    )
+                    callback?.invoke(false)
+                }
+                response.close()
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                Logger.w(this, "Error while preloading in-app message image $e")
+                callback?.invoke(false)
+            }
+        })
     }
 
     override fun has(url: String): Boolean {

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
+import io.mockk.spyk
+import io.mockk.verify
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -45,6 +47,48 @@ internal class InAppMessageBitmapCacheImplTest {
         val repo = InAppMessageBitmapCacheImpl(context)
         waitForIt { repo.preload(imageUrl) { it() } }
         assertNotNull(repo.get(imageUrl))
+    }
+
+    @Test
+    fun `should download image with same url only once`() {
+        server.enqueue(MockResponse().setBody("mock-response"))
+        // real image
+        val imageUrl = server.url(
+            "https://storage.googleapis.com/exp-app-storage/" +
+                    "f02807dc-6b57-11e9-8cc8-0a580a203636/media/original/" +
+                    "fda24b2c-5ccf-11ec-9e7d-224548c7f76e"
+        ).toString()
+
+        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        verify(exactly = 0) { repo.downloadImage(any(), any()) }
+        waitForIt { repo.preload(imageUrl) { it() } }
+        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+        waitForIt { repo.preload(imageUrl) { it() } }
+        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+    }
+
+    @Test
+    fun `should download image with different url`() {
+        server.enqueue(MockResponse().setBody("mock-response"))
+        // real image
+        val imageUrl1 = server.url(
+            "https://storage.googleapis.com/exp-app-storage/" +
+                    "f02807dc-6b57-11e9-8cc8-0a580a203636/media/original/" +
+                    "fda24b2c-5ccf-11ec-9e7d-224548c7f76e"
+        ).toString()
+
+        val imageUrl2 = server.url(
+            "https://storage.googleapis.com/exp-app-storage/" +
+                    "f02807dc-6b57-11e9-8cc8-0a580a203636/media/original/" +
+                    "a20fdf92-5cd2-11ec-819f-a64145d9ff9e"
+        ).toString()
+
+        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        verify(exactly = 0) { repo.downloadImage(any(), any()) }
+        waitForIt { repo.preload(imageUrl1) { it() } }
+        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+        waitForIt { repo.preload(imageUrl2) { it() } }
+        verify(exactly = 2) { repo.downloadImage(any(), any()) }
     }
 
     @Test

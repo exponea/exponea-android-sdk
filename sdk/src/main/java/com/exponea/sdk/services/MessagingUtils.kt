@@ -19,7 +19,7 @@ internal class MessagingUtils {
                     Exponea.pushChannelId.let { notificationManager.getNotificationChannel(it) }
                 return exponeaNotificationChannel?.isChannelBlocked(notificationManager) == true
             }
-            return true
+            return false
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
@@ -28,7 +28,7 @@ internal class MessagingUtils {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 return notificationManager.getNotificationChannelGroup(group)?.isBlocked == true
             }
-            return true
+            return false
         }
     }
 }

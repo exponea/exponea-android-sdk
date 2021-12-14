@@ -85,8 +85,9 @@ internal class PushNotificationSelfCheckManagerImpl(
         if (pushToken == null) {
             showResult(
                 0,
-                "Unable to get push token. Check your Firebase setup. " +
-                    "If you're using your own FirebaseMessagingService don't forget to call Exponea.trackPushToken()"
+                "Unable to get push token. Check your Firebase/HMS setup. " +
+                    "Don't forget to call Exponea.handleNewToken() in your FirebaseMessagingService, " +
+                        "or Exponea.handleNewHmsToken() in your HmsMessageService."
             )
             return
         }
@@ -107,8 +108,8 @@ internal class PushNotificationSelfCheckManagerImpl(
                 2,
                 "Unable to receive self-check push notification from Exponea. " +
                     "Check your push notification setup in Exponea administration. " +
-                    "If you're using your own FirebaseMessagingService, " +
-                    "don't forget to call Exponea.handleRemoteMessage()"
+                    "Don't forget to call Exponea.handleRemoteMessage() in your FirebaseMessagingService " +
+                        "(HmsMessageService for Huawei integration)"
             )
             return
         }

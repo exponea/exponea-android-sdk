@@ -22,7 +22,7 @@ You will need to choose a trigger and action type. If **Mobile Push Notification
 
 4. This will open notification builder. There you can specify **Title** (1) and **Message** (2) for your notification. There is a **Preview** (4) on the right side that will show the notification is gonna look like. There is also an option to specify an **Image (6)** you want to display and **Sound (9)** that will be played when notification is received.
 
-> When using SDK version less than 3.0.0, please make sure to provide a sound file name without extension.
+> When using SDK version older than 3.0.0, please make sure to provide a sound file name without extension. Since version 3.0.0 the SDK accepts both file names with and without the extension.
 
 ![](pics/send5.png)
 

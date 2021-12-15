@@ -295,7 +295,8 @@ internal class FcmManagerImpl(
             payload.notificationId,
             payload.notificationData,
             payload.rawData,
-            payload.deliveredTimestamp
+            payload.deliveredTimestamp,
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.M
         )
     }
 
@@ -321,30 +322,11 @@ internal class FcmManagerImpl(
             }
             NotificationPayload.Actions.BROWSER -> {
                 trackingIntent.action = ExponeaPushTrackingActivity.ACTION_URL_CLICKED
-
-                val browserIntent = Intent(Intent.ACTION_VIEW)
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                val url = actionInfo.url
-                if (url != null && url.isNotEmpty()) browserIntent.data = Uri.parse(url)
-                PendingIntent.getActivities(
-                    application,
-                    requestCode,
-                    arrayOf(browserIntent, trackingIntent),
-                    getPendingIntentFlags()
-                )
+                getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
             NotificationPayload.Actions.DEEPLINK -> {
                 trackingIntent.action = ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED
-                val deeplinkIntent = Intent(Intent.ACTION_VIEW)
-                deeplinkIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                val url = actionInfo.url
-                if (url != null && url.isNotEmpty()) deeplinkIntent.data = Uri.parse(url)
-                PendingIntent.getActivities(
-                    application,
-                    requestCode,
-                    arrayOf(deeplinkIntent, trackingIntent),
-                    getPendingIntentFlags()
-                )
+                getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
             else -> {
                 trackingIntent.action = ExponeaPushTrackingActivity.ACTION_CLICKED
@@ -356,6 +338,32 @@ internal class FcmManagerImpl(
                     getPendingIntentFlags()
                 )
             }
+        }
+    }
+
+    private fun getUrlIntent(
+        requestCode: Int,
+        trackingIntent: Intent,
+        url: String?
+    ): PendingIntent {
+        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            // for older SDKs, web and deeplink intent will be started directly from the tracking activity
+            PendingIntent.getActivity(
+                application,
+                requestCode,
+                trackingIntent,
+                getPendingIntentFlags()
+            )
+        } else {
+            val urlIntent = Intent(Intent.ACTION_VIEW)
+            urlIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+            if (url != null && url.isNotEmpty()) urlIntent.data = Uri.parse(url)
+            PendingIntent.getActivities(
+                application,
+                requestCode,
+                arrayOf(urlIntent, trackingIntent),
+                getPendingIntentFlags()
+            )
         }
     }
 

@@ -12,7 +12,7 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 
-internal class ExponeaPushTrackingActivity : Activity() {
+internal open class ExponeaPushTrackingActivity : Activity() {
 
     companion object {
         const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"
@@ -29,9 +29,15 @@ internal class ExponeaPushTrackingActivity : Activity() {
             id: Int,
             data: NotificationData?,
             messageData: HashMap<String, String>,
-            deliveredTimestamp: Double?
+            deliveredTimestamp: Double?,
+            olderApi: Boolean
         ): Intent {
-            return Intent(context, ExponeaPushTrackingActivity::class.java).apply {
+            val klass = if (olderApi) {
+                ExponeaPushTrackingActivityOlderApi::class.java
+            } else {
+                ExponeaPushTrackingActivity::class.java
+            }
+            return Intent(context, klass).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
                 putExtra(EXTRA_CUSTOM_DATA, messageData)
@@ -50,7 +56,7 @@ internal class ExponeaPushTrackingActivity : Activity() {
         finish()
     }
 
-    fun processPushClick(
+    open fun processPushClick(
         context: Context,
         intent: Intent,
         timestamp: Double = currentTimeSeconds()

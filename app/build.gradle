@@ -13,7 +13,7 @@ android {
     compileSdkVersion 31
     defaultConfig {
         applicationId "com.exponea.example"
-        minSdkVersion 26
+        minSdkVersion 21
         targetSdkVersion 31
         versionCode 55
         versionName "2.9.7"

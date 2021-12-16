@@ -10,22 +10,20 @@ Exponea allows you to easily create complex scenarios which you can use to send 
 ## Standard (Firebase) integration
 
 For firebase push notifications to work, you'll need to setup a few things:
-- create a Firebase project
-- integrate Firebase into your application 
+- create a Firebase project in the [Firebase console](https://console.firebase.google.com)
+- integrate Firebase into your application
 - set the Firebase server key in the Exponea web app
 - add and register firebase messaging service
-- add a broadcast listener for opening push notifications
 
 We've created a [Firebase quick start guide](../Guides/PUSH_QUICKSTART_FIREBASE.md) that will guide you through these steps.
 
 ## Huawei integration
 For huawei push notifications to work, you'll need to setup a few things:
-- register for a Huawei developer account
-- create a new Huawei app
-- enter Huawei credentials in the Exponea web app
+- register for a Huawei developer account at https://id7.cloud.huawei.com
+- create a new Huawei app and project in the [AppGallery Connect](https://developer.huawei.com/consumer/en/service/josp/agc/index.html,,AppGalleryConnect#/)
+- create Huawei integration in the Exponea web app with your project Client ID and Client Secret
 - integrate the Huawei messaging SDK into your app
 - add and register huawei messaging service
-- add a broadcast listener for opening push notifications
 
 We've created a [Huawei quick start guide](../Guides/PUSH_QUICKSTART_HUAWEI.md) that will guide you through these steps.
 

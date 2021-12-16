@@ -6,9 +6,9 @@ This section will help you to integrate Exponea SDK into your application
  ##  📦 [Installation & Configuration Guide](./INSTALL.md)
  This doc will show to you how to install and configure ExponeaSDK
  ## 📝 [Events/Users Tracking Guide](./TRACKING.md)
-Lean how to track events using Exponea
+Learn how to track events using Exponea
 
-## 📣 [Push Notifications Setup](./PUSH_QUICKSTART.md)
+## 📣 Push Notifications Setup - [Firebase](./PUSH_QUICKSTART_FIREBASE.md), [Huawei](./PUSH_QUICKSTART_HUAWEI.md)
  Attract new users to your Application using push notifications
 
 ## [Sending Push Notifications](./PUSH_SEND.md)
@@ -21,3 +21,5 @@ Lean how to track events using Exponea
 
 * #### [Anonymize](../Documentation/ANONYMIZE.md)
   Learn about user anonymizing features
+
+## ⏫ [SDK version update guide](./VERSION_UPDATE.md)

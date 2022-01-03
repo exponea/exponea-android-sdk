@@ -21,6 +21,7 @@ import org.robolectric.RobolectricTestRunner
 internal class AnonymizeTest : ExponeaSDKTest() {
     companion object {
         private const val PUSH_KEY = "google_push_notification_id"
+        private const val HUAWEI_PUSH_KEY = "huawei_push_notification_id"
     }
 
     private fun checkEvent(
@@ -68,16 +69,17 @@ internal class AnonymizeTest : ExponeaSDKTest() {
 
         val events = Exponea.componentForTesting.eventRepository.all()
         events.sortedBy { it.timestamp }
-        assertEquals(events.size, 8)
+        assertEquals(events.size, 9)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
         checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to "push_token"))
         // anonymize is called. We clear push token in old user and track initial events for new user
         checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
-        checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[5], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-        checkEvent(events[6], Constants.EventTypes.push, newProject, newUserId, hashMapOf(PUSH_KEY to "push_token"))
-        checkEvent(events[7], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(HUAWEI_PUSH_KEY to " "))
+        checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
+        checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+        checkEvent(events[7], Constants.EventTypes.push, newProject, newUserId, hashMapOf(PUSH_KEY to "push_token"))
+        checkEvent(events[8], "test", newProject, newUserId, hashMapOf("name" to "test"))
     }
 
     @Test
@@ -109,11 +111,12 @@ internal class AnonymizeTest : ExponeaSDKTest() {
 
         val events = Exponea.componentForTesting.eventRepository.all()
         events.sortedBy { it.timestamp }
-        assertEquals(events.size, 5)
+        assertEquals(events.size, 6)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
         checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
-        checkEvent(events[3], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[4], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(HUAWEI_PUSH_KEY to " "))
+        checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
+        checkEvent(events[5], "test", newProject, newUserId, hashMapOf("name" to "test"))
     }
 }

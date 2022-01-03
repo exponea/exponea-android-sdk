@@ -157,8 +157,9 @@ internal class ExponeaComponent(
         val token = pushTokenRepository.get()
         val tokenType = pushTokenRepository.getLastTokenType()
 
-        fcmManager.trackToken(" ", Exponea.tokenTrackFrequency, TokenType.FCM)
-        fcmManager.trackToken(" ", Exponea.tokenTrackFrequency, TokenType.HMS)
+        // Do not use TokenFrequency from the configuration, clear tokens immediately during anonymize
+        fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.HMS)
         deviceInitiatedRepository.set(false)
         campaignRepository.clear()
         inAppMessagesCache.clear()
@@ -177,7 +178,8 @@ internal class ExponeaComponent(
         if (exponeaConfiguration.automaticSessionTracking) {
             sessionManager.trackSessionStart(currentTimeSeconds())
         }
-        fcmManager.trackToken(token, Exponea.tokenTrackFrequency, tokenType)
+        // Do not use TokenFrequency from the configuration, setup token from new customer immediately during anonymize
+        fcmManager.trackToken(token, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, tokenType)
         inAppMessageManager.preload()
     }
 }

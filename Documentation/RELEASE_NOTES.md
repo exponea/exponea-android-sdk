@@ -1,4 +1,16 @@
 ## Release Notes
+## Release Notes for 3.0.0
+#### January 04, 2022
+* Features
+  * Huawei push notifications support
+  * Changes regarding Android S - Notification trampolining removed, androidx.work:work-runtime library updated, exported attribute added where necessary
+* Bug Fixes
+  * Fixed: In-Apps caching fixed - Images with the same URL are downloaded only once
+  * Fixed: In-Apps fetching fixed - In-app messages are no longer fetched when push notification auto initializes the SDK. In-apps are fetched only after the app is started
+  * Fixed: Notification sound file name can be now specified with the extension
+  * Fixed: Inconsistency with iOS SDK - Added platform attribute for a banner event, send banner type propery value in lower case
+
+
 ## Release Notes for 2.9.7
 #### November 05, 2021
 * Features

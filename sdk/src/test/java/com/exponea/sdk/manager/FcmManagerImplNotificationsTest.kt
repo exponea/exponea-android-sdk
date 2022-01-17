@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.ExponeaExtras
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_BUTTON
@@ -15,7 +16,6 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryImpl
-import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import io.mockk.Runs
@@ -70,9 +70,9 @@ internal class FcmManagerImplNotificationsTest(
             expectedPayload: HashMap<String, String>
         ) {
             assertEquals(expectedAction, intent.action)
-            assertEquals(expectedNotificationAction, intent.extras?.get(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO))
-            assertEquals(expectedNotificationData, intent.extras?.get(ExponeaPushTrackingActivity.EXTRA_DATA))
-            assertEquals(expectedPayload, intent.extras?.get(ExponeaPushTrackingActivity.EXTRA_CUSTOM_DATA))
+            assertEquals(expectedNotificationAction, intent.extras?.get(ExponeaExtras.EXTRA_ACTION_INFO))
+            assertEquals(expectedNotificationData, intent.extras?.get(ExponeaExtras.EXTRA_DATA))
+            assertEquals(expectedPayload, intent.extras?.get(ExponeaExtras.EXTRA_CUSTOM_DATA))
         }
 
         private val testCases = arrayListOf(
@@ -86,7 +86,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("push notification message", shadowOf(it).contentText)
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_CLICKED,
+                        ExponeaExtras.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         NotificationData(),
                         NotificationTestPayloads.BASIC_NOTIFICATION
@@ -108,7 +108,7 @@ internal class FcmManagerImplNotificationsTest(
 
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED,
+                        ExponeaExtras.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "app://test"),
                         NotificationData(),
                         NotificationTestPayloads.DEEPLINK_NOTIFICATION
@@ -130,7 +130,7 @@ internal class FcmManagerImplNotificationsTest(
 
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_URL_CLICKED,
+                        ExponeaExtras.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION, null, "http://google.com"),
                         NotificationData(),
                         NotificationTestPayloads.BROWSER_NOTIFICATION
@@ -152,7 +152,7 @@ internal class FcmManagerImplNotificationsTest(
 
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_CLICKED,
+                        ExponeaExtras.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
@@ -162,7 +162,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 1 title", it.actions[0].title)
                     validateIntent(
                         shadowOf(it.actions[0].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_CLICKED,
+                        ExponeaExtras.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
                         NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
@@ -170,7 +170,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 2 title", it.actions[1].title)
                     validateIntent(
                         shadowOf(it.actions[1].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED,
+                        ExponeaExtras.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "app://deeplink"),
                         NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
@@ -178,7 +178,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 3 title", it.actions[2].title)
                     validateIntent(
                         shadowOf(it.actions[2].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_URL_CLICKED,
+                        ExponeaExtras.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com"),
                         NotificationData(),
                         NotificationTestPayloads.ACTIONS_NOTIFICATION
@@ -218,7 +218,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Notification text", shadowOf(it).contentText)
                     validateIntent(
                         shadowOf(it.contentIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_CLICKED,
+                        ExponeaExtras.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_NOTIFICATION),
                         notificationData,
                         NotificationTestPayloads.PRODUCTION_NOTIFICATION
@@ -228,7 +228,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 1 title", it.actions[0].title)
                     validateIntent(
                         shadowOf(it.actions[0].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_CLICKED,
+                        ExponeaExtras.ACTION_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
                         notificationData,
                         NotificationTestPayloads.PRODUCTION_NOTIFICATION
@@ -236,7 +236,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 2 title", it.actions[1].title)
                     validateIntent(
                         shadowOf(it.actions[1].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED,
+                        ExponeaExtras.ACTION_DEEPLINK_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "http://deeplink?search=something"),
                         notificationData,
                         NotificationTestPayloads.PRODUCTION_NOTIFICATION
@@ -244,7 +244,7 @@ internal class FcmManagerImplNotificationsTest(
                     assertEquals("Action 3 title", it.actions[2].title)
                     validateIntent(
                         shadowOf(it.actions[2].actionIntent).savedIntent,
-                        ExponeaPushTrackingActivity.ACTION_URL_CLICKED,
+                        ExponeaExtras.ACTION_URL_CLICKED,
                         NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com?search=something"),
                         notificationData,
                         NotificationTestPayloads.PRODUCTION_NOTIFICATION
@@ -325,7 +325,7 @@ internal class FcmManagerImplNotificationsTest(
                             assertEquals("Notification text", shadowOf(it).contentText)
                             validateIntent(
                                     shadowOf(it.contentIntent).savedIntent,
-                                    ExponeaPushTrackingActivity.ACTION_CLICKED,
+                                    ExponeaExtras.ACTION_CLICKED,
                                     NotificationAction(ACTION_TYPE_NOTIFICATION),
                                     notificationData,
                                     NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
@@ -334,7 +334,7 @@ internal class FcmManagerImplNotificationsTest(
                             assertEquals("Action 1 title", it.actions[0].title)
                             validateIntent(
                                     shadowOf(it.actions[0].actionIntent).savedIntent,
-                                    ExponeaPushTrackingActivity.ACTION_CLICKED,
+                                    ExponeaExtras.ACTION_CLICKED,
                                     NotificationAction(ACTION_TYPE_BUTTON, "Action 1 title"),
                                     notificationData,
                                     NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
@@ -342,7 +342,7 @@ internal class FcmManagerImplNotificationsTest(
                             assertEquals("Action 2 title", it.actions[1].title)
                             validateIntent(
                                     shadowOf(it.actions[1].actionIntent).savedIntent,
-                                    ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED,
+                                    ExponeaExtras.ACTION_DEEPLINK_CLICKED,
                                     NotificationAction(ACTION_TYPE_BUTTON, "Action 2 title", "http://deeplink?search=something"), // ktlint-disable max-line-lengt
                                     notificationData,
                                     NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
@@ -350,7 +350,7 @@ internal class FcmManagerImplNotificationsTest(
                             assertEquals("Action 3 title", it.actions[2].title)
                             validateIntent(
                                     shadowOf(it.actions[2].actionIntent).savedIntent,
-                                    ExponeaPushTrackingActivity.ACTION_URL_CLICKED,
+                                    ExponeaExtras.ACTION_URL_CLICKED,
                                     NotificationAction(ACTION_TYPE_BUTTON, "Action 3 title", "http://google.com?search=something"), // ktlint-disable max-line-lengt
                                     notificationData,
                                     NotificationTestPayloads.PRODUCTION_NOTIFICATION_WITHOUT_SENT_TIME_AND_TYPE
@@ -449,7 +449,7 @@ internal class FcmManagerImplNotificationsTest(
                             assertEquals("Notification text", shadowOf(it).contentText)
                             validateIntent(
                                     shadowOf(it.contentIntent).savedIntent,
-                                    ExponeaPushTrackingActivity.ACTION_CLICKED,
+                                    ExponeaExtras.ACTION_CLICKED,
                                     NotificationAction(ACTION_TYPE_NOTIFICATION),
                                     notificationData,
                                     NotificationTestPayloads.NOTIFICATION_WITH_NESTED_ATTRIBUTES

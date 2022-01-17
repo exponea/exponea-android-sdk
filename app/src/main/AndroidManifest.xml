@@ -40,5 +40,15 @@
         <activity
             android:name=".view.AuthenticationActivity"
             android:screenOrientation="sensor" />
+        <receiver
+            android:name=".services.MyReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
+                <action android:name="com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED" />
+                <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

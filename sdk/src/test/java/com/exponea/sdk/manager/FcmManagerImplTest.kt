@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.ExponeaExtras
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
@@ -12,7 +13,6 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryImpl
-import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
@@ -94,12 +94,12 @@ internal class FcmManagerImplTest {
 
         assertEquals(
             NotificationAction("notification", null, "app://mock-url-1"),
-            intent1.extras?.get(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO)
+            intent1.extras?.get(ExponeaExtras.EXTRA_ACTION_INFO)
         )
 
         assertEquals(
             NotificationAction("notification", null, "app://mock-url-2"),
-            intent2.extras?.get(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO)
+            intent2.extras?.get(ExponeaExtras.EXTRA_ACTION_INFO)
         )
     }
 

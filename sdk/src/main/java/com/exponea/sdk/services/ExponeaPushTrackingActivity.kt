@@ -2,10 +2,16 @@ package com.exponea.sdk.services
 
 import android.app.Activity
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_ACTION_INFO
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_CUSTOM_DATA
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_DATA
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_DELIVERED_TIMESTAMP
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_NOTIFICATION_ID
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.util.Logger
@@ -15,15 +21,6 @@ import com.exponea.sdk.util.logOnException
 internal open class ExponeaPushTrackingActivity : Activity() {
 
     companion object {
-        const val ACTION_CLICKED = "com.exponea.sdk.action.PUSH_CLICKED"
-        const val ACTION_DEEPLINK_CLICKED = "com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED"
-        const val ACTION_URL_CLICKED = "com.exponea.sdk.action.PUSH_URL_CLICKED"
-        const val EXTRA_NOTIFICATION_ID = "NotificationId"
-        const val EXTRA_DATA = "NotificationData"
-        const val EXTRA_CUSTOM_DATA = "NotificationCustomData"
-        const val EXTRA_ACTION_INFO = "notification_action"
-        const val EXTRA_DELIVERED_TIMESTAMP = "NotificationDeliveredTimestamp"
-
         fun getClickIntent(
             context: Context,
             id: Int,
@@ -85,6 +82,22 @@ internal open class ExponeaPushTrackingActivity : Activity() {
 
             // And close the notification tray
             closeNotificationTray(context)
+        }
+
+        // send also broadcast with this action, so client app can also react to push open event
+
+        Intent().also { broadcastIntent ->
+            broadcastIntent.action = intent.action
+            broadcastIntent.putExtra(EXTRA_ACTION_INFO, action)
+            broadcastIntent.putExtra(EXTRA_DATA, data)
+            broadcastIntent.putExtra(EXTRA_CUSTOM_DATA, intent.getSerializableExtra(EXTRA_CUSTOM_DATA))
+            broadcastIntent.`package` = context.packageName
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                broadcastIntent,
+                MessagingUtils.getPendingIntentFlags()
+            ).send()
         }
     }
 

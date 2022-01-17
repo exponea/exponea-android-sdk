@@ -58,7 +58,7 @@ Deep link action creates "view" intent that contains the url specified when sett
 Open web browser is handled automatically by the SDK and no work is required from the developer to handle it.
 
 ## Handling notification payload extra data
-  You can setup notifications to contain extra data payload. Whenever a notification arrives the Exponea SDK will call `notificationCallback` that you can set on the `Exponea` object. The extras are a `Map<String, String>`.
+  You can setup notifications to contain extra data payload. Whenever a notification arrives the Exponea SDK will call `notificationCallback` that you can set on the `Exponea` object. The extras are a `Map<String, String>`.        
 
 #### 💻 Usage
 
@@ -71,6 +71,40 @@ Exponea.notificationDataCallback = {
 Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
 
 > If your app is not running in the background, the SDK will auto-initialize when push notification is received. In this case, `Exponea.notificationDataCallback` is not set, so the callback will be called after you attach the listener(next app start). If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`. 
+
+## Custom processing of notification actions
+When a user clicks on the notification or its buttons, SDK automatically performs linked action (open app, browser, etc.). If you need to do some more processing when this event occurs, you can create a receiver for this purpose. SDK is broadcasting `com.exponea.sdk.action.PUSH_CLICKED`, `com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED` and `com.exponea.sdk.action.PUSH_URL_CLICKED` actions, and you can specify them in intent filer to react to them.
+
+#### 💻 Usage
+
+Registration in AndroidManifest.xml 
+``` xml
+<receiver
+    android:name="MyReceiver"
+    android:enabled="true"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="com.exponea.sdk.action.PUSH_CLICKED" />
+        <action android:name="com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED" />  
+        <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />
+    </intent-filter>
+</receiver>
+```
+
+Receiver class
+``` kotlin
+class MyReceiver : BroadcastReceiver() {  
+  
+  // React on push action click 
+  override fun onReceive(context: Context, intent: Intent) {  
+        // Extract push data  
+        val data = intent.getParcelableExtra<NotificationData>(ExponeaExtras.EXTRA_DATA)  
+        val actionInfo = intent.getSerializableExtra(ExponeaExtras.EXTRA_ACTION_INFO) as? NotificationAction  
+        val customData = intent.getSerializableExtra(ExponeaExtras.EXTRA_CUSTOM_DATA) as Map<String, String>  
+        // Process push data as you need  
+    }  
+}
+```
 
 ## Silent push notifications
 Exponea web app allows you to setup silent push notifications, that are not displayed to the user. The SDK tracks `campaign` event when the push notification is delivered, just like for regular notifications. There is no opening for those notifications, but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handling notification payload extra data](#Handling-notification-payload-extra-data).

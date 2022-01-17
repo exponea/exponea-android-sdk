@@ -2,6 +2,7 @@ package com.exponea.sdk.services
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -29,6 +30,14 @@ internal class MessagingUtils {
                 return notificationManager.getNotificationChannelGroup(group)?.isBlocked == true
             }
             return false
+        }
+
+        internal fun getPendingIntentFlags(): Int {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
         }
     }
 }

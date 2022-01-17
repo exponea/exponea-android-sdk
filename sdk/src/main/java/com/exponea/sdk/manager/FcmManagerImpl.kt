@@ -16,6 +16,7 @@ import android.os.Looper
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.ExponeaExtras
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -25,6 +26,7 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushTrackingActivity
+import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
@@ -307,35 +309,35 @@ internal class FcmManagerImpl(
         requestCode: Int
     ): PendingIntent? {
         val trackingIntent = getPushReceiverIntent(payload)
-        trackingIntent.putExtra(ExponeaPushTrackingActivity.EXTRA_ACTION_INFO, actionInfo)
+        trackingIntent.putExtra(ExponeaExtras.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {
             NotificationPayload.Actions.APP -> {
-                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_CLICKED
+                trackingIntent.action = ExponeaExtras.ACTION_CLICKED
                 val launchIntent: Intent? = getIntentAppOpen(application)
                 PendingIntent.getActivities(
                     application,
                     requestCode,
                     arrayOf(launchIntent, trackingIntent),
-                    getPendingIntentFlags()
+                    MessagingUtils.getPendingIntentFlags()
                 )
             }
             NotificationPayload.Actions.BROWSER -> {
-                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_URL_CLICKED
+                trackingIntent.action = ExponeaExtras.ACTION_URL_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
             NotificationPayload.Actions.DEEPLINK -> {
-                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_DEEPLINK_CLICKED
+                trackingIntent.action = ExponeaExtras.ACTION_DEEPLINK_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
             else -> {
-                trackingIntent.action = ExponeaPushTrackingActivity.ACTION_CLICKED
+                trackingIntent.action = ExponeaExtras.ACTION_CLICKED
                 val launchIntent: Intent? = getIntentAppOpen(application)
                 PendingIntent.getActivities(
                     application,
                     requestCode,
                     arrayOf(launchIntent, trackingIntent),
-                    getPendingIntentFlags()
+                    MessagingUtils.getPendingIntentFlags()
                 )
             }
         }
@@ -352,7 +354,7 @@ internal class FcmManagerImpl(
                 application,
                 requestCode,
                 trackingIntent,
-                getPendingIntentFlags()
+                MessagingUtils.getPendingIntentFlags()
             )
         } else {
             val urlIntent = Intent(Intent.ACTION_VIEW)
@@ -362,7 +364,7 @@ internal class FcmManagerImpl(
                 application,
                 requestCode,
                 arrayOf(urlIntent, trackingIntent),
-                getPendingIntentFlags()
+                MessagingUtils.getPendingIntentFlags()
             )
         }
     }
@@ -383,14 +385,6 @@ internal class FcmManagerImpl(
                     Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
 
         return launchIntent
-    }
-
-    private fun getPendingIntentFlags(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
     }
 
     private fun getBitmapFromUrl(url: String): Bitmap? {

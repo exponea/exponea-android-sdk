@@ -3,6 +3,9 @@ package com.exponea.sdk.services
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.exponea.sdk.ExponeaExtras.Companion.ACTION_DEEPLINK_CLICKED
+import com.exponea.sdk.ExponeaExtras.Companion.ACTION_URL_CLICKED
+import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_ACTION_INFO
 import com.exponea.sdk.models.NotificationAction
 
 internal class ExponeaPushTrackingActivityOlderApi : ExponeaPushTrackingActivity() {

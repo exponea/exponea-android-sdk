@@ -1,4 +1,10 @@
 ## Release Notes
+## Release Notes for 3.0.1
+#### January 19, 2022
+* Bug Fixes
+  * Fixed: Broadcast push notification actions (Removed by mistake in 3.0.0)
+
+
 ## Release Notes for 3.0.0
 #### January 04, 2022
 * Features

@@ -17,7 +17,7 @@ internal object ExponeaMockServer {
         val content = this.javaClass.classLoader?.getResource(responseFile)?.readText()
 
         mockResponse.clearHeaders()
-        mockResponse.setBody(content)
+        mockResponse.setBody(content!!)
         mockResponse.setResponseCode(200)
 
         server.enqueue(mockResponse)
@@ -32,7 +32,7 @@ internal object ExponeaMockServer {
         val content = this.javaClass.classLoader?.getResource(responseFile)?.readText()
 
         mockResponse.clearHeaders()
-        mockResponse.setBody(content)
+        mockResponse.setBody(content!!)
         mockResponse.setResponseCode(errorCode)
 
         server.enqueue(mockResponse)
@@ -46,7 +46,7 @@ internal object ExponeaMockServer {
         } else {
             dispatcher.setFailFast(true)
         }
-        server.setDispatcher(dispatcher)
+        server.dispatcher = dispatcher
         return server
     }
 }

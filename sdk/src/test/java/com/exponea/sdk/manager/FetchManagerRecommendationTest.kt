@@ -10,8 +10,9 @@ import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.JsonPrimitive
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +26,7 @@ internal class FetchManagerRecommendationTest {
     }
 
     fun getResponse(response: String): ResponseBody {
-        return ResponseBody.create(MediaType.get("application/json"), response)
+        return response.toResponseBody("application/json".toMediaTypeOrNull())
     }
 
     private fun runTest(

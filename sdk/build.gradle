@@ -60,12 +60,12 @@ dependencies {
     //Keeping paperDb for migration purposes
     implementation 'io.github.pilgr:paperdb:2.7.1'
 
-    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
     // Deserialization
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
 
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.7.1"
@@ -79,7 +79,7 @@ dependencies {
     // Kotlin jUnit
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.2.40'
     // Networking Testing
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.1'
     testImplementation 'com.github.gmazzo:okhttp-mock:1.4.1'
     // Improved Unit Testing
     testImplementation "org.robolectric:robolectric:4.2"

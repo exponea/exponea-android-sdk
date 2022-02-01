@@ -30,9 +30,9 @@ internal class FetchManagerImpl(
     ): Callback {
         return object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                val responseCode = response.code()
+                val responseCode = response.code
                 Logger.d(this, "Response Code: $responseCode")
-                val jsonBody = response.body()?.string()
+                val jsonBody = response.body?.string()
                 if (response.isSuccessful) {
                     var result: Result<T>?
                     try {
@@ -48,7 +48,7 @@ internal class FetchManagerImpl(
                     }
                     onSuccess(result) // we need to call onSuccess outside of pokemon exception handling above
                 } else {
-                    val error = FetchError(jsonBody, response.message())
+                    val error = FetchError(jsonBody, response.message)
                     Logger.e(this, "Failed to fetch data: $error")
                     onFailure(Result(false, error))
                 }

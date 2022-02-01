@@ -127,9 +127,9 @@ internal class FlushManagerImpl(
         onFlushFinished: FlushFinishedCallback?
     ): (Call, Response) -> Unit {
         return { _, response ->
-            val responseCode = response.code()
+            val responseCode = response.code
             Logger.d(this, "Response Code: $responseCode")
-            when (response.code()) {
+            when (response.code) {
                 in 200..299 -> onEventSentSuccess(exportedEvent)
                 in 500..599 -> {
                     exportedEvent.shouldBeSkipped = true

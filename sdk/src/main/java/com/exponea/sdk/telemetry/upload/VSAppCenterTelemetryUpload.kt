@@ -23,6 +23,7 @@ import java.util.UUID
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -39,7 +40,7 @@ internal class VSAppCenterTelemetryUpload(
         private const val DEFAULT_UPLOAD_URL = "https://in.appcenter.ms/logs?Api-Version=1.0.0"
         private const val MAX_EVENT_PROPERTIES = 20
 
-        private val jsonMediaType: MediaType = MediaType.parse("application/json")!!
+        private val jsonMediaType: MediaType = "application/json".toMediaTypeOrNull()!!
         private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         init {
             isoDateFormat.timeZone = TimeZone.getTimeZone("UTC")

@@ -58,7 +58,7 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
                 if (response.isSuccessful) {
                     val file = createTempFile()
                     with(file.outputStream()) {
-                        response.body()?.byteStream()?.copyTo(this)
+                        response.body?.byteStream()?.copyTo(this)
                         this.close()
                     }
                     file.renameTo(File(directory, getFileName(url)))
@@ -66,7 +66,7 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
                 } else {
                     Logger.w(
                         this,
-                        "Error while preloading in-app message image. Server responded ${response.code()}"
+                        "Error while preloading in-app message image. Server responded ${response.code}"
                     )
                     callback?.invoke(false)
                 }

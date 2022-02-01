@@ -5,6 +5,7 @@ import com.exponea.sdk.util.Logger
 import okhttp3.Call
 import okhttp3.Interceptor
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
@@ -15,7 +16,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 
 internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
 
-    private val mediaTypeJson: MediaType = MediaType.parse("application/json")!!
+    private val mediaTypeJson: MediaType = "application/json".toMediaTypeOrNull()!!
     private lateinit var networkClient: OkHttpClient
 
     init {
@@ -26,7 +27,7 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
         return Interceptor {
             var request = it.request()
 
-            Logger.d(this, "Server address: ${request.url().host()}")
+            Logger.d(this, "Server address: ${request.url.host}")
 
             return@Interceptor try {
                 it.proceed(request)
@@ -40,7 +41,7 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
                         .protocol(Protocol.HTTP_2)
                         .message(message)
                         .request(it.request())
-                        .body(ResponseBody.create(MediaType.parse("text/plain"), message))
+                        .body(ResponseBody.create("text/plain".toMediaTypeOrNull(), message))
                         .build()
             }
         }

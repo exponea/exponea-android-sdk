@@ -182,7 +182,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val parsedResponse = ExponeaGson.instance.fromJson<SelfCheckResponse>(
-                        response.body()?.string(),
+                        response.body?.string(),
                         SelfCheckResponse::class.java
                     )
                     continuation.resume(parsedResponse.success)

@@ -6,8 +6,9 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -57,7 +58,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     """
 
     fun getResponse(response: String): ResponseBody {
-        return ResponseBody.create(MediaType.get("application/json"), response)
+        return response.toResponseBody("application/json".toMediaType())
     }
 
     @Test

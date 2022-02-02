@@ -64,3 +64,28 @@ If your application decides to present new Activity at the same time as the in-a
 
 ### In-app images caching
 To reduce the number of API calls and fetching time of in-app messages, SDK is caching the images displayed in messages. Therefore, once the SDK downloads the image, an image with the same URL may not be downloaded again, and will not change, since it was already cached. For this reason, we recommend always using different URLs for different images.
+
+
+### Custom in-app message actions
+If you want to override default SDK behavior, when in-app message action is performed (button is clicked, message is closed), or you want to add your code to be performed along with code executed by the SDK, you can set up `inAppMessageActionCallback` on Exponea instance.
+
+```kotlin
+Exponea.inAppMessageActionCallback = object : InAppMessageCallback {  
+    // If overrideDefaultBehavior is set to true, default in-app action will not be performed ( e.g. deep link )
+    override var overrideDefaultBehavior = true  
+    // If trackActions is set to false, click and close in-app events will not be tracked automatically
+    override var trackActions = false  
+  
+    override fun inAppMessageAction(  
+        messageId: String,  
+        button: InAppMessageButton?,  
+        interaction: Boolean,  
+        context: Context  
+    ) {  
+        // Here goes your code
+        // On in-app click, the button contains button text and button URL and the interaction is true
+        // On in-app close, the button is null, and the interaction is false.
+    }  
+}
+
+```

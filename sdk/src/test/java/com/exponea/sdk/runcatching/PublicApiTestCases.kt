@@ -32,6 +32,7 @@ internal object PublicApiTestCases {
         Pair(Exponea::defaultProperties, hashMapOf<String, Any>()),
         Pair(Exponea::isInitialized, false),
         Pair(Exponea::notificationDataCallback, null),
+        Pair(Exponea::inAppMessageActionCallback, Constants.InApps.defaultInAppMessageDelegate),
         Pair(Exponea::customerCookie, null),
         Pair(Exponea::checkPushSetup, false)
     )

@@ -32,6 +32,26 @@ class MainActivity : AppCompatActivity() {
         Exponea.checkPushSetup = true
         Exponea.handleCampaignIntent(intent, applicationContext)
 
+//        Uncomment this section, if you want to test in-app callback
+//        Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
+//            override var overrideDefaultBehavior = true
+//            override var trackActions = false
+//
+//            override fun inAppMessageAction(
+//                messageId: String,
+//                button: InAppMessageButton?,
+//                interaction: Boolean,
+//                context: Context
+//            ) {
+//                AlertDialog.Builder(context)
+//                .setTitle("In app action")
+//                .setMessage(" Message id: $messageId \n Interaction: $interaction \n ${button?.text} \n ${button?.url}")
+//                .setPositiveButton("OK") { _, _ -> }
+//                .create()
+//                .show()
+//            }
+//        }
+
         if (Exponea.isInitialized) {
             setupListeners()
         } else {

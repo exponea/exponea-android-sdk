@@ -1,5 +1,6 @@
 package com.exponea.sdk.view
 
+import android.app.Activity
 import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
@@ -99,7 +100,7 @@ internal class InAppMessageDialogPresenterTest(
         }
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
         val presenter = InAppMessagePresenter(activity.get())
-        val dismiss = spyk<() -> Unit>()
+        val dismiss = spyk<(Activity) -> Unit>()
         val presented =
             presenter.show(inAppMessageType, payload!!, BitmapFactory.decodeFile("mock-file"), 1234, mockk(), dismiss)
 
@@ -109,8 +110,8 @@ internal class InAppMessageDialogPresenterTest(
         buildActivity(InAppMessageActivity::class.java, intent).create().resume()
 
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
-        verify(exactly = 0) { dismiss() }
+        verify(exactly = 0) { dismiss(activity.get()) }
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.MILLISECONDS)
-        verify(exactly = 1) { dismiss() }
+        verify(exactly = 1) { dismiss(activity.get()) }
     }
 }

@@ -123,7 +123,7 @@ internal class InAppMessagePresenter(context: Context) {
         image: Bitmap?,
         timeout: Long?,
         actionCallback: (Activity, InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: () -> Unit
+        dismissedCallback: (Activity) -> Unit
     ): PresentedMessage? = runCatching {
         Logger.i(this, "Attempting to present in-app message.")
         val activity = currentActivity
@@ -141,7 +141,7 @@ internal class InAppMessagePresenter(context: Context) {
         }
         val presenterDismissedCallback = {
             presentedMessage = null
-            dismissedCallback()
+            dismissedCallback(activity)
         }
         val failedCallback = {
             presentedMessage = null

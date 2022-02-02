@@ -29,6 +29,7 @@ import com.exponea.sdk.models.FlushMode.IMMEDIATE
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
@@ -159,6 +160,15 @@ object Exponea {
                     component.pushNotificationRepository.clearExtraData()
                 }
             }
+        }.logOnException()
+
+    /**
+     * Whenever a in-app message button is clicked, this callback is called, if set up.
+     * Otherwise default button behaviour is handled by the SDK
+     */
+    var inAppMessageActionCallback: InAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
+        set(value) = runCatching {
+            field = value
         }.logOnException()
 
     /**

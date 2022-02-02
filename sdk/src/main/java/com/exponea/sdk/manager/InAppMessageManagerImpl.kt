@@ -13,6 +13,7 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -24,6 +25,7 @@ import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.Result
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -292,13 +294,36 @@ internal class InAppMessageManagerImpl(
                     image = bitmap,
                     timeout = message.timeout,
                     actionCallback = { activity, button ->
-                        displayStateRepository.setInteracted(message, Date())
-                        trackingDelegate.track(message, "click", true, button.buttonText, button.buttonLink)
                         Logger.i(this, "In-app message button clicked!")
-                        processInAppMessageAction(activity, button)
+                        displayStateRepository.setInteracted(message, Date())
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            trackingDelegate.track(message, "click", true, button.buttonText, button.buttonLink)
+                        }
+                        val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
+                        Handler(Looper.getMainLooper()).post {
+                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                                message.id,
+                                buttonInfo,
+                                true,
+                                activity
+                            )
+                        }
+                        if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+                            processInAppMessageAction(activity, button)
+                        }
                     },
-                    dismissedCallback = {
-                        trackingDelegate.track(message, "close", false)
+                    dismissedCallback = { activity ->
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            trackingDelegate.track(message, "close", false)
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                                message.id,
+                                null,
+                                false,
+                                activity
+                            )
+                        }
                     }
                 )
                 if (presented != null) {
@@ -318,7 +343,7 @@ internal class InAppMessageManagerImpl(
         )
     }
 
-    private fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
+    fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
         if (button.buttonType == InAppMessageButtonType.DEEPLINK) {
             try {
                 activity.startActivity(

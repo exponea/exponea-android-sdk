@@ -1,9 +1,11 @@
 package com.exponea.sdk.manager
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
@@ -12,6 +14,8 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageButton
+import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageFrequency
 import com.exponea.sdk.models.InAppMessagePayloadButton
@@ -93,6 +97,7 @@ internal class InAppMessageManagerImplTest {
             presenter
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
+        Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
     }
 
     @Test
@@ -467,7 +472,7 @@ internal class InAppMessageManagerImplTest {
         }
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<() -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
         every {
             presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
@@ -491,19 +496,21 @@ internal class InAppMessageManagerImplTest {
         }
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<() -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val spykManager = spyk(manager)
         every {
             presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
         } returns mockk()
 
-        waitForIt { manager.preload { it() } }
+        waitForIt { spykManager.preload { it() } }
 
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
-        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
+        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
             delegate.track(
                 InAppMessageTest.getInAppMessage(),
@@ -512,7 +519,10 @@ internal class InAppMessageManagerImplTest {
                 "Action",
                 "https://someaddress.com")
         }
-        dismissedCallbackSlot.captured.invoke()
+        verify(exactly = 1) {
+            spykManager.processInAppMessageAction(mockActivity, button)
+        }
+        dismissedCallbackSlot.captured.invoke(mockActivity)
         verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
     }
 
@@ -669,5 +679,145 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
         verify(exactly = 1) { delegate.track(message, "show", false) }
         verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should track and perform all actions if its enabled in callback`() {
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
+            override var overrideDefaultBehavior = false
+            override var trackActions = true
+
+            override fun inAppMessageAction(
+                messageId: String,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {}
+        })
+        Exponea.inAppMessageActionCallback = spykCallback
+
+        val delegate = spyk<InAppMessageTrackingDelegate>()
+        val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val spykManager = spyk(manager)
+
+        every {
+            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+        } returns mockk()
+
+        waitForIt { spykManager.preload { it() } }
+
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+
+        Robolectric.flushForegroundThreadScheduler()
+
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        actionCallbackSlot.captured.invoke(mockActivity, button)
+        verify(exactly = 1) {
+            delegate.track(
+                InAppMessageTest.getInAppMessage(),
+                "click",
+                true,
+                "Action",
+                "https://someaddress.com")
+        }
+        verify(exactly = 1) {
+            spykCallback.inAppMessageAction(
+                InAppMessageTest.getInAppMessage().id,
+                InAppMessageButton(button.buttonText, button.buttonLink),
+                true,
+                mockActivity
+            )
+        }
+        verify(exactly = 1) {
+            spykManager.processInAppMessageAction(mockActivity, button)
+        }
+        dismissedCallbackSlot.captured.invoke(mockActivity)
+        verify(exactly = 1) {
+            spykCallback.inAppMessageAction(
+                InAppMessageTest.getInAppMessage().id,
+                null,
+                false,
+                mockActivity
+            )
+        }
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
+    }
+
+    @Test
+    fun `should not track and perform any actions if its disabled in callback`() {
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
+            override var overrideDefaultBehavior = true
+            override var trackActions = false
+
+            override fun inAppMessageAction(
+                messageId: String,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {}
+        })
+        Exponea.inAppMessageActionCallback = spykCallback
+
+        val delegate = spyk<InAppMessageTrackingDelegate>()
+        val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val spykManager = spyk(manager)
+
+        every {
+            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+        } returns mockk()
+
+        waitForIt { spykManager.preload { it() } }
+
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+
+        Robolectric.flushForegroundThreadScheduler()
+
+        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        actionCallbackSlot.captured.invoke(mockActivity, button)
+        verify(exactly = 0) {
+            delegate.track(
+                any(),
+                any(),
+                true,
+                any(),
+                any())
+        }
+        verify(exactly = 1) {
+            spykCallback.inAppMessageAction(
+                InAppMessageTest.getInAppMessage().id,
+                InAppMessageButton(button.buttonText, button.buttonLink),
+                true,
+                mockActivity
+            )
+        }
+        verify(exactly = 0) {
+            spykManager.processInAppMessageAction(any(), any())
+        }
+        dismissedCallbackSlot.captured.invoke(mockActivity)
+        verify(exactly = 1) {
+            spykCallback.inAppMessageAction(
+                InAppMessageTest.getInAppMessage().id,
+                null,
+                false,
+                mockActivity
+            )
+        }
+        verify(exactly = 0) { delegate.track(any(), "close", false) }
     }
 }

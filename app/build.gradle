@@ -60,7 +60,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.preference:preference-ktx:1.1.1'
-    gmsImplementation 'com.google.firebase:firebase-messaging:21.0.0'
+    gmsImplementation 'com.google.firebase:firebase-messaging:23.0.0'
     hmsImplementation 'com.huawei.agconnect:agconnect-core:1.5.2.300'
     hmsImplementation 'com.huawei.hms:push:5.3.0.304'
 

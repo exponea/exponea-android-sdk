@@ -77,7 +77,6 @@ class AuthenticationActivity : AppCompatActivity() {
 
         // Set up our flushing
         Exponea.flushMode = FlushMode.IMMEDIATE
-
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

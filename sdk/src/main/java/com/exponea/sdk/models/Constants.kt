@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import android.content.Context
 import java.util.concurrent.TimeUnit
 
 internal object Constants {
@@ -66,5 +67,22 @@ internal object Constants {
     // Campaign default setup
     object Campaign {
         const val defaultCampaignTTL = 10.0
+    }
+
+    // In-app messages
+    object InApps {
+        val defaultInAppMessageDelegate = object : InAppMessageCallback {
+            override var overrideDefaultBehavior = false
+            override var trackActions = true
+
+            override fun inAppMessageAction(
+                messageId: String,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {
+                // do nothing here as default
+            }
+        }
     }
 }

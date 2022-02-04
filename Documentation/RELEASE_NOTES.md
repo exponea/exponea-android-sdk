@@ -1,4 +1,9 @@
 ## Release Notes
+## Release Notes for 3.0.2
+#### February 04, 2022
+* Features
+  * OkHttp library version bump
+
 ## Release Notes for 3.0.1
 #### January 19, 2022
 * Bug Fixes

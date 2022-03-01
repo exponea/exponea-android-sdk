@@ -29,6 +29,7 @@ import com.exponea.sdk.models.FlushMode.IMMEDIATE
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
@@ -890,4 +891,28 @@ object Exponea {
             )
         }.logOnException()
     }
+
+    /**
+     * Track in-app message banner click event
+     */
+    fun trackInAppMessageClick(
+        message: InAppMessage,
+        buttonText: String?,
+        buttonLink: String?
+    ) = runCatching {
+        requireInitialized {
+            component.eventManager.trackInAppMessageClick(message, buttonText, buttonLink)
+        }
+    }.logOnException()
+
+    /**
+     * Track in-app message banner close event
+     */
+    fun trackInAppMessageClose(
+        message: InAppMessage
+    ) = runCatching {
+        requireInitialized {
+            component.eventManager.trackInAppMessageClose(message)
+        }
+    }.logOnException()
 }

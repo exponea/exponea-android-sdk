@@ -17,5 +17,5 @@ interface InAppMessageCallback {
      * On in-app click, the button contains button text and button URL and the interaction is true
      * On in-app close, the button is null, and the interaction is false.
      */
-    fun inAppMessageAction(messageId: String, button: InAppMessageButton?, interaction: Boolean, context: Context)
+    fun inAppMessageAction(message: InAppMessage, button: InAppMessageButton?, interaction: Boolean, context: Context)
 }

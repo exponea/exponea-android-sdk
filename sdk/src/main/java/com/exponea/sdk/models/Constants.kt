@@ -76,7 +76,7 @@ internal object Constants {
             override var trackActions = true
 
             override fun inAppMessageAction(
-                messageId: String,
+                message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context

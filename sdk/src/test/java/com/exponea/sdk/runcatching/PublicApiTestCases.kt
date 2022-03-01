@@ -12,6 +12,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import kotlin.reflect.KFunction
@@ -133,7 +134,16 @@ internal object PublicApiTestCases {
         ) { Exponea.handleNewToken(ApplicationProvider.getApplicationContext(), "mock-push-token") },
         Pair<KFunction2<Context, String, Unit>, () -> Any>(
             Exponea::handleNewHmsToken
-        ) { Exponea.handleNewHmsToken(ApplicationProvider.getApplicationContext(), "mock-push-token") }
-
+        ) { Exponea.handleNewHmsToken(ApplicationProvider.getApplicationContext(), "mock-push-token") },
+        Pair(
+            Exponea::trackInAppMessageClick
+        ) { Exponea.trackInAppMessageClick(
+            InAppMessageTest.getInAppMessage(),
+            "mock-button-text",
+            "mock-button-link") },
+        Pair(
+            Exponea::trackInAppMessageClose
+        ) { Exponea.trackInAppMessageClose(InAppMessageTest.getInAppMessage())
+        }
     )
 }

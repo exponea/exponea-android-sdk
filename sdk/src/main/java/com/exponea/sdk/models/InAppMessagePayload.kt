@@ -4,7 +4,7 @@ import android.graphics.Color
 import com.exponea.sdk.util.Logger
 import com.google.gson.annotations.SerializedName
 
-internal data class InAppMessagePayload(
+data class InAppMessagePayload(
     @SerializedName("image_url")
     val imageUrl: String? = null,
     @SerializedName("title")

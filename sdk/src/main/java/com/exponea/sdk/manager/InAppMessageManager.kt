@@ -30,6 +30,16 @@ internal interface InAppMessageManager {
 
     fun sessionStarted(sessionStartDate: Date)
     fun preloadIfNeeded(timestamp: Double)
+    fun trackClickEvent(
+        message: InAppMessage,
+        trackingDelegate: InAppMessageTrackingDelegate,
+        buttonText: String?,
+        buttonLink: String?
+    )
+    fun trackCloseEvent(
+        message: InAppMessage,
+        trackingDelegate: InAppMessageTrackingDelegate
+    )
 }
 
 internal interface InAppMessageTrackingDelegate {

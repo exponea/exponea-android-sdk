@@ -6,7 +6,7 @@ import com.exponea.sdk.util.Logger
 import com.google.gson.annotations.SerializedName
 import java.util.Date
 
-internal data class InAppMessage(
+data class InAppMessage(
     @SerializedName("id")
     val id: String,
     @SerializedName("name")

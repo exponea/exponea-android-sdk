@@ -297,12 +297,12 @@ internal class InAppMessageManagerImpl(
                         Logger.i(this, "In-app message button clicked!")
                         displayStateRepository.setInteracted(message, Date())
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackingDelegate.track(message, "click", true, button.buttonText, button.buttonLink)
+                            trackClickEvent(message, trackingDelegate, button.buttonText, button.buttonLink)
                         }
                         val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
                         Handler(Looper.getMainLooper()).post {
                             Exponea.inAppMessageActionCallback.inAppMessageAction(
-                                message.id,
+                                message,
                                 buttonInfo,
                                 true,
                                 activity
@@ -314,11 +314,11 @@ internal class InAppMessageManagerImpl(
                     },
                     dismissedCallback = { activity ->
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackingDelegate.track(message, "close", false)
+                            trackCloseEvent(message, trackingDelegate)
                         }
                         Handler(Looper.getMainLooper()).post {
                             Exponea.inAppMessageActionCallback.inAppMessageAction(
-                                message.id,
+                                message,
                                 null,
                                 false,
                                 activity
@@ -341,6 +341,22 @@ internal class InAppMessageManagerImpl(
             com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
             hashMapOf("messageType" to message.rawMessageType)
         )
+    }
+
+    override fun trackClickEvent(
+        message: InAppMessage,
+        trackingDelegate: InAppMessageTrackingDelegate,
+        buttonText: String?,
+        buttonLink: String?
+    ) {
+        trackingDelegate.track(message, "click", true, buttonText, buttonLink)
+    }
+
+    override fun trackCloseEvent(
+        message: InAppMessage,
+        trackingDelegate: InAppMessageTrackingDelegate
+    ) {
+        trackingDelegate.track(message, "close", false)
     }
 
     fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {

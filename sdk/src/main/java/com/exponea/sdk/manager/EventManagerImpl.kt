@@ -7,6 +7,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
@@ -99,5 +100,19 @@ internal class EventManagerImpl(
                 inAppMessageTrackingDelegate
             )
         }
+    }
+
+    override fun trackInAppMessageClick(
+        message: InAppMessage,
+        buttonText: String?,
+        buttonLink: String?
+    ) {
+        inAppMessageManager.trackClickEvent(message, inAppMessageTrackingDelegate, buttonText, buttonLink)
+    }
+
+    override fun trackInAppMessageClose(
+        message: InAppMessage
+    ) {
+        inAppMessageManager.trackCloseEvent(message, inAppMessageTrackingDelegate)
     }
 }

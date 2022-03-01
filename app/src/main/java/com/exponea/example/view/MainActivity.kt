@@ -1,8 +1,10 @@
 package com.exponea.example.view
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.view.fragments.AnonymizeFragment
@@ -10,6 +12,9 @@ import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageButton
+import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isViewUrlIntent
 import kotlinx.android.synthetic.main.activity_main.navigation
@@ -33,24 +38,7 @@ class MainActivity : AppCompatActivity() {
         Exponea.handleCampaignIntent(intent, applicationContext)
 
 //        Uncomment this section, if you want to test in-app callback
-//        Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
-//            override var overrideDefaultBehavior = true
-//            override var trackActions = false
-//
-//            override fun inAppMessageAction(
-//                messageId: String,
-//                button: InAppMessageButton?,
-//                interaction: Boolean,
-//                context: Context
-//            ) {
-//                AlertDialog.Builder(context)
-//                .setTitle("In app action")
-//                .setMessage(" Message id: $messageId \n Interaction: $interaction \n ${button?.text} \n ${button?.url}")
-//                .setPositiveButton("OK") { _, _ -> }
-//                .create()
-//                .show()
-//            }
-//        }
+//        Exponea.inAppMessageActionCallback = getInAppMessageCallback()
 
         if (Exponea.isInitialized) {
             setupListeners()
@@ -78,6 +66,28 @@ class MainActivity : AppCompatActivity() {
                 R.id.actionPurchase -> replaceFragment(TrackFragment())
                 R.id.actionAnonymize -> replaceFragment(AnonymizeFragment())
                 else -> replaceFragment(FlushFragment())
+            }
+        }
+    }
+
+    private fun getInAppMessageCallback(): InAppMessageCallback {
+        return object : InAppMessageCallback {
+            override var overrideDefaultBehavior = true
+            override var trackActions = false
+
+            override fun inAppMessageAction(
+                message: InAppMessage,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {
+                AlertDialog.Builder(context)
+                .setTitle("In app action")
+                .setMessage(" Message id: ${message.id} \n " +
+                        "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
+                .setPositiveButton("OK") { _, _ -> }
+                .create()
+                .show()
             }
         }
     }

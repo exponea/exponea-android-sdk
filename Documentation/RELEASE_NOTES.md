@@ -1,4 +1,9 @@
 ## Release Notes
+## Release Notes for 3.0.3
+#### March 03, 2022
+* Features
+  * Callback for reacting on in-app message action clicks - check [In-app messages documentation](./IN_APP_MESSAGES.md) 
+
 ## Release Notes for 3.0.2
 #### February 04, 2022
 * Features

@@ -66,12 +66,12 @@ dependencies {
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
-
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.7.1"
     // View for in-app messages
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
 
     // Base Test
     testImplementation 'junit:junit:4.12'

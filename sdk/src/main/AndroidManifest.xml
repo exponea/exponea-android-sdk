@@ -10,7 +10,8 @@
         <activity
             android:name=".view.InAppMessageActivity"
             android:theme="@style/Theme.InAppMessageActivity"
-            android:screenOrientation="sensor" />
+            android:screenOrientation="sensor"
+            android:configChanges="orientation|screenSize"/>
 
         <activity
             android:name=".services.ExponeaPushTrackingActivity"

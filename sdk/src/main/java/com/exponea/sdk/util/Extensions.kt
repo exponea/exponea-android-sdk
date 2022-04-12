@@ -188,3 +188,9 @@ private fun Context.isOtherSDK(sdk: String): Boolean = runCatching {
     if (appInfo.metaData == null) return false
     return appInfo.metaData[sdk] == true
 }.returnOnException { false }
+
+fun Context.isCalledFromExampleApp(): Boolean = runCatching {
+    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+    if (appInfo.metaData == null) return false
+    return appInfo.metaData["ExponeaExampleApp"] == true
+}.returnOnException { false }

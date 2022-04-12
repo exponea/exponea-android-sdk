@@ -9,6 +9,7 @@ import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isCalledFromExampleApp
 import com.exponea.sdk.util.isCapacitorSDK
 import com.exponea.sdk.util.isFlutterSDK
 import com.exponea.sdk.util.isReactNativeSDK
@@ -48,33 +49,27 @@ internal class VSAppCenterTelemetryUpload(
     }
 
     private val APP_SECRET: String =
-        if (application.isReactNativeSDK()) {
-            if (BuildConfig.DEBUG) {
-                "8308ba5f-319a-452e-99eb-826a0714e344"
-            } else {
+
+    if (application.isCalledFromExampleApp()) {
+        // Use dev app center project when SDK is used in our demo app
+        "19dca50b-3467-488b-b1fa-47fb9258901a"
+    } else {
+        when {
+            application.isReactNativeSDK() -> {
                 "0be0c184-73d2-49d2-aa90-31c3895c2c54"
             }
-        } else if (application.isCapacitorSDK()) {
-            if (BuildConfig.DEBUG) {
-                "0dd0c2f1-9f7c-4230-9de8-083b7f236b8e"
-            } else {
+            application.isCapacitorSDK() -> {
                 "c942008a-ab47-42e3-82b0-5cbafb068344"
             }
-        } else if (application.isFlutterSDK()) {
-            if (BuildConfig.DEBUG) {
-                "a9113118-71d1-48d2-8780-a1df74e5e5fc"
-            } else {
+            application.isFlutterSDK() -> {
                 "05eaf27b-3955-4151-a524-f423615efeb2"
             }
-        } else if (application.isXamarinSDK()) {
-            "0b7cbf35-00cd-4a36-b2a1-c4c51450ec31"
-        } else {
-            if (BuildConfig.DEBUG) {
-                "19dca50b-3467-488b-b1fa-47fb9258901a"
-            } else {
-                "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
+            application.isXamarinSDK() -> {
+                "0b7cbf35-00cd-4a36-b2a1-c4c51450ec31"
             }
+            else -> "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
         }
+    }
 
     private val appInfo = TelemetryUtility.getAppInfo(application)
     private val networkClient = OkHttpClient()

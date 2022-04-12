@@ -48,9 +48,17 @@ internal class VSAppCenterTelemetryUpload(
         }
     }
 
+    private val isRunningTest: Boolean =
+        try {
+            Class.forName("com.exponea.ExponeaTestClass")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+
     private val APP_SECRET: String =
 
-    if (application.isCalledFromExampleApp()) {
+    if (application.isCalledFromExampleApp() || isRunningTest) {
         // Use dev app center project when SDK is used in our demo app
         "19dca50b-3467-488b-b1fa-47fb9258901a"
     } else {

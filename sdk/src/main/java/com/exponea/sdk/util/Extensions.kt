@@ -183,6 +183,22 @@ fun Context.isXamarinSDK(): Boolean {
     return isOtherSDK("ExponeaXamarinSDK")
 }
 
+fun Context.getReactNativeSDKVersion(): String? {
+    return getSDKVersion("ExponeaReactNativeSDKVersion")
+}
+
+fun Context.getCapacitorSDKVersion(): String? {
+    return getSDKVersion("ExponeaCapacitorSDKVersion")
+}
+
+fun Context.getFlutterSDKVersion(): String? {
+    return getSDKVersion("ExponeaFlutterSDKVersion")
+}
+
+fun Context.getXamarinSDKVersion(): String? {
+    return getSDKVersion("ExponeaXamarinSDKVersion")
+}
+
 private fun Context.isOtherSDK(sdk: String): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
     if (appInfo.metaData == null) return false
@@ -194,3 +210,9 @@ fun Context.isCalledFromExampleApp(): Boolean = runCatching {
     if (appInfo.metaData == null) return false
     return appInfo.metaData["ExponeaExampleApp"] == true
 }.returnOnException { false }
+
+private fun Context.getSDKVersion(metadataName: String): String? = runCatching {
+    val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+    if (appInfo.metaData == null) return null
+    return appInfo.metaData[metadataName] as String?
+}.returnOnException { null }

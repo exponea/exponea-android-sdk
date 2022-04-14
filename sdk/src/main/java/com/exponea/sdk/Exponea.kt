@@ -42,6 +42,7 @@ import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
+import com.exponea.sdk.util.VersionChecker
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isViewUrlIntent
@@ -683,8 +684,12 @@ object Exponea {
             }
         )
 
-        if (checkPushSetup && context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+        val isDebug = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        if (checkPushSetup && isDebug) {
             component.pushNotificationSelfCheckManager.start()
+        }
+        if (isDebug) {
+            VersionChecker(component.networkManager, context).warnIfNotLatestSDKVersion()
         }
     }
 

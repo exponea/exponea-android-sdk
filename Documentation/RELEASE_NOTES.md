@@ -1,4 +1,14 @@
 ## Release Notes
+## Release Notes for 3.0.4
+#### April 22, 2022
+* Features
+  * Warn in log when outdated SDK version is used
+* Bug Fixes
+  * Fixed: Track to dev project also if SDK is used from the tests
+  * Fixed: Development logs in production appCenter project
+  * Fixed: In-app closing when screen is rotated
+
+
 ## Release Notes for 3.0.3
 #### March 03, 2022
 * Features

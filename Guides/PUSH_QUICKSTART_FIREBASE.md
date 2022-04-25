@@ -68,6 +68,23 @@ Exponea SDK will only handle push notification messages coming from Exponea serv
 
  If you run the app, the SDK should track push token to Exponea servers. Self-check will tell you that, or you can find your customer in the Exponea web app and check user property `google_push_notification_id`
 
+> **Quick Tip:** If you are integrating a new Firebase project to existing project, or you are changing Firebase project completely, you may face an issue that your 'FirebaseMessagingService' is not called automatically.
+> To retrieve a fresh FCM token, you should consider to request a token manually as soon as possible after Firebase init.
+> ```kotlin
+> import android.app.Application
+> import com.exponea.sdk.Exponea
+> import com.google.firebase.installations.FirebaseInstallations
+> 
+> class ExponeaApp : Application() {
+>     override fun onCreate() {
+> 	    super.onCreate()
+> 	    FirebaseInstallations.getInstance().getToken(false).addOnSuccessListener {
+> 		    Exponea.handleNewToken(applicationContext, it.token)
+> 		}
+> 	}
+> }
+> ```
+
 ## Configuring Exponea to use your Firebase project 
  You need to connect the Exponea web application to your Firebase project.
    1. Open `Project settings` in your Exponea web app

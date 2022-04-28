@@ -86,6 +86,9 @@ Exponea.identifyCustomer(
         properties = properties
 )
 ```
+As result, the customer ID and properties are registered in your Exponea APP and you should see them in list `Data & Assets > Customers`
+> If you define a default properties (see Default Properties), they are sent along with customer properties.
+> In that case, please ensure that you allowed API to update a customer properties or you allowed to create a new properties in your Exponea APP (Project settings -> Access Management -> API -> Group permissions and check -> Customer properties)
 
 ### 🧳 Storing the events
 

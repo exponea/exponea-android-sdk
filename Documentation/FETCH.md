@@ -22,7 +22,7 @@ Resulting `CustomerRecommendation` contains system data from recommendation engi
 ```
 // Preparing the data.
 val recommendationOptions = CustomerRecommendationOptions(
-        id = idView.text.toString(),
+        id = "<recommendation_id>",
         fillWithRandom = true,
         size = 10
 )

@@ -42,6 +42,10 @@ Resulting file should be hosted at `https://your-domain.name/.well-known/assetli
 ## 🔍 Tracking Android App Links
 Exponea SDK can automatically decide whether the Intent that opened your application is an App Link, so you just need to call `Exponea.handleCampaignIntent(intent, applicationContext)`.
 
+App Link parameters are automatically tracked in `session_start` events when new session is started. If your app starts a new session, campaign parameters (`utm_source`, `utm_campaign`, `utm_content`, `utm_medium`, `utm_term` and `xnpe_cmp`) are sent within the session parameters to enable you to attribute the new session to a App Link click.
+
+> **NOTE:** If an existing session is resumed by clicking on an App Link, the resumed session is **NOT** attributed to the App Link click, the App Link click parameters are not tracked in the `session_start` event. Session behaviour is determined by the setup of the 'automaticSessionTracking' and 'sessionTimeout' parameters described in [ExponeaConfiguration](./CONFIG.md). Please consider this for manual session handling or when you test the App Link tracking during the development.
+
 In order to track session events with App Link parameters, you should call `Exponea.handleCampaignIntent` **before** your Activity onResume method is called. Ideally, make the call in your MainActivity `.onCreate` method.
 
 #### 💻 Example

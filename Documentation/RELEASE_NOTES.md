@@ -1,4 +1,15 @@
 ## Release Notes
+## Release Notes for 3.0.5
+#### May 23, 2022
+* Features
+  * Added example of Firebase token retrieval after adding Exponea SDK into already existing project
+  * Documentation note added that default properties are sent along with customer properties
+  * Example of usage of recommendation_id rewritten to match iOS documentation
+  * Documentation note for App Links data tracking with new vs resumed session
+* Bug Fixes
+  * Fixed: PushToken repository migration to support auto-backup due to issues with obsolete tokens
+
+
 ## Release Notes for 3.0.4
 #### April 22, 2022
 * Features

@@ -12,7 +12,7 @@ import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
-import com.exponea.sdk.repository.PushTokenRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
@@ -51,7 +51,7 @@ internal class FcmManagerImplTest {
         context = ApplicationProvider.getApplicationContext<Context>()
         eventManager = mockkClass(EventManagerImpl::class)
         every { eventManager.track(any(), any(), any(), any()) } just Runs
-        pushTokenRepository = spyk(PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)))
+        pushTokenRepository = spyk(PushTokenRepositoryProvider.get(context))
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),

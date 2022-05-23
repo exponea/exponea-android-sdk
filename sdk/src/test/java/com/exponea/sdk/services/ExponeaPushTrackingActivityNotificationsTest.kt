@@ -16,7 +16,7 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
-import com.exponea.sdk.repository.PushTokenRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import io.mockk.Runs
@@ -168,7 +168,7 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
-            PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)),
+            PushTokenRepositoryProvider.get(context),
             PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)

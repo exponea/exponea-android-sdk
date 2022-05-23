@@ -14,6 +14,6 @@ internal interface PushTokenRepository {
 
 internal object PushTokenRepositoryProvider {
     fun get(context: Context): PushTokenRepositoryImpl {
-        return PushTokenRepositoryImpl(ExponeaPreferencesImpl(context))
+        return PushTokenRepositoryImpl(ExponeaPreferencesImpl(context, "EXPONEA_PUSH_TOKEN"))
     }
 }

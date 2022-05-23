@@ -46,7 +46,7 @@ import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
-import com.exponea.sdk.repository.PushTokenRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.util.ExponeaGson
@@ -82,7 +82,7 @@ internal class ExponeaComponent(
 
     internal val eventRepository: EventRepository = EventRepositoryImpl(context, preferences)
 
-    internal val pushTokenRepository: PushTokenRepository = PushTokenRepositoryImpl(preferences)
+    internal val pushTokenRepository: PushTokenRepository = PushTokenRepositoryProvider.get(context)
 
     internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
 

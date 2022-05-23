@@ -4,8 +4,14 @@ import android.content.Context
 import android.preference.PreferenceManager
 import com.exponea.sdk.util.Logger
 
-internal class ExponeaPreferencesImpl(context: Context) : ExponeaPreferences {
-    private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+internal class ExponeaPreferencesImpl(
+        context: Context,
+        prefsName: String? = null
+    ) : ExponeaPreferences {
+
+    private val sharedPreferences = prefsName?.let {
+        context.getSharedPreferences(it, 0)
+    } ?: PreferenceManager.getDefaultSharedPreferences(context)
 
     override fun setString(key: String, value: String) {
         sharedPreferences.edit().putString(key, value).apply()

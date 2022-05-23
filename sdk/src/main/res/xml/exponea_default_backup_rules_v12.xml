@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="."/>
+        <include domain="database" path="."/>
+        <include domain="sharedpref" path="."/>
+        <include domain="external" path="."/>
+        <include domain="root" path="."/>
+        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml"/>
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="."/>
+        <include domain="database" path="."/>
+        <include domain="sharedpref" path="."/>
+        <include domain="external" path="."/>
+        <include domain="root" path="."/>
+        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml"/>
+    </device-transfer>
+</data-extraction-rules>

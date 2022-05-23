@@ -22,7 +22,7 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
 
     override fun get(): String? {
         val token = preferences.getString(key, "")
-        return if (token.isNotEmpty()) token else null
+        return token.ifEmpty { null }
     }
 
     override fun getLastTrackDateInMilliseconds(): Long? {

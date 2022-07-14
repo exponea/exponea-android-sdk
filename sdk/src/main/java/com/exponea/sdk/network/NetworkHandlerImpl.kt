@@ -12,6 +12,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody
+import okhttp3.brotli.BrotliInterceptor
 import okhttp3.logging.HttpLoggingInterceptor
 
 internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfiguration) : NetworkHandler {
@@ -66,6 +67,7 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
         networkClient = OkHttpClient.Builder()
                 .addInterceptor(getNetworkLogger())
                 .addInterceptor(networkInterceptor)
+                .addInterceptor(BrotliInterceptor)  // keep after logging due to body logging
                 .build()
     }
 

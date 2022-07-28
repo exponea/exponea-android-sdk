@@ -1,4 +1,12 @@
 ## Release Notes
+## Release Notes for 3.0.6
+#### July 28, 2022
+* Features
+  * Added a support for gzip and brotli HTTP compression for lower bandwith
+* Bug Fixes
+  * Fixed: Delivered push notification is not shown and tracked on Android 26+ after app cold-start by opening a push notification (This issue is since version 2.9.7)
+
+
 ## Release Notes for 3.0.5
 #### May 23, 2022
 * Features

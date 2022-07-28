@@ -32,6 +32,10 @@ class AuthenticationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_authentication)
         setSupportActionBar(toolbar)
 
+        editTextAuthCode.setText(authorizationToken)
+        editTextProjectToken.setText(projectToken)
+        editTextApiUrl.setText(apiUrl)
+
         editTextAuthCode.onTextChanged { authorizationToken = it }
         editTextRegisteredIds.onTextChanged { registeredIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }

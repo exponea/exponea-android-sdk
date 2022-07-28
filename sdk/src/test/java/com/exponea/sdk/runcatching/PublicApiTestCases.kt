@@ -90,8 +90,8 @@ internal object PublicApiTestCases {
         },
         Pair<KFunction1<Map<String, String>, Boolean>, () -> Any>(
             Exponea::isExponeaPushNotification
-        ) { // there is no way for this to throw exception, we'll simulate it to make tests pass
-            if (!Exponea.safeModeEnabled) throw ExponeaExceptionThrowing.TestPurposeException()
+        ) {
+            Exponea.isExponeaPushNotification(null)
         },
         Pair(
             Exponea::trackClickedPush
@@ -145,5 +145,28 @@ internal object PublicApiTestCases {
             Exponea::trackInAppMessageClose
         ) { Exponea.trackInAppMessageClose(InAppMessageTest.getInAppMessage())
         }
+    )
+
+    val autoInitializingMethods = arrayOf(
+//        Exponea::anonymize,
+//        Exponea::identifyCustomer,
+//        Exponea::flushData,
+//        Exponea::getConsents,
+        Exponea::handleCampaignIntent,
+        Exponea::handleRemoteMessage,
+//        Exponea::isExponeaPushNotification,
+//        Exponea::trackClickedPush,
+//        Exponea::trackDeliveredPush,
+//        Exponea::trackEvent,
+//        Exponea::trackPaymentEvent,
+//        Exponea::trackPushToken,
+//        Exponea::trackHmsPushToken,
+//        Exponea::trackSessionEnd,
+//        Exponea::trackSessionStart,
+//        Exponea::fetchRecommendation,
+        Exponea::handleNewToken,
+        Exponea::handleNewHmsToken,
+//        Exponea::trackInAppMessageClick,
+//        Exponea::trackInAppMessageClose
     )
 }

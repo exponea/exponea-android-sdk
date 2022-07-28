@@ -582,22 +582,24 @@ object Exponea {
      * @return true if notification is coming from Exponea servers, false otherwise.
      */
     fun handleRemoteMessage(
-        applicationContext: Context,
-        messageData: Map<String, String>?,
-        manager: NotificationManager,
-        showNotification: Boolean = true
+            applicationContext: Context,
+            messageData: Map<String, String>?,
+            manager: NotificationManager,
+            showNotification: Boolean = true
     ): Boolean = runCatching {
         if (!isExponeaPushNotification(messageData)) return@runCatching false
-        if (!MessagingUtils.areNotificationsBlockedForTheApp(applicationContext)) {
-            autoInitialize(applicationContext) {
+        autoInitialize(applicationContext, notInitializedBlock = {
+            Logger.e(this@Exponea, "Exponea notif message delivered to device but Exponea is not initialized yet (???)")
+        }) {
+            if (!MessagingUtils.areNotificationsBlockedForTheApp(applicationContext)) {
                 if (!isAutoPushNotification) {
                     return@autoInitialize
                 }
                 component.fcmManager.handleRemoteMessage(messageData, manager, showNotification)
+            } else {
+                Logger.i(this, "Notification delivery not handled," +
+                        " notifications for the app are turned off in the settings")
             }
-        } else {
-            Logger.i(this, "Notification delivery not handled," +
-                    " notifications for the app are turned off in the settings")
         }
         return true
     }.returnOnException { true }
@@ -810,16 +812,21 @@ object Exponea {
      * Please do not modify.
      */
     fun anonymize(
-        exponeaProject: ExponeaProject? = configuration.mainExponeaProject,
-        projectRouteMap: Map<EventType, List<ExponeaProject>>? = configuration.projectRouteMap
+        exponeaProject: ExponeaProject? = null,
+        projectRouteMap: Map<EventType, List<ExponeaProject>>? = null
     ) = runCatching {
-        requireInitialized {
-            component.anonymize(
-                    exponeaProject ?: configuration.mainExponeaProject,
-                    projectRouteMap ?: configuration.projectRouteMap
-            )
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
-        }
+        requireInitialized(
+                notInitializedBlock = {
+                    Logger.v(this@Exponea, "Exponea is not initialize")
+                },
+                initializedBlock = {
+                    component.anonymize(
+                            exponeaProject ?: configuration.mainExponeaProject,
+                            projectRouteMap ?: configuration.projectRouteMap
+                    )
+                    telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
+                }
+        )
     }.logOnException()
 
     /**

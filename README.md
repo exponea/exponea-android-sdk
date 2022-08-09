@@ -47,6 +47,7 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 To implement the Exponea SDK you must configure the SDK first:
 
 *  **[Detailed Guides about ExponeaSDK Integrations](./Guides/README.md)**
+    * [SDK version update guide](./Guides/VERSION_UPDATE.md)
 * [Configuration](./Documentation/CONFIG.md)
 * [Project Mapping](./Documentation/PROJECT_MAPPING.md)
 

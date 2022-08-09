@@ -6,18 +6,14 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.runcatching.PublicApiTestCases.autoInitializingMethods
-import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.every
-import io.mockk.mockkConstructor
-import org.junit.Before
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
-import kotlin.test.fail
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaColdStartPublicApiTests(
@@ -62,5 +58,4 @@ internal class ExponeaColdStartPublicApiTests(
                     "SDK should not be initialized without config after method ${method.name}")
         }
     }
-
 }

@@ -40,8 +40,20 @@ internal interface InAppMessageManager {
         message: InAppMessage,
         trackingDelegate: InAppMessageTrackingDelegate
     )
+    fun trackErrorEvent(
+        message: InAppMessage,
+        error: String,
+        trackingDelegate: InAppMessageTrackingDelegate
+    )
 }
 
 internal interface InAppMessageTrackingDelegate {
-    fun track(message: InAppMessage, action: String, interaction: Boolean, text: String? = null, link: String? = null)
+    fun track(
+        message: InAppMessage,
+        action: String,
+        interaction: Boolean,
+        text: String? = null,
+        link: String? = null,
+        error: String? = null
+    )
 }

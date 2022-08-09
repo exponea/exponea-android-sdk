@@ -84,7 +84,8 @@ enum class InAppMessageType(val value: String) {
     MODAL("modal"),
     ALERT("alert"),
     FULLSCREEN("fullscreen"),
-    SLIDE_IN("slide_in")
+    SLIDE_IN("slide_in"),
+    FREEFORM("freeform")
 }
 
 enum class TextPosition {

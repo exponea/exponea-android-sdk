@@ -6,7 +6,6 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.runcatching.ExponeaExceptionThrowing.TestPurposeException
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import okhttp3.mock.method
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import org.junit.Before
@@ -58,9 +57,9 @@ internal class ExponeaSafeModeMethodTest(
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
         if (method == Exponea::isExponeaPushNotification) {
-            //Note: cannot throw TestPurposeException because it is not accessing SDK in any way
-            //we kept invocation of method in this test for check of any other exception/error possibility
-            //but TestPurposeException has to be simulated for test pass
+            // Note: cannot throw TestPurposeException because it is not accessing SDK in any way
+            // we kept invocation of method in this test for check of any other exception/error possibility
+            // but TestPurposeException has to be simulated for test pass
             throw TestPurposeException()
         }
     }

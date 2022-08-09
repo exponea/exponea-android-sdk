@@ -21,7 +21,7 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
             EndPointName.TRACK_CAMPAIGN -> "/track/v2/projects/$splitterToken/campaigns/clicks"
             EndPointName.CUSTOMERS_ATTRIBUTES -> "/data/v2/projects/$splitterToken/customers/attributes"
             EndPointName.CONSENTS -> "/data/v2/projects/$splitterToken/consent/categories"
-            EndPointName.IN_APP_MESSAGES -> "/webxp/s/$splitterToken/inappmessages"
+            EndPointName.IN_APP_MESSAGES -> "/webxp/s/$splitterToken/inappmessages?v=1"
             EndPointName.PUSH_SELF_CHECK -> "/campaigns/send-self-check-notification?project_id=$splitterToken"
         }
 

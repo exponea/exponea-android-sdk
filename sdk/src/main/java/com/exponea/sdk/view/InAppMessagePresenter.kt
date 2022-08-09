@@ -11,80 +11,26 @@ import android.os.Looper
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
+import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
 import java.lang.Exception
 
-internal class InAppMessagePresenter(context: Context) {
+internal class InAppMessagePresenter(
+    context: Context,
+    private var bitmapCache: InAppMessageBitmapCache
+) {
     class PresentedMessage(
         val messageType: InAppMessageType,
-        val payload: InAppMessagePayload,
-        val image: Bitmap?,
+        val payload: InAppMessagePayload?,
+        val payloadHtml: HtmlNormalizer.NormalizedResult?,
         val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
         val dismissedCallback: (() -> Unit),
-        val failedCallback: (() -> Unit)
+        val failedCallback: ((String) -> Unit)
     )
-
-    companion object {
-        fun getView(
-            activity: Activity,
-            messageType: InAppMessageType,
-            payload: InAppMessagePayload,
-            image: Bitmap?,
-            timeout: Long?,
-            actionCallback: (InAppMessagePayloadButton) -> Unit,
-            dismissedCallback: () -> Unit
-        ): InAppMessageView? {
-            var messageTimeout = timeout
-            val view = when (messageType) {
-                InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
-                    activity,
-                    messageType == InAppMessageType.FULLSCREEN,
-                    payload,
-                    image ?: return null,
-                    actionCallback,
-                    dismissedCallback
-                )
-                InAppMessageType.ALERT -> InAppMessageAlert(
-                    activity,
-                    payload,
-                    actionCallback,
-                    dismissedCallback
-                )
-                InAppMessageType.SLIDE_IN -> {
-                    // slide-in message has 4 second auto-dismiss default
-                    if (timeout == null) messageTimeout = 4000
-                    InAppMessageSlideIn(
-                        activity,
-                        payload,
-                        image ?: return null,
-                        actionCallback,
-                        dismissedCallback
-                    )
-                }
-            }
-            if (messageTimeout != null) {
-                Handler(Looper.getMainLooper()).postDelayed(
-                    {
-                        if (view.isPresented) {
-                            try {
-                                view.dismiss()
-                            } catch (ex: Exception) {
-                                Logger.i(
-                                        this,
-                                        "InAppMessageActivity is probably already destroyed," +
-                                                " skipping dialog dismiss")
-                            }
-                        }
-                    },
-                    messageTimeout
-                )
-            }
-            return view
-        }
-    }
 
     var presentedMessage: PresentedMessage? = null
         private set
@@ -117,13 +63,79 @@ internal class InAppMessagePresenter(context: Context) {
         )
     }
 
+    fun getView(
+        activity: Activity,
+        messageType: InAppMessageType,
+        payload: InAppMessagePayload?,
+        payloadHtml: HtmlNormalizer.NormalizedResult?,
+        timeout: Long?,
+        actionCallback: (InAppMessagePayloadButton) -> Unit,
+        dismissedCallback: () -> Unit,
+        errorCallback: (String) -> Unit
+    ): InAppMessageView? {
+        var messageTimeout = timeout
+        val view = when (messageType) {
+            InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
+                    activity,
+                    messageType == InAppMessageType.FULLSCREEN,
+                    payload!!,
+                    loadImageByPayload(payload) ?: return null,
+                    actionCallback,
+                    dismissedCallback
+            )
+            InAppMessageType.ALERT -> InAppMessageAlert(
+                    activity,
+                    payload!!,
+                    actionCallback,
+                    dismissedCallback
+            )
+            InAppMessageType.SLIDE_IN -> {
+                // slide-in message has 4 second auto-dismiss default
+                if (timeout == null) messageTimeout = 4000
+                InAppMessageSlideIn(
+                        activity,
+                        payload!!,
+                        loadImageByPayload(payload) ?: return null,
+                        actionCallback,
+                        dismissedCallback
+                )
+            }
+            InAppMessageType.FREEFORM -> InAppMessageWebview(
+                    activity, payloadHtml!!, actionCallback, dismissedCallback, errorCallback
+            )
+        }
+        if (messageTimeout != null) {
+            Handler(Looper.getMainLooper()).postDelayed(
+                    {
+                        if (view.isPresented) {
+                            try {
+                                view.dismiss()
+                            } catch (ex: Exception) {
+                                Logger.i(
+                                        this,
+                                        "InAppMessageActivity is probably already destroyed," +
+                                                " skipping dialog dismiss")
+                            }
+                        }
+                    },
+                    messageTimeout
+            )
+        }
+        return view
+    }
+
+    private fun loadImageByPayload(payload: InAppMessagePayload): Bitmap? {
+        return payload.imageUrl?.let { bitmapCache.get(it) }
+    }
+
     fun show(
         messageType: InAppMessageType,
-        payload: InAppMessagePayload,
-        image: Bitmap?,
+        payload: InAppMessagePayload?,
+        payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (Activity, InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: (Activity) -> Unit
+        dismissedCallback: (Activity) -> Unit,
+        failedCallback: (String) -> Unit
     ): PresentedMessage? = runCatching {
         Logger.i(this, "Attempting to present in-app message.")
         val activity = currentActivity
@@ -136,21 +148,25 @@ internal class InAppMessagePresenter(context: Context) {
             return null
         }
         val presenterActionCallback = { button: InAppMessagePayloadButton ->
+            Logger.i(this, "InApp action clicked ${button.buttonLink}")
             presentedMessage = null
             actionCallback(activity, button)
         }
         val presenterDismissedCallback = {
+            Logger.i(this, "InApp dismissed")
             presentedMessage = null
             dismissedCallback(activity)
         }
-        val failedCallback = {
+        val failedCallback = { error: String ->
+            Logger.i(this, "InApp got error $error")
             presentedMessage = null
+            failedCallback(error)
         }
         presentedMessage =
             PresentedMessage(
                 messageType,
                 payload,
-                image,
+                payloadHtml,
                 timeout,
                 presenterActionCallback,
                 presenterDismissedCallback,
@@ -162,15 +178,16 @@ internal class InAppMessagePresenter(context: Context) {
                 val intent = Intent(activity, InAppMessageActivity::class.java)
                 activity.startActivity(intent)
             }
-            InAppMessageType.SLIDE_IN -> {
+            InAppMessageType.SLIDE_IN, InAppMessageType.FREEFORM -> {
                 getView(
                     activity,
                     messageType,
                     payload,
-                    image,
+                    payloadHtml,
                     timeout,
                     presenterActionCallback,
-                    presenterDismissedCallback
+                    presenterDismissedCallback,
+                    failedCallback
                 )?.show()
             }
         }

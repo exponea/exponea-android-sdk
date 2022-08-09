@@ -3,6 +3,7 @@ package com.exponea.sdk.models
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.google.gson.Gson
 import kotlin.test.assertEquals
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -48,7 +49,9 @@ internal class InAppMessageTest {
                 "to_date": null
             },
             "load_delay": 2000,
-            "close_timeout": 1000
+            "close_timeout": 1000,
+            "payload_html": null,
+            "is_html": false
         }
         """
 
@@ -60,7 +63,8 @@ internal class InAppMessageTest {
             imageUrl: String? = null,
             priority: Int? = null,
             timeout: Long? = null,
-            delay: Long? = null
+            delay: Long? = null,
+            environment: MockWebServer? = null
         ): InAppMessage {
             return InAppMessage(
                 id = id ?: "5dd86f44511946ea55132f29",
@@ -75,7 +79,7 @@ internal class InAppMessageTest {
                 delay = delay,
                 timeout = timeout,
                 payload = InAppMessagePayload(
-                    imageUrl = imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
+                    imageUrl = testUrl(imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg", environment),
                     title = "filip.vozar@exponea.com",
                     titleTextColor = "#000000",
                     titleTextSize = "22px",
@@ -88,13 +92,22 @@ internal class InAppMessageTest {
                         InAppMessagePayloadButton(
                             rawButtonType = "deep-link",
                             buttonText = "Action",
-                            buttonLink = "https://someaddress.com",
+                            buttonLink = testUrl("https://someaddress.com", environment),
                             buttonTextColor = "#ffffff",
                             buttonBackgroundColor = "#f44cac"
                         )
                     )
-                )
+                ),
+                payloadHtml = null,
+                isHtml = false
             )
+        }
+
+        private fun testUrl(url: String, environment: MockWebServer?): String {
+            if (environment == null) {
+                return url
+            }
+            return environment.url(url).toString()
         }
 
         fun getInAppMessage(
@@ -103,6 +116,7 @@ internal class InAppMessageTest {
             trigger: EventFilter? = null,
             frequency: String? = null,
             payload: InAppMessagePayload? = null,
+            payloadHtml: String? = null,
             variantId: Int = 0,
             variantName: String? = null,
             priority: Int? = null,
@@ -121,7 +135,9 @@ internal class InAppMessageTest {
                 priority = priority,
                 delay = delay,
                 timeout = timeout,
-                payload = payload
+                payload = payload,
+                payloadHtml = payloadHtml,
+                isHtml = payloadHtml?.isNotBlank()
             )
         }
     }

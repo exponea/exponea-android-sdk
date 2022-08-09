@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import android.text.TextUtils
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.models.eventfilter.EventFilterEvent
 import com.exponea.sdk.util.Logger
@@ -12,7 +13,7 @@ data class InAppMessage(
     @SerializedName("name")
     val name: String,
     @SerializedName("message_type")
-    val rawMessageType: String,
+    val rawMessageType: String?,
     @SerializedName("frequency")
     val rawFrequency: String,
     @SerializedName("payload")
@@ -30,7 +31,11 @@ data class InAppMessage(
     @SerializedName("load_delay")
     val delay: Long?,
     @SerializedName("close_timeout")
-    val timeout: Long?
+    val timeout: Long?,
+    @SerializedName("payload_html")
+    val payloadHtml: String?,
+    @SerializedName("is_html")
+    val isHtml: Boolean?
 ) {
     val frequency: InAppMessageFrequency?
         get() {
@@ -44,8 +49,11 @@ data class InAppMessage(
 
     val messageType: InAppMessageType
         get() {
+            if (isHtml == true) {
+                return InAppMessageType.FREEFORM
+            }
             return try {
-                InAppMessageType.valueOf(rawMessageType.uppercase())
+                InAppMessageType.valueOf(rawMessageType!!.uppercase())
             } catch (e: Throwable) {
                 Logger.e(this, "Unknown in-app-message type $rawMessageType. $e")
                 InAppMessageType.MODAL
@@ -116,6 +124,10 @@ data class InAppMessage(
             }
             else -> return true
         }
+    }
+
+    fun hasPayload(): Boolean {
+        return payload != null || !TextUtils.isEmpty(payloadHtml)
     }
 }
 

@@ -8,6 +8,8 @@ import android.util.Base64
 import com.exponea.sdk.util.Logger
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.min
 import okhttp3.Call
@@ -19,9 +21,12 @@ import okhttp3.Response
 internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitmapCache {
     companion object {
         const val DIRECTORY = "exponeasdk_in_app_message_storage"
+        private const val DOWNLOAD_TIMEOUT_SECONDS = 10L
     }
 
-    private val httpClient = OkHttpClient()
+    private val httpClient = OkHttpClient.Builder()
+            .callTimeout(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
+            .build()
     private val directory: File = File(context.cacheDir, DIRECTORY)
     init {
         if (!directory.exists()) {
@@ -43,17 +48,44 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
         }
     }
 
-    override fun preload(url: String, callback: ((Boolean) -> Unit)?) {
-        if (!has(url)) {
-            downloadImage(url, callback)
-        } else {
+    override fun preload(urls: List<String>, callback: ((Boolean) -> Unit)?) {
+        if (urls.isEmpty()) {
             callback?.invoke(true)
+            return
+        }
+        val counter = AtomicInteger(urls.size)
+        val downloadQueue = mutableListOf<Call>()
+        val perImageCallback: ((Boolean) -> Unit) = { downloaded ->
+            if (downloaded && counter.decrementAndGet() <= 0) {
+                // this and ALL images are downloaded
+                callback?.invoke(true)
+            } else if (!downloaded) {
+                // this image has not been downloaded -> global failure
+                callback?.invoke(false)
+                // stop downloading of others, there is no point to finish it
+                downloadQueue.forEach { downloadRequest ->
+                    try {
+                        downloadRequest.cancel()
+                    } catch (e: Exception) {
+                        // silent close
+                    }
+                }
+            }
+        }
+        for (imageUrl in urls) {
+            if (has(imageUrl)) {
+                counter.getAndDecrement()
+                perImageCallback.invoke(true)
+            } else {
+                downloadQueue.add(downloadImage(imageUrl, perImageCallback))
+            }
         }
     }
 
-    fun downloadImage(url: String, callback: ((Boolean) -> Unit)?) {
+    fun downloadImage(url: String, callback: ((Boolean) -> Unit)?): Call {
         val request = Request.Builder().url(url).build()
-        httpClient.newCall(request).enqueue(object : Callback {
+        val downloadRequest = httpClient.newCall(request)
+        downloadRequest.enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val file = createTempFile()
@@ -78,6 +110,7 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
                 callback?.invoke(false)
             }
         })
+        return downloadRequest
     }
 
     override fun has(url: String): Boolean {

@@ -108,14 +108,15 @@ internal class ExponeaComponent(
 
     internal val connectionManager: ConnectionManager = ConnectionManagerImpl(context)
 
-    internal val inAppMessagePresenter = InAppMessagePresenter(context)
+    internal val inAppMessagesBitmapCache = InAppMessageBitmapCacheImpl(context)
+    internal val inAppMessagePresenter = InAppMessagePresenter(context, inAppMessagesBitmapCache)
     internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
         exponeaConfiguration,
         customerIdsRepository,
         inAppMessagesCache,
         fetchManager,
         inAppMessageDisplayStateRepository,
-        InAppMessageBitmapCacheImpl(context),
+        inAppMessagesBitmapCache,
         inAppMessagePresenter
     )
 

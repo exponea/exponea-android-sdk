@@ -122,5 +122,28 @@ internal object NotificationTestPayloads {
             }""",
             "message" to "Notification text"
     )
+    val PRODUCTION_NOTIFICATION_2 = hashMapOf(
+            "notification_id" to "1545339447",
+            "source" to "xnpe_platform",
+            "silent" to "false",
+            "action" to "app",
+            "url_params" to """{"utm_campaign":"Unnamed mobile push","utm_medium":"mobile_push_notification","utm_source":"exponea","utm_content":"hu"}""",
+            "title" to "Test sending",
+            "attributes" to """{
+            "campaign_name":"Use Case 001: alfa",
+            "event_type":"campaign",
+            "action_id":84,
+            "action_type":"mobile notification",
+            "campaign_policy":"",
+            "subject":"Test sending",
+            "action_name":"Unnamed mobile push",
+            "recipient":"dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q",
+            "language":"",
+            "campaign_id":"5fc5439d3680dcf8ecf1fae1",
+            "platform":"android",
+            "sent_timestamp":1658403764.924152
+        }""",
+            "message" to "PROD issue test"
+    )
     /* ktlint-enable== max-line-length */
 }

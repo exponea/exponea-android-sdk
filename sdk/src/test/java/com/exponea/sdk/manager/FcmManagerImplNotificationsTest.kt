@@ -549,6 +549,72 @@ internal class FcmManagerImplNotificationsTest(
                                         "message" to "We have a great deal for you today, don't miss it!"
                                 )
                         )
+                ),
+                TestCase(
+                        "notification from production 002",
+                        NotificationTestPayloads.PRODUCTION_NOTIFICATION_2,
+                        true,
+                        1545339447,
+                        {
+                            val notificationData = NotificationData(
+                                    dataMap = hashMapOf(
+                                            "event_type" to "campaign",
+                                            "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
+                                            "campaign_name" to "Use Case 001: alfa",
+                                            "action_id" to 84.0,
+                                            "action_name" to "Unnamed mobile push",
+                                            "action_type" to "mobile notification",
+                                            "campaign_policy" to "",
+                                            "platform" to "android",
+                                            "language" to "",
+                                            "subject" to "Test sending",
+                                            "recipient" to "dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q", // ktlint-disable max-line-length
+                                            "sent_timestamp" to 1658403764.924152
+                                    ),
+                                    campaignMap = mapOf(
+                                            "utm_source" to "exponea",
+                                            "utm_campaign" to "Unnamed mobile push",
+                                            "utm_medium" to "mobile_push_notification",
+                                            "utm_content" to "hu"
+                                    )
+                            )
+                        },
+                        NotificationData(
+                                dataMap = hashMapOf(
+                                        "event_type" to "campaign",
+                                        "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
+                                        "campaign_name" to "Use Case 001: alfa",
+                                        "action_id" to 84.0,
+                                        "action_name" to "Unnamed mobile push",
+                                        "action_type" to "mobile notification",
+                                        "campaign_policy" to "",
+                                        "platform" to "android",
+                                        "language" to "",
+                                        "subject" to "Test sending",
+                                        "recipient" to "dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q", // ktlint-disable max-line-length
+                                        "sent_timestamp" to 1658403764.924152
+                                ),
+                                campaignMap = mapOf(
+                                        "utm_source" to "exponea",
+                                        "utm_campaign" to "Unnamed mobile push",
+                                        "utm_medium" to "mobile_push_notification",
+                                        "utm_content" to "hu"
+                                )
+                        ),
+                        mapOf(
+                                "campaign_name" to "Use Case 001: alfa",
+                                "event_type" to "campaign",
+                                "action_id" to 84.0,
+                                "action_type" to "mobile notification",
+                                "campaign_policy" to "",
+                                "subject" to "Test sending",
+                                "action_name" to "Unnamed mobile push",
+                                "recipient" to "dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q", // ktlint-disable max-line-length
+                                "language" to "",
+                                "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
+                                "platform" to "android",
+                                "sent_timestamp" to 1658403764.924152
+                        )
                 )
         )
 
@@ -595,6 +661,7 @@ internal class FcmManagerImplNotificationsTest(
         manager.handleRemoteMessage(notificationPayload, notificationManager, true)
 
         verify(exactly = 1) {
+//            Exponea.trackDeliveredPush(any(), any())
             Exponea.trackDeliveredPush(expectedTrackingData, any())
         }
         verify(exactly = (if (expectNotificationCreated) 1 else 0)) {

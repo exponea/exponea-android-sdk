@@ -45,7 +45,7 @@ internal class InAppMessageBitmapCacheImplTest {
         val imageUrl = server.url("image.jpg").toString()
 
         val repo = InAppMessageBitmapCacheImpl(context)
-        waitForIt { repo.preload(imageUrl) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         assertNotNull(repo.get(imageUrl))
     }
 
@@ -61,9 +61,9 @@ internal class InAppMessageBitmapCacheImplTest {
 
         val repo = spyk(InAppMessageBitmapCacheImpl(context))
         verify(exactly = 0) { repo.downloadImage(any(), any()) }
-        waitForIt { repo.preload(imageUrl) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         verify(exactly = 1) { repo.downloadImage(any(), any()) }
-        waitForIt { repo.preload(imageUrl) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         verify(exactly = 1) { repo.downloadImage(any(), any()) }
     }
 
@@ -85,9 +85,9 @@ internal class InAppMessageBitmapCacheImplTest {
 
         val repo = spyk(InAppMessageBitmapCacheImpl(context))
         verify(exactly = 0) { repo.downloadImage(any(), any()) }
-        waitForIt { repo.preload(imageUrl1) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl1)) { it() } }
         verify(exactly = 1) { repo.downloadImage(any(), any()) }
-        waitForIt { repo.preload(imageUrl2) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl2)) { it() } }
         verify(exactly = 2) { repo.downloadImage(any(), any()) }
     }
 
@@ -101,9 +101,9 @@ internal class InAppMessageBitmapCacheImplTest {
         val image3Url = server.url("image3.jpg").toString()
 
         val repo = InAppMessageBitmapCacheImpl(context)
-        waitForIt { repo.preload(image1Url) { it() } }
-        waitForIt { repo.preload(image2Url) { it() } }
-        waitForIt { repo.preload(image3Url) { it() } }
+        waitForIt { repo.preload(listOf(image1Url)) { it() } }
+        waitForIt { repo.preload(listOf(image2Url)) { it() } }
+        waitForIt { repo.preload(listOf(image3Url)) { it() } }
         assertTrue(repo.has(image1Url))
         assertTrue(repo.has(image2Url))
         assertTrue(repo.has(image3Url))
@@ -120,7 +120,7 @@ internal class InAppMessageBitmapCacheImplTest {
         val imageUrl = server.url("image.jpg").toString()
 
         val repo = InAppMessageBitmapCacheImpl(context)
-        waitForIt { repo.preload(imageUrl) { it() } }
+        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
 
         val storedFilePath = File(
             File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY),

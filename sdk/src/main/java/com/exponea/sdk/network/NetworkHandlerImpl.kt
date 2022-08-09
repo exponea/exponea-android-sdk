@@ -67,7 +67,8 @@ internal class NetworkHandlerImpl(private var exponeaConfiguration: ExponeaConfi
         networkClient = OkHttpClient.Builder()
                 .addInterceptor(getNetworkLogger())
                 .addInterceptor(networkInterceptor)
-                .addInterceptor(BrotliInterceptor)  // keep after logging due to body logging
+                // keep after logging due to body logging
+                .addInterceptor(BrotliInterceptor)
                 .build()
     }
 

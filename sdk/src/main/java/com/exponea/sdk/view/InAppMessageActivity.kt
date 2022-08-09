@@ -10,32 +10,12 @@ internal class InAppMessageActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val presenting = Exponea.presentedInAppMessage
-        if (presenting == null) {
+        presentedMessageView = Exponea.getPresentedInAppMessageView(this)
+
+        if (presentedMessageView == null) {
             finish()
-            return
-        }
-        val inAppMessageView = InAppMessagePresenter.getView(
-            this,
-            presenting.messageType,
-            presenting.payload,
-            presenting.image,
-            presenting.timeout,
-            { button ->
-                presenting.actionCallback(button)
-                finish()
-            },
-            {
-                presenting.dismissedCallback()
-                finish()
-            }
-        )
-        if (inAppMessageView != null) {
-            inAppMessageView.show()
-            presentedMessageView = inAppMessageView
         } else {
-            presenting.failedCallback()
-            finish()
+            presentedMessageView!!.show()
         }
     }
 

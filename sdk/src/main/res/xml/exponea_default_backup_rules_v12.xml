@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules>
+<data-extraction-rules xmlns:tools="http://schemas.android.com/tools">
     <cloud-backup>
         <include domain="file" path="."/>
         <include domain="database" path="."/>
         <include domain="sharedpref" path="."/>
         <include domain="external" path="."/>
         <include domain="root" path="."/>
-        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml"/>
+        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml" tools:ignore="FullBackupContent"/>
     </cloud-backup>
     <device-transfer>
         <include domain="file" path="."/>
@@ -14,6 +14,6 @@
         <include domain="sharedpref" path="."/>
         <include domain="external" path="."/>
         <include domain="root" path="."/>
-        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml"/>
+        <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml" tools:ignore="FullBackupContent"/>
     </device-transfer>
 </data-extraction-rules>

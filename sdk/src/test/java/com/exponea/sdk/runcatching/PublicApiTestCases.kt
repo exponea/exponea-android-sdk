@@ -165,7 +165,7 @@ internal object PublicApiTestCases {
 //        Exponea::trackSessionStart,
 //        Exponea::fetchRecommendation,
         Exponea::handleNewToken,
-        Exponea::handleNewHmsToken,
+        Exponea::handleNewHmsToken
 //        Exponea::trackInAppMessageClick,
 //        Exponea::trackInAppMessageClose
     )

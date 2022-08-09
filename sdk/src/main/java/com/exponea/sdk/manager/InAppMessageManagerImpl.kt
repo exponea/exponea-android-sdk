@@ -16,16 +16,17 @@ import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayloadButton
+import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.Result
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -118,14 +119,22 @@ internal class InAppMessageManagerImpl(
             Logger.i(this, "Attempt to show pending in-app message before loading all images.")
             val message = pickPendingMessage(false)
             if (message != null) {
-                val imageUrl = message.second.payload?.imageUrl
-                if (imageUrl.isNullOrEmpty()) {
+                val imageUrls = loadImageUrls(message.second)
+                if (imageUrls.isEmpty()) {
                     showPendingMessage(message)
                 } else {
                     shouldWaitWithPreload = true
                     Logger.i(this, "First preload pending in-app message image, load rest later.")
-                    bitmapCache.preload(imageUrl) {
-                        showPendingMessage(message)
+                    bitmapCache.preload(imageUrls) { preloaded ->
+                        if (preloaded) {
+                            showPendingMessage(message)
+                        } else {
+                            trackErrorEvent(
+                                message.second,
+                                "Images has not been preloaded",
+                                message.first.trackingDelegate
+                            )
+                        }
                         preloadImagesAfterPendingShown(messages.filter { it != message.second }, callback)
                     }
                 }
@@ -146,24 +155,31 @@ internal class InAppMessageManagerImpl(
             Logger.i(this, "All in-app message images loaded.")
             callback?.invoke(Result.success(Unit))
         }
-        val toPreload = AtomicInteger(messages.size)
+        if (messages.isEmpty()) {
+            onPreloaded()
+            return@runCatching
+        }
+        val counter = AtomicInteger(messages.size)
         for (message in messages) {
-            val imageUrl = message.payload?.imageUrl
-            if (!imageUrl.isNullOrEmpty()) {
-                bitmapCache.preload(imageUrl) {
-                    toPreload.getAndDecrement()
-                    if (toPreload.get() == 0) {
-                        onPreloaded()
-                    }
+            val imageUrls = loadImageUrls(message)
+            bitmapCache.preload(imageUrls) { messagePreloaded ->
+                if (messagePreloaded && counter.decrementAndGet() <= 0) {
+                    // this and ALL messages are preloaded
+                    onPreloaded()
                 }
-            } else {
-                toPreload.getAndDecrement()
             }
         }
-        if (toPreload.get() == 0) {
-            onPreloaded()
-        }
     }.logOnException()
+
+    private fun loadImageUrls(message: InAppMessage): ArrayList<String> {
+        val imageURLs = ArrayList<String>()
+        if (message.messageType == InAppMessageType.FREEFORM) {
+            imageURLs.addAll(HtmlNormalizer(bitmapCache, message.payloadHtml!!).collectImages())
+        } else if (!message.payload?.imageUrl.isNullOrEmpty()) {
+            imageURLs.add(message.payload!!.imageUrl!!)
+        }
+        return imageURLs
+    }
 
     private fun pickPendingMessage(requireImageLoaded: Boolean): Pair<InAppMessageShowRequest, InAppMessage>? {
         var pendingMessages: List<Pair<InAppMessageShowRequest, InAppMessage>> = arrayListOf()
@@ -271,27 +287,29 @@ internal class InAppMessageManagerImpl(
     }
 
     private fun show(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
-        if (message.variantId == -1 && message.payload == null) {
+        if (message.variantId == -1 && !message.hasPayload()) {
             Logger.i(this, "Only logging in-app message for control group '${message.name}'")
             trackShowEvent(message, trackingDelegate)
             return
         }
-        if (message.payload == null) {
+        if (!message.hasPayload()) {
             Logger.i(this, "Not showing message with empty payload '${message.name}'")
             return
         }
         Logger.i(this, "Attempting to show in-app message '${message.name}'")
-        val imageUrl = message.payload.imageUrl
-        val bitmap = if (!imageUrl.isNullOrBlank())
-            bitmapCache.get(imageUrl) ?: return
-        else null
+        val htmlPayload: HtmlNormalizer.NormalizedResult?
+        if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
+            htmlPayload = HtmlNormalizer(bitmapCache, message.payloadHtml).normalize()
+        } else {
+            htmlPayload = null
+        }
         Logger.i(this, "Posting show to main thread with delay ${message.delay ?: 0}ms.")
         Handler(Looper.getMainLooper()).postDelayed(
             {
                 val presented = presenter.show(
                     messageType = message.messageType,
                     payload = message.payload,
-                    image = bitmap,
+                    payloadHtml = htmlPayload,
                     timeout = message.timeout,
                     actionCallback = { activity, button ->
                         Logger.i(this, "In-app message button clicked!")
@@ -324,6 +342,11 @@ internal class InAppMessageManagerImpl(
                                 activity
                             )
                         }
+                    },
+                    failedCallback = { error ->
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            trackErrorEvent(message, error, trackingDelegate)
+                        }
                     }
                 )
                 if (presented != null) {
@@ -339,7 +362,7 @@ internal class InAppMessageManagerImpl(
         trackingDelegate.track(message, "show", false)
         Exponea.telemetry?.reportEvent(
             com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-            hashMapOf("messageType" to message.rawMessageType)
+            hashMapOf("messageType" to (message.rawMessageType ?: "null"))
         )
     }
 
@@ -350,6 +373,14 @@ internal class InAppMessageManagerImpl(
         buttonLink: String?
     ) {
         trackingDelegate.track(message, "click", true, buttonText, buttonLink)
+    }
+
+    override fun trackErrorEvent(
+        message: InAppMessage,
+        errorMessage: String,
+        trackingDelegate: InAppMessageTrackingDelegate
+    ) {
+        trackingDelegate.track(message, "error", false, error = errorMessage)
     }
 
     override fun trackCloseEvent(
@@ -381,7 +412,14 @@ internal class EventManagerInAppMessageTrackingDelegate(
 ) : InAppMessageTrackingDelegate {
     private val deviceProperties = DeviceProperties(context)
 
-    override fun track(message: InAppMessage, action: String, interaction: Boolean, text: String?, link: String?) {
+    override fun track(
+        message: InAppMessage,
+        action: String,
+        interaction: Boolean,
+        text: String?,
+        link: String?,
+        error: String?
+    ) {
         val properties = HashMap<String, Any>()
         properties.putAll(
             hashMapOf(
@@ -403,6 +441,7 @@ internal class EventManagerInAppMessageTrackingDelegate(
         if (link != null) {
             properties["link"] = link
         }
+        error?.let { properties["error"] = it }
 
         eventManager.track(
             eventType = Constants.EventTypes.banner,

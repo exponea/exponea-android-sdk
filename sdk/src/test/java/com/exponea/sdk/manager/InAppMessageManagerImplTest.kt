@@ -86,7 +86,7 @@ internal class InAppMessageManagerImplTest {
         every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
-        every { presenter.show(any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         manager = InAppMessageManagerImpl(
             ExponeaConfiguration(),
             customerIdsRepository,
@@ -220,7 +220,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
 
-        var addedEvents: java.util.ArrayList<ExportedEvent> = arrayListOf()
+        val addedEvents: java.util.ArrayList<ExportedEvent> = arrayListOf()
         every { eventRepo.add(capture(addedEvents)) } just Runs
 
         val numberOfThreads = 5
@@ -473,8 +473,13 @@ internal class InAppMessageManagerImplTest {
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val errorCallbackSlot = slot<(String) -> Unit>()
         every {
-            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(
+                any(), any(), any(), any(),
+                capture(actionCallbackSlot), capture(dismissedCallbackSlot),
+                capture(errorCallbackSlot)
+            )
         } returns mockk()
 
         waitForIt { manager.preload { it() } }
@@ -497,9 +502,13 @@ internal class InAppMessageManagerImplTest {
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
         every {
-            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(
+                any(), any(), any(), any(),
+                capture(actionCallbackSlot), capture(dismissedCallbackSlot), capture(errorCallbackSlot)
+            )
         } returns mockk()
 
         waitForIt { spykManager.preload { it() } }
@@ -535,7 +544,11 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        every { presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), any()) } returns mockk()
+        val errorCallbackSlot = slot<(String) -> Unit>()
+        every { presenter.show(
+            any(), any(), any(), any(),
+            capture(actionCallbackSlot), any(), capture(errorCallbackSlot)
+        ) } returns mockk()
         waitForIt { manager.preload { it() } }
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.flushForegroundThreadScheduler()
@@ -607,11 +620,10 @@ internal class InAppMessageManagerImplTest {
             messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             bitmapCache.clearExcept(arrayListOf("pending_image_url", "other_image_url_1", "other_image_url_2"))
             messagesCache.get()
-            bitmapCache.preload("pending_image_url", any())
-            bitmapCache.get("pending_image_url")
-            presenter.show(InAppMessageType.MODAL, pendingMessage.payload!!, any(), any(), any(), any())
-            bitmapCache.preload("other_image_url_1", any())
-            bitmapCache.preload("other_image_url_2", any())
+            bitmapCache.preload(listOf("pending_image_url"), any())
+            presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any(), any())
+            bitmapCache.preload(listOf("other_image_url_1"), any())
+            bitmapCache.preload(listOf("other_image_url_2"), any())
         }
         confirmVerified(messagesCache, bitmapCache, presenter)
     }
@@ -625,17 +637,17 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        every { presenter.show(any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
         waitForIt { manager.preload { it() } }
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         verify(exactly = 0) {
-            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), any(), any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any(), any())
         }
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.MILLISECONDS)
         verify(exactly = 1) {
-            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), any(), any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any(), any())
         }
     }
 
@@ -648,13 +660,13 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        every { presenter.show(any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
         waitForIt { manager.preload { it() } }
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
         Robolectric.flushForegroundThreadScheduler()
         verify {
-            presenter.show(InAppMessageType.MODAL, message.payload!!, any(), 1234, any(), any())
+            presenter.show(InAppMessageType.MODAL, message.payload, any(), 1234, any(), any(), any())
         }
     }
 
@@ -673,12 +685,12 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        every { presenter.show(any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         waitForIt { manager.preload { it() } }
         runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate) }
         Robolectric.flushForegroundThreadScheduler()
         verify(exactly = 1) { delegate.track(message, "show", false) }
-        verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -705,10 +717,14 @@ internal class InAppMessageManagerImplTest {
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
         every {
-            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(
+                any(), any(), any(), any(),
+                capture(actionCallbackSlot), capture(dismissedCallbackSlot), capture(errorCallbackSlot)
+            )
         } returns mockk()
 
         waitForIt { spykManager.preload { it() } }
@@ -775,10 +791,14 @@ internal class InAppMessageManagerImplTest {
         val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
         every {
-            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(
+                any(), any(), any(), any(),
+                capture(actionCallbackSlot), capture(dismissedCallbackSlot), capture(errorCallbackSlot)
+            )
         } returns mockk()
 
         waitForIt { spykManager.preload { it() } }
@@ -848,10 +868,14 @@ internal class InAppMessageManagerImplTest {
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
         every {
-            presenter.show(any(), any(), any(), any(), capture(actionCallbackSlot), capture(dismissedCallbackSlot))
+            presenter.show(
+                any(), any(), any(), any(),
+                capture(actionCallbackSlot), capture(dismissedCallbackSlot), capture(errorCallbackSlot)
+            )
         } returns mockk()
 
         waitForIt { spykManager.preload { it() } }

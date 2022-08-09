@@ -1,6 +1,7 @@
 package com.exponea.sdk
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
@@ -49,6 +50,7 @@ import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.view.InAppMessagePresenter
+import com.exponea.sdk.view.InAppMessageView
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -582,10 +584,10 @@ object Exponea {
      * @return true if notification is coming from Exponea servers, false otherwise.
      */
     fun handleRemoteMessage(
-            applicationContext: Context,
-            messageData: Map<String, String>?,
-            manager: NotificationManager,
-            showNotification: Boolean = true
+        applicationContext: Context,
+        messageData: Map<String, String>?,
+        manager: NotificationManager,
+        showNotification: Boolean = true
     ): Boolean = runCatching {
         if (!isExponeaPushNotification(messageData)) return@runCatching false
         autoInitialize(applicationContext, notInitializedBlock = {
@@ -861,9 +863,43 @@ object Exponea {
     // used by InAppMessageActivity to get currently displayed message
     internal val presentedInAppMessage: InAppMessagePresenter.PresentedMessage?
         get() {
-            if (!isInitialized) return null
-            return component.inAppMessagePresenter.presentedMessage
+            return inAppMessagePresenter?.presentedMessage
         }
+
+    internal val inAppMessagePresenter: InAppMessagePresenter?
+        get() {
+            if (!isInitialized) return null
+            return component.inAppMessagePresenter
+        }
+
+    // used by InAppMessageActivity to get currently displayed message View
+    // View is not kept as field but generating from scratch to avoid memory leaks
+    internal fun getPresentedInAppMessageView(activity: Activity): InAppMessageView? {
+        val presenting = presentedInAppMessage ?: return null
+        val inappMessageView = inAppMessagePresenter?.getView(
+                activity,
+                presenting.messageType,
+                presenting.payload,
+                presenting.payloadHtml,
+                presenting.timeout,
+                { button ->
+                    presenting.actionCallback(button)
+                    activity.finish()
+                },
+                {
+                    presenting.dismissedCallback()
+                    activity.finish()
+                },
+                { error: String ->
+                    presenting.failedCallback(error)
+                    activity.finish()
+                }
+        )
+        if (inappMessageView == null) {
+            presenting.failedCallback("Unable to present message")
+        }
+        return inappMessageView
+    }
 
     internal fun selfCheckPushReceived() {
         component.pushNotificationSelfCheckManager.selfCheckPushReceived()

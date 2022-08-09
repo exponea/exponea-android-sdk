@@ -18,7 +18,7 @@ class AppUpdateReceiver : BroadcastReceiver() {
             Logger.e(this, "Application update event received but with no context")
             return
         }
-        migrateFcmToken(context);
+        migrateFcmToken(context)
     }
 
     /**
@@ -27,16 +27,20 @@ class AppUpdateReceiver : BroadcastReceiver() {
     private fun migrateFcmToken(context: Context) {
         val obsoleteRepo = PushTokenRepositoryImpl(ExponeaPreferencesImpl(context))
         if (obsoleteRepo.get().isNullOrEmpty()) {
-            Logger.d(this,"FCM token migration not needed")
+            Logger.d(this, "FCM token migration not needed")
             return
         }
         val newRepo = PushTokenRepositoryProvider.get(context)
         if (newRepo.get().isNullOrEmpty() == false) {
-            Logger.d(this,"FCM token migration already done")
+            Logger.d(this, "FCM token migration already done")
             obsoleteRepo.clear()
             return
         }
-        newRepo.set(obsoleteRepo.get()!!, obsoleteRepo.getLastTrackDateInMilliseconds() ?: 0, obsoleteRepo.getLastTokenType())
+        newRepo.set(
+            obsoleteRepo.get()!!,
+            obsoleteRepo.getLastTrackDateInMilliseconds() ?: 0,
+            obsoleteRepo.getLastTokenType()
+        )
         obsoleteRepo.clear()
         Logger.d(this, "FCM migration has been done")
     }

@@ -1,6 +1,12 @@
 ## Release Notes
-
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
+
+## Release Notes for 3.1.0
+#### August 09, 2022
+* Features
+  * Added a support of HTML InApp messages
+  * Added a link to 'Version update' guideline into release notes and README
+
 
 ## Release Notes for 3.0.6
 #### July 28, 2022

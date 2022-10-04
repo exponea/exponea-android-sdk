@@ -178,4 +178,48 @@ internal class FcmManagerImplTrackingTest(
         // sent -> delivered -> clicked order, only delivered -> clicked order
         assertTrue { clickedTimestampSlot.captured > deliveredTimestampSlot.captured }
     }
+
+    @Test
+    fun `should NOT track delivered and clicked events when consent is not given`() {
+        val notification = NotificationTestPayloads.NOTIFICATION_WITH_DENIED_CONSENT
+        val deliveredTimestampSlot = slot<Double>()
+        val clickedTimestampSlot = slot<Double>()
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+
+        manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
+        verify(exactly = 0) {
+            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+        }
+        ExponeaPushTrackingActivity().processPushClick(
+            context,
+            intentGetter(notificationSlot.captured),
+            clickedTimestamp
+        )
+        verify(exactly = 0) {
+            Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
+        }
+    }
+
+    @Test
+    fun `should NOT track delivered event and DO track clicked event when consent is not given but action forced`() {
+        val notification = NotificationTestPayloads.NOTIFICATION_WITH_DENIED_CONSENT_BUT_ACTION_FORCED
+        val deliveredTimestampSlot = slot<Double>()
+        val clickedTimestampSlot = slot<Double>()
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+
+        manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
+        verify(exactly = 0) {
+            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+        }
+        ExponeaPushTrackingActivity().processPushClick(
+            context,
+            intentGetter(notificationSlot.captured),
+            clickedTimestamp
+        )
+        verify(exactly = 1) {
+            Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
+        }
+    }
 }

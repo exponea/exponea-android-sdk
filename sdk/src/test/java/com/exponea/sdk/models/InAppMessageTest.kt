@@ -99,7 +99,9 @@ internal class InAppMessageTest {
                     )
                 ),
                 payloadHtml = null,
-                isHtml = false
+                isHtml = false,
+                consentCategoryTracking = null,
+                rawHasTrackingConsent = null
             )
         }
 
@@ -137,7 +139,9 @@ internal class InAppMessageTest {
                 timeout = timeout,
                 payload = payload,
                 payloadHtml = payloadHtml,
-                isHtml = payloadHtml?.isNotBlank()
+                isHtml = payloadHtml?.isNotBlank(),
+                consentCategoryTracking = null,
+                rawHasTrackingConsent = null
             )
         }
     }

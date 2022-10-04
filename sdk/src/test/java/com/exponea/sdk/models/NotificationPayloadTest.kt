@@ -186,7 +186,9 @@ internal class NotificationPayloadTest(
                                         "utm_source" to "exponea",
                                         "utm_campaign" to "Testing mobile push",
                                         "utm_medium" to "mobile_push_notification"
-                                )
+                                ),
+                            consentCategoryTracking = null,
+                            hasTrackingConsent = true
                         ),
                         it.notificationData
                 )
@@ -279,7 +281,9 @@ internal class NotificationPayloadTest(
                                         "utm_source" to "exponea",
                                         "utm_campaign" to "Testing mobile push",
                                         "utm_medium" to "mobile_push_notification"
-                                )
+                                ),
+                            consentCategoryTracking = null,
+                            hasTrackingConsent = true
                         ),
                         it.notificationData
                 )

@@ -35,7 +35,11 @@ data class InAppMessage(
     @SerializedName("payload_html")
     val payloadHtml: String?,
     @SerializedName("is_html")
-    val isHtml: Boolean?
+    val isHtml: Boolean?,
+    @SerializedName("has_tracking_consent")
+    val rawHasTrackingConsent: Boolean?,
+    @SerializedName("consent_category_tracking")
+    val consentCategoryTracking: String?
 ) {
     val frequency: InAppMessageFrequency?
         get() {
@@ -59,6 +63,8 @@ data class InAppMessage(
                 InAppMessageType.MODAL
             }
         }
+
+    val hasTrackingConsent: Boolean get() = rawHasTrackingConsent ?: true
 
     fun applyDateFilter(currentTimeSeconds: Long): Boolean {
         if (!dateFilter.enabled) {

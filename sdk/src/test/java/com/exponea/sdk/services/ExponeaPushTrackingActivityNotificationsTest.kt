@@ -136,7 +136,39 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
                                 "utm_source" to "exponea",
                                 "utm_campaign" to "Testing mobile push",
                                 "utm_medium" to "mobile_push_notification"
-                        )
+                        ),
+                    consentCategoryTracking = null,
+                    hasTrackingConsent = true
+                ),
+                expectedTrackingActionData = NotificationAction("notification", null, null)
+            ),
+
+            TestCase(
+                "notification without consent",
+                NotificationTestPayloads.NOTIFICATION_WITH_DENIED_CONSENT,
+                intentGetter = { shadowOf(it.contentIntent).savedIntent },
+                expectedTrackingData = NotificationData(
+                    dataMap = hashMapOf("event_type" to "campaign",
+                        "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                        "campaign_name" to "Wassil's push",
+                        "action_id" to 2.0,
+                        "action_name" to "Unnamed mobile push",
+                        "action_type" to "mobile notification",
+                        "campaign_policy" to "",
+                        "platform" to "android",
+                        "language" to "",
+                        "subject" to "Notification title",
+                        "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                        "sent_timestamp" to 1614585422.20,
+                        "type" to "push"
+                    ),
+                    campaignMap = mapOf(
+                        "utm_source" to "exponea",
+                        "utm_campaign" to "Testing mobile push",
+                        "utm_medium" to "mobile_push_notification"
+                    ),
+                    consentCategoryTracking = null,
+                    hasTrackingConsent = false
                 ),
                 expectedTrackingActionData = NotificationAction("notification", null, null)
             )
@@ -189,7 +221,7 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
         ExponeaPushTrackingActivity().processPushClick(
             ApplicationProvider.getApplicationContext(),
             intentGetter(notificationSlot.captured))
-        verify(exactly = 1) {
+        verify(exactly = if (expectedTrackingData.hasTrackingConsent) 1 else 0) {
             Exponea.trackClickedPush(expectedTrackingData, expectedTrackingActionData, any())
         }
     }

@@ -56,7 +56,9 @@ internal class NotificationDataTest : ExponeaSDKTest() {
                         "utm_medium" to "mock medium",
                         "utm_content" to "mock content",
                         "utm_term" to "mock term"
-                )
+                ),
+            consentCategoryTracking = null,
+            hasTrackingConsent = true
         )
 
     @Test

@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.util.GdprTracking
 import java.io.Serializable
 
 data class NotificationAction(
@@ -11,4 +12,6 @@ data class NotificationAction(
         const val ACTION_TYPE_BUTTON = "button"
         const val ACTION_TYPE_NOTIFICATION = "notification"
     }
+    val isTrackingForced: Boolean
+        get() = GdprTracking.isTrackForced(url)
 }

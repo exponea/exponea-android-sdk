@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
@@ -68,6 +69,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var presenter: InAppMessagePresenter
     private lateinit var manager: InAppMessageManagerImpl
     private lateinit var mockActivity: Activity
+    private lateinit var trackingConsentManager: TrackingConsentManager
     @Before
     fun before() {
         fetchManager = mockk()
@@ -87,6 +89,11 @@ internal class InAppMessageManagerImplTest {
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
+        trackingConsentManager = mockk()
+        every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
         manager = InAppMessageManagerImpl(
             ExponeaConfiguration(),
             customerIdsRepository,
@@ -94,7 +101,8 @@ internal class InAppMessageManagerImplTest {
             fetchManager,
             inAppMessageDisplayStateRepository,
             bitmapCache,
-            presenter
+            presenter,
+            trackingConsentManager
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
         Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
@@ -168,12 +176,13 @@ internal class InAppMessageManagerImplTest {
         val flushManager = mockk<FlushManager>()
         every { flushManager.flushData(any()) } just Runs
         val eventManager = EventManagerImpl(
-            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(projectToken = "mock-project-token"),
             eventRepo,
             customerIdsRepo,
             flushManager,
-            manager
+            onEventCreated = { event, type ->
+                manager.onEventCreated(event, type)
+            }
         )
         return eventManager
     }
@@ -209,12 +218,13 @@ internal class InAppMessageManagerImplTest {
         val flushManager = mockk<FlushManager>()
         every { flushManager.flushData(any()) } just Runs
         val eventManager = EventManagerImpl(
-                ApplicationProvider.getApplicationContext(),
                 ExponeaConfiguration(projectToken = "mock-project-token"),
                 eventRepo,
                 customerIdsRepo,
                 flushManager,
-                manager
+                onEventCreated = { event, type ->
+                    manager.onEventCreated(event, type)
+                }
         )
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
@@ -470,7 +480,6 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
@@ -483,7 +492,7 @@ internal class InAppMessageManagerImplTest {
         } returns mockk()
 
         waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
@@ -499,7 +508,6 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
@@ -513,26 +521,32 @@ internal class InAppMessageManagerImplTest {
 
         waitForIt { spykManager.preload { it() } }
 
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+        }
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
-            delegate.track(
+            trackingConsentManager.trackInAppMessageClick(
                 InAppMessageTest.getInAppMessage(),
-                "click",
-                true,
                 "Action",
-                "https://someaddress.com")
+                "https://someaddress.com",
+                CONSIDER_CONSENT
+            )
         }
         verify(exactly = 1) {
             spykManager.processInAppMessageAction(mockActivity, button)
         }
         dismissedCallbackSlot.captured.invoke(mockActivity)
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageClose(
+                InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT
+            )
+        }
     }
 
     @Test
@@ -550,7 +564,7 @@ internal class InAppMessageManagerImplTest {
             capture(actionCallbackSlot), any(), capture(errorCallbackSlot)
         ) } returns mockk()
         waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
         Robolectric.flushForegroundThreadScheduler()
 
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
@@ -612,7 +626,7 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
-        manager.showRandom("session_start", hashMapOf(), null, spyk())
+        manager.showRandom("session_start", hashMapOf(), null)
 
         waitForIt { manager.preload { _ -> it() } }
 
@@ -640,7 +654,7 @@ internal class InAppMessageManagerImplTest {
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
         waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         verify(exactly = 0) {
             presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any(), any())
@@ -663,7 +677,7 @@ internal class InAppMessageManagerImplTest {
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
         waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, spyk())?.join() }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
         Robolectric.flushForegroundThreadScheduler()
         verify {
             presenter.show(InAppMessageType.MODAL, message.payload, any(), 1234, any(), any(), any())
@@ -678,7 +692,6 @@ internal class InAppMessageManagerImplTest {
             variantName = "Control group",
             timeout = 1234
         )
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         every { messagesCache.get() } returns arrayListOf(message)
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -687,9 +700,9 @@ internal class InAppMessageManagerImplTest {
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null, delegate) }
+        runBlocking { manager.showRandom("session_start", hashMapOf(), null) }
         Robolectric.flushForegroundThreadScheduler()
-        verify(exactly = 1) { delegate.track(message, "show", false) }
+        verify(exactly = 1) { trackingConsentManager.trackInAppMessageShown(message, CONSIDER_CONSENT) }
         verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any(), any()) }
     }
 
@@ -714,7 +727,6 @@ internal class InAppMessageManagerImplTest {
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
@@ -729,20 +741,22 @@ internal class InAppMessageManagerImplTest {
 
         waitForIt { spykManager.preload { it() } }
 
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+        }
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
-            delegate.track(
+            trackingConsentManager.trackInAppMessageClick(
                 InAppMessageTest.getInAppMessage(),
-                "click",
-                true,
                 "Action",
-                "https://someaddress.com")
+                "https://someaddress.com",
+                CONSIDER_CONSENT
+            )
         }
         verify(exactly = 1) {
             spykCallback.inAppMessageAction(
@@ -764,7 +778,9 @@ internal class InAppMessageManagerImplTest {
                 mockActivity
             )
         }
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "close", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+        }
     }
 
     @Test
@@ -788,7 +804,6 @@ internal class InAppMessageManagerImplTest {
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
@@ -803,20 +818,17 @@ internal class InAppMessageManagerImplTest {
 
         waitForIt { spykManager.preload { it() } }
 
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+        }
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 0) {
-            delegate.track(
-                any(),
-                any(),
-                true,
-                any(),
-                any())
+            trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any())
         }
         verify(exactly = 1) {
             spykCallback.inAppMessageAction(
@@ -838,7 +850,9 @@ internal class InAppMessageManagerImplTest {
                 mockActivity
             )
         }
-        verify(exactly = 0) { delegate.track(any(), "close", false) }
+        verify(exactly = 0) {
+            trackingConsentManager.trackInAppMessageClose(any(), any())
+        }
     }
 
     @Test
@@ -849,7 +863,6 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        val delegate = spyk<InAppMessageTrackingDelegate>()
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
             override var trackActions = false
@@ -860,8 +873,8 @@ internal class InAppMessageManagerImplTest {
                 interaction: Boolean,
                 context: Context
             ) {
-                manager.trackClickEvent(message, delegate, button?.text, button?.url)
-                manager.trackCloseEvent(message, delegate)
+                trackingConsentManager.trackInAppMessageClick(message, button?.text, button?.url, CONSIDER_CONSENT)
+                trackingConsentManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
             }
         })
         Exponea.inAppMessageActionCallback = spykCallback
@@ -880,25 +893,25 @@ internal class InAppMessageManagerImplTest {
 
         waitForIt { spykManager.preload { it() } }
 
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null, delegate)?.join() }
+        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
 
         Robolectric.flushForegroundThreadScheduler()
 
-        verify(exactly = 1) { delegate.track(InAppMessageTest.getInAppMessage(), "show", false) }
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+        }
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
-            delegate.track(
+            trackingConsentManager.trackInAppMessageClick(
                 InAppMessageTest.getInAppMessage(),
-                "click",
-                true,
                 "Action",
-                "https://someaddress.com")
+                "https://someaddress.com",
+                CONSIDER_CONSENT
+            )
         }
-        verify(exactly = 1) { delegate.track(
-            InAppMessageTest.getInAppMessage(),
-            "close",
-            false)
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
         }
     }
 }

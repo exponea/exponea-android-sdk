@@ -72,11 +72,17 @@ internal open class ExponeaPushTrackingActivity : Activity() {
             timestamp
         }
         Exponea.autoInitialize(context) {
-            Exponea.trackClickedPush(
-                data = data,
-                actionData = action,
-                timestamp = clickedTimestamp
-            )
+            if (data?.hasTrackingConsent == true || action?.isTrackingForced == true) {
+                Exponea.trackClickedPush(
+                    data = data,
+                    actionData = action,
+                    timestamp = clickedTimestamp
+                )
+            } else {
+                Logger.e(this,
+                    "Event for clicked notification is not tracked because consent is not given nor forced")
+            }
+
             // After clicking the notification button (action), dismiss it
             dismissNotification(context, intent)
 

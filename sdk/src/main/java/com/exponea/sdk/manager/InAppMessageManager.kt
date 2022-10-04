@@ -1,5 +1,7 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.Event
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.InAppMessage
 import java.util.Date
 import kotlinx.coroutines.Job
@@ -24,27 +26,12 @@ internal interface InAppMessageManager {
     fun showRandom(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?,
-        trackingDelegate: InAppMessageTrackingDelegate
+        timestamp: Double?
     ): Job?
 
     fun sessionStarted(sessionStartDate: Date)
     fun preloadIfNeeded(timestamp: Double)
-    fun trackClickEvent(
-        message: InAppMessage,
-        trackingDelegate: InAppMessageTrackingDelegate,
-        buttonText: String?,
-        buttonLink: String?
-    )
-    fun trackCloseEvent(
-        message: InAppMessage,
-        trackingDelegate: InAppMessageTrackingDelegate
-    )
-    fun trackErrorEvent(
-        message: InAppMessage,
-        error: String,
-        trackingDelegate: InAppMessageTrackingDelegate
-    )
+    fun onEventCreated(event: Event, type: EventType)
 }
 
 internal interface InAppMessageTrackingDelegate {

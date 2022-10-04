@@ -153,6 +153,8 @@ Exponea.trackDeliveredPush(
 )
 ```
 
+> NotificationData contains field `hasTrackingConsent` that has to be set and handled properly according to (TODO: gdpr link). Exponea SDK will not track NotificationData with `false` value of `hasTrackingConsent`. 
+
 #### Track Clicked Push Notification
 
 ``` kotlin
@@ -178,6 +180,8 @@ Exponea.trackClickedPush(
         timestamp = currentTimeSeconds()
 )
 ```
+
+> NotificationData contains field `hasTrackingConsent` that has to be set and handled properly according to (TODO: gdpr link). Exponea SDK will not track NotificationData with `false` value of `hasTrackingConsent` by default. Nevertheless, event is tracked if NotificationAction contains `url` with parameter `xnpe_force_track`. In that case, event is tracked with `tracking_forced = true` property.
 
 ## Troubleshooting
 In case of push notifications not working for you, these are frequent issues with the most likely solutions.

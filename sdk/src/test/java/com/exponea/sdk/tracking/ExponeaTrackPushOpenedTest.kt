@@ -19,6 +19,7 @@ import io.mockk.just
 import io.mockk.mockkConstructor
 import io.mockk.slot
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +28,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaTrackPushOpenedTest(
     private val name: String,
+    private val expectEvent: Boolean,
     private val notificationData: NotificationData?,
     private val actionData: NotificationAction?,
     private val eventName: String,
@@ -36,6 +38,7 @@ internal class ExponeaTrackPushOpenedTest(
     companion object {
         data class TestCase(
             val name: String,
+            val expectEvent: Boolean,
             val notificationData: NotificationData?,
             val actionData: NotificationAction?,
             val eventName: String,
@@ -46,6 +49,7 @@ internal class ExponeaTrackPushOpenedTest(
         private val testCases = arrayListOf(
             TestCase(
                 "empty push data",
+                true,
                 null,
                 null,
                 Constants.EventTypes.push,
@@ -59,6 +63,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom event type",
+                true,
                 NotificationData(hashMapOf("event_type" to "my_push_event")),
                 null,
                 "my_push_event",
@@ -72,6 +77,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "empty event type",
+                true,
                 NotificationData(hashMapOf("event_type" to "")),
                 null,
                 Constants.EventTypes.push,
@@ -85,6 +91,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom action name",
+                true,
                 null,
                 NotificationAction(actionType = "mock type", actionName = "my action name"),
                 Constants.EventTypes.push,
@@ -98,6 +105,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom action url",
+                true,
                 null,
                 NotificationAction(actionType = "mock type", url = "my action url"),
                 Constants.EventTypes.push,
@@ -111,6 +119,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "custom platform",
+                true,
                 NotificationData(hashMapOf("platform" to "custom platform")),
                 null,
                 Constants.EventTypes.push,
@@ -124,6 +133,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "full data",
+                true,
                     NotificationData(hashMapOf(
                             "campaign_id" to "mock campaign id",
                             "campaign_name" to "mock campaign name",
@@ -157,6 +167,7 @@ internal class ExponeaTrackPushOpenedTest(
             ),
             TestCase(
                 "nested attributes",
+                true,
                 NotificationData(hashMapOf(
                         "campaign_id" to "mock campaign id",
                         "campaign_name" to "mock campaign name",
@@ -237,7 +248,31 @@ internal class ExponeaTrackPushOpenedTest(
                         )
                 ),
                 EventType.PUSH_OPENED
-        )
+        ),
+            TestCase(
+                "push without consent",
+                false,
+                NotificationData(hasTrackingConsent = false),
+                null,
+                Constants.EventTypes.push,
+                hashMapOf(),
+                EventType.PUSH_OPENED
+            ),
+            TestCase(
+                "push without consent but action forced by url",
+                true,
+                NotificationData(hasTrackingConsent = false),
+                NotificationAction("mock type", "Action", "https://exponea.com/action?xnpe_force_track=true"),
+                Constants.EventTypes.push,
+                hashMapOf(
+                    "status" to "clicked",
+                    "platform" to "android",
+                    "cta" to "Action",
+                    "url" to "https://exponea.com/action?xnpe_force_track=true",
+                    "tracking_forced" to true
+                ),
+                EventType.PUSH_OPENED
+            )
         )
 
         @JvmStatic
@@ -246,6 +281,7 @@ internal class ExponeaTrackPushOpenedTest(
             return testCases.map {
                 arrayOf(
                     it.name,
+                    it.expectEvent,
                     it.notificationData,
                     it.actionData,
                     it.eventName,
@@ -273,9 +309,13 @@ internal class ExponeaTrackPushOpenedTest(
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
         } just Runs
         Exponea.trackClickedPush(notificationData, actionData)
-        assertEquals(notificationData?.campaignData, Exponea.componentForTesting.campaignRepository.get())
-        assertEquals(eventName, eventSlot.captured.type)
-        assertEquals(eventProperties, eventSlot.captured.properties)
-        assertEquals(eventType, eventTypeSlot.captured)
+        if (expectEvent) {
+            assertEquals(notificationData?.campaignData, Exponea.componentForTesting.campaignRepository.get())
+            assertEquals(eventName, eventSlot.captured.type)
+            assertEquals(eventProperties, eventSlot.captured.properties)
+            assertEquals(eventType, eventTypeSlot.captured)
+        } else {
+            assertFalse { eventSlot.isCaptured }
+        }
     }
 }

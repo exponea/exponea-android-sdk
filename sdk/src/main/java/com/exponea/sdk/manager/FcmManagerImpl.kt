@@ -115,7 +115,11 @@ internal class FcmManagerImpl(
         if (payload.notificationId == lastPushNotificationId) {
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
         } else {
-            Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
+            if (payload.notificationData.hasTrackingConsent) {
+                Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
+            } else {
+                Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
+            }
             lastPushNotificationId = payload.notificationId
             callNotificationDataCallback(payload)
             if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {

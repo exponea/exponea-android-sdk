@@ -7,6 +7,7 @@ import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.ConnectionManagerImpl
 import com.exponea.sdk.manager.EventManager
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.manager.EventManagerInAppMessageTrackingDelegate
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
 import com.exponea.sdk.manager.FetchManager
@@ -15,12 +16,15 @@ import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppMessageManager
 import com.exponea.sdk.manager.InAppMessageManagerImpl
+import com.exponea.sdk.manager.InAppMessageTrackingDelegate
 import com.exponea.sdk.manager.PushNotificationSelfCheckManager
 import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
 import com.exponea.sdk.manager.ServiceManager
 import com.exponea.sdk.manager.ServiceManagerImpl
 import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
+import com.exponea.sdk.manager.TrackingConsentManager
+import com.exponea.sdk.manager.TrackingConsentManagerImpl
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
@@ -110,15 +114,6 @@ internal class ExponeaComponent(
 
     internal val inAppMessagesBitmapCache = InAppMessageBitmapCacheImpl(context)
     internal val inAppMessagePresenter = InAppMessagePresenter(context, inAppMessagesBitmapCache)
-    internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
-        exponeaConfiguration,
-        customerIdsRepository,
-        inAppMessagesCache,
-        fetchManager,
-        inAppMessageDisplayStateRepository,
-        inAppMessagesBitmapCache,
-        inAppMessagePresenter
-    )
 
     internal val flushManager: FlushManager = FlushManagerImpl(
         exponeaConfiguration,
@@ -130,7 +125,10 @@ internal class ExponeaComponent(
     )
 
     internal val eventManager: EventManager = EventManagerImpl(
-        context, exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, inAppMessageManager
+        exponeaConfiguration, eventRepository, customerIdsRepository, flushManager,
+        onEventCreated = { event, type ->
+            inAppMessageManager.onEventCreated(event, type)
+        }
     )
 
     internal val fcmManager: FcmManager = FcmManagerImpl(
@@ -150,6 +148,25 @@ internal class ExponeaComponent(
             flushManager,
             exponeaService
         )
+
+    internal val inAppMessageTrackingDelegate: InAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
+        context, eventManager
+    )
+
+    internal val trackingConsentManager: TrackingConsentManager = TrackingConsentManagerImpl(
+        eventManager, campaignRepository, inAppMessageTrackingDelegate
+    )
+
+    internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
+        exponeaConfiguration,
+        customerIdsRepository,
+        inAppMessagesCache,
+        fetchManager,
+        inAppMessageDisplayStateRepository,
+        inAppMessagesBitmapCache,
+        inAppMessagePresenter,
+        trackingConsentManager
+    )
 
     fun anonymize(
         exponeaProject: ExponeaProject,

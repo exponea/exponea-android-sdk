@@ -1,29 +1,23 @@
 package com.exponea.sdk.manager
 
-import android.content.Context
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.currentTimeSeconds
-import java.util.Date
 
 internal class EventManagerImpl(
-    context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
     private val flushManager: FlushManager,
-    private val inAppMessageManager: InAppMessageManager
+    private val onEventCreated: (Event, EventType) -> Unit
 ) : EventManager {
-    private val inAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(context, this)
 
     fun addEventToQueue(event: Event, eventType: EventType) {
         Logger.d(this, "addEventToQueue")
@@ -76,43 +70,6 @@ internal class EventManagerImpl(
         )
 
         addEventToQueue(event, type)
-
-        val eventTimestamp = timestamp ?: currentTimeSeconds()
-        val eventTimestampInMillis = eventTimestamp * 1000
-
-        // do not initiate in-app preload on push events and session_end event
-        // user may not even end up in the app and in-app fetch would run unnecessarily
-        if (type != EventType.PUSH_DELIVERED &&
-            type != EventType.PUSH_OPENED &&
-            type != EventType.SESSION_END
-        ) {
-            inAppMessageManager.preloadIfNeeded(eventTimestampInMillis)
-        }
-
-        if (type == EventType.SESSION_START) {
-            inAppMessageManager.sessionStarted(Date(eventTimestampInMillis.toLong()))
-        }
-        if (eventType != null) {
-            inAppMessageManager.showRandom(
-                eventType,
-                properties,
-                timestamp,
-                inAppMessageTrackingDelegate
-            )
-        }
-    }
-
-    override fun trackInAppMessageClick(
-        message: InAppMessage,
-        buttonText: String?,
-        buttonLink: String?
-    ) {
-        inAppMessageManager.trackClickEvent(message, inAppMessageTrackingDelegate, buttonText, buttonLink)
-    }
-
-    override fun trackInAppMessageClose(
-        message: InAppMessage
-    ) {
-        inAppMessageManager.trackCloseEvent(message, inAppMessageTrackingDelegate)
+        onEventCreated(event, type)
     }
 }

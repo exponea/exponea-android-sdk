@@ -34,9 +34,13 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
         private fun parseNotificationData(data: Map<String, String>): NotificationData {
             val dataMap: HashMap<String, Any> = gson.fromJson(data["data"] ?: data["attributes"] ?: "{}")
             val campaignMap: Map<String, String> = gson.fromJson(data["url_params"] ?: "{}")
+            val consentCategoryTracking: String? = data["consent_category_tracking"]
+            val hasTrackingConsent: Boolean = (data["has_tracking_consent"] ?: "true") == "true"
             return NotificationData(
                 dataMap,
-                campaignMap
+                campaignMap,
+                consentCategoryTracking,
+                hasTrackingConsent
             )
         }
 

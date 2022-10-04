@@ -6,20 +6,31 @@ import java.io.Serializable
 
 data class NotificationData(
     val attributes: HashMap<String, Any> = HashMap(),
-    val campaignData: CampaignData = CampaignData()
+    val campaignData: CampaignData = CampaignData(),
+    val consentCategoryTracking: String? = null,
+    val hasTrackingConsent: Boolean = true
 ) : Parcelable {
     val hasCustomEventType: Boolean = !((attributes["event_type"] as String?).isNullOrBlank())
     val eventType: String? = attributes["event_type"] as String?
     val sentTimestamp: Double? = attributes["sent_timestamp"] as Double?
 
-    internal constructor(dataMap: HashMap<String, Any>, campaignMap: Map<String, String>) : this(
+    internal constructor(
+        dataMap: HashMap<String, Any>,
+        campaignMap: Map<String, String>,
+        consentCategoryTracking: String?,
+        hasTrackingConsent: Boolean
+    ) : this(
         dataMap,
-        CampaignData(campaignMap)
+        CampaignData(campaignMap),
+        consentCategoryTracking,
+        hasTrackingConsent
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         writeMapToParcel(attributes, parcel)
         parcel.writeValue(campaignData)
+        parcel.writeString(consentCategoryTracking ?: "")
+        parcel.writeByte(if (hasTrackingConsent) 1 else 0)
     }
 
     private fun writeMapToParcel(map: Map<String, Any>, parcel: Parcel) {
@@ -79,7 +90,14 @@ data class NotificationData(
             parcel.readSerializable() // read MAP_SIZE flag first
             val map: HashMap<String, Any> = readMapFromParcel(parcel)
             val campaignData = parcel.readValue(CampaignData::class.java.classLoader) as CampaignData
-            return NotificationData(map, campaignData)
+            val consentCategoryTracking = parcel.readString()
+            val hasTrackingConsent = parcel.readByte() == 1.toByte()
+            return NotificationData(
+                map,
+                campaignData,
+                if (consentCategoryTracking.isNullOrEmpty()) null else consentCategoryTracking,
+                hasTrackingConsent
+            )
         }
 
         override fun newArray(size: Int): Array<NotificationData?> {

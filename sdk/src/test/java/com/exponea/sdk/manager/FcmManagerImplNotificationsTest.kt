@@ -194,25 +194,27 @@ internal class FcmManagerImplNotificationsTest(
                 1,
                 {
                     val notificationData = NotificationData(
-                            dataMap = hashMapOf("event_type" to "campaign",
-                                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                                    "campaign_name" to "Wassil's push",
-                                    "action_id" to 2.0,
-                                    "action_name" to "Unnamed mobile push",
-                                    "action_type" to "mobile notification",
-                                    "campaign_policy" to "",
-                                    "platform" to "android",
-                                    "language" to "",
-                                    "subject" to "Notification title",
-                                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
-                                    "sent_timestamp" to 1614585422.20,
-                                    "type" to "push"
-                            ),
-                            campaignMap = mapOf(
-                                    "utm_source" to "exponea",
-                                    "utm_campaign" to "Testing mobile push",
-                                    "utm_medium" to "mobile_push_notification"
-                            )
+                        dataMap = hashMapOf("event_type" to "campaign",
+                                "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                "campaign_name" to "Wassil's push",
+                                "action_id" to 2.0,
+                                "action_name" to "Unnamed mobile push",
+                                "action_type" to "mobile notification",
+                                "campaign_policy" to "",
+                                "platform" to "android",
+                                "language" to "",
+                                "subject" to "Notification title",
+                                "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                                "sent_timestamp" to 1614585422.20,
+                                "type" to "push"
+                        ),
+                        campaignMap = mapOf(
+                                "utm_source" to "exponea",
+                                "utm_campaign" to "Testing mobile push",
+                                "utm_medium" to "mobile_push_notification"
+                        ),
+                        consentCategoryTracking = null,
+                        hasTrackingConsent = true
                     )
                     assertEquals("Notification title", shadowOf(it).contentTitle)
                     assertEquals("Notification text", shadowOf(it).contentText)
@@ -251,25 +253,27 @@ internal class FcmManagerImplNotificationsTest(
                     )
                 },
                     NotificationData(
-                            dataMap = hashMapOf("event_type" to "campaign",
-                                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                                    "campaign_name" to "Wassil's push",
-                                    "action_id" to 2.0,
-                                    "action_name" to "Unnamed mobile push",
-                                    "action_type" to "mobile notification",
-                                    "campaign_policy" to "",
-                                    "platform" to "android",
-                                    "language" to "",
-                                    "subject" to "Notification title",
-                                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
-                                    "sent_timestamp" to 1614585422.20,
-                                    "type" to "push"
-                            ),
-                            campaignMap = mapOf(
-                                    "utm_source" to "exponea",
-                                    "utm_campaign" to "Testing mobile push",
-                                    "utm_medium" to "mobile_push_notification"
-                            )
+                        dataMap = hashMapOf("event_type" to "campaign",
+                                "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                "campaign_name" to "Wassil's push",
+                                "action_id" to 2.0,
+                                "action_name" to "Unnamed mobile push",
+                                "action_type" to "mobile notification",
+                                "campaign_policy" to "",
+                                "platform" to "android",
+                                "language" to "",
+                                "subject" to "Notification title",
+                                "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                                "sent_timestamp" to 1614585422.20,
+                                "type" to "push"
+                        ),
+                        campaignMap = mapOf(
+                                "utm_source" to "exponea",
+                                "utm_campaign" to "Testing mobile push",
+                                "utm_medium" to "mobile_push_notification"
+                        ),
+                        consentCategoryTracking = null,
+                        hasTrackingConsent = true
                     ),
                 mapOf(
                     "campaign_name" to "Wassil's push",
@@ -303,23 +307,25 @@ internal class FcmManagerImplNotificationsTest(
                         1,
                         {
                             val notificationData = NotificationData(
-                                    dataMap = hashMapOf("event_type" to "campaign",
-                                            "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                                            "campaign_name" to "Wassil's push",
-                                            "action_id" to 2.0,
-                                            "action_name" to "Unnamed mobile push",
-                                            "action_type" to "mobile notification",
-                                            "campaign_policy" to "",
-                                            "platform" to "android",
-                                            "language" to "",
-                                            "subject" to "Notification title",
-                                            "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-lengt
-                                    ),
-                                    campaignMap = mapOf(
-                                            "utm_source" to "exponea",
-                                            "utm_campaign" to "Testing mobile push",
-                                            "utm_medium" to "mobile_push_notification"
-                                    )
+                                dataMap = hashMapOf("event_type" to "campaign",
+                                        "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                        "campaign_name" to "Wassil's push",
+                                        "action_id" to 2.0,
+                                        "action_name" to "Unnamed mobile push",
+                                        "action_type" to "mobile notification",
+                                        "campaign_policy" to "",
+                                        "platform" to "android",
+                                        "language" to "",
+                                        "subject" to "Notification title",
+                                        "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-lengt
+                                ),
+                                campaignMap = mapOf(
+                                        "utm_source" to "exponea",
+                                        "utm_campaign" to "Testing mobile push",
+                                        "utm_medium" to "mobile_push_notification"
+                                ),
+                                consentCategoryTracking = null,
+                                hasTrackingConsent = true
                             )
                             assertEquals("Notification title", shadowOf(it).contentTitle)
                             assertEquals("Notification text", shadowOf(it).contentText)
@@ -357,23 +363,25 @@ internal class FcmManagerImplNotificationsTest(
                             )
                         },
                         NotificationData(
-                                dataMap = hashMapOf("event_type" to "campaign",
-                                        "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                                        "campaign_name" to "Wassil's push",
-                                        "action_id" to 2.0,
-                                        "action_name" to "Unnamed mobile push",
-                                        "action_type" to "mobile notification",
-                                        "campaign_policy" to "",
-                                        "platform" to "android",
-                                        "language" to "",
-                                        "subject" to "Notification title",
-                                        "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
-                                ),
-                                campaignMap = mapOf(
-                                        "utm_source" to "exponea",
-                                        "utm_campaign" to "Testing mobile push",
-                                        "utm_medium" to "mobile_push_notification"
-                                )
+                            dataMap = hashMapOf("event_type" to "campaign",
+                                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                    "campaign_name" to "Wassil's push",
+                                    "action_id" to 2.0,
+                                    "action_name" to "Unnamed mobile push",
+                                    "action_type" to "mobile notification",
+                                    "campaign_policy" to "",
+                                    "platform" to "android",
+                                    "language" to "",
+                                    "subject" to "Notification title",
+                                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z" // ktlint-disable max-line-length
+                            ),
+                            campaignMap = mapOf(
+                                    "utm_source" to "exponea",
+                                    "utm_campaign" to "Testing mobile push",
+                                    "utm_medium" to "mobile_push_notification"
+                            ),
+                            consentCategoryTracking = null,
+                            hasTrackingConsent = true
                         ),
                         mapOf(
                                 "campaign_name" to "Wassil's push",
@@ -396,67 +404,7 @@ internal class FcmManagerImplNotificationsTest(
                         1,
                         {
                             val notificationData = NotificationData(
-                                    dataMap = hashMapOf("event_type" to "campaign",
-                                            "campaign_id" to "5db9ab54b073dfb424ccfa6f",
-                                            "campaign_name" to "Wassil's push",
-                                            "action_id" to 2.0,
-                                            "action_name" to "Unnamed mobile push",
-                                            "action_type" to "mobile notification",
-                                            "campaign_policy" to "",
-                                            "platform" to "android",
-                                            "language" to "",
-                                            "subject" to "Notification title",
-                                            "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-lengt
-                                            "first_level_attribute" to hashMapOf(
-                                                "second_level__nested_attribute" to hashMapOf(
-                                                    "third_level_attribute" to "third_level_value"
-                                                ),
-                                                "second_level_attribute" to "second_level_value"
-                                            ),
-                                            "product_list" to arrayListOf(
-                                                hashMapOf(
-                                                        "item_id" to "1234",
-                                                        "item_quantity" to 3.0
-                                                ),
-                                                hashMapOf(
-                                                        "item_id" to "2345",
-                                                        "item_quantity" to 2.0
-                                                ),
-                                                hashMapOf(
-                                                        "item_id" to "6789",
-                                                        "item_quantity" to 1.0
-                                                )
-                                            ),
-                                            "product_ids" to arrayListOf("1234", "2345", "6789"),
-                                            "push_content" to hashMapOf(
-                                                    "title" to "Hey!",
-                                                    "actions" to arrayListOf(
-                                                            hashMapOf(
-                                                                    "title" to "Action 1 title",
-                                                                    "action" to "app"
-                                                            )
-                                                    ),
-                                                    "message" to "We have a great deal for you today, don't miss it!"
-                                            )
-                                    ),
-                                    campaignMap = mapOf(
-                                            "utm_source" to "exponea",
-                                            "utm_campaign" to "Testing mobile push",
-                                            "utm_medium" to "mobile_push_notification"
-                                    )
-                            )
-                            assertEquals("Notification title", shadowOf(it).contentTitle)
-                            assertEquals("Notification text", shadowOf(it).contentText)
-                            validateIntent(
-                                    shadowOf(it.contentIntent).savedIntent,
-                                    ExponeaExtras.ACTION_CLICKED,
-                                    NotificationAction(ACTION_TYPE_NOTIFICATION),
-                                    notificationData,
-                                    NotificationTestPayloads.NOTIFICATION_WITH_NESTED_ATTRIBUTES
-                            )
-                        },
-                        NotificationData(
-                                hashMapOf("event_type" to "campaign",
+                                dataMap = hashMapOf("event_type" to "campaign",
                                         "campaign_id" to "5db9ab54b073dfb424ccfa6f",
                                         "campaign_name" to "Wassil's push",
                                         "action_id" to 2.0,
@@ -468,24 +416,24 @@ internal class FcmManagerImplNotificationsTest(
                                         "subject" to "Notification title",
                                         "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-lengt
                                         "first_level_attribute" to hashMapOf(
-                                                "second_level__nested_attribute" to hashMapOf(
-                                                        "third_level_attribute" to "third_level_value"
-                                                ),
-                                                "second_level_attribute" to "second_level_value"
+                                            "second_level__nested_attribute" to hashMapOf(
+                                                "third_level_attribute" to "third_level_value"
+                                            ),
+                                            "second_level_attribute" to "second_level_value"
                                         ),
                                         "product_list" to arrayListOf(
-                                                hashMapOf(
-                                                        "item_id" to "1234",
-                                                        "item_quantity" to 3.0
-                                                ),
-                                                hashMapOf(
-                                                        "item_id" to "2345",
-                                                        "item_quantity" to 2.0
-                                                ),
-                                                hashMapOf(
-                                                        "item_id" to "6789",
-                                                        "item_quantity" to 1.0
-                                                )
+                                            hashMapOf(
+                                                    "item_id" to "1234",
+                                                    "item_quantity" to 3.0
+                                            ),
+                                            hashMapOf(
+                                                    "item_id" to "2345",
+                                                    "item_quantity" to 2.0
+                                            ),
+                                            hashMapOf(
+                                                    "item_id" to "6789",
+                                                    "item_quantity" to 1.0
+                                            )
                                         ),
                                         "product_ids" to arrayListOf("1234", "2345", "6789"),
                                         "push_content" to hashMapOf(
@@ -503,7 +451,71 @@ internal class FcmManagerImplNotificationsTest(
                                         "utm_source" to "exponea",
                                         "utm_campaign" to "Testing mobile push",
                                         "utm_medium" to "mobile_push_notification"
-                                )
+                                ),
+                                consentCategoryTracking = null,
+                                hasTrackingConsent = true
+                            )
+                            assertEquals("Notification title", shadowOf(it).contentTitle)
+                            assertEquals("Notification text", shadowOf(it).contentText)
+                            validateIntent(
+                                    shadowOf(it.contentIntent).savedIntent,
+                                    ExponeaExtras.ACTION_CLICKED,
+                                    NotificationAction(ACTION_TYPE_NOTIFICATION),
+                                    notificationData,
+                                    NotificationTestPayloads.NOTIFICATION_WITH_NESTED_ATTRIBUTES
+                            )
+                        },
+                        NotificationData(
+                            hashMapOf("event_type" to "campaign",
+                                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                                    "campaign_name" to "Wassil's push",
+                                    "action_id" to 2.0,
+                                    "action_name" to "Unnamed mobile push",
+                                    "action_type" to "mobile notification",
+                                    "campaign_policy" to "",
+                                    "platform" to "android",
+                                    "language" to "",
+                                    "subject" to "Notification title",
+                                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-lengt
+                                    "first_level_attribute" to hashMapOf(
+                                            "second_level__nested_attribute" to hashMapOf(
+                                                    "third_level_attribute" to "third_level_value"
+                                            ),
+                                            "second_level_attribute" to "second_level_value"
+                                    ),
+                                    "product_list" to arrayListOf(
+                                            hashMapOf(
+                                                    "item_id" to "1234",
+                                                    "item_quantity" to 3.0
+                                            ),
+                                            hashMapOf(
+                                                    "item_id" to "2345",
+                                                    "item_quantity" to 2.0
+                                            ),
+                                            hashMapOf(
+                                                    "item_id" to "6789",
+                                                    "item_quantity" to 1.0
+                                            )
+                                    ),
+                                    "product_ids" to arrayListOf("1234", "2345", "6789"),
+                                    "push_content" to hashMapOf(
+                                            "title" to "Hey!",
+                                            "actions" to arrayListOf(
+                                                    hashMapOf(
+                                                            "title" to "Action 1 title",
+                                                            "action" to "app"
+                                                    )
+                                            ),
+                                            "message" to "We have a great deal for you today, don't miss it!"
+                                    )
+                            ),
+                            campaignMap = mapOf(
+                                    "utm_source" to "exponea",
+                                    "utm_campaign" to "Testing mobile push",
+                                    "utm_medium" to "mobile_push_notification"
+                            ),
+                            consentCategoryTracking = null,
+                            hasTrackingConsent = true
                         ),
                         mapOf(
                                 "campaign_name" to "Wassil's push",
@@ -557,29 +569,6 @@ internal class FcmManagerImplNotificationsTest(
                         1545339447,
                         {
                             val notificationData = NotificationData(
-                                    dataMap = hashMapOf(
-                                            "event_type" to "campaign",
-                                            "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
-                                            "campaign_name" to "Use Case 001: alfa",
-                                            "action_id" to 84.0,
-                                            "action_name" to "Unnamed mobile push",
-                                            "action_type" to "mobile notification",
-                                            "campaign_policy" to "",
-                                            "platform" to "android",
-                                            "language" to "",
-                                            "subject" to "Test sending",
-                                            "recipient" to "dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q", // ktlint-disable max-line-length
-                                            "sent_timestamp" to 1658403764.924152
-                                    ),
-                                    campaignMap = mapOf(
-                                            "utm_source" to "exponea",
-                                            "utm_campaign" to "Unnamed mobile push",
-                                            "utm_medium" to "mobile_push_notification",
-                                            "utm_content" to "hu"
-                                    )
-                            )
-                        },
-                        NotificationData(
                                 dataMap = hashMapOf(
                                         "event_type" to "campaign",
                                         "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
@@ -599,7 +588,34 @@ internal class FcmManagerImplNotificationsTest(
                                         "utm_campaign" to "Unnamed mobile push",
                                         "utm_medium" to "mobile_push_notification",
                                         "utm_content" to "hu"
-                                )
+                                ),
+                                consentCategoryTracking = null,
+                                hasTrackingConsent = true
+                            )
+                        },
+                        NotificationData(
+                            dataMap = hashMapOf(
+                                    "event_type" to "campaign",
+                                    "campaign_id" to "5fc5439d3680dcf8ecf1fae1",
+                                    "campaign_name" to "Use Case 001: alfa",
+                                    "action_id" to 84.0,
+                                    "action_name" to "Unnamed mobile push",
+                                    "action_type" to "mobile notification",
+                                    "campaign_policy" to "",
+                                    "platform" to "android",
+                                    "language" to "",
+                                    "subject" to "Test sending",
+                                    "recipient" to "dMALLSnQbHQ:APA91bEnnmqvcgy-89VPpVoik-Pt96jpg1HNLnVjSDfQvdQPiCYAUxH0xba6dTlDB0IGt1EcqcW8XgHMoywrmOUoLBZP_oL-mpJFvbQDgKsBPGdEPJHxIJ0HKXrbFkL-1GnjiqY6sA6q", // ktlint-disable max-line-length
+                                    "sent_timestamp" to 1658403764.924152
+                            ),
+                            campaignMap = mapOf(
+                                    "utm_source" to "exponea",
+                                    "utm_campaign" to "Unnamed mobile push",
+                                    "utm_medium" to "mobile_push_notification",
+                                    "utm_content" to "hu"
+                            ),
+                            consentCategoryTracking = null,
+                            hasTrackingConsent = true
                         ),
                         mapOf(
                                 "campaign_name" to "Use Case 001: alfa",
@@ -615,7 +631,61 @@ internal class FcmManagerImplNotificationsTest(
                                 "platform" to "android",
                                 "sent_timestamp" to 1658403764.924152
                         )
+                ),
+            TestCase(
+                name = "silent notification",
+                notificationPayload = NotificationTestPayloads.SILENT_NOTIFICATION,
+                expectNotificationCreated = false,
+                expectedNotificationId = 0,
+                expectedNotificationMatcher = {},
+                expectedTrackingData = NotificationData(hashMapOf("silent_test" to "value")),
+                expectedNotificationData = mapOf("silent_test" to "value")
+            ),
+            TestCase(
+                name = "notification without consent",
+                notificationPayload = NotificationTestPayloads.NOTIFICATION_WITH_DENIED_CONSENT,
+                expectNotificationCreated = true,
+                expectedNotificationId = 1,
+                expectedNotificationMatcher = {},
+                expectedTrackingData = NotificationData(
+                    dataMap = hashMapOf("event_type" to "campaign",
+                        "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                        "campaign_name" to "Wassil's push",
+                        "action_id" to 2.0,
+                        "action_name" to "Unnamed mobile push",
+                        "action_type" to "mobile notification",
+                        "campaign_policy" to "",
+                        "platform" to "android",
+                        "language" to "",
+                        "subject" to "Notification title",
+                        "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                        "sent_timestamp" to 1614585422.20,
+                        "type" to "push"
+                    ),
+                    campaignMap = mapOf(
+                        "utm_source" to "exponea",
+                        "utm_campaign" to "Testing mobile push",
+                        "utm_medium" to "mobile_push_notification"
+                    ),
+                    consentCategoryTracking = null,
+                    hasTrackingConsent = false
+                ),
+                expectedNotificationData = mapOf(
+                    "campaign_name" to "Wassil's push",
+                    "event_type" to "campaign",
+                    "action_id" to 2.0,
+                    "action_type" to "mobile notification",
+                    "campaign_policy" to "",
+                    "subject" to "Notification title",
+                    "action_name" to "Unnamed mobile push",
+                    "recipient" to "eMxrdLuMalE:APA91bFgzKPVtem5aA0ZL0PFm_FgksAtVCOhzIQywX7DZQx2dKiVUepgl_Yw2aIrGZ7gpblCHltL6PWfXLoRw_5aZvV9swkPtUNwYjMNoF2f7igXgNe5Ovgyi8q5fmoX9QVHtyt8C-0Z", // ktlint-disable max-line-length
+                    "language" to "",
+                    "campaign_id" to "5db9ab54b073dfb424ccfa6f",
+                    "platform" to "android",
+                    "sent_timestamp" to 1.6145854222E9,
+                    "type" to "push"
                 )
+            )
         )
 
         @JvmStatic
@@ -660,8 +730,7 @@ internal class FcmManagerImplNotificationsTest(
         every { anyConstructed<Date>().time } returns expectedCreationTime.toLong() // mock current time
         manager.handleRemoteMessage(notificationPayload, notificationManager, true)
 
-        verify(exactly = 1) {
-//            Exponea.trackDeliveredPush(any(), any())
+        verify(exactly = if (expectedTrackingData.hasTrackingConsent) 1 else 0) {
             Exponea.trackDeliveredPush(expectedTrackingData, any())
         }
         verify(exactly = (if (expectNotificationCreated) 1 else 0)) {

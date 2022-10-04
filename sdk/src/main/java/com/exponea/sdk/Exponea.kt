@@ -12,6 +12,8 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.ConfigurationFileManager
+import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
+import com.exponea.sdk.manager.TrackingConsentManager.MODE.IGNORE_CONSENT
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
@@ -486,63 +488,64 @@ object Exponea {
 
     /**
      * Manually track delivered push notification to Exponea API.
+     * Event is tracked even if NotificationData have not a tracking consent.
      */
+    fun trackDeliveredPushWithoutTrackingConsent(
+        data: NotificationData? = null,
+        timestamp: Double = currentTimeSeconds()
+    ) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackDeliveredPush(
+                data, timestamp, IGNORE_CONSENT
+            )
+        }
+    }.logOnException()
 
+    /**
+     * Manually track delivered push notification to Exponea API.
+     * Event is tracked if parameter 'data' has TRUE value of 'hasTrackingConsent' property
+     */
     fun trackDeliveredPush(
         data: NotificationData? = null,
         timestamp: Double = currentTimeSeconds()
     ) = runCatching {
         requireInitialized {
-            val properties = PropertiesList(
-                hashMapOf("status" to "delivered", "platform" to "android")
-            )
-            if (data?.getTrackingData() != null) {
-                for (item in data.getTrackingData()) {
-                    properties[item.key] = item.value
-                }
-            }
-            component.eventManager.track(
-                eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
-                properties = properties.properties,
-                type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
-                timestamp = timestamp
+            component.trackingConsentManager.trackDeliveredPush(
+                data, timestamp, CONSIDER_CONSENT
             )
         }
     }.logOnException()
 
     /**
      * Manually track clicked push notification to Exponea API.
+     * Event is tracked if one or both conditions met:
+     * - parameter 'data' has TRUE value of 'hasTrackingConsent' property
+     * - parameter 'actionData' has TRUE value of 'isTrackingForced' property
      */
-
     fun trackClickedPush(
         data: NotificationData? = null,
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
         requireInitialized {
-            val properties = PropertiesList(
-                hashMapOf(
-                    "status" to "clicked",
-                    "platform" to "android",
-                    "url" to (actionData?.url ?: "app"),
-                    "cta" to (actionData?.actionName ?: "notification")
-                )
+            component.trackingConsentManager.trackClickedPush(
+                data, actionData, timestamp, CONSIDER_CONSENT
             )
-            if (data != null) {
-                // we'll consider the campaign data as just created - for expiration handling
-                data.campaignData.createdAt = currentTimeSeconds()
-                component.campaignRepository.set(data.campaignData)
-            }
-            if (data?.getTrackingData() != null) {
-                for (item in data.getTrackingData()) {
-                    properties[item.key] = item.value
-                }
-            }
-            component.eventManager.track(
-                eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
-                properties = properties.properties,
-                type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_OPENED,
-                timestamp = timestamp
+        }
+    }.logOnException()
+
+    /**
+     * Manually track clicked push notification to Exponea API.
+     * Event is tracked even if NotificationData and NotificationAction have not a tracking consent.
+     */
+    fun trackClickedPushWithoutTrackingConsent(
+        data: NotificationData? = null,
+        actionData: NotificationAction? = null,
+        timestamp: Double? = currentTimeSeconds()
+    ) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackClickedPush(
+                data, actionData, timestamp, IGNORE_CONSENT
             )
         }
     }.logOnException()
@@ -942,6 +945,9 @@ object Exponea {
 
     /**
      * Track in-app message banner click event
+     * Event is tracked if one or both conditions met:
+     * - parameter 'message' has TRUE value of 'hasTrackingConsent' property
+     * - parameter 'buttonLink' has TRUE value of query parameter 'xnpe_force_track'
      */
     fun trackInAppMessageClick(
         message: InAppMessage,
@@ -949,18 +955,53 @@ object Exponea {
         buttonLink: String?
     ) = runCatching {
         requireInitialized {
-            component.eventManager.trackInAppMessageClick(message, buttonText, buttonLink)
+            component.trackingConsentManager.trackInAppMessageClick(
+                message, buttonText, buttonLink, CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    /**
+     * Track in-app message banner click event
+     * Event is tracked even if InAppMessage and button link have not a tracking consent.
+     */
+    fun trackInAppMessageClickWithoutTrackingConsent(
+        message: InAppMessage,
+        buttonText: String?,
+        buttonLink: String?
+    ) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackInAppMessageClick(
+                message, buttonText, buttonLink, IGNORE_CONSENT
+            )
         }
     }.logOnException()
 
     /**
      * Track in-app message banner close event
+     * Event is tracked if parameter 'message' has TRUE value of 'hasTrackingConsent' property
      */
     fun trackInAppMessageClose(
         message: InAppMessage
     ) = runCatching {
         requireInitialized {
-            component.eventManager.trackInAppMessageClose(message)
+            component.trackingConsentManager.trackInAppMessageClose(
+                message, CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    /**
+     * Track in-app message banner close event
+     * Event is tracked even if InAppMessage has not a tracking consent.
+     */
+    fun trackInAppMessageCloseWithoutTrackingConsent(
+        message: InAppMessage
+    ) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackInAppMessageClose(
+                message, IGNORE_CONSENT
+            )
         }
     }.logOnException()
 }

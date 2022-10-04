@@ -1,6 +1,5 @@
 package com.exponea.sdk.manager
 
-import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.EventType
@@ -8,16 +7,22 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
+import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.spyk
 import io.mockk.verify
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -29,6 +34,13 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var eventRepo: EventRepository
     lateinit var flushManager: FlushManager
     lateinit var inAppMessageManager: InAppMessageManager
+    lateinit var fetchManager: FetchManager
+    lateinit var customerIdsRepository: CustomerIdsRepository
+    lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
+    lateinit var messagesCache: InAppMessagesCache
+    lateinit var bitmapCache: InAppMessageBitmapCache
+    lateinit var presenter: InAppMessagePresenter
+    lateinit var trackingConsentManager: TrackingConsentManager
     lateinit var manager: EventManagerImpl
 
     lateinit var addedEvents: ArrayList<ExportedEvent>
@@ -47,18 +59,50 @@ internal class EventManagerTest : ExponeaSDKTest() {
         flushManager = mockk()
         every { flushManager.flushData(any()) } just Runs
 
-        inAppMessageManager = mockk()
-        every { inAppMessageManager.showRandom(any(), any(), any(), any()) } returns null
-        every { inAppMessageManager.sessionStarted(any()) } just Runs
+        fetchManager = mockk()
+        messagesCache = mockk()
+        every { messagesCache.set(any()) } just Runs
+        every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
+        every { messagesCache.get() } returns arrayListOf()
+        bitmapCache = mockk()
+        every { bitmapCache.has(any()) } returns false
+        every { bitmapCache.preload(any(), any()) } just Runs
+        every { bitmapCache.clearExcept(any()) } just Runs
+        customerIdsRepository = mockk()
+        every { customerIdsRepository.get() } returns CustomerIds()
+        inAppMessageDisplayStateRepository = mockk()
+        every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(null, null)
+        every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
+        every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
+        presenter = mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
+        trackingConsentManager = mockk()
+        every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
+        inAppMessageManager = spyk(InAppMessageManagerImpl(
+            configuration,
+            customerIdsRepo,
+            messagesCache,
+            fetchManager,
+            inAppMessageDisplayStateRepository,
+            bitmapCache,
+            presenter,
+            trackingConsentManager
+        ))
         every { inAppMessageManager.preloadIfNeeded(any()) } just Runs
+        every { inAppMessageManager.sessionStarted(any()) } just Runs
+        every { inAppMessageManager.showRandom(any(), any(), any()) } returns mockk()
 
         manager = EventManagerImpl(
-            ApplicationProvider.getApplicationContext(),
             configuration,
             eventRepo,
             customerIdsRepo,
             flushManager,
-            inAppMessageManager
+            onEventCreated = { event, type ->
+                inAppMessageManager.onEventCreated(event, type)
+            }
         )
     }
 
@@ -68,8 +112,9 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.onEventCreated(any(), any())
             inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any(), any())
+            inAppMessageManager.showRandom(any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         val firstAddedEvent = addedEvents.first()
@@ -106,8 +151,9 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.INSTALL)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.onEventCreated(any(), any())
             inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any(), any())
+            inAppMessageManager.showRandom(any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         assertEquals(3, addedEvents.size)
@@ -132,8 +178,9 @@ internal class EventManagerTest : ExponeaSDKTest() {
         verify {
             eventRepo.add(any())
             flushManager.flushData(any())
+            inAppMessageManager.onEventCreated(any(), any())
             inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any(), any())
+            inAppMessageManager.showRandom(any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
     }
@@ -144,9 +191,10 @@ internal class EventManagerTest : ExponeaSDKTest() {
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify {
             eventRepo.add(any())
+            inAppMessageManager.onEventCreated(any(), any())
             inAppMessageManager.preloadIfNeeded(any())
             inAppMessageManager.sessionStarted(any())
-            inAppMessageManager.showRandom(any(), any(), any(), any())
+            inAppMessageManager.showRandom(any(), any(), any())
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
     }

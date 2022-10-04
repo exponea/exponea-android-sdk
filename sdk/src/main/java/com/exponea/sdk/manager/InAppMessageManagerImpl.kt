@@ -8,8 +8,10 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessage
@@ -21,8 +23,10 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
@@ -35,7 +39,6 @@ internal data class InAppMessageShowRequest(
     val eventType: String,
     val properties: Map<String, Any?>,
     val timestamp: Double?,
-    val trackingDelegate: InAppMessageTrackingDelegate,
     val requestedAt: Long
 )
 internal class InAppMessageManagerImpl(
@@ -45,7 +48,8 @@ internal class InAppMessageManagerImpl(
     private val fetchManager: FetchManager,
     private val displayStateRepository: InAppMessageDisplayStateRepository,
     private val bitmapCache: InAppMessageBitmapCache,
-    private val presenter: InAppMessagePresenter
+    private val presenter: InAppMessagePresenter,
+    private val eventManager: TrackingConsentManager
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
@@ -129,10 +133,8 @@ internal class InAppMessageManagerImpl(
                         if (preloaded) {
                             showPendingMessage(message)
                         } else {
-                            trackErrorEvent(
-                                message.second,
-                                "Images has not been preloaded",
-                                message.first.trackingDelegate
+                            eventManager.trackInAppMessageError(
+                                message.second, "Images has not been preloaded", CONSIDER_CONSENT
                             )
                         }
                         preloadImagesAfterPendingShown(messages.filter { it != message.second }, callback)
@@ -205,7 +207,7 @@ internal class InAppMessageManagerImpl(
     private fun showPendingMessage(pickedMessage: Pair<InAppMessageShowRequest, InAppMessage>? = null) {
         val message = pickedMessage ?: pickPendingMessage(true)
         if (message != null) {
-            show(message.second, message.first.trackingDelegate)
+            show(message.second)
         }
         pendingShowRequests = arrayListOf()
     }
@@ -260,9 +262,7 @@ internal class InAppMessageManagerImpl(
     override fun showRandom(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?,
-        trackingDelegate: InAppMessageTrackingDelegate
-
+        timestamp: Double?
     ): Job? {
         Logger.i(this, "Requesting to show in-app message for event type $eventType")
         if (preloaded) {
@@ -270,7 +270,7 @@ internal class InAppMessageManagerImpl(
                 Logger.i(this, "In-app message data preloaded, picking a message to display")
                 val message = getRandom(eventType, properties, timestamp)
                 if (message != null) {
-                    show(message, trackingDelegate)
+                    show(message)
                 }
             }
         } else {
@@ -279,17 +279,16 @@ internal class InAppMessageManagerImpl(
                 eventType,
                 properties,
                 timestamp,
-                trackingDelegate,
                 System.currentTimeMillis()
             )
             return null
         }
     }
 
-    private fun show(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+    private fun show(message: InAppMessage) {
         if (message.variantId == -1 && !message.hasPayload()) {
             Logger.i(this, "Only logging in-app message for control group '${message.name}'")
-            trackShowEvent(message, trackingDelegate)
+            trackShowEvent(message)
             return
         }
         if (!message.hasPayload()) {
@@ -315,7 +314,12 @@ internal class InAppMessageManagerImpl(
                         Logger.i(this, "In-app message button clicked!")
                         displayStateRepository.setInteracted(message, Date())
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackClickEvent(message, trackingDelegate, button.buttonText, button.buttonLink)
+                            eventManager.trackInAppMessageClick(
+                                message,
+                                button.buttonText,
+                                button.buttonLink,
+                                CONSIDER_CONSENT
+                            )
                         }
                         val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
                         Handler(Looper.getMainLooper()).post {
@@ -332,7 +336,7 @@ internal class InAppMessageManagerImpl(
                     },
                     dismissedCallback = { activity ->
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackCloseEvent(message, trackingDelegate)
+                            eventManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
                         }
                         Handler(Looper.getMainLooper()).post {
                             Exponea.inAppMessageActionCallback.inAppMessageAction(
@@ -345,49 +349,25 @@ internal class InAppMessageManagerImpl(
                     },
                     failedCallback = { error ->
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackErrorEvent(message, error, trackingDelegate)
+                            eventManager.trackInAppMessageError(message, error, CONSIDER_CONSENT)
                         }
                     }
                 )
                 if (presented != null) {
-                    trackShowEvent(message, trackingDelegate)
+                    trackShowEvent(message)
                 }
             },
             message.delay ?: 0
         )
     }
 
-    private fun trackShowEvent(message: InAppMessage, trackingDelegate: InAppMessageTrackingDelegate) {
+    private fun trackShowEvent(message: InAppMessage) {
         displayStateRepository.setDisplayed(message, Date())
-        trackingDelegate.track(message, "show", false)
+        eventManager.trackInAppMessageShown(message, CONSIDER_CONSENT)
         Exponea.telemetry?.reportEvent(
             com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
             hashMapOf("messageType" to (message.rawMessageType ?: "null"))
         )
-    }
-
-    override fun trackClickEvent(
-        message: InAppMessage,
-        trackingDelegate: InAppMessageTrackingDelegate,
-        buttonText: String?,
-        buttonLink: String?
-    ) {
-        trackingDelegate.track(message, "click", true, buttonText, buttonLink)
-    }
-
-    override fun trackErrorEvent(
-        message: InAppMessage,
-        errorMessage: String,
-        trackingDelegate: InAppMessageTrackingDelegate
-    ) {
-        trackingDelegate.track(message, "error", false, error = errorMessage)
-    }
-
-    override fun trackCloseEvent(
-        message: InAppMessage,
-        trackingDelegate: InAppMessageTrackingDelegate
-    ) {
-        trackingDelegate.track(message, "close", false)
     }
 
     fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
@@ -402,6 +382,34 @@ internal class InAppMessageManagerImpl(
             } catch (e: ActivityNotFoundException) {
                 Logger.e(this, "Unable to perform deeplink", e)
             }
+        }
+    }
+
+    override fun onEventCreated(event: Event, type: EventType) {
+        val eventType = event.type
+        val properties = event.properties?.toMap() ?: mapOf()
+        val timestamp = event.timestamp
+        val eventTimestamp = timestamp ?: currentTimeSeconds()
+        val eventTimestampInMillis = eventTimestamp * 1000
+
+        // do not initiate in-app preload on push events and session_end event
+        // user may not even end up in the app and in-app fetch would run unnecessarily
+        if (type != EventType.PUSH_DELIVERED &&
+            type != EventType.PUSH_OPENED &&
+            type != EventType.SESSION_END
+        ) {
+            preloadIfNeeded(eventTimestampInMillis)
+        }
+
+        if (type == EventType.SESSION_START) {
+            sessionStarted(Date(eventTimestampInMillis.toLong()))
+        }
+        if (eventType != null) {
+            showRandom(
+                eventType,
+                properties,
+                timestamp
+            )
         }
     }
 }
@@ -442,7 +450,12 @@ internal class EventManagerInAppMessageTrackingDelegate(
             properties["link"] = link
         }
         error?.let { properties["error"] = it }
-
+        if (message.consentCategoryTracking != null) {
+            properties["consent_category_tracking"] = message.consentCategoryTracking
+        }
+        if (GdprTracking.isTrackForced(link)) {
+            properties["tracking_forced"] = true
+        }
         eventManager.track(
             eventType = Constants.EventTypes.banner,
             properties = properties,

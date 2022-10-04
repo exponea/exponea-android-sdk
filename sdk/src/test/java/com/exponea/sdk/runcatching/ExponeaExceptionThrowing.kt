@@ -26,6 +26,8 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<ExponeaComponent>().fcmManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().fetchManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().networkManager } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().trackingConsentManager } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().inAppMessageTrackingDelegate } throws TestPurposeException()
 
         // This will cause onSessionStart/Stop to throw exception
         every { anyConstructed<BackgroundTimerManagerImpl>().startTimer() } throws TestPurposeException()

@@ -97,8 +97,14 @@ internal object PublicApiTestCases {
             Exponea::trackClickedPush
         ) { Exponea.trackClickedPush() },
         Pair(
+            Exponea::trackClickedPushWithoutTrackingConsent
+        ) { Exponea.trackClickedPushWithoutTrackingConsent() },
+        Pair(
             Exponea::trackDeliveredPush
         ) { Exponea.trackDeliveredPush() },
+        Pair(
+            Exponea::trackDeliveredPushWithoutTrackingConsent
+        ) { Exponea.trackDeliveredPushWithoutTrackingConsent() },
         Pair(
             Exponea::trackEvent
         ) { Exponea.trackEvent(PropertiesList(hashMapOf()), null, null) },
@@ -142,8 +148,18 @@ internal object PublicApiTestCases {
             "mock-button-text",
             "mock-button-link") },
         Pair(
+            Exponea::trackInAppMessageClickWithoutTrackingConsent
+        ) { Exponea.trackInAppMessageClickWithoutTrackingConsent(
+            InAppMessageTest.getInAppMessage(),
+            "mock-button-text",
+            "mock-button-link") },
+        Pair(
             Exponea::trackInAppMessageClose
         ) { Exponea.trackInAppMessageClose(InAppMessageTest.getInAppMessage())
+        },
+        Pair(
+            Exponea::trackInAppMessageCloseWithoutTrackingConsent
+        ) { Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
         }
     )
 
@@ -156,7 +172,9 @@ internal object PublicApiTestCases {
         Exponea::handleRemoteMessage,
 //        Exponea::isExponeaPushNotification,
 //        Exponea::trackClickedPush,
+//        Exponea::trackClickedPushWithoutTrackingConsent,
 //        Exponea::trackDeliveredPush,
+//        Exponea::trackDeliveredPushWithoutTrackingConsent,
 //        Exponea::trackEvent,
 //        Exponea::trackPaymentEvent,
 //        Exponea::trackPushToken,
@@ -167,6 +185,8 @@ internal object PublicApiTestCases {
         Exponea::handleNewToken,
         Exponea::handleNewHmsToken
 //        Exponea::trackInAppMessageClick,
-//        Exponea::trackInAppMessageClose
+//        Exponea::trackInAppMessageClickWithoutTrackingConsent,
+//        Exponea::trackInAppMessageClose,
+//        Exponea::trackInAppMessageCloseWithoutTrackingConsent
     )
 }

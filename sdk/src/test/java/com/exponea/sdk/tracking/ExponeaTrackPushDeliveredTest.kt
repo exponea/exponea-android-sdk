@@ -17,6 +17,7 @@ import io.mockk.just
 import io.mockk.mockkConstructor
 import io.mockk.slot
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -178,7 +179,14 @@ internal class ExponeaTrackPushDeliveredTest(
                         )
                 ),
                 EventType.PUSH_DELIVERED
-        )
+        ),
+            TestCase(
+                "Push without consent",
+                NotificationData(hasTrackingConsent = false),
+                Constants.EventTypes.push,
+                hashMapOf(),
+                EventType.PUSH_DELIVERED
+            )
         )
 
         @JvmStatic
@@ -213,8 +221,12 @@ internal class ExponeaTrackPushDeliveredTest(
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
         } just Runs
         Exponea.trackDeliveredPush(notificationData)
-        assertEquals(eventName, eventSlot.captured.type)
-        assertEquals(eventProperties, eventSlot.captured.properties)
-        assertEquals(eventType, eventTypeSlot.captured)
+        if (notificationData?.hasTrackingConsent != false) {
+            assertEquals(eventName, eventSlot.captured.type)
+            assertEquals(eventProperties, eventSlot.captured.properties)
+            assertEquals(eventType, eventTypeSlot.captured)
+        } else {
+            assertFalse { eventSlot.isCaptured }
+        }
     }
 }

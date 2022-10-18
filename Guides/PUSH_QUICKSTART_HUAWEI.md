@@ -74,6 +74,10 @@ Exponea SDK will only handle push notification messages coming from Exponea serv
 
 If you run the app after completing the setup, the SDK should track push token to Exponea servers. Self-check will tell you that, or you can find your customer in the Exponea web app and check user property `huawei_push_notification_id`
 
+> **Quick Tip:** If you are integrating Exponea SDK to existing project, you may face an issue that your 'HmsMessageService' is not called automatically.
+> To retrieve a fresh Push token, you should consider to request a token manually as soon as possible after application start init.
+> Please read a HMS guide how to retrieve current Push token https://developer.huawei.com/consumer/en/doc/development/HMSCore-Guides/android-client-dev-0000001050042041
+
 ## Configuring Exponea to use your Huawei project 
  You need to connect the Exponea web application to your Huawei project.
    1. Create Huawei Push Service integration in `Data & Assets/Integrations` 

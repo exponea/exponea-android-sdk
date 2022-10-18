@@ -197,6 +197,12 @@ In case of push notifications not working for you, these are frequent issues wit
 Xiaomi MIUI is handling battery optimization in its own way and can sometimes affect the behavior of push notifications. 
 If battery optimization is on for devices with MIUI, it can make push notifications stop showing or not working after the click. Unfortunately, there is nothing we can do on our end to prevent this, but you can try this to solve the issues:
 
--   Turn off any battery optimizations in Settings->Battery & Performance you can
--   Set the "No restrictions" option in battery saver options for your app
--   And (probably) most important, turn off Memory and MIUI Optimization under Developer Options
+- Turn off any battery optimizations in Settings->Battery & Performance you can
+- Set the "No restrictions" option in battery saver options for your app
+- And (probably) most important, turn off Memory and MIUI Optimization under Developer Options
+
+### Push notification token is missing after anonymization
+
+There is principal usage of `Exponea.anonymize()` as an sign out feature in some applications. Keep in mind that invoking of `anonymize` will remove also a Push notification token from storage. To load a current token, your application should retrieve a valid token manually before using any Push notification feature. So it may be called right after `anonymize` or before/after `identifyCustomer`, it depends on your Push notifications usage.
+
+> Guide how to retrieve a valid Push notification token is written for [FCM](../Guides/PUSH_QUICKSTART_FIREBASE.md) and [HMS](../Guides/PUSH_QUICKSTART_HUAWEI.md).

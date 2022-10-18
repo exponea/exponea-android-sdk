@@ -73,13 +73,13 @@ Exponea SDK will only handle push notification messages coming from Exponea serv
 > ```kotlin
 > import android.app.Application
 > import com.exponea.sdk.Exponea
-> import com.google.firebase.installations.FirebaseInstallations
+> import com.google.firebase.installations.FirebaseMessaging
 > 
 > class ExponeaApp : Application() {
 >     override fun onCreate() {
 > 	    super.onCreate()
-> 	    FirebaseInstallations.getInstance().getToken(false).addOnSuccessListener {
-> 		    Exponea.handleNewToken(applicationContext, it.token)
+> 	    FirebaseMessaging.getInstance().token.addOnSuccessListener {
+> 		    Exponea.handleNewToken(applicationContext, it)
 > 		}
 > 	}
 > }

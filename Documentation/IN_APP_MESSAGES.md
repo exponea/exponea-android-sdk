@@ -106,3 +106,5 @@ override fun inAppMessageAction(
         }
     }  
 ```
+
+> The behaviour of `trackInAppMessageClick` and `trackInAppMessageClose` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).

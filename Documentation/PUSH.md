@@ -70,7 +70,9 @@ Exponea.notificationDataCallback = {
 
 Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
 
-> If your app is not running in the background, the SDK will auto-initialize when push notification is received. In this case, `Exponea.notificationDataCallback` is not set, so the callback will be called after you attach the listener(next app start). If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`. 
+> If your app is not running in the background, the SDK will auto-initialize when push notification is received. In this case, `Exponea.notificationDataCallback` is not set, so the callback will be called after you attach the listener(next app start). If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`.
+
+> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
 ## Custom processing of notification actions
 When a user clicks on the notification or its buttons, SDK automatically performs linked action (open app, browser, etc.). If you need to do some more processing when this event occurs, you can create a receiver for this purpose. SDK is broadcasting `com.exponea.sdk.action.PUSH_CLICKED`, `com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED` and `com.exponea.sdk.action.PUSH_URL_CLICKED` actions, and you can specify them in intent filer to react to them.
@@ -136,6 +138,8 @@ fun trackDeliveredPush(
 )
 ```
 
+> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
+
 #### 💻 Usage
 
 ``` kotlin
@@ -153,7 +157,7 @@ Exponea.trackDeliveredPush(
 )
 ```
 
-> NotificationData contains field `hasTrackingConsent` that has to be set and handled properly according to (TODO: gdpr link). Exponea SDK will not track NotificationData with `false` value of `hasTrackingConsent`. 
+> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
 #### Track Clicked Push Notification
 
@@ -163,6 +167,8 @@ fun trackClickedPush(
         timestamp: Double? = null
 )
 ```
+
+> The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
 #### 💻 Usage
 
@@ -181,7 +187,7 @@ Exponea.trackClickedPush(
 )
 ```
 
-> NotificationData contains field `hasTrackingConsent` that has to be set and handled properly according to (TODO: gdpr link). Exponea SDK will not track NotificationData with `false` value of `hasTrackingConsent` by default. Nevertheless, event is tracked if NotificationAction contains `url` with parameter `xnpe_force_track`. In that case, event is tracked with `tracking_forced = true` property.
+> The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
 ## Troubleshooting
 In case of push notifications not working for you, these are frequent issues with the most likely solutions.

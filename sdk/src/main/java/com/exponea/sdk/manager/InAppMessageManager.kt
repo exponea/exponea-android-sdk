@@ -39,6 +39,7 @@ internal interface InAppMessageTrackingDelegate {
         message: InAppMessage,
         action: String,
         interaction: Boolean,
+        trackingAllowed: Boolean,
         text: String? = null,
         link: String? = null,
         error: String? = null

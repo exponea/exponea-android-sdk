@@ -10,4 +10,11 @@ internal interface EventManager {
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType
     )
+    fun processTrack(
+        eventType: String? = null,
+        timestamp: Double? = currentTimeSeconds(),
+        properties: HashMap<String, Any> = hashMapOf(),
+        type: EventType,
+        trackingAllowed: Boolean
+    )
 }

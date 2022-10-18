@@ -48,11 +48,11 @@ internal class ExponeaTrackVirtualPaymentTest : ExponeaSDKTest() {
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         Exponea.trackPaymentEvent(purchasedItem = purchase)
         verify(exactly = 1) {
-            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals("payment", eventSlot.captured.type)

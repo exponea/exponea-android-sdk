@@ -28,10 +28,11 @@ internal class TrackingConsentManagerImpl(
         timestamp: Double?,
         mode: MODE
     ) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && data?.hasTrackingConsent == false && actionData?.isTrackingForced != true) {
             Logger.e(this,
                 "Event for clicked notification is not tracked because consent is not given nor forced")
-            return
+            trackingAllowed = false
         }
         val properties = PropertiesList(
             hashMapOf(
@@ -57,18 +58,20 @@ internal class TrackingConsentManagerImpl(
         if (actionData?.isTrackingForced == true) {
             properties["tracking_forced"] = true
         }
-        eventManager.track(
+        eventManager.processTrack(
             eventType = if (data?.hasCustomEventType == true) data.eventType else EventTypes.push,
             properties = properties.properties,
             type = if (data?.hasCustomEventType == true) TRACK_EVENT else PUSH_OPENED,
-            timestamp = timestamp
+            timestamp = timestamp,
+            trackingAllowed = trackingAllowed
         )
     }
 
     override fun trackDeliveredPush(data: NotificationData?, timestamp: Double, mode: MODE) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && data?.hasTrackingConsent == false) {
             Logger.e(this, "Event for delivered notification is not tracked because consent is not given")
-            return
+            trackingAllowed = false
         }
         val properties = PropertiesList(
             hashMapOf("status" to "delivered", "platform" to "android")
@@ -81,49 +84,55 @@ internal class TrackingConsentManagerImpl(
         if (data?.consentCategoryTracking != null) {
             properties["consent_category_tracking"] = data.consentCategoryTracking
         }
-        eventManager.track(
+        eventManager.processTrack(
             eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
             properties = properties.properties,
             type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
-            timestamp = timestamp
+            timestamp = timestamp,
+            trackingAllowed = trackingAllowed
         )
     }
 
     override fun trackInAppMessageShown(message: InAppMessage, mode: MODE) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent) {
             Logger.e(this, "Event for shown inAppMessage is not tracked because consent is not given")
-            return
+            trackingAllowed = false
         }
-        inappMessageTrackingDelegate.track(message, "show", false)
+        inappMessageTrackingDelegate.track(message, "show", false, trackingAllowed)
     }
 
     override fun trackInAppMessageClick(message: InAppMessage, buttonText: String?, buttonLink: String?, mode: MODE) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent && !GdprTracking.isTrackForced(buttonLink)) {
             Logger.e(this, "Event for clicked inAppMessage is not tracked because consent is not given")
-            return
+            trackingAllowed = false
         }
         inappMessageTrackingDelegate.track(
             message,
             "click",
             true,
+            trackingAllowed,
             buttonText,
             buttonLink
         )
     }
 
     override fun trackInAppMessageClose(message: InAppMessage, mode: MODE) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent) {
             Logger.e(this, "Event for closed inAppMessage is not tracked because consent is not given")
-            return
+            trackingAllowed = false
         }
-        inappMessageTrackingDelegate.track(message, "close", false)
+        inappMessageTrackingDelegate.track(message, "close", false, trackingAllowed)
     }
 
-    override fun trackInAppMessageError(message: InAppMessage, errorMessage: String, mode: MODE) {
+    override fun trackInAppMessageError(message: InAppMessage, error: String, mode: MODE) {
+        var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent) {
             Logger.e(this, "Event for error of inAppMessage showing is not tracked because consent is not given")
-            return
+            trackingAllowed = false
         }
-        inappMessageTrackingDelegate.track(message, "error", false, error = errorMessage)
+        inappMessageTrackingDelegate.track(message, "error", false, trackingAllowed, error = error)
     }
 }

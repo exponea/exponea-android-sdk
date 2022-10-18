@@ -38,11 +38,11 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         Exponea.trackPushToken(token = "test-google-push-token")
         verify(exactly = 1) {
-            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals("campaign", eventSlot.captured.type)

@@ -40,14 +40,14 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         Exponea.identifyCustomer(
             CustomerIds().withId("registered", "john@doe.com"),
             PropertiesList(hashMapOf("first_name" to "NewName"))
         )
         verify(exactly = 1) {
-            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals(

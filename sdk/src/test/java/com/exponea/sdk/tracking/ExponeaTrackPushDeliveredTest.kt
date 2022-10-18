@@ -218,7 +218,7 @@ internal class ExponeaTrackPushDeliveredTest(
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), true)
         } just Runs
         Exponea.trackDeliveredPush(notificationData)
         if (notificationData?.hasTrackingConsent != false) {

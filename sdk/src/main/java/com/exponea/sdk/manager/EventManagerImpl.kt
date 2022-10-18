@@ -19,7 +19,7 @@ internal class EventManagerImpl(
     private val onEventCreated: (Event, EventType) -> Unit
 ) : EventManager {
 
-    fun addEventToQueue(event: Event, eventType: EventType) {
+    fun addEventToQueue(event: Event, eventType: EventType, trackingAllowed: Boolean) {
         Logger.d(this, "addEventToQueue")
 
         val route = when (eventType) {
@@ -42,8 +42,13 @@ internal class EventManagerImpl(
                     route = route,
                     exponeaProject = project
             )
-            Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
-            eventRepository.add(exportedEvent)
+            if (trackingAllowed) {
+                Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
+                eventRepository.add(exportedEvent)
+            } else {
+                Logger.d(this, "Event has not been added to Queue: ${exportedEvent.id}" +
+                    "because real tracking is not allowed")
+            }
         }
 
         // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
@@ -58,6 +63,16 @@ internal class EventManagerImpl(
         properties: HashMap<String, Any>,
         type: EventType
     ) {
+        processTrack(eventType, timestamp, properties, type, true)
+    }
+
+    override fun processTrack(
+        eventType: String?,
+        timestamp: Double?,
+        properties: HashMap<String, Any>,
+        type: EventType,
+        trackingAllowed: Boolean
+    ) {
         val trackedProperties: HashMap<String, Any> = hashMapOf()
         trackedProperties.putAll(configuration.defaultProperties)
         trackedProperties.putAll(properties)
@@ -68,8 +83,7 @@ internal class EventManagerImpl(
             customerIds = customerIdsRepository.get().toHashMap(),
             properties = trackedProperties
         )
-
-        addEventToQueue(event, type)
+        addEventToQueue(event, type, trackingAllowed)
         onEventCreated(event, type)
     }
 }

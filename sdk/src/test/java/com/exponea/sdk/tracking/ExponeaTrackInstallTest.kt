@@ -38,11 +38,11 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         Exponea.init(context, configuration)
         verify(exactly = 1) {
-            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals("installation", eventSlot.captured.type)
@@ -54,12 +54,12 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
-            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot))
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         Exponea.init(context, configuration)
         Exponea.trackInstallEvent()
         verify(exactly = 1) {
-            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any())
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
     }
 }

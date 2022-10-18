@@ -583,14 +583,14 @@ internal class InAppMessageManagerImplTest {
         val propertiesSlot = slot<HashMap<String, Any>>()
         val typeSlot = slot<EventType>()
         every {
-            eventManager.track(capture(eventTypeSlot), any(), capture(propertiesSlot), capture(typeSlot))
+            eventManager.processTrack(capture(eventTypeSlot), any(), capture(propertiesSlot), capture(typeSlot), any())
         } just Runs
 
         val delegate = EventManagerInAppMessageTrackingDelegate(
             ApplicationProvider.getApplicationContext(),
             eventManager
         )
-        delegate.track(InAppMessageTest.getInAppMessage(), "mock-action", false)
+        delegate.track(InAppMessageTest.getInAppMessage(), "mock-action", false, true)
         assertEquals(Constants.EventTypes.banner, eventTypeSlot.captured)
         assertEquals(EventType.BANNER, typeSlot.captured)
         assertEquals("5dd86f44511946ea55132f29", propertiesSlot.captured["banner_id"])

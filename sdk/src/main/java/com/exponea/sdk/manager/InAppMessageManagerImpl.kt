@@ -424,6 +424,7 @@ internal class EventManagerInAppMessageTrackingDelegate(
         message: InAppMessage,
         action: String,
         interaction: Boolean,
+        trackingAllowed: Boolean,
         text: String?,
         link: String?,
         error: String?
@@ -456,10 +457,11 @@ internal class EventManagerInAppMessageTrackingDelegate(
         if (GdprTracking.isTrackForced(link)) {
             properties["tracking_forced"] = true
         }
-        eventManager.track(
+        eventManager.processTrack(
             eventType = Constants.EventTypes.banner,
             properties = properties,
-            type = EventType.BANNER
+            type = EventType.BANNER,
+            trackingAllowed = trackingAllowed
         )
     }
 }

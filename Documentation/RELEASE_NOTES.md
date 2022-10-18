@@ -1,6 +1,6 @@
-## Release Notes
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
+## Release Notes
 ## Release Notes for 3.1.0
 #### August 09, 2022
 * Features

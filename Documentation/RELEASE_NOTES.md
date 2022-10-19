@@ -1,6 +1,16 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.2.0
+#### October 19, 2022
+* Features
+  * Added feature to handle tracking consent according to DSGVO/GDPR
+  * Guiding documentation added for Push notification update after certain circumstances
+* Bug Fixes
+  * Fixed: License established to MIT
+  * Fixed: Documentation for Push token retrieval shows FirebaseMessaging usage
+
+
 ## Release Notes for 3.1.0
 #### August 09, 2022
 * Features

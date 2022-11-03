@@ -3,7 +3,7 @@
 </p>
 
 ### Specs
-[![API](https://img.shields.io/badge/API-14%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=14)
+[![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=17)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Exponea Android SDK
@@ -75,4 +75,4 @@ Release notes can be found [here](./Documentation/RELEASE_NOTES.md).
 
 ## ⚠️ Version Disclaimer
 
-This SDK supports **API 14+** and **Android 4+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
+This SDK supports **API 17+** and **Android 4.2+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).

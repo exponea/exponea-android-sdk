@@ -68,6 +68,7 @@
 * Features
   * Huawei push notifications support
   * Changes regarding Android S - Notification trampolining removed, androidx.work:work-runtime library updated, exported attribute added where necessary
+  * Minimal SDK version support has been increased to 17
 * Bug Fixes
   * Fixed: In-Apps caching fixed - Images with the same URL are downloaded only once
   * Fixed: In-Apps fetching fixed - In-app messages are no longer fetched when push notification auto initializes the SDK. In-apps are fetched only after the app is started
@@ -221,6 +222,7 @@
 * Features
   * Updated Firebase messaging library to version 2.1.0
   * Updated minimum SDK version to 16 as recommended by Google
+  * Minimal SDK version support has been increased to 16
 
 ## Release Notes for 2.6.2
 #### January 10, 2020

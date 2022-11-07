@@ -276,4 +276,90 @@ internal class EventManagerTest : ExponeaSDKTest() {
             secondEvent
         )
     }
+
+    @Test
+    fun `should add default properties to customer properties by default`() {
+        setup(
+            ExponeaConfiguration(
+                projectToken = "mock-project-token",
+                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                    baseUrl = "https://api.exponea.com",
+                    projectToken = "mock-project-token",
+                    authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_CUSTOMERS
+            ), firstAddedEvent
+        )
+    }
+
+    @Test
+    fun `should add default properties to customer properties if allowed`() {
+        setup(
+            ExponeaConfiguration(
+                projectToken = "mock-project-token",
+                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                allowDefaultCustomerProperties = true
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                    baseUrl = "https://api.exponea.com",
+                    projectToken = "mock-project-token",
+                    authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_CUSTOMERS
+            ), firstAddedEvent
+        )
+    }
+
+    @Test
+    fun `should NOT add default properties to customer properties if denied`() {
+        setup(
+            ExponeaConfiguration(
+                projectToken = "mock-project-token",
+                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                allowDefaultCustomerProperties = false
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                    baseUrl = "https://api.exponea.com",
+                    projectToken = "mock-project-token",
+                    authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_CUSTOMERS
+            ), firstAddedEvent
+        )
+    }
 }

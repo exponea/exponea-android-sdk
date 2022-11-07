@@ -41,7 +41,10 @@ data class ExponeaConfiguration(
     /** A list of properties to be added to all tracking events */
     var defaultProperties: HashMap<String, Any> = hashMapOf(),
     /** How ofter the token is tracked */
-    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
+    var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE,
+
+    /** If true, default properties are applied also for 'identifyCustomer' event. */
+    var allowDefaultCustomerProperties: Boolean = true
 ) {
 
     val mainExponeaProject

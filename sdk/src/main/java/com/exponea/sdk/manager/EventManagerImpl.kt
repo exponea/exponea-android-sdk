@@ -74,7 +74,9 @@ internal class EventManagerImpl(
         trackingAllowed: Boolean
     ) {
         val trackedProperties: HashMap<String, Any> = hashMapOf()
-        trackedProperties.putAll(configuration.defaultProperties)
+        if (canUseDefaultProperties(type)) {
+            trackedProperties.putAll(configuration.defaultProperties)
+        }
         trackedProperties.putAll(properties)
 
         val event = Event(
@@ -85,5 +87,9 @@ internal class EventManagerImpl(
         )
         addEventToQueue(event, type, trackingAllowed)
         onEventCreated(event, type)
+    }
+
+    private fun canUseDefaultProperties(type: EventType): Boolean {
+        return configuration.allowDefaultCustomerProperties || EventType.TRACK_CUSTOMER != type
     }
 }

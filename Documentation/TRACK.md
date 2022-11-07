@@ -87,6 +87,7 @@ Exponea.identifyCustomer(
 )
 ```
 As result, the customer ID and properties are registered in your Exponea APP and you should see them in list `Data & Assets > Customers`
+> Tracking event for `identifyCustomer` contains also default properties by default. If you want to disallow it, please set `allowDefaultCustomerProperties` to FALSE. See docs in [Config](CONFIG.md) page
 > If you define a default properties (see Default Properties), they are sent along with customer properties.
 > In that case, please ensure that you allowed API to update a customer properties or you allowed to create a new properties in your Exponea APP (Project settings -> Access Management -> API -> Group permissions and check -> Customer properties)
 

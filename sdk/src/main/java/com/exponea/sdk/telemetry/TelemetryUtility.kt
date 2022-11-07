@@ -89,7 +89,9 @@ object TelemetryUtility {
             "defaultProperties"
                 to if (configuration.defaultProperties.isNotEmpty()) "[REDACTED]" else "[]",
             "tokenTrackFrequency"
-                to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency)
+                to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency),
+            "allowDefaultCustomerProperties"
+                to formatConfigurationProperty(ExponeaConfiguration::allowDefaultCustomerProperties)
         )
     }
 

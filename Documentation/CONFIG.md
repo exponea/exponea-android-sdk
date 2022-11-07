@@ -55,6 +55,9 @@ data class ExponeaConfiguration(
 
   /** How ofter the token is tracked */
   var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE
+  
+  /** If true, default properties are applied also for 'identifyCustomer' event. */
+  var allowDefaultCustomerProperties: Boolean = true
 )
 ```
 #### projectToken
@@ -148,6 +151,11 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### defaultProperties
 
 * The properties defined on this setting will always be sent with all triggered tracking events.
+
+#### allowDefaultCustomerProperties
+
+* Flag to apply `defaultProperties` list to `identifyCustomer` tracking event
+* Default value `true`
 
 #### tokenTrackFrequency
 

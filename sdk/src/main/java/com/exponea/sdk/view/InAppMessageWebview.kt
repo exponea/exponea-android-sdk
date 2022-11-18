@@ -1,7 +1,6 @@
 package com.exponea.sdk.view
 
 import android.app.Activity
-import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build.VERSION
@@ -17,9 +16,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.PopupWindow
 import android.widget.RelativeLayout
-import androidx.core.content.ContextCompat.startActivity
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessageButtonType
+import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
+import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
@@ -114,11 +114,6 @@ internal class InAppMessageWebview(
             isActionUrl(url) -> this.onButtonClick.invoke(toPayloadButton(url!!))
             else -> Logger.w(this, "[HTML] Unknown action URL: $url")
         }
-        if (isActionUrl(url)) {
-            val i = Intent(Intent.ACTION_VIEW)
-            i.setData(Uri.parse(url!!))
-            startActivity(activity, i, null)
-        }
         dismiss()
     }
 
@@ -126,16 +121,39 @@ internal class InAppMessageWebview(
         return InAppMessagePayloadButton(
                 buttonLink = url,
                 buttonText = findActionByUrl(url)?.buttonText ?: "Unknown",
-                rawButtonType = InAppMessageButtonType.DEEPLINK.value
+                rawButtonType = detectActionType(url).value
         )
     }
 
+    private fun detectActionType(url: String): InAppMessageButtonType {
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return BROWSER
+        } else {
+            return DEEPLINK
+        }
+    }
+
     private fun findActionByUrl(url: String): HtmlNormalizer.ActionInfo? {
-        return this.normalizedResult.actions?.find { it.actionUrl.equals(url) }
+        return this.normalizedResult.actions?.find { areEqualAsURLs(it.actionUrl, url) }
+    }
+
+    private fun areEqualAsURLs(url1: String, url2: String): Boolean {
+        try {
+            val parsed1 = Uri.parse(url1)
+            val parsed2 = Uri.parse(url2)
+            val path1 = parsed1.path?.removeSuffix("/")
+            val path2 = parsed2.path?.removeSuffix("/")
+            return parsed1.scheme == parsed2.scheme &&
+                parsed1.host == parsed2.host &&
+                path1 == path2
+        } catch (e: Exception) {
+            Logger.e(this, "[HTML] Unable to compare urls $url1 vs $url2", e)
+            return false
+        }
     }
 
     private fun isActionUrl(url: String?): Boolean {
-        return !isCloseAction(url) && url?.startsWith("http", true) ?: false
+        return url != null && !isCloseAction(url) && findActionByUrl(url) != null
     }
 
     private fun isCloseAction(url: String?): Boolean {

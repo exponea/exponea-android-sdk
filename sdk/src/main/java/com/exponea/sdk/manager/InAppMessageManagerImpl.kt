@@ -16,7 +16,8 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
-import com.exponea.sdk.models.InAppMessageButtonType
+import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
+import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -371,7 +372,7 @@ internal class InAppMessageManagerImpl(
     }
 
     fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
-        if (button.buttonType == InAppMessageButtonType.DEEPLINK) {
+        if (button.buttonType == DEEPLINK || button.buttonType == BROWSER) {
             try {
                 activity.startActivity(
                     Intent(Intent.ACTION_VIEW).apply {

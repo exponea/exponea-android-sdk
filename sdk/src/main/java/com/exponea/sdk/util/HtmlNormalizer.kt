@@ -31,7 +31,7 @@ internal class HtmlNormalizer(
         private const val CLOSE_BUTTON_ATTR_DEF = "data-actiontype='close'"
         private const val CLOSE_BUTTON_SELECTOR = "[$CLOSE_BUTTON_ATTR_DEF]"
         private const val ACTION_BUTTON_ATTR = "data-link"
-        private const val ACTION_BUTTON_SELECTOR = "[$ACTION_BUTTON_ATTR^=http]"
+        private const val ACTION_BUTTON_SELECTOR = "[$ACTION_BUTTON_ATTR]"
 
         private const val HREF_ATTR = "href"
         private const val META_TAG_SELECTOR = "meta"

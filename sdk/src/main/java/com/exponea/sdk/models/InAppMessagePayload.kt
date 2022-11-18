@@ -98,5 +98,6 @@ enum class MessagePosition {
 
 enum class InAppMessageButtonType(val value: String) {
     CANCEL("cancel"),
-    DEEPLINK("deep-link")
+    DEEPLINK("deep-link"),
+    BROWSER("browser")
 }

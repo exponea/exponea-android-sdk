@@ -35,7 +35,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         "sdkName":"ExponeaSDK.android",
         "sdkVersion":"1.0.0",
         "osName":"Android",
-        "osVersion":"8.1.0",
+        "osVersion":"12",
         "model":"robolectric",
         "locale":"en_US"
     }"""
@@ -112,7 +112,6 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
             },
             """ {"logs":[
                 {
-                    "type":"managedError",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "sid":"mock-run-id",
                     "userId":"mock-user-id",
@@ -134,7 +133,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     },
                     "appLaunchTimestamp":"2019-11-13T11:35:23Z",
                     "processId":0,
-                    "processName":""
+                    "processName":"",
+                    "type":"managedError"
                 }
             ]}
             """
@@ -160,7 +160,6 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
             },
             """ {"logs":[
                 {
-                    "type":"handledError",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "sid":"mock-run-id",
                     "userId":"mock-user-id",
@@ -175,10 +174,10 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     },
                     "appLaunchTimestamp":"2019-11-13T11:35:23Z",
                     "processId":0,
-                    "processName":""
+                    "processName":"",
+                    "type":"handledError"
                 },
                 {
-                    "type":"errorAttachment",
                     "id":"REPLACED ID FOR TEST",
                     "sid":"mock-run-id",
                     "userId":"mock-user-id",
@@ -186,7 +185,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     "timestamp":"2019-11-19T09:29:49Z",
                     "errorId":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "contentType":"text/plain",
-                    "data":"bG9nIDEKbG9nIDI="
+                    "data":"bG9nIDEKbG9nIDI=",
+                    "type":"errorAttachment"
                 }
             ]}
             """,
@@ -215,7 +215,6 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
             },
             """ {"logs":[
                 {
-                    "type":"event",
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "sid":"mock-run-id",
                     "userId":"mock-user-id",
@@ -225,7 +224,8 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                     "properties": {
                         "mock-1": "mock-value-1",
                         "mock-2": "mock-value-2"
-                    }
+                    },
+                    "type":"event"
                 }
             ]}
             """

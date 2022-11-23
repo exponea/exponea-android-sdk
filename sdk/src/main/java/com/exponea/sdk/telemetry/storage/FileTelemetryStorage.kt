@@ -47,7 +47,7 @@ internal class FileTelemetryStorage(private val application: Application) : Tele
                 name.startsWith(CRASHLOG_FILE_PREFIX)
             }
             val crashLogs = arrayListOf<CrashLog>()
-            files.forEach { file ->
+            files?.forEach { file ->
                 try {
                     crashLogs.add(Gson().fromJson(file.readText(), CrashLog::class.java))
                 } catch (e: Exception) {

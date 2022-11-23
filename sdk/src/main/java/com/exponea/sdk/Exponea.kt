@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.os.Build
 import android.os.Looper
 import androidx.work.Configuration
 import androidx.work.WorkManager
@@ -695,9 +696,22 @@ object Exponea {
         if (checkPushSetup && isDebug) {
             component.pushNotificationSelfCheckManager.start()
         }
-        if (isDebug) {
+        if (isDebug && !isUnitTest()) {
             VersionChecker(component.networkManager, context).warnIfNotLatestSDKVersion()
         }
+    }
+
+    private fun isUnitTest(): Boolean {
+        var device = Build.DEVICE
+        var product = Build.PRODUCT
+        if (device == null) {
+            device = ""
+        }
+
+        if (product == null) {
+            product = ""
+        }
+        return device == "robolectric" && product == "robolectric"
     }
 
     /**

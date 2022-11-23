@@ -14,7 +14,7 @@ internal class EventRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : EventRepository {
     private val oldDatabase = PaperDatabase(context, "EventDatabase")
-    private val database = Room.databaseBuilder(
+    val database = Room.databaseBuilder(
             context,
             ExponeaDatabase::class.java, "ExponeaEventDatabase"
     ).enableMultiInstanceInvalidation()

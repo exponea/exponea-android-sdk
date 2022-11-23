@@ -107,7 +107,6 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
         assertEquals(db.count(), 1)
     }
 
-    @After
     @Test
     fun denit() {
         for (x in 1..10) {
@@ -123,5 +122,11 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
         db.clear()
         assertEquals(db.count(), 0)
         assertTrue(db.all().isEmpty())
+    }
+
+    @After
+    fun closeDB() {
+        denit()
+        db.openHelper.close()
     }
 }

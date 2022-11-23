@@ -115,7 +115,7 @@ data class NotificationData(
                         map[key] = readMapFromParcel(parcel)
                     } else if (value is String && value == ARRAY_SIZE_EXTRA) {
                         map[key] = readArrayFromParcel(parcel)
-                    } else {
+                    } else if (value != null) {
                         map[key] = value
                     }
                 }
@@ -132,7 +132,7 @@ data class NotificationData(
                     array[i] = readMapFromParcel(parcel)
                 } else if (value is String && value == ARRAY_SIZE_EXTRA) {
                     array[i] = readArrayFromParcel(parcel)
-                } else {
+                } else if (value != null) {
                     array[i] = value
                 }
             }

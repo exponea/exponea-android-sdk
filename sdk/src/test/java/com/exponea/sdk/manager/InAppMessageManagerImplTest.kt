@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
@@ -58,6 +59,8 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageManagerImplTest {
@@ -603,6 +606,8 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should preload pending message image first and show it`() {
         val pendingMessage = InAppMessageTest.getInAppMessage(
             trigger = EventFilter("session_start", arrayListOf()),
@@ -707,6 +712,8 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should track and perform all actions if its enabled in callback`() {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
@@ -784,6 +791,8 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should not track and perform any actions if its disabled in callback`() {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
@@ -856,6 +865,8 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should track action when track is called in callback`() {
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true

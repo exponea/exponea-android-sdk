@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.os.Build
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -15,6 +16,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 internal class FetchManagerTest : ExponeaSDKTest() {
@@ -91,6 +94,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should call onFailure when server returns empty json`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("{}")), ExponeaGson.instance).fetchConsents(

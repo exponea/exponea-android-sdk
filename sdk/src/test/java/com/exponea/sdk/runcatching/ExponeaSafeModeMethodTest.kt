@@ -1,5 +1,6 @@
 package com.exponea.sdk.runcatching
 
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -12,6 +13,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 internal class ExponeaSafeModeMethodTest(
@@ -49,6 +52,8 @@ internal class ExponeaSafeModeMethodTest(
     }
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL

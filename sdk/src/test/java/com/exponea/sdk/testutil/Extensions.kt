@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.repository.EventRepositoryImpl
 
 internal fun Exponea.reset() {
     flushMode = Constants.Flush.defaultFlushMode
@@ -14,6 +15,7 @@ internal fun Exponea.reset() {
     componentForTesting.customerIdsRepository.clear()
     componentForTesting.deviceInitiatedRepository.set(false)
     componentForTesting.eventRepository.clear()
+    (componentForTesting.eventRepository as EventRepositoryImpl).close()
     componentForTesting.pushTokenRepository.clear()
     componentForTesting.pushNotificationRepository.set(false)
 
@@ -25,6 +27,10 @@ internal fun Exponea.reset() {
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
     telemetry = null
+}
+
+internal fun EventRepositoryImpl.close() {
+    database.openHelper.close()
 }
 
 internal val Exponea.componentForTesting: ExponeaComponent

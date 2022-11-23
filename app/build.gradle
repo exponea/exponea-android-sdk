@@ -10,11 +10,11 @@ if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().c
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     defaultConfig {
         applicationId "com.exponea.example"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 32
         versionCode 64
         versionName "3.2.0"
         vectorDrawables.useSupportLibrary = true
@@ -59,10 +59,10 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.preference:preference-ktx:1.1.1'
-    gmsImplementation 'com.google.firebase:firebase-messaging:23.0.0'
-    hmsImplementation 'com.huawei.agconnect:agconnect-core:1.5.2.300'
-    hmsImplementation 'com.huawei.hms:push:5.3.0.304'
+    implementation 'androidx.preference:preference-ktx:1.2.0'
+    gmsImplementation 'com.google.firebase:firebase-messaging:23.1.0'
+    hmsImplementation 'com.huawei.agconnect:agconnect-core:1.6.5.300'
+    hmsImplementation 'com.huawei.hms:push:6.5.0.300'
 
     implementation project(path: ':sdk')
 }

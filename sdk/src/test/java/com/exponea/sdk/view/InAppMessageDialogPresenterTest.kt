@@ -2,6 +2,7 @@ package com.exponea.sdk.view
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
@@ -31,6 +32,7 @@ import org.robolectric.Robolectric
 import org.robolectric.Robolectric.buildActivity
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @Config(application = MockApplication::class)
@@ -137,6 +139,8 @@ internal class InAppMessageDialogPresenterTest(
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should dismiss the dialog after timeout has passed`() {
         if (inAppMessageType == InAppMessageType.SLIDE_IN) {
             // we'll skip this for slide-in that requires rendering of the dialog itself

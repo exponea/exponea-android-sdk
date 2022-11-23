@@ -48,17 +48,17 @@ internal class InAppMessagePresenter(
         val application = context.applicationContext as Application
         application.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
-                override fun onActivityPaused(activity: Activity?) {
+                override fun onActivityPaused(activity: Activity) {
                     if (activity == currentActivity) currentActivity = null
                 }
-                override fun onActivityResumed(activity: Activity?) {
+                override fun onActivityResumed(activity: Activity) {
                     currentActivity = activity
                 }
-                override fun onActivityStarted(activity: Activity?) {}
-                override fun onActivityDestroyed(activity: Activity?) {}
-                override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
-                override fun onActivityStopped(activity: Activity?) {}
-                override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
+                override fun onActivityStarted(activity: Activity) {}
+                override fun onActivityDestroyed(activity: Activity) {}
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+                override fun onActivityStopped(activity: Activity) {}
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
             }
         )
     }
@@ -157,7 +157,7 @@ internal class InAppMessagePresenter(
             presentedMessage = null
             dismissedCallback(activity)
         }
-        val failedCallback = { error: String ->
+        val presenterFailedCallback = { error: String ->
             Logger.i(this, "InApp got error $error")
             presentedMessage = null
             failedCallback(error)
@@ -170,7 +170,7 @@ internal class InAppMessagePresenter(
                 timeout,
                 presenterActionCallback,
                 presenterDismissedCallback,
-                failedCallback
+                presenterFailedCallback
             )
 
         when (messageType) {
@@ -187,7 +187,7 @@ internal class InAppMessagePresenter(
                     timeout,
                     presenterActionCallback,
                     presenterDismissedCallback,
-                    failedCallback
+                    presenterFailedCallback
                 )?.show()
             }
         }

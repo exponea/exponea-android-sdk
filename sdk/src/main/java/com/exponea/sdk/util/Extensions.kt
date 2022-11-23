@@ -44,19 +44,19 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
     application.registerActivityLifecycleCallbacks(object :
             Application.ActivityLifecycleCallbacks {
         private var activityCount: Int = 0
-        override fun onActivityResumed(activity: Activity?) {
+        override fun onActivityResumed(activity: Activity) {
             runCatching {
                 onOpen()
             }.logOnException()
             activityCount++
         }
 
-        override fun onActivityStarted(activity: Activity?) {}
-        override fun onActivityDestroyed(activity: Activity?) {}
-        override fun onActivitySaveInstanceState(activity: Activity?, outState: Bundle?) {}
-        override fun onActivityStopped(activity: Activity?) {}
-        override fun onActivityCreated(activity: Activity?, savedInstanceState: Bundle?) {}
-        override fun onActivityPaused(activity: Activity?) {
+        override fun onActivityStarted(activity: Activity) {}
+        override fun onActivityDestroyed(activity: Activity) {}
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+        override fun onActivityStopped(activity: Activity) {}
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+        override fun onActivityPaused(activity: Activity) {
             activityCount--
             if (activityCount <= 0) {
                 runCatching {
@@ -68,7 +68,7 @@ internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Un
     this.registerComponentCallbacks(object : ComponentCallbacks2 {
         override fun onLowMemory() {}
 
-        override fun onConfigurationChanged(newConfig: Configuration?) {}
+        override fun onConfigurationChanged(newConfig: Configuration) {}
 
         override fun onTrimMemory(level: Int) {
             if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {

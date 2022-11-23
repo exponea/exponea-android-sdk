@@ -40,7 +40,7 @@ internal class VersionChecker(
         }
         val url = String.format(baseUrl, gitProject)
 
-            if (actualVersion != null) {
+        if (actualVersion != null) {
             networkManager.get(url).enqueue(object : Callback {
                 override fun onResponse(call: Call, response: Response) {
                     try {

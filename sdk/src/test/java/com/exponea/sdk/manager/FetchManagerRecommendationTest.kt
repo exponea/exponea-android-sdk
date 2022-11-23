@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.os.Build
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.CustomerRecommendationRequest
@@ -17,6 +18,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 internal class FetchManagerRecommendationTest {
@@ -64,6 +67,8 @@ internal class FetchManagerRecommendationTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should return error for non-existing user`() {
         val payload = """
         {

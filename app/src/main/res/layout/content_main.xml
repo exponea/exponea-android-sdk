@@ -45,7 +45,7 @@
         android:layout_marginBottom="@dimen/content_margin"
         android:layout_marginEnd="@dimen/content_margin"
         android:src="@drawable/logo"
-        android:tint="@color/colorAccent"
+        app:tint="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

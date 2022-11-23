@@ -82,6 +82,7 @@ internal class InAppMessageWebview(
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun applyAntiXssSetup(webView: WebView?) {
         CookieManager.getInstance().setAcceptCookie(false)
         webView?.settings?.apply {

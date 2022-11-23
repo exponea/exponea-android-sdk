@@ -1,17 +1,16 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'maven'
 apply plugin: 'kotlin-android-extensions'
 apply from: 'publish-maven.gradle'
 apply from: '../jacoco.gradle'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 17
-        targetSdkVersion 27
+        targetSdkVersion 31
         buildConfigField "String", "EXPONEA_VERSION_NAME", '"3.2.0"'
         buildConfigField "int", "EXPONEA_VERSION_CODE", "59"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -46,6 +45,11 @@ android {
     }
 
     testOptions.unitTests.includeAndroidResources = true
+    testOptions {
+        unitTests.all {
+            jvmArgs '-Xmx2g'
+        }
+    }
 }
 
 dependencies {
@@ -58,14 +62,15 @@ dependencies {
     kapt("androidx.room:room-compiler:2.1.0")
 
     //Keeping paperDb for migration purposes
+    //noinspection GradleDependency - PaperDB ends support, raising version is meaningless
     implementation 'io.github.pilgr:paperdb:2.7.1'
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     // Deserialization
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
     // Google WorkManager
     implementation "androidx.work:work-runtime-ktx:2.7.1"
     // View for in-app messages
@@ -79,14 +84,14 @@ dependencies {
 
     // Base Test
     testImplementation 'junit:junit:4.12'
-    testImplementation 'androidx.test:core:1.3.0'
+    testImplementation 'androidx.test:core:1.4.0'
     // Kotlin jUnit
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.2.40'
     // Networking Testing
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.1'
     testImplementation 'com.github.gmazzo:okhttp-mock:1.4.1'
     // Improved Unit Testing
-    testImplementation "org.robolectric:robolectric:4.2"
+    testImplementation "org.robolectric:robolectric:4.7.3"
     // Co-Routines
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4'
     // Mockk

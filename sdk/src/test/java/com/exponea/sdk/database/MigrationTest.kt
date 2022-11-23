@@ -13,7 +13,9 @@ import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.close
 import kotlin.test.assertEquals
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -100,5 +102,10 @@ internal class MigrationTest : ExponeaSDKTest() {
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
         // migrated db should contain previous evens + install event
         assertEquals(repo.count(), 21)
+    }
+
+    @After
+    fun closeDB() {
+        (repo as EventRepositoryImpl).close()
     }
 }

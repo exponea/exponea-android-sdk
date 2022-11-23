@@ -1,6 +1,7 @@
 package com.exponea.sdk.models.eventfilter
 
 import com.exponea.sdk.util.ExponeaGson
+import com.exponea.sdk.util.Logger
 import com.google.gson.annotations.SerializedName
 
 data class EventFilterEvent(
@@ -21,7 +22,10 @@ data class EventFilter(
     }
 
     fun passes(event: EventFilterEvent): Boolean {
-        if (event.eventType != eventType) return false
+        if (event.eventType != eventType) {
+            Logger.v(this, "EventFilter eventType mismatch")
+            return false
+        }
         return filter.all { it.passes(event) }
     }
 

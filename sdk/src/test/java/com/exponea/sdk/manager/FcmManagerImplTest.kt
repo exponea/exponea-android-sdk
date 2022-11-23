@@ -36,6 +36,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
+import org.robolectric.annotation.LooperMode.Mode.LEGACY
 import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
@@ -124,6 +126,7 @@ internal class FcmManagerImplTest {
     }
 
     @Test
+    @LooperMode(LEGACY)
     fun `should track token in DAILY mode`() {
         // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912
         ShadowSystemClock.setNanoTime(System.currentTimeMillis() * 1000 * 1000)
@@ -146,7 +149,7 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    @Config(shadows = [ShadowRingtone::class])
+    @Config(shadows = [ShadowRingtone::class], sdk = [Build.VERSION_CODES.P])
     fun `should play default sound`() {
         val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         manager.handleRemoteMessage(notification, notificationManager, true)
@@ -173,7 +176,7 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class])
+    @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class], sdk = [Build.VERSION_CODES.P])
     fun `should play sound from notification payload for sound name with extension`() {
         val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         payload["sound"] = "mock-sound.mp3"
@@ -186,7 +189,7 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class])
+    @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class], sdk = [Build.VERSION_CODES.P])
     fun `should play sound from notification payload for sound name without extension`() {
         val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
         payload["sound"] = "mock-sound"

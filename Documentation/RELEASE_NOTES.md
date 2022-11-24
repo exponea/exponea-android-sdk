@@ -1,6 +1,17 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.2.1
+#### November 24, 2022
+* Features
+  * Updated guide documentation for FCM integration setup
+  * Upgraded build and SDK dependencies of core libraries
+  * Added Configuration flag to be able to disable tracking of default properties along with customer properties
+* Bug Fixes
+  * Fixed: Supported Android version needs to be updated in docs
+  * Fixed: Handling of universal links in HTML InApp messages was not working properly
+
+
 ## Release Notes for 3.2.0
 #### October 19, 2022
 * Features

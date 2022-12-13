@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
@@ -43,5 +43,43 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AppInboxButton" parent="@style/Widget.AppCompat.Button">
+        <item name="android:theme">@style/AppButton</item>
+    </style>
+
+    <style name="AppInboxActionButton" parent="@style/Widget.AppCompat.Button">
+        <item name="android:theme">@style/AppButton</item>
+    </style>
+
+    <style name="Theme.AppInboxListActivity" parent="@style/AppTheme">
+    </style>
+
+    <style name="Theme.AppInboxDetailActivity" parent="@style/AppTheme">
+    </style>
+
+    <style name="AppInboxEmptyStatusTitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.01</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="AppInboxErrorStatusTitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.01</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="AppInboxEmptyStatusMessage">
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.02</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="AppInboxErrorStatusMessage">
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0.02</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
 
 </resources>

@@ -11,7 +11,9 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
         CUSTOMERS_ATTRIBUTES,
         CONSENTS,
         IN_APP_MESSAGES,
-        PUSH_SELF_CHECK
+        PUSH_SELF_CHECK,
+        MESSAGE_INBOX,
+        MESSAGE_INBOX_READ
     }
 
     init {
@@ -22,6 +24,8 @@ internal data class ApiEndPoint(private val endPointName: EndPointName, private 
             EndPointName.CUSTOMERS_ATTRIBUTES -> "/data/v2/projects/$splitterToken/customers/attributes"
             EndPointName.CONSENTS -> "/data/v2/projects/$splitterToken/consent/categories"
             EndPointName.IN_APP_MESSAGES -> "/webxp/s/$splitterToken/inappmessages?v=1"
+            EndPointName.MESSAGE_INBOX -> "/webxp/projects/$splitterToken/appinbox/fetch"
+            EndPointName.MESSAGE_INBOX_READ -> "/webxp/projects/$splitterToken/appinbox/markasread"
             EndPointName.PUSH_SELF_CHECK -> "/campaigns/send-self-check-notification?project_id=$splitterToken"
         }
 

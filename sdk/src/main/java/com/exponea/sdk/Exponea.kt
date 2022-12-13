@@ -9,6 +9,9 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Looper
+import android.view.View
+import android.widget.Button
+import androidx.fragment.app.Fragment
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
@@ -35,6 +38,8 @@ import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
+import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
@@ -42,6 +47,7 @@ import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
+import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
@@ -1018,4 +1024,107 @@ object Exponea {
             )
         }
     }.logOnException()
+
+    fun getAppInboxButton(context: Context): Button? = runCatching<Button?> {
+        requireInitialized<Button>(
+            initializedBlock = {
+                Exponea.appInboxProvider.getAppInboxButton(context)
+            }
+        )
+    }.logOnException().getOrNull()
+
+    fun getAppInboxListView(
+        context: Context,
+        onItemClicked: (MessageItem, Int) -> Unit
+    ): View? = runCatching<View?> {
+        requireInitialized<View>(
+            initializedBlock = {
+                Exponea.appInboxProvider.getAppInboxListView(context, onItemClicked = onItemClicked)
+            }
+        )
+    }.logOnException().getOrNull()
+
+    fun getAppInboxListFragment(context: Context): Fragment? = runCatching<Fragment?> {
+        requireInitialized<Fragment>(
+            initializedBlock = {
+                Exponea.appInboxProvider.getAppInboxListFragment(context)
+            }
+        )
+    }.logOnException().getOrNull()
+
+    fun getAppInboxDetailFragment(context: Context, messageId: String): Fragment? = runCatching<Fragment?> {
+        requireInitialized<Fragment>(
+            initializedBlock = {
+                Exponea.appInboxProvider.getAppInboxDetailFragment(context, messageId)
+            }
+        )
+    }.logOnException().getOrNull()
+
+    fun getAppInboxDetailView(context: Context, messageId: String): View? = runCatching<View?> {
+        requireInitialized<View>(
+            initializedBlock = {
+                Exponea.appInboxProvider.getAppInboxDetailView(context, messageId)
+            }
+        )
+    }.logOnException().getOrNull()
+
+    public fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
+        requireInitialized {
+            component.appInboxManager.fetchAppInbox(callback)
+            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.TRACK_INBOX_FETCH)
+        }
+    }.logOnException()
+
+    fun fetchAppInboxItem(messageId: String, callback: (MessageItem?) -> Unit) = runCatching {
+        requireInitialized {
+            component.appInboxManager.fetchAppInboxItem(messageId, callback)
+        }
+    }.logOnException()
+
+    fun trackAppInboxOpened(item: MessageItem) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackAppInboxOpened(item, CONSIDER_CONSENT)
+        }
+    }.logOnException()
+
+    fun trackAppInboxOpenedWithoutTrackingConsent(item: MessageItem) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackAppInboxOpened(item, IGNORE_CONSENT)
+        }
+    }.logOnException()
+
+    fun trackAppInboxClick(action: MessageItemAction, message: MessageItem) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackAppInboxClicked(
+                message, action.title, action.url, CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackAppInboxClickWithoutTrackingConsent(action: MessageItemAction, message: MessageItem) = runCatching {
+        requireInitialized {
+            component.trackingConsentManager.trackAppInboxClicked(
+                message, action.title, action.url, IGNORE_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun markAppInboxAsRead(messageId: String, callback: ((Boolean) -> Unit)?) = runCatching {
+        requireInitialized {
+            component.appInboxManager.markMessageAsRead(messageId, callback)
+        }
+    }.logOnException()
+
+    var appInboxProvider: AppInboxProvider = Constants.AppInbox.defaulAppInboxProvider
+        set(value) = runCatching {
+            field = value
+        }.logOnException()
+
+    internal fun getComponent(): ExponeaComponent? = runCatching<ExponeaComponent?> {
+        requireInitialized<ExponeaComponent>(
+            initializedBlock = {
+                component
+            }
+        )
+    }.logOnException().getOrNull()
 }

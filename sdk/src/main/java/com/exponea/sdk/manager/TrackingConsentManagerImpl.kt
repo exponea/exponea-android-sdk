@@ -8,6 +8,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.EventType.PUSH_OPENED
 import com.exponea.sdk.models.EventType.TRACK_EVENT
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
@@ -134,5 +135,69 @@ internal class TrackingConsentManagerImpl(
             trackingAllowed = false
         }
         inappMessageTrackingDelegate.track(message, "error", false, trackingAllowed, error = error)
+    }
+
+    override fun trackAppInboxOpened(item: MessageItem, mode: MODE) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && item.content != null && !item.content!!.hasTrackingConsent) {
+            Logger.e(this, "Event for AppInbox showing is not tracked because consent is not given")
+            trackingAllowed = false
+        }
+        val properties = PropertiesList(
+            hashMapOf("status" to "opened", "platform" to "android")
+        )
+        item.content?.trackingData?.let { trackingData ->
+            for (each in trackingData) {
+                properties[each.key] = each.value
+            }
+        }
+        item.content?.consentCategoryTracking?.let { consentCategoryTracking ->
+            properties["consent_category_tracking"] = consentCategoryTracking
+        }
+        properties["action_type"] = "app inbox"
+        properties["platform"] = "android"
+        eventManager.processTrack(
+            eventType = Constants.EventTypes.push,
+            properties = properties.properties,
+            type = EventType.APP_INBOX_OPENED,
+            timestamp = currentTimeSeconds(),
+            trackingAllowed = trackingAllowed
+        )
+    }
+
+    override fun trackAppInboxClicked(message: MessageItem, buttonText: String?, buttonLink: String?, mode: MODE) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent && !GdprTracking.isTrackForced(buttonLink)) {
+            Logger.e(this, "Event for clicked AppInbox is not tracked because consent is not given")
+            trackingAllowed = false
+        }
+        val properties = PropertiesList(
+            hashMapOf(
+                "status" to "clicked",
+                "platform" to "android",
+                "url" to (buttonLink ?: "app"),
+                "cta" to (buttonText ?: "inbox")
+            )
+        )
+        message.content?.trackingData?.let { trackingData ->
+            for (item in trackingData) {
+                properties[item.key] = item.value
+            }
+        }
+        message.content?.consentCategoryTracking?.let { consentCategoryTracking ->
+            properties["consent_category_tracking"] = consentCategoryTracking
+        }
+        if (GdprTracking.isTrackForced(buttonLink)) {
+            properties["tracking_forced"] = true
+        }
+        properties["action_type"] = "app inbox"
+        properties["platform"] = "android"
+        eventManager.processTrack(
+            eventType = Constants.EventTypes.push,
+            properties = properties.properties,
+            type = EventType.APP_INBOX_CLICKED,
+            timestamp = currentTimeSeconds(),
+            trackingAllowed = trackingAllowed
+        )
     }
 }

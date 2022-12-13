@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
 import com.exponea.example.models.Constants
@@ -19,14 +20,21 @@ import kotlinx.android.synthetic.main.fragment_fetch.consentsButton
 import kotlinx.android.synthetic.main.fragment_fetch.progressBar
 import kotlinx.android.synthetic.main.fragment_fetch.recommendationsButton
 import kotlinx.android.synthetic.main.fragment_fetch.resultTextView
+import kotlinx.android.synthetic.main.fragment_fetch.view.buttonsContainer
 
 class FetchFragment : BaseFragment() {
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_fetch, container, false)
+        val layout = layoutInflater.inflate(R.layout.fragment_fetch, container, false)
+        layout.buttonsContainer.addView(
+            Exponea.getAppInboxButton(requireActivity()),
+            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+        )
+        return layout
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,7 +62,6 @@ class FetchFragment : BaseFragment() {
         recommendationsButton.setOnClickListener {
             FetchRecommendationDialog.show(childFragmentManager) { fetchRecommended(it) }
         }
-
         consentsButton.setOnClickListener {
             setProgressBarVisible(true)
             Exponea.getConsents({ onFetchSuccess(it) }, { onFetchFailed(it) })

@@ -82,7 +82,7 @@ internal class FetchManagerRecommendationTest {
         """
         runTest(
             mockResponse = payload,
-            expectedErrorResult = Result(false, FetchError(payload, "Unable to parse response from the server."))
+            expectedErrorResult = Result(false, FetchError(null, "Server returned empty results"))
         )
     }
 

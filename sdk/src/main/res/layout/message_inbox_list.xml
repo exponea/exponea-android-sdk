@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <LinearLayout
+        android:id="@+id/message_inbox_status_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ProgressBar
+            android:id="@+id/message_inbox_status_progress"
+            style="@style/AppInboxStatusLoading"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:indeterminate="true" />
+
+        <TextView
+            android:id="@+id/message_inbox_empty_status_title"
+            style="@style/AppInboxEmptyStatusTitle"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/exponea_inbox_emptyTitle"/>
+
+        <TextView
+            android:id="@+id/message_inbox_empty_status_message"
+            style="@style/AppInboxEmptyStatusMessage"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/exponea_inbox_emptyMessage"/>
+
+        <TextView
+            android:id="@+id/message_inbox_error_status_title"
+            style="@style/AppInboxErrorStatusTitle"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/exponea_inbox_errorTitle"/>
+
+        <TextView
+            android:id="@+id/message_inbox_error_status_message"
+            style="@style/AppInboxErrorStatusMessage"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/exponea_inbox_errorMessage"/>
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/message_inbox_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:itemCount="5"
+        tools:listitem="@layout/message_inbox_list_item" />
+</merge>

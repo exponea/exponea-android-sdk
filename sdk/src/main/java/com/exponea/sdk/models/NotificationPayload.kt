@@ -18,7 +18,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val notificationAction: ActionPayload = parseMainAction(rawData["action"], rawData["url"])
     val notificationData: NotificationData = parseNotificationData(rawData)
     val attributes: Map<String, Any>? = parseAttributes(rawData["attributes"])
-    var deliveredTimestamp: Double? = null
+    var deliveredTimestamp: Double? = notificationData.sentTimestamp
 
     data class ActionPayload(
         val action: Actions? = null,

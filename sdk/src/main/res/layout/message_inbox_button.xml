@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/message_inbox_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="@string/exponea_inbox_button"
+    android:drawableStart="@drawable/message_inbox_button"
+    android:drawablePadding="8dp"
+    style="@style/AppInboxButton" />

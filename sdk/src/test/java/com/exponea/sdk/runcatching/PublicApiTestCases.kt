@@ -13,8 +13,11 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.MessageItemAction
+import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.repository.AppInboxCacheImplTest
 import kotlin.reflect.KFunction
 import kotlin.reflect.KFunction1
 import kotlin.reflect.KFunction2
@@ -35,7 +38,8 @@ internal object PublicApiTestCases {
         Pair(Exponea::notificationDataCallback, null),
         Pair(Exponea::inAppMessageActionCallback, Constants.InApps.defaultInAppMessageDelegate),
         Pair(Exponea::customerCookie, null),
-        Pair(Exponea::checkPushSetup, false)
+        Pair(Exponea::checkPushSetup, false),
+        Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider)
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(
@@ -157,11 +161,67 @@ internal object PublicApiTestCases {
             Exponea::trackInAppMessageClose
         ) { Exponea.trackInAppMessageClose(InAppMessageTest.getInAppMessage())
         },
-        Pair(
-            Exponea::trackInAppMessageCloseWithoutTrackingConsent
-        ) { Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
+        Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
+        },
+        Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
+        },
+        Pair(Exponea::getAppInboxButton) {
+            Exponea.getAppInboxButton(ApplicationProvider.getApplicationContext())
+        },
+        Pair(Exponea::getAppInboxListView) {
+            Exponea.getAppInboxListView(
+                ApplicationProvider.getApplicationContext(),
+                onItemClicked = { _, _ -> }
+            )
+        },
+        Pair(Exponea::getAppInboxListFragment) {
+            Exponea.getAppInboxListFragment(ApplicationProvider.getApplicationContext())
+        },
+        Pair(Exponea::getAppInboxDetailFragment) {
+            Exponea.getAppInboxDetailFragment(ApplicationProvider.getApplicationContext(), "1")
+        },
+        Pair(Exponea::getAppInboxDetailView) {
+            Exponea.getAppInboxDetailView(ApplicationProvider.getApplicationContext(), "1")
+        },
+        Pair(Exponea::fetchAppInbox) {
+            Exponea.fetchAppInbox(callback = { _ -> })
+        },
+        Pair(Exponea::fetchAppInboxItem) {
+            Exponea.fetchAppInboxItem("1") { _ -> }
+        },
+        Pair(Exponea::trackAppInboxOpened) {
+            Exponea.trackAppInboxOpened(AppInboxCacheImplTest.buildMessage("1"))
+        },
+        Pair(Exponea::trackAppInboxOpenedWithoutTrackingConsent) {
+            Exponea.trackAppInboxOpenedWithoutTrackingConsent(AppInboxCacheImplTest.buildMessage("1"))
+        },
+        Pair(Exponea::trackAppInboxClick) {
+            Exponea.trackAppInboxClick(buildMessageItemAction(), AppInboxCacheImplTest.buildMessage("1"))
+        },
+        Pair(Exponea::trackAppInboxClickWithoutTrackingConsent) {
+            Exponea.trackAppInboxClickWithoutTrackingConsent(
+                buildMessageItemAction(),
+                AppInboxCacheImplTest.buildMessage("1")
+            )
+        },
+        Pair(Exponea::markAppInboxAsRead) {
+            Exponea.markAppInboxAsRead(
+                "1",
+                null
+            )
         }
+
     )
+
+    private fun buildMessageItemAction(): MessageItemAction {
+        return MessageItemAction().apply {
+            url = "https://test.com"
+            type = BROWSER
+            title = "test"
+        }
+    }
 
     val autoInitializingMethods = arrayOf(
 //        Exponea::anonymize,
@@ -187,6 +247,17 @@ internal object PublicApiTestCases {
 //        Exponea::trackInAppMessageClick,
 //        Exponea::trackInAppMessageClickWithoutTrackingConsent,
 //        Exponea::trackInAppMessageClose,
-//        Exponea::trackInAppMessageCloseWithoutTrackingConsent
+//        Exponea::trackInAppMessageCloseWithoutTrackingConsent,
+//        Exponea::getAppInboxButton,
+//        Exponea::getAppInboxListView,
+//        Exponea::getAppInboxListFragment,
+//        Exponea::getAppInboxDetailFragment,
+//        Exponea::getAppInboxDetailView,
+//        Exponea::fetchAppInbox,
+//        Exponea::fetchAppInboxItem,
+//        Exponea::trackAppInboxOpened,
+//        Exponea::trackAppInboxOpenedWithoutTrackingConsent,
+//        Exponea::trackAppInboxClick,
+//        Exponea::trackAppInboxClickWithoutTrackingConsent
     )
 }

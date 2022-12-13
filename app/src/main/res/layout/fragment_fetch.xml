@@ -6,29 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".view.MainActivity">
 
-    <Button
-        android:id="@+id/recommendationsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/content_margin"
-        android:layout_marginTop="32dp"
-        android:text="Recommended"
-        android:theme="@style/AppButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
-
-
-    <Button
-        android:id="@+id/consentsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="16dp"
-        android:text="Consents"
-        android:theme="@style/AppButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
-
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyle"
@@ -40,6 +17,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <LinearLayout
+        android:id="@+id/buttonsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/content_margin"
+        android:paddingEnd="@dimen/content_margin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar">
+
+        <Button
+            android:id="@+id/recommendationsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Recommended"
+            android:theme="@style/AppButton" />
+
+
+        <Button
+            android:id="@+id/consentsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Consents"
+            android:theme="@style/AppButton" />
+
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -50,7 +55,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recommendationsButton">
+        app:layout_constraintTop_toBottomOf="@+id/buttonsContainer">
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"

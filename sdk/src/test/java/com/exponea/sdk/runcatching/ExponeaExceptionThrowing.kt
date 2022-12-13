@@ -1,7 +1,9 @@
 package com.exponea.sdk.runcatching
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
+import com.exponea.sdk.services.DefaultAppInboxProvider
 import io.mockk.every
 import io.mockk.mockkConstructor
 
@@ -11,6 +13,8 @@ object ExponeaExceptionThrowing {
     fun prepareExponeaToThrow() {
         mockkConstructor(ExponeaComponent::class)
         mockkConstructor(BackgroundTimerManagerImpl::class)
+        mockkConstructor(DefaultAppInboxProvider::class)
+        Exponea.appInboxProvider = DefaultAppInboxProvider()
     }
 
     fun makeExponeaThrow() {
@@ -28,6 +32,17 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<ExponeaComponent>().networkManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().trackingConsentManager } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().inAppMessageTrackingDelegate } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().appInboxManager } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().appInboxCache } throws TestPurposeException()
+        every {
+            anyConstructed<DefaultAppInboxProvider>().getAppInboxButton(any())
+        } throws TestPurposeException()
+        every {
+            anyConstructed<DefaultAppInboxProvider>().getAppInboxListFragment(any())
+        } throws TestPurposeException()
+        every {
+            anyConstructed<DefaultAppInboxProvider>().getAppInboxDetailFragment(any(), any())
+        } throws TestPurposeException()
 
         // This will cause onSessionStart/Stop to throw exception
         every { anyConstructed<BackgroundTimerManagerImpl>().startTimer() } throws TestPurposeException()

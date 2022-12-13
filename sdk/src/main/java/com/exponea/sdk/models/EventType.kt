@@ -32,5 +32,11 @@ enum class EventType {
     CAMPAIGN_CLICK,
 
     // For tracking in-app message related events.
-    BANNER
+    BANNER,
+
+    // For tracking app inbox message opened
+    APP_INBOX_OPENED,
+
+    // For tracking app inbox action clicked
+    APP_INBOX_CLICKED
 }

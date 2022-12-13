@@ -45,6 +45,18 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".view.AppInboxListActivity"
+            android:theme="@style/Theme.AppInboxListActivity"
+            android:screenOrientation="sensor"
+            android:configChanges="orientation|screenSize"/>
+
+        <activity
+            android:name=".view.AppInboxDetailActivity"
+            android:theme="@style/Theme.AppInboxDetailActivity"
+            android:screenOrientation="sensor"
+            android:configChanges="orientation|screenSize"/>
+
         <receiver
             android:name=".receiver.AppUpdateReceiver"
             android:enabled="true"

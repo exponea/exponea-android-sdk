@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
+import com.exponea.example.services.ExampleAppInboxProvider
 import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
 //        Uncomment this section, if you want to test in-app callback
 //        Exponea.inAppMessageActionCallback = getInAppMessageCallback()
+        Exponea.appInboxProvider = ExampleAppInboxProvider()
 
         if (Exponea.isInitialized) {
             setupListeners()

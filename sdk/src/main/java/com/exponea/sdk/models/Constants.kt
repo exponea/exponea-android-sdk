@@ -1,6 +1,7 @@
 package com.exponea.sdk.models
 
 import android.content.Context
+import com.exponea.sdk.services.DefaultAppInboxProvider
 import java.util.concurrent.TimeUnit
 
 internal object Constants {
@@ -17,6 +18,7 @@ internal object Constants {
 
     // Type of customer events
     object EventTypes {
+        val inbox: String = "app_inbox"
         val installation: String = "installation"
         val sessionEnd: String = "session_end"
         val sessionStart: String = "session_start"
@@ -84,5 +86,10 @@ internal object Constants {
                 // do nothing here as default
             }
         }
+    }
+
+    // AppInbox messages
+    object AppInbox {
+        val defaulAppInboxProvider = DefaultAppInboxProvider()
     }
 }

@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Sdk</string>
+    <string name="exponea_inbox_button">Inbox</string>
+    <string name="exponea_inbox_title">Inbox</string>
+    <string name="exponea_inbox_defaultTitle">Inbox message</string>
+    <string name="exponea_inbox_emptyTitle">Empty Inbox</string>
+    <string name="exponea_inbox_emptyMessage">You have no messages yet.</string>
+    <string name="exponea_inbox_errorTitle">Something went wrong :(</string>
+    <string name="exponea_inbox_errorMessage">We could not retrieve your messages.</string>
+    <string name="exponea_inbox_mainActionTitle">See more</string>
 </resources>

@@ -10,6 +10,8 @@ import android.content.res.Configuration
 import android.graphics.PorterDuff
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.Lifecycle
@@ -149,6 +151,23 @@ fun Result<Unit>.logOnException() {
     }
 }
 
+fun <T> Result<T>.logOnException(): Result<T> {
+    val exception = this.exceptionOrNull()
+    if (exception != null) {
+        try {
+            Logger.e(Exponea, "Exponea Safe Mode wrapper caught unhandled error", exception)
+        } catch (e: Throwable) {
+            // cannot log problem, swallowing
+        }
+        if (!Exponea.safeModeEnabled) {
+            throw exception
+        } else {
+            Exponea.telemetry?.reportCaughtException(exception)
+        }
+    }
+    return this
+}
+
 val JsonElement.asOptionalString: String?
     get() = if (this.isJsonNull) null else this.asString
 
@@ -216,3 +235,9 @@ private fun Context.getSDKVersion(metadataName: String): String? = runCatching {
     if (appInfo.metaData == null) return null
     return appInfo.metaData[metadataName] as String?
 }.returnOnException { null }
+
+public inline fun runOnMainThread(crossinline block: () -> Unit) {
+    Handler(Looper.getMainLooper()).post {
+        block.invoke()
+    }
+}

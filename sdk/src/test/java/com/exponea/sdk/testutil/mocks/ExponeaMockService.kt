@@ -88,4 +88,20 @@ internal class ExponeaMockService(
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
+
+    override fun postFetchAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String?
+    ): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun postReadFlagAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        messageIds: List<String>
+    ): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
 }

@@ -8,5 +8,6 @@ enum class EventType(val value: String) {
     SELF_CHECK("selfCheck"),
     ANONYMIZE("anonymize"),
     EVENT_COUNT("eventCount"),
-    PUSH_SERVICE("pushService")
+    PUSH_SERVICE("pushService"),
+    TRACK_INBOX_FETCH("appInboxFetch")
 }

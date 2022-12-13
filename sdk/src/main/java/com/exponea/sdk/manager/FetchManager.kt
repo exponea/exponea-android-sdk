@@ -7,6 +7,7 @@ import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 
 internal interface FetchManager {
@@ -27,6 +28,14 @@ internal interface FetchManager {
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
+
+    fun fetchAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String?,
+        onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 }

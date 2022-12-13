@@ -8,6 +8,7 @@ import com.exponea.sdk.models.CustomerRecommendationResponse
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
@@ -37,9 +38,6 @@ internal class FetchManagerImpl(
                     var result: Result<T>?
                     try {
                         result = gson.fromJson<Result<T>>(jsonBody, resultType.type)
-                        if (result.results == null) {
-                            throw Exception("Unable to parse response from the server.")
-                        }
                     } catch (e: Exception) {
                         val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
                         Logger.e(this, "Failed to deserialize fetch response: $error")
@@ -69,8 +67,14 @@ internal class FetchManagerImpl(
     ) {
         api.postFetchConsents(exponeaProject).enqueue(
             getFetchCallback(
-                object : TypeToken<Result<ArrayList<Consent>>>() {},
-                onSuccess,
+                object : TypeToken<Result<ArrayList<Consent>?>>() {},
+                { result: Result<ArrayList<Consent>?> ->
+                    if (result.results?.isNotEmpty() ?: false) {
+                        onSuccess(Result(true, result.results!!))
+                    } else {
+                        onFailure(Result(false, FetchError(null, "Server returned empty results")))
+                    }
+                },
                 onFailure
             )
         )
@@ -84,10 +88,10 @@ internal class FetchManagerImpl(
     ) {
         api.postFetchAttributes(exponeaProject, recommendationRequest).enqueue(
             getFetchCallback(
-                object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>>>() {},
-                { result: Result<ArrayList<CustomerRecommendationResponse>> ->
-                    if (result.results.isNotEmpty()) {
-                        val innerResult = result.results[0]
+                object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>?>>() {},
+                { result: Result<ArrayList<CustomerRecommendationResponse>?> ->
+                    if (result.results?.isNotEmpty() ?: false) {
+                        val innerResult = result.results!![0]
                         if (innerResult.success && innerResult.value != null) {
                             onSuccess(Result(true, innerResult.value))
                         } else {
@@ -110,7 +114,29 @@ internal class FetchManagerImpl(
     ) {
         api.postFetchInAppMessages(exponeaProject, customerIds).enqueue(
             getFetchCallback(
-                object : TypeToken<Result<ArrayList<InAppMessage>>>() {},
+                object : TypeToken<Result<ArrayList<InAppMessage>?>>() {},
+                { result: Result<ArrayList<InAppMessage>?> ->
+                    if (result.results?.isNotEmpty() ?: false) {
+                        onSuccess(Result(true, result.results!!))
+                    } else {
+                        onFailure(Result(false, FetchError(null, "Server returned empty results")))
+                    }
+                },
+                onFailure
+            )
+        )
+    }
+
+    override fun fetchAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String?,
+        onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postFetchAppInbox(exponeaProject, customerIds, syncToken).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<MessageItem>?>>() {},
                 onSuccess,
                 onFailure
             )

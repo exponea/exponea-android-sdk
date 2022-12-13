@@ -49,6 +49,35 @@ internal class ExponeaServiceImpl(
         )
     }
 
+    override fun postFetchAppInbox(exponeaProject: ExponeaProject, customerIds: CustomerIds, syncToken: String?): Call {
+        val reqBody = hashMapOf<String, Any>(
+            "customer_ids" to customerIds.toHashMap()
+        )
+        if (syncToken != null) {
+            reqBody.put("sync_token", syncToken)
+        }
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.EndPointName.MESSAGE_INBOX,
+            reqBody
+        )
+    }
+
+    override fun postReadFlagAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        messageIds: List<String>
+    ): Call {
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.EndPointName.MESSAGE_INBOX_READ,
+            hashMapOf(
+                "customer_ids" to customerIds.toHashMap(),
+                "message_ids" to messageIds
+            )
+        )
+    }
+
     override fun postPushSelfCheck(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,

@@ -1,6 +1,11 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.3.0
+#### December 15, 2022
+* Features
+  * Added App Inbox feature with PUSH message type support
+
 ## Release Notes for 3.2.1
 #### November 24, 2022
 * Features

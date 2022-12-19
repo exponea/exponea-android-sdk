@@ -61,6 +61,7 @@ Then you can start using all supported features:
 * [Payments](./Documentation/PAYMENT.md)
 * [Anonymize](./Documentation/ANONYMIZE.md)
 * [In-app messages](./Documentation/IN_APP_MESSAGES.md)
+* [App Inbox](./Documentation/APP_INBOX.md)
 
 If facing any issues, look for **Troubleshooting** section in the respective document.
 

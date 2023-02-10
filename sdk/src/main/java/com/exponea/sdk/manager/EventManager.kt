@@ -8,13 +8,15 @@ internal interface EventManager {
         eventType: String? = null,
         timestamp: Double? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
-        type: EventType
+        type: EventType,
+        customerIds: Map<String, String?>? = null
     )
     fun processTrack(
         eventType: String? = null,
         timestamp: Double? = currentTimeSeconds(),
         properties: HashMap<String, Any> = hashMapOf(),
         type: EventType,
-        trackingAllowed: Boolean
+        trackingAllowed: Boolean,
+        customerIds: Map<String, String?>? = null
     )
 }

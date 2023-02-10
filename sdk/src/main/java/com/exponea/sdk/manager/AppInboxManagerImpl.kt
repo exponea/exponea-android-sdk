@@ -1,87 +1,116 @@
 package com.exponea.sdk.manager
 
-import android.os.Handler
-import android.os.Looper
+import com.exponea.sdk.models.AppInboxMessateType.UNKNOWN
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
-import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
-import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
-import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
-import okhttp3.Call
-import okhttp3.Response
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 internal class AppInboxManagerImpl(
     private val fetchManager: FetchManager,
     private val bitmapCache: InAppMessageBitmapCache,
-    private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
-    private val api: ExponeaService,
-    private val appInboxCache: AppInboxCache
+    private val appInboxCache: AppInboxCache,
+    private val projectFactory: ExponeaProjectFactory
 ) : AppInboxManager {
 
-    private val SUPPORTED_MESSAGE_TYPES: List<String> = listOf("push")
-
-    public override fun markMessageAsRead(messageId: String, callback: ((Boolean) -> Unit)?) {
-        appInboxCache.getMessages().forEach { msg ->
-            if (msg.id == messageId) {
-                msg.read = true
+    public override fun markMessageAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) {
+        if (message.syncToken == null || message.customerIds.isEmpty()) {
+            Logger.e(this, "Unable to mark message ${message.id} as read, try to fetch AppInbox")
+            GlobalScope.launch(Dispatchers.Main) {
+                callback?.invoke(false)
             }
+            return
         }
+        message.read = true
         // ensure to message change is stored
         appInboxCache.setMessages(appInboxCache.getMessages())
-        api.postReadFlagAppInbox(
-            exponeaProject = configuration.mainExponeaProject,
-            customerIds = customerIdsRepository.get(),
-            messageIds = listOf(messageId)
-        ).enqueue(object : okhttp3.Callback {
-            override fun onResponse(call: Call, response: Response) {
-                val responseCode = response.code
-                Logger.d(this, "Response Code: $responseCode")
-                if (response.isSuccessful) {
+        requireMutualExponeaProject { expoProject ->
+            if (expoProject.authorization == null) {
+                Logger.e(this, "AppInbox loading failed. Authorization token is missing")
+                GlobalScope.launch(Dispatchers.Main) {
+                    callback?.invoke(false)
+                }
+            }
+            fetchManager.markAppInboxAsRead(
+                exponeaProject = expoProject,
+                customerIds = CustomerIds(HashMap(message.customerIds)),
+                syncToken = message.syncToken!!,
+                messageIds = listOf(message.id),
+                onSuccess = {
                     Logger.i(this, "AppInbox marked as read")
-                    Handler(Looper.getMainLooper()).post {
+                    GlobalScope.launch(Dispatchers.Main) {
                         callback?.invoke(true)
                     }
-                } else {
-                    Logger.e(this, "AppInbox marking as read failed. ${response.message}")
-                    Handler(Looper.getMainLooper()).post {
+                },
+                onFailure = {
+                    Logger.e(this, "AppInbox marking as read failed. ${it.results.message}")
+                    GlobalScope.launch(Dispatchers.Main) {
                         callback?.invoke(false)
                     }
                 }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                Logger.e(this, "AppInbox marking as read failed: $e")
-                Handler(Looper.getMainLooper()).post {
-                    callback?.invoke(true)
-                }
-            }
-        })
+            )
+        }
     }
 
     public override fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) {
-        fetchManager.fetchAppInbox(
-            exponeaProject = configuration.mainExponeaProject,
-            customerIds = customerIdsRepository.get(),
-            syncToken = appInboxCache.getSyncToken(),
-            onSuccess = { result ->
-                Logger.i(this, "AppInbox loaded successfully")
-                onAppInboxDataLoaded(result, callback)
-            },
-            onFailure = {
-                Logger.e(this, "AppInbox loading failed. ${it.results.message}")
-                Handler(Looper.getMainLooper()).post {
+        requireMutualExponeaProject { expoProject ->
+            if (expoProject.authorization == null) {
+                Logger.e(this, "AppInbox loading failed. Authorization token is missing")
+                GlobalScope.launch(Dispatchers.Main) {
                     callback.invoke(null)
                 }
+                return@requireMutualExponeaProject
             }
-        )
+            val customerIds = customerIdsRepository.get()
+            fetchManager.fetchAppInbox(
+                exponeaProject = expoProject,
+                customerIds = customerIds,
+                syncToken = appInboxCache.getSyncToken(),
+                onSuccess = { result ->
+                    Logger.i(this, "AppInbox loaded successfully")
+                    enhanceMessages(result.results, customerIds, result.syncToken)
+                    onAppInboxDataLoaded(result, callback)
+                },
+                onFailure = {
+                    Logger.e(this, "AppInbox loading failed. ${it.results.message}")
+                    GlobalScope.launch(Dispatchers.Main) {
+                        callback.invoke(null)
+                    }
+                }
+            )
+        }
+    }
+
+    private fun requireMutualExponeaProject(onTokenCallback: (ExponeaProject) -> Unit) {
+        GlobalScope.launch {
+            onTokenCallback.invoke(projectFactory.mutualExponeaProject)
+        }
+    }
+
+    /**
+     * Adds customerIds and syncToken into every MessageItem in list.
+     * These values will be used for tracking and markAsRead future calls
+     */
+    private fun enhanceMessages(messages: List<MessageItem>?, customerIds: CustomerIds, syncToken: String?) {
+        if (messages == null || messages.isEmpty()) {
+            return
+        }
+        messages.forEach { messageItem ->
+            messageItem.customerIds = customerIds.toHashMap()
+            messageItem.syncToken = syncToken
+        }
     }
 
     private fun onAppInboxDataLoaded(result: Result<ArrayList<MessageItem>?>, callback: (List<MessageItem>) -> Unit) {
@@ -89,14 +118,14 @@ internal class AppInboxManagerImpl(
             appInboxCache.setSyncToken(it)
         }
         val messages = result.results ?: arrayListOf()
-        var supportedMessages = messages.filter { SUPPORTED_MESSAGE_TYPES.contains(it.type) }
+        var supportedMessages = messages.filter { it.type != UNKNOWN }
         val imageUrls = supportedMessages
             .mapNotNull { messageItem -> messageItem.content?.imageUrl }
             .filter { imageUrl -> !imageUrl.isNullOrBlank() }
         appInboxCache.addMessages(supportedMessages)
         var allMessages = appInboxCache.getMessages()
         if (imageUrls.isEmpty()) {
-            Handler(Looper.getMainLooper()).post {
+            GlobalScope.launch(Dispatchers.Main) {
                 callback.invoke(allMessages)
             }
             return
@@ -105,7 +134,7 @@ internal class AppInboxManagerImpl(
         imageUrls.forEach { imageUrl ->
             bitmapCache.preload(listOf(imageUrl), {
                 if (counter.decrementAndGet() <= 0) {
-                    Handler(Looper.getMainLooper()).post {
+                    GlobalScope.launch(Dispatchers.Main) {
                         callback.invoke(allMessages)
                     }
                 }
@@ -120,14 +149,15 @@ internal class AppInboxManagerImpl(
         }
     }
 
-    override fun clear() {
+    override fun reload() {
         appInboxCache.clear()
+        fetchAppInbox { Logger.d(this, "AppInbox loaded") }
     }
 
     override fun onEventCreated(event: Event, type: EventType) {
         if (EventType.TRACK_CUSTOMER == type) {
             Logger.i(this, "CustomerIDs are updated, clearing AppInbox messages")
-            clear()
+            reload()
         }
     }
 }

@@ -21,33 +21,42 @@ internal class AppInboxCacheImpl(
     }
 
     private val storageFile = File(context.cacheDir, FILENAME)
-    private var data: AppInboxData? = null
-
-    override fun setMessages(messages: List<MessageItem>) {
-        ensureData().messages = ArrayList(messages).sortedByDescending { it.receivedTime }
-        storeData()
-    }
+    private var data: AppInboxData = ensureData()
 
     private fun ensureData(): AppInboxData {
-        if (data == null) {
-            synchronized(this) {
-                if (data == null) {
-                    try {
-                        if (storageFile.exists()) {
-                            val fileData = storageFile.readText()
-                            val type = object : TypeToken<AppInboxData>() {}.type
-                            data = gson.fromJson(fileData, type)
-                        } else {
-                            data = AppInboxData()
-                        }
-                    } catch (e: Throwable) {
-                        Logger.w(this, "Error getting stored AppInbox messages $e")
-                        data = AppInboxData()
-                    }
+        var result: AppInboxData
+        try {
+            if (storageFile.exists()) {
+                val fileData = storageFile.readText()
+                val type = object : TypeToken<AppInboxData>() {}.type
+                val loadedData: AppInboxData = gson.fromJson(fileData, type)
+                if (areValid(loadedData)) {
+                    result = loadedData
+                } else {
+                    storageFile.delete()
+                    result = AppInboxData()
                 }
+            } else {
+                result = AppInboxData()
             }
+        } catch (e: Throwable) {
+            Logger.w(this, "Error getting stored AppInbox messages $e")
+            result = AppInboxData()
         }
-        return data!!
+        return result
+    }
+
+    /**
+     * Older SDK may store AppInboxData with MessageItem without required data.
+     * We have to check and remove them in that case
+     */
+    private fun areValid(source: AppInboxData): Boolean {
+        return source.messages.all { it.syncToken != null && it.customerIds.isNotEmpty() }
+    }
+
+    override fun setMessages(messages: List<MessageItem>) {
+        data.messages = ArrayList(messages).sortedByDescending { it.receivedTime }
+        storeData()
     }
 
     private fun storeData() {
@@ -59,24 +68,21 @@ internal class AppInboxCacheImpl(
     }
 
     override fun clear(): Boolean {
-        data?.let {
-            it.messages = arrayListOf()
-            it.token = null
-        }
-        data = null
+        data.messages = arrayListOf()
+        data.token = null
         return storageFile.delete()
     }
 
     override fun getMessages(): List<MessageItem> {
-        return ensureData().messages
+        return data.messages
     }
 
     override fun getSyncToken(): String? {
-        return ensureData().token
+        return data.token
     }
 
     override fun setSyncToken(token: String?) {
-        ensureData().token = token
+        data.token = token
         storeData()
     }
 

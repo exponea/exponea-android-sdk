@@ -44,11 +44,17 @@ data class ExponeaConfiguration(
     var tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE,
 
     /** If true, default properties are applied also for 'identifyCustomer' event. */
-    var allowDefaultCustomerProperties: Boolean = true
+    var allowDefaultCustomerProperties: Boolean = true,
+
+    /** If true, Customer Token authentication is used */
+    var advancedAuthEnabled: Boolean = false
 ) {
 
-    val mainExponeaProject
-        get() = ExponeaProject(baseURL, projectToken, authorization)
+    companion object {
+        public val TOKEN_AUTH_PREFIX = "Token "
+        public val BASIC_AUTH_PREFIX = "Basic "
+        public val BEARER_AUTH_PREFIX = "Bearer "
+    }
 
     enum class HttpLoggingLevel {
         /** No logs. */
@@ -71,17 +77,21 @@ data class ExponeaConfiguration(
     }
 
     fun validate() {
-        if (authorization?.startsWith("Basic ") == true) {
+        validateBasicAuthValue(authorization)
+    }
+
+    private fun validateBasicAuthValue(authToken: String?) {
+        if (authToken?.startsWith(BASIC_AUTH_PREFIX) == true) {
             throw InvalidConfigurationException("""
                 Basic authentication is not supported by mobile SDK for security reasons.
                 Use Token authentication instead.
-                For more details see https://docs.exponea.com/reference#section-public-key
+                For more details see https://documentation.bloomreach.com/engagement/reference/technical-information#public-api-access
                 """.trimIndent()
             )
-        } else if (authorization?.startsWith("Token ") == false) {
+        } else if (authToken?.startsWith(TOKEN_AUTH_PREFIX) == false) {
             throw InvalidConfigurationException("""
                 Use 'Token <access token>' as authorization for SDK.
-                For more details see https://docs.exponea.com/reference#section-public-key
+                For more details see https://documentation.bloomreach.com/engagement/reference/technical-information#public-api-access
                 """.trimIndent()
             )
         }

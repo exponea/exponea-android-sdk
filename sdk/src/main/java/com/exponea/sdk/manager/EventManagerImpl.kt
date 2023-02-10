@@ -9,6 +9,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
 
 internal class EventManagerImpl(
@@ -16,6 +17,7 @@ internal class EventManagerImpl(
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
     private val flushManager: FlushManager,
+    private val projectFactory: ExponeaProjectFactory,
     private val onEventCreated: (Event, EventType) -> Unit
 ) : EventManager {
 
@@ -29,7 +31,7 @@ internal class EventManagerImpl(
             else -> Route.TRACK_EVENTS
         }
 
-        var projects = arrayListOf(configuration.mainExponeaProject)
+        var projects = arrayListOf(projectFactory.mainExponeaProject)
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
         for (project in projects.distinct()) {
             val exportedEvent = ExportedEvent(
@@ -61,9 +63,10 @@ internal class EventManagerImpl(
         eventType: String?,
         timestamp: Double?,
         properties: HashMap<String, Any>,
-        type: EventType
+        type: EventType,
+        customerIds: Map<String, String?>?
     ) {
-        processTrack(eventType, timestamp, properties, type, true)
+        processTrack(eventType, timestamp, properties, type, true, customerIds)
     }
 
     override fun processTrack(
@@ -71,18 +74,24 @@ internal class EventManagerImpl(
         timestamp: Double?,
         properties: HashMap<String, Any>,
         type: EventType,
-        trackingAllowed: Boolean
+        trackingAllowed: Boolean,
+        customerIds: Map<String, String?>?
     ) {
         val trackedProperties: HashMap<String, Any> = hashMapOf()
         if (canUseDefaultProperties(type)) {
             trackedProperties.putAll(configuration.defaultProperties)
         }
         trackedProperties.putAll(properties)
-
+        val customerIdsMap: HashMap<String, String?> = hashMapOf()
+        if (customerIds.isNullOrEmpty()) {
+            customerIdsMap.putAll(customerIdsRepository.get().toHashMap())
+        } else {
+            customerIdsMap.putAll(customerIds)
+        }
         val event = Event(
             type = eventType,
             timestamp = timestamp,
-            customerIds = customerIdsRepository.get().toHashMap(),
+            customerIds = customerIdsMap,
             properties = trackedProperties
         )
         addEventToQueue(event, type, trackingAllowed)

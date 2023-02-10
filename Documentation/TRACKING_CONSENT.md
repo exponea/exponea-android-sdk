@@ -61,6 +61,7 @@ Event is normally tracked by calling `Exponea.trackAppInboxOpened`. This method 
 
 * Tracking consent feature is disabled
 * Tracking consent feature is enabled and 'hasTrackingConsent' has 'true' value
+* AppInbox has been loaded and given MessageItem is listed in AppInbox
 
 If you are using `Exponea.trackAppInboxOpened` method manually and you want to avoid to consider tracking, you may use `Exponea.trackAppInboxOpenedWithoutTrackingConsent` instead. This method will do track event ignoring tracking consent state.
 

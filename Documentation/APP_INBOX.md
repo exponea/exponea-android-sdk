@@ -289,7 +289,7 @@ Fetching of single message is still requesting for fetch of all messages (includ
 
 To set an App Inbox message read flag you need to pass a message ID:
 ```kotlin
-Exponea.markAppInboxAsRead(messageId) { marked ->
+Exponea.markAppInboxAsRead(message) { marked ->
     Logger.i(this, "AppInbox message marked as read: $marked")
 }
 ```

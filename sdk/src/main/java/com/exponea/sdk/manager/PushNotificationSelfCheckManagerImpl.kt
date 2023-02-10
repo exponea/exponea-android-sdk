@@ -12,6 +12,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.PushTokenRepository
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
@@ -36,6 +37,7 @@ internal class PushNotificationSelfCheckManagerImpl(
     private val tokenRepository: PushTokenRepository,
     private val flushManager: FlushManager,
     private val exponeaService: ExponeaService,
+    private val projectFactory: ExponeaProjectFactory,
     private val operationsTimeout: Long = 5000
 ) : PushNotificationSelfCheckManager {
     companion object {
@@ -174,7 +176,7 @@ internal class PushNotificationSelfCheckManagerImpl(
         tokenType: TokenType
     ): Boolean = suspendCoroutine { continuation ->
         exponeaService.postPushSelfCheck(
-            configuration.mainExponeaProject,
+            projectFactory.mainExponeaProject,
             customerIdsRepository.get(),
             pushToken,
             tokenType

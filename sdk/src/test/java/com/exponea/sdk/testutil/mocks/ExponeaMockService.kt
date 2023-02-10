@@ -100,7 +100,8 @@ internal class ExponeaMockService(
     override fun postReadFlagAppInbox(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
-        messageIds: List<String>
+        messageIds: List<String>,
+        syncToken: String
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }

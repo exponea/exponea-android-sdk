@@ -7,6 +7,8 @@ import com.exponea.sdk.repository.InAppMessageBitmapCache
 import java.io.ByteArrayOutputStream
 import java.util.Collections
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit.SECONDS
 import okhttp3.internal.closeQuietly
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -30,10 +32,12 @@ internal class HtmlNormalizer(
         private const val CLOSE_ACTION_COMMAND = "close_action"
         private const val CLOSE_BUTTON_ATTR_DEF = "data-actiontype='close'"
         private const val CLOSE_BUTTON_SELECTOR = "[$CLOSE_BUTTON_ATTR_DEF]"
-        private const val ACTION_BUTTON_ATTR = "data-link"
-        private const val ACTION_BUTTON_SELECTOR = "[$ACTION_BUTTON_ATTR]"
+        private const val DATALINK_BUTTON_ATTR = "data-link"
+        private const val DATALINK_BUTTON_SELECTOR = "[$DATALINK_BUTTON_ATTR]"
+        private const val ANCHOR_BUTTON_SELECTOR = "a[href]"
 
         private const val HREF_ATTR = "href"
+        private const val ANCHOR_TAG_SELECTOR = "a"
         private const val META_TAG_SELECTOR = "meta"
         private const val SCRIPT_TAG_SELECTOR = "script"
         private const val TITLE_TAG_SELECTOR = "title"
@@ -55,6 +59,10 @@ internal class HtmlNormalizer(
                 "onplay", "onplaying", "onprogress", "onratechange", "onseeked", "onseeking", "onstalled", "onsuspend",
                 "ontimeupdate", "onvolumechange", "onwaiting", "ontoggle"
         )
+
+        private val ANCHOR_LINK_ATTRIBUTES = arrayOf(
+            "download", "ping", "target"
+        )
     }
 
     private var document: Document?
@@ -69,7 +77,7 @@ internal class HtmlNormalizer(
     }
 
     @WorkerThread
-    fun normalize(): NormalizedResult {
+    fun normalize(config: HtmlNormalizerConfig = DefaultConfig()): NormalizedResult {
         val result = NormalizedResult()
         if (document == null) {
             Logger.i(this, "[HTML] Original HTML code is invalid, unable to normalize")
@@ -77,10 +85,14 @@ internal class HtmlNormalizer(
             return result
         }
         try {
-            cleanHtml()
-            makeImagesToBeOffline()
-            result.closeActionUrl = ensureCloseButton()
-            result.actions = ensureActionButtons()
+            cleanHtml(config.allowAnchorButton)
+            if (config.makeImagesOffline) {
+                makeImagesToBeOffline()
+            }
+            if (config.ensureCloseButton) {
+                result.closeActionUrl = ensureCloseButton()
+            }
+            result.actions = ensureActionButtons(config.allowAnchorButton)
             result.html = exportHtml()
             result.valid = true
         } catch (e: Exception) {
@@ -97,8 +109,16 @@ internal class HtmlNormalizer(
         var html: String? = null
     }
 
-    private fun cleanHtml() {
-        removeAttributes(HREF_ATTR) // !!! Has to be called before #ensureCloseButton and #ensureActionButtons.
+    private fun cleanHtml(allowAnchorButton: Boolean) {
+        // !!! Has to be called before #ensureCloseButton and #ensureActionButtons.
+        if (allowAnchorButton) {
+            removeAttributes(HREF_ATTR, ANCHOR_TAG_SELECTOR)
+        } else {
+            removeAttributes(HREF_ATTR)
+        }
+        ANCHOR_LINK_ATTRIBUTES.forEach {
+            removeAttributes(it)
+        }
         INLINE_SCRIPT_ATTRIBUTES.forEach {
             removeAttributes(it)
         }
@@ -118,11 +138,13 @@ internal class HtmlNormalizer(
 
     /**
      * Removes 'href' attribute from HTML elements
-     * !!! Has to be called before #ensureCloseButton and #ensureActionButtons.
      */
-    private fun removeAttributes(attribute: String) {
+    private fun removeAttributes(attribute: String, skipTag: String? = null) {
         val attributedElements = document!!.select("[$attribute]")
         for (each in attributedElements) {
+            if (skipTag != null && each.`is`(skipTag)) {
+                continue
+            }
             each.removeAttr(attribute)
         }
     }
@@ -131,25 +153,49 @@ internal class HtmlNormalizer(
         return document!!.html()
     }
 
-    private fun ensureActionButtons(): List<ActionInfo> {
+    private fun ensureActionButtons(allowAnchorButton: Boolean): List<ActionInfo> {
         val result = ArrayList<ActionInfo>()
-        val actionButtons = document!!.select(ACTION_BUTTON_SELECTOR)
+        document?.let { it ->
+            if (allowAnchorButton) {
+                result.addAll(collectAnchorLinkButtons(it))
+            }
+            result.addAll(collectDataLinkButtons(it))
+        }
+        return result
+    }
+
+    private fun collectAnchorLinkButtons(document: Document): List<ActionInfo> {
+        val result = ArrayList<ActionInfo>()
+        val actionButtons = document.select(ANCHOR_BUTTON_SELECTOR)
         for (actionButton in actionButtons) {
-            val targetAction = actionButton.attr(ACTION_BUTTON_ATTR)
+            val targetAction = actionButton.attr(HREF_ATTR)
             if (targetAction.isNullOrBlank()) {
-                // TODO: internal event?
                 Logger.e(this, "[HTML] Action button found but with empty action")
                 continue
             }
-            if (!actionButton.hasParent() || !actionButton.parent()!!.`is`("a")) {
+            result.add(ActionInfo(actionButton.html(), targetAction))
+        }
+        return result
+    }
+
+    private fun collectDataLinkButtons(document: Document): List<ActionInfo> {
+        val result = ArrayList<ActionInfo>()
+        val actionButtons = document.select(DATALINK_BUTTON_SELECTOR)
+        for (actionButton in actionButtons) {
+            val targetAction = actionButton.attr(DATALINK_BUTTON_ATTR)
+            if (targetAction.isNullOrBlank()) {
+                Logger.e(this, "[HTML] Action button found but with empty action")
+                continue
+            }
+            if (!actionButton.hasParent() || !actionButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
                 Logger.i(this, "[HTML] Wrapping Action button with a-href")
                 // randomize class name => prevents from CSS styles overriding in HTML
                 val actionButtonHrefClass = "action-button-href-${UUID.randomUUID()}"
-                document!!.head().append("<style>" +
-                        ".$actionButtonHrefClass {" +
-                        "    text-decoration: none;" +
-                        "}" +
-                        "</style>")
+                document.head().append("<style>" +
+                    ".$actionButtonHrefClass {" +
+                    "    text-decoration: none;" +
+                    "}" +
+                    "</style>")
                 actionButton.wrap("<a href='$targetAction' class='$actionButtonHrefClass'></a>")
             }
             result.add(ActionInfo(actionButton.html(), targetAction))
@@ -204,7 +250,7 @@ internal class HtmlNormalizer(
         // link has to be valid URL, but is handled by String comparison anyway
         val closeActionLink = "https://exponea.com/$CLOSE_ACTION_COMMAND"
         val closeButton = closeButtons.first()!!
-        if (!closeButton.hasParent() || !closeButton.parent()!!.`is`("a")) {
+        if (!closeButton.hasParent() || !closeButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
             Logger.i(this, "[HTML] Wrapping Close button with a-href")
             closeButton.wrap("<a href='$closeActionLink' class='$closeButtonHrefClass'></a>")
         } else if (!closeButton.parent()!!.attr("href").equals(closeActionLink, true)) {
@@ -235,12 +281,23 @@ internal class HtmlNormalizer(
         if (isBase64Uri(imageSource)) {
             return imageSource
         }
-        val imageData = imageCache.get(imageSource)
+        var imageData = imageCache.get(imageSource)
         if (imageData == null) {
+            val semaphore = CountDownLatch(1)
+            imageCache.preload(listOf(imageSource)) { loaded ->
+                if (loaded) {
+                    imageData = imageCache.get(imageSource)
+                }
+                semaphore.countDown()
+            }
+            semaphore.await(10, SECONDS)
+        }
+        if (imageData == null) {
+            Logger.e(this, "Unable to load image for HTML")
             throw IllegalStateException("Image is not preloaded")
         }
         val os = ByteArrayOutputStream()
-        imageData.compress(Bitmap.CompressFormat.PNG, 100, os)
+        imageData!!.compress(Bitmap.CompressFormat.PNG, 100, os)
         val result = Base64.encodeToString(os.toByteArray(), Base64.DEFAULT)
         os.closeQuietly()
         // image type is not needed to be checked from source, WebView will fix it anyway...
@@ -269,4 +326,24 @@ internal class HtmlNormalizer(
         }
         return target
     }
+
+    /**
+     * Defines some steps for HTML normalization process
+     */
+    open class HtmlNormalizerConfig(
+        val makeImagesOffline: Boolean,
+        val ensureCloseButton: Boolean,
+        val allowAnchorButton: Boolean
+    )
+
+    /**
+     * Default config for HTML normalization process:
+     * - Images are transformed into Base64 format
+     * - Close button is ensured to be shown
+     */
+    private class DefaultConfig : HtmlNormalizerConfig(
+        makeImagesOffline = true,
+        ensureCloseButton = true,
+        allowAnchorButton = false
+    )
 }

@@ -12,6 +12,7 @@ import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.enqueue
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
@@ -45,6 +46,46 @@ internal class FetchManagerImpl(
                         return
                     }
                     onSuccess(result) // we need to call onSuccess outside of pokemon exception handling above
+                } else {
+                    val error = FetchError(jsonBody, response.message)
+                    Logger.e(this, "Failed to fetch data: $error")
+                    onFailure(Result(false, error))
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                val error = FetchError(null, e.localizedMessage ?: "Unknown error")
+                Logger.e(this, "Fetch configuration Failed $e")
+                onFailure(Result(false, error))
+            }
+        }
+    }
+
+    private fun getVoidCallback(
+        onSuccess: (Result<Any?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ): Callback {
+        return object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val responseCode = response.code
+                Logger.d(this, "Response Code: $responseCode")
+                val jsonBody = response.body?.string()
+                if (response.isSuccessful) {
+                    var result: Result<Any?>?
+                    val resultType = object : TypeToken<Result<Any?>>() {}
+                    try {
+                        result = gson.fromJson(jsonBody, resultType.type)
+                    } catch (e: Exception) {
+                        val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
+                        Logger.e(this, "Failed to deserialize fetch response: $error")
+                        onFailure(Result(false, error))
+                        return
+                    }
+                    if (result == null) {
+                        // empty response is OK and possible, isSuccessful is enough
+                        result = Result(success = true, results = null)
+                    }
+                    onSuccess(result)
                 } else {
                     val error = FetchError(jsonBody, response.message)
                     Logger.e(this, "Failed to fetch data: $error")
@@ -140,6 +181,19 @@ internal class FetchManagerImpl(
                 onSuccess,
                 onFailure
             )
+        )
+    }
+
+    override fun markAppInboxAsRead(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String,
+        messageIds: List<String>,
+        onSuccess: (Result<Any?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.postReadFlagAppInbox(exponeaProject, customerIds, messageIds, syncToken).enqueue(
+            getVoidCallback(onSuccess, onFailure)
         )
     }
 }

@@ -91,8 +91,8 @@ object TelemetryUtility {
             "tokenTrackFrequency"
                 to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency)
             // TODO: this should be uploaded as well, but AppCenter has limitation to 20 properties
-//            "allowDefaultCustomerProperties"
-//                to formatConfigurationProperty(ExponeaConfiguration::allowDefaultCustomerProperties)
+            // "allowDefaultCustomerProperties"
+            //      to formatConfigurationProperty(ExponeaConfiguration::allowDefaultCustomerProperties)
         )
     }
 

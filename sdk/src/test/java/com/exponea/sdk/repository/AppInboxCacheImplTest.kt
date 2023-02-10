@@ -24,8 +24,9 @@ internal class AppInboxCacheImplTest {
         ): MessageItem {
             return MessageItem(
                 id = id,
-                type = "push",
+                rawType = "push",
                 read = read,
+                receivedTime = received,
                 rawContent = mapOf(
                     "attributes" to mapOf(
                         "sent_timestamp" to received

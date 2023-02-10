@@ -386,7 +386,7 @@ object Exponea {
     ) = runCatching {
         requireInitialized {
             component.fetchManager.fetchConsents(
-                exponeaProject = configuration.mainExponeaProject,
+                exponeaProject = component.projectFactory.mainExponeaProject,
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
@@ -408,7 +408,7 @@ object Exponea {
         requireInitialized {
             val customer = component.customerIdsRepository.get()
             component.fetchManager.fetchRecommendation(
-                exponeaProject = configuration.mainExponeaProject,
+                exponeaProject = component.projectFactory.mainExponeaProject,
                 recommendationRequest = CustomerRecommendationRequest(
                     customerIds = customer.toHashMap().filter { e -> e.value != null },
                     options = recommendationOptions
@@ -838,7 +838,8 @@ object Exponea {
      */
     fun anonymize(
         exponeaProject: ExponeaProject? = null,
-        projectRouteMap: Map<EventType, List<ExponeaProject>>? = null
+        projectRouteMap: Map<EventType, List<ExponeaProject>>? = null,
+        advancedAuthToken: String? = null
     ) = runCatching {
         requireInitialized(
                 notInitializedBlock = {
@@ -846,7 +847,7 @@ object Exponea {
                 },
                 initializedBlock = {
                     component.anonymize(
-                            exponeaProject ?: configuration.mainExponeaProject,
+                            exponeaProject ?: component.projectFactory.mainExponeaProject,
                             projectRouteMap ?: configuration.projectRouteMap
                     )
                     telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
@@ -1109,9 +1110,9 @@ object Exponea {
         }
     }.logOnException()
 
-    fun markAppInboxAsRead(messageId: String, callback: ((Boolean) -> Unit)?) = runCatching {
+    fun markAppInboxAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) = runCatching {
         requireInitialized {
-            component.appInboxManager.markMessageAsRead(messageId, callback)
+            component.appInboxManager.markMessageAsRead(message, callback)
         }
     }.logOnException()
 

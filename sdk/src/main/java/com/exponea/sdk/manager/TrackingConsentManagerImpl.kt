@@ -138,6 +138,11 @@ internal class TrackingConsentManagerImpl(
     }
 
     override fun trackAppInboxOpened(item: MessageItem, mode: MODE) {
+        val customerIds = item.customerIds
+        if (customerIds.isEmpty()) {
+            Logger.e(this, "AppInbox message contains empty customerIds")
+            return
+        }
         var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && item.content != null && !item.content!!.hasTrackingConsent) {
             Logger.e(this, "Event for AppInbox showing is not tracked because consent is not given")
@@ -161,11 +166,17 @@ internal class TrackingConsentManagerImpl(
             properties = properties.properties,
             type = EventType.APP_INBOX_OPENED,
             timestamp = currentTimeSeconds(),
-            trackingAllowed = trackingAllowed
+            trackingAllowed = trackingAllowed,
+            customerIds = customerIds
         )
     }
 
     override fun trackAppInboxClicked(message: MessageItem, buttonText: String?, buttonLink: String?, mode: MODE) {
+        val customerIds = message.customerIds
+        if (customerIds.isEmpty()) {
+            Logger.e(this, "AppInbox message contains empty customerIds")
+            return
+        }
         var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent && !GdprTracking.isTrackForced(buttonLink)) {
             Logger.e(this, "Event for clicked AppInbox is not tracked because consent is not given")
@@ -197,7 +208,8 @@ internal class TrackingConsentManagerImpl(
             properties = properties.properties,
             type = EventType.APP_INBOX_CLICKED,
             timestamp = currentTimeSeconds(),
-            trackingAllowed = trackingAllowed
+            trackingAllowed = trackingAllowed,
+            customerIds = customerIds
         )
     }
 }

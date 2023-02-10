@@ -44,7 +44,7 @@ internal class AppInboxAdapter(
         val source = items[position]
         target.readFlag.visibility = if (source.read == true) View.GONE else View.VISIBLE
         val contentSource = source.content
-        val receivedMillis: Long = contentSource?.createdAt?.times(1000)?.toLong() ?: System.currentTimeMillis()
+        val receivedMillis: Long = source.receivedTime?.times(1000)?.toLong() ?: System.currentTimeMillis()
         target.receivedTime.text = DateUtils.getRelativeTimeSpanString(
             receivedMillis,
             System.currentTimeMillis(),

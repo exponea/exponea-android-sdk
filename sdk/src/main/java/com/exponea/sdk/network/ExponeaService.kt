@@ -14,7 +14,12 @@ internal interface ExponeaService {
     fun postCampaignClick(exponeaProject: ExponeaProject, event: Event): Call
     fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call
     fun postFetchAppInbox(exponeaProject: ExponeaProject, customerIds: CustomerIds, syncToken: String?): Call
-    fun postReadFlagAppInbox(exponeaProject: ExponeaProject, customerIds: CustomerIds, messageIds: List<String>): Call
+    fun postReadFlagAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        messageIds: List<String>,
+        syncToken: String
+    ): Call
     fun postPushSelfCheck(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,

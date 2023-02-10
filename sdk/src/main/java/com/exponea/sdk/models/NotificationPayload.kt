@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
@@ -35,7 +36,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
             val dataMap: HashMap<String, Any> = gson.fromJson(data["data"] ?: data["attributes"] ?: "{}")
             val campaignMap: Map<String, String> = gson.fromJson(data["url_params"] ?: "{}")
             val consentCategoryTracking: String? = data["consent_category_tracking"]
-            val hasTrackingConsent: Boolean = (data["has_tracking_consent"] ?: "true") == "true"
+            val hasTrackingConsent: Boolean = GdprTracking.hasTrackingConsent(data["has_tracking_consent"])
             return NotificationData(
                 dataMap,
                 campaignMap,

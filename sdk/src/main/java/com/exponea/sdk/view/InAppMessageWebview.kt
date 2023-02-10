@@ -2,7 +2,6 @@ package com.exponea.sdk.view
 
 import android.app.Activity
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.util.Base64
@@ -23,6 +22,7 @@ import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.URLUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -134,22 +134,7 @@ internal class InAppMessageWebview(
     }
 
     private fun findActionByUrl(url: String): HtmlNormalizer.ActionInfo? {
-        return this.normalizedResult.actions?.find { areEqualAsURLs(it.actionUrl, url) }
-    }
-
-    private fun areEqualAsURLs(url1: String, url2: String): Boolean {
-        try {
-            val parsed1 = Uri.parse(url1)
-            val parsed2 = Uri.parse(url2)
-            val path1 = parsed1.path?.removeSuffix("/")
-            val path2 = parsed2.path?.removeSuffix("/")
-            return parsed1.scheme == parsed2.scheme &&
-                parsed1.host == parsed2.host &&
-                path1 == path2
-        } catch (e: Exception) {
-            Logger.e(this, "[HTML] Unable to compare urls $url1 vs $url2", e)
-            return false
-        }
+        return this.normalizedResult.actions?.find { URLUtils.areEqualAsURLs(it.actionUrl, url) }
     }
 
     private fun isActionUrl(url: String?): Boolean {

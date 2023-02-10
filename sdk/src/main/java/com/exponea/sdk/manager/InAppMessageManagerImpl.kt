@@ -24,6 +24,7 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
@@ -50,7 +51,8 @@ internal class InAppMessageManagerImpl(
     private val displayStateRepository: InAppMessageDisplayStateRepository,
     private val bitmapCache: InAppMessageBitmapCache,
     private val presenter: InAppMessagePresenter,
-    private val eventManager: TrackingConsentManager
+    private val eventManager: TrackingConsentManager,
+    private val projectFactory: ExponeaProjectFactory
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
@@ -73,7 +75,7 @@ internal class InAppMessageManagerImpl(
 
     override fun preload(callback: ((Result<Unit>) -> Unit)?) {
         fetchManager.fetchInAppMessages(
-            exponeaProject = configuration.mainExponeaProject,
+            exponeaProject = projectFactory.mainExponeaProject,
             customerIds = customerIdsRepository.get(),
             onSuccess = { result ->
                 inAppMessagesCache.set(result.results)

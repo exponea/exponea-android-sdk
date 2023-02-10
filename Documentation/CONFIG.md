@@ -58,6 +58,9 @@ data class ExponeaConfiguration(
   
   /** If true, default properties are applied also for 'identifyCustomer' event. */
   var allowDefaultCustomerProperties: Boolean = true
+  
+  /** If true, Customer Token authentication is used */
+  var advancedAuthEnabled: Boolean? = null
 )
 ```
 #### projectToken
@@ -160,3 +163,8 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### tokenTrackFrequency
 
 * Indicates the frequency which the Firebase token should be tracked
+
+#### advancedAuthEnabled
+
+* If set, advanced authorization is used for communication with BE for API listed in [JWT Authorization](./AUTHORIZATION.md)
+* For more info see [authorization setup](./AUTHORIZATION.md)

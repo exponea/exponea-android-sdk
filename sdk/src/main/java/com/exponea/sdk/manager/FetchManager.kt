@@ -38,4 +38,13 @@ internal interface FetchManager {
         onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
+
+    fun markAppInboxAsRead(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String,
+        messageIds: List<String>,
+        onSuccess: (Result<Any?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
 }

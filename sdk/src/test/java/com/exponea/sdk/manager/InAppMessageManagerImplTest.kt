@@ -32,6 +32,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -73,6 +74,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var manager: InAppMessageManagerImpl
     private lateinit var mockActivity: Activity
     private lateinit var trackingConsentManager: TrackingConsentManager
+    private lateinit var projectFactory: ExponeaProjectFactory
     @Before
     fun before() {
         fetchManager = mockk()
@@ -97,15 +99,18 @@ internal class InAppMessageManagerImplTest {
         every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
+        val configuration = ExponeaConfiguration()
+        projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
         manager = InAppMessageManagerImpl(
-            ExponeaConfiguration(),
+            configuration,
             customerIdsRepository,
             messagesCache,
             fetchManager,
             inAppMessageDisplayStateRepository,
             bitmapCache,
             presenter,
-            trackingConsentManager
+            trackingConsentManager,
+            projectFactory
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
         Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
@@ -183,6 +188,7 @@ internal class InAppMessageManagerImplTest {
             eventRepo,
             customerIdsRepo,
             flushManager,
+            projectFactory,
             onEventCreated = { event, type ->
                 manager.onEventCreated(event, type)
             }
@@ -225,6 +231,7 @@ internal class InAppMessageManagerImplTest {
                 eventRepo,
                 customerIdsRepo,
                 flushManager,
+                projectFactory,
                 onEventCreated = { event, type ->
                     manager.onEventCreated(event, type)
                 }

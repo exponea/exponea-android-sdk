@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.R
+import com.exponea.example.managers.CustomerTokenStorage
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.example.view.dialogs.TrackCustomAttributesDialog
@@ -103,7 +104,11 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      */
     private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
         val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
-
+        CustomerTokenStorage.INSTANCE.configure(
+            customerIds = hashMapOf(
+                "registered" to (App.instance.registeredIdManager.registeredID ?: "")
+            )
+        )
         Exponea.identifyCustomer(
                 customerIds = customerIds,
                 properties = propertiesList

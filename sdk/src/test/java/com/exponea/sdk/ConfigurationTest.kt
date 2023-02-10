@@ -1,11 +1,18 @@
 package com.exponea.sdk
 
+import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaConfiguration.HttpLoggingLevel.BASIC
+import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -16,8 +23,13 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class ConfigurationTest : ExponeaSDKTest() {
 
-    private fun setupExponea(authorization: String) {
-        val configuration = ExponeaConfiguration(projectToken = "projectToken", authorization = authorization)
+    private fun setupExponea(
+        authorization: String
+    ) {
+        val configuration = ExponeaConfiguration(
+            projectToken = "projectToken",
+            authorization = authorization
+        )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
     }
@@ -54,5 +66,76 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         @Suppress("DEPRECATION")
         Exponea.initFromFile(context)
         assertEquals(Exponea.isInitialized, true)
+    }
+
+    @Test
+    fun `should initialize with correct secured authorization`() {
+        setupExponea("Token asdf")
+        assertEquals(Exponea.isInitialized, true)
+    }
+
+    @Test
+    fun `should use basic token for no secured token`() {
+        val basicToken = "Token asdf"
+        setupExponea(basicToken)
+        assertEquals(
+            basicToken,
+            Exponea.componentForTesting.projectFactory.mutualExponeaProject.authorization
+        )
+    }
+
+    @Test
+    fun `should deserialize empty config`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration()
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(runTimeConfig, storedConfig)
+    }
+
+    @Test
+    fun `should deserialize basic config`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com"
+        )
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(runTimeConfig, storedConfig)
+    }
+
+    @Test
+    fun `should deserialize full config`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            projectRouteMap = mapOf(EventType.TRACK_CUSTOMER to listOf(ExponeaProject(
+                baseUrl = "https://api.exponea.com",
+                projectToken = "project-token",
+                authorization = "Token mock-auth"
+            ))),
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            httpLoggingLevel = BASIC,
+            maxTries = 20,
+            sessionTimeout = 20.0,
+            campaignTTL = 20.0,
+            automaticSessionTracking = true,
+            automaticPushNotification = true,
+            pushIcon = 1,
+            pushAccentColor = 1,
+            pushChannelName = "Push",
+            pushChannelDescription = "Description",
+            pushChannelId = "1",
+            pushNotificationImportance = NotificationManager.IMPORTANCE_HIGH,
+            defaultProperties = hashMapOf("def" to "val"),
+            tokenTrackFrequency = EVERY_LAUNCH,
+            allowDefaultCustomerProperties = true
+        )
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(runTimeConfig, storedConfig)
     }
 }

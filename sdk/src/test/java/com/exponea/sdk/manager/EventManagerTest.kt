@@ -1,5 +1,7 @@
 package com.exponea.sdk.manager
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.EventType
@@ -14,6 +16,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
@@ -42,10 +45,11 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var presenter: InAppMessagePresenter
     lateinit var trackingConsentManager: TrackingConsentManager
     lateinit var manager: EventManagerImpl
+    lateinit var projectFactory: ExponeaProjectFactory
 
     lateinit var addedEvents: ArrayList<ExportedEvent>
 
-    fun setup(configuration: ExponeaConfiguration, flushMode: FlushMode) {
+    fun setup(context: Context, configuration: ExponeaConfiguration, flushMode: FlushMode) {
         mockkObject(Exponea)
         every { Exponea.flushMode } returns flushMode
 
@@ -81,6 +85,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
+        projectFactory = ExponeaProjectFactory(context, configuration)
         inAppMessageManager = spyk(InAppMessageManagerImpl(
             configuration,
             customerIdsRepo,
@@ -89,7 +94,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
             inAppMessageDisplayStateRepository,
             bitmapCache,
             presenter,
-            trackingConsentManager
+            trackingConsentManager,
+            projectFactory
         ))
         every { inAppMessageManager.preloadIfNeeded(any()) } just Runs
         every { inAppMessageManager.sessionStarted(any()) } just Runs
@@ -100,6 +106,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             eventRepo,
             customerIdsRepo,
             flushManager,
+            projectFactory,
             onEventCreated = { event, type ->
                 inAppMessageManager.onEventCreated(event, type)
             }
@@ -108,7 +115,11 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should track event`() {
-        setup(ExponeaConfiguration(projectToken = "mock-project-token"), FlushMode.MANUAL)
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            FlushMode.MANUAL
+        )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         verify {
             eventRepo.add(any())
@@ -139,6 +150,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should track event for all projects`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 projectRouteMap = hashMapOf(EventType.INSTALL to arrayListOf(
@@ -173,7 +185,11 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should start flush in immediate flush mode`() {
-        setup(ExponeaConfiguration(projectToken = "mock-project-token"), FlushMode.IMMEDIATE)
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            FlushMode.IMMEDIATE
+        )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         verify {
             eventRepo.add(any())
@@ -187,7 +203,11 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should notify in-app message manager of session start`() {
-        setup(ExponeaConfiguration(projectToken = "mock-project-token"), FlushMode.MANUAL)
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            FlushMode.MANUAL
+        )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
         verify {
             eventRepo.add(any())
@@ -202,6 +222,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should add default properties`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
@@ -230,6 +251,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should not accumulate default properties`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
@@ -280,6 +302,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should add default properties to customer properties by default`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
@@ -308,6 +331,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should add default properties to customer properties if allowed`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
@@ -337,6 +361,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     @Test
     fun `should NOT add default properties to customer properties if denied`() {
         setup(
+            ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
                 projectToken = "mock-project-token",
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),

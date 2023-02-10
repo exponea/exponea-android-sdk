@@ -63,6 +63,8 @@ dependencies {
     gmsImplementation 'com.google.firebase:firebase-messaging:23.1.0'
     hmsImplementation 'com.huawei.agconnect:agconnect-core:1.6.5.300'
     hmsImplementation 'com.huawei.hms:push:6.5.0.300'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'com.google.code.gson:gson:2.8.9'
 
     implementation project(path: ':sdk')
 }

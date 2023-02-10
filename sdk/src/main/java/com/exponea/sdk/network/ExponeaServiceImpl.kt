@@ -66,15 +66,18 @@ internal class ExponeaServiceImpl(
     override fun postReadFlagAppInbox(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
-        messageIds: List<String>
+        messageIds: List<String>,
+        syncToken: String
     ): Call {
+        val reqBody = hashMapOf(
+            "customer_ids" to customerIds.toHashMap(),
+            "message_ids" to messageIds,
+            "sync_token" to syncToken
+        )
         return doPost(
             exponeaProject,
             ApiEndPoint.EndPointName.MESSAGE_INBOX_READ,
-            hashMapOf(
-                "customer_ids" to customerIds.toHashMap(),
-                "message_ids" to messageIds
-            )
+            reqBody
         )
     }
 

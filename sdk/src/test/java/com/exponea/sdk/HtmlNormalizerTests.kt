@@ -6,11 +6,13 @@ import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
+import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import io.mockk.mockk
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -52,6 +54,32 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(mockk(), rawHtml).normalize()
         assertNotNull(result.closeActionUrl)
         assertEquals(2, result.actions?.size)
+    }
+
+    @Test
+    fun test_datalinkAnchorAction() {
+        val rawHtml = "<html><body>" +
+            "<div data-link='https://example.com/1'>Action 1</div>" +
+            "<a href='https://example.com/1'>Action 2</a>" +
+            "</body></html>"
+        val result = HtmlNormalizer(mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
+            makeImagesOffline = false, ensureCloseButton = false, allowAnchorButton = true
+        ))
+        assertNull(result.closeActionUrl)
+        assertEquals(2, result.actions?.size)
+    }
+
+    @Test
+    fun test_anchorActionWithTargetRemoved() {
+        val rawHtml = "<html><body>" +
+            "<a href='https://example.com/1' target='_self'>Action 2</a>" +
+            "</body></html>"
+        val result = HtmlNormalizer(mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
+            makeImagesOffline = false, ensureCloseButton = false, allowAnchorButton = true
+        ))
+        assertNull(result.closeActionUrl)
+        assertEquals(1, result.actions?.size)
+        assertFalse { result.html!!.contains("target") }
     }
 
     @Test

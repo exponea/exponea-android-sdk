@@ -52,5 +52,9 @@
             </intent-filter>
         </receiver>
         <meta-data android:name="ExponeaExampleApp" android:value="true" />
+        <meta-data
+            android:name="ExponeaAuthProvider"
+            android:value="com.exponea.example.services.ExampleAuthProvider"
+        />
     </application>
 </manifest>

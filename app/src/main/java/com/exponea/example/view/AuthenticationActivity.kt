@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.R
+import com.exponea.example.managers.CustomerTokenStorage
 import com.exponea.example.utils.isVaildUrl
 import com.exponea.example.utils.isValid
 import com.exponea.example.utils.onTextChanged
@@ -14,6 +15,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import kotlinx.android.synthetic.main.activity_authentication.button
+import kotlinx.android.synthetic.main.activity_authentication.editTextAdvancedPublicKey
 import kotlinx.android.synthetic.main.activity_authentication.editTextApiUrl
 import kotlinx.android.synthetic.main.activity_authentication.editTextAuthCode
 import kotlinx.android.synthetic.main.activity_authentication.editTextProjectToken
@@ -23,6 +25,7 @@ import kotlinx.android.synthetic.main.activity_authentication.toolbar
 class AuthenticationActivity : AppCompatActivity() {
 
     var authorizationToken = ""
+    var advancedPublicKey = ""
     var projectToken = ""
     var registeredIds = ""
     var apiUrl = ""
@@ -33,10 +36,13 @@ class AuthenticationActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         editTextAuthCode.setText(authorizationToken)
+        editTextAdvancedPublicKey.setText(advancedPublicKey)
+        editTextRegisteredIds.setText(registeredIds)
         editTextProjectToken.setText(projectToken)
         editTextApiUrl.setText(apiUrl)
 
         editTextAuthCode.onTextChanged { authorizationToken = it }
+        editTextAdvancedPublicKey.onTextChanged { advancedPublicKey = it }
         editTextRegisteredIds.onTextChanged { registeredIds = it }
         editTextProjectToken.onTextChanged { projectToken = it }
         editTextApiUrl.onTextChanged { apiUrl = it }
@@ -54,15 +60,30 @@ class AuthenticationActivity : AppCompatActivity() {
         // Start our exponea configuration
         val configuration = ExponeaConfiguration()
         configuration.authorization = authorizationToken
+        configuration.advancedAuthEnabled = advancedPublicKey.isNotBlank()
         configuration.projectToken = projectToken
         configuration.baseURL = apiUrl
         configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
         configuration.defaultProperties["thisIsADefaultStringProperty"] = "This is a default string value"
         configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
 
+        // Prepare Example Advanced Auth
+        CustomerTokenStorage.INSTANCE.configure(
+            host = apiUrl,
+            projectToken = projectToken,
+            publicKey = advancedPublicKey,
+            customerIds = null,
+            expiration = null
+        )
+
         // Set our customer registration id
         if (editTextRegisteredIds.isValid()) {
             App.instance.registeredIdManager.registeredID = registeredIds
+            CustomerTokenStorage.INSTANCE.configure(
+                customerIds = hashMapOf(
+                    "registered" to (App.instance.registeredIdManager.registeredID ?: "")
+                )
+            )
         }
 
         // Start our SDK

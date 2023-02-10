@@ -208,7 +208,7 @@ internal object PublicApiTestCases {
         },
         Pair(Exponea::markAppInboxAsRead) {
             Exponea.markAppInboxAsRead(
-                "1",
+                AppInboxCacheImplTest.buildMessage("1"),
                 null
             )
         }
@@ -258,6 +258,20 @@ internal object PublicApiTestCases {
 //        Exponea::trackAppInboxOpened,
 //        Exponea::trackAppInboxOpenedWithoutTrackingConsent,
 //        Exponea::trackAppInboxClick,
-//        Exponea::trackAppInboxClickWithoutTrackingConsent
+//        Exponea::trackAppInboxClickWithoutTrackingConsent,
+//        Exponea::getAppInboxButton,
+//        Exponea::getAppInboxListView,
+//        Exponea::getAppInboxListFragment,
+//        Exponea::getAppInboxDetailFragment,
+//        Exponea::getAppInboxDetailView,
+//        Exponea::fetchAppInbox,
+//        Exponea::fetchAppInboxItem,
+//        Exponea::trackAppInboxOpened,
+//        Exponea::trackAppInboxOpenedWithoutTrackingConsent,
+//        Exponea::trackAppInboxClick,
+//        Exponea::trackAppInboxClickWithoutTrackingConsent,
+//        Exponea::markAppInboxAsRead,
+//        Exponea::markAppInboxAsRead
+
     )
 }

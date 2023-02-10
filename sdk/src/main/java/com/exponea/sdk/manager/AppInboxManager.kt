@@ -7,7 +7,7 @@ import com.exponea.sdk.models.MessageItem
 interface AppInboxManager {
     fun fetchAppInbox(callback: (List<MessageItem>?) -> Unit)
     fun fetchAppInboxItem(messageId: String, callback: (MessageItem?) -> Unit)
-    fun clear()
+    fun reload()
     fun onEventCreated(event: Event, type: EventType)
-    fun markMessageAsRead(messageId: String, callback: ((Boolean) -> Unit)?)
+    fun markMessageAsRead(messageId: MessageItem, callback: ((Boolean) -> Unit)?)
 }

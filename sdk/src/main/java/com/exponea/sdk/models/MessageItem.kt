@@ -1,6 +1,8 @@
 package com.exponea.sdk.models
 
-import com.exponea.sdk.util.ExponeaGson
+import com.exponea.sdk.models.AppInboxMessateType.HTML
+import com.exponea.sdk.models.AppInboxMessateType.PUSH
+import com.exponea.sdk.util.AppInboxParser
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.annotations.SerializedName
@@ -8,45 +10,54 @@ import com.google.gson.annotations.SerializedName
 data class MessageItem(
     @SerializedName("id")
     val id: String,
-    val type: String,
+    @SerializedName("type")
+    val rawType: String,
     @SerializedName("is_read")
     var read: Boolean? = false,
+    @SerializedName("create_time")
+    var receivedTime: Double? = currentTimeSeconds(),
     @SerializedName("content")
     val rawContent: Map<String, Any?>?
 ) {
-    val content: MessageItemContent?
-        get() {
-            return when (type) {
-                "push" -> parseFromPushNotification(rawContent)
-                else -> {
-                    Logger.e(this, "AppInbox message has unsupported type \"${type}\"")
-                    return null
-                }
-            }
-        }
 
-    val receivedTime: Double get() = content?.createdAt ?: currentTimeSeconds()
+    internal var customerIds: Map<String, String?> = mapOf()
+    internal var syncToken: String? = null
 
-    private fun parseFromPushNotification(source: Map<String, Any?>?): MessageItemContent {
-        var normalized: Map<String, String> = mapOf()
-        if (source != null) {
-            normalized = source
-                .filter { e -> e.value != null }
-                .map { e -> e.key to toJson(e.value!!) }
-                .toMap()
+    val type: AppInboxMessateType get() {
+        return when (rawType) {
+            "push" -> AppInboxMessateType.PUSH
+            "html" -> AppInboxMessateType.HTML
+            else -> AppInboxMessateType.UNKNOWN
         }
-        val pushContent = NotificationPayload(HashMap(normalized))
-        return MessageItemContent(pushContent)
     }
 
-    private fun toJson(value: Any): String {
-        if (value is String) {
-            return value
+    val content: MessageItemContent? get() {
+        return when (type) {
+            PUSH -> AppInboxParser.parseFromPushNotification(rawContent)
+            HTML -> AppInboxParser.parseFromHtmlMessage(rawContent ?: mapOf())
+            else -> {
+                Logger.e(this, "AppInbox message has unsupported type \"${type}\"")
+                return null
+            }
         }
-        return ExponeaGson.instance.toJson(value)
     }
 
     val hasTrackingConsent: Boolean get() {
         return content?.hasTrackingConsent ?: true
     }
+}
+
+enum class AppInboxMessateType {
+    /**
+     * AppInbox message with paylod containing PushNotification data
+     */
+    PUSH,
+    /**
+     * AppInbox message with paylod containing HTML data
+     */
+    HTML,
+    /**
+     * AppInbox message with unknown or invalid type
+     */
+    UNKNOWN
 }

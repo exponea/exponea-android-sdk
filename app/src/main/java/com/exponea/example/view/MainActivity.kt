@@ -3,7 +3,6 @@ package com.exponea.example.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
@@ -28,11 +27,6 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Examples"
 
-        if (intent.isViewUrlIntent("http") || intent.isViewUrlIntent("exponea")) {
-            Toast.makeText(this, "Deep link received from ${intent?.data?.host}, " +
-                    "path is ${intent?.data?.path}", Toast.LENGTH_LONG).show()
-        }
-
         // Set log level before first call to SDK function
         Exponea.loggerLevel = Logger.Level.DEBUG
         Exponea.checkPushSetup = true
@@ -48,20 +42,83 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
         }
-        if (savedInstanceState == null) {
-            replaceFragment(FetchFragment())
+
+        val deeplinkDestination = resolveDeeplinkDestination(intent)
+
+        if (deeplinkDestination != null) {
+            handleDeeplinkDestination(deeplinkDestination)
+        } else if (savedInstanceState == null) {
+            selectTab(BottomTab.Fetch)
         }
     }
 
-    private fun replaceFragment(fragment: androidx.fragment.app.Fragment): Boolean {
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        val deeplinkDestination = resolveDeeplinkDestination(intent)
+
+        if (deeplinkDestination != null) {
+            handleDeeplinkDestination(deeplinkDestination)
+        }
+    }
+
+    private fun selectTab(tab: BottomTab) {
+        navigation.selectedItemId = when (tab) {
+            BottomTab.Anonymize -> R.id.actionAnonymize
+            BottomTab.Fetch -> R.id.actionMain
+            BottomTab.Manual -> R.id.actionSettings
+            BottomTab.Track -> R.id.actionPurchase
+        }
+
+        val fragment = when (tab) {
+            BottomTab.Anonymize -> AnonymizeFragment()
+            BottomTab.Fetch -> FetchFragment()
+            BottomTab.Manual -> FlushFragment()
+            BottomTab.Track -> TrackFragment()
+        }
+
         supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit()
-        return true
+    }
+
+    private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
+        fun String.toDeeplinkDestination() = when (this) {
+            "fetch" -> DeeplinkDestination.Fetch
+            "track" -> DeeplinkDestination.Track
+            "manual" -> DeeplinkDestination.Manual
+            "anonymize" -> DeeplinkDestination.Anonymize
+            else -> null
+        }
+
+        return if (intent.isViewUrlIntent("http")) {
+            intent?.data?.path.orEmpty().toDeeplinkDestination()
+        } else if (intent.isViewUrlIntent("exponea")) {
+            intent?.data?.host.orEmpty().toDeeplinkDestination()
+        } else {
+            null
+        }
+    }
+
+    private fun handleDeeplinkDestination(deeplinkDestination: DeeplinkDestination) {
+        when (deeplinkDestination) {
+            DeeplinkDestination.Anonymize -> selectTab(BottomTab.Anonymize)
+            DeeplinkDestination.Fetch -> selectTab(BottomTab.Fetch)
+            DeeplinkDestination.Manual -> selectTab(BottomTab.Manual)
+            DeeplinkDestination.Track -> selectTab(BottomTab.Track)
+        }
     }
 
     private fun setupListeners() {
+        fun replaceFragment(fragment: androidx.fragment.app.Fragment): Boolean {
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container, fragment)
+                    .commit()
+            return true
+        }
+
         navigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.actionMain -> replaceFragment(FetchFragment())
@@ -84,12 +141,12 @@ class MainActivity : AppCompatActivity() {
                 context: Context
             ) {
                 AlertDialog.Builder(context)
-                .setTitle("In app action")
-                .setMessage(" Message id: ${message.id} \n " +
-                        "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
-                .setPositiveButton("OK") { _, _ -> }
-                .create()
-                .show()
+                        .setTitle("In app action")
+                        .setMessage(" Message id: ${message.id} \n " +
+                                "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
+                        .setPositiveButton("OK") { _, _ -> }
+                        .create()
+                        .show()
             }
         }
     }

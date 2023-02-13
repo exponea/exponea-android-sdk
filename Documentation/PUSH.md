@@ -147,11 +147,18 @@ fun trackDeliveredPush(
 ``` kotlin
 // create NotificationData from your push payload
 val notificationData = NotificationData(
-    subject = "my subject",
-    campaignName = "My campaign",
-    actionName = "my-action",
-    platform = "android",
-    ...
+    dataMap = hashMapOf(
+        "platform" to "android",
+        "subject" to "Subject",
+        "type" to "push",
+        ...
+    ),
+    campaignMap = mapOf(
+       "utm_campaign" to "Campaign name",
+       "utm_medium" to "mobile_push_notification",
+       "utm_content" to "en",
+       ...
+    )
 )
 Exponea.trackDeliveredPush(
         data = notificationData
@@ -177,11 +184,18 @@ fun trackClickedPush(
 ``` kotlin
 // create NotificationData from your push payload
 val notificationData = NotificationData(
-    subject = "my subject",
-    campaignName = "My campaign",
-    actionName = "my-action",
-    platform = "android",
-    ...
+    dataMap = hashMapOf(
+        "platform" to "android",
+        "subject" to "Subject",
+        "type" to "push",
+        ...
+    ),
+    campaignMap = mapOf(
+       "utm_campaign" to "Campaign name",
+       "utm_medium" to "mobile_push_notification",
+       "utm_content" to "en",
+       ...
+    )
 )
 Exponea.trackClickedPush(
         data = notificationData

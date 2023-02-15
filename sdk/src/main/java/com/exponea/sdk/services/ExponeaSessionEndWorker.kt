@@ -5,7 +5,9 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.returnOnException
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit.SECONDS
 
 internal class ExponeaSessionEndWorker(
     context: Context,
@@ -14,29 +16,28 @@ internal class ExponeaSessionEndWorker(
 
     override fun doWork(): Result {
         Logger.d(this, "doWork -> Starting...")
-        return Exponea.autoInitialize<Result>(applicationContext) {
-            val countDownLatch = CountDownLatch(1)
-            try {
+        return Exponea.runCatching {
+            Exponea.requireInitialized {
+                val countDownLatch = CountDownLatch(1)
                 Exponea.trackAutomaticSessionEnd()
                 Logger.d(this, "doWork -> Starting flushing data")
                 Exponea.flushData {
                     Logger.d(this, "doWork -> Finished")
                     countDownLatch.countDown()
                 }
-
                 try {
-                    countDownLatch.await()
+                    var successFinish = countDownLatch.await(20, SECONDS)
+                    if (!successFinish) {
+                        Logger.e(this, "doWork -> Timeout!")
+                        return@requireInitialized Result.failure()
+                    }
                 } catch (e: InterruptedException) {
                     Logger.e(this, "doWork -> countDownLatch was interrupted", e)
-                    return@autoInitialize Result.failure()
+                    return@requireInitialized Result.failure()
                 }
-
                 Logger.d(this, "doWork -> Success!")
-
-                return@autoInitialize Result.success()
-            } catch (e: Exception) {
-                return@autoInitialize Result.failure()
+                return@requireInitialized Result.success()
             }
-        } ?: Result.failure()
+        }.returnOnException { Result.failure() } ?: Result.failure()
     }
 }

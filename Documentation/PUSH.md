@@ -72,7 +72,7 @@ Exponea.notificationDataCallback = {
 
 Note that if a previous data was received and no listener was attached to the callback, that data will be dispatched as soon as a listener is attached.
 
-> If your app is not running in the background, the SDK will auto-initialize when push notification is received. In this case, `Exponea.notificationDataCallback` is not set, so the callback will be called after you attach the listener(next app start). If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`.
+> `Exponea.notificationDataCallback` callback will be called after you attach the listener(next app start) and SDK is initialized. If you need to respond to the notification received immediately, implement your own `FirebaseMessagingService` and set the notification data callback in `onMessageReceived` function before calling `Exponea.handleRemoteMessage`.
 
 > The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 

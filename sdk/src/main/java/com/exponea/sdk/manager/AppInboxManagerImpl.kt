@@ -12,10 +12,9 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.runOnBackgroundThread
+import com.exponea.sdk.util.runOnMainThread
 import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 internal class AppInboxManagerImpl(
     private val fetchManager: FetchManager,
@@ -28,7 +27,7 @@ internal class AppInboxManagerImpl(
     public override fun markMessageAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) {
         if (message.syncToken == null || message.customerIds.isEmpty()) {
             Logger.e(this, "Unable to mark message ${message.id} as read, try to fetch AppInbox")
-            GlobalScope.launch(Dispatchers.Main) {
+            runOnMainThread {
                 callback?.invoke(false)
             }
             return
@@ -39,7 +38,7 @@ internal class AppInboxManagerImpl(
         requireMutualExponeaProject { expoProject ->
             if (expoProject.authorization == null) {
                 Logger.e(this, "AppInbox loading failed. Authorization token is missing")
-                GlobalScope.launch(Dispatchers.Main) {
+                runOnMainThread {
                     callback?.invoke(false)
                 }
             }
@@ -50,13 +49,13 @@ internal class AppInboxManagerImpl(
                 messageIds = listOf(message.id),
                 onSuccess = {
                     Logger.i(this, "AppInbox marked as read")
-                    GlobalScope.launch(Dispatchers.Main) {
+                    runOnMainThread {
                         callback?.invoke(true)
                     }
                 },
                 onFailure = {
                     Logger.e(this, "AppInbox marking as read failed. ${it.results.message}")
-                    GlobalScope.launch(Dispatchers.Main) {
+                    runOnMainThread {
                         callback?.invoke(false)
                     }
                 }
@@ -68,7 +67,7 @@ internal class AppInboxManagerImpl(
         requireMutualExponeaProject { expoProject ->
             if (expoProject.authorization == null) {
                 Logger.e(this, "AppInbox loading failed. Authorization token is missing")
-                GlobalScope.launch(Dispatchers.Main) {
+                runOnMainThread {
                     callback.invoke(null)
                 }
                 return@requireMutualExponeaProject
@@ -85,7 +84,7 @@ internal class AppInboxManagerImpl(
                 },
                 onFailure = {
                     Logger.e(this, "AppInbox loading failed. ${it.results.message}")
-                    GlobalScope.launch(Dispatchers.Main) {
+                    runOnMainThread {
                         callback.invoke(null)
                     }
                 }
@@ -94,7 +93,7 @@ internal class AppInboxManagerImpl(
     }
 
     private fun requireMutualExponeaProject(onTokenCallback: (ExponeaProject) -> Unit) {
-        GlobalScope.launch {
+        runOnBackgroundThread {
             onTokenCallback.invoke(projectFactory.mutualExponeaProject)
         }
     }
@@ -125,7 +124,7 @@ internal class AppInboxManagerImpl(
         appInboxCache.addMessages(supportedMessages)
         var allMessages = appInboxCache.getMessages()
         if (imageUrls.isEmpty()) {
-            GlobalScope.launch(Dispatchers.Main) {
+            runOnMainThread {
                 callback.invoke(allMessages)
             }
             return
@@ -134,7 +133,7 @@ internal class AppInboxManagerImpl(
         imageUrls.forEach { imageUrl ->
             bitmapCache.preload(listOf(imageUrl), {
                 if (counter.decrementAndGet() <= 0) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    runOnMainThread {
                         callback.invoke(allMessages)
                     }
                 }

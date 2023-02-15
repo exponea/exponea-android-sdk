@@ -7,7 +7,6 @@ import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
@@ -15,7 +14,6 @@ import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,25 +45,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track fcm token when Exponea can be auto-initialized`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration())
-        Exponea.handleNewToken(context, "mock token")
-        verify {
-            Exponea.componentForTesting.eventManager.track(
-                "campaign",
-                any(),
-                hashMapOf("google_push_notification_id" to "mock token"),
-                EventType.PUSH_TOKEN
-            )
-        }
-    }
-
-    @Test
     fun `should track fcm token after Exponea is initialized`() {
+        Exponea.init(context, ExponeaConfiguration())
         Exponea.handleNewToken(context, "mock token")
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
-        assertNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
-        Exponea.init(context, ExponeaConfiguration())
+        assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
         verify {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
@@ -93,25 +77,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track hms token when Exponea can be auto-initialized`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration())
-        Exponea.handleNewHmsToken(context, "mock token")
-        verify {
-            Exponea.componentForTesting.eventManager.track(
-                "campaign",
-                any(),
-                hashMapOf("huawei_push_notification_id" to "mock token"),
-                EventType.PUSH_TOKEN
-            )
-        }
-    }
-
-    @Test
     fun `should track hms token after Exponea is initialized`() {
+        Exponea.init(context, ExponeaConfiguration())
         Exponea.handleNewHmsToken(context, "mock token")
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
-        assertNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
-        Exponea.init(context, ExponeaConfiguration())
+        assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
         verify {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",

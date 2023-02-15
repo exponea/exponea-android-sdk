@@ -65,6 +65,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     @Test
     fun `should have no token after reinstall`() {
+        initExponea()
         Exponea.handleNewToken(context, token_1)
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
         simulateUninstall()
@@ -79,6 +80,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     @Test
     fun `should have token after future update`() {
+        initExponea()
         Exponea.handleNewToken(context, token_1)
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
         // simulate future updates == app will use only new storage
@@ -88,7 +90,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     private fun initExponea() {
         val configuration = ExponeaConfiguration()
-        configuration.automaticPushNotification = false
+        configuration.automaticPushNotification = true
         Exponea.init(context, configuration)
     }
 }

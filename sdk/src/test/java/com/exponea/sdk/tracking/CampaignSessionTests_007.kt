@@ -8,6 +8,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -28,14 +29,17 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
         val campaignIntent = createDeeplinkIntent()
         val controller = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         controller.create()
+        assertFalse(Exponea.isInitialized)
 
+        controller.start()
         assertTrue(Exponea.isInitialized)
+
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
         assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         controller.resume()
-        assertTrue(Exponea.isInitialized)
+        Thread.sleep(1000)
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.type == Constants.EventTypes.sessionStart
@@ -58,8 +62,8 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
 
-        override fun onPostResume() {
-            super.onPostResume()
+        override fun onStart() {
+            super.onStart()
             initExponea(applicationContext)
         }
     }

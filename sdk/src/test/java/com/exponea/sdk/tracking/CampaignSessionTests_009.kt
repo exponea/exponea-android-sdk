@@ -29,6 +29,7 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
+        firstRun.start()
         firstRun.resume()
         var sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
             it.type == Constants.EventTypes.sessionStart
@@ -40,6 +41,7 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
+        secondRun.start()
 
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
@@ -80,8 +82,8 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
 
-        override fun onPostResume() {
-            super.onPostResume()
+        override fun onStart() {
+            super.onStart()
             initExponea(applicationContext)
         }
     }

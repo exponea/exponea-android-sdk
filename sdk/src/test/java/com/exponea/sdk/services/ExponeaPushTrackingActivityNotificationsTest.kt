@@ -194,7 +194,7 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         Exponea.flushMode = FlushMode.MANUAL
-        ExponeaConfigRepository.set(context, ExponeaConfiguration()) // we'll just store config, it will auto-initialize
+        ExponeaConfigRepository.set(context, ExponeaConfiguration())
 
         manager = FcmManagerImpl(
             context,

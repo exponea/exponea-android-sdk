@@ -5,8 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
@@ -30,12 +28,12 @@ import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
+import com.exponea.sdk.util.runOnBackgroundThread
+import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 internal data class InAppMessageShowRequest(
     val eventType: String,
@@ -269,7 +267,7 @@ internal class InAppMessageManagerImpl(
     ): Job? {
         Logger.i(this, "Requesting to show in-app message for event type $eventType")
         if (preloaded) {
-            return GlobalScope.launch {
+            return runOnBackgroundThread {
                 Logger.i(this, "In-app message data preloaded, picking a message to display")
                 val message = getRandom(eventType, properties, timestamp)
                 if (message != null) {
@@ -306,62 +304,59 @@ internal class InAppMessageManagerImpl(
             htmlPayload = null
         }
         Logger.i(this, "Posting show to main thread with delay ${message.delay ?: 0}ms.")
-        Handler(Looper.getMainLooper()).postDelayed(
-            {
-                val presented = presenter.show(
-                    messageType = message.messageType,
-                    payload = message.payload,
-                    payloadHtml = htmlPayload,
-                    timeout = message.timeout,
-                    actionCallback = { activity, button ->
-                        Logger.i(this, "In-app message button clicked!")
-                        displayStateRepository.setInteracted(message, Date())
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageClick(
-                                message,
-                                button.buttonText,
-                                button.buttonLink,
-                                CONSIDER_CONSENT
-                            )
-                        }
-                        val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
-                        Handler(Looper.getMainLooper()).post {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
-                                message,
-                                buttonInfo,
-                                true,
-                                activity
-                            )
-                        }
-                        if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
-                            processInAppMessageAction(activity, button)
-                        }
-                    },
-                    dismissedCallback = { activity ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
-                        }
-                        Handler(Looper.getMainLooper()).post {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
-                                message,
-                                null,
-                                false,
-                                activity
-                            )
-                        }
-                    },
-                    failedCallback = { error ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageError(message, error, CONSIDER_CONSENT)
-                        }
+        runOnMainThread(message.delay ?: 0) {
+            val presented = presenter.show(
+                messageType = message.messageType,
+                payload = message.payload,
+                payloadHtml = htmlPayload,
+                timeout = message.timeout,
+                actionCallback = { activity, button ->
+                    Logger.i(this, "In-app message button clicked!")
+                    displayStateRepository.setInteracted(message, Date())
+                    if (Exponea.inAppMessageActionCallback.trackActions) {
+                        eventManager.trackInAppMessageClick(
+                            message,
+                            button.buttonText,
+                            button.buttonLink,
+                            CONSIDER_CONSENT
+                        )
                     }
-                )
-                if (presented != null) {
-                    trackShowEvent(message)
+                    val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
+                    runOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            message,
+                            buttonInfo,
+                            true,
+                            activity
+                        )
+                    }
+                    if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+                        processInAppMessageAction(activity, button)
+                    }
+                },
+                dismissedCallback = { activity ->
+                    if (Exponea.inAppMessageActionCallback.trackActions) {
+                        eventManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
+                    }
+                    runOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            message,
+                            null,
+                            false,
+                            activity
+                        )
+                    }
+                },
+                failedCallback = { error ->
+                    if (Exponea.inAppMessageActionCallback.trackActions) {
+                        eventManager.trackInAppMessageError(message, error, CONSIDER_CONSENT)
+                    }
                 }
-            },
-            message.delay ?: 0
-        )
+            )
+            if (presented != null) {
+                trackShowEvent(message)
+            }
+        }
     }
 
     private fun trackShowEvent(message: InAppMessage) {

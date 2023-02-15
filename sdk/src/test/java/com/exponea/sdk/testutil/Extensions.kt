@@ -10,6 +10,7 @@ import com.exponea.sdk.repository.EventRepositoryImpl
 internal fun Exponea.reset() {
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
+    initGate.clear()
     if (!isInitialized) return
     componentForTesting.campaignRepository.clear()
     componentForTesting.customerIdsRepository.clear()

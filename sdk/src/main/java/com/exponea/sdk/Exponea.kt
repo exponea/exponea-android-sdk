@@ -46,8 +46,8 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
+import com.exponea.sdk.services.ExponeaInitManager
 import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
@@ -68,6 +68,7 @@ object Exponea {
     private lateinit var configuration: ExponeaConfiguration
     private lateinit var component: ExponeaComponent
     internal var telemetry: TelemetryManager? = null
+    internal val initGate = ExponeaInitManager()
 
     /**
      * Cookie of the current customer. Null before the SDK is initialized
@@ -165,7 +166,7 @@ object Exponea {
      */
     var notificationDataCallback: ((data: Map<String, Any>) -> Unit)? = null
         set(value) = runCatching {
-            requireInitialized {
+            initGate.waitForInitialize {
                 field = value
                 val storeData = component.pushNotificationRepository.getExtraData()
                 if (storeData != null) {
@@ -294,7 +295,6 @@ object Exponea {
 
     /**
      * This is the main init method that should be called to initialize Exponea SDK
-     * It's also called when the SDK is auto-initialized
      */
     @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.application = context.applicationContext as Application
@@ -318,8 +318,12 @@ object Exponea {
         ExponeaConfigRepository.set(context, configuration)
         initializeSdk(context)
         isInitialized = true
+        initGate.notifyInitializedState()
     }.run {
         val exception = exceptionOrNull()
+        if (exception != null) {
+            initGate.notifyInitializedState()
+        }
         if (exception is InvalidConfigurationException) {
             throw exception
         }
@@ -333,7 +337,7 @@ object Exponea {
      */
 
     fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.customerIdsRepository.set(customerIds)
             component.eventManager.track(
                 properties = properties.properties,
@@ -353,7 +357,7 @@ object Exponea {
         timestamp: Double? = currentTimeSeconds(),
         eventType: String?
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.eventManager.track(
                 properties = properties.properties,
                 timestamp = timestamp,
@@ -368,9 +372,7 @@ object Exponea {
      */
 
     fun flushData(onFlushFinished: ((kotlin.Result<Unit>) -> Unit)? = null) = runCatching {
-        requireInitialized(notInitializedBlock = {
-            onFlushFinished?.invoke(kotlin.Result.failure(Exception("Exponea SDK was not initialized properly!")))
-        }) {
+        initGate.waitForInitialize {
             component.flushManager.flushData(onFlushFinished)
         }
     }.logOnException()
@@ -384,7 +386,7 @@ object Exponea {
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.fetchManager.fetchConsents(
                 exponeaProject = component.projectFactory.mainExponeaProject,
                 onSuccess = onSuccess,
@@ -405,7 +407,7 @@ object Exponea {
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             val customer = component.customerIdsRepository.get()
             component.fetchManager.fetchRecommendation(
                 exponeaProject = component.projectFactory.mainExponeaProject,
@@ -425,13 +427,13 @@ object Exponea {
      * @param timestamp - determines session start time ( in seconds )
      */
     fun trackSessionStart(timestamp: Double = currentTimeSeconds()) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             if (isAutomaticSessionTracking) {
                 Logger.w(
                     component.sessionManager,
                     "Can't manually track session, since automatic tracking is on "
                 )
-                return@requireInitialized
+                return@waitForInitialize
             }
             component.sessionManager.trackSessionStart(timestamp)
         }
@@ -442,13 +444,13 @@ object Exponea {
      * @param timestamp - determines session end time ( in seconds )
      */
     fun trackSessionEnd(timestamp: Double = currentTimeSeconds()) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             if (isAutomaticSessionTracking) {
                 Logger.w(
                     component.sessionManager,
                     "Can't manually track session, since automatic tracking is on "
                 )
-                return@requireInitialized
+                return@waitForInitialize
             }
 
             component.sessionManager.trackSessionEnd(timestamp)
@@ -488,7 +490,7 @@ object Exponea {
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
         tokenType: TokenType
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.fcmManager.trackToken(fcmToken, tokenTrackFrequency, tokenType)
         }
     }.logOnException()
@@ -501,7 +503,7 @@ object Exponea {
         data: NotificationData? = null,
         timestamp: Double = currentTimeSeconds()
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackDeliveredPush(
                 data, timestamp, IGNORE_CONSENT
             )
@@ -516,7 +518,7 @@ object Exponea {
         data: NotificationData? = null,
         timestamp: Double = currentTimeSeconds()
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackDeliveredPush(
                 data, timestamp, CONSIDER_CONSENT
             )
@@ -534,7 +536,7 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackClickedPush(
                 data, actionData, timestamp, CONSIDER_CONSENT
             )
@@ -550,7 +552,7 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackClickedPush(
                 data, actionData, timestamp, IGNORE_CONSENT
             )
@@ -566,7 +568,7 @@ object Exponea {
         timestamp: Double = currentTimeSeconds(),
         purchasedItem: PurchasedItem
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             val properties = purchasedItem.toHashMap()
             properties.putAll(DeviceProperties(application).toHashMap())
             component.eventManager.track(
@@ -586,7 +588,7 @@ object Exponea {
     /**
      * Handles Exponea notification payload.
      * Does not handle non-Exponea notifications, just returns false for them so you can process them yourself.
-     * @param applicationContext application context required to auto-initialize ExponeaSDK
+     * @param applicationContext application context required to check notifications permission
      * @param messageData the message payload
      * @param manager the system notification manager instance
      * @param showNotification indicates if the SDK should display the notification or just track it
@@ -600,12 +602,10 @@ object Exponea {
         showNotification: Boolean = true
     ): Boolean = runCatching {
         if (!isExponeaPushNotification(messageData)) return@runCatching false
-        autoInitialize(applicationContext, notInitializedBlock = {
-            Logger.e(this@Exponea, "Exponea notif message delivered to device but Exponea is not initialized yet (???)")
-        }) {
+        initGate.waitForInitialize {
             if (!MessagingUtils.areNotificationsBlockedForTheApp(applicationContext)) {
                 if (!isAutoPushNotification) {
-                    return@autoInitialize
+                    return@waitForInitialize
                 }
                 component.fcmManager.handleRemoteMessage(messageData, manager, showNotification)
             } else {
@@ -627,32 +627,6 @@ object Exponea {
     // extra function without return type for Unit, above method would have return type Unit?
     private fun requireInitialized(notInitializedBlock: (() -> Unit)? = null, initializedBlock: () -> Unit) {
         requireInitialized<Unit>(notInitializedBlock, initializedBlock)
-    }
-
-    internal fun <T> autoInitialize(
-        applicationContext: Context,
-        notInitializedBlock: (() -> T)? = null,
-        initializedBlock: () -> T
-    ): T? {
-        if (!isInitialized) {
-            val config = ExponeaConfigRepository.get(applicationContext)
-            if (config == null) {
-                if (notInitializedBlock == null) { // only log this if we don't have fallback
-                    Logger.e(this, "Unable to automatically initialize Exponea SDK!")
-                }
-                return notInitializedBlock?.invoke()
-            }
-            init(applicationContext, config)
-        }
-        return requireInitialized(initializedBlock = initializedBlock)
-    }
-
-    internal fun autoInitialize(
-        applicationContext: Context,
-        notInitializedBlock: (() -> Unit)? = null,
-        initializedBlock: () -> Unit
-    ) {
-        autoInitialize<Unit>(applicationContext, notInitializedBlock, initializedBlock)
     }
 
     // Private Helpers
@@ -838,14 +812,14 @@ object Exponea {
      */
     fun anonymize(
         exponeaProject: ExponeaProject? = null,
-        projectRouteMap: Map<EventType, List<ExponeaProject>>? = null,
-        advancedAuthToken: String? = null
+        projectRouteMap: Map<EventType, List<ExponeaProject>>? = null
     ) = runCatching {
         requireInitialized(
                 notInitializedBlock = {
                     Logger.v(this@Exponea, "Exponea is not initialize")
                 },
                 initializedBlock = {
+                    initGate.clear()
                     component.anonymize(
                             exponeaProject ?: component.projectFactory.mainExponeaProject,
                             projectRouteMap ?: configuration.projectRouteMap
@@ -861,15 +835,15 @@ object Exponea {
      * is returned.
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
-        return autoInitialize<Boolean>(appContext) {
-            if (!intent.isViewUrlIntent("http")) {
-                return@autoInitialize false
-            }
-            val campaignData = CampaignData(intent!!.data!!)
-            if (!campaignData.isValid()) {
-                Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
-                return@autoInitialize false
-            }
+        if (!intent.isViewUrlIntent("http")) {
+            return false
+        }
+        val campaignData = CampaignData(intent!!.data!!)
+        if (!campaignData.isValid()) {
+            Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
+            return false
+        }
+        initGate.waitForInitialize {
             component.campaignRepository.set(campaignData)
             val properties = HashMap<String, Any>()
             properties["platform"] = "Android"
@@ -880,8 +854,8 @@ object Exponea {
                 properties = properties,
                 type = EventType.CAMPAIGN_CLICK
             )
-            return@autoInitialize true
-        } ?: false
+        }
+        return true
     }.returnOnException { false }
 
     // used by InAppMessageActivity to get currently displayed message
@@ -946,21 +920,13 @@ object Exponea {
     private fun handleNewTokenInternal(context: Context, token: String, tokenType: TokenType) {
         runCatching {
             Logger.d(this, "Received push notification token")
-            autoInitialize(context,
-                {
-                    Logger.d(
-                        this,
-                        "Exponea cannot be auto-initialized, token will be tracked once Exponea is initialized")
-                    PushTokenRepositoryProvider.get(context).set(token, 0, tokenType)
-                },
-                {
-                    if (!isAutoPushNotification) {
-                        return@autoInitialize
-                    }
-                    Logger.d(this, "Token Refreshed")
-                    trackPushToken(token, tokenTrackFrequency, tokenType)
+            initGate.waitForInitialize {
+                if (!isAutoPushNotification) {
+                    return@waitForInitialize
                 }
-            )
+                Logger.d(this, "Token Refreshed")
+                trackPushToken(token, tokenTrackFrequency, tokenType)
+            }
         }.logOnException()
     }
 
@@ -975,7 +941,7 @@ object Exponea {
         buttonText: String?,
         buttonLink: String?
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClick(
                 message, buttonText, buttonLink, CONSIDER_CONSENT
             )
@@ -991,7 +957,7 @@ object Exponea {
         buttonText: String?,
         buttonLink: String?
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClick(
                 message, buttonText, buttonLink, IGNORE_CONSENT
             )
@@ -1005,7 +971,7 @@ object Exponea {
     fun trackInAppMessageClose(
         message: InAppMessage
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
                 message, CONSIDER_CONSENT
             )
@@ -1019,7 +985,7 @@ object Exponea {
     fun trackInAppMessageCloseWithoutTrackingConsent(
         message: InAppMessage
     ) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
                 message, IGNORE_CONSENT
             )
@@ -1070,32 +1036,32 @@ object Exponea {
     }.logOnException().getOrNull()
 
     public fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.appInboxManager.fetchAppInbox(callback)
             telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.TRACK_INBOX_FETCH)
         }
     }.logOnException()
 
     fun fetchAppInboxItem(messageId: String, callback: (MessageItem?) -> Unit) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.appInboxManager.fetchAppInboxItem(messageId, callback)
         }
     }.logOnException()
 
     fun trackAppInboxOpened(item: MessageItem) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackAppInboxOpened(item, CONSIDER_CONSENT)
         }
     }.logOnException()
 
     fun trackAppInboxOpenedWithoutTrackingConsent(item: MessageItem) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackAppInboxOpened(item, IGNORE_CONSENT)
         }
     }.logOnException()
 
     fun trackAppInboxClick(action: MessageItemAction, message: MessageItem) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackAppInboxClicked(
                 message, action.title, action.url, CONSIDER_CONSENT
             )
@@ -1103,7 +1069,7 @@ object Exponea {
     }.logOnException()
 
     fun trackAppInboxClickWithoutTrackingConsent(action: MessageItemAction, message: MessageItem) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.trackingConsentManager.trackAppInboxClicked(
                 message, action.title, action.url, IGNORE_CONSENT
             )
@@ -1111,7 +1077,7 @@ object Exponea {
     }.logOnException()
 
     fun markAppInboxAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) = runCatching {
-        requireInitialized {
+        initGate.waitForInitialize {
             component.appInboxManager.markMessageAsRead(message, callback)
         }
     }.logOnException()

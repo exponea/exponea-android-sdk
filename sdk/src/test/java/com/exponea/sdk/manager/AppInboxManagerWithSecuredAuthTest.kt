@@ -15,6 +15,8 @@ import com.exponea.sdk.services.AuthorizationProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import com.google.gson.Gson
 import io.mockk.Runs
 import io.mockk.every
@@ -25,12 +27,14 @@ import io.mockk.verify
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
-import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
@@ -54,6 +58,18 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         appInboxCache = AppInboxCacheImpl(
             ApplicationProvider.getApplicationContext(), Gson()
         )
+    }
+
+    @Before
+    fun overrideThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    @After
+    fun restoreThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test

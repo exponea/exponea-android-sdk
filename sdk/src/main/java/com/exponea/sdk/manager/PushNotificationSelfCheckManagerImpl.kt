@@ -5,8 +5,6 @@ import android.app.AlertDialog
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaService
@@ -18,6 +16,7 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.isResumedActivity
+import com.exponea.sdk.util.runOnMainThread
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -133,7 +132,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             while (currentResumedActivity == null) { delay(operationsTimeout / 10) }
         }
         if (currentResumedActivity != null) {
-            Handler(Looper.getMainLooper()).post {
+            runOnMainThread {
                 val builder = AlertDialog.Builder(currentResumedActivity)
 
                 builder.setTitle(title)

@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
@@ -16,7 +14,7 @@ import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
-import java.lang.Exception
+import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessagePresenter(
     context: Context,
@@ -105,21 +103,18 @@ internal class InAppMessagePresenter(
             )
         }
         if (messageTimeout != null) {
-            Handler(Looper.getMainLooper()).postDelayed(
-                    {
-                        if (view.isPresented) {
-                            try {
-                                view.dismiss()
-                            } catch (ex: Exception) {
-                                Logger.i(
-                                        this,
-                                        "InAppMessageActivity is probably already destroyed," +
-                                                " skipping dialog dismiss")
-                            }
-                        }
-                    },
-                    messageTimeout
-            )
+            runOnMainThread(messageTimeout) {
+                if (view.isPresented) {
+                    try {
+                        view.dismiss()
+                    } catch (ex: Exception) {
+                        Logger.i(
+                            this,
+                            "InAppMessageActivity is probably already destroyed," +
+                                " skipping dialog dismiss")
+                    }
+                }
+            }
         }
         return view
     }

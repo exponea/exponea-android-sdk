@@ -7,8 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.os.Handler
-import android.os.Looper
 import android.text.format.DateUtils
 import android.util.Base64
 import android.view.LayoutInflater
@@ -38,6 +36,7 @@ import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
+import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.AppInboxDetailFragment
 import com.exponea.sdk.view.AppInboxDetailView
 import com.exponea.sdk.view.AppInboxListActivity
@@ -252,7 +251,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             bitmapCache.preload(listOf(imageUrl), { loaded ->
                 if (loaded) {
                     val bitmapToShow = bitmapCache.get(imageUrl)
-                    Handler(Looper.getMainLooper()).post {
+                    runOnMainThread {
                         target.imageView.setImageBitmap(bitmapToShow)
                     }
                 }

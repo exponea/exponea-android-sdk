@@ -23,9 +23,7 @@ import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessageWebview(
     private val activity: Activity,
@@ -65,7 +63,7 @@ internal class InAppMessageWebview(
         }
         setOnDismissListener { this.onDismiss?.invoke() }
         if (normalizedResult.valid && normalizedResult.html != null) {
-            GlobalScope.launch(Dispatchers.Main) {
+            runOnMainThread {
                 if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
                     webView.loadDataWithBaseURL(null, normalizedResult.html!!, "text/html", "UTF-8", null)
                 } else {

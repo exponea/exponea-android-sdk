@@ -18,6 +18,8 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.AppInboxCacheImplTest
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -25,6 +27,9 @@ import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,6 +52,18 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
+    }
+
+    @Before
+    fun overrideThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    @After
+    fun restoreThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test

@@ -71,24 +71,22 @@ internal open class ExponeaPushTrackingActivity : Activity() {
         } else {
             timestamp
         }
-        Exponea.autoInitialize(context) {
-            if (data?.hasTrackingConsent == true || action?.isTrackingForced == true) {
-                Exponea.trackClickedPush(
-                    data = data,
-                    actionData = action,
-                    timestamp = clickedTimestamp
-                )
-            } else {
-                Logger.e(this,
-                    "Event for clicked notification is not tracked because consent is not given nor forced")
-            }
-
-            // After clicking the notification button (action), dismiss it
-            dismissNotification(context, intent)
-
-            // And close the notification tray
-            closeNotificationTray(context)
+        if (data?.hasTrackingConsent == true || action?.isTrackingForced == true) {
+            Exponea.trackClickedPush(
+                data = data,
+                actionData = action,
+                timestamp = clickedTimestamp
+            )
+        } else {
+            Logger.e(this,
+                "Event for clicked notification is not tracked because consent is not given nor forced")
         }
+
+        // After clicking the notification button (action), dismiss it
+        dismissNotification(context, intent)
+
+        // And close the notification tray
+        closeNotificationTray(context)
 
         // send also broadcast with this action, so client app can also react to push open event
 

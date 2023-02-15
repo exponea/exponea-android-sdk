@@ -11,8 +11,6 @@ import android.graphics.BitmapFactory
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
@@ -30,6 +28,7 @@ import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
+import com.exponea.sdk.util.runOnMainThread
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -289,7 +288,7 @@ internal class FcmManagerImpl(
                 pushNotificationRepository.setExtraData(messageData.attributes)
                 return
             }
-            Handler(Looper.getMainLooper()).post {
+            runOnMainThread {
                 Exponea.notificationDataCallback?.invoke(messageData.attributes)
             }
         }

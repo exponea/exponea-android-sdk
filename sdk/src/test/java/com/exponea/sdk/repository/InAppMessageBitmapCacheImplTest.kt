@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import io.mockk.spyk
 import io.mockk.verify
 import java.io.File
@@ -12,8 +14,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +35,18 @@ internal class InAppMessageBitmapCacheImplTest {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
+    }
+
+    @Before
+    fun overrideThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    @After
+    fun restoreThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test

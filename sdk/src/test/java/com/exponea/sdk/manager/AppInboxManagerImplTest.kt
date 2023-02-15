@@ -20,6 +20,8 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import com.google.gson.Gson
 import io.mockk.Runs
 import io.mockk.every
@@ -29,6 +31,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -259,6 +264,18 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             customerIdsRepository = customerIdsRepository,
             appInboxCache = appInboxCache
         )
+    }
+
+    @Before
+    fun overrideThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    @After
+    fun restoreThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test

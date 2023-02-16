@@ -1,6 +1,16 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.4.0
+#### February 16, 2023
+* Features
+  * Extended App Inbox functionality with new HTML message type - Inbox message
+  * Updated documentation for Deeplink handling in active Activity
+  * Added support for Customer token authorization
+  * All SDK methods are invoked after SDK has been initialised
+* Bug Fixes
+  * Fixed: Documentation for NotificationData usage has been updated
+
 ## Release Notes for 3.3.0
 #### December 15, 2022
 * Features

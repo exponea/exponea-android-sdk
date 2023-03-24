@@ -12,7 +12,6 @@ import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.enqueue
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
@@ -157,11 +156,7 @@ internal class FetchManagerImpl(
             getFetchCallback(
                 object : TypeToken<Result<ArrayList<InAppMessage>?>>() {},
                 { result: Result<ArrayList<InAppMessage>?> ->
-                    if (result.results?.isNotEmpty() ?: false) {
-                        onSuccess(Result(true, result.results!!))
-                    } else {
-                        onFailure(Result(false, FetchError(null, "Server returned empty results")))
-                    }
+                    onSuccess(Result(true, result.results ?: arrayListOf()))
                 },
                 onFailure
             )

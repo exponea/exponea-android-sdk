@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.os.Build
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -102,6 +103,57 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty InApps`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchInAppMessages(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty AppInbox`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchAppInbox(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")),
+                "mock-sync-token",
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty MarkAsRead AppInbox action`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.markAppInboxAsRead(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")),
+                "mock-sync-token",
+                listOf("1"),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
             )
         }
     }

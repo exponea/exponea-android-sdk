@@ -40,7 +40,12 @@ internal class InAppMessageBitmapCacheImpl(context: Context) : InAppMessageBitma
 
     override fun clearExcept(urls: List<String>) {
         val keepFileNames = HashSet(urls.map { getFileName(it) })
-        val files = directory.listFiles()
+        val files = try {
+            directory.listFiles()
+        } catch (e: Exception) {
+            Logger.e(this, "Unable to access InApp cache, please validate storage permissions", e)
+            null
+        }
         files?.forEach { file ->
             if (!keepFileNames.contains(file.name)) {
                 file.delete()

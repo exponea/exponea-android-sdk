@@ -67,7 +67,6 @@ If facing any issues, look for **Troubleshooting** section in the respective doc
 
 ## 🔗 Useful links
 
-* [Exponea Developer Hub](https://developers.exponea.com)
 * [Exponea App](https://app.exponea.com/login)
 
 ## 📝 Release Notes

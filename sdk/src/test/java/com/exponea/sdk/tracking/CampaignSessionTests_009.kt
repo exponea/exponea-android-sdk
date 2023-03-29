@@ -1,9 +1,10 @@
 package com.exponea.sdk.tracking
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
@@ -29,9 +30,8 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
-        firstRun.start()
         firstRun.resume()
-        var sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
+        val sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
             it.type == Constants.EventTypes.sessionStart
         }
         firstRun.pause()
@@ -41,7 +41,6 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
-        secondRun.start()
 
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
@@ -51,6 +50,9 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         secondRun.resume()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())
+        assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
+            it.type == Constants.EventTypes.sessionStart
+        }, "Only single session_start has to exists")
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.type == Constants.EventTypes.sessionStart
         }
@@ -76,15 +78,16 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
     /**
      * Used by test testBehavior_009 (Hot start with resume session, campaign click start, SDK init after onResume)
      */
-    class TestActivity : Activity() {
+    class TestActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            setTheme(R.style.Theme_AppCompat_Light)
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
 
-        override fun onStart() {
-            super.onStart()
-            initExponea(applicationContext)
+        override fun onPostResume() {
+            super.onPostResume()
+            initExponea(context = this)
         }
     }
 }

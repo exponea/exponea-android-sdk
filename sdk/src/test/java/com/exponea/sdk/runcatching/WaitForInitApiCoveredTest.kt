@@ -43,6 +43,15 @@ internal class WaitForInitApiCoveredTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `all Init awaiting methods cannot be SDKless`() {
+        assertTrue {
+            PublicApiTestCases.awaitInitMethods.all {
+                !PublicApiTestCases.sdkLessMethods.contains(it)
+            }
+        }
+    }
+
+    @Test
     fun `should wake pending callbacks after init`() {
         PublicApiTestCases.initMethods.forEach {
             Exponea.flushMode = FlushMode.MANUAL

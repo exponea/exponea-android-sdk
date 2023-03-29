@@ -121,8 +121,8 @@ internal class FcmManagerImplTest {
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
         manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
-        verify(exactly = 1) { pushTokenRepository.set("token", any(), TokenType.FCM) }
-        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM) }
     }
 
     @Test
@@ -131,12 +131,12 @@ internal class FcmManagerImplTest {
         // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912
         ShadowSystemClock.setNanoTime(System.currentTimeMillis() * 1000 * 1000)
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
-        verify(exactly = 1) { pushTokenRepository.set("token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM) }
         manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
-        verify(exactly = 0) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
-        pushTokenRepository.set("token", System.currentTimeMillis() - 24 * 60 * 60 * 1000, TokenType.FCM)
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM) }
+        pushTokenRepository.setTrackedToken("token", System.currentTimeMillis() - 24 * 60 * 60 * 1000, TokenType.FCM)
         manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
-        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM) }
     }
 
     @Test
@@ -144,8 +144,8 @@ internal class FcmManagerImplTest {
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
         manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
-        verify(exactly = 2) { pushTokenRepository.set("token", any(), TokenType.FCM) }
-        verify(exactly = 1) { pushTokenRepository.set("other_token", any(), TokenType.FCM) }
+        verify(exactly = 2) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM) }
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM) }
     }
 
     @Test

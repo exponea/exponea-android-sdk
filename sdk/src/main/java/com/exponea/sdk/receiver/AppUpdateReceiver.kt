@@ -36,7 +36,7 @@ class AppUpdateReceiver : BroadcastReceiver() {
             obsoleteRepo.clear()
             return
         }
-        newRepo.set(
+        newRepo.setTrackedToken(
             obsoleteRepo.get()!!,
             obsoleteRepo.getLastTrackDateInMilliseconds() ?: 0,
             obsoleteRepo.getLastTokenType()

@@ -31,7 +31,7 @@ Steps 2-6 are described in detail in the official [Huawei documentation](https:/
 
 Our automatic tracking relies on the implementation of HmsMessageService. Therefore, you will need to create and register a service that extends HmsMessageService.
 
-> **Note:**We decided not to include this implementation in our SDK since we want to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy this code and use it in your app.
+> **Note:** We decided not to include this implementation in our SDK since we want to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy this code and use it in your app.
 
 1. Create the service
 ``` kotlin
@@ -71,6 +71,8 @@ class MyHmsMessagingService: HmsMessageService() {
 <meta-data  android:name="push_kit_auto_init_enabled" android:value="true"/>
 ```
 Exponea SDK will only handle push notification messages coming from Exponea servers. You can also use helper method `Exponea.isExponeaPushNotification()`.
+
+> **NOTE:** Calling of `Exponea.handleNewHmsToken` and `Exponea.handleRemoteMessage` is allowed before SDK initialization in case that previous initialization process was done. In such a case, methods will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration.
 
 If you run the app after completing the setup, the SDK should track push token to Exponea servers. Self-check will tell you that, or you can find your customer in the Exponea web app and check user property `huawei_push_notification_id`
 

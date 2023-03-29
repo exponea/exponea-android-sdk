@@ -54,7 +54,7 @@ Deep link action creates "view" intent that contains the url specified when sett
 </intent-filter>
 ```
 
-> Keep in mind: If deep link intent is send to Activity that is currently active, default behavior is that Intent is delivered to [onNewIntent](https://developer.android.com/reference/android/app/Activity#onNewIntent(android.content.Intent)) method rather to [onCreate](https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)).
+> :exclamation: If deep link intent is send to Activity that is currently active, default behavior is that Intent is delivered to [onNewIntent](https://developer.android.com/reference/android/app/Activity#onNewIntent(android.content.Intent)) method rather to [onCreate](https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)).
 
 ### 3. Open web browser
 Open web browser is handled automatically by the SDK and no work is required from the developer to handle it.

@@ -16,7 +16,7 @@ import kotlin.Result
 import okhttp3.Call
 import okhttp3.Response
 
-internal class FlushManagerImpl(
+internal open class FlushManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val exponeaService: ExponeaService,
@@ -24,7 +24,7 @@ internal class FlushManagerImpl(
     private val customerIdentifiedHandler: () -> Unit
 ) : FlushManager {
     @Volatile override var isRunning: Boolean = false
-        private set
+        internal set
 
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
         synchronized(this) {

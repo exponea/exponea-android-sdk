@@ -12,7 +12,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
 
-internal class EventManagerImpl(
+internal open class EventManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,

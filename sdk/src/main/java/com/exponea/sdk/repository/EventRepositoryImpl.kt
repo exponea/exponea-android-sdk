@@ -9,7 +9,7 @@ import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.Logger
 
-internal class EventRepositoryImpl(
+internal open class EventRepositoryImpl(
     context: Context,
     private val preferences: ExponeaPreferences
 ) : EventRepository {

@@ -10,9 +10,21 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
     private val keyDate = "ExponeaLastFirebaseTokenDate"
     private val keyType = "ExponeaLastTokenType"
 
-    override fun set(token: String, lastTrackDateInMilliseconds: Long, tokenType: TokenType) {
+    override fun setTrackedToken(token: String, lastTrackDateInMilliseconds: Long, tokenType: TokenType) {
+        storeTokenInternal(token, lastTrackDateInMilliseconds, tokenType)
+    }
+
+    override fun setUntrackedToken(token: String, tokenType: TokenType) {
+        storeTokenInternal(token, null, tokenType)
+    }
+
+    private fun storeTokenInternal(token: String, lastTrackDateInMilliseconds: Long?, tokenType: TokenType) {
         preferences.setString(key, token)
-        preferences.setLong(keyDate, lastTrackDateInMilliseconds)
+        if (lastTrackDateInMilliseconds == null) {
+            preferences.remove(keyDate)
+        } else {
+            preferences.setLong(keyDate, lastTrackDateInMilliseconds)
+        }
         preferences.setString(keyType, tokenType.name)
     }
 

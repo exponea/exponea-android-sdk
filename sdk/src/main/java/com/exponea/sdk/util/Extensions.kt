@@ -8,10 +8,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.PorterDuff
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.exponea.sdk.Exponea
@@ -20,6 +22,8 @@ import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import java.util.Date
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -186,7 +190,7 @@ fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
 fun Context.isResumedActivity(): Boolean = runCatching {
     if (this !is Activity) return false
     val lifecycleOwner = this as? LifecycleOwner ?: return false
-    return lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+    return lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
 }.returnOnException { false }
 
 fun Context.isReactNativeSDK(): Boolean {
@@ -275,5 +279,51 @@ internal inline fun runOnBackgroundThread(delayMillis: Long, crossinline block: 
             return@launch
         }
         block.invoke()
+    }
+}
+
+/**
+ * Runs 'work' with 'timeout' limitation. If work takes too long, 'onExpire' is called.
+ * Please ensure that 'onExpire' will be invoked fast as possible. There is no limitation applied.
+ */
+internal inline fun <T> runWithTimeout(
+    timeoutMillis: Long,
+    noinline work: () -> T,
+    noinline onExpire: () -> T
+): T {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        return runWithTimeoutForApi24(timeoutMillis, work, onExpire)
+    }
+    return runWithTimeoutPreApi24(timeoutMillis, work, onExpire)
+}
+
+private fun <T> runWithTimeoutPreApi24(
+    timeoutMillis: Long,
+    work: () -> T,
+    onExpire: () -> T
+): T {
+    try {
+        return object : AsyncTask<Void, Int, T>() {
+            override fun doInBackground(vararg params: Void?): T {
+                return work()
+            }
+        }.execute().get(timeoutMillis, MILLISECONDS)
+    } catch (e: Throwable) {
+        return onExpire()
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.N)
+private fun <T> runWithTimeoutForApi24(
+    timeoutMillis: Long,
+    work: () -> T,
+    onExpire: () -> T
+): T {
+    try {
+        return CompletableFuture
+            .supplyAsync(work)
+            .get(timeoutMillis, MILLISECONDS)
+    } catch (e: Throwable) {
+        return onExpire()
     }
 }

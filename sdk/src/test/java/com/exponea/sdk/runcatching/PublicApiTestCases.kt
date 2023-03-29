@@ -224,13 +224,9 @@ internal object PublicApiTestCases {
     }
 
     val awaitInitMethods = arrayOf(
-//        Exponea::anonymize,
         Exponea::identifyCustomer,
         Exponea::flushData,
         Exponea::getConsents,
-        Exponea::handleCampaignIntent,
-        Exponea::handleRemoteMessage,
-//        Exponea::isExponeaPushNotification,
         Exponea::trackClickedPush,
         Exponea::trackClickedPushWithoutTrackingConsent,
         Exponea::trackDeliveredPush,
@@ -242,17 +238,10 @@ internal object PublicApiTestCases {
         Exponea::trackSessionEnd,
         Exponea::trackSessionStart,
         Exponea::fetchRecommendation,
-        Exponea::handleNewToken,
-        Exponea::handleNewHmsToken,
         Exponea::trackInAppMessageClick,
         Exponea::trackInAppMessageClickWithoutTrackingConsent,
         Exponea::trackInAppMessageClose,
         Exponea::trackInAppMessageCloseWithoutTrackingConsent,
-//        Exponea::getAppInboxButton,
-//        Exponea::getAppInboxListView,
-//        Exponea::getAppInboxListFragment,
-//        Exponea::getAppInboxDetailFragment,
-//        Exponea::getAppInboxDetailView,
         Exponea::fetchAppInbox,
         Exponea::fetchAppInboxItem,
         Exponea::trackAppInboxOpened,
@@ -260,5 +249,12 @@ internal object PublicApiTestCases {
         Exponea::trackAppInboxClick,
         Exponea::trackAppInboxClickWithoutTrackingConsent,
         Exponea::markAppInboxAsRead
+    )
+
+    val sdkLessMethods = arrayOf(
+        Exponea::handleCampaignIntent,
+        Exponea::handleRemoteMessage,
+        Exponea::handleNewToken,
+        Exponea::handleNewHmsToken
     )
 }

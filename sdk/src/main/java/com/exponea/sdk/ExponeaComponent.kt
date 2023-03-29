@@ -5,6 +5,8 @@ import com.exponea.sdk.manager.AppInboxManager
 import com.exponea.sdk.manager.AppInboxManagerImpl
 import com.exponea.sdk.manager.BackgroundTimerManager
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
+import com.exponea.sdk.manager.CampaignManager
+import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.ConnectionManagerImpl
 import com.exponea.sdk.manager.EventManager
@@ -142,6 +144,10 @@ internal class ExponeaComponent(
             inAppMessageManager.onEventCreated(event, type)
             appInboxManager.onEventCreated(event, type)
         }
+    )
+
+    internal val campaignManager: CampaignManager = CampaignManagerImpl(
+        campaignRepository, eventManager
     )
 
     internal val fcmManager: FcmManager = FcmManagerImpl(

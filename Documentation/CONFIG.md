@@ -2,6 +2,15 @@
 
 The configuration object must be configured before starting using the SDK.
 
+> **NOTE:** Using of some API is allowed before SDK initialization in case that previous initialization process was done.
+> These API methods are:
+> - Exponea.handleCampaignIntent
+> - Exponea.handleRemoteMessage
+> - Exponea.handleNewToken
+> - Exponea.handleNewHmsToken
+> 
+> In such a case, method will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration.
+
 It's possible to initialize the configuration through a ExponeaConfiguration object or providing a configuration file with the same structure (keys). In case of initializing the SDK with the configuration file, it must be located at the assets folder of the application with the name `exponea_configuration.json`. An configuration file example can be seen [here](
 ../app/src/main/assets/exponea_configuration.json).
 

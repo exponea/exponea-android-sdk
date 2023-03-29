@@ -15,7 +15,11 @@ import androidx.fragment.app.Fragment
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.manager.CampaignManager
+import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConfigurationFileManager
+import com.exponea.sdk.manager.FcmManager
+import com.exponea.sdk.manager.TimeLimitedFcmManagerImpl
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.IGNORE_CONSENT
 import com.exponea.sdk.models.CampaignData
@@ -28,6 +32,7 @@ import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
@@ -46,9 +51,9 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.ExponeaInitManager
-import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
@@ -124,9 +129,6 @@ object Exponea {
             configuration.automaticSessionTracking = value
             startSessionTracking(value)
         }.logOnException()
-
-    internal val pushChannelId: String
-        get() = configuration.pushChannelId
 
     /**
      * Check if our library has been properly initialized
@@ -465,9 +467,8 @@ object Exponea {
     /**
      * Manually track Fcm Token to Exponea API.
      */
-
     fun trackPushToken(token: String) = runCatching {
-        trackPushToken(
+        trackPushTokenInternal(
             token,
             ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
             TokenType.FCM
@@ -478,14 +479,14 @@ object Exponea {
      * Manually track Hms Token to Exponea API.
      */
     fun trackHmsPushToken(token: String) = runCatching {
-        trackPushToken(
+        trackPushTokenInternal(
             token,
             ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
             TokenType.HMS
         )
     }.logOnException()
 
-    private fun trackPushToken(
+    private fun trackPushTokenInternal(
         fcmToken: String,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
         tokenType: TokenType
@@ -602,19 +603,37 @@ object Exponea {
         showNotification: Boolean = true
     ): Boolean = runCatching {
         if (!isExponeaPushNotification(messageData)) return@runCatching false
-        initGate.waitForInitialize {
-            if (!MessagingUtils.areNotificationsBlockedForTheApp(applicationContext)) {
-                if (!isAutoPushNotification) {
-                    return@waitForInitialize
-                }
-                component.fcmManager.handleRemoteMessage(messageData, manager, showNotification)
-            } else {
-                Logger.i(this, "Notification delivery not handled," +
-                        " notifications for the app are turned off in the settings")
-            }
+        val fcmManagerInstance = getFcmManager(applicationContext)
+        if (fcmManagerInstance != null) {
+            fcmManagerInstance.handleRemoteMessage(messageData, manager, showNotification)
         }
         return true
     }.returnOnException { true }
+
+    /**
+     * Returns FcmManager implementation that fits current SDK state:
+     * - SDK is initialized = FcmManager impl from SDK is returned
+     * - SDK is not initialized = Lightweigt SimpleFcmManager is returned
+     */
+    private fun getFcmManager(applicationContext: Context): FcmManager? {
+        if (isInitialized) {
+            return component.fcmManager
+        }
+        // Simple FCM manager - without SDK init
+        val configuration = ExponeaConfigRepository.get(applicationContext)
+        if (configuration == null) {
+            Logger.w(this, "Notification delivery not handled," +
+                " previous SDK configuration not found")
+            return null
+        }
+        try {
+            return TimeLimitedFcmManagerImpl.createSdklessInstance(applicationContext, configuration)
+        } catch (e: Exception) {
+            Logger.e(this, "Notification delivery not handled," +
+                " error occured while preparing a handling process, see logs", e)
+            return null
+        }
+    }
 
     internal fun <T> requireInitialized(notInitializedBlock: (() -> T)? = null, initializedBlock: () -> T): T? {
         if (!isInitialized) {
@@ -843,20 +862,32 @@ object Exponea {
             Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
             return false
         }
-        initGate.waitForInitialize {
-            component.campaignRepository.set(campaignData)
-            val properties = HashMap<String, Any>()
-            properties["platform"] = "Android"
-            properties["timestamp"] = campaignData.createdAt
-            properties.putAll(campaignData.getTrackingData())
-            component.eventManager.track(
-                eventType = Constants.EventTypes.push,
-                properties = properties,
-                type = EventType.CAMPAIGN_CLICK
-            )
+        val campaingManager = getCampaingManager(appContext)
+        if (campaingManager != null) {
+            campaingManager.trackCampaignClick(campaignData)
         }
         return true
     }.returnOnException { false }
+
+    private fun getCampaingManager(applicationContext: Context): CampaignManager? {
+        if (isInitialized) {
+            return component.campaignManager
+        }
+        // Camaign manager - without SDK init
+        val configuration = ExponeaConfigRepository.get(applicationContext)
+        if (configuration == null) {
+            Logger.w(this, "Campaign click not handled," +
+                " previous SDK configuration not found")
+            return null
+        }
+        try {
+            return CampaignManagerImpl.createSdklessInstance(applicationContext, configuration)
+        } catch (e: Exception) {
+            Logger.e(this, "Campaign click not handled," +
+                " error occured while preparing a handling process, see logs", e)
+            return null
+        }
+    }
 
     // used by InAppMessageActivity to get currently displayed message
     internal val presentedInAppMessage: InAppMessagePresenter.PresentedMessage?
@@ -907,25 +938,45 @@ object Exponea {
      * Use this method to track push token, when new token is obtained in firebase messaging service
      */
     fun handleNewToken(context: Context, token: String) {
-        handleNewTokenInternal(context, token, TokenType.FCM)
+        handleNewTokenInternal(
+            context,
+            token,
+            null, // track it according to SDK configuration
+            TokenType.FCM
+        )
     }
 
     /**
      * Use this method to track push token, when new token is obtained in huawei messaging service
      */
     fun handleNewHmsToken(context: Context, token: String) {
-        handleNewTokenInternal(context, token, TokenType.HMS)
+        handleNewTokenInternal(
+            context,
+            token,
+            null, // track it according to SDK configuration
+            TokenType.HMS
+        )
     }
 
-    private fun handleNewTokenInternal(context: Context, token: String, tokenType: TokenType) {
+    private fun handleNewTokenInternal(
+        context: Context,
+        token: String,
+        tokenFrequency: TokenFrequency?,
+        tokenType: TokenType
+    ) {
         runCatching {
             Logger.d(this, "Received push notification token")
-            initGate.waitForInitialize {
-                if (!isAutoPushNotification) {
-                    return@waitForInitialize
-                }
-                Logger.d(this, "Token Refreshed")
-                trackPushToken(token, tokenTrackFrequency, tokenType)
+            val fcmManagerInstance = getFcmManager(context)
+            if (fcmManagerInstance == null) {
+                Logger.d(this, "Token not refreshed: SDK is not initialized nor configured previously")
+                val pushTokenRepository = PushTokenRepositoryProvider.get(context)
+                pushTokenRepository.setUntrackedToken(
+                    token,
+                    tokenType
+                )
+            } else {
+                Logger.d(this, "Token refresh")
+                fcmManagerInstance.trackToken(token, tokenFrequency, tokenType)
             }
         }.logOnException()
     }

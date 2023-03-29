@@ -13,6 +13,7 @@ import com.exponea.example.utils.isValid
 import com.exponea.example.utils.onTextChanged
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
 import com.exponea.sdk.models.FlushMode
 import kotlinx.android.synthetic.main.activity_authentication.button
 import kotlinx.android.synthetic.main.activity_authentication.editTextAdvancedPublicKey
@@ -24,11 +25,11 @@ import kotlinx.android.synthetic.main.activity_authentication.toolbar
 
 class AuthenticationActivity : AppCompatActivity() {
 
+    var projectToken = ""
+    var apiUrl = ""
     var authorizationToken = ""
     var advancedPublicKey = ""
-    var projectToken = ""
     var registeredIds = ""
-    var apiUrl = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +67,9 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.BODY
         configuration.defaultProperties["thisIsADefaultStringProperty"] = "This is a default string value"
         configuration.defaultProperties["thisIsADefaultIntProperty"] = 1
+        configuration.automaticPushNotification = true
+        configuration.tokenTrackFrequency = EVERY_LAUNCH
+        configuration.pushChannelId = "123"
 
         // Prepare Example Advanced Auth
         CustomerTokenStorage.INSTANCE.configure(

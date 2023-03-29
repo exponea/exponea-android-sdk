@@ -57,3 +57,5 @@ In order to track session events with App Link parameters, you should call `Expo
     }
 }
 ```
+
+> **NOTE:** Calling of `Exponea.handleCampaignIntent` is allowed before SDK initialization in case that previous initialization process was done. In such a case, `Exponea.handleCampaignIntent` will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration. 

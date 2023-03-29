@@ -4,8 +4,23 @@ import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.EventRepositoryImpl
+
+internal fun Exponea.shutdown() {
+    isInitialized = false
+    flushMode = Constants.Flush.defaultFlushMode
+    flushPeriod = Constants.Flush.defaultFlushPeriod
+    (componentForTesting.eventRepository as EventRepositoryImpl).close()
+    componentForTesting.sessionManager.stopSessionListener()
+    componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
+    componentForTesting.backgroundTimerManager.stopTimer()
+    loggerLevel = Constants.Logger.defaultLoggerLevel
+    (componentForTesting.flushManager as FlushManagerImpl).isRunning = false
+    initGate.clear()
+    telemetry = null
+}
 
 internal fun Exponea.reset() {
     flushMode = Constants.Flush.defaultFlushMode

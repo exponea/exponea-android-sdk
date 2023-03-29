@@ -119,3 +119,5 @@ and
 was changed to  
 
 `fun isExponeaPushNotification(messageData: Map<String, String>?): Boolean`
+
+> **NOTE:** Calling of `Exponea.handleNewToken`, `Exponea.handleNewHmsToken` and `Exponea.handleRemoteMessage` is allowed before SDK initialization in case that previous initialization process was done. In such a case, methods will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration.

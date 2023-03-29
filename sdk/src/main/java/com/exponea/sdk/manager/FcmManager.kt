@@ -9,7 +9,7 @@ import com.exponea.sdk.util.currentTimeSeconds
 internal interface FcmManager {
     fun trackToken(
         token: String? = null,
-        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?
     )
     fun handleRemoteMessage(
@@ -19,5 +19,4 @@ internal interface FcmManager {
         timestamp: Double = currentTimeSeconds()
     )
     fun showNotification(manager: NotificationManager, payload: NotificationPayload)
-    fun createNotificationChannel(manager: NotificationManager)
 }

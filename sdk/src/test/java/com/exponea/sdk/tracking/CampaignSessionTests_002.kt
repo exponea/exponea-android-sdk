@@ -1,9 +1,10 @@
 package com.exponea.sdk.tracking
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
@@ -36,6 +37,9 @@ internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
         controller.resume()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())
+        assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
+            it.type == Constants.EventTypes.sessionStart
+        }, "Only single session_start has to exists")
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.type == Constants.EventTypes.sessionStart
         }
@@ -51,9 +55,10 @@ internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
     /**
      * Used by test testBehavior_002 (Hot start with new session, Campaign click start, SDK init before onResume)
      */
-    class TestActivity : Activity() {
+    class TestActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            setTheme(R.style.Theme_AppCompat)
             initExponea(applicationContext)
             Exponea.handleCampaignIntent(intent, applicationContext)
         }

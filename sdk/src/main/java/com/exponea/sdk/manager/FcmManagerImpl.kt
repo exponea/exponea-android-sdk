@@ -35,7 +35,12 @@ import java.net.URL
 import java.util.Random
 import kotlin.concurrent.thread
 
-internal class FcmManagerImpl(
+/**
+ * Handles data in scope of Push notifications integration (currently FCM and HMS services).
+ *
+ * !!! Keep behavior in sync with TimeLimitedFcmManagerImpl
+ */
+internal open class FcmManagerImpl(
     context: Context,
     private val configuration: ExponeaConfiguration,
     private val eventManager: EventManager,
@@ -48,7 +53,7 @@ internal class FcmManagerImpl(
 
     override fun trackToken(
         token: String?,
-        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?
     ) {
         val shouldUpdateToken = run {
@@ -56,7 +61,7 @@ internal class FcmManagerImpl(
             if (lastTrackDateInMilliseconds == null) { // if the token wasn't ever tracked, track it
                 true
             } else {
-                when (tokenTrackFrequency) {
+                when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
                     ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != pushTokenRepository.get()
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
@@ -65,7 +70,13 @@ internal class FcmManagerImpl(
         }
 
         if (token != null && tokenType != null && shouldUpdateToken) {
-            pushTokenRepository.set(token, System.currentTimeMillis(), tokenType)
+            if (!configuration.automaticPushNotification) {
+                Logger.w(this, "Push token stored but not tracked:" +
+                    " SDK configuration has 'automaticPushNotification' == false")
+                pushTokenRepository.setUntrackedToken(token, tokenType)
+                return
+            }
+            pushTokenRepository.setTrackedToken(token, System.currentTimeMillis(), tokenType)
             val properties = PropertiesList(hashMapOf(tokenType.apiProperty to token))
             eventManager.track(
                 eventType = Constants.EventTypes.push,
@@ -84,52 +95,75 @@ internal class FcmManagerImpl(
         showNotification: Boolean,
         timestamp: Double
     ) {
-
         Logger.d(this, "handleRemoteMessage")
-
-        if (messageData == null) return
-
-        // Configure the notification channel for push notifications on API 26+
-        // This configuration runs only once.
-        if (!pushNotificationRepository.get()) {
-            createNotificationChannel(manager)
-            pushNotificationRepository.set(true)
-        }
-
-        val payload = NotificationPayload(HashMap(messageData))
-        val sentTimestamp = payload.notificationData.sentTimestamp
-
-        val deliveredTimestamp = if (sentTimestamp != null && timestamp <= sentTimestamp) {
-            sentTimestamp + 1
-        } else {
-            timestamp
-        }
-        payload.deliveredTimestamp = deliveredTimestamp
-
-        if (payload.notificationAction.action == NotificationPayload.Actions.SELFCHECK) {
-            Exponea.selfCheckPushReceived()
+        if (!configuration.automaticPushNotification) {
+            Logger.w(this, "Notification delivery not handled," +
+                " initialized SDK configuration has 'automaticPushNotification' == false")
             return
         }
-
+        ensureNotificationChannelExistance(manager)
+        if (MessagingUtils.areNotificationsBlockedForTheApp(application, configuration.pushChannelId)) {
+            Logger.w(this, "Notification delivery not handled," +
+                " notifications for the app are turned off in the settings")
+            return
+        }
+        if (messageData == null) {
+            Logger.w(this, "Push notification not handled because of no data")
+            return
+        }
+        val payload = parseNotificationPayload(messageData, timestamp)
+        if (payload.deliveredTimestamp == null) {
+            // this really should not happen, parsing must find a proper delivery time
+            Logger.e(this, "Push notification needs info about time delivery")
+            payload.deliveredTimestamp = timestamp
+        }
+        if (payload.notificationAction.action == NotificationPayload.Actions.SELFCHECK) {
+            Logger.d(this, "Self-check notification received")
+            onSelfCheckReceived()
+            return
+        }
         if (payload.notificationId == lastPushNotificationId) {
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
+            return
+        }
+        lastPushNotificationId = payload.notificationId
+        trackDeliveredPush(payload, payload.deliveredTimestamp!!)
+        callNotificationDataCallback(payload)
+        if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
+            showNotification(manager, payload)
+        }
+    }
+
+    private fun parseNotificationPayload(
+        source: Map<String, String>,
+        deviceReceivedTimestamp: Double
+    ): NotificationPayload {
+        val payload = NotificationPayload(HashMap(source))
+        val sentTimestamp = payload.notificationData.sentTimestamp
+        val deliveredTimestamp = if (sentTimestamp != null && deviceReceivedTimestamp <= sentTimestamp) {
+            sentTimestamp + 1
         } else {
-            if (payload.notificationData.hasTrackingConsent) {
-                Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
-            } else {
-                Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
-            }
-            lastPushNotificationId = payload.notificationId
-            callNotificationDataCallback(payload)
-            if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
-                showNotification(manager, payload)
-            }
+            deviceReceivedTimestamp
+        }
+        payload.deliveredTimestamp = deliveredTimestamp
+        return payload
+    }
+
+    protected open fun onSelfCheckReceived() {
+        Exponea.selfCheckPushReceived()
+    }
+
+    protected open fun trackDeliveredPush(payload: NotificationPayload, deliveredTimestamp: Double) {
+        if (payload.notificationData.hasTrackingConsent) {
+            Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
+        } else {
+            Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
         }
     }
 
     override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
         Logger.d(this, "showNotification")
-
+        ensureNotificationChannelExistance(manager)
         val notification = NotificationCompat.Builder(application, configuration.pushChannelId)
             .setContentText(payload.message)
             .setContentTitle(payload.title)
@@ -146,7 +180,16 @@ internal class FcmManagerImpl(
         manager.notify(payload.notificationId, notification.build())
     }
 
-    override fun createNotificationChannel(manager: NotificationManager) {
+    private fun ensureNotificationChannelExistance(manager: NotificationManager) {
+        // Configure the notification channel for push notifications on API 26+
+        // This configuration runs only once.
+        if (!pushNotificationRepository.get()) {
+            createNotificationChannel(manager)
+            pushNotificationRepository.set(true)
+        }
+    }
+
+    private fun createNotificationChannel(manager: NotificationManager) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -390,7 +433,7 @@ internal class FcmManagerImpl(
         return launchIntent
     }
 
-    private fun getBitmapFromUrl(url: String): Bitmap? {
+    protected open fun getBitmapFromUrl(url: String): Bitmap? {
         var bmp: Bitmap? = null
         thread {
             try {

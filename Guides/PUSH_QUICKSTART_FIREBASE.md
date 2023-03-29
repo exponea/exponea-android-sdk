@@ -26,7 +26,7 @@ To send/receive push notifications, you have to set up the Firebase project. [Of
 
 Our automatic tracking relies on the implementation of FirebaseMessagingService. Therefore, you will need to create and register a service that extends FirebaseMessagingService.
 
-> **Note:**We decided not to include this implementation in our SDK since we want to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy this code and use it in your app.
+> **Note:** We decided not to include this implementation in our SDK since we want to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy this code and use it in your app.
 
 1. Create the service
 ``` kotlin
@@ -66,7 +66,9 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
 ```
 Exponea SDK will only handle push notification messages coming from Exponea servers. You can also use helper method `Exponea.isExponeaPushNotification()`.
 
- If you run the app, the SDK should track push token to Exponea servers. Self-check will tell you that, or you can find your customer in the Exponea web app and check user property `google_push_notification_id`
+> **NOTE:** Calling of `Exponea.handleNewToken` and `Exponea.handleRemoteMessage` is allowed before SDK initialization in case that previous initialization process was done. In such a case, methods will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration.
+
+If you run the app, the SDK should track push token to Exponea servers. Self-check will tell you that, or you can find your customer in the Exponea web app and check user property `google_push_notification_id`
 
 > **Quick Tip:** If you are integrating a new Firebase project to existing project, or you are changing Firebase project completely, you may face an issue that your 'FirebaseMessagingService' is not called automatically.
 > To retrieve a fresh FCM token, you should consider to request a token manually as soon as possible after Firebase init.
@@ -79,8 +81,8 @@ Exponea SDK will only handle push notification messages coming from Exponea serv
 >     override fun onCreate() {
 > 	    super.onCreate()
 > 	    FirebaseMessaging.getInstance().token.addOnSuccessListener {
-> 		    Exponea.handleNewToken(applicationContext, it)
-> 		}
+> 		Exponea.handleNewToken(applicationContext, it)
+> 	    }
 > 	}
 > }
 > ```

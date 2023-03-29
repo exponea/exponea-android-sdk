@@ -7,7 +7,8 @@ import com.exponea.sdk.util.TokenType
 internal interface PushTokenRepository {
     fun get(): String?
     fun getLastTrackDateInMilliseconds(): Long?
-    fun set(token: String, lastTrackDateInMilliseconds: Long, tokenType: TokenType)
+    fun setTrackedToken(token: String, lastTrackDateInMilliseconds: Long, tokenType: TokenType)
+    fun setUntrackedToken(token: String, tokenType: TokenType)
     fun clear(): Boolean
     fun getLastTokenType(): TokenType
 }

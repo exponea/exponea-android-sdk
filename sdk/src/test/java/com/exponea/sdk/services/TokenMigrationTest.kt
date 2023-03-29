@@ -10,6 +10,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.receiver.AppUpdateReceiver
+import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.mockkConstructor
@@ -65,7 +66,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     @Test
     fun `should have no token after reinstall`() {
-        initExponea()
+        ExponeaConfigRepository.set(context, getExponeaConfiguration())
         Exponea.handleNewToken(context, token_1)
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
         simulateUninstall()
@@ -80,7 +81,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     @Test
     fun `should have token after future update`() {
-        initExponea()
+        ExponeaConfigRepository.set(context, getExponeaConfiguration())
         Exponea.handleNewToken(context, token_1)
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
         // simulate future updates == app will use only new storage
@@ -89,8 +90,12 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
     }
 
     private fun initExponea() {
+        Exponea.init(context, getExponeaConfiguration())
+    }
+
+    private fun getExponeaConfiguration(): ExponeaConfiguration {
         val configuration = ExponeaConfiguration()
         configuration.automaticPushNotification = true
-        Exponea.init(context, configuration)
+        return configuration
     }
 }

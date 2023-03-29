@@ -1,12 +1,17 @@
 package com.exponea.sdk.tracking
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.CampaignRepositoryImpl
+import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.util.ExponeaGson
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -25,22 +30,26 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
      */
     @Test
     fun testBehavior_007() {
-        ExponeaConfigRepository.set(InstrumentationRegistry.getInstrumentation().context, configuration)
+        val applicationContext = InstrumentationRegistry.getInstrumentation().context
+        ExponeaConfigRepository.set(applicationContext, configuration)
         val campaignIntent = createDeeplinkIntent()
         val controller = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         controller.create()
+
         assertFalse(Exponea.isInitialized)
-
-        controller.start()
-        assertTrue(Exponea.isInitialized)
-
-        val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
+        val preferences = ExponeaPreferencesImpl(applicationContext)
+        val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
+        val eventRepository = EventRepositoryImpl(applicationContext, preferences)
+        val campaignEvent = campaignRepository.get()
         assertNotNull(campaignEvent)
-        assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
+        assertTrue(eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         controller.resume()
-        Thread.sleep(1000)
+        assertTrue(Exponea.isInitialized)
         assertNull(Exponea.componentForTesting.campaignRepository.get())
+        assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
+            it.type == Constants.EventTypes.sessionStart
+        }, "Only single session_start has to exists")
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.type == Constants.EventTypes.sessionStart
         }
@@ -56,15 +65,16 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
     /**
      * Used by test testBehavior_007 (Cold start, Campaign click start, SDK init after onResume)
      */
-    class TestActivity : Activity() {
+    class TestActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            setTheme(R.style.Theme_AppCompat_Light)
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
 
-        override fun onStart() {
-            super.onStart()
-            initExponea(applicationContext)
+        override fun onPostResume() {
+            super.onPostResume()
+            initExponea(context = this)
         }
     }
 }

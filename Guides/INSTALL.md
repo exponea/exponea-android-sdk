@@ -86,5 +86,14 @@ You may decide that start of your application is not the best time to initialize
 
 The SDK hooks into application lifecycle to e.g. track sessions, so we need to keep track of activities `onResume` callbacks. If you need to initialize the SDK after the activity has been resumed, do so with the `context` of the current activity.
 
+> **NOTE:** Using of some API is allowed before SDK initialization in case that previous initialization process was done.
+> These API methods are:
+> - Exponea.handleCampaignIntent
+> - Exponea.handleRemoteMessage
+> - Exponea.handleNewToken
+> - Exponea.handleNewHmsToken
+>
+> In such a case, method will track events with configuration of last initialization. Please consider to do SDK initialization in `Application::onCreate` in case of update of your application to apply a fresh new configuration.
+
 ## That's it!
 Your are now able to use Exponea in your application!

@@ -35,13 +35,24 @@ internal class FetchManagerImpl(
                 Logger.d(this, "Response Code: $responseCode")
                 val jsonBody = response.body?.string()
                 if (response.isSuccessful) {
-                    var result: Result<T>?
+                    var result: Result<T>
                     try {
                         result = gson.fromJson<Result<T>>(jsonBody, resultType.type)
+                        if (result == null || result.success == null) {
+                            throw Exception("Unable to parse response from the server.")
+                        }
                     } catch (e: Exception) {
                         val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
                         Logger.e(this, "Failed to deserialize fetch response: $error")
                         onFailure(Result(false, error))
+                        return
+                    }
+                    if (result.success != true) {
+                        Logger.e(this, "Server returns false state")
+                        onFailure(Result(
+                            false,
+                            FetchError(null, "Failure state from server returned")
+                        ))
                         return
                     }
                     onSuccess(result) // we need to call onSuccess outside of pokemon exception handling above
@@ -64,40 +75,8 @@ internal class FetchManagerImpl(
         onSuccess: (Result<Any?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ): Callback {
-        return object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                val responseCode = response.code
-                Logger.d(this, "Response Code: $responseCode")
-                val jsonBody = response.body?.string()
-                if (response.isSuccessful) {
-                    var result: Result<Any?>?
-                    val resultType = object : TypeToken<Result<Any?>>() {}
-                    try {
-                        result = gson.fromJson(jsonBody, resultType.type)
-                    } catch (e: Exception) {
-                        val error = FetchError(jsonBody, e.localizedMessage ?: "Unknown error")
-                        Logger.e(this, "Failed to deserialize fetch response: $error")
-                        onFailure(Result(false, error))
-                        return
-                    }
-                    if (result == null) {
-                        // empty response is OK and possible, isSuccessful is enough
-                        result = Result(success = true, results = null)
-                    }
-                    onSuccess(result)
-                } else {
-                    val error = FetchError(jsonBody, response.message)
-                    Logger.e(this, "Failed to fetch data: $error")
-                    onFailure(Result(false, error))
-                }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                val error = FetchError(null, e.localizedMessage ?: "Unknown error")
-                Logger.e(this, "Fetch configuration Failed $e")
-                onFailure(Result(false, error))
-            }
-        }
+        val emptyType = object : TypeToken<Result<Any?>>() {}
+        return getFetchCallback(emptyType, onSuccess, onFailure)
     }
 
     override fun fetchConsents(

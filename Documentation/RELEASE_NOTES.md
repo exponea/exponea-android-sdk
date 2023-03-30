@@ -1,6 +1,17 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.5.0
+#### March 30, 2023
+* Features
+  * Now we are able to show PUSH notification without requirement of runtime SDK init (from killed state), all events will be tracked
+* Bug Fixes
+  * Fixed: Empty in-app message response did not clear the cache so previously loaded messages persisted there
+  * Fixed: Invalid empty response can lead to crash
+  * Fixed: PUSH token handling issue when token update first run - not saved when receiving before SDK init
+  * Fixed: Clicked PUSH event did not start a session properly
+  * Fixed: Incorrect sessionTimeout values in documentation
+
 ## Release Notes for 3.4.0
 #### February 16, 2023
 * Features

@@ -102,6 +102,7 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
 }
 
 ```
+
 If you set `trackActions` to **false** but you still want to track click/close event under some circumstances, you can call Exponea methods `trackInAppMessageClick` or `trackInAppMessageClose` in the action method:
 
 ```kotlin
@@ -120,5 +121,7 @@ override fun inAppMessageAction(
         }
     }  
 ```
+
+Method `trackInAppMessageClose` will track a 'close' event with 'interaction' field of TRUE value by default. You are able to use a optional parameter 'interaction' of this method to override this value.
 
 > The behaviour of `trackInAppMessageClick` and `trackInAppMessageClose` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).

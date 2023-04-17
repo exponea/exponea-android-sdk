@@ -1020,11 +1020,12 @@ object Exponea {
      * Event is tracked if parameter 'message' has TRUE value of 'hasTrackingConsent' property
      */
     fun trackInAppMessageClose(
-        message: InAppMessage
+        message: InAppMessage,
+        interaction: Boolean? = null
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
-                message, CONSIDER_CONSENT
+                message, interaction ?: true, CONSIDER_CONSENT
             )
         }
     }.logOnException()
@@ -1034,11 +1035,12 @@ object Exponea {
      * Event is tracked even if InAppMessage has not a tracking consent.
      */
     fun trackInAppMessageCloseWithoutTrackingConsent(
-        message: InAppMessage
+        message: InAppMessage,
+        interaction: Boolean? = null
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
-                message, IGNORE_CONSENT
+                message, interaction ?: true, IGNORE_CONSENT
             )
         }
     }.logOnException()

@@ -82,7 +82,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
         projectFactory = ExponeaProjectFactory(context, configuration)

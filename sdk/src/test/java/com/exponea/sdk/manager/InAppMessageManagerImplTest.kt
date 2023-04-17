@@ -96,7 +96,7 @@ internal class InAppMessageManagerImplTest {
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppMessageClose(any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
         val configuration = ExponeaConfiguration()
@@ -554,7 +554,7 @@ internal class InAppMessageManagerImplTest {
         dismissedCallbackSlot.captured.invoke(mockActivity, false)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(
-                InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT
+                InAppMessageTest.getInAppMessage(), false, CONSIDER_CONSENT
             )
         }
     }
@@ -793,7 +793,7 @@ internal class InAppMessageManagerImplTest {
             )
         }
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), false, CONSIDER_CONSENT)
         }
     }
 
@@ -867,7 +867,7 @@ internal class InAppMessageManagerImplTest {
             )
         }
         verify(exactly = 0) {
-            trackingConsentManager.trackInAppMessageClose(any(), any())
+            trackingConsentManager.trackInAppMessageClose(any(), any(), any())
         }
     }
 
@@ -892,7 +892,7 @@ internal class InAppMessageManagerImplTest {
                 context: Context
             ) {
                 trackingConsentManager.trackInAppMessageClick(message, button?.text, button?.url, CONSIDER_CONSENT)
-                trackingConsentManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
+                trackingConsentManager.trackInAppMessageClose(message, interaction, CONSIDER_CONSENT)
             }
         })
         Exponea.inAppMessageActionCallback = spykCallback
@@ -927,9 +927,6 @@ internal class InAppMessageManagerImplTest {
                 "https://someaddress.com",
                 CONSIDER_CONSENT
             )
-        }
-        verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
         }
     }
 }

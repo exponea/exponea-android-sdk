@@ -8,7 +8,7 @@ import com.exponea.sdk.models.InAppMessagePayloadButton
 
 internal class InAppMessageAlert : InAppMessageView {
     val dialog: AlertDialog
-    var buttonClicked: Boolean = false
+    var userInteraction: Boolean = false
     override val isPresented: Boolean
         get() = dialog.isShowing
 
@@ -16,7 +16,7 @@ internal class InAppMessageAlert : InAppMessageView {
         context: Context,
         payload: InAppMessagePayload,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: () -> Unit
+        onDismiss: (Boolean) -> Unit
     ) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle(payload.title)
@@ -24,18 +24,22 @@ internal class InAppMessageAlert : InAppMessageView {
         if (payload.buttons != null) {
             for (button in payload.buttons) {
                 if (button.buttonType == InAppMessageButtonType.CANCEL) {
-                    builder.setNegativeButton(button.buttonText) { _, _ -> dismiss() }
+                    builder.setNegativeButton(button.buttonText) { _, _ ->
+                        userInteraction = true
+                        onDismiss(true)
+                        dismiss()
+                    }
                 } else {
                     builder.setPositiveButton(button.buttonText) { _, _ ->
-                        buttonClicked = true
+                        userInteraction = true
                         onButtonClick(button)
                     }
                 }
             }
         }
         builder.setOnDismissListener {
-            if (!buttonClicked) {
-                onDismiss()
+            if (!userInteraction) {
+                onDismiss(false)
             }
         }
         dialog = builder.create()

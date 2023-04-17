@@ -36,7 +36,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private val fullScreen: Boolean
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
-    private var onDismiss: (() -> Unit)?
+    private var onDismiss: ((Boolean) -> Unit)?
     private val bitmap: Bitmap
 
     override val isPresented: Boolean
@@ -48,7 +48,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         payload: InAppMessagePayload,
         image: Bitmap,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: () -> Unit
+        onDismiss: (Boolean) -> Unit
     ) : super(context) {
         this.fullScreen = fullScreen
         this.payload = payload
@@ -70,7 +70,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         setupWindow()
 
         setOnDismissListener {
-            this.onDismiss?.invoke()
+            this.onDismiss?.invoke(false)
         }
     }
 
@@ -189,6 +189,9 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     private fun setupCloseButton() {
         buttonClose.setOnClickListener {
+            onDismiss?.invoke(true)
+            // clear the dismiss listener, we called the manual listener
+            onDismiss = null
             dismiss()
         }
         buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))

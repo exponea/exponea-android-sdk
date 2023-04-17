@@ -29,7 +29,7 @@ internal class InAppMessageWebview(
     private val activity: Activity,
     private val normalizedResult: HtmlNormalizer.NormalizedResult,
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: (Boolean) -> Unit,
     onError: (String) -> Unit
 ) : PopupWindow(
             LayoutInflater.from(activity).inflate(R.layout.in_app_message_webview, null, false),
@@ -37,9 +37,10 @@ internal class InAppMessageWebview(
             RelativeLayout.LayoutParams.MATCH_PARENT,
             true),
             InAppMessageView {
-    private var onDismiss: (() -> Unit)? = onDismiss
+    private var onDismiss: ((Boolean) -> Unit)? = onDismiss
     private var onError: ((String) -> Unit)? = onError
     private var webView: WebView
+    private var userInteraction = false
 
     override val isPresented: Boolean
         get() = isShowing
@@ -61,7 +62,11 @@ internal class InAppMessageWebview(
                 return true
             }
         }
-        setOnDismissListener { this.onDismiss?.invoke() }
+        setOnDismissListener {
+            if (!userInteraction) {
+                this.onDismiss?.invoke(false)
+            }
+        }
         if (normalizedResult.valid && normalizedResult.html != null) {
             runOnMainThread {
                 if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
@@ -105,11 +110,17 @@ internal class InAppMessageWebview(
         }
     }
 
-    private fun handleActionClick(url: String?) {
+    internal fun handleActionClick(url: String?) {
         Logger.i(this@InAppMessageWebview, "[HTML] action for $url")
         when {
-            isCloseAction(url) -> this.onDismiss?.invoke()
-            isActionUrl(url) -> this.onButtonClick.invoke(toPayloadButton(url!!))
+            isCloseAction(url) -> {
+                userInteraction = true
+                this.onDismiss?.invoke(true)
+            }
+            isActionUrl(url) -> {
+                userInteraction = true
+                this.onButtonClick.invoke(toPayloadButton(url!!))
+            }
             else -> Logger.w(this, "[HTML] Unknown action URL: $url")
         }
         dismiss()

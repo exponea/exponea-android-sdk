@@ -13,9 +13,9 @@ interface InAppMessageCallback {
     var trackActions: Boolean
 
     /**
-     * Method called when in-app message action is performed
+     * Method called when in-app message action is performed.
      * On in-app click, the button contains button text and button URL and the interaction is true
-     * On in-app close, the button is null, and the interaction is false.
+     * On in-app close, the button is null and the interaction is true if user closes message manually.
      */
     fun inAppMessageAction(message: InAppMessage, button: InAppMessageButton?, interaction: Boolean, context: Context)
 }

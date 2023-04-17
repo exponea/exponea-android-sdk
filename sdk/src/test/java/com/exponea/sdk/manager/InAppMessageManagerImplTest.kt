@@ -491,7 +491,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         every {
             presenter.show(
@@ -519,7 +519,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
         every {
@@ -551,7 +551,7 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             spykManager.processInAppMessageAction(mockActivity, button)
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(
                 InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT
@@ -742,7 +742,7 @@ internal class InAppMessageManagerImplTest {
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
@@ -783,7 +783,7 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             spykManager.processInAppMessageAction(mockActivity, button)
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false)
         verify(exactly = 1) {
             spykCallback.inAppMessageAction(
                 InAppMessageTest.getInAppMessage(),
@@ -821,7 +821,7 @@ internal class InAppMessageManagerImplTest {
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
@@ -857,7 +857,7 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 0) {
             spykManager.processInAppMessageAction(any(), any())
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false)
         verify(exactly = 1) {
             spykCallback.inAppMessageAction(
                 InAppMessageTest.getInAppMessage(),
@@ -898,7 +898,7 @@ internal class InAppMessageManagerImplTest {
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 

@@ -34,8 +34,9 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     private val activity: Activity
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
-    private var onDismiss: (() -> Unit)?
+    private var onDismiss: ((Boolean) -> Unit)?
     private val bitmap: Bitmap
+    private var userInteraction = false
 
     override val isPresented: Boolean
         get() = isShowing
@@ -45,7 +46,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         payload: InAppMessagePayload,
         image: Bitmap,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: () -> Unit
+        onDismiss: (Boolean) -> Unit
     ) : super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) {
         this.activity = activity
         this.payload = payload
@@ -62,7 +63,11 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         setupBodyText()
         setupButtons()
 
-        setOnDismissListener { this.onDismiss?.invoke() }
+        setOnDismissListener {
+            if (!userInteraction) {
+                this.onDismiss?.invoke(false)
+            }
+        }
     }
 
     override fun show() {
@@ -108,7 +113,9 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         val swipeToDismissBehavior = SwipeDismissBehavior<LinearLayout>()
         swipeToDismissBehavior.setSwipeDirection(SwipeDismissBehavior.SWIPE_DIRECTION_START_TO_END)
         swipeToDismissBehavior.setListener(object : SwipeDismissBehavior.OnDismissListener {
-                override fun onDismiss(view: View) { dismiss() }
+                override fun onDismiss(view: View) {
+                    onCloseManually()
+                }
                 override fun onDragStateChanged(state: Int) {}
             })
         (containerView.layoutParams as CoordinatorLayout.LayoutParams).behavior = swipeToDismissBehavior
@@ -179,13 +186,27 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
             parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
         )
         if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
-            buttonAction.setOnClickListener { dismiss() }
+            buttonAction.setOnClickListener {
+                onCloseManually()
+            }
         } else {
             buttonAction.setOnClickListener {
-                onButtonClick(buttonPayload)
-                onDismiss = null // clear the dismiss listener, we called the button listener
-                dismiss()
+                onActionClicked(buttonPayload)
             }
         }
+    }
+
+    private fun onCloseManually() {
+        userInteraction = true
+        onDismiss?.invoke(true)
+        onDismiss = null // clear the dismiss listener, we called the button listener
+        dismiss()
+    }
+
+    private fun onActionClicked(buttonPayload: InAppMessagePayloadButton) {
+        userInteraction = true
+        onButtonClick(buttonPayload)
+        onDismiss = null // clear the dismiss listener, we called the button listener
+        dismiss()
     }
 }

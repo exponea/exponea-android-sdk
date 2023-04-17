@@ -26,7 +26,7 @@ internal class InAppMessagePresenter(
         val payloadHtml: HtmlNormalizer.NormalizedResult?,
         val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
-        val dismissedCallback: (() -> Unit),
+        val dismissedCallback: ((Boolean) -> Unit),
         val failedCallback: ((String) -> Unit)
     )
 
@@ -68,7 +68,7 @@ internal class InAppMessagePresenter(
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: () -> Unit,
+        dismissedCallback: (Boolean) -> Unit,
         errorCallback: (String) -> Unit
     ): InAppMessageView? {
         var messageTimeout = timeout
@@ -129,7 +129,7 @@ internal class InAppMessagePresenter(
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (Activity, InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: (Activity) -> Unit,
+        dismissedCallback: (Activity, Boolean) -> Unit,
         failedCallback: (String) -> Unit
     ): PresentedMessage? = runCatching {
         Logger.i(this, "Attempting to present in-app message.")
@@ -147,10 +147,10 @@ internal class InAppMessagePresenter(
             presentedMessage = null
             actionCallback(activity, button)
         }
-        val presenterDismissedCallback = {
-            Logger.i(this, "InApp dismissed")
+        val presenterDismissedCallback = { userInteraction: Boolean ->
+            Logger.i(this, "InApp dismissed by user: ${if (userInteraction) "true" else "false"}")
             presentedMessage = null
-            dismissedCallback(activity)
+            dismissedCallback(activity, userInteraction)
         }
         val presenterFailedCallback = { error: String ->
             Logger.i(this, "InApp got error $error")

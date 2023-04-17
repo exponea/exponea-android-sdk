@@ -334,7 +334,7 @@ internal class InAppMessageManagerImpl(
                         processInAppMessageAction(activity, button)
                     }
                 },
-                dismissedCallback = { activity ->
+                dismissedCallback = { activity, userInteraction ->
                     if (Exponea.inAppMessageActionCallback.trackActions) {
                         eventManager.trackInAppMessageClose(message, CONSIDER_CONSENT)
                     }
@@ -342,7 +342,7 @@ internal class InAppMessageManagerImpl(
                         Exponea.inAppMessageActionCallback.inAppMessageAction(
                             message,
                             null,
-                            false,
+                            userInteraction,
                             activity
                         )
                     }

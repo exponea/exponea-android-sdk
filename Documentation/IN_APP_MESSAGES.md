@@ -96,8 +96,9 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
     ) {  
         // Here goes your code
         // On in-app click, the button contains button text and button URL, and the interaction is true
-        // On in-app close, the button is null, and the interaction is false.
-    }  
+        // On in-app close by user interaction, the button is null and the interaction is true
+        // On in-app close by non-user interaction (i.e. timeout), the button is null and the interaction is false
+    }
 }
 
 ```

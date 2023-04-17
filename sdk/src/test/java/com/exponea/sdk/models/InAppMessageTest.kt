@@ -1,5 +1,7 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.models.InAppMessageType.FREEFORM
+import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.google.gson.Gson
 import kotlin.test.assertEquals
@@ -34,6 +36,11 @@ internal class InAppMessageTest {
                         "button_link":"https://someaddress.com",
                         "button_text_color":"#ffffff",
                         "button_background_color":"#f44cac"
+                    },{
+                        "button_text":"Cancel",
+                        "button_type":"cancel",
+                        "button_text_color":"#ffffff",
+                        "button_background_color":"#f44cac"
                     }
                 ]
             },
@@ -64,20 +71,17 @@ internal class InAppMessageTest {
             priority: Int? = null,
             timeout: Long? = null,
             delay: Long? = null,
-            environment: MockWebServer? = null
+            environment: MockWebServer? = null,
+            type: InAppMessageType = MODAL
         ): InAppMessage {
-            return InAppMessage(
-                id = id ?: "5dd86f44511946ea55132f29",
-                name = "Test serving in-app message",
-                rawMessageType = "modal",
-                rawFrequency = frequency ?: "unknown",
-                variantId = 0,
-                variantName = "Variant A",
-                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
-                dateFilter = dateFilter ?: DateFilter(false, null, null),
-                priority = priority,
-                delay = delay,
-                timeout = timeout,
+            var payload: InAppMessagePayload? = null
+            var payloadHtml: String? = null
+            if (type == FREEFORM) {
+                payloadHtml = "<html><body>" +
+                    "<div data-actiontype='close'>Close</div>" +
+                    "<div data-link='https://someaddress.com'>Action 1</div>" +
+                    "</body></html>"
+            } else {
                 payload = InAppMessagePayload(
                     imageUrl = testUrl(imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg", environment),
                     title = "filip.vozar@exponea.com",
@@ -95,11 +99,32 @@ internal class InAppMessageTest {
                             buttonLink = testUrl("https://someaddress.com", environment),
                             buttonTextColor = "#ffffff",
                             buttonBackgroundColor = "#f44cac"
+                        ),
+                        InAppMessagePayloadButton(
+                            rawButtonType = "cancel",
+                            buttonText = "Cancel",
+                            buttonLink = null,
+                            buttonTextColor = "#ffffff",
+                            buttonBackgroundColor = "#f44cac"
                         )
                     )
-                ),
-                payloadHtml = null,
-                isHtml = false,
+                )
+            }
+            return InAppMessage(
+                id = id ?: "5dd86f44511946ea55132f29",
+                name = "Test serving in-app message",
+                rawMessageType = type.value,
+                rawFrequency = frequency ?: "unknown",
+                variantId = 0,
+                variantName = "Variant A",
+                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
+                dateFilter = dateFilter ?: DateFilter(false, null, null),
+                priority = priority,
+                delay = delay,
+                timeout = timeout,
+                payload = payload,
+                payloadHtml = payloadHtml,
+                isHtml = type == FREEFORM,
                 consentCategoryTracking = null,
                 rawHasTrackingConsent = null
             )

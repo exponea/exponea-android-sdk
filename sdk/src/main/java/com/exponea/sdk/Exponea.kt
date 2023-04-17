@@ -916,7 +916,7 @@ object Exponea {
                     activity.finish()
                 },
                 {
-                    presenting.dismissedCallback()
+                    presenting.dismissedCallback(it)
                     activity.finish()
                 },
                 { error: String ->

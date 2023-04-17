@@ -11,7 +11,7 @@ data class CustomerIds(
     }
 
     companion object {
-        private const val COOKIE = "cookie"
+        internal const val COOKIE = "cookie"
     }
 
     internal var cookie: String? = null

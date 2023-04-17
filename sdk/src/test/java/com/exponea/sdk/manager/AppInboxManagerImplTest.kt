@@ -23,10 +23,12 @@ import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.mainThreadDispatcher
 import com.google.gson.Gson
+import io.mockk.CapturingSlot
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -239,11 +241,11 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     fun before() {
         fetchManager = mockk()
         bitmapCache = mockk()
+        customerIdsRepository = mockk()
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
         every { bitmapCache.clearExcept(any()) } just Runs
-        customerIdsRepository = mockk()
-        every { customerIdsRepository.get() } returns CustomerIds()
+        identifyCustomer()
         apiService = ExponeaMockService(true)
         appInboxCache = AppInboxCacheImpl(
             ApplicationProvider.getApplicationContext(), Gson()
@@ -461,6 +463,128 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 assertTrue(marked)
                 it()
             }
+        }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - onlyCookie`() {
+        // setup
+        identifyCustomer(cookie = "hash-cookie")
+        val customerIdsWhileFetch = slot<CustomerIds>()
+        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+        assertTrue(customerIdsWhileFetch.isCaptured)
+        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+        assertEquals(1, customerIdsMapWhileFetch.size)
+        assertEquals(1, customerIdsMapWhileRead.size)
+        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - singleExternal`() {
+        // setup
+        identifyCustomer(ids = hashMapOf("registered" to "email@test.com"))
+        val customerIdsWhileFetch = slot<CustomerIds>()
+        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+        assertTrue(customerIdsWhileFetch.isCaptured)
+        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+        assertEquals(1, customerIdsMapWhileFetch.size)
+        assertEquals(1, customerIdsMapWhileRead.size)
+        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - multipleExternal`() {
+        // setup
+        identifyCustomer(ids = hashMapOf(
+            "registered" to "email@test.com",
+            "registered2" to "email2@test.com",
+            "registered3" to "email3@test.com"
+        ))
+        val customerIdsWhileFetch = slot<CustomerIds>()
+        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+        assertTrue(customerIdsWhileFetch.isCaptured)
+        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+        assertEquals(3, customerIdsMapWhileFetch.size)
+        assertEquals(3, customerIdsMapWhileRead.size)
+        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - cookieAndExternal`() {
+        // setup
+        identifyCustomer(cookie = "hash-cookie", ids = hashMapOf(
+            "registered" to "email@test.com",
+            "registered2" to "email2@test.com",
+            "registered3" to "email3@test.com"
+        ))
+        val customerIdsWhileFetch = slot<CustomerIds>()
+        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+        assertTrue(customerIdsWhileFetch.isCaptured)
+        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+        assertEquals(4, customerIdsMapWhileFetch.size)
+        assertEquals(4, customerIdsMapWhileRead.size)
+        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+    }
+
+    private fun runFetchAndMarkAsRead(
+        customerIdsWhileFetch: CapturingSlot<CustomerIds>,
+        customerIdsWhileMarkAsRead: CapturingSlot<CustomerIds>
+    ) {
+        val testMessage = buildMessage("id1", type = "push")
+        every {
+            fetchManager.fetchAppInbox(any(), capture(customerIdsWhileFetch), any(), any(), any())
+        } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+                .invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            testMessage,
+                            buildMessage("id2", type = "html")
+                        ),
+                        "sync_123"
+                    )
+                )
+        }
+        // fetchManager should be asked for marking so valid answer is expected
+        every {
+            fetchManager.markAppInboxAsRead(any(), capture(customerIdsWhileMarkAsRead), any(), any(), any(), any())
+        } answers {
+            arg<(Result<Any?>) -> Unit>(4)
+                .invoke(Result(true, null))
+        }
+        waitForIt(20000) {
+            appInboxManager.fetchAppInbox { data ->
+                it()
+            }
+        }
+        waitForIt(20000) {
+            appInboxManager.markMessageAsRead(testMessage) { marked ->
+                it()
+            }
+        }
+    }
+
+    private fun identifyCustomer(cookie: String? = null, ids: HashMap<String, String?> = hashMapOf()) {
+        every { customerIdsRepository.get() } returns CustomerIds().apply {
+            this.cookie = cookie
+            this.externalIds = ids
         }
     }
 }

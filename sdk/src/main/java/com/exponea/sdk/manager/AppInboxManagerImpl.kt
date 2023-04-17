@@ -42,9 +42,14 @@ internal class AppInboxManagerImpl(
                     callback?.invoke(false)
                 }
             }
+            val customerIds = CustomerIds(HashMap(message.customerIds)).apply {
+                message.customerIds.get(CustomerIds.COOKIE)?.let {
+                    cookie = it
+                }
+            }
             fetchManager.markAppInboxAsRead(
                 exponeaProject = expoProject,
-                customerIds = CustomerIds(HashMap(message.customerIds)),
+                customerIds = customerIds,
                 syncToken = message.syncToken!!,
                 messageIds = listOf(message.id),
                 onSuccess = {

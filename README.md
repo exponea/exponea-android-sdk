@@ -76,3 +76,8 @@ Release notes can be found [here](./Documentation/RELEASE_NOTES.md).
 ## ⚠️ Version Disclaimer
 
 This SDK supports **API 17+** and **Android 4.2+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
+
+## Support
+
+Are you a Bloomreach customer and dealing with some issues on mobile SDK? You can reach the official Engagement Support [via these recommended ways](https://documentation.bloomreach.com/engagement/docs/engagement-support#contacting-the-support).
+Note that Github repository issues and PRs will also be considered but with the lowest priority and without guaranteed output.

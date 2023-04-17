@@ -1,6 +1,17 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.6.0
+#### April 17, 2023
+* Features
+  * Ability to track a user 'interaction' while closing InApp message
+  * Support section added to main Readme
+  * JSoup library updated to 1.15.4 due to reported vulnerability of library
+  * InApp loading flow has been described more deeply in documentation
+* Bug Fixes
+  * Fixed: Marking of App Inbox message as read failed due to invalid usage of Customer IDs
+
+
 ## Release Notes for 3.5.0
 #### March 30, 2023
 * Features

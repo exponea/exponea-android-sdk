@@ -80,7 +80,7 @@ dependencies {
     // Okhttp HTTP compression interceptor
     implementation 'com.squareup.okhttp3:okhttp-brotli:4.9.1'
     // Html handling for in-app freeform messages
-    implementation 'org.jsoup:jsoup:1.15.1'
+    implementation 'org.jsoup:jsoup:1.15.4'
 
     // Base Test
     testImplementation 'junit:junit:4.12'

@@ -86,7 +86,7 @@ abstract class EventFilterOperator {
 
 class EventFilterOperatorException(message: String) : Exception(message)
 
-internal class EventFilterOperatorSerializer : JsonSerializer<EventFilterOperator> {
+class EventFilterOperatorSerializer : JsonSerializer<EventFilterOperator> {
     override fun serialize(
         src: EventFilterOperator,
         typeOfSrc: Type,
@@ -96,7 +96,7 @@ internal class EventFilterOperatorSerializer : JsonSerializer<EventFilterOperato
     }
 }
 
-internal class EventFilterOperatorDeserializer : JsonDeserializer<EventFilterOperator> {
+class EventFilterOperatorDeserializer : JsonDeserializer<EventFilterOperator> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,

@@ -2,7 +2,8 @@ package com.exponea.sdk.util
 
 import android.net.Uri
 
-internal object GdprTracking {
+object GdprTracking {
+
     fun isTrackForced(url: String?): Boolean = runCatching {
         if (url == null) {
             return false

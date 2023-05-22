@@ -62,6 +62,7 @@ import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
+import com.exponea.sdk.util.logOnExceptionWithResult
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 import com.exponea.sdk.view.InAppMessageView
@@ -1051,7 +1052,7 @@ object Exponea {
                 Exponea.appInboxProvider.getAppInboxButton(context)
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 
     fun getAppInboxListView(
         context: Context,
@@ -1062,7 +1063,7 @@ object Exponea {
                 Exponea.appInboxProvider.getAppInboxListView(context, onItemClicked = onItemClicked)
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 
     fun getAppInboxListFragment(context: Context): Fragment? = runCatching<Fragment?> {
         requireInitialized<Fragment>(
@@ -1070,7 +1071,7 @@ object Exponea {
                 Exponea.appInboxProvider.getAppInboxListFragment(context)
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 
     fun getAppInboxDetailFragment(context: Context, messageId: String): Fragment? = runCatching<Fragment?> {
         requireInitialized<Fragment>(
@@ -1078,7 +1079,7 @@ object Exponea {
                 Exponea.appInboxProvider.getAppInboxDetailFragment(context, messageId)
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 
     fun getAppInboxDetailView(context: Context, messageId: String): View? = runCatching<View?> {
         requireInitialized<View>(
@@ -1086,7 +1087,7 @@ object Exponea {
                 Exponea.appInboxProvider.getAppInboxDetailView(context, messageId)
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 
     public fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
         initGate.waitForInitialize {
@@ -1146,5 +1147,5 @@ object Exponea {
                 component
             }
         )
-    }.logOnException().getOrNull()
+    }.logOnExceptionWithResult().getOrNull()
 }

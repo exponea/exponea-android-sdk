@@ -5,7 +5,7 @@ import com.google.gson.typeadapters.RuntimeTypeAdapterFactory
 
 interface EventFilterAttribute {
     companion object {
-        internal val typeAdapterFactory = RuntimeTypeAdapterFactory.of(EventFilterAttribute::class.java, "type", true)
+        val typeAdapterFactory = RuntimeTypeAdapterFactory.of(EventFilterAttribute::class.java, "type", true)
             .registerSubtype(PropertyAttribute::class.java, "property")
             .registerSubtype(TimestampAttribute::class.java, "timestamp")
     }

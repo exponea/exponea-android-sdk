@@ -5,35 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R.layout
-import com.exponea.sdk.manager.AppInboxAdapter.MessageItemViewHolder
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.MessageItemViewHolder
 import com.exponea.sdk.util.runOnMainThread
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_container
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_content
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_image
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_read_flag
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_received_time
-import kotlinx.android.synthetic.main.message_inbox_list_item.view.message_item_title
 
 internal class AppInboxAdapter(
     private val items: MutableList<MessageItem> = mutableListOf<MessageItem>(),
     private val bitmapCache: InAppMessageBitmapCache,
     private val onItemClicked: (MessageItem, Int) -> Unit
 ) : Adapter<MessageItemViewHolder>() {
-
-    class MessageItemViewHolder(target: View) : ViewHolder(target) {
-        val itemContainer = target.message_item_container
-        val readFlag = target.message_item_read_flag
-        val receivedTime = target.message_item_received_time
-        val title = target.message_item_title
-        val content = target.message_item_content
-        val image = target.message_item_image
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(layout.message_inbox_list_item, parent, false)

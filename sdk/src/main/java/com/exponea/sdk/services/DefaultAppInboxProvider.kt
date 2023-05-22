@@ -56,7 +56,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
     override fun getAppInboxButton(context: Context): Button {
         var button = LayoutInflater.from(context).inflate(R.layout.message_inbox_button, null, false) as Button
         button.setOnClickListener {
-            context.startActivity(Intent(context, AppInboxListActivity::class.java))
+            val openAppInboxListIntent = Intent(context, AppInboxListActivity::class.java)
+            if (context == context.applicationContext) {
+                openAppInboxListIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(openAppInboxListIntent)
         }
         return button
     }

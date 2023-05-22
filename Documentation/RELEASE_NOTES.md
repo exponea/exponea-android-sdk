@@ -1,6 +1,14 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.6.1
+#### May 22, 2023
+* Features
+  * New AppInbox provider has been created for easier styling of UI components
+  * Android API supported version has been increased to 33
+  * Small internal refactoring for better compatibility with other wrappers
+
+
 ## Release Notes for 3.6.0
 #### April 17, 2023
 * Features

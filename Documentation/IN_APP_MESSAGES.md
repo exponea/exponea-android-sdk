@@ -78,6 +78,8 @@ In-app messages reloading is triggered by any case of:
 Any In-app message images are preloaded too so message is able to be shown after whole process is finished. Please considers it while testing of In-app feature.
 It is common behaviour that if you change an In-app message data on platform then this change is reflected in SDK after 30 minutes due to usage of messages cache. Do call `Exponea.identifyCustomer` or `Exponea.anonymize` if you want to reflect changes immediately.
 
+> Note: Invoking of `Exponea.anonymize` does fetch In-apps immediately but `Exponea.identifyCustomer` needs to be sent to backend successfully. The reason is to register customer IDs on backend properly to correctly assign an In-app messages. If you have set other then `Exponea.flushMode = FlushMode.IMMEDIATE` you need to call `Exponea.flushData()` to finalize `identifyCustomer` process and trigger a In-app messages fetch.
+
 ### Custom in-app message actions
 If you want to override default SDK behavior, when in-app message action is performed (button is clicked, a message is closed), or you want to add your code to be performed along with code executed by the SDK, you can set up `inAppMessageActionCallback` on Exponea instance.
 

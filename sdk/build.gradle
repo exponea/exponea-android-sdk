@@ -67,7 +67,7 @@ dependencies {
 
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     // Deserialization
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.danilopianini:gson-extras:0.2.2'
     // OkHttp Debugger Logger
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'

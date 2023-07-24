@@ -262,4 +262,22 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(bitmapCache, rawHtml).normalize()
         assertFalse(result.valid)
     }
+
+    @Test
+    fun test_ActionNameIsUserReadable() {
+        val rawHtml = "<html><body>" +
+            "<div data-actiontype='close'><span>Close</span></div>" +
+            "<div data-link='https://example.com/1'><span>Action 1</span></div>" +
+            "<div data-link='https://example.com/2'><span><h1>Action</h1></span><span> 2</span></div>" +
+            "</body></html>"
+        val result = HtmlNormalizer(mockk(), rawHtml).normalize()
+        assertNotNull(result.closeActionUrl)
+        assertEquals(2, result.actions?.size)
+        val action1 = result.actions!!.firstOrNull { it.actionUrl == "https://example.com/1" }
+        assertNotNull(action1)
+        val action2 = result.actions!!.firstOrNull { it.actionUrl == "https://example.com/2" }
+        assertNotNull(action2)
+        assertEquals("Action 1", action1.buttonText)
+        assertEquals("Action 2", action2.buttonText)
+    }
 }

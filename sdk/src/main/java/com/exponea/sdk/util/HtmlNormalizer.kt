@@ -173,7 +173,7 @@ internal class HtmlNormalizer(
                 Logger.e(this, "[HTML] Action button found but with empty action")
                 continue
             }
-            result.add(ActionInfo(actionButton.html(), targetAction))
+            result.add(ActionInfo(actionButton.text(), targetAction))
         }
         return result
     }
@@ -198,7 +198,7 @@ internal class HtmlNormalizer(
                     "</style>")
                 actionButton.wrap("<a href='$targetAction' class='$actionButtonHrefClass'></a>")
             }
-            result.add(ActionInfo(actionButton.html(), targetAction))
+            result.add(ActionInfo(actionButton.text(), targetAction))
         }
         return result
     }

@@ -16,9 +16,12 @@ class URLUtils {
                 val parsed2 = Uri.parse(url2)
                 val path1 = parsed1.path?.removeSuffix("/")
                 val path2 = parsed2.path?.removeSuffix("/")
+                val query1 = parsed1.query
+                val query2 = parsed2.query
                 return parsed1.scheme == parsed2.scheme &&
                     parsed1.host == parsed2.host &&
-                    path1 == path2
+                    path1 == path2 &&
+                    query1 == query2
             } catch (e: Exception) {
                 Logger.e(this, "Unable to compare urls $url1 vs $url2", e)
                 return false

@@ -1,6 +1,18 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.7.0
+#### July 28, 2023
+* Features
+  * In-app content block feature has been added into SDK
+  * Documentation is updated to describe fetching of In-app messages while `identifyCustomer` process in detail
+* Bug Fixes
+  * Fixed: Action `click` event from In-app messages, and App Inbox HTML Inbox messages tracked button text with HTML tags
+  * Fixed: Proguard configuration for GSON library was missing for R8
+
+> Note: Please note, we're working on the Bloomreach Engagement App release for the new In-app personalization features. This is just the mobile SDK part, for the new features, keep an eye on the Engagement App release notes, it will be released shortly.
+
+
 ## Release Notes for 3.6.1
 #### May 22, 2023
 * Features

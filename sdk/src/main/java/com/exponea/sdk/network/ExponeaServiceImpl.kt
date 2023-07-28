@@ -107,4 +107,28 @@ internal class ExponeaServiceImpl(
         val jsonBody = bodyContent?.let { gson.toJson(it) }
         return networkManager.post(exponeaProject.baseUrl + endpoint, exponeaProject.authorization, jsonBody)
     }
+
+    override fun fetchStaticInAppContentBlocks(exponeaProject: ExponeaProject): Call {
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.EndPointName.INAPP_CONTENT_BLOCKS_STATIC,
+            null
+        )
+    }
+
+    override fun fetchPersonalizedInAppContentBlocks(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        contentBlockIds: List<String>
+    ): Call {
+        val reqBody = hashMapOf(
+            "customer_ids" to customerIds.toHashMap(),
+            "content_block_ids" to contentBlockIds
+        )
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.EndPointName.INAPP_CONTENT_BLOCKS_PERSONAL,
+            reqBody
+        )
+    }
 }

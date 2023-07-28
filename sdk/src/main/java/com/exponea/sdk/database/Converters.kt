@@ -6,7 +6,6 @@ import com.exponea.sdk.models.Route
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.fromJson
 import com.google.gson.Gson
-import java.lang.Exception
 
 class Converters {
 
@@ -37,8 +36,38 @@ class Converters {
         return if (parts.size < 3) {
             null
         } else {
-            ExponeaProject(projectToken = parts[0], authorization = parts[1], baseUrl = parts[2])
+            val result = ExponeaProject(
+                projectToken = parts[0],
+                authorization = parts[1],
+                baseUrl = parts[2],
+                inAppContentBlockPlaceholdersAutoLoad = toStringList(parts.getOrNull(3))
+            )
+            return result
         }
+    }
+
+    @TypeConverter
+    fun toStringList(source: String?): List<String> {
+        if (source.isNullOrBlank()) {
+            return emptyList()
+        }
+        try {
+            return Gson().fromJson<List<String>>(source)
+        } catch (ex: Exception) {
+            Logger.e(this, ex.message ?: "Unable to deserialize the list", ex)
+        }
+        return emptyList()
+    }
+
+    @TypeConverter
+    fun fromStringList(data: List<String>?): String? {
+        if (data == null) return ""
+        try {
+            return Gson().toJson(data)
+        } catch (ex: Exception) {
+            Logger.e(this, ex.message ?: "Unable to serialize the list", ex)
+        }
+        return null
     }
 
     @TypeConverter

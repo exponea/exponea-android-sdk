@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="#00000000">
 
-    <WebView
+    <com.exponea.sdk.view.ExponeaWebView
         android:id="@+id/content_html"
         android:layout_centerInParent="true"
         android:layout_width="match_parent"

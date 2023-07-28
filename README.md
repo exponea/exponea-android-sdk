@@ -60,7 +60,9 @@ Then you can start using all supported features:
 * [Fetch Data](./Documentation/FETCH.md)
 * [Payments](./Documentation/PAYMENT.md)
 * [Anonymize](./Documentation/ANONYMIZE.md)
-* [In-app messages](./Documentation/IN_APP_MESSAGES.md)
+* In-App Personalization
+    * [In-app messages](./Documentation/IN_APP_MESSAGES.md)
+    * [In-app content blocks](./Documentation/IN_APP_CONTENT_BLOCKS.md)
 * [App Inbox](./Documentation/APP_INBOX.md)
 
 If facing any issues, look for **Troubleshooting** section in the respective document.

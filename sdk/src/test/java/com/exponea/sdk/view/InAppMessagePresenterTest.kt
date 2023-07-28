@@ -21,6 +21,7 @@ import com.exponea.sdk.models.InAppMessageType.FREEFORM
 import com.exponea.sdk.models.InAppMessageType.FULLSCREEN
 import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.InAppMessageType.SLIDE_IN
+import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.mocks.MockApplication
@@ -77,12 +78,13 @@ internal class InAppMessagePresenterTest(
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
         val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val fontCache = FontCacheImpl(context)
         inAppMessage = InAppMessageTest.getInAppMessage(
             environment = server,
             type = inAppMessageType
         )
         payload = inAppMessage.payload
-        payloadHtml = inAppMessage.payloadHtml?.let { HtmlNormalizer(bitmapCache, it).normalize() }
+        payloadHtml = inAppMessage.payloadHtml?.let { HtmlNormalizer(bitmapCache, fontCache, it).normalize() }
     }
 
     @Test

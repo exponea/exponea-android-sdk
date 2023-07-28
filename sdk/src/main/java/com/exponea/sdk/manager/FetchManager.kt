@@ -6,6 +6,8 @@ import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
@@ -45,6 +47,20 @@ internal interface FetchManager {
         syncToken: String,
         messageIds: List<String>,
         onSuccess: (Result<Any?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
+
+    fun fetchStaticInAppContentBlocks(
+        exponeaProject: ExponeaProject,
+        onSuccess: (Result<ArrayList<InAppContentBlock>?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
+
+    fun fetchPersonalizedContentBlocks(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        contentBlockIds: List<String>,
+        onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 }

@@ -33,4 +33,7 @@
     <string name="exponea_inbox_errorTitle">Something went wrong :(</string>
     <string name="exponea_inbox_errorMessage">We could not retrieve your messages.</string>
     <string name="hint_public_key">API key ID of Private</string>
+    <string name="content_blocks_title">InAppCB</string>
+    <string name="content_blocks_messages_list">Products</string>
+    <string name="content_blocks_sdk_not_init">SDK has not been initialized</string>
 </resources>

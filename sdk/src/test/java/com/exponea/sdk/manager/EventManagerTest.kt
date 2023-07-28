@@ -11,11 +11,12 @@ import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -41,7 +42,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var customerIdsRepository: CustomerIdsRepository
     lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     lateinit var messagesCache: InAppMessagesCache
-    lateinit var bitmapCache: InAppMessageBitmapCache
+    lateinit var bitmapCache: BitmapCache
+    lateinit var fontCache: SimpleFileCache
     lateinit var presenter: InAppMessagePresenter
     lateinit var trackingConsentManager: TrackingConsentManager
     lateinit var manager: EventManagerImpl
@@ -72,6 +74,10 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
         every { bitmapCache.clearExcept(any()) } just Runs
+        fontCache = mockk()
+        every { fontCache.has(any()) } returns false
+        every { fontCache.preload(any(), any()) } just Runs
+        every { fontCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         inAppMessageDisplayStateRepository = mockk()
@@ -93,6 +99,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             fetchManager,
             inAppMessageDisplayStateRepository,
             bitmapCache,
+            fontCache,
             presenter,
             trackingConsentManager,
             projectFactory

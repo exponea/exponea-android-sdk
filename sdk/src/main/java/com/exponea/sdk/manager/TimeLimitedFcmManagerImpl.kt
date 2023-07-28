@@ -20,6 +20,7 @@ import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
@@ -84,8 +85,11 @@ internal class TimeLimitedFcmManagerImpl : FcmManagerImpl {
             val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
                 context, eventManager
             )
+            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
+                context, eventManager
+            )
             val trackingConsentManager = TrackingConsentManagerImpl(
-                eventManager, campaignRepository, inappMessageTrackingDelegate
+                eventManager, campaignRepository, inappMessageTrackingDelegate, inAppContentBlockTrackingDelegate
             )
             return TimeLimitedFcmManagerImpl(
                 context, configuration, eventManager, pushTokenRepository,

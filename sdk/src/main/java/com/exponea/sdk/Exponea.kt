@@ -41,6 +41,7 @@ import com.exponea.sdk.models.FlushMode.IMMEDIATE
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.MessageItem
@@ -64,6 +65,7 @@ import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.logOnExceptionWithResult
 import com.exponea.sdk.util.returnOnException
+import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import com.exponea.sdk.view.InAppMessagePresenter
 import com.exponea.sdk.view.InAppMessageView
 
@@ -675,6 +677,8 @@ object Exponea {
 
         startSessionTracking(configuration.automaticSessionTracking)
 
+        component.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+
         context.addAppStateCallbacks(
             onOpen = {
                 Logger.i(this, "App is opened")
@@ -1145,6 +1149,22 @@ object Exponea {
         requireInitialized<ExponeaComponent>(
             initializedBlock = {
                 component
+            }
+        )
+    }.logOnExceptionWithResult().getOrNull()
+
+    fun getInAppContentBlocksPlaceholder(
+        placeholderId: String,
+        context: Context,
+        config: InAppContentBlockPlaceholderConfiguration? = null
+    ): InAppContentBlockPlaceholderView? = runCatching<InAppContentBlockPlaceholderView?> {
+        requireInitialized<InAppContentBlockPlaceholderView>(
+            initializedBlock = {
+                Exponea.component.inAppContentBlockManager.getPlaceholderView(
+                    placeholderId,
+                    context,
+                    config ?: InAppContentBlockPlaceholderConfiguration()
+                )
             }
         )
     }.logOnExceptionWithResult().getOrNull()

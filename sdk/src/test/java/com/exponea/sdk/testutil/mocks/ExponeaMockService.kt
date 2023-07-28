@@ -89,6 +89,18 @@ internal class ExponeaMockService(
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
+    override fun fetchStaticInAppContentBlocks(exponeaProject: ExponeaProject): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun fetchPersonalizedInAppContentBlocks(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        contentBlockIds: List<String>
+    ): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
     override fun postFetchAppInbox(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,

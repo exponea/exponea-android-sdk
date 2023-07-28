@@ -9,8 +9,8 @@ import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.services.AuthorizationProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -42,7 +42,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
     private lateinit var appInboxManager: AppInboxManager
     private lateinit var appInboxCache: AppInboxCache
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: InAppMessageBitmapCache
+    private lateinit var bitmapCache: BitmapCache
     private lateinit var fetchManager: FetchManager
 
     @Before

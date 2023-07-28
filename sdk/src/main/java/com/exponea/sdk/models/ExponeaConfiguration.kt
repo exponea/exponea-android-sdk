@@ -47,7 +47,12 @@ data class ExponeaConfiguration(
     var allowDefaultCustomerProperties: Boolean = true,
 
     /** If true, Customer Token authentication is used */
-    var advancedAuthEnabled: Boolean = false
+    var advancedAuthEnabled: Boolean = false,
+
+    /**
+     * Automatically load content of In-app content blocks assigned to these Placeholder IDs
+     */
+    var inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList()
 ) {
 
     companion object {

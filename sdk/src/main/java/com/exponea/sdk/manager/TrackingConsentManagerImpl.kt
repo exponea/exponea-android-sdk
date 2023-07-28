@@ -7,6 +7,7 @@ import com.exponea.sdk.models.Constants.EventTypes
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.EventType.PUSH_OPENED
 import com.exponea.sdk.models.EventType.TRACK_EVENT
+import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.NotificationAction
@@ -20,7 +21,8 @@ import com.exponea.sdk.util.currentTimeSeconds
 internal class TrackingConsentManagerImpl(
     private val eventManager: EventManager,
     private val campaignRepository: CampaignRepository,
-    private val inappMessageTrackingDelegate: InAppMessageTrackingDelegate
+    private val inappMessageTrackingDelegate: InAppMessageTrackingDelegate,
+    private val inAppContentBlockTrackingDelegate: InAppContentBlockTrackingDelegate
 ) : TrackingConsentManager {
 
     override fun trackClickedPush(
@@ -215,6 +217,82 @@ internal class TrackingConsentManagerImpl(
             timestamp = currentTimeSeconds(),
             trackingAllowed = trackingAllowed,
             customerIds = customerIds
+        )
+    }
+
+    override fun trackInAppContentBlockShown(placeholderId: String, contentBlock: InAppContentBlock, mode: MODE) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && !contentBlock.hasTrackingConsent) {
+            Logger.e(this,
+                "Event for shown InApp Content Block is not tracked because consent is not given"
+            )
+            trackingAllowed = false
+        }
+        inAppContentBlockTrackingDelegate.track(placeholderId, contentBlock, "show", false, trackingAllowed)
+    }
+
+    override fun trackInAppContentBlockClick(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        buttonText: String?,
+        buttonLink: String?,
+        mode: MODE
+    ) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && !contentBlock.hasTrackingConsent && !GdprTracking.isTrackForced(buttonLink)) {
+            Logger.e(this,
+                "Event for clicked InApp Content Block is not tracked because consent is not given"
+            )
+            trackingAllowed = false
+        }
+        inAppContentBlockTrackingDelegate.track(
+            placeholderId,
+            contentBlock,
+            "click",
+            true,
+            trackingAllowed,
+            buttonText,
+            buttonLink
+        )
+    }
+
+    override fun trackInAppContentBlockClose(placeholderId: String, contentBlock: InAppContentBlock, mode: MODE) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && !contentBlock.hasTrackingConsent) {
+            Logger.e(this,
+                "Event for closed InApp Content Block is not tracked because consent is not given"
+            )
+            trackingAllowed = false
+        }
+        inAppContentBlockTrackingDelegate.track(
+            placeholderId,
+            contentBlock,
+            "close",
+            true,
+            trackingAllowed
+        )
+    }
+
+    override fun trackInAppContentBlockError(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        error: String,
+        mode: MODE
+    ) {
+        var trackingAllowed = true
+        if (mode == CONSIDER_CONSENT && !contentBlock.hasTrackingConsent) {
+            Logger.e(this,
+                "Event for error of InApp Content Block showing is not tracked because consent is not given"
+            )
+            trackingAllowed = false
+        }
+        inAppContentBlockTrackingDelegate.track(
+            placeholderId,
+            contentBlock,
+            "error",
+            false,
+            trackingAllowed,
+            error = error
         )
     }
 }

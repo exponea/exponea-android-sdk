@@ -18,10 +18,11 @@ import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
 import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
@@ -47,7 +48,8 @@ internal class InAppMessageManagerImpl(
     private val inAppMessagesCache: InAppMessagesCache,
     private val fetchManager: FetchManager,
     private val displayStateRepository: InAppMessageDisplayStateRepository,
-    private val bitmapCache: InAppMessageBitmapCache,
+    private val bitmapCache: BitmapCache,
+    private val fontCache: SimpleFileCache,
     private val presenter: InAppMessagePresenter,
     private val eventManager: TrackingConsentManager,
     private val projectFactory: ExponeaProjectFactory
@@ -177,7 +179,7 @@ internal class InAppMessageManagerImpl(
     private fun loadImageUrls(message: InAppMessage): ArrayList<String> {
         val imageURLs = ArrayList<String>()
         if (message.messageType == InAppMessageType.FREEFORM) {
-            imageURLs.addAll(HtmlNormalizer(bitmapCache, message.payloadHtml!!).collectImages())
+            imageURLs.addAll(HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml!!).collectImages())
         } else if (!message.payload?.imageUrl.isNullOrEmpty()) {
             imageURLs.add(message.payload!!.imageUrl!!)
         }
@@ -299,7 +301,7 @@ internal class InAppMessageManagerImpl(
         Logger.i(this, "Attempting to show in-app message '${message.name}'")
         val htmlPayload: HtmlNormalizer.NormalizedResult?
         if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
-            htmlPayload = HtmlNormalizer(bitmapCache, message.payloadHtml).normalize()
+            htmlPayload = HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml).normalize()
         } else {
             htmlPayload = null
         }

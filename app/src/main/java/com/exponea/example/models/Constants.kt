@@ -7,6 +7,7 @@ class Constants {
             var purchaseScreen = "Purchase"
             var settingsScreen = "Settings"
             var anonymizeScreen = "Anonymize"
+            var inAppContentBlocksScreen = "InAppCB"
         }
     }
 }

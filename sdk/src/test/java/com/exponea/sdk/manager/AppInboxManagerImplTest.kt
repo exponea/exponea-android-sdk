@@ -14,8 +14,8 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
@@ -185,6 +185,10 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 .in-app-message.modal-in-app-message>.content>.buttons>.button:nth-child(2) {
                     margin-left: 8px;
                 }
+                
+                .css-image {
+                    background-image: url('https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg')
+                }
 
             </style>
 
@@ -233,7 +237,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     private lateinit var appInboxManager: AppInboxManager
     private lateinit var appInboxCache: AppInboxCache
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: InAppMessageBitmapCache
+    private lateinit var bitmapCache: BitmapCache
     private lateinit var fetchManager: FetchManager
     private lateinit var apiService: ExponeaService
 

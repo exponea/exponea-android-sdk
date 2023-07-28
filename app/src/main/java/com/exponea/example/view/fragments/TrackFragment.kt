@@ -103,6 +103,10 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle updating customer properties
      */
     private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
+        val registeredIdUpdate = propertiesList.properties.remove("registered") as? String
+        if (registeredIdUpdate != null) {
+            App.instance.registeredIdManager.registeredID = registeredIdUpdate
+        }
         val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
         CustomerTokenStorage.INSTANCE.configure(
             customerIds = hashMapOf(

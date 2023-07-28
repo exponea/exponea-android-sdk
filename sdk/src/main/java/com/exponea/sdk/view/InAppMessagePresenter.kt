@@ -9,7 +9,7 @@ import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
-import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
@@ -18,7 +18,7 @@ import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessagePresenter(
     context: Context,
-    private var bitmapCache: InAppMessageBitmapCache
+    private var bitmapCache: BitmapCache
 ) {
     class PresentedMessage(
         val messageType: InAppMessageType,

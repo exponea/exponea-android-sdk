@@ -27,11 +27,12 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.models.eventfilter.EventPropertyFilter
 import com.exponea.sdk.models.eventfilter.StringConstraint
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
@@ -69,7 +70,8 @@ internal class InAppMessageManagerImplTest {
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     private lateinit var messagesCache: InAppMessagesCache
-    private lateinit var bitmapCache: InAppMessageBitmapCache
+    private lateinit var bitmapCache: BitmapCache
+    private lateinit var fontCache: SimpleFileCache
     private lateinit var presenter: InAppMessagePresenter
     private lateinit var manager: InAppMessageManagerImpl
     private lateinit var mockActivity: Activity
@@ -86,6 +88,10 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
         every { bitmapCache.clearExcept(any()) } just Runs
+        fontCache = mockk()
+        every { fontCache.has(any()) } returns false
+        every { fontCache.preload(any(), any()) } just Runs
+        every { fontCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         inAppMessageDisplayStateRepository = mockk()
@@ -108,6 +114,7 @@ internal class InAppMessageManagerImplTest {
             fetchManager,
             inAppMessageDisplayStateRepository,
             bitmapCache,
+            fontCache,
             presenter,
             trackingConsentManager,
             projectFactory

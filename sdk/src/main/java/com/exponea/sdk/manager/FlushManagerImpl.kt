@@ -149,7 +149,8 @@ internal open class FlushManagerImpl(
         val exponeaProject = exportedEvent.exponeaProject ?: ExponeaProject(
             configuration.baseURL,
                 exportedEvent.projectId,
-            configuration.authorization
+            configuration.authorization,
+            configuration.inAppContentBlockPlaceholdersAutoLoad
         )
         val simpleEvent = Event(
                 type = exportedEvent.type,

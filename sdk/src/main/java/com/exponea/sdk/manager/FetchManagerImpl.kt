@@ -7,6 +7,8 @@ import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.CustomerRecommendationResponse
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
@@ -168,6 +170,40 @@ internal class FetchManagerImpl(
     ) {
         api.postReadFlagAppInbox(exponeaProject, customerIds, messageIds, syncToken).enqueue(
             getVoidCallback(onSuccess, onFailure)
+        )
+    }
+
+    override fun fetchStaticInAppContentBlocks(
+        exponeaProject: ExponeaProject,
+        onSuccess: (Result<ArrayList<InAppContentBlock>?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        api.fetchStaticInAppContentBlocks(exponeaProject).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<InAppContentBlock>?>>() {},
+                onSuccess,
+                onFailure
+            )
+        )
+    }
+
+    override fun fetchPersonalizedContentBlocks(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        contentBlockIds: List<String>,
+        onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    ) {
+        if (contentBlockIds.isEmpty()) {
+            onSuccess(Result(true, ArrayList()))
+            return
+        }
+        api.fetchPersonalizedInAppContentBlocks(exponeaProject, customerIds, contentBlockIds).enqueue(
+            getFetchCallback(
+                object : TypeToken<Result<ArrayList<InAppContentBlockPersonalizedData>?>>() {},
+                onSuccess,
+                onFailure
+            )
         )
     }
 }

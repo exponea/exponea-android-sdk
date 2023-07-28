@@ -26,4 +26,10 @@ internal interface ExponeaService {
         pushToken: String,
         tokenType: TokenType
     ): Call
+    fun fetchStaticInAppContentBlocks(exponeaProject: ExponeaProject): Call
+    fun fetchPersonalizedInAppContentBlocks(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        contentBlockIds: List<String>
+    ): Call
 }

@@ -3,6 +3,7 @@ package com.exponea.sdk.repository
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.testutil.assertEqualsIgnoreOrder
 import com.google.gson.Gson
 import java.io.File
 import kotlin.test.assertEquals
@@ -51,7 +52,7 @@ internal class AppInboxCacheImplTest {
     @Test
     fun `should store empty messages`() {
         cache.setMessages(arrayListOf())
-        assertEquals(arrayListOf(), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(), cache.getMessages())
     }
 
     @Test
@@ -67,7 +68,7 @@ internal class AppInboxCacheImplTest {
         cache.setMessages(
             arrayListOf(msg1, msg2)
         )
-        assertEquals(
+        assertEqualsIgnoreOrder(
             arrayListOf(msg1, msg2),
             cache.getMessages()
         )
@@ -84,9 +85,9 @@ internal class AppInboxCacheImplTest {
         val msg1 = buildMessage("id1")
         val msg2 = buildMessage("id2")
         cache.setMessages(arrayListOf(msg1))
-        assertEquals(arrayListOf(msg1), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg1), cache.getMessages())
         cache.setMessages(arrayListOf(msg2))
-        assertEquals(arrayListOf(msg2), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg2), cache.getMessages())
     }
 
     @Test
@@ -102,9 +103,9 @@ internal class AppInboxCacheImplTest {
         val msg1 = buildMessage("id1")
         val msg2 = buildMessage("id2")
         cache.setMessages(arrayListOf(msg1))
-        assertEquals(arrayListOf(msg1), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg1), cache.getMessages())
         cache.addMessages(arrayListOf(msg2))
-        assertEquals(arrayListOf(msg1, msg2), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg1, msg2), cache.getMessages())
     }
 
     @Test
@@ -112,9 +113,9 @@ internal class AppInboxCacheImplTest {
         val msg1Unread = buildMessage("id1", read = false)
         val msg1Read = buildMessage("id1", read = true)
         cache.setMessages(arrayListOf(msg1Unread))
-        assertEquals(arrayListOf(msg1Unread), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg1Unread), cache.getMessages())
         cache.addMessages(arrayListOf(msg1Read))
-        assertEquals(arrayListOf(msg1Read), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(msg1Read), cache.getMessages())
     }
 
     @Test
@@ -177,7 +178,7 @@ internal class AppInboxCacheImplTest {
 
     @Test
     fun `should get no messages when empty`() {
-        assertEquals(arrayListOf(), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(), cache.getMessages())
     }
 
     @Test
@@ -191,7 +192,7 @@ internal class AppInboxCacheImplTest {
             ApplicationProvider.getApplicationContext<Context>().cacheDir,
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
-        assertEquals(arrayListOf(), cache.getMessages())
+        assertEqualsIgnoreOrder(arrayListOf(), cache.getMessages())
     }
 
     @Test

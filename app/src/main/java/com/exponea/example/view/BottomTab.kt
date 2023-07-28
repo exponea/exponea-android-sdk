@@ -5,4 +5,5 @@ sealed interface BottomTab {
     object Track : BottomTab
     object Manual : BottomTab
     object Anonymize : BottomTab
+    object InAppContentBlock : BottomTab
 }

@@ -77,11 +77,11 @@ internal class InAppMessageBitmapCacheImplTest {
         ).toString()
 
         val repo = spyk(InAppMessageBitmapCacheImpl(context))
-        verify(exactly = 0) { repo.downloadImage(any(), any()) }
+        verify(exactly = 0) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+        verify(exactly = 1) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+        verify(exactly = 1) { repo.downloadFile(any(), any()) }
     }
 
     @Test
@@ -101,11 +101,11 @@ internal class InAppMessageBitmapCacheImplTest {
         ).toString()
 
         val repo = spyk(InAppMessageBitmapCacheImpl(context))
-        verify(exactly = 0) { repo.downloadImage(any(), any()) }
+        verify(exactly = 0) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl1)) { it() } }
-        verify(exactly = 1) { repo.downloadImage(any(), any()) }
+        verify(exactly = 1) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl2)) { it() } }
-        verify(exactly = 2) { repo.downloadImage(any(), any()) }
+        verify(exactly = 2) { repo.downloadFile(any(), any()) }
     }
 
     @Test

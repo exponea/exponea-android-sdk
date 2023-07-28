@@ -8,8 +8,8 @@ import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.AppInboxCache
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
-import com.exponea.sdk.repository.InAppMessageBitmapCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 internal class AppInboxManagerImpl(
     private val fetchManager: FetchManager,
-    private val bitmapCache: InAppMessageBitmapCache,
+    private val bitmapCache: BitmapCache,
     private val customerIdsRepository: CustomerIdsRepository,
     private val appInboxCache: AppInboxCache,
     private val projectFactory: ExponeaProjectFactory

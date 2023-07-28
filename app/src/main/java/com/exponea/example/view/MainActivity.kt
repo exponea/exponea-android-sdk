@@ -6,10 +6,17 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.R
+import com.exponea.example.R.id
 import com.exponea.example.services.ExampleAppInboxProvider
+import com.exponea.example.view.BottomTab.Anonymize
+import com.exponea.example.view.BottomTab.Fetch
+import com.exponea.example.view.BottomTab.InAppContentBlock
+import com.exponea.example.view.BottomTab.Manual
+import com.exponea.example.view.BottomTab.Track
 import com.exponea.example.view.fragments.AnonymizeFragment
 import com.exponea.example.view.fragments.FetchFragment
 import com.exponea.example.view.fragments.FlushFragment
+import com.exponea.example.view.fragments.InAppContentBlocksFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.InAppMessage
@@ -64,17 +71,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun selectTab(tab: BottomTab) {
         navigation.selectedItemId = when (tab) {
-            BottomTab.Anonymize -> R.id.actionAnonymize
-            BottomTab.Fetch -> R.id.actionMain
-            BottomTab.Manual -> R.id.actionSettings
-            BottomTab.Track -> R.id.actionPurchase
+            Anonymize -> id.actionAnonymize
+            Fetch -> id.actionMain
+            Manual -> id.actionSettings
+            Track -> id.actionPurchase
+            InAppContentBlock -> id.actionInAppContentBlock
         }
 
         val fragment = when (tab) {
-            BottomTab.Anonymize -> AnonymizeFragment()
-            BottomTab.Fetch -> FetchFragment()
-            BottomTab.Manual -> FlushFragment()
-            BottomTab.Track -> TrackFragment()
+            Anonymize -> AnonymizeFragment()
+            Fetch -> FetchFragment()
+            Manual -> FlushFragment()
+            Track -> TrackFragment()
+            InAppContentBlock -> InAppContentBlocksFragment()
         }
 
         supportFragmentManager
@@ -124,6 +133,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.actionMain -> replaceFragment(FetchFragment())
                 R.id.actionPurchase -> replaceFragment(TrackFragment())
                 R.id.actionAnonymize -> replaceFragment(AnonymizeFragment())
+                R.id.actionInAppContentBlock -> replaceFragment(InAppContentBlocksFragment())
                 else -> replaceFragment(FlushFragment())
             }
         }

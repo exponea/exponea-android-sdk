@@ -8,14 +8,14 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R.layout
 import com.exponea.sdk.models.MessageItem
-import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.MessageItemViewHolder
 import com.exponea.sdk.util.runOnMainThread
 
 internal class AppInboxAdapter(
     private val items: MutableList<MessageItem> = mutableListOf<MessageItem>(),
-    private val bitmapCache: InAppMessageBitmapCache,
+    private val bitmapCache: BitmapCache,
     private val onItemClicked: (MessageItem, Int) -> Unit
 ) : Adapter<MessageItemViewHolder>() {
 

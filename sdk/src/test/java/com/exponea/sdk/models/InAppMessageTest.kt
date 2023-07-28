@@ -77,7 +77,16 @@ internal class InAppMessageTest {
             var payload: InAppMessagePayload? = null
             var payloadHtml: String? = null
             if (type == FREEFORM) {
-                payloadHtml = "<html><body>" +
+                payloadHtml = "<html>" +
+                    "<head>" +
+                    "<style>" +
+                    ".css-image {" +
+                    "   background-image: url('https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg')" +
+                    "}" +
+                    "</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<img src='https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg'/>" +
                     "<div data-actiontype='close'>Close</div>" +
                     "<div data-link='https://someaddress.com'>Action 1</div>" +
                     "</body></html>"

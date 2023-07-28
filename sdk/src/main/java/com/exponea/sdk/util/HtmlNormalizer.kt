@@ -3,12 +3,16 @@ package com.exponea.sdk.util
 import android.graphics.Bitmap
 import android.util.Base64
 import androidx.annotation.WorkerThread
-import com.exponea.sdk.repository.InAppMessageBitmapCache
+import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.SimpleFileCache
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
+import kotlin.text.RegexOption.DOT_MATCHES_ALL
+import kotlin.text.RegexOption.IGNORE_CASE
 import okhttp3.internal.closeQuietly
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -24,7 +28,8 @@ import org.jsoup.nodes.Document
  * - ensures compatibility of action buttons
  */
 internal class HtmlNormalizer(
-    private var imageCache: InAppMessageBitmapCache,
+    private val imageCache: BitmapCache,
+    private val fontCache: SimpleFileCache,
     originalHtml: String
 ) {
 
@@ -44,10 +49,32 @@ internal class HtmlNormalizer(
         private const val LINK_TAG_SELECTOR = "link"
         private const val IFRAME_TAG_SELECTOR = "iframe"
 
+        private const val IMAGE_MIMETYPE = "image/png"
+        private const val FONT_MIMETYPE = "application/font"
+
+        private val regExpOptions = setOf<RegexOption>(IGNORE_CASE, DOT_MATCHES_ALL)
+        private val cssUrlRegexp = Regex(
+            pattern = "url\\((.+?)\\)",
+            options = regExpOptions
+        )
+        private val cssImportUrlRegexp = Regex(
+            pattern = "@import[\\s]+url\\(.+?\\)",
+            options = regExpOptions
+        )
+        private const val cssKeyFormat = "-?[_a-zA-Z]+[_a-zA-Z0-9-]*"
+        private const val cssDelimiterFormat = "[\\s]*:[\\s]*"
+        private const val cssValueFormat = "[^;\\n]+"
+        private const val keyGroupName = "attrKey"
+        private const val valueGroupName = "attrVal"
+        private val cssAttributeRegexp = Regex(
+            pattern = "(?<$keyGroupName>$cssKeyFormat)$cssDelimiterFormat(?<$valueGroupName>$cssValueFormat)",
+            options = regExpOptions
+        )
+
         /**
          * Inline javascript attributes. Listed here https://www.w3schools.com/tags/ref_eventattributes.asp
          */
-        private val INLINE_SCRIPT_ATTRIBUTES = arrayOf(
+        internal val INLINE_SCRIPT_ATTRIBUTES = arrayOf(
                 "onafterprint", "onbeforeprint", "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage",
                 "onoffline", "ononline", "onpagehide", "onpageshow", "onpopstate", "onresize", "onstorage", "onunload",
                 "onblur", "onchange", "oncontextmenu", "onfocus", "oninput", "oninvalid", "onreset", "onsearch",
@@ -62,6 +89,11 @@ internal class HtmlNormalizer(
 
         private val ANCHOR_LINK_ATTRIBUTES = arrayOf(
             "download", "ping", "target"
+        )
+
+        internal val SUPPORTED_CSS_URL_PROPERTIES = arrayOf(
+            "background", "background-image", "border-image", "border-image-source", "content", "cursor", "filter",
+            "list-style", "list-style-image", "mask", "mask-image", "offset-path", "src"
         )
     }
 
@@ -86,13 +118,11 @@ internal class HtmlNormalizer(
         }
         try {
             cleanHtml(config.allowAnchorButton)
-            if (config.makeImagesOffline) {
-                makeImagesToBeOffline()
-            }
-            if (config.ensureCloseButton) {
-                result.closeActionUrl = ensureCloseButton()
+            if (config.makeResourcesOffline) {
+                makeResourcesToBeOffline()
             }
             result.actions = ensureActionButtons(config.allowAnchorButton)
+            result.closeActionUrl = detectCloseButton(config.ensureCloseButton)
             result.html = exportHtml()
             result.valid = true
         } catch (e: Exception) {
@@ -107,6 +137,15 @@ internal class HtmlNormalizer(
         var actions: List<ActionInfo>? = null
         var closeActionUrl: String? = null
         var html: String? = null
+        fun findActionByUrl(url: String): HtmlNormalizer.ActionInfo? {
+            return actions?.find { URLUtils.areEqualAsURLs(it.actionUrl, url) }
+        }
+        fun isActionUrl(url: String?): Boolean {
+            return url != null && !isCloseAction(url) && findActionByUrl(url) != null
+        }
+        fun isCloseAction(url: String?): Boolean {
+            return url?.equals(closeActionUrl) ?: false
+        }
     }
 
     private fun cleanHtml(allowAnchorButton: Boolean) {
@@ -205,9 +244,9 @@ internal class HtmlNormalizer(
 
     class ActionInfo(val buttonText: String, val actionUrl: String)
 
-    private fun ensureCloseButton(): String {
+    private fun detectCloseButton(ensureCloseButton: Boolean): String? {
         var closeButtons = document!!.select(CLOSE_BUTTON_SELECTOR)
-        if (closeButtons.isEmpty()) {
+        if (closeButtons.isEmpty() && ensureCloseButton) {
             Logger.i(this, "[HTML] Adding default close-button")
             // randomize class name => prevents from CSS styles overriding in HTML
             val closeButtonClass = "close-button-${UUID.randomUUID()}"
@@ -242,8 +281,12 @@ internal class HtmlNormalizer(
             closeButtons = document!!.select(CLOSE_BUTTON_SELECTOR)
         }
         if (closeButtons.isEmpty()) {
-            // defined or default has to exist
-            throw IllegalStateException("Action close cannot be ensured")
+            if (ensureCloseButton) {
+                // defined or default has to exist
+                throw IllegalStateException("Action close cannot be ensured")
+            }
+            // no close button found
+            return null
         }
         // randomize class name => prevents from CSS styles overriding in HTML
         val closeButtonHrefClass = "close-button-href-${UUID.randomUUID()}"
@@ -261,7 +304,92 @@ internal class HtmlNormalizer(
         return closeActionLink
     }
 
-    private fun makeImagesToBeOffline() {
+    private fun makeResourcesToBeOffline() {
+        makeImageTagsToBeOffline()
+        makeStylesheetsToBeOffline()
+        makeStyleAttributesToBeOffline()
+    }
+
+    private fun makeStyleAttributesToBeOffline() {
+        val styleAttrsElements = document!!.select("[style]")
+        for (element in styleAttrsElements) {
+            val styleAttr = element.attr("style")
+            if (styleAttr.isNullOrEmpty()) {
+                continue
+            }
+            element.attr("style", downloadOnlineResources(styleAttr))
+        }
+    }
+
+    private fun downloadOnlineResources(styleSource: String): String {
+        val onlineStatements = collectOnlineUrlStatements(styleSource)
+        var styleTarget = styleSource
+        for (statement in onlineStatements) {
+            val dataBase64: String?
+            when (statement.mimeType) {
+                FONT_MIMETYPE -> dataBase64 = asBase64Font(statement.url)
+                IMAGE_MIMETYPE -> dataBase64 = asBase64Image(statement.url)
+                else -> {
+                    dataBase64 = null
+                    Logger.e(this, "Unsupported mime type ${statement.mimeType}")
+                }
+            }
+            if (dataBase64.isNullOrBlank()) {
+                Logger.e(this, "Unable to make offline resource ${statement.url}")
+                continue
+            }
+            styleTarget = styleTarget.replace(
+                statement.url, dataBase64
+            )
+        }
+        return styleTarget
+    }
+
+    private fun collectOnlineUrlStatements(cssStyle: String): List<CssOnlineUrl> {
+        val result = mutableListOf<CssOnlineUrl>()
+        // CSS @import search
+        val cssImportMatches = cssImportUrlRegexp.findAll(cssStyle)
+        for (importRule in cssImportMatches) {
+            val importUrlMatches = cssUrlRegexp.findAll(importRule.value)
+            for (importUrl in importUrlMatches) {
+                result.add(CssOnlineUrl(
+                    mimeType = FONT_MIMETYPE,
+                    url = importUrl.groupValues.last().trim('\'', '"')
+                ))
+            }
+        }
+        // CSS definitions search
+        val cssDefinitionMatches = cssAttributeRegexp.findAll(cssStyle)
+        for (cssDefinitionMatch in cssDefinitionMatches) {
+            val cssKey = cssDefinitionMatch.groups[keyGroupName]?.value
+            if (cssKey == null || !SUPPORTED_CSS_URL_PROPERTIES.contains(cssKey.lowercase())) {
+                // skip
+                continue
+            }
+            val cssValue = cssDefinitionMatch.groups[valueGroupName]?.value
+            if (cssValue == null) {
+                // skip
+                continue
+            }
+            val urlValueMatches = cssUrlRegexp.findAll(cssValue)
+            for (urlValue in urlValueMatches) {
+                result.add(CssOnlineUrl(
+                    mimeType = if (cssKey == "src") { FONT_MIMETYPE } else { IMAGE_MIMETYPE },
+                    url = urlValue.groupValues.last().trim('\'', '"')
+                ))
+            }
+        }
+        return result
+    }
+
+    private fun makeStylesheetsToBeOffline() {
+        val styles = document!!.select("style")
+        for (style in styles) {
+            style.text(downloadOnlineResources(style.data()))
+        }
+    }
+
+    private fun makeImageTagsToBeOffline() {
         val images = document!!.select("img")
         for (image in images) {
             val imageSource = image.attr("src")
@@ -281,27 +409,61 @@ internal class HtmlNormalizer(
         if (isBase64Uri(imageSource)) {
             return imageSource
         }
-        var imageData = imageCache.get(imageSource)
-        if (imageData == null) {
+        var imageData = getImageFromUrl(imageSource)
+        val os = ByteArrayOutputStream()
+        imageData!!.compress(Bitmap.CompressFormat.PNG, 100, os)
+        val result = Base64.encodeToString(os.toByteArray(), Base64.NO_WRAP)
+        os.closeQuietly()
+        // image type is not needed to be checked from source, WebView will fix it anyway...
+        return "data:$IMAGE_MIMETYPE;base64,$result"
+    }
+
+    private fun asBase64Font(fontSource: String): String {
+        if (isBase64Uri(fontSource)) {
+            return fontSource
+        }
+        var fontData = getFileFromUrl(fontSource)
+        val result = Base64.encodeToString(fontData.readBytes(), Base64.NO_WRAP)
+        // font type is not needed to be precise, WebView will fix it anyway...
+        return "data:$FONT_MIMETYPE;charset=utf-8;base64,$result"
+    }
+
+    private fun getFileFromUrl(url: String): File {
+        var fileData = fontCache.getFile(url)
+        if (!fileData.exists()) {
             val semaphore = CountDownLatch(1)
-            imageCache.preload(listOf(imageSource)) { loaded ->
+            fontCache.preload(listOf(url)) { loaded ->
                 if (loaded) {
-                    imageData = imageCache.get(imageSource)
+                    fileData = fontCache.getFile(url)
                 }
                 semaphore.countDown()
             }
             semaphore.await(10, SECONDS)
         }
-        if (imageData == null) {
-            Logger.e(this, "Unable to load image for HTML")
+        if (!fileData.exists()) {
+            Logger.e(this, "Unable to load file $url for HTML")
+            throw IllegalStateException("File is not preloaded")
+        }
+        return fileData
+    }
+
+    private fun getImageFromUrl(url: String): Bitmap? {
+        var fileData = imageCache.get(url)
+        if (fileData == null) {
+            val semaphore = CountDownLatch(1)
+            imageCache.preload(listOf(url)) { loaded ->
+                if (loaded) {
+                    fileData = imageCache.get(url)
+                }
+                semaphore.countDown()
+            }
+            semaphore.await(10, SECONDS)
+        }
+        if (fileData == null) {
+            Logger.e(this, "Unable to load image $url for HTML")
             throw IllegalStateException("Image is not preloaded")
         }
-        val os = ByteArrayOutputStream()
-        imageData!!.compress(Bitmap.CompressFormat.PNG, 100, os)
-        val result = Base64.encodeToString(os.toByteArray(), Base64.DEFAULT)
-        os.closeQuietly()
-        // image type is not needed to be checked from source, WebView will fix it anyway...
-        return "data:image/png;base64,$result"
+        return fileData
     }
 
     /**
@@ -316,22 +478,43 @@ internal class HtmlNormalizer(
         if (document == null) {
             return Collections.emptyList()
         }
-        val target = ArrayList<String>()
+        val onlineUrls = ArrayList<String>()
+        // images
         val images = document!!.select("img")
         for (imgEl in images) {
             val imageUrl = imgEl.attr("src")
-            if (!imageUrl.isNullOrEmpty()) {
-                target.add(imageUrl)
+            if (!imageUrl.isNullOrEmpty() && !isBase64Uri(imageUrl)) {
+                onlineUrls.add(imageUrl)
             }
         }
-        return target
+        // style tags
+        val styleTags = document!!.select("style")
+        for (styleTag in styleTags) {
+            val styleSource = styleTag.data()
+            val onlineSources = collectOnlineUrlStatements(styleSource)
+            val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
+            onlineUrls.addAll(imageOnlineSources.map { it.url })
+        }
+        // style attributes
+        val styledEls = document!!.select("[style]")
+        for (styledEl in styledEls) {
+            val styleAttrSource = styledEl.attr("style")
+            if (styleAttrSource.isNullOrBlank()) {
+                continue
+            }
+            val onlineSources = collectOnlineUrlStatements(styleAttrSource)
+            val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
+            onlineUrls.addAll(imageOnlineSources.map { it.url })
+        }
+        // end
+        return onlineUrls
     }
 
     /**
      * Defines some steps for HTML normalization process
      */
     open class HtmlNormalizerConfig(
-        val makeImagesOffline: Boolean,
+        val makeResourcesOffline: Boolean,
         val ensureCloseButton: Boolean,
         val allowAnchorButton: Boolean
     )
@@ -342,8 +525,16 @@ internal class HtmlNormalizer(
      * - Close button is ensured to be shown
      */
     private class DefaultConfig : HtmlNormalizerConfig(
-        makeImagesOffline = true,
+        makeResourcesOffline = true,
         ensureCloseButton = true,
         allowAnchorButton = false
+    )
+
+    /**
+     * Holds mime-type for 'url(...)' in CSS
+     */
+    private data class CssOnlineUrl(
+        val mimeType: String,
+        val url: String
     )
 }

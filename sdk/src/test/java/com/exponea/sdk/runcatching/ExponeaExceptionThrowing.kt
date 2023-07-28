@@ -47,5 +47,6 @@ object ExponeaExceptionThrowing {
         // This will cause onSessionStart/Stop to throw exception
         every { anyConstructed<BackgroundTimerManagerImpl>().startTimer() } throws TestPurposeException()
         every { anyConstructed<BackgroundTimerManagerImpl>().stopTimer() } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().inAppContentBlockManager } throws TestPurposeException()
     }
 }

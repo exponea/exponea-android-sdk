@@ -19,4 +19,9 @@
         android:id="@+id/actionAnonymize"
         android:icon="@drawable/ic_anonymous"
         android:title="@string/anonymize"/>
+
+    <item
+        android:id="@+id/actionInAppContentBlock"
+        android:icon="@drawable/ic_content_blocks"
+        android:title="@string/content_blocks_title"/>
 </menu>

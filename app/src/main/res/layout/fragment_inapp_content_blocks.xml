@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.MainActivity"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:id="@+id/content_blocks_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignParentTop="true"
+        >
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/content_blocks_products_title"
+        android:layout_below="@+id/content_blocks_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/content_blocks_messages_list"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/content_blocks_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/content_blocks_products_title"
+        />
+</RelativeLayout>

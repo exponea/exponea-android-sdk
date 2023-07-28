@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.NotificationAction
@@ -14,6 +15,16 @@ internal interface TrackingConsentManager {
     fun trackInAppMessageError(message: InAppMessage, error: String, mode: MODE)
     fun trackAppInboxOpened(item: MessageItem, mode: MODE)
     fun trackAppInboxClicked(message: MessageItem, buttonText: String?, buttonLink: String?, mode: MODE)
+    fun trackInAppContentBlockShown(placeholderId: String, contentBlock: InAppContentBlock, mode: MODE)
+    fun trackInAppContentBlockClick(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        buttonText: String?,
+        buttonLink: String?,
+        mode: MODE
+    )
+    fun trackInAppContentBlockClose(placeholderId: String, contentBlock: InAppContentBlock, mode: MODE)
+    fun trackInAppContentBlockError(placeholderId: String, contentBlock: InAppContentBlock, error: String, mode: MODE)
 
     enum class MODE {
         CONSIDER_CONSENT, IGNORE_CONSENT

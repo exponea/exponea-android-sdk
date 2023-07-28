@@ -720,4 +720,255 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             )
         }
     }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns null data Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"success\":true}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty data Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"success\":true, data:[]}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns false state Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns invalid json Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns raw-empty json Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns null Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns error Static-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchStaticInAppContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns null data Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"success\":true}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty data Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"success\":true, data:[]}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns false state Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns invalid json Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns raw-empty json Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns null Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns error Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = listOf("1"),
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess with empty data for empty message IDs request Personalized-InAppContentBlock`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"success\":true, data:[]}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = CustomerIds(hashMapOf("user" to "test")),
+                contentBlockIds = emptyList(),
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
 }

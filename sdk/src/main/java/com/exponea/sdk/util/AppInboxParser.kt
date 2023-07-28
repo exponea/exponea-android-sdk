@@ -29,14 +29,16 @@ internal class AppInboxParser {
             val htmlOrigin = normalized["message"]
             if (htmlOrigin != null) {
                 val imageCache = Exponea.getComponent()?.inAppMessagesBitmapCache
-                if (imageCache == null) {
+                val fontCache = Exponea.getComponent()?.fontCache
+                if (imageCache == null || fontCache == null) {
                     throw Exception("Exponea SDK was not initialized properly!")
                 }
                 val htmlContent = HtmlNormalizer(
                     imageCache,
+                    fontCache,
                     htmlOrigin
                 ).normalize(config = HtmlNormalizerConfig(
-                    makeImagesOffline = false,
+                    makeResourcesOffline = false,
                     ensureCloseButton = false,
                     allowAnchorButton = true
                 ))

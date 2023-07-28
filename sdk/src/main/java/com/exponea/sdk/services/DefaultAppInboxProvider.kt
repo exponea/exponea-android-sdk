@@ -169,15 +169,16 @@ open class DefaultAppInboxProvider : AppInboxProvider {
 
     private fun showHtmlMessageDetail(source: MessageItem, target: AppInboxDetailView) {
         val dataSource = source.content?.html ?: ""
-        val bitmapCache = Exponea.getComponent()?.inAppMessagesBitmapCache
-        if (bitmapCache == null) {
+        val bitmapCache = Exponea.getComponent()?.appInboxMessagesBitmapCache
+        val fontCache = Exponea.getComponent()?.fontCache
+        if (bitmapCache == null || fontCache == null) {
             throw Exception("Exponea SDK was not initialized properly!")
         }
         target.htmlContainer.visibility = VISIBLE
         val htmlContent = HtmlNormalizer(
-            bitmapCache, dataSource
+            bitmapCache, fontCache, dataSource
         ).normalize(HtmlNormalizerConfig(
-            makeImagesOffline = true,
+            makeResourcesOffline = true,
             ensureCloseButton = false,
             allowAnchorButton = true
         ))

@@ -35,7 +35,8 @@ internal open class ExponeaProjectFactory(
         get() = ExponeaProject(
             configuration.baseURL,
             configuration.projectToken,
-            configuration.authorization
+            configuration.authorization,
+            configuration.inAppContentBlockPlaceholdersAutoLoad
         )
 
     /**
@@ -58,7 +59,8 @@ internal open class ExponeaProjectFactory(
             return ExponeaProject(
                 configuration.baseURL,
                 configuration.projectToken,
-                authToken
+                authToken,
+                configuration.inAppContentBlockPlaceholdersAutoLoad
             )
         }
 

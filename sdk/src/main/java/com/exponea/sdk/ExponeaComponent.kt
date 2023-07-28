@@ -18,6 +18,8 @@ import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
+import com.exponea.sdk.manager.InAppContentBlockManager
+import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppMessageManager
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.InAppMessageTrackingDelegate
@@ -40,6 +42,7 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
+import com.exponea.sdk.repository.AppInboxMessageBitmapCacheImpl
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -49,6 +52,10 @@ import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
+import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
+import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCache
@@ -60,6 +67,7 @@ import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
@@ -143,6 +151,7 @@ internal class ExponeaComponent(
         onEventCreated = { event, type ->
             inAppMessageManager.onEventCreated(event, type)
             appInboxManager.onEventCreated(event, type)
+            inAppContentBlockManager.onEventCreated(event, type)
         }
     )
 
@@ -173,13 +182,21 @@ internal class ExponeaComponent(
         context, eventManager
     )
 
-    internal val trackingConsentManager: TrackingConsentManager = TrackingConsentManagerImpl(
-        eventManager, campaignRepository, inAppMessageTrackingDelegate
+    internal val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
+        context, eventManager
     )
+
+    internal val trackingConsentManager: TrackingConsentManager = TrackingConsentManagerImpl(
+        eventManager, campaignRepository, inAppMessageTrackingDelegate, inAppContentBlockTrackingDelegate
+    )
+
+    internal val appInboxMessagesBitmapCache = AppInboxMessageBitmapCacheImpl(context)
+
+    internal val fontCache = FontCacheImpl(context)
 
     internal val appInboxManager: AppInboxManager = AppInboxManagerImpl(
         fetchManager = fetchManager,
-        bitmapCache = inAppMessagesBitmapCache,
+        bitmapCache = appInboxMessagesBitmapCache,
         projectFactory = projectFactory,
         customerIdsRepository = customerIdsRepository,
         appInboxCache = appInboxCache
@@ -192,9 +209,32 @@ internal class ExponeaComponent(
         fetchManager,
         inAppMessageDisplayStateRepository,
         inAppMessagesBitmapCache,
+        fontCache,
         inAppMessagePresenter,
         trackingConsentManager,
         projectFactory
+    )
+
+    internal val inAppContentBlockDisplayStateRepository = InAppContentBlockDisplayStateRepositoryImpl(
+        preferences
+    )
+
+    internal val htmlNormalizedCache = HtmlNormalizedCacheImpl(
+        context,
+        preferences
+    )
+
+    internal val inAppContentBlocksBitmapCache = InAppContentBlockBitmapCacheImpl(context)
+
+    internal val inAppContentBlockManager: InAppContentBlockManager = InAppContentBlocksManagerImpl(
+        inAppContentBlockDisplayStateRepository,
+        fetchManager,
+        projectFactory,
+        customerIdsRepository,
+        trackingConsentManager,
+        inAppContentBlocksBitmapCache,
+        htmlNormalizedCache,
+        fontCache
     )
 
     fun anonymize(
@@ -213,11 +253,14 @@ internal class ExponeaComponent(
         inAppMessageDisplayStateRepository.clear()
         uniqueIdentifierRepository.clear()
         customerIdsRepository.clear()
+        inAppContentBlockManager.clearAll()
         sessionManager.reset()
 
         exponeaConfiguration.baseURL = exponeaProject.baseUrl
         exponeaConfiguration.projectToken = exponeaProject.projectToken
         exponeaConfiguration.authorization = exponeaProject.authorization
+        exponeaConfiguration.inAppContentBlockPlaceholdersAutoLoad =
+            exponeaProject.inAppContentBlockPlaceholdersAutoLoad
         exponeaConfiguration.projectRouteMap = projectRouteMap
         ExponeaConfigRepository.set(application, exponeaConfiguration)
         projectFactory.reset(exponeaConfiguration)
@@ -230,5 +273,6 @@ internal class ExponeaComponent(
         fcmManager.trackToken(token, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, tokenType)
         inAppMessageManager.preload()
         appInboxManager.reload()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
     }
 }

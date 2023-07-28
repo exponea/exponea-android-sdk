@@ -211,8 +211,10 @@ internal object PublicApiTestCases {
                 AppInboxCacheImplTest.buildMessage("1"),
                 null
             )
+        },
+        Pair(Exponea::getInAppContentBlocksPlaceholder) {
+            Exponea.getInAppContentBlocksPlaceholder("placeholder1", ApplicationProvider.getApplicationContext())
         }
-
     )
 
     private fun buildMessageItemAction(): MessageItemAction {

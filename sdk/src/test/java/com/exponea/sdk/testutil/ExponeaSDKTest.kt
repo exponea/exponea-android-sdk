@@ -2,6 +2,7 @@ package com.exponea.sdk.testutil
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
@@ -33,6 +34,12 @@ internal open class ExponeaSDKTest {
     fun disableInAppMessagePrefetch() {
         mockkConstructor(InAppMessageManagerImpl::class)
         every { anyConstructed<InAppMessageManagerImpl>().preload() } just Runs
+    }
+
+    @Before
+    fun disableInAppContentBlocksPrefetch() {
+        mockkConstructor(InAppContentBlocksManagerImpl::class)
+        every { anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders() } just Runs
     }
 
     @After

@@ -1,7 +1,7 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
-## Release Notes for 3.7.0-realm-SNAPSHOT
+## Release Notes for 3.7.0-realm
 #### August 01, 2023
 * Features
   * Local DB is changed to Realm, instead of Room

@@ -1,3 +1,7 @@
+plugins {
+    id 'io.realm.kotlin'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -15,6 +19,7 @@ android {
         buildConfigField "int", "EXPONEA_VERSION_CODE", "66"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
+        multiDexEnabled true
     }
 
     compileOptions {
@@ -55,10 +60,15 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Database
+    implementation 'io.realm.kotlin:library-base:1.7.1'
+
+    // Keeping Room for migration purposes
+    //noinspection GradleDependency - raising version is meaningless
     implementation("androidx.room:room-runtime:2.1.0")
     annotationProcessor("androidx.room:room-compiler:2.1.0")
 
     // To use Kotlin annotation processing tool (kapt)
+    //noinspection GradleDependency
     kapt("androidx.room:room-compiler:2.1.0")
 
     //Keeping paperDb for migration purposes
@@ -98,4 +108,7 @@ dependencies {
     testImplementation "io.mockk:mockk:1.9.3"
     // WorkManager testing
     testImplementation 'androidx.work:work-testing:2.4.0'
+
+    androidTestImplementation "androidx.test:runner:1.5.2"
+    androidTestImplementation "androidx.test:rules:1.5.0"
 }

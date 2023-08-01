@@ -4,6 +4,7 @@ import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
+import com.exponea.sdk.database.ExportedEventRealmDao
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.EventRepositoryImpl
@@ -48,7 +49,11 @@ internal fun Exponea.reset() {
 }
 
 internal fun EventRepositoryImpl.close() {
-    database.openHelper.close()
+    if (exportedEventDao is ExportedEventRealmDao) {
+        exportedEventDao.database.close()
+        throw IllegalStateException("Realm database should not be used in Unit tests")
+    }
+    // ExportedEventRuntimeDao should be used and it don't need a closing
 }
 
 internal val Exponea.componentForTesting: ExponeaComponent

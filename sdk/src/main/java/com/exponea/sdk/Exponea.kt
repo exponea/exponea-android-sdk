@@ -660,7 +660,7 @@ object Exponea {
     private fun initializeSdk(context: Context) {
         this.component = ExponeaComponent(this.configuration, context)
 
-        component.eventRepository.tryToMigrateFromPaper()
+        component.eventRepository.tryToMigrate()
 
         telemetry?.reportEvent(
             com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,
@@ -1168,4 +1168,23 @@ object Exponea {
             }
         )
     }.logOnExceptionWithResult().getOrNull()
+
+    /**
+     * Checks if SDK is running in Unit test environment.
+     * - If app is running -> returns FALSE
+     * - If unit test (src/test/java) is running -> returns TRUE
+     * - If incremental test (src/androidTest/java) is running -> returns FALSE
+     */
+    internal fun isTestEnvironment(): Boolean {
+        // This check has to exist as function rather as top-level property
+        // because top-level property init time is time of <cinit> if this class
+        // and that could be sooner than <cinit> of ExponeaTestClass
+        // https://discuss.kotlinlang.org/t/top-level-property-initialization-when-does-it-happen/19121/2
+        return try {
+            Class.forName("com.exponea.ExponeaTestClass")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
 }

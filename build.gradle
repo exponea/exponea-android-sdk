@@ -27,6 +27,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'io.realm.kotlin' version '1.7.1' apply false
+}
+
 allprojects {
     repositories {
         google()

@@ -4,11 +4,11 @@ import com.exponea.sdk.models.ExportedEvent
 
 internal interface EventRepository {
     fun all(): List<ExportedEvent>
-    fun count(): Int
+    fun count(): Long
     fun add(item: ExportedEvent)
     fun update(item: ExportedEvent)
     fun get(id: String): ExportedEvent?
     fun remove(id: String)
     fun clear()
-    fun tryToMigrateFromPaper()
+    fun tryToMigrate()
 }

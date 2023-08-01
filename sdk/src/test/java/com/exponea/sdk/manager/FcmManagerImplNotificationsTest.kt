@@ -54,7 +54,7 @@ internal class FcmManagerImplNotificationsTest(
     companion object {
         data class TestCase(
             val name: String,
-            val notificationPayload: Map<String, String>,
+            val notificationPayload: Map<String, String?>,
             val expectNotificationCreated: Boolean,
             val expectedNotificationId: Int,
             val expectedNotificationMatcher: (Notification) -> Unit,

@@ -3,29 +3,29 @@ package com.exponea.sdk.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.ExportedEventRoom
 
-@Database(entities = [ExportedEvent::class], version = 1)
+@Database(entities = [ExportedEventRoom::class], version = 1)
 @TypeConverters(Converters::class)
-internal abstract class ExponeaDatabase : RoomDatabase() {
+internal abstract class ExponeaRoomDatabase : RoomDatabase() {
 
-    abstract fun exportedEventDao(): ExportedEventDao
+    abstract fun exportedEventDao(): ExportedEventRoomDao
 
-    fun all(): List<ExportedEvent> {
+    fun all(): List<ExportedEventRoom> {
         return exportedEventDao().all()
     }
     fun count(): Int {
         return exportedEventDao().count()
     }
-    fun add(item: ExportedEvent) {
+    fun add(item: ExportedEventRoom) {
         exportedEventDao().add(item)
     }
 
-    fun update(item: ExportedEvent) {
+    fun update(item: ExportedEventRoom) {
         exportedEventDao().update(item)
     }
 
-    fun get(id: String): ExportedEvent? {
+    fun get(id: String): ExportedEventRoom? {
         return exportedEventDao().get(id)
     }
     fun remove(id: String) {

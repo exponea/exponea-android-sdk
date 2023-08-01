@@ -9,6 +9,10 @@ import com.google.gson.Gson
 
 class Converters {
 
+    companion object {
+        val instance = Converters()
+    }
+
     private val separator = "§§§§§"
 
     @TypeConverter
@@ -93,10 +97,10 @@ class Converters {
     }
 
     @TypeConverter
-    fun toStringMap(value: String?): HashMap<String, String>? {
+    fun toStringMap(value: String?): HashMap<String, String?>? {
         if (value == null || value.isEmpty()) return null
         try {
-            return Gson().fromJson<HashMap<String, String>>(value)
+            return Gson().fromJson<HashMap<String, String?>>(value)
         } catch (ex: Exception) {
             Logger.e(this, ex.message ?: "Unable to deserialize the map", ex)
         }
@@ -104,7 +108,7 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromStringMap(data: HashMap<String, String>?): String? {
+    fun fromStringMap(data: HashMap<String, String?>?): String? {
         if (data == null) return ""
         try {
             return Gson().toJson(data)

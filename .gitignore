@@ -66,3 +66,11 @@ fastlane/test_output
 fastlane/readme.md
 
 .idea/misc.xml
+
+#Realm created DB files
+sdk/ExponeaEventRealm.db
+sdk/ExponeaEventRealm.db.lock
+sdk/ExponeaEventRealm.db.management/
+sdk/default.db
+sdk/default.db.lock
+sdk/default.db.management/

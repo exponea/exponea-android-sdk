@@ -111,7 +111,7 @@ internal class AppInboxManagerImpl(
         if (messages == null || messages.isEmpty()) {
             return
         }
-        messages.forEach { messageItem ->
+        for (messageItem in messages) {
             messageItem.customerIds = customerIds.toHashMap()
             messageItem.syncToken = syncToken
         }

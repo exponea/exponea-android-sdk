@@ -42,8 +42,10 @@ internal class AppInboxParser {
                     ensureCloseButton = false,
                     allowAnchorButton = true
                 ))
-                htmlContent.actions?.forEach { htmlAction ->
-                    actions.add(toAppInboxAction(htmlAction))
+                htmlContent.actions?.let {
+                    for (htmlAction in it) {
+                        actions.add(toAppInboxAction(htmlAction))
+                    }
                 }
             }
             val trackingData: MutableMap<String, Any?> = mutableMapOf()

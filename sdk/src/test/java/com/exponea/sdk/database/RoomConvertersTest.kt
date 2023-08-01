@@ -73,7 +73,7 @@ internal class RoomConvertersTest {
     fun `should convert string map correctly`() {
         // use notification payload as mock hashMap
         val payload = NotificationTestPayloads.NOTIFICATION_WITH_NESTED_ATTRIBUTES
-        val mapString = converters.fromStringMap(payload)
+        val mapString = converters.fromStringMap(payload as HashMap<String, String?>)
         assertEquals(converters.toStringMap(mapString), payload)
     }
 

@@ -3,8 +3,9 @@ package com.exponea.sdk.database
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaProject
-import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.ExportedEventRoom
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.Route.TRACK_EVENTS
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import kotlin.concurrent.thread
@@ -17,18 +18,18 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExponeaDatabaseTest : ExponeaSDKTest() {
+internal class ExponeaRoomDatabaseTest : ExponeaSDKTest() {
 
     companion object {
         const val DB_NAME = "TestDatabase"
     }
 
-    private lateinit var db: ExponeaDatabase
-    private val mockData = ExportedEvent(
+    private lateinit var db: ExponeaRoomDatabase
+    private val mockData = ExportedEventRoom(
         properties = hashMapOf(Pair("key", "value")),
         age = 1.234,
         projectId = "mock_project_id",
-        route = Route.TRACK_EVENTS,
+        route = TRACK_EVENTS,
         exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
     )
 
@@ -36,7 +37,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     fun init() {
         db = Room.databaseBuilder(
                 ApplicationProvider.getApplicationContext(),
-                ExponeaDatabase::class.java, DB_NAME
+                ExponeaRoomDatabase::class.java, DB_NAME
         ).enableMultiInstanceInvalidation()
         .allowMainThreadQueries().build()
     }
@@ -83,10 +84,10 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
                 thread {
                     for (x in 1..10) {
                         db.add(
-                            ExportedEvent(
+                            ExportedEventRoom(
                                 customerIds = hashMapOf(Pair("first name $i $x", "second name")),
                                 projectId = "mock_project_id",
-                                route = Route.TRACK_EVENTS,
+                                route = TRACK_EVENTS,
                                 exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
                             )
                         )
@@ -111,7 +112,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     fun denit() {
         for (x in 1..10) {
             db.add(
-                    ExportedEvent(
+                    ExportedEventRoom(
                             customerIds = hashMapOf(Pair("first name $x", "second name")),
                             projectId = "mock_project_id",
                             route = Route.TRACK_EVENTS,

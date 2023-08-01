@@ -276,7 +276,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         } else {
             target.actionsContainerView.visibility = View.VISIBLE
             target.actionsContainerView.removeAllViews()
-            actions.forEach { messageAction ->
+            for (messageAction in actions) {
                 val actionButton = LayoutInflater
                     .from(target.context)
                     .inflate(R.layout.message_inbox_action_button, null, false) as Button

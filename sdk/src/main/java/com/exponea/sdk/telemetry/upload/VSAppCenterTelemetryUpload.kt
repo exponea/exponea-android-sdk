@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Build
 import android.util.Base64
 import com.exponea.sdk.BuildConfig
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
@@ -48,17 +49,9 @@ internal class VSAppCenterTelemetryUpload(
         }
     }
 
-    private val isRunningTest: Boolean =
-        try {
-            Class.forName("com.exponea.ExponeaTestClass")
-            true
-        } catch (e: ClassNotFoundException) {
-            false
-        }
-
     private val APP_SECRET: String =
 
-    if (application.isCalledFromExampleApp() || isRunningTest) {
+    if (application.isCalledFromExampleApp() || Exponea.isTestEnvironment()) {
         // Use dev app center project when SDK is used in our demo app
         "19dca50b-3467-488b-b1fa-47fb9258901a"
     } else {

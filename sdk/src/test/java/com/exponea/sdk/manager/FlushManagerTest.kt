@@ -21,10 +21,16 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -201,6 +207,74 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         }
         assertNull(eventSlot.captured.age)
         assertNotNull(eventSlot.captured.timestamp)
+    }
+
+    @Test
+    fun `should be thread safe`() {
+        setup(connected = true, serviceSuccess = true)
+        val readCount = 200
+        val createCount = 200
+        val updateCount = 200
+        val deleteCount = 200
+        val getAllCount = 200
+        val threadsCount = readCount + updateCount + deleteCount + getAllCount + createCount
+        val recordsToRead = mutableListOf<ExportedEvent>()
+        for (i in 0 until readCount) {
+            recordsToRead.add(createTestEvent(true, type = Constants.EventTypes.push))
+        }
+        val recordsToUpdate = mutableListOf<ExportedEvent>()
+        for (i in 0 until updateCount) {
+            recordsToUpdate.add(createTestEvent(true, type = Constants.EventTypes.push))
+        }
+        val recordsToDelete = mutableListOf<ExportedEvent>()
+        for (i in 0 until deleteCount) {
+            recordsToDelete.add(createTestEvent(true, type = Constants.EventTypes.push))
+        }
+        val service: ExecutorService = Executors.newFixedThreadPool(threadsCount)
+        val startPoint = Semaphore(0)
+        val doneTaskCount = CountDownLatch(threadsCount)
+        for (each in recordsToRead) {
+            service.submit {
+                startPoint.acquire()
+                assertNotNull(repo.get(each.id))
+                doneTaskCount.countDown()
+            }
+        }
+        for (i in 0 until createCount) {
+            service.submit {
+                startPoint.acquire()
+                createTestEvent(true, type = Constants.EventTypes.push)
+                doneTaskCount.countDown()
+            }
+        }
+        for (each in recordsToUpdate) {
+            service.submit {
+                startPoint.acquire()
+                each.age = 10.0
+                repo.update(each)
+                doneTaskCount.countDown()
+            }
+        }
+        for (each in recordsToDelete) {
+            service.submit {
+                startPoint.acquire()
+                repo.remove(each.id)
+                doneTaskCount.countDown()
+            }
+        }
+        for (i in 0 until getAllCount) {
+            service.submit {
+                startPoint.acquire()
+                assertNotNull(repo.all())
+                doneTaskCount.countDown()
+            }
+        }
+        // start all DB actions at once
+        startPoint.release(threadsCount)
+        // wait until all actions are done
+        val isDone = doneTaskCount.await(20, SECONDS)
+        assertTrue(isDone)
+        assertEquals(600, repo.all().size)
     }
 
     @After

@@ -12,9 +12,9 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 
-internal class ExponeaGson {
+public class ExponeaGson {
     companion object {
-        internal val instance = GsonBuilder()
+        public val instance = GsonBuilder()
             // NaN and Infinity are serialized as strings.
             // Gson cannot serialize them, it can be setup to do it,
             // but then Exponea servers fail to process the JSON afterwards.

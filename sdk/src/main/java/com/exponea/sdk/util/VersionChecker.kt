@@ -4,7 +4,6 @@ import android.content.Context
 import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.network.NetworkHandler
 import java.io.IOException
-import java.lang.Exception
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -32,6 +31,10 @@ internal class VersionChecker(
             context.isXamarinSDK() -> {
                 actualVersion = context.getXamarinSDKVersion()
                 gitProject = "exponea-xamarin-sdk"
+            }
+            context.isMauiSDK() -> {
+                actualVersion = context.getMauiSDKVersion()
+                gitProject = "bloomreach-maui-sdk"
             }
             else -> {
                 actualVersion = BuildConfig.EXPONEA_VERSION_NAME

@@ -12,6 +12,7 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isCalledFromExampleApp
 import com.exponea.sdk.util.isCapacitorSDK
 import com.exponea.sdk.util.isFlutterSDK
+import com.exponea.sdk.util.isMauiSDK
 import com.exponea.sdk.util.isReactNativeSDK
 import com.exponea.sdk.util.isXamarinSDK
 import com.google.gson.Gson
@@ -74,6 +75,9 @@ internal class VSAppCenterTelemetryUpload(
             }
             application.isXamarinSDK() -> {
                 "0b7cbf35-00cd-4a36-b2a1-c4c51450ec31"
+            }
+            application.isMauiSDK() -> {
+                "430d3892-0dba-4185-9da3-3ea153ea97e9"
             }
             else -> "67e2bde9-3c20-4259-b8e4-428b4f89ca8d"
         }

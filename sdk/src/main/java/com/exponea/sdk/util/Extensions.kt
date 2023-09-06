@@ -212,6 +212,10 @@ fun Context.isXamarinSDK(): Boolean {
     return isOtherSDK("ExponeaXamarinSDK")
 }
 
+fun Context.isMauiSDK(): Boolean {
+    return isOtherSDK("BloomreachMauiSDK")
+}
+
 fun Context.getReactNativeSDKVersion(): String? {
     return getSDKVersion("ExponeaReactNativeSDKVersion")
 }
@@ -226,6 +230,10 @@ fun Context.getFlutterSDKVersion(): String? {
 
 fun Context.getXamarinSDKVersion(): String? {
     return getSDKVersion("ExponeaXamarinSDKVersion")
+}
+
+fun Context.getMauiSDKVersion(): String? {
+    return getSDKVersion("BloomreachMauiSDKVersion")
 }
 
 private fun Context.isOtherSDK(sdk: String): Boolean = runCatching {

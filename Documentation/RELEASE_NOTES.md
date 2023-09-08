@@ -1,6 +1,12 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.7.1
+#### September 08, 2023
+* Features
+  * Small internal refactoring for better compatibility with MAUI wrapper
+
+
 ## Release Notes for 3.7.0
 #### July 28, 2023
 * Features

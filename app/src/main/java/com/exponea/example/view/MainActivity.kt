@@ -93,18 +93,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
-        fun String.toDeeplinkDestination() = when (this) {
-            "fetch" -> DeeplinkDestination.Fetch
-            "track" -> DeeplinkDestination.Track
-            "manual" -> DeeplinkDestination.Manual
-            "anonymize" -> DeeplinkDestination.Anonymize
+        fun String.toDeeplinkDestination() = when {
+            this.contains("fetch") -> DeeplinkDestination.Fetch
+            this.contains("track") -> DeeplinkDestination.Track
+            this.contains("manual") -> DeeplinkDestination.Manual
+            this.contains("anonymize") -> DeeplinkDestination.Anonymize
+            this.contains("inappcb") -> DeeplinkDestination.InAppCb
             else -> null
         }
-
         return if (intent.isViewUrlIntent("http")) {
             intent?.data?.path.orEmpty().toDeeplinkDestination()
         } else if (intent.isViewUrlIntent("exponea")) {
-            intent?.data?.host.orEmpty().toDeeplinkDestination()
+            intent?.data?.path.orEmpty().toDeeplinkDestination()
         } else {
             null
         }
@@ -112,10 +112,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleDeeplinkDestination(deeplinkDestination: DeeplinkDestination) {
         when (deeplinkDestination) {
-            DeeplinkDestination.Anonymize -> selectTab(BottomTab.Anonymize)
-            DeeplinkDestination.Fetch -> selectTab(BottomTab.Fetch)
-            DeeplinkDestination.Manual -> selectTab(BottomTab.Manual)
-            DeeplinkDestination.Track -> selectTab(BottomTab.Track)
+            DeeplinkDestination.Anonymize -> selectTab(Anonymize)
+            DeeplinkDestination.Fetch -> selectTab(Fetch)
+            DeeplinkDestination.Manual -> selectTab(Manual)
+            DeeplinkDestination.Track -> selectTab(Track)
+            DeeplinkDestination.InAppCb -> selectTab(InAppContentBlock)
         }
     }
 

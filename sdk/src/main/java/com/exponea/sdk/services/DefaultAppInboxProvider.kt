@@ -179,8 +179,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             bitmapCache, fontCache, dataSource
         ).normalize(HtmlNormalizerConfig(
             makeResourcesOffline = true,
-            ensureCloseButton = false,
-            allowAnchorButton = true
+            ensureCloseButton = false
         ))
         registerWebViewListener(source, target, htmlContent)
         if (htmlContent.valid && htmlContent.html != null) {

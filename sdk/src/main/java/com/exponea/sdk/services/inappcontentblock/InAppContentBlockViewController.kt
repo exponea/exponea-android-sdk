@@ -199,8 +199,7 @@ internal class InAppContentBlockViewController(
             )
             val normalizedResult = normalizer.normalize(HtmlNormalizerConfig(
                 makeResourcesOffline = true,
-                ensureCloseButton = false,
-                allowAnchorButton = true
+                ensureCloseButton = false
             ))
             htmlCache.set(message.id, htmlContent, normalizedResult)
             normalizedHtml = normalizedResult

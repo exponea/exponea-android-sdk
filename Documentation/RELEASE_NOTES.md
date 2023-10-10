@@ -16,8 +16,6 @@
   * Fixed: Action `click` event from In-app messages, and App Inbox HTML Inbox messages tracked button text with HTML tags
   * Fixed: Proguard configuration for GSON library was missing for R8
 
-> Note: Please note, we're working on the Bloomreach Engagement App release for the new In-app personalization features. This is just the mobile SDK part, for the new features, keep an eye on the Engagement App release notes, it will be released shortly.
-
 
 ## Release Notes for 3.6.1
 #### May 22, 2023

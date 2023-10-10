@@ -5,6 +5,7 @@ import android.util.Base64
 import com.exponea.sdk.util.Logger
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Call
@@ -29,7 +30,10 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
     }
 
     fun getFileName(url: String): String {
-        return Base64.encodeToString(url.toByteArray(), Base64.NO_WRAP).replace("=", "").replace("/", "-")
+        return MessageDigest
+            .getInstance("SHA-512")
+            .digest(url.toByteArray())
+            .fold("") { str, it -> str + "%02x".format(it) }
     }
 
     fun clearExcept(urls: List<String>) {

@@ -205,6 +205,52 @@ Exponea.trackClickedPush(
 
 > The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
+## Custom push notification data processing
+
+If using of `Exponea.handleRemoteMessage` does not fit requirements of your app, or you decide to deactivate the automatic push notification and want to use Bloomreach for push notifications delivery, you need to handle push notification payload yourself.
+
+Notification payload is generated from complex scenarios created in Bloomreach platform. It contains all data for Android, iOS and Web platforms, therefore payload itself could be robust.
+But payload itself is lightweight JSON with given structure:
+
+```json
+{
+    "notification_id": 123,
+    "url": "https://example.com/main_action",
+    "title": "Notification title",
+    "action": "app|browser|deeplink|self-check",
+    "message": "Notification message",
+    "image": "https://example.com/image.jpg",
+    "actions": [
+        {"title": "Action 1", "action": "app|browser|deeplink", "url": "https://example.com/action1"}
+    ],
+    "sound": "default",
+    "aps": {
+        "alert": {"title": "Notification title", "body": "Notification message"},
+        "mutable-content": 1
+    },
+    "attributes": {
+        "event_type": "campaign",
+        "campaign_id": "123456",
+        "campaign_name": "Campaign name",
+        "action_id": 1,
+        "action_type": "mobile notification",
+        "action_name": "Action 1",
+        "campaign_policy": "policy",
+        "consent_category": "General consent",
+        "subject": "Subject",
+        "language": "en",
+        "platform": "ios|android",
+        "sent_timestamp": 1631234567.89,
+        "recipient": "user@example.com"
+    },
+    "url_params": {"param1": "value1", "param2": "value2"},
+    "source": "xnpe_platform",
+    "silent": false,
+    "has_tracking_consent": true,
+    "consent_category_tracking": "Tracking consent name"
+}
+```
+
 ## Troubleshooting
 In case of push notifications not working for you, these are frequent issues with the most likely solutions.
 

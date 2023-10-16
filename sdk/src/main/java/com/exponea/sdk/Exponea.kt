@@ -20,8 +20,10 @@ import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConfigurationFileManager
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.TimeLimitedFcmManagerImpl
+import com.exponea.sdk.manager.TrackingConsentManager
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.IGNORE_CONSENT
+import com.exponea.sdk.manager.TrackingConsentManagerImpl
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
@@ -54,6 +56,7 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaInitManager
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
@@ -540,11 +543,19 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        initGate.waitForInitialize {
-            component.trackingConsentManager.trackClickedPush(
-                data, actionData, timestamp, CONSIDER_CONSENT
-            )
+        val trackingConsentManager = getTrackingConsentManager()
+        if (trackingConsentManager == null) {
+            Logger.w(this, "Unable to start tracking flow, waiting for SDK init")
+            initGate.waitForInitialize {
+                component.trackingConsentManager.trackClickedPush(
+                    data, actionData, timestamp, CONSIDER_CONSENT
+                )
+            }
+            return@runCatching
         }
+        trackingConsentManager.trackClickedPush(
+            data, actionData, timestamp, CONSIDER_CONSENT
+        )
     }.logOnException()
 
     /**
@@ -556,11 +567,19 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        initGate.waitForInitialize {
-            component.trackingConsentManager.trackClickedPush(
-                data, actionData, timestamp, IGNORE_CONSENT
-            )
+        val trackingConsentManager = getTrackingConsentManager()
+        if (trackingConsentManager == null) {
+            Logger.w(this, "Unable to start tracking flow, waiting for SDK init")
+            initGate.waitForInitialize {
+                component.trackingConsentManager.trackClickedPush(
+                    data, actionData, timestamp, IGNORE_CONSENT
+                )
+            }
+            return@runCatching
         }
+        trackingConsentManager.trackClickedPush(
+            data, actionData, timestamp, IGNORE_CONSENT
+        )
     }.logOnException()
 
     /**
@@ -612,6 +631,25 @@ object Exponea {
         }
         return true
     }.returnOnException { true }
+
+    private fun getTrackingConsentManager(): TrackingConsentManager? {
+        if (isInitialized) {
+            return component.trackingConsentManager
+        }
+        val applicationContext = ExponeaContextProvider.applicationContext
+        if (applicationContext == null) {
+            Logger.e(this, "Tracking process cannot continue without known application context")
+            return null
+        }
+        // TrackingConsentManager without SDK init
+        try {
+            return TrackingConsentManagerImpl.createSdklessInstance(applicationContext)
+        } catch (e: Exception) {
+            Logger.e(this, "Tracking not handled" +
+                " error occured while preparing a tracking process, see logs", e)
+            return null
+        }
+    }
 
     /**
      * Returns FcmManager implementation that fits current SDK state:

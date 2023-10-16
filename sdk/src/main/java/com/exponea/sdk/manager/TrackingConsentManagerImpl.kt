@@ -1,5 +1,7 @@
 package com.exponea.sdk.manager
 
+import android.content.Context
+import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.TrackingConsentManager.MODE
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
@@ -13,7 +15,17 @@ import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.network.NetworkHandlerImpl
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepository
+import com.exponea.sdk.repository.CampaignRepositoryImpl
+import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
+import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
+import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
@@ -294,5 +306,57 @@ internal class TrackingConsentManagerImpl(
             trackingAllowed,
             error = error
         )
+    }
+
+    companion object {
+        fun createSdklessInstance(context: Context): TrackingConsentManagerImpl {
+            val configuration = ExponeaConfigRepository.get(context)
+                ?: throw InvalidConfigurationException("No previous Exponea configuration found")
+            val preferences = ExponeaPreferencesImpl(context)
+            val eventRepository = TemporaryEventRepositoryImpl(context, preferences)
+            val uniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
+            val customerIdsRepository = CustomerIdsRepositoryImpl(
+                ExponeaGson.instance, uniqueIdentifierRepository, preferences
+            )
+            val networkManager = NetworkHandlerImpl(configuration)
+            val exponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
+            val connectionManager = ConnectionManagerImpl(context)
+            val flushManager = FlushManagerImpl(
+                configuration,
+                eventRepository,
+                exponeaService,
+                connectionManager
+            ) {
+                // no action for identifyCustomer - SDK is not initialized
+            }
+            val projectFactory = try {
+                ExponeaProjectFactory(context, configuration)
+            } catch (e: InvalidConfigurationException) {
+                if (configuration.advancedAuthEnabled) {
+                    Logger.w(this, "Turning off advanced auth for campaign data tracking")
+                    configuration.advancedAuthEnabled = false
+                }
+                ExponeaProjectFactory(context, configuration)
+            }
+            val eventManager = EventManagerImpl(
+                configuration, eventRepository, customerIdsRepository, flushManager, projectFactory,
+                onEventCreated = { event, type ->
+                    // no action for any event - SDK is not initialized
+                }
+            )
+            val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
+            val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
+                context, eventManager
+            )
+            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
+                context, eventManager
+            )
+            return TrackingConsentManagerImpl(
+                eventManager = eventManager,
+                campaignRepository = campaignRepository,
+                inappMessageTrackingDelegate = inappMessageTrackingDelegate,
+                inAppContentBlockTrackingDelegate = inAppContentBlockTrackingDelegate
+            )
+        }
     }
 }

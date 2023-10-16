@@ -54,6 +54,11 @@
             android:theme="@style/Theme.AppInboxDetailActivity"
             android:configChanges="orientation|screenSize"/>
 
+        <activity
+            android:name=".view.NotificationsPermissionActivity"
+            android:theme="@style/Theme.Invisible"
+            />
+
         <receiver
             android:name=".receiver.AppUpdateReceiver"
             android:enabled="true"

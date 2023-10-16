@@ -53,6 +53,7 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
@@ -1206,4 +1207,8 @@ object Exponea {
             }
         )
     }.logOnExceptionWithResult().getOrNull()
+
+    fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) = runCatching {
+        NotificationsPermissionReceiver.requestPushAuthorization(context, listener)
+    }.logOnException()
 }

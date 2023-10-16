@@ -161,7 +161,7 @@ internal class InAppMessageBitmapCacheImplTest {
     fun `should download and store image with URL length up to 2000 characters`() {
         val repo = spyk(InAppMessageBitmapCacheImpl(context))
         val alphabet: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-        for (nameLength in 1..2000){
+        for (nameLength in 1..2000) {
             server.enqueue(MockResponse().setBody("mock-response"))
             val imageUrl = server.url(
                 List(nameLength) { alphabet.random() }.joinToString("")

@@ -1,7 +1,6 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
-import android.util.Base64
 import com.exponea.sdk.util.Logger
 import java.io.File
 import java.io.IOException

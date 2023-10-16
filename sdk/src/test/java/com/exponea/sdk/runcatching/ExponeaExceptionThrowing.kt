@@ -3,9 +3,11 @@ package com.exponea.sdk.runcatching
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.services.DefaultAppInboxProvider
 import io.mockk.every
 import io.mockk.mockkConstructor
+import io.mockk.mockkObject
 
 object ExponeaExceptionThrowing {
     class TestPurposeException : Exception("Exception for test purposes")
@@ -15,6 +17,7 @@ object ExponeaExceptionThrowing {
         mockkConstructor(BackgroundTimerManagerImpl::class)
         mockkConstructor(DefaultAppInboxProvider::class)
         Exponea.appInboxProvider = DefaultAppInboxProvider()
+        mockkObject(NotificationsPermissionReceiver)
     }
 
     fun makeExponeaThrow() {
@@ -48,5 +51,6 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<BackgroundTimerManagerImpl>().startTimer() } throws TestPurposeException()
         every { anyConstructed<BackgroundTimerManagerImpl>().stopTimer() } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().inAppContentBlockManager } throws TestPurposeException()
+        every { NotificationsPermissionReceiver.requestPushAuthorization(any(), any()) } throws TestPurposeException()
     }
 }

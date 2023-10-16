@@ -214,6 +214,9 @@ internal object PublicApiTestCases {
         },
         Pair(Exponea::getInAppContentBlocksPlaceholder) {
             Exponea.getInAppContentBlocksPlaceholder("placeholder1", ApplicationProvider.getApplicationContext())
+        },
+        Pair(Exponea::requestPushAuthorization) {
+            Exponea.requestPushAuthorization(ApplicationProvider.getApplicationContext()) { }
         }
     )
 

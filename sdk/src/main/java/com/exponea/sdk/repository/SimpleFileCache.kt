@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -79,13 +80,20 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
                 counter.getAndDecrement()
                 perFileCallback.invoke(true)
             } else {
-                downloadQueue.add(downloadFile(fileUrl, perFileCallback))
+                downloadFile(fileUrl, perFileCallback)?.let {
+                    downloadQueue.add(it)
+                }
             }
         }
     }
 
-    fun downloadFile(url: String, callback: ((Boolean) -> Unit)?): Call {
-        val request = Request.Builder().url(url).build()
+    fun downloadFile(url: String, callback: ((Boolean) -> Unit)?): Call? {
+        val validUrl = url.toHttpUrlOrNull()
+        if (validUrl == null) {
+            callback?.invoke(false)
+            return null
+        }
+        val request = Request.Builder().url(validUrl).build()
         val downloadRequest = httpClient.newCall(request)
         downloadRequest.enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {

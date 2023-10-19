@@ -16,6 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import okhttp3.Call
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -184,5 +185,23 @@ internal class InAppMessageBitmapCacheImplTest {
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         verify(exactly = 1) { repo.downloadFile(any(), any()) }
         assertTrue(repo.has(imageUrl))
+    }
+
+    @Test
+    fun `should not download image with non http url`() {
+        server.enqueue(MockResponse().setBody("mock-response"))
+        // real image
+        val imageUrl = "noscheme://example.com/image.jpg"
+        val repo = InAppMessageBitmapCacheImpl(context)
+        var downloaded = true
+        var downloadCall: Call? = null
+        waitForIt { done ->
+            downloadCall = repo.downloadFile(imageUrl) { downloadStatus ->
+                downloaded = downloadStatus
+                done()
+            }
+        }
+        assertFalse(downloaded)
+        assertNull(downloadCall)
     }
 }

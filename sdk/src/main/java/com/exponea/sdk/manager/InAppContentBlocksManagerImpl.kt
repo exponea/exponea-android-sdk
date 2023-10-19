@@ -30,6 +30,7 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.fromJson
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
@@ -66,9 +67,11 @@ internal class InAppContentBlocksManagerImpl(
                 sessionStartDate = Date(eventTimestampInMillis.toLong())
             }
             EventType.TRACK_CUSTOMER -> {
-                Logger.i(this, "CustomerIDs are updated, clearing InApp content personalized blocks")
-                clearPersonalizationAssignments()
-                reassignCustomerIds()
+                runOnBackgroundThread {
+                    Logger.i(this, "CustomerIDs are updated, clearing InApp content personalized blocks")
+                    clearPersonalizationAssignments()
+                    reassignCustomerIds()
+                }
             }
             else -> {
                 // nothing to trigger
@@ -93,7 +96,7 @@ internal class InAppContentBlocksManagerImpl(
         return viewController.getPlaceholderView(context)
     }
 
-    override fun clearAll() = runThreadSafely {
+    override fun clearAll() = runThreadSafelyInBackground {
         contentBlocksData.forEach { contentBlock ->
             htmlCache.remove(contentBlock.id)
         }
@@ -102,15 +105,17 @@ internal class InAppContentBlocksManagerImpl(
         Logger.d(this, "InApp Content Blocks was cleared completely")
     }
 
-    private fun runThreadSafely(action: () -> Unit) {
-        dataAccess.waitForAccess(action)
+    private fun runThreadSafelyInBackground(action: () -> Unit) {
+        ensureOnBackgroundThread {
+            dataAccess.waitForAccess(action)
+        }
     }
 
     private fun <T> runThreadSafelyWithResult(action: () -> T): T? {
         return dataAccess.waitForAccessWithResult(action).getOrNull()
     }
 
-    private fun clearPersonalizationAssignments() = runThreadSafely {
+    private fun clearPersonalizationAssignments() = runThreadSafelyInBackground {
         contentBlocksData.forEach {
             it.personalizedData = null
         }
@@ -118,13 +123,13 @@ internal class InAppContentBlocksManagerImpl(
         Logger.d(this, "InApp Content Blocks was cleared from personal assignments")
     }
 
-    private fun reassignCustomerIds() = runThreadSafely {
+    private fun reassignCustomerIds() = runThreadSafelyInBackground {
         contentBlocksData.forEach {
             it.customerIds = customerIdsRepository.get().toHashMap()
         }
     }
 
-    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafely {
+    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafelyInBackground {
         val dataMap = source.groupBy { it.id }
         contentBlocksData.forEach { targetContentBlock ->
             dataMap.get(targetContentBlock.id)?.firstOrNull()?.let { sourceContentBlock ->
@@ -136,12 +141,12 @@ internal class InAppContentBlocksManagerImpl(
     /**
      * Loads missing or obsolete content for block.
      */
-    private fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafely {
+    private fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafelyInBackground {
         val blockIds = contentBlocks
             .filter { !it.hasFreshContent() }
             .map { it.id }
         if (blockIds.isEmpty()) {
-            return@runThreadSafely
+            return@runThreadSafelyInBackground
         }
         Logger.i(this, "Loading content for InApp Content Blocks ${blockIds.joinToString()}")
         val semaphore = CountDownLatch(1)
@@ -281,7 +286,7 @@ internal class InAppContentBlocksManagerImpl(
 
     override fun loadInAppContentBlockPlaceholders() {
         Logger.d(this, "Loading of InApp Content Block placeholders requested")
-        runOnBackgroundThread {
+        ensureOnBackgroundThread {
             dataAccess.waitForAccessWithDone { done ->
                 Logger.d(this, "Loading of InApp Content Block placeholders")
                 val customerIds = customerIdsRepository.get()

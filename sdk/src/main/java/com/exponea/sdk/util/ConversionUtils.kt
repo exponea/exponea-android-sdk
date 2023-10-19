@@ -1,5 +1,6 @@
 package com.exponea.sdk.util
 
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
 import android.util.TypedValue
@@ -326,6 +327,10 @@ class ConversionUtils {
                 "900" -> return Typeface.BOLD
                 else -> return Typeface.NORMAL
             }
+        }
+
+        fun dpToPx(source: Int): Int {
+            return (source * Resources.getSystem().displayMetrics.density).toInt()
         }
     }
 }

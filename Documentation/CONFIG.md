@@ -70,6 +70,13 @@ data class ExponeaConfiguration(
   
   /** If true, Customer Token authentication is used */
   var advancedAuthEnabled: Boolean? = null
+  
+  /**
+  * Defines margin-top of Image in App Inbox detail screen in dp. Default value (null) will result
+  * in `?attr/actionBarSize` defined in application theme.
+  * This is useful in case of transparent toolbar theming.
+  */
+  var appInboxDetailImageInset: Int? = null
 )
 ```
 #### projectToken

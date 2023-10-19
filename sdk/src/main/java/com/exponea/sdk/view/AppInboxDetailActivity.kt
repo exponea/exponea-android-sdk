@@ -4,10 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.util.ConversionUtils
+import com.exponea.sdk.util.Logger
 import kotlinx.android.synthetic.main.message_inbox_list_activity.toolbar
 
 internal class AppInboxDetailActivity : AppCompatActivity() {
@@ -29,10 +33,22 @@ internal class AppInboxDetailActivity : AppCompatActivity() {
             finish()
             return
         }
-        Exponea.fetchAppInboxItem(messageId, { message ->
+        Exponea.fetchAppInboxItem(messageId) { message ->
             supportActionBar?.title = message?.content?.title
-                ?: getString(R.string.exponea_inbox_defaultTitle)
-        })
+                    ?: getString(R.string.exponea_inbox_defaultTitle)
+        }
+        Exponea.getComponent()?.exponeaConfiguration?.appInboxDetailImageInset?.let {
+            try {
+                val detailContainer = findViewById<FrameLayout>(R.id.container)
+                val layoutParams = detailContainer.layoutParams as RelativeLayout.LayoutParams
+                layoutParams.topMargin = ConversionUtils.dpToPx(it)
+                detailContainer.layoutParams = layoutParams
+            } catch (e: Exception) {
+                Logger.e(this, """
+                    App Inbox detail screen changed in layout, unable to apply `appInboxDetailImageInset`
+                """.trimIndent())
+            }
+        }
         val detailFragment = Exponea.getAppInboxDetailFragment(this, messageId)
         if (detailFragment == null) {
             finish()

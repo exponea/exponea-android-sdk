@@ -52,7 +52,14 @@ data class ExponeaConfiguration(
     /**
      * Automatically load content of In-app content blocks assigned to these Placeholder IDs
      */
-    var inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList()
+    var inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList(),
+
+    /**
+     * Defines margin-top of Image in App Inbox detail screen in dp. Default value (null) will result
+     * in `?attr/actionBarSize` defined in application theme.
+     * This is useful in case of transparent toolbar theming.
+     */
+    var appInboxDetailImageInset: Int? = null
 ) {
 
     companion object {

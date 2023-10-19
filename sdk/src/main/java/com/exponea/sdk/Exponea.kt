@@ -831,12 +831,10 @@ object Exponea {
      * Send the firebase token
      */
     private fun trackSavedToken() {
-        if (isAutoPushNotification) {
-            this.component.fcmManager.trackToken(
-                component.pushTokenRepository.get(),
-                tokenTrackFrequency,
-                component.pushTokenRepository.getLastTokenType())
-        }
+        this.component.fcmManager.trackToken(
+            component.pushTokenRepository.get(),
+            tokenTrackFrequency,
+            component.pushTokenRepository.getLastTokenType())
     }
 
     /**

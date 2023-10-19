@@ -70,12 +70,6 @@ internal open class FcmManagerImpl(
         }
 
         if (token != null && tokenType != null && shouldUpdateToken) {
-            if (!configuration.automaticPushNotification) {
-                Logger.w(this, "Push token stored but not tracked:" +
-                    " SDK configuration has 'automaticPushNotification' == false")
-                pushTokenRepository.setUntrackedToken(token, tokenType)
-                return
-            }
             pushTokenRepository.setTrackedToken(token, System.currentTimeMillis(), tokenType)
             val properties = PropertiesList(hashMapOf(tokenType.apiProperty to token))
             eventManager.track(

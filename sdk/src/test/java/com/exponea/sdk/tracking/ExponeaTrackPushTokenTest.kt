@@ -65,10 +65,10 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should NOT track FCM push token after SDK init with disabled automaticPushNotification`() {
+    fun `should track FCM push token after SDK init with disabled automaticPushNotification`() {
         initSdk(false)
         Exponea.trackPushToken(token = "test-google-push-token")
-        verify(exactly = 0) {
+        verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
     }
@@ -95,10 +95,10 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should NOT track HMS push token after SDK init with disabled automaticPushNotification`() {
+    fun `should track HMS push token after SDK init with disabled automaticPushNotification`() {
         initSdk(false)
         Exponea.trackHmsPushToken(token = "test-google-push-token")
-        verify(exactly = 0) {
+        verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
     }

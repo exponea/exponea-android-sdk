@@ -52,7 +52,7 @@ internal class MigrationTest : ExponeaSDKTest() {
                     route = Route.TRACK_EVENTS,
                     exponeaProject = ExponeaProject(
                         "mock_base_url.com",
-                        "mock_project_token",
+                        "mock-project-token",
                         "mock_auth"
                     )
                 )
@@ -75,7 +75,7 @@ internal class MigrationTest : ExponeaSDKTest() {
             assertEquals(event?.route, Route.TRACK_EVENTS)
             assertEquals(event?.exponeaProject, ExponeaProject(
                 "mock_base_url.com",
-                "mock_project_token",
+                "mock-project-token",
                 "mock_auth"
             ))
             assertEquals(event?.tries, i)
@@ -99,7 +99,7 @@ internal class MigrationTest : ExponeaSDKTest() {
         setup(20)
         assertEquals(repo.count(), 0)
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
         // migrated db should contain previous evens + install event
         assertEquals(repo.count(), 21)
     }

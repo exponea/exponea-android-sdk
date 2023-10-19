@@ -28,7 +28,7 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialProject = ExponeaProject(
             "https://base-url.com",
-            "project_token",
+            "project-token",
             "Token auth"
         )
         Exponea.flushMode = FlushMode.MANUAL

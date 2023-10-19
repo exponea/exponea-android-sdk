@@ -48,7 +48,10 @@ internal object PublicApiTestCases {
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) },
         Pair<KFunction2<Context, ExponeaConfiguration, Unit>, () -> Any>(
             Exponea::init
-        ) { Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration()) },
+        ) { Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-token")
+        ) },
         Pair<KFunction<Any>, () -> Any>(
             Exponea::initFromFile
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) }

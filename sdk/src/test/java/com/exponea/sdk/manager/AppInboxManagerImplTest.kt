@@ -256,7 +256,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         )
         // Need to be initialized to use bitmapCache for HTML parser
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project_token", "Token auth")
+        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, ExponeaConfiguration(
             baseURL = initialProject.baseUrl,

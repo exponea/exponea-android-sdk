@@ -89,7 +89,36 @@ data class ExponeaConfiguration(
     }
 
     fun validate() {
+        validateProjectToken(projectToken)
+        for (each in projectRouteMap) {
+            val eventType = each.key
+            each.value.forEach { project ->
+                try {
+                    validateProjectToken(project.projectToken)
+                } catch (e: Exception) {
+                    throw InvalidConfigurationException(
+                        """
+                        Project mapping for event type $eventType is not valid. ${e.localizedMessage}
+                    """.trimIndent()
+                    )
+                }
+            }
+        }
         validateBasicAuthValue(authorization)
+    }
+
+    private fun validateProjectToken(projectToken: String) {
+        if (projectToken.isBlank()) {
+            throw InvalidConfigurationException("""
+                Project token provided is not valid. Project token cannot be empty string.
+            """.trimIndent())
+        }
+        val projectTokenAllowedCharacters = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-'
+        if (projectToken.any { projectTokenAllowedCharacters.contains(it).not() }) {
+            throw InvalidConfigurationException("""
+                Project token provided is not valid. Only alphanumeric symbols and dashes are allowed in project token.
+            """.trimIndent())
+        }
     }
 
     private fun validateBasicAuthValue(authToken: String?) {

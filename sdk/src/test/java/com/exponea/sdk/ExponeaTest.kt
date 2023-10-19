@@ -21,14 +21,14 @@ internal class ExponeaTest : ExponeaSDKTest() {
     @Test
     fun `should get customer cookie after initialized`() {
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
         assertNotNull(Exponea.customerCookie)
     }
 
     @Test
     fun `should get current customer cookie after anonymize`() {
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
         val cookie1 = Exponea.customerCookie
         assertNotNull(cookie1)
         Exponea.anonymize()

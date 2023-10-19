@@ -37,7 +37,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token when Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewToken(context, "mock token")
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -51,7 +51,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token when Exponea Config is available`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration())
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewToken(context, "mock token")
         verify {
             anyConstructed<EventManagerImpl>().track(
@@ -105,7 +105,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token after Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewToken(context, "mock token")
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -134,7 +134,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // Firebase sends a new token, but no SDK config is stored
         Exponea.handleNewToken(context, "mock token")
         // And SDK is initialized later
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         // should re-track a stored token
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -163,7 +163,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // HMS sends a new token, but no SDK config is stored
         Exponea.handleNewHmsToken(context, "mock token")
         // And SDK is initialized later
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         // should re-track a stored token
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -183,7 +183,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should post-track fcm token on next Exponea init with enabled automaticPushNotification`() {
         // first run - SDK init without notification handling (probably user want to use own solution)
         Exponea.flushMode = MANUAL
-        val disabledConf = ExponeaConfiguration()
+        val disabledConf = ExponeaConfiguration(projectToken = "mock-token")
         disabledConf.automaticPushNotification = false
         Exponea.init(context, disabledConf)
         // Firebase sends a new token
@@ -202,7 +202,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         Exponea.shutdown()
         // second run - SDK init with notification handling
         Exponea.flushMode = MANUAL
-        val enabledConf = ExponeaConfiguration()
+        val enabledConf = ExponeaConfiguration(projectToken = "mock-token")
         enabledConf.automaticPushNotification = true
         Exponea.init(context, enabledConf)
         // should re-track a stored token, Firebase will not sent second update
@@ -222,7 +222,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should post-track HMS token on next Exponea init with enabled automaticPushNotification`() {
         // first run - SDK init without notification handling (probably user want to use own solution)
         Exponea.flushMode = MANUAL
-        val disabledConf = ExponeaConfiguration()
+        val disabledConf = ExponeaConfiguration(projectToken = "mock-token")
         disabledConf.automaticPushNotification = false
         Exponea.init(context, disabledConf)
         // HMS sends a new token
@@ -241,7 +241,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         Exponea.shutdown()
         // second run - SDK init with notification handling
         Exponea.flushMode = MANUAL
-        val enabledConf = ExponeaConfiguration()
+        val enabledConf = ExponeaConfiguration(projectToken = "mock-token")
         enabledConf.automaticPushNotification = true
         Exponea.init(context, enabledConf)
         // should re-track a stored token, HMS will not sent second update
@@ -259,7 +259,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token when Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewHmsToken(context, "mock token")
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -273,7 +273,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token when Exponea Config is available`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration())
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewHmsToken(context, "mock token")
         verify {
             anyConstructed<EventManagerImpl>().track(
@@ -287,7 +287,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token after Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration())
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.handleNewHmsToken(context, "mock token")
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -305,7 +305,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should store fcm token when Exponea is initialized with disabled automaticPushNotification`() {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         configuration.automaticPushNotification = false
         Exponea.init(context, configuration)
         val tokenRepository = PushTokenRepositoryProvider.get(context)
@@ -328,7 +328,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should store HMS token when Exponea is initialized with disabled automaticPushNotification`() {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         configuration.automaticPushNotification = false
         Exponea.init(context, configuration)
         val tokenRepository = PushTokenRepositoryProvider.get(context)
@@ -351,7 +351,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should store fcm token when Exponea Config is available with disabled automaticPushNotification`() {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         configuration.automaticPushNotification = false
         ExponeaConfigRepository.set(context, configuration)
         val tokenRepository = PushTokenRepositoryProvider.get(context)
@@ -374,7 +374,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should store HMS token when Exponea Config is available with disabled automaticPushNotification`() {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         configuration.automaticPushNotification = false
         ExponeaConfigRepository.set(context, configuration)
         val tokenRepository = PushTokenRepositoryProvider.get(context)

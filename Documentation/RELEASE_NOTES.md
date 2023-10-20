@@ -1,6 +1,27 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.8.0
+#### October 20, 2023
+* Features
+  * Example of Universal link handling added into example app
+  * Link for In-app content block guide has been added into documentation
+  * Anonymize feature has been described with more details in documentation
+  * Configuration property 'tokenTrackFrequency' has been described with more details in documentation
+  * Push notification Payload structure has been documented
+  * Push notification clicked event could be tracked without requirement of runtime SDK init (from killed state)
+  * Push notification permission request support
+  * App Inbox detail image inset added as Configuration property
+  * Project token validation added into SDK initialization process
+* Bug Fixes
+  * Fixed: Screen orientation 'sensor' was applied while showing of In-app message
+  * Fixed: Images with long URL was not correctly cached for In-app messages
+  * Fixed: Loading of In-app content blocks was causing ANR on UI thread
+  * Fixed: Showing of image with non-https URL was causing exception or crash
+  * Fixed: Push token was not tracked while 'automaticPushNotification' was disabled
+  * Fixed: Example app for HMS calls API for tracking of FCM push token
+
+
 ## Release Notes for 3.7.1
 #### September 08, 2023
 * Features

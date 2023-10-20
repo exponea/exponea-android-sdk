@@ -39,7 +39,9 @@ internal object PublicApiTestCases {
         Pair(Exponea::inAppMessageActionCallback, Constants.InApps.defaultInAppMessageDelegate),
         Pair(Exponea::customerCookie, null),
         Pair(Exponea::checkPushSetup, false),
-        Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider)
+        Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider),
+        Pair(Exponea::safeModeEnabled, true),
+        Pair(Exponea::runDebugMode, false)
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(

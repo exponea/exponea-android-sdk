@@ -32,7 +32,6 @@ import com.exponea.sdk.util.ThreadSafeAccess
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.fromJson
-import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.Date
 import java.util.concurrent.CountDownLatch
@@ -67,7 +66,7 @@ internal class InAppContentBlocksManagerImpl(
                 sessionStartDate = Date(eventTimestampInMillis.toLong())
             }
             EventType.TRACK_CUSTOMER -> {
-                runOnBackgroundThread {
+                ensureOnBackgroundThread {
                     Logger.i(this, "CustomerIDs are updated, clearing InApp content personalized blocks")
                     clearPersonalizationAssignments()
                     reassignCustomerIds()
@@ -107,15 +106,19 @@ internal class InAppContentBlocksManagerImpl(
 
     private fun runThreadSafelyInBackground(action: () -> Unit) {
         ensureOnBackgroundThread {
-            dataAccess.waitForAccess(action)
+            runThreadSafely(action)
         }
+    }
+
+    private fun runThreadSafely(action: () -> Unit) {
+        dataAccess.waitForAccess(action)
     }
 
     private fun <T> runThreadSafelyWithResult(action: () -> T): T? {
         return dataAccess.waitForAccessWithResult(action).getOrNull()
     }
 
-    private fun clearPersonalizationAssignments() = runThreadSafelyInBackground {
+    private fun clearPersonalizationAssignments() = runThreadSafely {
         contentBlocksData.forEach {
             it.personalizedData = null
         }
@@ -123,13 +126,13 @@ internal class InAppContentBlocksManagerImpl(
         Logger.d(this, "InApp Content Blocks was cleared from personal assignments")
     }
 
-    private fun reassignCustomerIds() = runThreadSafelyInBackground {
+    private fun reassignCustomerIds() = runThreadSafely {
         contentBlocksData.forEach {
             it.customerIds = customerIdsRepository.get().toHashMap()
         }
     }
 
-    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafelyInBackground {
+    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafely {
         val dataMap = source.groupBy { it.id }
         contentBlocksData.forEach { targetContentBlock ->
             dataMap.get(targetContentBlock.id)?.firstOrNull()?.let { sourceContentBlock ->
@@ -141,12 +144,12 @@ internal class InAppContentBlocksManagerImpl(
     /**
      * Loads missing or obsolete content for block.
      */
-    private fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafelyInBackground {
+    private fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafely {
         val blockIds = contentBlocks
             .filter { !it.hasFreshContent() }
             .map { it.id }
         if (blockIds.isEmpty()) {
-            return@runThreadSafelyInBackground
+            return@runThreadSafely
         }
         Logger.i(this, "Loading content for InApp Content Blocks ${blockIds.joinToString()}")
         val semaphore = CountDownLatch(1)

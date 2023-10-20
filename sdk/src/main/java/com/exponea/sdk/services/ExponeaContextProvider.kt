@@ -12,7 +12,7 @@ import com.exponea.sdk.util.Logger
  * Uses Android app lifecycle system - ContentProviders are loaded in main thread after App start
  * See more: https://firebase.blog/posts/2016/12/how-does-firebase-initialize-on-android
  */
-internal class ExponeaContextProvider: ContentProvider() {
+internal class ExponeaContextProvider : ContentProvider() {
 
     companion object {
         var applicationContext: Context? = null

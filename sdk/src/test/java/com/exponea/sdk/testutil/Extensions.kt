@@ -24,6 +24,10 @@ internal fun Exponea.shutdown() {
 }
 
 internal fun Exponea.reset() {
+    resetField(Exponea, "application")
+    resetField(Exponea, "configuration")
+    safeModeOverride = null
+    runDebugModeOverride = null
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
     initGate.clear()
@@ -45,6 +49,14 @@ internal fun Exponea.reset() {
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
     telemetry = null
+}
+
+fun resetField(target: Any, fieldName: String) {
+    val field = target.javaClass.getDeclaredField(fieldName)
+    with(field) {
+        isAccessible = true
+        set(target, null)
+    }
 }
 
 internal fun EventRepositoryImpl.close() {

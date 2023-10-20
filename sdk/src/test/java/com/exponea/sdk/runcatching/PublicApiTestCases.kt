@@ -39,7 +39,9 @@ internal object PublicApiTestCases {
         Pair(Exponea::inAppMessageActionCallback, Constants.InApps.defaultInAppMessageDelegate),
         Pair(Exponea::customerCookie, null),
         Pair(Exponea::checkPushSetup, false),
-        Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider)
+        Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider),
+        Pair(Exponea::safeModeEnabled, true),
+        Pair(Exponea::runDebugMode, false)
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(
@@ -48,7 +50,10 @@ internal object PublicApiTestCases {
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) },
         Pair<KFunction2<Context, ExponeaConfiguration, Unit>, () -> Any>(
             Exponea::init
-        ) { Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration()) },
+        ) { Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-token")
+        ) },
         Pair<KFunction<Any>, () -> Any>(
             Exponea::initFromFile
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) }
@@ -214,6 +219,9 @@ internal object PublicApiTestCases {
         },
         Pair(Exponea::getInAppContentBlocksPlaceholder) {
             Exponea.getInAppContentBlocksPlaceholder("placeholder1", ApplicationProvider.getApplicationContext())
+        },
+        Pair(Exponea::requestPushAuthorization) {
+            Exponea.requestPushAuthorization(ApplicationProvider.getApplicationContext()) { }
         }
     )
 

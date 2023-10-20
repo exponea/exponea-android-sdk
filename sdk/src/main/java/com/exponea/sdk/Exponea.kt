@@ -20,8 +20,10 @@ import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConfigurationFileManager
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.TimeLimitedFcmManagerImpl
+import com.exponea.sdk.manager.TrackingConsentManager
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.IGNORE_CONSENT
+import com.exponea.sdk.manager.TrackingConsentManagerImpl
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
@@ -51,9 +53,11 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaInitManager
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
@@ -231,17 +235,17 @@ object Exponea {
     /**
      * Any exception in SDK will be logged and swallowed if flag is enabled, otherwise
      * the exception will be rethrown.
-     * If we have application context and the application is debuggable, then safe mode is `disabled`.
+     * If we have application context and the app is debuggable or runDebugMode is TRUE, then safe mode is `disabled`.
      * Default is `enabled` - for any call to SDK method before init is called.
      * If we don't know if the app is build for debugging/release, `enabled` is the safest.
      * You can also set the value yourself that will override the default behaviour.
      */
-    private var safeModeOverride: Boolean? = null
-    internal var safeModeEnabled: Boolean
+    internal var safeModeOverride: Boolean? = null
+    var safeModeEnabled: Boolean
         get() {
             safeModeOverride?.let { return it }
             return if (this::application.isInitialized) {
-                application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0
+                !runDebugMode
             } else {
                 Logger.w(this, "No context available, defaulting to enabled safe mode")
                 true
@@ -249,6 +253,25 @@ object Exponea {
         }
         set(value) {
             safeModeOverride = value
+        }
+
+    /**
+     * Tells to SDK if app is running in Debug mode.
+     * In Debug mode, SDK is invoking VersionChecker step and turns off safeMode (saveMode could be overridden).
+     */
+    internal var runDebugModeOverride: Boolean? = null
+    var runDebugMode: Boolean
+        get() {
+            runDebugModeOverride?.let { return it }
+            return if (this::application.isInitialized) {
+                application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+            } else {
+                Logger.w(this, "No context available, debug mode is false by default")
+                false
+            }
+        }
+        set(value) {
+            runDebugModeOverride = value
         }
 
     /**
@@ -540,11 +563,19 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        initGate.waitForInitialize {
-            component.trackingConsentManager.trackClickedPush(
-                data, actionData, timestamp, CONSIDER_CONSENT
-            )
+        val trackingConsentManager = getTrackingConsentManager()
+        if (trackingConsentManager == null) {
+            Logger.w(this, "Unable to start tracking flow, waiting for SDK init")
+            initGate.waitForInitialize {
+                component.trackingConsentManager.trackClickedPush(
+                    data, actionData, timestamp, CONSIDER_CONSENT
+                )
+            }
+            return@runCatching
         }
+        trackingConsentManager.trackClickedPush(
+            data, actionData, timestamp, CONSIDER_CONSENT
+        )
     }.logOnException()
 
     /**
@@ -556,11 +587,19 @@ object Exponea {
         actionData: NotificationAction? = null,
         timestamp: Double? = currentTimeSeconds()
     ) = runCatching {
-        initGate.waitForInitialize {
-            component.trackingConsentManager.trackClickedPush(
-                data, actionData, timestamp, IGNORE_CONSENT
-            )
+        val trackingConsentManager = getTrackingConsentManager()
+        if (trackingConsentManager == null) {
+            Logger.w(this, "Unable to start tracking flow, waiting for SDK init")
+            initGate.waitForInitialize {
+                component.trackingConsentManager.trackClickedPush(
+                    data, actionData, timestamp, IGNORE_CONSENT
+                )
+            }
+            return@runCatching
         }
+        trackingConsentManager.trackClickedPush(
+            data, actionData, timestamp, IGNORE_CONSENT
+        )
     }.logOnException()
 
     /**
@@ -612,6 +651,25 @@ object Exponea {
         }
         return true
     }.returnOnException { true }
+
+    private fun getTrackingConsentManager(): TrackingConsentManager? {
+        if (isInitialized) {
+            return component.trackingConsentManager
+        }
+        val applicationContext = ExponeaContextProvider.applicationContext
+        if (applicationContext == null) {
+            Logger.e(this, "Tracking process cannot continue without known application context")
+            return null
+        }
+        // TrackingConsentManager without SDK init
+        try {
+            return TrackingConsentManagerImpl.createSdklessInstance(applicationContext)
+        } catch (e: Exception) {
+            Logger.e(this, "Tracking not handled" +
+                " error occured while preparing a tracking process, see logs", e)
+            return null
+        }
+    }
 
     /**
      * Returns FcmManager implementation that fits current SDK state:
@@ -696,25 +754,17 @@ object Exponea {
             }
         )
 
-        val isDebug = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-        if (checkPushSetup && isDebug) {
+        if (checkPushSetup && runDebugMode) {
             component.pushNotificationSelfCheckManager.start()
         }
-        if (isDebug && !isUnitTest()) {
+        if (runDebugMode && !isUnitTest()) {
             VersionChecker(component.networkManager, context).warnIfNotLatestSDKVersion()
         }
     }
 
-    private fun isUnitTest(): Boolean {
-        var device = Build.DEVICE
-        var product = Build.PRODUCT
-        if (device == null) {
-            device = ""
-        }
-
-        if (product == null) {
-            product = ""
-        }
+    internal fun isUnitTest(): Boolean {
+        val device = Build.DEVICE ?: ""
+        val product = Build.PRODUCT ?: ""
         return device == "robolectric" && product == "robolectric"
     }
 
@@ -792,12 +842,10 @@ object Exponea {
      * Send the firebase token
      */
     private fun trackSavedToken() {
-        if (isAutoPushNotification) {
-            this.component.fcmManager.trackToken(
-                component.pushTokenRepository.get(),
-                tokenTrackFrequency,
-                component.pushTokenRepository.getLastTokenType())
-        }
+        this.component.fcmManager.trackToken(
+            component.pushTokenRepository.get(),
+            tokenTrackFrequency,
+            component.pushTokenRepository.getLastTokenType())
     }
 
     /**
@@ -1168,4 +1216,8 @@ object Exponea {
             }
         )
     }.logOnExceptionWithResult().getOrNull()
+
+    fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) = runCatching {
+        NotificationsPermissionReceiver.requestPushAuthorization(context, listener)
+    }.logOnException()
 }

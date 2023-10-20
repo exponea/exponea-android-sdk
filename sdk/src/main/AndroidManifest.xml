@@ -12,7 +12,6 @@
         <activity
             android:name=".view.InAppMessageActivity"
             android:theme="@style/Theme.InAppMessageActivity"
-            android:screenOrientation="sensor"
             android:configChanges="orientation|screenSize"/>
 
         <activity
@@ -48,14 +47,17 @@
         <activity
             android:name=".view.AppInboxListActivity"
             android:theme="@style/Theme.AppInboxListActivity"
-            android:screenOrientation="sensor"
             android:configChanges="orientation|screenSize"/>
 
         <activity
             android:name=".view.AppInboxDetailActivity"
             android:theme="@style/Theme.AppInboxDetailActivity"
-            android:screenOrientation="sensor"
             android:configChanges="orientation|screenSize"/>
+
+        <activity
+            android:name=".view.NotificationsPermissionActivity"
+            android:theme="@style/Theme.Invisible"
+            />
 
         <receiver
             android:name=".receiver.AppUpdateReceiver"
@@ -65,6 +67,11 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <provider android:name=".services.ExponeaContextProvider"
+            android:authorities="${applicationId}.sdk.contextprovider"
+            android:exported="false"
+            android:enabled="true" />
     </application>
 
 </manifest>

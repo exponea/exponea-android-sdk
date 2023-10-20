@@ -48,9 +48,19 @@
         <item name="android:textColor">#666666</item>
     </style>
 
+    <style name="AppInboxAppBarOverlayStyle">
+        <item name="android:theme">@style/Theme.AppInboxAppBarOverlay</item>
+    </style>
+
     <style name="Theme.AppInboxAppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <style name="Theme.AppInboxAppBarPopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppInboxAppBarPopupStyle">
+        <item name="popupTheme">@style/Theme.AppInboxAppBarPopupOverlay</item>
+    </style>
+
+    <style name="Theme.AppInboxAppBarPopupOverlay" parent="ThemeOverlay.AppCompat.Light" >
+        <item name="android:background">?attr/colorPrimary</item>
+    </style>
 
     <style name="AppInboxButton" parent="@style/Widget.AppCompat.Button">
         <item name="android:theme">@style/Theme.AppCompat.NoActionBar</item>
@@ -85,5 +95,15 @@
     </style>
 
     <style name="AppInboxStatusLoading" parent="android:Widget.DeviceDefault.ProgressBar.Large">
+    </style>
+
+    <style name="Theme.Invisible" parent="Theme.AppCompat">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>

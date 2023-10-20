@@ -70,6 +70,13 @@ data class ExponeaConfiguration(
   
   /** If true, Customer Token authentication is used */
   var advancedAuthEnabled: Boolean? = null
+  
+  /**
+  * Defines margin-top of Image in App Inbox detail screen in dp. Default value (null) will result
+  * in `?attr/actionBarSize` defined in application theme.
+  * This is useful in case of transparent toolbar theming.
+  */
+  var appInboxDetailImageInset: Int? = null
 )
 ```
 #### projectToken
@@ -170,6 +177,11 @@ automatically send `session_start` and `session_end` events to Exponea API
 #### tokenTrackFrequency
 
 * Indicates the frequency which the Firebase token should be tracked
+* Default value is `ON_TOKEN_CHANGE`
+* Possible values are:
+  * ON_TOKEN_CHANGE - tracks push token if differs from previous tracked one
+  * EVERY_LAUNCH - tracks push token always
+  * DAILY - tracks push token once per day
 
 #### advancedAuthEnabled
 

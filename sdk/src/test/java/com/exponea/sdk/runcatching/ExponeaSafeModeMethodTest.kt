@@ -45,7 +45,7 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeEnabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.safeModeEnabled = true
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
@@ -57,7 +57,7 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration())
+        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.safeModeEnabled = false
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()

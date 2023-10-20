@@ -6,13 +6,13 @@ apply from: '../jacoco.gradle'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 17
-        targetSdkVersion 31
-        buildConfigField "String", "EXPONEA_VERSION_NAME", '"3.7.1"'
-        buildConfigField "int", "EXPONEA_VERSION_CODE", "67"
+        targetSdkVersion 33
+        buildConfigField "String", "EXPONEA_VERSION_NAME", '"3.8.0"'
+        buildConfigField "int", "EXPONEA_VERSION_CODE", "68"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
     }
@@ -91,7 +91,7 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.1'
     testImplementation 'com.github.gmazzo:okhttp-mock:1.4.1'
     // Improved Unit Testing
-    testImplementation "org.robolectric:robolectric:4.7.3"
+    testImplementation "org.robolectric:robolectric:4.10.3"
     // Co-Routines
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4'
     // Mockk

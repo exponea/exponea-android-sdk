@@ -35,7 +35,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         "sdkName":"ExponeaSDK.android",
         "sdkVersion":"1.0.0",
         "osName":"Android",
-        "osVersion":"12",
+        "osVersion":"13",
         "model":"robolectric",
         "locale":"en_US"
     }"""

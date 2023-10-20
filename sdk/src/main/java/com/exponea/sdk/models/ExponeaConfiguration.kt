@@ -52,7 +52,14 @@ data class ExponeaConfiguration(
     /**
      * Automatically load content of In-app content blocks assigned to these Placeholder IDs
      */
-    var inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList()
+    var inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList(),
+
+    /**
+     * Defines margin-top of Image in App Inbox detail screen in dp. Default value (null) will result
+     * in `?attr/actionBarSize` defined in application theme.
+     * This is useful in case of transparent toolbar theming.
+     */
+    var appInboxDetailImageInset: Int? = null
 ) {
 
     companion object {
@@ -82,7 +89,36 @@ data class ExponeaConfiguration(
     }
 
     fun validate() {
+        validateProjectToken(projectToken)
+        for (each in projectRouteMap) {
+            val eventType = each.key
+            each.value.forEach { project ->
+                try {
+                    validateProjectToken(project.projectToken)
+                } catch (e: Exception) {
+                    throw InvalidConfigurationException(
+                        """
+                        Project mapping for event type $eventType is not valid. ${e.localizedMessage}
+                    """.trimIndent()
+                    )
+                }
+            }
+        }
         validateBasicAuthValue(authorization)
+    }
+
+    private fun validateProjectToken(projectToken: String) {
+        if (projectToken.isBlank()) {
+            throw InvalidConfigurationException("""
+                Project token provided is not valid. Project token cannot be empty string.
+            """.trimIndent())
+        }
+        val projectTokenAllowedCharacters = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-'
+        if (projectToken.any { projectTokenAllowedCharacters.contains(it).not() }) {
+            throw InvalidConfigurationException("""
+                Project token provided is not valid. Only alphanumeric symbols and dashes are allowed in project token.
+            """.trimIndent())
+        }
     }
 
     private fun validateBasicAuthValue(authToken: String?) {

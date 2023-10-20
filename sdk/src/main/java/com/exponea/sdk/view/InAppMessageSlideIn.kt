@@ -100,10 +100,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
                     contentView.measuredHeight.toFloat()
             )
             .setListener(object : Animator.AnimatorListener {
-                override fun onAnimationEnd(animation: Animator?) { superDismiss() }
-                override fun onAnimationCancel(animation: Animator?) { superDismiss() }
-                override fun onAnimationStart(animation: Animator?) {}
-                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationEnd(animation: Animator) { superDismiss() }
+                override fun onAnimationCancel(animation: Animator) { superDismiss() }
+                override fun onAnimationStart(animation: Animator) {}
+                override fun onAnimationRepeat(animation: Animator) {}
             })
             .start()
     }

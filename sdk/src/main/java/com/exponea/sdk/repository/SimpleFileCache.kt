@@ -1,14 +1,15 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
-import android.util.Base64
 import com.exponea.sdk.util.Logger
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -29,7 +30,10 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
     }
 
     fun getFileName(url: String): String {
-        return Base64.encodeToString(url.toByteArray(), Base64.NO_WRAP).replace("=", "").replace("/", "-")
+        return MessageDigest
+            .getInstance("SHA-512")
+            .digest(url.toByteArray())
+            .fold("") { str, it -> str + "%02x".format(it) }
     }
 
     fun clearExcept(urls: List<String>) {
@@ -76,13 +80,20 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
                 counter.getAndDecrement()
                 perFileCallback.invoke(true)
             } else {
-                downloadQueue.add(downloadFile(fileUrl, perFileCallback))
+                downloadFile(fileUrl, perFileCallback)?.let {
+                    downloadQueue.add(it)
+                }
             }
         }
     }
 
-    fun downloadFile(url: String, callback: ((Boolean) -> Unit)?): Call {
-        val request = Request.Builder().url(url).build()
+    fun downloadFile(url: String, callback: ((Boolean) -> Unit)?): Call? {
+        val validUrl = url.toHttpUrlOrNull()
+        if (validUrl == null) {
+            callback?.invoke(false)
+            return null
+        }
+        val request = Request.Builder().url(validUrl).build()
         val downloadRequest = httpClient.newCall(request)
         downloadRequest.enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {

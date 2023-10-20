@@ -105,7 +105,7 @@ internal class InAppMessageManagerImplTest {
         every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
         manager = InAppMessageManagerImpl(
             configuration,

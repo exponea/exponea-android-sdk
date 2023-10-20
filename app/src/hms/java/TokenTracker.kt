@@ -19,7 +19,7 @@ class TokenTracker {
 
                     // Check whether the token is empty.
                     if (!TextUtils.isEmpty(token)) {
-                        Exponea.trackPushToken(token)
+                        Exponea.trackHmsPushToken(token)
                     }
                 } catch (e: ApiException) {
                     Logger.e(this, "get hms token failed, $e")

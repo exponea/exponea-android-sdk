@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
@@ -291,6 +292,18 @@ internal inline fun runOnBackgroundThread(delayMillis: Long, crossinline block: 
         }
         block.invoke()
     }
+}
+
+internal inline fun ensureOnBackgroundThread(crossinline block: () -> Unit) {
+    if (isRunningOnUiThread()) {
+        runOnBackgroundThread(block)
+    } else {
+        block.invoke()
+    }
+}
+
+internal fun isRunningOnUiThread(): Boolean {
+    return Looper.myLooper() == Looper.getMainLooper()
 }
 
 /**

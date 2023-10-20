@@ -94,8 +94,7 @@ internal class HtmlCacheImplTest {
             imageCache, fontCache, originalHtml
         ).normalize(HtmlNormalizerConfig(
             makeResourcesOffline = false,
-            ensureCloseButton = false,
-            allowAnchorButton = true
+            ensureCloseButton = false
         ))
     }
 }

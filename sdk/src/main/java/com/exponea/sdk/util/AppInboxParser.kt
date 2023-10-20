@@ -39,8 +39,7 @@ internal class AppInboxParser {
                     htmlOrigin
                 ).normalize(config = HtmlNormalizerConfig(
                     makeResourcesOffline = false,
-                    ensureCloseButton = false,
-                    allowAnchorButton = true
+                    ensureCloseButton = false
                 ))
                 htmlContent.actions?.forEach { htmlAction ->
                     actions.add(toAppInboxAction(htmlAction))

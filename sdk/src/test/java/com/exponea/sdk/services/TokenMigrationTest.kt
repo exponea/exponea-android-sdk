@@ -94,7 +94,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
     }
 
     private fun getExponeaConfiguration(): ExponeaConfiguration {
-        val configuration = ExponeaConfiguration()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token")
         configuration.automaticPushNotification = true
         return configuration
     }

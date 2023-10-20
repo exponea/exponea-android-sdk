@@ -24,12 +24,17 @@ import org.robolectric.RobolectricTestRunner
 internal class ConfigurationTest : ExponeaSDKTest() {
 
     private fun setupExponea(
-        authorization: String
+        authorization: String,
+        projectToken: String = "projectToken",
+        projectMapping: Map<EventType, List<ExponeaProject>>? = null
     ) {
         val configuration = ExponeaConfiguration(
-            projectToken = "projectToken",
+            projectToken = projectToken,
             authorization = authorization
         )
+        projectMapping?.let {
+            configuration.projectRouteMap = it
+        }
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
     }
@@ -46,7 +51,9 @@ internal class ConfigurationTest : ExponeaSDKTest() {
     @Test
     fun `should throw error when initializing sdk with basic authorization`() {
         expectedException.expect(InvalidConfigurationException::class.java)
-        expectedException.expectMessage("Basic authentication is not supported by mobile SDK for security reasons.")
+        expectedException.expectMessage("""
+            Basic authentication is not supported by mobile SDK for security reasons.
+        """.trimIndent())
         setupExponea("Basic asdf")
         assertEquals(Exponea.isInitialized, true)
     }
@@ -137,5 +144,93 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         ExponeaConfigRepository.set(context, runTimeConfig)
         val storedConfig = ExponeaConfigRepository.get(context)
         assertEquals(runTimeConfig, storedConfig)
+    }
+
+    @Test
+    fun `should initialize with correct project token`() {
+        setupExponea("Token asdf", "abcd-1234-fgh")
+        assertEquals(Exponea.isInitialized, true)
+    }
+
+    @Test
+    fun `should initialize with correct project mapping`() {
+        setupExponea(
+            "Token asdf",
+            "abcd-1234-fgh",
+            mapOf(
+                EventType.TRACK_CUSTOMER to listOf(
+                    ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "project-token",
+                        authorization = "Token mock-auth"
+                    )
+                )
+            )
+        )
+        assertEquals(Exponea.isInitialized, true)
+    }
+
+    @Test
+    fun `should throw error when initializing sdk with empty project token`() {
+        expectedException.expect(InvalidConfigurationException::class.java)
+        expectedException.expectMessage("""
+            Project token provided is not valid. Project token cannot be empty string.
+        """.trimIndent())
+        setupExponea("Basic asdf", "")
+        assertEquals(Exponea.isInitialized, false)
+    }
+
+    @Test
+    fun `should throw error when initializing sdk with empty project token in mapping`() {
+        expectedException.expect(InvalidConfigurationException::class.java)
+        expectedException.expectMessage("""
+            Project token provided is not valid. Project token cannot be empty string.
+        """.trimIndent())
+        setupExponea(
+            "Token asdf",
+            "abcd-1234-fgh",
+            mapOf(
+                EventType.TRACK_CUSTOMER to listOf(
+                    ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "",
+                        authorization = "Token mock-auth"
+                    )
+                )
+            )
+        )
+        assertEquals(Exponea.isInitialized, false)
+    }
+
+    @Test
+    fun `should throw error when initializing sdk with invalid project token`() {
+        expectedException.expect(InvalidConfigurationException::class.java)
+        expectedException.expectMessage("""
+            Project token provided is not valid. Only alphanumeric symbols and dashes are allowed in project token.
+        """.trimIndent())
+        setupExponea("Basic asdf", "invalid_token_value")
+        assertEquals(Exponea.isInitialized, false)
+    }
+
+    @Test
+    fun `should throw error when initializing sdk with invalid project token in mapping`() {
+        expectedException.expect(InvalidConfigurationException::class.java)
+        expectedException.expectMessage("""
+            Project mapping for event type TRACK_CUSTOMER is not valid. Project token provided is not valid. Only alphanumeric symbols and dashes are allowed in project token.
+        """.trimIndent())
+        setupExponea(
+            "Token asdf",
+            "abcd-1234-fgh",
+            mapOf(
+                EventType.TRACK_CUSTOMER to listOf(
+                    ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "invalid_token_value",
+                        authorization = "Token mock-auth"
+                    )
+                )
+            )
+        )
+        assertEquals(Exponea.isInitialized, false)
     }
 }

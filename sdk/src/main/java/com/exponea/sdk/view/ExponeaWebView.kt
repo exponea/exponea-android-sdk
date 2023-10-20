@@ -86,7 +86,6 @@ public class ExponeaWebView : WebView {
             domStorageEnabled = false
             loadWithOverviewMode = false
             cacheMode = WebSettings.LOAD_NO_CACHE
-            setAppCacheEnabled(false)
         }
     }
 

@@ -117,11 +117,11 @@ internal class HtmlNormalizer(
             return result
         }
         try {
-            cleanHtml(config.allowAnchorButton)
+            cleanHtml()
             if (config.makeResourcesOffline) {
                 makeResourcesToBeOffline()
             }
-            result.actions = ensureActionButtons(config.allowAnchorButton)
+            result.actions = ensureActionButtons()
             result.closeActionUrl = detectCloseButton(config.ensureCloseButton)
             result.html = exportHtml()
             result.valid = true
@@ -148,13 +148,9 @@ internal class HtmlNormalizer(
         }
     }
 
-    private fun cleanHtml(allowAnchorButton: Boolean) {
+    private fun cleanHtml() {
         // !!! Has to be called before #ensureCloseButton and #ensureActionButtons.
-        if (allowAnchorButton) {
-            removeAttributes(HREF_ATTR, ANCHOR_TAG_SELECTOR)
-        } else {
-            removeAttributes(HREF_ATTR)
-        }
+        removeAttributes(HREF_ATTR, ANCHOR_TAG_SELECTOR)
         ANCHOR_LINK_ATTRIBUTES.forEach {
             removeAttributes(it)
         }
@@ -192,15 +188,18 @@ internal class HtmlNormalizer(
         return document!!.html()
     }
 
-    private fun ensureActionButtons(allowAnchorButton: Boolean): List<ActionInfo> {
-        val result = ArrayList<ActionInfo>()
-        document?.let { it ->
-            if (allowAnchorButton) {
-                result.addAll(collectAnchorLinkButtons(it))
+    private fun ensureActionButtons(): List<ActionInfo> {
+        val result = mutableMapOf<String, ActionInfo>()
+        document?.let {
+            // collect 'data-link' first as it may update href
+            collectDataLinkButtons(it).forEach { action ->
+                result[action.actionUrl] = action
             }
-            result.addAll(collectDataLinkButtons(it))
+            collectAnchorLinkButtons(it).forEach { action ->
+                result[action.actionUrl] = action
+            }
         }
-        return result
+        return result.values.toList()
     }
 
     private fun collectAnchorLinkButtons(document: Document): List<ActionInfo> {
@@ -226,7 +225,9 @@ internal class HtmlNormalizer(
                 Logger.e(this, "[HTML] Action button found but with empty action")
                 continue
             }
-            if (!actionButton.hasParent() || !actionButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
+            if (actionButton.`is`(ANCHOR_TAG_SELECTOR)) {
+                actionButton.attr(HREF_ATTR, targetAction)
+            } else if (!actionButton.hasParent() || !actionButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
                 Logger.i(this, "[HTML] Wrapping Action button with a-href")
                 // randomize class name => prevents from CSS styles overriding in HTML
                 val actionButtonHrefClass = "action-button-href-${UUID.randomUUID()}"
@@ -515,8 +516,7 @@ internal class HtmlNormalizer(
      */
     open class HtmlNormalizerConfig(
         val makeResourcesOffline: Boolean,
-        val ensureCloseButton: Boolean,
-        val allowAnchorButton: Boolean
+        val ensureCloseButton: Boolean
     )
 
     /**
@@ -526,8 +526,7 @@ internal class HtmlNormalizer(
      */
     private class DefaultConfig : HtmlNormalizerConfig(
         makeResourcesOffline = true,
-        ensureCloseButton = true,
-        allowAnchorButton = false
+        ensureCloseButton = true
     )
 
     /**

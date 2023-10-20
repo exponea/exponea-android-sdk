@@ -63,7 +63,7 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
             super.onCreate(savedInstanceState)
             skipInstallEvent()
             Exponea.flushMode = FlushMode.MANUAL
-            Exponea.init(applicationContext, ExponeaConfiguration())
+            Exponea.init(applicationContext, ExponeaConfiguration(projectToken = "mock-token"))
         }
     }
 }

@@ -22,6 +22,8 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.util.Logger
+import kotlinx.android.synthetic.main.fragment_track.buttonAuthorizePush
 import kotlinx.android.synthetic.main.fragment_track.buttonCustomEvent
 import kotlinx.android.synthetic.main.fragment_track.buttonTrackClicked
 import kotlinx.android.synthetic.main.fragment_track.buttonTrackDelivered
@@ -67,6 +69,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonTrackClicked.setOnClickListener { trackPushClicked() }
         buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
         buttonTrackToken.setOnClickListener { trackToken() }
+        buttonAuthorizePush.setOnClickListener { requestPushAuthorization() }
 
         buttonUpdateProperties.setOnClickListener {
             TrackCustomAttributesDialog.show(childFragmentManager) {
@@ -77,6 +80,12 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         buttonCustomEvent.setOnClickListener {
             TrackCustomEventDialog.show(childFragmentManager) { eventName, properties ->
                 trackCustomEvent(eventName, properties) }
+        }
+    }
+
+    private fun requestPushAuthorization() {
+        Exponea.requestPushAuthorization(requireContext()) { granted ->
+            Logger.i(this, "Push notifications are allowed: $granted")
         }
     }
 

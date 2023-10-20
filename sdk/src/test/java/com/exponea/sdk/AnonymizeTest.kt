@@ -40,7 +40,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     @Test
     fun `should anonymize sdk and switch projects`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project_token", "Token auth")
+        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, ExponeaConfiguration(
             baseURL = initialProject.baseUrl,
@@ -85,7 +85,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     @Test
     fun `should not track session start on anonymize when automaticSessionTracking is off`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project_token", "Token auth")
+        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, ExponeaConfiguration(
                 baseURL = initialProject.baseUrl,

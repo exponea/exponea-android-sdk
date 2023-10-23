@@ -20,6 +20,7 @@
   * Fixed: Showing of image with non-https URL was causing exception or crash
   * Fixed: Push token was not tracked while 'automaticPushNotification' was disabled
   * Fixed: Example app for HMS calls API for tracking of FCM push token
+  * Fixed: Click on button was ignored if action was created in HTML Visual builder
 
 
 ## Release Notes for 3.7.1

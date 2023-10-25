@@ -213,6 +213,28 @@ internal class HtmlNormalizerTests {
     }
 
     @Test
+    fun test_RemoveMeta_exceptViewport() {
+        val rawHtml = "<html>" +
+                "<head>" +
+                "<meta name='keywords' content='HTML, CSS, JavaScript'>" +
+                "<meta name='author' content='John Doe'>" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1' />" +
+                "</head>" +
+                "<body>" +
+                "<div data-actiontype='close' onclick='alert('hello')'>Close</div>" +
+                "<div data-link='https://example.com/1'>Action 1</div>" +
+                "<div data-link='https://example.com/2'>Action 2</div>" +
+                "</body></html>"
+        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        assertTrue(result.html!!.contains("meta"))
+        assertTrue(result.html!!.contains("viewport"))
+        assertFalse(result.html!!.contains("keywords"))
+        assertFalse(result.html!!.contains("author"))
+        assertFalse(result.html!!.contains("HTML, CSS, JavaScript"))
+        assertFalse(result.html!!.contains("John Doe"))
+    }
+
+    @Test
     fun test_KeepNormalHref() {
         val rawHtml = "<html>" +
             "<head>" +

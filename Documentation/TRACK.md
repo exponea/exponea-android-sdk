@@ -28,6 +28,16 @@ fun trackEvent(
 )
 ```
 
+## 🔍 Track Token
+
+You can manually track token for Push notification receiving. Token is assigned to currently logged customer (with `indentifyCustomer` method).
+
+```swift
+Exponea.trackPushToken("value-of-push-token")
+```
+
+Invoking of this method will track a push token immediately regardless of SDK configuration for 'tokenTrackFrequency' (see [configuration](CONFIG.md))
+
 #### 💻 Usage
 
 ```

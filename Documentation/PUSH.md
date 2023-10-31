@@ -131,6 +131,8 @@ Exponea.trackPushToken(
 )
 ```
 
+Invoking of this method will track a push token immediately regardless of SDK configuration for 'tokenTrackFrequency' (see [configuration](CONFIG.md))
+
 #### Track Delivered Push Notification
 
 ``` kotlin

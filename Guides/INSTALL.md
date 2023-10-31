@@ -5,7 +5,7 @@
 2. Add ExponeaSDK dependency and sync your project
     ```groovy
     dependencies {
-        implementation 'com.exponea.sdk:sdk:3.8.0'
+        implementation 'com.exponea.sdk:sdk:3.9.0'
     }
     ```
 3. After synchronization is complete, you can start using the SDK.

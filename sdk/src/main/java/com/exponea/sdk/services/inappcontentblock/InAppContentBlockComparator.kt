@@ -14,15 +14,15 @@ internal open class InAppContentBlockComparator : Comparator<InAppContentBlock> 
         // null check
         when {
             msg1 == null && msg2 == null -> return KEEP_ORDER
-            msg1 == null -> SECOND_WINS
-            msg2 == null -> FIRST_WINS
+            msg1 == null -> return SECOND_WINS
+            msg2 == null -> return FIRST_WINS
         }
         // priority comparison - higher priority wins
         val msgPriority1 = msg1?.priority ?: 0
         val msgPriority2 = msg2?.priority ?: 0
         when {
-            msgPriority1 > msgPriority2 -> FIRST_WINS
-            msgPriority2 > msgPriority1 -> SECOND_WINS
+            msgPriority1 > msgPriority2 -> return FIRST_WINS
+            msgPriority2 > msgPriority1 -> return SECOND_WINS
         }
         // for same priorities, we want to randomize it
         return CMP_RESULTS.random()

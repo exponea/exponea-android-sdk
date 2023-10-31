@@ -43,7 +43,7 @@ internal class HtmlNormalizer(
 
         private const val HREF_ATTR = "href"
         private const val ANCHOR_TAG_SELECTOR = "a"
-        private const val META_TAG_SELECTOR = "meta"
+        private const val META_TAG_SELECTOR = "meta:not([name='viewport'])"
         private const val SCRIPT_TAG_SELECTOR = "script"
         private const val TITLE_TAG_SELECTOR = "title"
         private const val LINK_TAG_SELECTOR = "link"
@@ -251,30 +251,31 @@ internal class HtmlNormalizer(
             Logger.i(this, "[HTML] Adding default close-button")
             // randomize class name => prevents from CSS styles overriding in HTML
             val closeButtonClass = "close-button-${UUID.randomUUID()}"
+            val buttonSize = "max(min(5vw, 5vh), 16px)"
             document!!.body().append("<div $CLOSE_BUTTON_ATTR_DEF class='$closeButtonClass'><div>")
             document!!.head().append("""
                 <style>
                     .$closeButtonClass {
                       display: inline-block;
                       position: absolute;
-                      width: 20px;
-                      height: 20px;
+                      width: $buttonSize;
+                      height: $buttonSize;
                       top: 10px;
                       right: 10px;
-                      border: 2px solid #C0C0C099;
+                      cursor: pointer;
                       border-radius: 50%;
-                      background-color: #FAFAFA99;
+                      background-color: rgba(250, 250, 250, 0.6);
                      }
                     .$closeButtonClass:before {
                       content: '×';
                       position: absolute;
                       display: flex;
                       justify-content: center;
-                      width: 20px;
-                      height: 20px;
-                      color: #C0C0C099;
-                      font-size: 20px;
-                      line-height: 20px;
+                      width: $buttonSize;
+                      height: $buttonSize;
+                      color: rgb(0, 0, 0);
+                      font-size: $buttonSize;
+                      line-height: $buttonSize;
                     }
                 </style>
             """.trimIndent()

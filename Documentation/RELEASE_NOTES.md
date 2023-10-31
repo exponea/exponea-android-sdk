@@ -1,6 +1,16 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.9.0
+#### October 31, 2023
+* Features
+  * Viewport meta tag was removed from forbidden constructs for all HTML messages due to scaling issues
+  * Tracking of push token has been described with more details in documentation
+* Bug Fixes
+  * Fixed: Showing of In-app Content Block do not respect priority properly
+  * Fixed: Missing permission in Manifest to requesting notification permission feature
+
+
 ## Release Notes for 3.8.0
 #### October 20, 2023
 * Features
@@ -20,6 +30,7 @@
   * Fixed: Showing of image with non-https URL was causing exception or crash
   * Fixed: Push token was not tracked while 'automaticPushNotification' was disabled
   * Fixed: Example app for HMS calls API for tracking of FCM push token
+  * Fixed: Click on button was ignored if action was created in HTML Visual builder
 
 
 ## Release Notes for 3.7.1

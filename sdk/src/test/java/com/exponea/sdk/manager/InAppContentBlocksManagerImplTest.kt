@@ -47,14 +47,15 @@ internal class InAppContentBlocksManagerImplTest {
             type: String? = null,
             data: Map<String, Any?>? = null,
             placeholders: List<String> = listOf("placeholder_1"),
-            trackingConsentCategory: String? = null
+            trackingConsentCategory: String? = null,
+            priority: Int? = null
         ): InAppContentBlock {
             return InAppContentBlock(
                 id = id,
                 name = "Random name",
                 dateFilter = null,
                 rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
-                priority = null,
+                priority = priority,
                 consentCategoryTracking = trackingConsentCategory,
                 rawContentType = type,
                 content = data,
@@ -586,5 +587,59 @@ internal class InAppContentBlocksManagerImplTest {
             this.externalIds = ids
         }
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should prioritize message by priority value`() {
+        val placeholderId = "ph1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                    buildMessage(
+                            id = "1",
+                            placeholders = listOf(placeholderId),
+                            priority = null
+                    ),
+                    buildMessage(
+                            id = "2",
+                            placeholders = listOf(placeholderId),
+                            priority = 0
+                    ),
+                    buildMessage(
+                            id = "3",
+                            placeholders = listOf(placeholderId),
+                            priority = 1000
+                    ),
+                    buildMessage(
+                            id = "4",
+                            placeholders = listOf(placeholderId),
+                            priority = 10
+                    )
+            )))
+        }
+        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
+            val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
+            arg<List<String>>(2).forEach { messageId ->
+                msgData.add(buildMessageData(
+                        messageId,
+                        type = "html",
+                        hasTrackingConsent = false,
+                        data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                        )
+                ))
+            }
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, msgData))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        for (i in 0..1000) {    // 1000 repeats are statistically minimum
+            val chosenContentBlock = (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+            assertNotNull(chosenContentBlock)
+            assertNotNull(chosenContentBlock.personalizedData)
+            assertEquals("3", chosenContentBlock.id)
+            assertEquals("3", chosenContentBlock.personalizedData!!.blockId)
+            assertEquals(InAppContentBlockType.HTML, chosenContentBlock.contentType)
+            assertNotNull(chosenContentBlock.htmlContent)
+        }
     }
 }

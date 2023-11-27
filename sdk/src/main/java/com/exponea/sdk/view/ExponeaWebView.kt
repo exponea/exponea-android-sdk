@@ -13,6 +13,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.Logger
 
 public class ExponeaWebView : WebView {
@@ -37,6 +38,7 @@ public class ExponeaWebView : WebView {
     }
 
     private var onUrlClickCallback: ((String) -> Unit)? = null
+    private var onPageLoadedCallback: (() -> Unit)? = null
 
     private fun init() {
         applyAntiXssSetup()
@@ -55,6 +57,12 @@ public class ExponeaWebView : WebView {
                 // stop URL loading, we are using only single-page HTML content
                 return true
             }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                Logger.d(this, "Web page has been loaded")
+                onPageLoadedCallback?.invoke()
+            }
         }
     }
 
@@ -69,7 +77,13 @@ public class ExponeaWebView : WebView {
 
     @Suppress("DEPRECATION")
     private fun applyAntiXssSetup() {
-        CookieManager.getInstance().setAcceptCookie(false)
+        Exponea.getComponent()?.let {
+            val allowWebViewCookies = it.exponeaConfiguration.allowWebViewCookies
+            CookieManager.getInstance().setAcceptCookie(allowWebViewCookies)
+            if (VERSION.SDK_INT >= LOLLIPOP) {
+                CookieManager.getInstance().setAcceptThirdPartyCookies(this, allowWebViewCookies)
+            }
+        }
         this.settings.apply {
             setGeolocationEnabled(false)
             allowFileAccessFromFileURLs = false
@@ -103,5 +117,9 @@ public class ExponeaWebView : WebView {
 
     fun setOnUrlCallback(callback: ((String) -> Unit)?) {
         onUrlClickCallback = callback
+    }
+
+    fun setOnPageLoadedCallback(callback: (() -> Unit)?) {
+        onPageLoadedCallback = callback
     }
 }

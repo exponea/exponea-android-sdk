@@ -632,8 +632,9 @@ internal class InAppContentBlocksManagerImplTest {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, msgData))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        for (i in 0..1000) {    // 1000 repeats are statistically minimum
-            val chosenContentBlock = (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        for (i in 0..1000) {
+            val chosenContentBlock = (inAppContentBlockManager as InAppContentBlocksManagerImpl)
+                    .loadContent(placeholderId)
             assertNotNull(chosenContentBlock)
             assertNotNull(chosenContentBlock.personalizedData)
             assertEquals("3", chosenContentBlock.id)

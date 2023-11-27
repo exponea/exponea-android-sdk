@@ -77,6 +77,9 @@ data class ExponeaConfiguration(
   * This is useful in case of transparent toolbar theming.
   */
   var appInboxDetailImageInset: Int? = null
+  
+  /** Flag to enable or disable cookies in WebViews */
+  var allowWebviewCookies: Boolean = false
 )
 ```
 #### projectToken
@@ -187,3 +190,14 @@ automatically send `session_start` and `session_end` events to Exponea API
 
 * If set, advanced authorization is used for communication with BE for API listed in [JWT Authorization](./AUTHORIZATION.md)
 * For more info see [authorization setup](./AUTHORIZATION.md)
+
+#### allowWebViewCookies
+
+* Flag to enable or disable cookies in WebViews.
+* Default value is false.
+
+> Disclaimer:
+> * For security purposes Cookies are by defeault disabled in WebViews
+> * This setting has effect on all WebViews in the application, NOT ONLY the ones used by the SDK
+> * DO NOT CHANGE THIS SETTING unless you know the risks associated with enabling and storing cookies
+> * By changing this setting and enabling cookies in WebViews you take full responsibility for any security vulnerabilities or incidents caused by them

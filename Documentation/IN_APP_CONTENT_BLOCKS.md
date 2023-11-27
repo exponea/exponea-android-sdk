@@ -61,3 +61,22 @@ In-app content blocks are tracked automatically by SDK. You may see these `actio
 - 'error' - event is tracked if showing of message has failed. Event contains 'error' property with meaningfull description
 
 > The behaviour of In-app content block tracking may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
+
+### Show In-app content block view after content is loaded
+
+You may prefer UX design "finding and operating" principle so you want to show to user only available things. Or you may have a static layout where you need to set exact frame dimension to In-app content block view but it is blank until content is ready. For that case we recommend to use callback that will be notified if content has been successfully loaded or no content was found.
+
+```kotlin
+val placeholderView = Exponea.getInAppContentBlocksPlaceholder("placeholder_1", activityContext)
+placeholderView?.let {
+    it.setOnContentReadyListener { contentLoaded ->
+        if (contentLoaded) {
+            // you have exact dimensions for loaded content
+            Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+        } else {
+            // you can hide this view because no In-app content block is available now
+            it.visibility = View.GONE
+        }
+    }
+}
+```

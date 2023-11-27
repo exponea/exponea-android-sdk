@@ -13,6 +13,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.Logger
 
 public class ExponeaWebView : WebView {
@@ -76,7 +77,13 @@ public class ExponeaWebView : WebView {
 
     @Suppress("DEPRECATION")
     private fun applyAntiXssSetup() {
-        CookieManager.getInstance().setAcceptCookie(false)
+        Exponea.getComponent()?.let {
+            val allowWebViewCookies = it.exponeaConfiguration.allowWebViewCookies
+            CookieManager.getInstance().setAcceptCookie(allowWebViewCookies)
+            if (VERSION.SDK_INT >= LOLLIPOP) {
+                CookieManager.getInstance().setAcceptThirdPartyCookies(this, allowWebViewCookies)
+            }
+        }
         this.settings.apply {
             setGeolocationEnabled(false)
             allowFileAccessFromFileURLs = false

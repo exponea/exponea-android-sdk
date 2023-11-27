@@ -1,6 +1,7 @@
 package com.exponea.sdk.testutil
 
 import android.preference.PreferenceManager
+import android.webkit.CookieManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
@@ -49,6 +50,7 @@ internal fun Exponea.reset() {
     loggerLevel = Constants.Logger.defaultLoggerLevel
     isInitialized = false
     telemetry = null
+    CookieManager.getInstance().setAcceptCookie(true)
 }
 
 fun resetField(target: Any, fieldName: String) {

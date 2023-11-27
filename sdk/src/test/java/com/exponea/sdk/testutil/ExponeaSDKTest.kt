@@ -61,7 +61,6 @@ internal open class ExponeaSDKTest {
             // You can use waitUntilFlushed() to fix this
             throw RuntimeException("Flushing still in progress after test is done!")
         }
-
         Exponea.reset()
     }
 }

@@ -40,6 +40,9 @@ class InAppContentBlocksFragment : BaseFragment() {
 
         content_blocks_layout.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
         Exponea.getInAppContentBlocksPlaceholder("example_top", requireContext())?.let {
+            it.setOnContentReadyListener { contentLoaded ->
+                Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+            }
             content_blocks_layout.addView(it, LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT

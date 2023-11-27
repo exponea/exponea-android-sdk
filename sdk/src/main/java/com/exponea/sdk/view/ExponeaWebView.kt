@@ -37,6 +37,7 @@ public class ExponeaWebView : WebView {
     }
 
     private var onUrlClickCallback: ((String) -> Unit)? = null
+    private var onPageLoadedCallback: (() -> Unit)? = null
 
     private fun init() {
         applyAntiXssSetup()
@@ -54,6 +55,12 @@ public class ExponeaWebView : WebView {
                 }
                 // stop URL loading, we are using only single-page HTML content
                 return true
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                Logger.d(this, "Web page has been loaded")
+                onPageLoadedCallback?.invoke()
             }
         }
     }
@@ -103,5 +110,9 @@ public class ExponeaWebView : WebView {
 
     fun setOnUrlCallback(callback: ((String) -> Unit)?) {
         onUrlClickCallback = callback
+    }
+
+    fun setOnPageLoadedCallback(callback: (() -> Unit)?) {
+        onPageLoadedCallback = callback
     }
 }

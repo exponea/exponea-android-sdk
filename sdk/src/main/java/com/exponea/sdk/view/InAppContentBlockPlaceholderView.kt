@@ -7,6 +7,7 @@ import android.widget.RelativeLayout
 import androidx.cardview.widget.CardView
 import com.exponea.sdk.R
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_placeholder
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_webview
 
@@ -17,6 +18,8 @@ public class InAppContentBlockPlaceholderView constructor(
     internal var controller: InAppContentBlockViewController? = null
     private lateinit var htmlContainer: ExponeaWebView
     private lateinit var placeholder: CardView
+    private var onContentReady: ((Boolean) -> Unit)? = null
+    private val pageFinishedEvent = AtomicReference<Boolean?>(null)
 
     init {
         inflateLayout()
@@ -26,6 +29,14 @@ public class InAppContentBlockPlaceholderView constructor(
     private fun registerHandlers() {
         htmlContainer.setOnUrlCallback { url ->
             controller?.onUrlClick(url, context)
+        }
+        htmlContainer.setOnPageLoadedCallback {
+            pageFinishedEvent.set(true)
+        }
+        this.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            pageFinishedEvent.getAndSet(null)?.let { contentLoaded ->
+                onContentReady?.invoke(contentLoaded)
+            }
         }
     }
 
@@ -40,11 +51,12 @@ public class InAppContentBlockPlaceholderView constructor(
     }
 
     public fun showNoContent() {
+        pageFinishedEvent.set(false)
         if (mayHaveZeroSizeForEmptyContent()) {
             this.visibility = GONE
-            return
+        } else {
+            this.placeholder.visibility = VISIBLE
         }
-        this.placeholder.visibility = VISIBLE
     }
 
     private fun mayHaveZeroSizeForEmptyContent(): Boolean {
@@ -67,10 +79,15 @@ public class InAppContentBlockPlaceholderView constructor(
 
     fun showHtmlContent(html: String) {
         htmlContainer.loadData(html)
+        // pageFinishedEvent will be set after html full load
         htmlContainer.visibility = VISIBLE
     }
 
     public fun refreshContent() {
         controller?.loadContent()
+    }
+
+    fun setOnContentReadyListener(listener: (Boolean) -> Unit) {
+        onContentReady = listener
     }
 }

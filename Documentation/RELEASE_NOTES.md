@@ -1,6 +1,16 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.10.0
+#### November 27, 2023
+* Features
+  * In-app content blocks listener for event when content is loaded and ready to show
+  * Push notification permission request usage example added to documentation for Android 13 (API 33)
+  * SDK configuration extended with allowWebViewCookies param to allow cookies usage for WebView
+* Bug Fixes
+  * Fixed: Source code contains small lint issues
+
+
 ## Release Notes for 3.9.0
 #### October 31, 2023
 * Features

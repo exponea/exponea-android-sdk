@@ -15,8 +15,8 @@ android {
         applicationId "com.exponea.example"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 74
-        versionName "3.9.0"
+        versionCode 75
+        versionName "3.10.0"
         vectorDrawables.useSupportLibrary = true
     }
     compileOptions {

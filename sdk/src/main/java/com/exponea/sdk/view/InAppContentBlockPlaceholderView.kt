@@ -1,39 +1,55 @@
 package com.exponea.sdk.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.cardview.widget.CardView
 import com.exponea.sdk.R
+import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_placeholder
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_webview
 
-public class InAppContentBlockPlaceholderView constructor(
-    context: Context
+@SuppressLint("ViewConstructor")
+class InAppContentBlockPlaceholderView internal constructor(
+    context: Context,
+    internal val controller: InAppContentBlockViewController
 ) : RelativeLayout(context, null, 0) {
 
-    internal var controller: InAppContentBlockViewController? = null
     private lateinit var htmlContainer: ExponeaWebView
     private lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
     private val pageFinishedEvent = AtomicReference<Boolean?>(null)
+    /**
+     * Whenever a in-app content block message is handled, this callback is called, if set up.
+     * Otherwise default behaviour is handled by the SDK
+     */
+    @Suppress("RedundantVisibilityModifier")
+    public var behaviourCallback: InAppContentBlockCallback
+        get() {
+            return controller.behaviourCallback
+        }
+        set(value) {
+            controller.behaviourCallback = value
+        }
 
     init {
+        controller.view = this
         inflateLayout()
         registerHandlers()
     }
 
     private fun registerHandlers() {
         htmlContainer.setOnUrlCallback { url ->
-            controller?.onUrlClick(url, context)
+            controller.onUrlClick(url)
         }
         htmlContainer.setOnPageLoadedCallback {
             pageFinishedEvent.set(true)
         }
-        this.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+        this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             pageFinishedEvent.getAndSet(null)?.let { contentLoaded ->
                 onContentReady?.invoke(contentLoaded)
             }
@@ -50,7 +66,7 @@ public class InAppContentBlockPlaceholderView constructor(
         this.placeholder.visibility = GONE
     }
 
-    public fun showNoContent() {
+    internal fun showNoContent() {
         pageFinishedEvent.set(false)
         if (mayHaveZeroSizeForEmptyContent()) {
             this.visibility = GONE
@@ -69,22 +85,22 @@ public class InAppContentBlockPlaceholderView constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        controller?.onViewAttachedToWindow()
+        controller.onViewAttachedToWindow()
     }
 
     override fun onDetachedFromWindow() {
-        controller?.onViewDetachedFromWindow()
+        controller.onViewDetachedFromWindow()
         super.onDetachedFromWindow()
     }
 
-    fun showHtmlContent(html: String) {
+    internal fun showHtmlContent(html: String) {
         htmlContainer.loadData(html)
         // pageFinishedEvent will be set after html full load
         htmlContainer.visibility = VISIBLE
     }
 
-    public fun refreshContent() {
-        controller?.loadContent()
+    fun refreshContent() {
+        controller.loadContent()
     }
 
     fun setOnContentReadyListener(listener: (Boolean) -> Unit) {

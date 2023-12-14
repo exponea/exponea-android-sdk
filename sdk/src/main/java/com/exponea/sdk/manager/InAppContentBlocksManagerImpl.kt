@@ -1,16 +1,11 @@
 package com.exponea.sdk.manager
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
-import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockStatus.OK
@@ -22,6 +17,7 @@ import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.inappcontentblock.DefaultInAppContentCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockComparator
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
@@ -42,7 +38,6 @@ internal class InAppContentBlocksManagerImpl(
     private val fetchManager: FetchManager,
     private val projectFactory: ExponeaProjectFactory,
     private val customerIdsRepository: CustomerIdsRepository,
-    private val trackingConsentManager: TrackingConsentManager,
     private val imageCache: BitmapCache,
     private val htmlCache: HtmlNormalizedCache,
     private val fontCache: SimpleFileCache
@@ -83,16 +78,24 @@ internal class InAppContentBlocksManagerImpl(
         context: Context,
         config: InAppContentBlockPlaceholderConfiguration
     ): InAppContentBlockPlaceholderView {
-        val viewController = InAppContentBlockViewController(
+        val controller = InAppContentBlockViewController(
             placeholderId,
             config,
             imageCache,
             fontCache,
             htmlCache,
             this,
-            this
+            this,
+            DefaultInAppContentCallback(context)
         )
-        return viewController.getPlaceholderView(context)
+        val view = InAppContentBlockPlaceholderView(
+            context,
+            controller
+        )
+        if (!config.defferedLoad) {
+            controller.loadContent()
+        }
+        return view
     }
 
     override fun clearAll() = runThreadSafelyInBackground {
@@ -334,25 +337,20 @@ internal class InAppContentBlocksManagerImpl(
 
     override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
         Logger.w(this, "InApp Content Block ${contentBlock?.id ?: "no_ID"} has error $errorMessage")
-        trackError(placeholderId, contentBlock, errorMessage)
     }
 
     override fun onClose(placeholderId: String, contentBlock: InAppContentBlock) {
         Logger.i(this, "InApp Content Block ${contentBlock.id} was closed")
         displayStateRepository.setInteracted(contentBlock, Date())
-        trackClose(placeholderId, contentBlock)
     }
 
     override fun onAction(
         placeholderId: String,
         contentBlock: InAppContentBlock,
-        action: InAppContentBlockAction,
-        context: Context
+        action: InAppContentBlockAction
     ) {
         Logger.i(this, "InApp Content Block ${contentBlock.id} requested action ${action.name}")
         displayStateRepository.setInteracted(contentBlock, Date())
-        trackAction(placeholderId, action)
-        invokeAction(action, context)
     }
 
     override fun onNoContent(placeholderId: String, contentBlock: InAppContentBlock?) {
@@ -360,66 +358,12 @@ internal class InAppContentBlocksManagerImpl(
         contentBlock?.let {
             // possibility of AB testing
             displayStateRepository.setDisplayed(it, Date())
-            trackShown(placeholderId, it)
         }
     }
 
     override fun onShown(placeholderId: String, contentBlock: InAppContentBlock) {
         Logger.i(this, "InApp Content Block ${contentBlock.id} has been shown")
         displayStateRepository.setDisplayed(contentBlock, Date())
-        trackShown(placeholderId, contentBlock)
-    }
-
-    private fun trackAction(placeholderId: String, action: InAppContentBlockAction) {
-        Logger.d(this, "Tracking of InApp Content Block ${action.contentBlock.id} action ${action.name}")
-        trackingConsentManager.trackInAppContentBlockClick(
-            placeholderId,
-            action.contentBlock,
-            action.name,
-            action.url,
-            CONSIDER_CONSENT
-        )
-    }
-
-    private fun trackClose(placeholderId: String, contentBlock: InAppContentBlock) {
-        Logger.d(this, "Tracking of InApp Content Block ${contentBlock.id} close")
-        trackingConsentManager.trackInAppContentBlockClose(placeholderId, contentBlock, CONSIDER_CONSENT)
-    }
-
-    private fun trackShown(placeholderId: String, contentBlock: InAppContentBlock) {
-        Logger.d(this, "Tracking of InApp Content Block ${contentBlock.id} show")
-        trackingConsentManager.trackInAppContentBlockShown(placeholderId, contentBlock, CONSIDER_CONSENT)
-    }
-
-    private fun trackError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
-        Logger.d(this, "Tracking of InApp Content Block ${contentBlock?.id ?: "no_ID"} error")
-        if (contentBlock == null) {
-            Logger.e(this, "InApp Content Block is empty!!! Nothing to track")
-            return
-        }
-        trackingConsentManager.trackInAppContentBlockError(placeholderId, contentBlock, errorMessage, CONSIDER_CONSENT)
-    }
-
-    private fun invokeAction(action: InAppContentBlockAction, context: Context) {
-        Logger.d(this, "Invoking InApp Content Block ${action.contentBlock.id} action '${action.name}'")
-        val actionUrl = try {
-            Uri.parse(action.url)
-        } catch (e: Exception) {
-            Logger.e(this, "InApp Content Block ${action.contentBlock.id} action ${action.url} is invalid", e)
-            return
-        }
-        if (action.type == InAppContentBlockActionType.DEEPLINK || action.type == InAppContentBlockActionType.BROWSER) {
-            try {
-                context.startActivity(
-                    Intent(Intent.ACTION_VIEW).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        data = actionUrl
-                    }
-                )
-            } catch (e: ActivityNotFoundException) {
-                Logger.e(this, "InApp Content Block action failed", e)
-            }
-        }
     }
 
     override fun loadContent(placeholderId: String): InAppContentBlock? {

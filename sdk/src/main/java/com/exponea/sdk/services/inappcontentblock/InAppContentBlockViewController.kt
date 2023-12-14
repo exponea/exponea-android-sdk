@@ -1,12 +1,12 @@
 package com.exponea.sdk.services.inappcontentblock
 
-import android.content.Context
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockActionType.BROWSER
 import com.exponea.sdk.models.InAppContentBlockActionType.CLOSE
 import com.exponea.sdk.models.InAppContentBlockActionType.DEEPLINK
+import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockType.HTML
@@ -31,31 +31,37 @@ internal class InAppContentBlockViewController(
     private val fontCache: SimpleFileCache,
     private val htmlCache: HtmlNormalizedCache,
     private val actionDispatcher: InAppContentBlockActionDispatcher,
-    private val dataLoader: InAppContentBlockDataLoader
+    private val dataLoader: InAppContentBlockDataLoader,
+    internal var behaviourCallback: InAppContentBlockCallback
 ) {
 
+    internal lateinit var view: InAppContentBlockPlaceholderView
     private var isViewAttachedToWindow: Boolean = false
     private var contentLoaded: Boolean = false
-    internal var view: InAppContentBlockPlaceholderView? = null
     private var assignedHtmlContent: NormalizedResult? = null
     private var assignedMessage: InAppContentBlock? = null
 
-    internal fun onUrlClick(url: String, context: Context) {
+    internal fun onUrlClick(url: String) {
         Logger.d(this, "HTML InApp Content Block click for $url")
         val action = parseInAppContentBlockAction(url)
-        if (action == null) {
-            actionDispatcher.onError(placeholderId, assignedMessage, "Invalid action definition")
+        val message = assignedMessage
+        if (action == null || message == null) {
+            val errorMessage = "Invalid action definition"
+            actionDispatcher.onError(placeholderId, message, errorMessage)
+            behaviourCallback.onError(placeholderId, message, errorMessage)
             return
         }
         if (action.type == CLOSE) {
-            actionDispatcher.onClose(placeholderId, action.contentBlock)
+            actionDispatcher.onClose(placeholderId, message)
+            behaviourCallback.onCloseClicked(placeholderId, message)
         } else {
-            actionDispatcher.onAction(placeholderId, action.contentBlock, action, context)
+            actionDispatcher.onAction(placeholderId, message, action)
+            behaviourCallback.onActionClicked(placeholderId, message, action)
         }
-        if (action.contentBlock.frequency == UNTIL_VISITOR_INTERACTS) {
+        if (message.frequency == UNTIL_VISITOR_INTERACTS) {
             Logger.i(
                 this,
-                "InApp Content Block ${action.contentBlock.id} needs to be replaced for first interaction"
+                "InApp Content Block ${message.id} needs to be replaced for first interaction"
             )
             reloadContent()
         }
@@ -67,24 +73,16 @@ internal class InAppContentBlockViewController(
     }
 
     private fun parseInAppContentBlockAction(url: String): InAppContentBlockAction? {
-        val message = assignedMessage
+        val action = assignedHtmlContent?.findActionByUrl(url) ?: return null
         val type = detectActionType(url)
-        if (message == null || type == null) {
-            return null
-        }
-        val action = assignedHtmlContent?.findActionByUrl(url)
-        if (action == null) {
-            return null
-        }
         return InAppContentBlockAction(
-            contentBlock = message,
             type = type,
             name = action.buttonText,
             url = action.actionUrl
         )
     }
 
-    private fun detectActionType(url: String): InAppContentBlockActionType? {
+    private fun detectActionType(url: String): InAppContentBlockActionType {
         if (assignedHtmlContent?.isCloseAction(url) == true) {
             return CLOSE
         }
@@ -95,23 +93,7 @@ internal class InAppContentBlockViewController(
         }
     }
 
-    fun getPlaceholderView(context: Context): InAppContentBlockPlaceholderView {
-        if (view == null) {
-            synchronized(this) {
-                if (view == null) {
-                    val viewInstance = InAppContentBlockPlaceholderView(context)
-                    view = viewInstance
-                    viewInstance.controller = this
-                    if (!config.defferedLoad) {
-                        loadContent()
-                    }
-                }
-            }
-        }
-        return view!!
-    }
-
-    public fun loadContent() {
+    fun loadContent() {
         runOnBackgroundThread {
             Logger.d(this, "Loading InApp Content Block for placeholder $placeholderId")
             assignedMessage = dataLoader.loadContent(placeholderId)
@@ -124,16 +106,17 @@ internal class InAppContentBlockViewController(
                 }
             }
             if (isViewAttachedToWindow) {
-                showMesage(assignedMessage)
+                showMessage(assignedMessage)
             }
         }
     }
 
-    private fun showMesage(message: InAppContentBlock?) {
+    private fun showMessage(message: InAppContentBlock?) {
         if (message == null) {
             runOnMainThread {
-                view?.showNoContent()
+                view.showNoContent()
             }
+            behaviourCallback.onNoMessageFound(placeholderId)
             return
         }
         Logger.i(this, "InApp Content Block ${message.id} going to be shown")
@@ -154,9 +137,16 @@ internal class InAppContentBlockViewController(
     private fun showNoContent() {
         Logger.d(this, "Empty HTML InApp Content Block content")
         runOnMainThread {
-            view?.showNoContent()
+            view.showNoContent()
         }
         actionDispatcher.onNoContent(placeholderId, assignedMessage)
+        val message = assignedMessage
+        if (message == null) {
+            behaviourCallback.onNoMessageFound(placeholderId)
+        } else {
+            // possibility of AB testing
+            behaviourCallback.onMessageShown(placeholderId, message)
+        }
     }
 
     private fun showHtmlContent(message: InAppContentBlock) {
@@ -168,7 +158,7 @@ internal class InAppContentBlockViewController(
                 showNoContent()
                 return@runOnBackgroundThread
             }
-            var normalizedHtml = getOrCreateNormalizedHtml(message, htmlContent)
+            val normalizedHtml = getOrCreateNormalizedHtml(message, htmlContent)
             val skipHtmlShow = assignedHtmlContent?.html.contentEquals(normalizedHtml.html)
             assignedHtmlContent = normalizedHtml
             if (normalizedHtml.valid && normalizedHtml.html != null) {
@@ -177,16 +167,25 @@ internal class InAppContentBlockViewController(
                     Logger.d(this, "Same HTML for InApp Content Block")
                 } else {
                     runOnMainThread {
-                        view?.showHtmlContent(normalizedHtml.html!!)
+                        view.showHtmlContent(normalizedHtml.html!!)
                     }
                 }
                 actionDispatcher.onShown(placeholderId, message)
+                behaviourCallback.onMessageShown(placeholderId, message)
             } else {
                 Logger.w(this, "HTML InApp Content Block has invalid payload")
-                showNoContent()
-                actionDispatcher.onError(placeholderId, message, "Invalid HTML or empty")
+                showError(message, "Invalid HTML or empty")
             }
         }
+    }
+
+    private fun showError(message: InAppContentBlock, errorMessage: String) {
+        Logger.e(this, "InApp Content Block cannot be shown because of: $errorMessage")
+        runOnMainThread {
+            view.showNoContent()
+        }
+        actionDispatcher.onError(placeholderId, message, errorMessage)
+        behaviourCallback.onError(placeholderId, message, errorMessage)
     }
 
     private fun getOrCreateNormalizedHtml(message: InAppContentBlock, htmlContent: String): NormalizedResult {
@@ -207,7 +206,7 @@ internal class InAppContentBlockViewController(
         return normalizedHtml
     }
 
-    fun cleanUp() {
+    private fun cleanUp() {
         contentLoaded = false
         assignedMessage = null
         assignedHtmlContent = null
@@ -216,7 +215,7 @@ internal class InAppContentBlockViewController(
     fun onViewAttachedToWindow() {
         isViewAttachedToWindow = true
         if (contentLoaded) {
-            showMesage(assignedMessage)
+            showMessage(assignedMessage)
         } else if (config.defferedLoad) {
             loadContent()
         }

@@ -6,6 +6,8 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockDisplayState
 import com.exponea.sdk.models.InAppContentBlockFrequency
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
@@ -43,7 +45,7 @@ internal class InAppContentBlocksManagerImplTest {
 
     companion object {
         fun buildMessage(
-            id: String,
+            id: String = "12345",
             type: String? = null,
             data: Map<String, Any?>? = null,
             placeholders: List<String> = listOf("placeholder_1"),
@@ -249,6 +251,17 @@ internal class InAppContentBlocksManagerImplTest {
             </div>
         """.trimIndent()
         }
+        fun buildAction(
+            type: InAppContentBlockActionType = InAppContentBlockActionType.BROWSER,
+            actionName: String = "InApp action",
+            actionUrl: String = "www.example.com"
+        ): InAppContentBlockAction {
+            return InAppContentBlockAction(
+                    type = type,
+                    name = actionName,
+                    url = actionUrl
+            )
+        }
     }
 
     private lateinit var customerIdsRepository: CustomerIdsRepository
@@ -259,7 +272,6 @@ internal class InAppContentBlocksManagerImplTest {
     private lateinit var projectFactory: ExponeaProjectFactory
     private lateinit var htmlCache: HtmlNormalizedCache
     private lateinit var fontCache: SimpleFileCache
-    private lateinit var trackingConsentManager: TrackingConsentManager
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
 
     @Before
@@ -291,18 +303,12 @@ internal class InAppContentBlocksManagerImplTest {
         every { htmlCache.remove(any()) } just Runs
         every { htmlCache.get(any(), any()) } returns null
         every { htmlCache.set(any(), any(), any()) } just Runs
-        trackingConsentManager = mockk()
-        every { trackingConsentManager.trackInAppContentBlockClick(any(), any(), any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppContentBlockClose(any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppContentBlockShown(any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppContentBlockError(any(), any(), any(), any()) } just Runs
         apiService = ExponeaMockService(true)
         inAppContentBlockManager = InAppContentBlocksManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
             projectFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
-            trackingConsentManager = trackingConsentManager,
             imageCache = bitmapCache,
             htmlCache = htmlCache,
             fontCache = fontCache
@@ -486,7 +492,6 @@ internal class InAppContentBlocksManagerImplTest {
             fetchManager = fetchManager,
             projectFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
-            trackingConsentManager = trackingConsentManager,
             imageCache = bitmapCache,
             htmlCache = htmlCache,
             fontCache = fontCache

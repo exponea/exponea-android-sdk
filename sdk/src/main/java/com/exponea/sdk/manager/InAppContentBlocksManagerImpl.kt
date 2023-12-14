@@ -57,12 +57,13 @@ internal class InAppContentBlocksManagerImpl(
     override fun onEventCreated(event: Event, type: EventType) {
         when (type) {
             EventType.SESSION_START -> {
+                Logger.d(this, "InAppCB: Event session_start occurs, storing time value")
                 val eventTimestampInMillis = (event.timestamp ?: currentTimeSeconds()) * 1000
                 sessionStartDate = Date(eventTimestampInMillis.toLong())
             }
             EventType.TRACK_CUSTOMER -> {
                 ensureOnBackgroundThread {
-                    Logger.i(this, "CustomerIDs are updated, clearing InApp content personalized blocks")
+                    Logger.i(this, "InAppCB: CustomerIDs are updated, clearing personalized content")
                     clearPersonalizationAssignments()
                     reassignCustomerIds()
                 }
@@ -104,7 +105,7 @@ internal class InAppContentBlocksManagerImpl(
         }
         contentBlocksData = emptyList()
         displayStateRepository.clear()
-        Logger.d(this, "InApp Content Blocks was cleared completely")
+        Logger.i(this, "InAppCB: All data and cache has been cleared completely")
     }
 
     private fun runThreadSafelyInBackground(action: () -> Unit) {
@@ -126,7 +127,7 @@ internal class InAppContentBlocksManagerImpl(
             it.personalizedData = null
         }
         displayStateRepository.clear()
-        Logger.d(this, "InApp Content Blocks was cleared from personal assignments")
+        Logger.d(this, "InAppCB: All Content Blocks was cleared from personalized data")
     }
 
     private fun reassignCustomerIds() = runThreadSafely {
@@ -137,8 +138,9 @@ internal class InAppContentBlocksManagerImpl(
 
     private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafely {
         val dataMap = source.groupBy { it.id }
+        Logger.d(this, "InAppCB: Request to update content of ${dataMap.keys.joinToString()}")
         contentBlocksData.forEach { targetContentBlock ->
-            dataMap.get(targetContentBlock.id)?.firstOrNull()?.let { sourceContentBlock ->
+            dataMap[targetContentBlock.id]?.firstOrNull()?.let { sourceContentBlock ->
                 targetContentBlock.personalizedData = sourceContentBlock.personalizedData
             }
         }
@@ -152,16 +154,17 @@ internal class InAppContentBlocksManagerImpl(
             .filter { !it.hasFreshContent() }
             .map { it.id }
         if (blockIds.isEmpty()) {
+            Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
             return@runThreadSafely
         }
-        Logger.i(this, "Loading content for InApp Content Blocks ${blockIds.joinToString()}")
+        Logger.i(this, "InAppCB: Loading content for blocks: ${blockIds.joinToString()}")
         val semaphore = CountDownLatch(1)
         prefetchContentForBlocks(
             blockIds,
             onSuccess = { contentData ->
                 val dataMap = contentData.groupBy { it.blockId }
                 contentBlocks.forEach { contentBlock ->
-                    dataMap.get(contentBlock.id)?.firstOrNull()?.let {
+                    dataMap[contentBlock.id]?.firstOrNull()?.let {
                         contentBlock.personalizedData = it
                     }
                 }
@@ -172,8 +175,10 @@ internal class InAppContentBlocksManagerImpl(
                 semaphore.countDown()
             }
         )
-        if (!semaphore.await(CONTENT_LOAD_TIMEOUT, SECONDS)) {
-            Logger.w(this, "Loading content for InApp Content Blocks timeout")
+        if (semaphore.await(CONTENT_LOAD_TIMEOUT, SECONDS)) {
+            Logger.i(this, "InAppCB: Loading content for blocks was done")
+        } else {
+            Logger.w(this, "InAppCB: Loading content for InApp Content Blocks has timeouted")
         }
     }
 
@@ -183,12 +188,17 @@ internal class InAppContentBlocksManagerImpl(
         onFailure: (FetchError) -> Unit
     ) {
         val customerIds = customerIdsRepository.get()
+        Logger.i(this, "InAppCB: Prefetching personalized content for current customer")
+        val contentBlockIdsAsString = contentBlockIds.joinToString()
         fetchManager.fetchPersonalizedContentBlocks(
             exponeaProject = projectFactory.mutualExponeaProject,
             customerIds = customerIds,
             contentBlockIds = contentBlockIds,
             onSuccess = { result ->
-                Logger.i(this, "Content for InApp Content Blocks $contentBlockIds loaded")
+                Logger.i(
+                    this,
+                    "InAppCB: Personalized content for blocks $contentBlockIdsAsString loaded"
+                )
                 val data = result.results ?: emptyList()
                 data.forEach {
                     it.loadedAt = Date()
@@ -196,25 +206,25 @@ internal class InAppContentBlocksManagerImpl(
                 onSuccess(data)
             },
             onFailure = {
-                Logger.e(this, "InAppContentBlock data load failed. ${it.results.message}")
+                val errorMessage = it.results.message
+                Logger.e(
+                    this,
+                    "InAppCB: Personalized content for blocks $contentBlockIdsAsString failed: $errorMessage"
+                )
                 onFailure(it.results)
             }
         )
     }
 
     private fun pickInAppContentBlock(placeholderId: String): InAppContentBlock? {
-        Logger.d(this, "Picking InAppContentBlock for placeholder $placeholderId starts")
+        Logger.i(this, "InAppCB: Picking of InAppContentBlock for placeholder $placeholderId starts")
         val allContentBlocks = getInAppContentBlocksForPlaceholder(placeholderId)
-        Logger.d(this,
-            """Got ${allContentBlocks.size} content blocks:
-                ${ExponeaGson.instance.toJson(allContentBlocks)}
-                """.trimIndent())
         val filteredContentBlocks = allContentBlocks.filter { each -> passesFilters(each) }
         loadContentIfNeededSync(filteredContentBlocks)
         updateContentForLocalContentBlocks(filteredContentBlocks)
         val validFilteredContentBlocks = filteredContentBlocks
             .filter { each -> isStatusValid(each) }
-            .filter { each -> isContentSupported(each) }
+            .filter { each -> isContentSupportedToShow(each) }
         val sortedContentBlocks = validFilteredContentBlocks.sortedWith(InAppContentBlockComparator.INSTANCE)
         Logger.i(this, "Got ${sortedContentBlocks.size} content blocks for placeholder $placeholderId")
         Logger.d(this, """
@@ -230,17 +240,25 @@ internal class InAppContentBlocksManagerImpl(
             return true
         }
         Logger.i(this, """
-            InApp Content Block ${contentBlock.id} filtered out because of status ${contentBlock.status}
+            InAppCB: Block ${contentBlock.id} filtered out because of status ${contentBlock.status}
             """.trimIndent()
         )
         return false
     }
 
-    private fun isContentSupported(contentBlock: InAppContentBlock): Boolean {
+    private fun isContentSupportedToShow(contentBlock: InAppContentBlock): Boolean {
         if (SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW.contains(contentBlock.contentType)) {
             return true
         }
-        Logger.i(this, "InApp Content Block ${contentBlock.id} is invalid to be shown")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} content is unsupported to show")
+        return false
+    }
+
+    private fun isContentSupportedToDownload(contentBlock: InAppContentBlock): Boolean {
+        if (SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD.contains(contentBlock.contentType)) {
+            return true
+        }
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} content is unsupported to download")
         return false
     }
 
@@ -258,9 +276,9 @@ internal class InAppContentBlocksManagerImpl(
     }
 
     private fun passesFilters(contentBlock: InAppContentBlock): Boolean {
-        Logger.i(this, "Validating filters for Content Block ${contentBlock.id}")
+        Logger.i(this, "InAppCB: Validating filters for Content Block ${contentBlock.id}")
         val dateFilterPass = contentBlock.applyDateFilter(System.currentTimeMillis() / 1000)
-        Logger.i(this, "InApp Content Block ${contentBlock.id} date-filter passed: $dateFilterPass")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} date-filter passed: $dateFilterPass")
         if (!dateFilterPass) {
             return false
         }
@@ -268,7 +286,7 @@ internal class InAppContentBlocksManagerImpl(
             displayStateRepository.get(contentBlock),
             sessionStartDate
         )
-        Logger.i(this, "InApp Content Block ${contentBlock.id} frequency-filter passed: $frequencyFilter")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} frequency-filter passed: $frequencyFilter")
         return frequencyFilter
     }
 
@@ -279,11 +297,11 @@ internal class InAppContentBlocksManagerImpl(
             block.placeholders.contains(placeholderId)
         }
         Logger.i(this,
-            """${contentBlocksForPlaceholder.size} InApp Content Blocks found for placeholder $placeholderId
+            """InAppCB: ${contentBlocksForPlaceholder.size} blocks found for placeholder $placeholderId
             """.trimIndent()
         )
         Logger.d(this,
-            """Found Content Blocks for placeholder $placeholderId:
+            """InAppCB: Found Content Blocks for placeholder $placeholderId:
             ${ExponeaGson.instance.toJson(contentBlocksForPlaceholder)}
             """.trimIndent()
         )
@@ -291,19 +309,18 @@ internal class InAppContentBlocksManagerImpl(
     } ?: listOf()
 
     override fun loadInAppContentBlockPlaceholders() {
-        Logger.d(this, "Loading of InApp Content Block placeholders requested")
+        Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders requested")
         ensureOnBackgroundThread {
             dataAccess.waitForAccessWithDone { done ->
-                Logger.d(this, "Loading of InApp Content Block placeholders")
+                Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders starts")
                 val customerIds = customerIdsRepository.get()
                 val exponeaProject = projectFactory.mutualExponeaProject
                 fetchManager.fetchStaticInAppContentBlocks(
                     exponeaProject = exponeaProject,
                     onSuccess = { result ->
-                        Logger.i(this, "InApp Content Block placeholders preloaded successfully")
                         val inAppContentBlocks = result.results ?: emptyList()
                         val supportedContentBlocks = inAppContentBlocks.filter {
-                            SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD.contains(it.contentType)
+                            isContentSupportedToDownload(it)
                         }
                         supportedContentBlocks.forEach {
                             it.customerIds = customerIds.toHashMap()
@@ -313,10 +330,14 @@ internal class InAppContentBlocksManagerImpl(
                             exponeaProject.inAppContentBlockPlaceholdersAutoLoad
                         )
                         contentBlocksData = supportedContentBlocks
+                        Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
                         done()
                     },
                     onFailure = {
-                        Logger.e(this, "InApp Content Block placeholders failed. ${it.results.message}")
+                        Logger.e(
+                            this,
+                            "InAppCB: InApp Content Block placeholders failed. ${it.results.message}"
+                        )
                         done()
                     }
                 )
@@ -325,22 +346,29 @@ internal class InAppContentBlocksManagerImpl(
     }
 
     private fun forceContentByPlaceholders(target: List<InAppContentBlock>, autoLoadPlaceholders: List<String>) {
-        Logger.d(this, "InApp Content Blocks prefetch starts for placeholders: $autoLoadPlaceholders")
-        val contentBlocksToLoad = target
-            .filter { it.placeholders.intersect(autoLoadPlaceholders).isNotEmpty() }
+        Logger.i(
+            this,
+            "InAppCB: InApp Content Blocks prefetch starts for placeholders: $autoLoadPlaceholders"
+        )
+        val contentBlocksToLoad = target.filter {
+            it.placeholders.intersect(autoLoadPlaceholders).isNotEmpty()
+        }
         if (contentBlocksToLoad.isEmpty()) {
-            Logger.i(this, "No InApp Content Block going to be prefetched")
+            Logger.i(this, "InAppCB: No InApp Content Block going to be prefetched")
             return
         }
         loadContentIfNeededSync(contentBlocksToLoad)
     }
 
     override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
-        Logger.w(this, "InApp Content Block ${contentBlock?.id ?: "no_ID"} has error $errorMessage")
+        Logger.w(
+            this,
+            "InAppCB: Block ${contentBlock?.id ?: "no_ID"} has error $errorMessage"
+        )
     }
 
     override fun onClose(placeholderId: String, contentBlock: InAppContentBlock) {
-        Logger.i(this, "InApp Content Block ${contentBlock.id} was closed")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} was closed")
         displayStateRepository.setInteracted(contentBlock, Date())
     }
 
@@ -349,12 +377,12 @@ internal class InAppContentBlocksManagerImpl(
         contentBlock: InAppContentBlock,
         action: InAppContentBlockAction
     ) {
-        Logger.i(this, "InApp Content Block ${contentBlock.id} requested action ${action.name}")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} requested action ${action.name}")
         displayStateRepository.setInteracted(contentBlock, Date())
     }
 
     override fun onNoContent(placeholderId: String, contentBlock: InAppContentBlock?) {
-        Logger.i(this, "InApp Content Block ${contentBlock?.id ?: "no_ID"} has no content")
+        Logger.i(this, "InAppCB: Block ${contentBlock?.id ?: "no_ID"} has no content")
         contentBlock?.let {
             // possibility of AB testing
             displayStateRepository.setDisplayed(it, Date())
@@ -362,16 +390,19 @@ internal class InAppContentBlocksManagerImpl(
     }
 
     override fun onShown(placeholderId: String, contentBlock: InAppContentBlock) {
-        Logger.i(this, "InApp Content Block ${contentBlock.id} has been shown")
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} has been shown")
         displayStateRepository.setDisplayed(contentBlock, Date())
     }
 
     override fun loadContent(placeholderId: String): InAppContentBlock? {
         val contentBlock = pickInAppContentBlock(placeholderId)
         if (contentBlock == null) {
-            Logger.i(this, "No InApp Content Block found for placeholder ${placeholderId}\"")
+            Logger.i(this, "InAppCB: No InApp Content Block found for placeholder $placeholderId")
         } else {
-            Logger.i(this, "InApp Content Block ${contentBlock.id} for placeholder ${placeholderId}\"")
+            Logger.i(
+                this,
+                "InAppCB: InApp Content Block ${contentBlock.id} for placeholder $placeholderId"
+            )
             loadContentIfNeededSync(listOf(contentBlock))
             // update content in storage just in case
             updateContentForLocalContentBlocks(listOf(contentBlock))

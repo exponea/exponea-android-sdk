@@ -30,7 +30,7 @@ internal class ExponeaContextProvider : ContentProvider() {
         applicationContext = context
         val contextAvailable = context != null
         if (contextAvailable) {
-            Logger.e(this, "Application context loaded")
+            Logger.d(this, "Application context loaded")
         } else {
             Logger.w(this, """
                 Application context not found, Check ContextProvider registration in the Manifest!

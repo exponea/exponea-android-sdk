@@ -9,6 +9,7 @@ import androidx.cardview.widget.CardView
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
+import com.exponea.sdk.util.Logger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_placeholder
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_webview
@@ -51,6 +52,7 @@ class InAppContentBlockPlaceholderView internal constructor(
         }
         this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             pageFinishedEvent.getAndSet(null)?.let { contentLoaded ->
+                Logger.i(this, "InAppCB: Page loaded, notifying content ready with $contentLoaded")
                 onContentReady?.invoke(contentLoaded)
             }
         }
@@ -67,6 +69,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     internal fun showNoContent() {
+        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
         pageFinishedEvent.set(false)
         if (mayHaveZeroSizeForEmptyContent()) {
             this.visibility = GONE
@@ -84,22 +87,32 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     override fun onAttachedToWindow() {
+        Logger.d(
+            this,
+            "InAppCB: Placeholder ${controller.placeholderId} view has been attached to window"
+        )
         super.onAttachedToWindow()
         controller.onViewAttachedToWindow()
     }
 
     override fun onDetachedFromWindow() {
+        Logger.d(
+            this,
+            "InAppCB: Placeholder ${controller.placeholderId} view has been detached from window"
+        )
         controller.onViewDetachedFromWindow()
         super.onDetachedFromWindow()
     }
 
     internal fun showHtmlContent(html: String) {
+        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view going to show HTML block")
         htmlContainer.loadData(html)
         // pageFinishedEvent will be set after html full load
         htmlContainer.visibility = VISIBLE
     }
 
     fun refreshContent() {
+        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view requested to be refreshed")
         controller.loadContent()
     }
 

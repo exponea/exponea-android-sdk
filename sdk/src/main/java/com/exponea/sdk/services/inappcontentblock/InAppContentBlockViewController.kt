@@ -83,8 +83,15 @@ internal class InAppContentBlockViewController(
     }
 
     private fun parseInAppContentBlockAction(url: String): InAppContentBlockAction? {
-        val action = assignedHtmlContent?.findActionByUrl(url) ?: return null
         val type = detectActionType(url)
+        if (type == CLOSE) {
+            return InAppContentBlockAction(
+                type = type,
+                name = "",
+                url = ""
+            )
+        }
+        val action = assignedHtmlContent?.findActionByUrl(url) ?: return null
         return InAppContentBlockAction(
             type = type,
             name = action.buttonText,

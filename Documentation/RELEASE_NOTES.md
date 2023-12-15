@@ -1,6 +1,14 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.11.0
+#### December 15, 2023
+* Features
+  * More detailed logging added to In-app content blocks
+  * In-app content blocks behaviour handler for view lifecycle events
+  * In-app content blocks tracking API with handling of tracking consent according to DSGVO/GDPR
+
+
 ## Release Notes for 3.10.0
 #### November 27, 2023
 * Features

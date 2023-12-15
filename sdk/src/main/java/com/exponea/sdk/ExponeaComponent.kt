@@ -231,7 +231,6 @@ internal class ExponeaComponent(
         fetchManager,
         projectFactory,
         customerIdsRepository,
-        trackingConsentManager,
         inAppContentBlocksBitmapCache,
         htmlNormalizedCache,
         fontCache

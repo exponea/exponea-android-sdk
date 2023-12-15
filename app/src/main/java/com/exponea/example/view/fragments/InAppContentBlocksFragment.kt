@@ -1,5 +1,8 @@
 package com.exponea.example.view.fragments
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +18,9 @@ import com.exponea.example.R
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.util.Logger
 import kotlin.math.ceil
@@ -39,14 +45,59 @@ class InAppContentBlocksFragment : BaseFragment() {
         trackPage(Constants.ScreenNames.inAppContentBlocksScreen)
 
         content_blocks_layout.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
-        Exponea.getInAppContentBlocksPlaceholder("example_top", requireContext())?.let {
+        Exponea.getInAppContentBlocksPlaceholder(
+                "example_top",
+                requireContext(),
+                InAppContentBlockPlaceholderConfiguration(true)
+        )?.let {
             it.setOnContentReadyListener { contentLoaded ->
                 Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+            }
+            val origBehaviour = it.behaviourCallback
+            it.behaviourCallback = object : InAppContentBlockCallback {
+                override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                    origBehaviour.onMessageShown(placeholderId, contentBlock)
+                    Logger.i(this, "Content block with HTML: ${contentBlock.htmlContent}")
+                }
+                override fun onNoMessageFound(placeholderId: String) {
+                    origBehaviour.onNoMessageFound(placeholderId)
+                }
+                override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                    if (contentBlock == null) {
+                        return
+                    }
+                    Exponea.trackInAppContentBlockErrorWithoutTrackingConsent(
+                            placeholderId, contentBlock, errorMessage
+                    )
+                }
+                override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                    Exponea.trackInAppContentBlockCloseWithoutTrackingConsent(placeholderId, contentBlock)
+                }
+                override fun onActionClicked(
+                    placeholderId: String,
+                    contentBlock: InAppContentBlock,
+                    action: InAppContentBlockAction
+                ) {
+                    Exponea.trackInAppContentBlockClickWithoutTrackingConsent(
+                            placeholderId, action, contentBlock
+                    )
+                    try {
+                        requireContext().startActivity(
+                                Intent(Intent.ACTION_VIEW).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    data = Uri.parse(action.url)
+                                }
+                        )
+                    } catch (e: ActivityNotFoundException) {
+                        Logger.e(this, "Unable to perform deeplink", e)
+                    }
+                }
             }
             content_blocks_layout.addView(it, LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT
             ))
+            it.refreshContent()
         }
 
         content_blocks_layout.addView(TextView(requireContext()).apply { text = "Placeholder: ph_x_example_Android" })

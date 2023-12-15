@@ -80,3 +80,54 @@ placeholderView?.let {
     }
 }
 ```
+
+### Custom In-app content block actions
+
+If you want to override default SDK behavior, when in-app content block action is performed (button is clicked), or you want to add your code to be performed along with code executed by the SDK, you can set up `behaviourCallback` on View instance.
+Default SDK behaviour is mainly tracking of 'show', 'click', 'close' and 'error' events and opening action URL.
+
+```kotlin
+val placeholderView = Exponea.getInAppContentBlocksPlaceholder(
+        "placeholder_1",
+        activityContext,
+        // it is recommended to postpone message load if `onMessageShown` usage is crucial for you
+        // due to cached messages so message could be shown before you set `behaviourCallback`
+        InAppContentBlockPlaceholderConfiguration(true)
+)
+// you can access original callback and invokes it anytime
+val origBehaviour = placeholderView.behaviourCallback
+placeholderView.behaviourCallback = object : InAppContentBlockCallback {
+    override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+        origBehaviour.onMessageShown(placeholderId, contentBlock)   // tracks 'show'
+        Logger.i(this, "Content block with HTML: ${contentBlock.htmlContent}")
+        // you may set this placeholder visible
+    }
+    override fun onNoMessageFound(placeholderId: String) {
+        origBehaviour.onNoMessageFound(placeholderId)   // just log
+        // you may set this placeholder hidden
+    }
+    override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+        if (contentBlock == null) {
+            return
+        }
+        // !!! invoke origBehaviour.onError to track 'error' or call it yourself
+        Exponea.trackInAppContentBlockError(
+                placeholderId, contentBlock, errorMessage
+        )
+        // you may set this placeholder hidden and do any fallback
+    }
+    override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+        // !!! invoke origBehaviour.onCloseClicked to track 'close' or call it yourself
+        Exponea.trackInAppContentBlockClose(placeholderId, contentBlock)
+        // placeholder may show another content block if is assigned to placeholder ID
+    }
+    override fun onActionClicked(placeholderId: String, contentBlock: InAppContentBlock, action: InAppContentBlockAction) {
+        // content block action has to be tracked for 'click' event
+        Exponea.trackInAppContentBlockAction(
+                placeholderId, action, contentBlock
+        )
+        // content block action has to be handled for given `action.url`
+        handleUrlByYourApp(action.url)
+    }
+}
+```

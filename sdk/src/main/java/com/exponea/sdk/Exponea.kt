@@ -43,6 +43,8 @@ import com.exponea.sdk.models.FlushMode.IMMEDIATE
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.FlushMode.PERIOD
 import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
@@ -1219,5 +1221,119 @@ object Exponea {
 
     fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) = runCatching {
         NotificationsPermissionReceiver.requestPushAuthorization(context, listener)
+    }.logOnException()
+
+    fun trackInAppContentBlockClick(
+        placeholderId: String,
+        action: InAppContentBlockAction,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockClick(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    buttonText = action.name,
+                    buttonLink = action.url,
+                    mode = CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockClickWithoutTrackingConsent(
+        placeholderId: String,
+        action: InAppContentBlockAction,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockClick(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    buttonText = action.name,
+                    buttonLink = action.url,
+                    mode = IGNORE_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockClose(
+        placeholderId: String,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockClose(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    mode = CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockCloseWithoutTrackingConsent(
+        placeholderId: String,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockClose(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    mode = IGNORE_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockShown(
+        placeholderId: String,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockShown(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    mode = CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockShownWithoutTrackingConsent(
+        placeholderId: String,
+        message: InAppContentBlock
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockShown(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    mode = IGNORE_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockError(
+        placeholderId: String,
+        message: InAppContentBlock,
+        errorMessage: String
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockError(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    error = errorMessage,
+                    mode = CONSIDER_CONSENT
+            )
+        }
+    }.logOnException()
+
+    fun trackInAppContentBlockErrorWithoutTrackingConsent(
+        placeholderId: String,
+        message: InAppContentBlock,
+        errorMessage: String
+    ) = runCatching {
+        initGate.waitForInitialize {
+            component.trackingConsentManager.trackInAppContentBlockError(
+                    placeholderId = placeholderId,
+                    contentBlock = message,
+                    error = errorMessage,
+                    mode = IGNORE_CONSENT
+            )
+        }
     }.logOnException()
 }

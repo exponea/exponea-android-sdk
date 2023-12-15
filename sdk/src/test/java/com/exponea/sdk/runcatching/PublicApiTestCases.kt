@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
@@ -222,6 +223,58 @@ internal object PublicApiTestCases {
         },
         Pair(Exponea::requestPushAuthorization) {
             Exponea.requestPushAuthorization(ApplicationProvider.getApplicationContext()) { }
+        },
+        Pair(Exponea::trackInAppContentBlockClick) {
+            Exponea.trackInAppContentBlockClick(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildAction(),
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockClickWithoutTrackingConsent) {
+            Exponea.trackInAppContentBlockClickWithoutTrackingConsent(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildAction(),
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockClose) {
+            Exponea.trackInAppContentBlockClose(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockCloseWithoutTrackingConsent) {
+            Exponea.trackInAppContentBlockCloseWithoutTrackingConsent(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockError) {
+            Exponea.trackInAppContentBlockError(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage(),
+                    "Failure message"
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockErrorWithoutTrackingConsent) {
+            Exponea.trackInAppContentBlockErrorWithoutTrackingConsent(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage(),
+                    "Failure message"
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockShown) {
+            Exponea.trackInAppContentBlockShown(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
+        },
+        Pair(Exponea::trackInAppContentBlockShownWithoutTrackingConsent) {
+            Exponea.trackInAppContentBlockShownWithoutTrackingConsent(
+                    "placeholder1",
+                    InAppContentBlocksManagerImplTest.buildMessage()
+            )
         }
     )
 

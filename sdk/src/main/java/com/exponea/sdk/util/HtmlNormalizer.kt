@@ -1,9 +1,12 @@
 package com.exponea.sdk.util
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
 import androidx.annotation.WorkerThread
 import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
 import com.exponea.sdk.repository.SimpleFileCache
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -27,11 +30,37 @@ import org.jsoup.nodes.Document
  * - transforms images into offline form
  * - ensures compatibility of action buttons
  */
-internal class HtmlNormalizer(
-    private val imageCache: BitmapCache,
-    private val fontCache: SimpleFileCache,
-    originalHtml: String
-) {
+public class HtmlNormalizer {
+
+    private val imageCache: BitmapCache
+    private val fontCache: SimpleFileCache
+    private val originalHtml: String
+    private val document: Document?
+
+    internal constructor(
+        imageCache: BitmapCache,
+        fontCache: SimpleFileCache,
+        originalHtml: String
+    ) {
+        this.imageCache = imageCache
+        this.fontCache = fontCache
+        this.originalHtml = originalHtml
+        document = try {
+            Jsoup.parse(originalHtml)
+        } catch (e: Exception) {
+            Logger.i(this, "[HTML] Unable to parse original HTML source code $originalHtml")
+            null
+        }
+    }
+
+    public constructor(
+        context: Context,
+        originalHtml: String
+    ) : this(
+        InAppContentBlockBitmapCacheImpl(context),
+        FontCacheImpl(context),
+        originalHtml
+    )
 
     companion object {
         private const val CLOSE_ACTION_COMMAND = "close_action"
@@ -95,17 +124,6 @@ internal class HtmlNormalizer(
             "background", "background-image", "border-image", "border-image-source", "content", "cursor", "filter",
             "list-style", "list-style-image", "mask", "mask-image", "offset-path", "src"
         )
-    }
-
-    private var document: Document?
-
-    init {
-        try {
-            document = Jsoup.parse(originalHtml)
-        } catch (e: Exception) {
-            Logger.i(this, "[HTML] Unable to parse original HTML source code $originalHtml")
-            document = null
-        }
     }
 
     @WorkerThread
@@ -411,7 +429,7 @@ internal class HtmlNormalizer(
         if (isBase64Uri(imageSource)) {
             return imageSource
         }
-        var imageData = getImageFromUrl(imageSource)
+        val imageData = getImageFromUrl(imageSource)
         val os = ByteArrayOutputStream()
         imageData!!.compress(Bitmap.CompressFormat.PNG, 100, os)
         val result = Base64.encodeToString(os.toByteArray(), Base64.NO_WRAP)

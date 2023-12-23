@@ -28,7 +28,7 @@ internal class AppInboxParser {
             val actions: MutableList<MessageItemAction> = mutableListOf()
             val htmlOrigin = normalized["message"]
             if (htmlOrigin != null) {
-                val imageCache = Exponea.getComponent()?.inAppMessagesBitmapCache
+                val imageCache = Exponea.getComponent()?.appInboxMessagesBitmapCache
                 val fontCache = Exponea.getComponent()?.fontCache
                 if (imageCache == null || fontCache == null) {
                     throw Exception("Exponea SDK was not initialized properly!")

@@ -1,6 +1,13 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.11.1
+#### December 23, 2023
+* Bug Fixes
+  * Fixed: Using of HtmlNormalizer is not available as public, and normalization process can not be set
+  * Fixed: Loading of In-app content block HTML message with same content does not trigger onMessageShown event
+
+
 ## Release Notes for 3.11.0
 #### December 15, 2023
 * Features

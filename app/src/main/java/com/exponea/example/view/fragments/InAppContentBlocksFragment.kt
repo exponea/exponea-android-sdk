@@ -22,6 +22,7 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
+import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import kotlin.math.ceil
 import kotlinx.android.synthetic.main.fragment_inapp_content_blocks.content_blocks_layout
@@ -58,6 +59,16 @@ class InAppContentBlocksFragment : BaseFragment() {
                 override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
                     origBehaviour.onMessageShown(placeholderId, contentBlock)
                     Logger.i(this, "Content block with HTML: ${contentBlock.htmlContent}")
+                    contentBlock.htmlContent?.let { rawHtml ->
+                        val normalizationConfig = HtmlNormalizer.HtmlNormalizerConfig(
+                            true,
+                            false
+                        )
+                        val normalizedHtml = HtmlNormalizer(requireContext(), rawHtml)
+                            .normalize(normalizationConfig)
+                            .html
+                        Logger.i(this, "Normalized HTML: $normalizedHtml")
+                    }
                 }
                 override fun onNoMessageFound(placeholderId: String) {
                     origBehaviour.onNoMessageFound(placeholderId)

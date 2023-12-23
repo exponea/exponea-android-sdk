@@ -7,7 +7,6 @@ import com.exponea.sdk.models.InAppContentBlockActionType.BROWSER
 import com.exponea.sdk.models.InAppContentBlockActionType.CLOSE
 import com.exponea.sdk.models.InAppContentBlockActionType.DEEPLINK
 import com.exponea.sdk.models.InAppContentBlockCallback
-import com.exponea.sdk.models.InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockType.HTML
 import com.exponea.sdk.models.InAppContentBlockType.NATIVE
@@ -67,19 +66,13 @@ internal class InAppContentBlockViewController(
             actionDispatcher.onAction(placeholderId, message, action)
             behaviourCallback.onActionClicked(placeholderId, message, action)
         }
-        if (message.frequency == UNTIL_VISITOR_INTERACTS) {
-            Logger.i(
-                this,
-                "InApp Content Block ${message.id} needs to be replaced for first interaction"
-            )
-            reloadContent()
-        }
+        reloadContent()
     }
 
     private fun reloadContent() {
         Logger.i(this, "InAppCB: Placeholder $placeholderId is reloading for next content block")
         cleanUp()
-        loadContent()
+        loadContent(true)
     }
 
     private fun parseInAppContentBlockAction(url: String): InAppContentBlockAction? {
@@ -110,21 +103,19 @@ internal class InAppContentBlockViewController(
         }
     }
 
-    fun loadContent() {
+    fun loadContent(requiresAttachedView: Boolean) {
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
             assignedMessage = dataLoader.loadContent(placeholderId)
+            assignedHtmlContent = normalizeHtmlIfPossible(assignedMessage)
             contentLoaded = true
-            assignedMessage?.let {
-                val htmlContent = it.htmlContent
-                if (it.contentType == HTML && htmlContent != null) {
-                    Logger.i(this, "InAppCB: Message found for placeholder $placeholderId, normalizing")
-                    // prepare cache
-                    getOrCreateNormalizedHtml(it, htmlContent)
-                }
-            }
-            if (isViewAttachedToWindow) {
-                Logger.d(this, "InAppCB: Placeholder $placeholderId attached to window, showing message")
+            if (isViewAttachedToWindow || !requiresAttachedView) {
+                Logger.d(
+                    this,
+                    """
+                    InAppCB: Placeholder $placeholderId attached to window ($isViewAttachedToWindow), showing message
+                    """.trimIndent()
+                )
                 showMessage(assignedMessage)
             } else {
                 Logger.d(
@@ -133,6 +124,35 @@ internal class InAppContentBlockViewController(
                 )
             }
         }
+    }
+
+    private fun normalizeHtmlIfPossible(message: InAppContentBlock?): NormalizedResult? {
+        val htmlContent = message?.htmlContent
+        if (message == null || message.contentType != HTML || htmlContent == null) {
+            return null
+        }
+        Logger.d(this, "InAppCB: Normalizing HTML content of message ${message.id}")
+        var normalizedHtml = htmlCache.get(message.id, htmlContent)
+        if (normalizedHtml == null) {
+            Logger.d(this, "InAppCB: No html cache for message ${message.id}, creating new")
+            val normalizer = HtmlNormalizer(
+                imageCache = imageCache,
+                fontCache = fontCache,
+                originalHtml = htmlContent
+            )
+            val normalizedResult = normalizer.normalize(HtmlNormalizerConfig(
+                makeResourcesOffline = true,
+                ensureCloseButton = false
+            ))
+            htmlCache.set(message.id, htmlContent, normalizedResult)
+            normalizedHtml = normalizedResult
+        } else {
+            Logger.d(
+                this,
+                "InAppCB: Using already normalized HTML content of message ${message.id} from cache"
+            )
+        }
+        return normalizedHtml
     }
 
     private fun showMessage(message: InAppContentBlock?) {
@@ -180,36 +200,25 @@ internal class InAppContentBlockViewController(
         runOnBackgroundThread {
             Logger.i(this, "InAppCB: Loading HTML content for placeholder $placeholderId")
             val htmlContent = message.htmlContent
-            if (htmlContent == null) {
-                Logger.e(this, "InAppCB: No HTML content provided for message ${message.id}")
+            if (htmlContent.isNullOrEmpty()) {
+                // possible AB testing
+                Logger.i(this, "InAppCB: No HTML content provided for message ${message.id}")
                 showNoContent()
                 return@runOnBackgroundThread
             }
-            val normalizedHtml = getOrCreateNormalizedHtml(message, htmlContent)
-            val skipHtmlShow = assignedHtmlContent?.html.contentEquals(normalizedHtml.html)
-            assignedHtmlContent = normalizedHtml
-            if (normalizedHtml.valid && normalizedHtml.html != null) {
-                Logger.i(this, "InAppCB: HTML content for placeholder $placeholderId is valid")
-                if (skipHtmlShow) {
-                    Logger.d(
-                        this,
-                        "InAppCB: HTML content for placeholder $placeholderId already shown, skipping"
-                    )
-                } else {
-                    Logger.d(
-                        this,
-                        "InAppCB: HTML content for placeholder $placeholderId going to be shown"
-                    )
-                    runOnMainThread {
-                        view.showHtmlContent(normalizedHtml.html!!)
-                    }
-                }
-                actionDispatcher.onShown(placeholderId, message)
-                behaviourCallback.onMessageShown(placeholderId, message)
-            } else {
-                Logger.w(this, "InAppCB: HTML content for message ${message.id} is invalid")
+            val normalizedHtml = assignedHtmlContent?.html
+            if (normalizedHtml.isNullOrEmpty()) {
+                // htmlContent is non-null, normalized HTML has to be prepared; otherwise htmlContent is invalid
+                Logger.e(this, "InAppCB: HTML content for message ${message.id} is invalid")
                 showError(message, "Invalid HTML or empty")
+                return@runOnBackgroundThread
             }
+            Logger.i(this, "InAppCB: HTML content for placeholder $placeholderId is valid")
+            runOnMainThread {
+                view.showHtmlContent(normalizedHtml)
+            }
+            actionDispatcher.onShown(placeholderId, message)
+            behaviourCallback.onMessageShown(placeholderId, message)
         }
     }
 
@@ -223,31 +232,6 @@ internal class InAppContentBlockViewController(
         }
         actionDispatcher.onError(placeholderId, message, errorMessage)
         behaviourCallback.onError(placeholderId, message, errorMessage)
-    }
-
-    private fun getOrCreateNormalizedHtml(message: InAppContentBlock, htmlContent: String): NormalizedResult {
-        Logger.d(this, "InAppCB: Normalizing HTML content of message ${message.id}")
-        var normalizedHtml = htmlCache.get(message.id, htmlContent)
-        if (normalizedHtml == null) {
-            Logger.d(this, "InAppCB: No html cache for message ${message.id}, creating new")
-            val normalizer = HtmlNormalizer(
-                imageCache = imageCache,
-                fontCache = fontCache,
-                originalHtml = htmlContent
-            )
-            val normalizedResult = normalizer.normalize(HtmlNormalizerConfig(
-                makeResourcesOffline = true,
-                ensureCloseButton = false
-            ))
-            htmlCache.set(message.id, htmlContent, normalizedResult)
-            normalizedHtml = normalizedResult
-        } else {
-            Logger.d(
-                this,
-                "InAppCB: Using already normalized HTML content of message ${message.id} from cache"
-            )
-        }
-        return normalizedHtml
     }
 
     private fun cleanUp() {
@@ -274,7 +258,7 @@ internal class InAppContentBlockViewController(
                 InAppCB: Placeholder $placeholderId view attached to window, content needs to be loaded
                 """.trimIndent()
             )
-            loadContent()
+            loadContent(true)
         }
     }
 

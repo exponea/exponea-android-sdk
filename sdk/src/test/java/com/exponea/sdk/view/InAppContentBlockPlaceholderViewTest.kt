@@ -1,9 +1,15 @@
 package com.exponea.sdk.view
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.os.Looper.getMainLooper
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.R
 import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
+import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest.Companion.buildHtmlMessageContent
 import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest.Companion.buildMessage
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
@@ -30,6 +36,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +46,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
@@ -55,6 +64,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
     @Before
     fun before() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         fetchManager = mockk()
         customerIdsRepository = mockk()
         displayStateRepository = mockk()
@@ -68,6 +78,8 @@ internal class InAppContentBlockPlaceholderViewTest {
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
         every { bitmapCache.clearExcept(any()) } just Runs
+        every { bitmapCache.get(any()) } returns
+            BitmapFactory.decodeResource(context.resources, R.drawable.message_inbox_button)
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
@@ -77,7 +89,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             authorization = "Token auth",
             baseURL = "https://test.com"
         )
-        projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
+        projectFactory = ExponeaProjectFactory(context, configuration)
         htmlCache = mockk()
         every { htmlCache.remove(any()) } just Runs
         every { htmlCache.get(any(), any()) } returns null
@@ -112,9 +124,10 @@ internal class InAppContentBlockPlaceholderViewTest {
     fun `should load message assigned to placeholder ID`() {
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "html")
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
             )))
         }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
                 "placeholder_1",
                 ApplicationProvider.getApplicationContext(),
@@ -140,6 +153,64 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should call message changed events in correct order`() {
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        preloadInAppContentBlocks(arrayListOf(
+            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        ))
+        var messageFound = false
+        placeholder.behaviourCallback = object : InAppContentBlockCallback {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                messageFound = true
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                messageFound = false
+            }
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+            }
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+            }
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+            }
+        }
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertTrue(messageFound)
+        assertEquals(View.VISIBLE, placeholder.htmlContainer.visibility)
+        assertEquals(View.GONE, placeholder.placeholder.visibility)
+        preloadInAppContentBlocks(arrayListOf())
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertFalse(messageFound)
+        assertEquals(View.GONE, placeholder.htmlContainer.visibility)
+        assertEquals(View.VISIBLE, placeholder.placeholder.visibility)
+        preloadInAppContentBlocks(arrayListOf(
+            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        ))
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertTrue(messageFound)
+        assertEquals(View.VISIBLE, placeholder.htmlContainer.visibility)
+        assertEquals(View.GONE, placeholder.placeholder.visibility)
+    }
+
+    private fun preloadInAppContentBlocks(messages: ArrayList<InAppContentBlock>) {
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, messages))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
     }
 
     private fun identifyCustomer(cookie: String? = null, ids: HashMap<String, String?> = hashMapOf()) {

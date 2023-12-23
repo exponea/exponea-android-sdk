@@ -94,7 +94,7 @@ internal class InAppContentBlocksManagerImpl(
             controller
         )
         if (!config.defferedLoad) {
-            controller.loadContent()
+            controller.loadContent(false)
         }
         return view
     }

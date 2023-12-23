@@ -118,9 +118,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         assertNotNull(view)
         val controller = view.controller
         assertNotNull(controller)
-        controller.onUrlClick("https://exponea.com")
-        // validate
+        // validate show event
         verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        controller.onUrlClick("https://exponea.com")
+        // validate click event and show next
+        verify(exactly = 2) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
         assertEquals("banner", eventSlot.captured.type)
@@ -242,9 +246,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         assertNotNull(view)
         val controller = view.controller
         assertNotNull(controller)
-        controller.onUrlClick("https://exponea.com")
-        // validate
+        // validate show
         verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), true)
+        }
+        controller.onUrlClick("https://exponea.com")
+        // validate click and show next
+        verify(exactly = 2) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), true)
         }
     }
@@ -299,8 +307,6 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         assertNotNull(view)
         val controller = view.controller
         assertNotNull(controller)
-        // simulate show without show :-D
-        controller.onViewAttachedToWindow()
         // validate show without tracking
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), false)

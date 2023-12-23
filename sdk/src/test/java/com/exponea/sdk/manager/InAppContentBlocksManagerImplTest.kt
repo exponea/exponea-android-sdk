@@ -90,6 +90,8 @@ internal class InAppContentBlocksManagerImplTest {
          */
         public fun buildHtmlMessageContent(): String {
             return """
+            <html>
+            <head>
             <style>
                 .in-app-message-wrapper {
                     display: flex;
@@ -207,8 +209,8 @@ internal class InAppContentBlocksManagerImplTest {
                 }
 
             </style>
-
-
+            </head>
+            <body>
             <div class="in-app-message-wrapper">
                 <div class="in-app-message modal-in-app-message " style="background-color: #ffffff">
 
@@ -249,6 +251,8 @@ internal class InAppContentBlocksManagerImplTest {
                     </div>
                 </div>
             </div>
+            </body>
+            </html>
         """.trimIndent()
         }
         fun buildAction(

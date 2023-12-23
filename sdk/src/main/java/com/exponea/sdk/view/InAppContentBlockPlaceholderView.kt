@@ -20,8 +20,8 @@ class InAppContentBlockPlaceholderView internal constructor(
     internal val controller: InAppContentBlockViewController
 ) : RelativeLayout(context, null, 0) {
 
-    private lateinit var htmlContainer: ExponeaWebView
-    private lateinit var placeholder: CardView
+    internal lateinit var htmlContainer: ExponeaWebView
+    internal lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
     private val pageFinishedEvent = AtomicReference<Boolean?>(null)
     /**
@@ -62,19 +62,20 @@ class InAppContentBlockPlaceholderView internal constructor(
         View.inflate(context, R.layout.inapp_content_block_placeholder, this)
         this.htmlContainer = this.content_block_webview
         this.htmlContainer.setBackgroundColor(Color.TRANSPARENT)
-        // all modes has to be hidden before usage
-        this.htmlContainer.visibility = GONE
         this.placeholder = this.content_block_placeholder
+        // all modes has to be hidden before usage
+        this.visibility = VISIBLE
+        this.htmlContainer.visibility = GONE
         this.placeholder.visibility = GONE
     }
 
     internal fun showNoContent() {
         Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
         pageFinishedEvent.set(false)
+        this.htmlContainer.visibility = GONE
+        this.placeholder.visibility = VISIBLE
         if (mayHaveZeroSizeForEmptyContent()) {
             this.visibility = GONE
-        } else {
-            this.placeholder.visibility = VISIBLE
         }
     }
 
@@ -82,8 +83,9 @@ class InAppContentBlockPlaceholderView internal constructor(
         if (minimumHeight > 0 && minimumWidth > 0) {
             return false
         }
-        return this.layoutParams.height == LayoutParams.WRAP_CONTENT ||
-            this.layoutParams.width == LayoutParams.WRAP_CONTENT
+        val layoutParams = this.layoutParams ?: return true
+        return layoutParams.height == LayoutParams.WRAP_CONTENT ||
+            layoutParams.width == LayoutParams.WRAP_CONTENT
     }
 
     override fun onAttachedToWindow() {
@@ -108,12 +110,14 @@ class InAppContentBlockPlaceholderView internal constructor(
         Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view going to show HTML block")
         htmlContainer.loadData(html)
         // pageFinishedEvent will be set after html full load
-        htmlContainer.visibility = VISIBLE
+        this.visibility = VISIBLE
+        this.htmlContainer.visibility = VISIBLE
+        this.placeholder.visibility = GONE
     }
 
     fun refreshContent() {
         Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view requested to be refreshed")
-        controller.loadContent()
+        controller.loadContent(false)
     }
 
     fun setOnContentReadyListener(listener: (Boolean) -> Unit) {

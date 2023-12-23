@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdkVersion 17
         targetSdkVersion 33
-        buildConfigField "String", "EXPONEA_VERSION_NAME", '"3.11.0"'
-        buildConfigField "int", "EXPONEA_VERSION_CODE", "71"
+        buildConfigField "String", "EXPONEA_VERSION_NAME", '"3.11.1"'
+        buildConfigField "int", "EXPONEA_VERSION_CODE", "72"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
     }

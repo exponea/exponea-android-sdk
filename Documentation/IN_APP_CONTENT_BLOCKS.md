@@ -131,3 +131,79 @@ placeholderView.behaviourCallback = object : InAppContentBlockCallback {
     }
 }
 ```
+
+### Custom presentation of In-app content block
+
+In case that UI presentation of InAppContentBlockPlaceholderView does not fit UX design of your application (for example customized animations) you may create own View element that wraps existing InAppContentBlockPlaceholderView instance.
+Setup could differ from your use case but you should keep these 3 principles:
+
+1. Prepare InAppContentBlockPlaceholderView instance with deferred load and (important) add it into layout to keep View lifecycle:
+```kotlin
+class CustomView : FrameLayout {
+
+    private lateinit var placeholderView: InAppContentBlockPlaceholderView
+
+    constructor(context: Context) : super(context) {
+        placeholderView = Exponea.getInAppContentBlocksPlaceholder(
+                "placeholder_1",
+                context,
+                InAppContentBlockPlaceholderConfiguration(true)
+        ) ?: return
+        overrideBehaviour(placeholderView)
+        addView(placeholderView, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        placeholderView.refreshContent()
+    }
+}
+```
+2. Hook your CustomView to listen on In-app Content Block message arrival:
+```kotlin
+private fun overrideBehaviour(placeholderView: InAppContentBlockPlaceholderView) {
+    val originalBehavior = placeholderView.behaviourCallback
+    placeholderView.behaviourCallback = object : InAppContentBlockCallback {
+        override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+            // Calling originalBehavior tracks 'show' event and opens URL
+            originalBehavior.onMessageShown(placeholderId, contentBlock)
+            showMessage(contentBlock)
+        }
+
+        override fun onNoMessageFound(placeholderId: String) {
+            showNoMessage()
+        }
+
+        override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+            // Calling originalBehavior tracks 'error' event
+            originalBehavior.onError(placeholderId, contentBlock, errorMessage)
+            showError()
+        }
+
+        override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+            // Calling originalBehavior tracks 'close' event
+            originalBehavior.onCloseClicked(placeholderId, contentBlock)
+            hideMe()
+        }
+
+        override fun onActionClicked(placeholderId: String, contentBlock: InAppContentBlock, action: InAppContentBlockAction) {
+            // Calling originalBehavior tracks 'click' event
+            originalBehavior.onActionClicked(placeholderId, contentBlock, action)
+        }
+    }
+}
+
+/**
+ * Update your customized content.
+ * This method could be called multiple times for every content block update, especially in case that multiple messages are assigned to given "placeholder_1" ID
+ */
+fun showMessage(data: InAppContentBlock) {
+    //...
+}
+```
+3. Invoke clicked action manually. For example if your CustomView contains Button that is registered with View.OnClickListener for action URL and is calling `onMyActionClick` method:
+```kotlin
+fun onMyActionClick(url: String) {
+    placeholderView.invokeActionClick(url)
+}
+```
+
+That is all, now your CustomView will receive all In-app Content Block data.
+
+> **Keep in mind:** Ensure that InAppContentBlockPlaceholderView instance is added to Layout. It could be hidden but it relays on [attachToWindow](https://developer.android.com/reference/android/view/View#onAttachedToWindow()) lifecycle to be able to refresh content on data update. You have to invoke refreshContent() manually after invokeActionClick() otherwise.

@@ -50,13 +50,14 @@ internal class InAppContentBlocksManagerImplTest {
             data: Map<String, Any?>? = null,
             placeholders: List<String> = listOf("placeholder_1"),
             trackingConsentCategory: String? = null,
-            priority: Int? = null
+            priority: Int? = null,
+            rawFrequency: String = InAppContentBlockFrequency.ALWAYS.name.lowercase()
         ): InAppContentBlock {
             return InAppContentBlock(
                 id = id,
                 name = "Random name",
                 dateFilter = null,
-                rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
+                rawFrequency = rawFrequency,
                 priority = priority,
                 consentCategoryTracking = trackingConsentCategory,
                 rawContentType = type,

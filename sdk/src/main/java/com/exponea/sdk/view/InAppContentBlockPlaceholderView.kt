@@ -123,4 +123,12 @@ class InAppContentBlockPlaceholderView internal constructor(
     fun setOnContentReadyListener(listener: (Boolean) -> Unit) {
         onContentReady = listener
     }
+
+    fun invokeActionClick(actionUrl: String) {
+        Logger.i(
+            this,
+            "InAppCB: Manual action $actionUrl invoked on placeholder ${controller.placeholderId}"
+        )
+        controller.onUrlClick(actionUrl)
+    }
 }

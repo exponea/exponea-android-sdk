@@ -19,6 +19,7 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockDisplayState
+import com.exponea.sdk.models.InAppContentBlockFrequency
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
@@ -35,8 +36,11 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlinx.coroutines.CoroutineScope
@@ -67,13 +71,7 @@ internal class InAppContentBlockPlaceholderViewTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         fetchManager = mockk()
         customerIdsRepository = mockk()
-        displayStateRepository = mockk()
-        every { displayStateRepository.get(any()) } returns InAppContentBlockDisplayState(
-            null, 0, null, 0
-        )
-        every { displayStateRepository.setDisplayed(any(), any()) } just Runs
-        every { displayStateRepository.setInteracted(any(), any()) } just Runs
-        every { displayStateRepository.clear() } just Runs
+        displayStateRepository = InAppContentBlockDisplayStateMock()
         bitmapCache = mockk()
         every { bitmapCache.has(any()) } returns false
         every { bitmapCache.preload(any(), any()) } just Runs
@@ -206,6 +204,213 @@ internal class InAppContentBlockPlaceholderViewTest {
         assertEquals(View.GONE, placeholder.placeholder.visibility)
     }
 
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should store interaction flags by invoking manual action`() {
+        val placeholderId = "ph1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    placeholders = listOf(placeholderId),
+                    data = mapOf("html" to buildHtmlMessageContent()),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                )
+            )))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        val manualActionUrl = "https://exponea.com"
+        var stepIndex = 0
+        var messageShown = 0
+        var actionClicked = 0
+        var noMessageFound = 0
+        var shownMessage: InAppContentBlock? = null
+        placeholder.behaviourCallback = object : InAppContentBlockCallback {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                assertEquals("id1", contentBlock.id)
+                messageShown = ++stepIndex
+                shownMessage = contentBlock
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                noMessageFound = ++stepIndex
+            }
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                fail("Should not throw error")
+            }
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                fail("Should not invoke close click")
+            }
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                assertEquals("id1", contentBlock.id)
+                assertEquals(manualActionUrl, action.url)
+                actionClicked = ++stepIndex
+            }
+        }
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertEquals(1, messageShown)
+        assertNotNull(shownMessage)
+        placeholder.invokeActionClick(manualActionUrl)
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertEquals(2, actionClicked)
+        assertEquals(3, noMessageFound)
+        // message is visible 'until interaction' so next message should not be shown/found
+        assertEquals(1, messageShown)
+        // local flags validation
+        val displayState = displayStateRepository.get(shownMessage!!)
+        assertEquals(1, displayState.displayedCount)
+        assertNotNull(displayState.displayedLast)
+        assertEquals(1, displayState.interactedCount)
+        assertNotNull(displayState.interactedLast)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should store interaction flags by invoking close action`() {
+        val placeholderId = "ph1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    placeholders = listOf(placeholderId),
+                    data = mapOf("html" to buildHtmlMessageContent()),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                )
+            )))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        val manualCloseUrl = "https://exponea.com/close_action"
+        var stepIndex = 0
+        var messageShown = 0
+        var actionClosed = 0
+        var noMessageFound = 0
+        var shownMessage: InAppContentBlock? = null
+        placeholder.behaviourCallback = object : InAppContentBlockCallback {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                assertEquals("id1", contentBlock.id)
+                messageShown = ++stepIndex
+                shownMessage = contentBlock
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                noMessageFound = ++stepIndex
+            }
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                fail("Should not throw error")
+            }
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                assertEquals("id1", contentBlock.id)
+                actionClosed = ++stepIndex
+            }
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                fail("Should not invoke action click")
+            }
+        }
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertEquals(1, messageShown)
+        assertNotNull(shownMessage)
+        placeholder.invokeActionClick(manualCloseUrl)
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertEquals(2, actionClosed)
+        assertEquals(3, noMessageFound)
+        // message is visible 'until interaction' so next message should not be shown/found
+        assertEquals(1, messageShown)
+        // local flags validation
+        val displayState = displayStateRepository.get(shownMessage!!)
+        assertEquals(1, displayState.displayedCount)
+        assertNotNull(displayState.displayedLast)
+        assertEquals(1, displayState.interactedCount)
+        assertNotNull(displayState.interactedLast)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should store interaction flags by invoking invalid action`() {
+        val placeholderId = "ph1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    placeholders = listOf(placeholderId),
+                    data = mapOf("html" to buildHtmlMessageContent()),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                )
+            )))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        val manualInvalidUrl = "https://exponea.com/is-not-listed-action"
+        var stepIndex = 0
+        var messageShown = 0
+        var onErrorFound = 0
+        var shownMessage: InAppContentBlock? = null
+        placeholder.behaviourCallback = object : InAppContentBlockCallback {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                assertEquals("id1", contentBlock.id)
+                messageShown = ++stepIndex
+                shownMessage = contentBlock
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                fail("Should not invoke no message step")
+            }
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                onErrorFound = ++stepIndex
+            }
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                fail("Should not invoke close click")
+            }
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                fail("Should not invoke action click")
+            }
+        }
+        placeholder.refreshContent()
+        shadowOf(getMainLooper()).idle()
+        assertEquals(1, messageShown)
+        assertNotNull(shownMessage)
+        placeholder.invokeActionClick(manualInvalidUrl)
+        shadowOf(getMainLooper()).idle()
+        assertEquals(2, onErrorFound)
+        // message is visible 'until interaction' so next message should not be shown/found
+        assertEquals(1, messageShown)
+        // local flags validation
+        val displayState = displayStateRepository.get(shownMessage!!)
+        assertEquals(1, displayState.displayedCount)
+        assertNotNull(displayState.displayedLast)
+        assertEquals(0, displayState.interactedCount)
+        assertNull(displayState.interactedLast)
+    }
+
     private fun preloadInAppContentBlocks(messages: ArrayList<InAppContentBlock>) {
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, messages))
@@ -219,5 +424,38 @@ internal class InAppContentBlockPlaceholderViewTest {
             this.externalIds = ids
         }
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
+    }
+}
+
+class InAppContentBlockDisplayStateMock : InAppContentBlockDisplayStateRepository {
+    private val displayStates = mutableMapOf<String, InAppContentBlockDisplayState>()
+    override fun get(message: InAppContentBlock): InAppContentBlockDisplayState {
+        return displayStates[message.id] ?: InAppContentBlockDisplayState(
+            null, 0, null, 0
+        )
+    }
+
+    override fun setDisplayed(message: InAppContentBlock, date: Date) {
+        val displayState = get(message)
+        displayStates[message.id] = InAppContentBlockDisplayState(
+            date,
+            displayState.displayedCount + 1,
+            displayState.interactedLast,
+            displayState.interactedCount
+        )
+    }
+
+    override fun setInteracted(message: InAppContentBlock, date: Date) {
+        val displayState = get(message)
+        displayStates[message.id] = InAppContentBlockDisplayState(
+            displayState.displayedLast,
+            displayState.displayedCount,
+            date,
+            displayState.interactedCount + 1
+        )
+    }
+
+    override fun clear() {
+        displayStates.clear()
     }
 }

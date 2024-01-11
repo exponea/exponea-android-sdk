@@ -1,6 +1,12 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.11.2
+#### January 11, 2024
+* Bug Fixes
+  * Fixed: Invoking of In-app content blocks behaviour callback from outside is not reflected to local flags about showing and interaction
+
+
 ## Release Notes for 3.11.1
 #### December 23, 2023
 * Bug Fixes

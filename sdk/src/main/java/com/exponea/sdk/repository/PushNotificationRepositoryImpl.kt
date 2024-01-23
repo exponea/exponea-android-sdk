@@ -8,16 +8,7 @@ internal class PushNotificationRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : PushNotificationRepository {
 
-    private val KEY = "ExponeaPushNotificationInitiated"
     private val KEY_EXTRA_DATA = "ExponeaPushNotificationExtraData"
-
-    override fun get(): Boolean {
-        return preferences.getBoolean(KEY, false)
-    }
-
-    override fun set(boolean: Boolean) {
-        preferences.setBoolean(KEY, boolean)
-    }
 
     override fun getExtraData(): Map<String, Any>? {
         val dataString = preferences.getString(KEY_EXTRA_DATA, "")

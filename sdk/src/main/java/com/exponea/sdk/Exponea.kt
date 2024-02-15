@@ -913,10 +913,6 @@ object Exponea {
             return false
         }
         val campaignData = CampaignData(intent!!.data!!)
-        if (!campaignData.isValid()) {
-            Logger.w(this, "Intent doesn't contain a valid Campaign info in Uri: ${intent.data}")
-            return false
-        }
         val campaingManager = getCampaingManager(appContext)
         if (campaingManager != null) {
             campaingManager.trackCampaignClick(campaignData)

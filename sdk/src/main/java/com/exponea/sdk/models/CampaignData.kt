@@ -3,7 +3,6 @@ package com.exponea.sdk.models
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 import com.exponea.sdk.util.currentTimeSeconds
 
 /**
@@ -40,8 +39,6 @@ data class CampaignData(
             createdAt = currentTimeSeconds(),
             completeUrl = data.toString()
     )
-
-    fun isValid() = !TextUtils.isEmpty(payload)
 
     fun getTrackingData(): Map<String, String> {
         return hashMapOf(

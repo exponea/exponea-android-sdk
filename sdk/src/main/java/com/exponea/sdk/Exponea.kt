@@ -123,6 +123,7 @@ object Exponea {
         }
         set(value) = runCatching {
             configuration.sessionTimeout = value
+            ExponeaConfigRepository.set(application, configuration)
         }.logOnException()
 
     /**
@@ -136,6 +137,7 @@ object Exponea {
         }
         set(value) = runCatching {
             configuration.automaticSessionTracking = value
+            ExponeaConfigRepository.set(application, configuration)
             startSessionTracking(value)
         }.logOnException()
 
@@ -156,6 +158,7 @@ object Exponea {
         }
         set(value) = runCatching {
             configuration.automaticPushNotification = value
+            ExponeaConfigRepository.set(application, configuration)
         }.logOnException()
 
     /**
@@ -220,6 +223,7 @@ object Exponea {
         }
         set(value) = runCatching {
             configuration.campaignTTL = value
+            ExponeaConfigRepository.set(application, configuration)
         }.logOnException()
 
     /**
@@ -232,6 +236,7 @@ object Exponea {
         }.returnOnException { hashMapOf() }
         set(value) = runCatching {
             configuration.defaultProperties = value
+            ExponeaConfigRepository.set(application, configuration)
         }.logOnException()
 
     /**

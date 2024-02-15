@@ -14,6 +14,10 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -263,5 +267,127 @@ internal class ConfigurationTest : ExponeaSDKTest() {
             )
         )
         assertEquals(Exponea.isInitialized, false)
+    }
+
+    @Test
+    fun `should update sessionTimeout conf in local storage`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            sessionTimeout = 10.0
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        assertNotNull(storedConfig)
+        assertEquals(10.0, storedConfig.sessionTimeout)
+        // update sessionTimeout via API
+        Exponea.sessionTimeout = 20.0
+        val storedConfigAfterUpdate = ExponeaConfigRepository.get(context)
+        assertNotNull(storedConfigAfterUpdate)
+        assertEquals(20.0, storedConfigAfterUpdate.sessionTimeout)
+    }
+
+    @Test
+    fun `should update automaticSessionTracking conf in local storage`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            automaticSessionTracking = false
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        assertNotNull(storedConfig)
+        assertFalse(storedConfig.automaticSessionTracking)
+        // update automaticSessionTracking via API
+        Exponea.isAutomaticSessionTracking = true
+        val storedConfigAfterUpdate = ExponeaConfigRepository.get(context)
+        assertNotNull(storedConfigAfterUpdate)
+        assertTrue(storedConfigAfterUpdate.automaticSessionTracking)
+    }
+
+    @Test
+    fun `should update automaticPushNotification conf in local storage`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            automaticPushNotification = false
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        assertNotNull(storedConfig)
+        assertFalse(storedConfig.automaticPushNotification)
+        // update automaticPushNotification via API
+        Exponea.isAutoPushNotification = true
+        val storedConfigAfterUpdate = ExponeaConfigRepository.get(context)
+        assertNotNull(storedConfigAfterUpdate)
+        assertTrue(storedConfigAfterUpdate.automaticPushNotification)
+    }
+
+    @Test
+    fun `should update campaignTTL conf in local storage`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            campaignTTL = 10.0
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        assertNotNull(storedConfig)
+        assertEquals(10.0, storedConfig.campaignTTL)
+        // update campaignTTL via API
+        Exponea.campaignTTL = 20.0
+        val storedConfigAfterUpdate = ExponeaConfigRepository.get(context)
+        assertNotNull(storedConfigAfterUpdate)
+        assertEquals(20.0, storedConfigAfterUpdate.campaignTTL)
+    }
+
+    @Test
+    fun `should update defaultProperties conf in local storage`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com",
+            defaultProperties = hashMapOf("defTestProp" to "defTestVal")
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        assertNotNull(storedConfig)
+        assertEquals("defTestVal", storedConfig.defaultProperties["defTestProp"])
+        // update defaultProperties via API
+        Exponea.defaultProperties = hashMapOf("defTestPropUpdate" to "defTestValUpdate")
+        val storedConfigAfterUpdate = ExponeaConfigRepository.get(context)
+        assertNotNull(storedConfigAfterUpdate)
+        assertTrue(storedConfigAfterUpdate.automaticPushNotification)
+        assertNull(storedConfigAfterUpdate.defaultProperties["defTestProp"])
+        assertEquals("defTestValUpdate", storedConfigAfterUpdate.defaultProperties["defTestPropUpdate"])
     }
 }

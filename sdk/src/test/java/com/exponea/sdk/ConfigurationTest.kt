@@ -147,6 +147,37 @@ internal class ConfigurationTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should deserialize config after switch project`() {
+        // de-init to be able init SDK
+        resetExponea()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sdkConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com"
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, sdkConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(sdkConfig, storedConfig)
+        // switch project
+        val baseUrlSwitch = "https://switch-api.exponea.com"
+        val projectTokenSwitch = "switch-project-token"
+        val authorizationSwitch = "Token switch-mock-auth"
+        Exponea.anonymize(
+            exponeaProject = ExponeaProject(
+                baseUrl = baseUrlSwitch,
+                projectToken = projectTokenSwitch,
+                authorization = authorizationSwitch
+            )
+        )
+        val storedConfigAfterSwitch = ExponeaConfigRepository.get(context)
+        assertEquals(baseUrlSwitch, storedConfigAfterSwitch?.baseURL)
+        assertEquals(projectTokenSwitch, storedConfigAfterSwitch?.projectToken)
+        assertEquals(authorizationSwitch, storedConfigAfterSwitch?.authorization)
+    }
+
+    @Test
     fun `should initialize with correct project token`() {
         setupExponea("Token asdf", "abcd-1234-fgh")
         assertEquals(Exponea.isInitialized, true)

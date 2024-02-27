@@ -3,6 +3,7 @@ package com.exponea.sdk.view
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -28,7 +29,7 @@ class AppInboxDetailView@JvmOverloads constructor(
     public lateinit var contentView: TextView
     public lateinit var titleView: TextView
     public lateinit var receivedTimeView: TextView
-    public lateinit var imageView: SquareImageView
+    public lateinit var imageView: ImageView
     public lateinit var htmlContainer: RelativeLayout
     public lateinit var webView: ExponeaWebView
 

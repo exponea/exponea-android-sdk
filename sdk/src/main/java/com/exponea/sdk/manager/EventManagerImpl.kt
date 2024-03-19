@@ -99,6 +99,9 @@ internal open class EventManagerImpl(
     }
 
     private fun canUseDefaultProperties(type: EventType): Boolean {
-        return configuration.allowDefaultCustomerProperties || EventType.TRACK_CUSTOMER != type
+        return when (type) {
+            EventType.TRACK_CUSTOMER, EventType.PUSH_TOKEN -> configuration.allowDefaultCustomerProperties
+            else -> true
+        }
     }
 }

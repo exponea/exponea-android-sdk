@@ -95,8 +95,8 @@ internal open class FcmManagerImpl(
                 " initialized SDK configuration has 'automaticPushNotification' == false")
             return
         }
-        ensureNotificationChannelExistance(manager)
-        if (MessagingUtils.areNotificationsBlockedForTheApp(application, configuration.pushChannelId)) {
+        ensureNotificationChannelExistence(application, manager)
+        if (MessagingUtils.areNotificationsBlockedForTheApp(application, manager, configuration.pushChannelId)) {
             Logger.w(this, "Notification delivery not handled," +
                 " notifications for the app are turned off in the settings")
             return
@@ -157,7 +157,7 @@ internal open class FcmManagerImpl(
 
     override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
         Logger.d(this, "showNotification")
-        ensureNotificationChannelExistance(manager)
+        ensureNotificationChannelExistence(application, manager)
         val notification = NotificationCompat.Builder(application, configuration.pushChannelId)
             .setContentText(payload.message)
             .setContentTitle(payload.title)
@@ -174,12 +174,11 @@ internal open class FcmManagerImpl(
         manager.notify(payload.notificationId, notification.build())
     }
 
-    private fun ensureNotificationChannelExistance(manager: NotificationManager) {
+    private fun ensureNotificationChannelExistence(context: Context, manager: NotificationManager) {
         // Configure the notification channel for push notifications on API 26+
         // This configuration runs only once.
-        if (!pushNotificationRepository.get()) {
+        if (!MessagingUtils.doesChannelExists(context, manager, configuration.pushChannelId)) {
             createNotificationChannel(manager)
-            pushNotificationRepository.set(true)
         }
     }
 
@@ -274,7 +273,7 @@ internal open class FcmManagerImpl(
             }
 
             // if the notification channel is blocked/deleted
-            val channel = manager.getNotificationChannel(configuration.pushChannelId)
+            val channel = MessagingUtils.getNotificationChannel(application, manager, configuration.pushChannelId)
             if (channel == null) {
                 Logger.d(this, "Won't play notification sound, channel not found.")
                 shouldPlaySound = false

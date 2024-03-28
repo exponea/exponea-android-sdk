@@ -137,6 +137,72 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should add default properties to trackPushToken() if allowed`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            projectToken = "mock-token",
+            automaticSessionTracking = false,
+            allowDefaultCustomerProperties = true,
+            defaultProperties = hashMapOf(
+                "def_key" to "def_value"
+            )
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+        Exponea.trackPushToken("abcd")
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        assertEquals(
+            hashMapOf<String, Any>(
+                "google_push_notification_id" to "abcd",
+                "def_key" to "def_value"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
+    }
+
+    @Test
+    fun `should add default properties to trackHmsPushToken() if allowed`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            projectToken = "mock-token",
+            automaticSessionTracking = false,
+            allowDefaultCustomerProperties = true,
+            defaultProperties = hashMapOf(
+                "def_key" to "def_value"
+            )
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+        Exponea.trackHmsPushToken("abcd")
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        assertEquals(
+            hashMapOf<String, Any>(
+                "huawei_push_notification_id" to "abcd",
+                "def_key" to "def_value"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
+    }
+
+    @Test
     fun `should NOT add default properties to track_customer if denied`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
@@ -171,5 +237,71 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         )
         assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))
         assertEquals(EventType.TRACK_CUSTOMER, eventTypeSlot.captured)
+    }
+
+    @Test
+    fun `should NOT add default properties to trackPushToken() if denied`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            projectToken = "mock-token",
+            automaticSessionTracking = false,
+            allowDefaultCustomerProperties = false,
+            defaultProperties = hashMapOf(
+                "def_key" to "def_value"
+            )
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+        Exponea.trackPushToken("abcd")
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+
+        assertEquals(
+            hashMapOf<String, Any>(
+                "google_push_notification_id" to "abcd"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
+    }
+
+    @Test
+    fun `should NOT add default properties to trackHmsPushToken() if denied`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            projectToken = "mock-token",
+            automaticSessionTracking = false,
+            allowDefaultCustomerProperties = false,
+            defaultProperties = hashMapOf(
+                "def_key" to "def_value"
+            )
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+        Exponea.trackHmsPushToken("abcd")
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+
+        assertEquals(
+            hashMapOf<String, Any>(
+                "huawei_push_notification_id" to "abcd"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
     }
 }

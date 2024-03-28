@@ -14,12 +14,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.exponea.sdk.view.SquareImageView
+            <ImageView
                 android:id="@+id/message_detail_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#F5F5F5"
-                android:scaleType="centerCrop"
+                android:scaleType="fitCenter"
+                tools:src="@drawable/app_inbox_placeholder_gray"
                 android:adjustViewBounds="true" />
 
             <LinearLayout

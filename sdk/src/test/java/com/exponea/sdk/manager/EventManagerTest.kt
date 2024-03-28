@@ -9,7 +9,10 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageDisplayState
+import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -19,6 +22,8 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -29,15 +34,20 @@ import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var eventRepo: EventRepository
     lateinit var flushManager: FlushManager
-    lateinit var inAppMessageManager: InAppMessageManager
+    lateinit var inAppMessageManager: InAppMessageManagerImpl
     lateinit var fetchManager: FetchManager
     lateinit var customerIdsRepository: CustomerIdsRepository
     lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
@@ -66,6 +76,11 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { flushManager.flushData(any()) } just Runs
 
         fetchManager = mockk()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(InAppMessageTest.getInAppMessage()))
+            )
+        }
         messagesCache = mockk()
         every { messagesCache.set(any()) } just Runs
         every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
@@ -86,6 +101,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.isPresenting() } returns false
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
@@ -93,7 +109,6 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
         projectFactory = ExponeaProjectFactory(context, configuration)
         inAppMessageManager = spyk(InAppMessageManagerImpl(
-            configuration,
             customerIdsRepo,
             messagesCache,
             fetchManager,
@@ -104,9 +119,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             trackingConsentManager,
             projectFactory
         ))
-        every { inAppMessageManager.preloadIfNeeded(any()) } just Runs
         every { inAppMessageManager.sessionStarted(any()) } just Runs
-        every { inAppMessageManager.showRandom(any(), any(), any()) } returns mockk()
 
         manager = EventManagerImpl(
             configuration,
@@ -120,6 +133,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
     }
 
+    @Before
+    fun overrideThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    @After
+    fun restoreThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
+    }
+
     @Test
     fun `should track event`() {
         setup(
@@ -128,11 +153,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        Robolectric.flushForegroundThreadScheduler()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())
-            inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any())
+            inAppMessageManager.inAppShowingTriggered(any(), any(), any(), any(), any())
+            inAppMessageManager.registerPendingShowRequest(any(), any(), any(), any())
+            inAppMessageManager.detectReloadMode(any(), any())
+            inAppMessageManager.pickAndShowMessage()
+            inAppMessageManager.pickPendingMessage()
+            inAppMessageManager.findMessagesByFilter(any(), any(), any())
+            inAppMessageManager.pendingShowRequests
+            inAppMessageManager.pendingShowRequests = any()
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         val firstAddedEvent = addedEvents.first()
@@ -148,7 +180,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                         "mock-project-token",
                         null),
                 projectId = "mock-project-token",
-                route = Route.TRACK_EVENTS
+                route = Route.TRACK_EVENTS,
+                sdkEventType = EventType.TRACK_EVENT.name
             ),
             firstAddedEvent
         )
@@ -168,11 +201,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.INSTALL)
+        Robolectric.flushForegroundThreadScheduler()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())
-            inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any())
+            inAppMessageManager.inAppShowingTriggered(any(), any(), any(), any(), any())
+            inAppMessageManager.registerPendingShowRequest(any(), any(), any(), any())
+            inAppMessageManager.detectReloadMode(any(), any())
+            inAppMessageManager.pickAndShowMessage()
+            inAppMessageManager.pickPendingMessage()
+            inAppMessageManager.findMessagesByFilter(any(), any(), any())
+            inAppMessageManager.pendingShowRequests
+            inAppMessageManager.pendingShowRequests = any()
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         assertEquals(3, addedEvents.size)
@@ -198,12 +238,19 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.IMMEDIATE
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        Robolectric.flushForegroundThreadScheduler()
         verify {
             eventRepo.add(any())
             flushManager.flushData(any())
             inAppMessageManager.onEventCreated(any(), any())
-            inAppMessageManager.preloadIfNeeded(any())
-            inAppMessageManager.showRandom(any(), any(), any())
+            inAppMessageManager.inAppShowingTriggered(any(), any(), any(), any(), any())
+            inAppMessageManager.registerPendingShowRequest(any(), any(), any(), any())
+            inAppMessageManager.detectReloadMode(any(), any())
+            inAppMessageManager.pickAndShowMessage()
+            inAppMessageManager.pickPendingMessage()
+            inAppMessageManager.findMessagesByFilter(any(), any(), any())
+            inAppMessageManager.pendingShowRequests
+            inAppMessageManager.pendingShowRequests = any()
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
     }
@@ -216,12 +263,19 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
+        Robolectric.flushForegroundThreadScheduler()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())
-            inAppMessageManager.preloadIfNeeded(any())
+            inAppMessageManager.inAppShowingTriggered(any(), any(), any(), any(), any())
+            inAppMessageManager.registerPendingShowRequest(any(), any(), any(), any())
             inAppMessageManager.sessionStarted(any())
-            inAppMessageManager.showRandom(any(), any(), any())
+            inAppMessageManager.detectReloadMode(any(), any())
+            inAppMessageManager.pickAndShowMessage()
+            inAppMessageManager.pickPendingMessage()
+            inAppMessageManager.findMessagesByFilter(any(), any(), any())
+            inAppMessageManager.pendingShowRequests
+            inAppMessageManager.pendingShowRequests = any()
         }
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
     }
@@ -250,7 +304,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_EVENTS
+                route = Route.TRACK_EVENTS,
+                sdkEventType = EventType.TRACK_EVENT.name
             ), firstAddedEvent
         )
     }
@@ -281,26 +336,28 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 exponeaProject = ExponeaProject(
                         baseUrl = "https://api.exponea.com",
                         projectToken = "mock-project-token",
-                        authorization = null)
+                        authorization = null),
+                sdkEventType = EventType.TRACK_EVENT.name
             ),
             firstEvent
         )
         assertEquals(
                 ExportedEvent(
-                        id = secondEvent.id,
-                        type = "test-event",
-                        timestamp = 123.0,
-                        route = Route.TRACK_EVENTS,
-                        customerIds = hashMapOf("cookie" to "mock-cookie"),
-                        properties = hashMapOf(
-                                "prop" to "value",
-                                "default-prop1" to "value1",
-                                "default-prop2" to "value2"),
-                        exponeaProject = ExponeaProject(
-                                baseUrl = "https://api.exponea.com",
-                                projectToken = "mock-project-token",
-                                authorization = null),
-                        projectId = "mock-project-token"
+                    id = secondEvent.id,
+                    type = "test-event",
+                    timestamp = 123.0,
+                    route = Route.TRACK_EVENTS,
+                    customerIds = hashMapOf("cookie" to "mock-cookie"),
+                    properties = hashMapOf(
+                            "prop" to "value",
+                            "default-prop1" to "value1",
+                            "default-prop2" to "value2"),
+                    exponeaProject = ExponeaProject(
+                            baseUrl = "https://api.exponea.com",
+                            projectToken = "mock-project-token",
+                            authorization = null),
+                    projectId = "mock-project-token",
+                    sdkEventType = EventType.TRACK_EVENT.name
                 ),
             secondEvent
         )
@@ -330,7 +387,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.TRACK_CUSTOMER.name
             ), firstAddedEvent
         )
     }
@@ -360,7 +418,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.TRACK_CUSTOMER.name
             ), firstAddedEvent
         )
     }
@@ -390,7 +449,70 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.TRACK_CUSTOMER.name
+            ), firstAddedEvent
+        )
+    }
+
+    @Test
+    fun `should add default properties to customer properties if allowed - push token update`() {
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(
+                projectToken = "mock-project-token",
+                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                allowDefaultCustomerProperties = true
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                    baseUrl = "https://api.exponea.com",
+                    projectToken = "mock-project-token",
+                    authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.PUSH_TOKEN.name
+            ), firstAddedEvent
+        )
+    }
+
+    @Test
+    fun `should NOT add default properties to customer properties if denied - push token update`() {
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(
+                projectToken = "mock-project-token",
+                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                allowDefaultCustomerProperties = false
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                exponeaProject = ExponeaProject(
+                    baseUrl = "https://api.exponea.com",
+                    projectToken = "mock-project-token",
+                    authorization = null),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf("prop" to "value"),
+                projectId = "mock-project-token",
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.PUSH_TOKEN.name
             ), firstAddedEvent
         )
     }

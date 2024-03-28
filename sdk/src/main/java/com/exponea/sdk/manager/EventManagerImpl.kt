@@ -35,14 +35,15 @@ internal open class EventManagerImpl(
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
         for (project in projects.distinct()) {
             val exportedEvent = ExportedEvent(
-                    type = event.type,
-                    timestamp = event.timestamp,
-                    age = event.age,
-                    customerIds = event.customerIds,
-                    properties = event.properties,
-                    projectId = project.projectToken,
-                    route = route,
-                    exponeaProject = project
+                type = event.type,
+                timestamp = event.timestamp,
+                age = event.age,
+                customerIds = event.customerIds,
+                properties = event.properties,
+                projectId = project.projectToken,
+                route = route,
+                exponeaProject = project,
+                sdkEventType = eventType.name
             )
             if (trackingAllowed) {
                 Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
@@ -99,6 +100,9 @@ internal open class EventManagerImpl(
     }
 
     private fun canUseDefaultProperties(type: EventType): Boolean {
-        return configuration.allowDefaultCustomerProperties || EventType.TRACK_CUSTOMER != type
+        return when (type) {
+            EventType.TRACK_CUSTOMER, EventType.PUSH_TOKEN -> configuration.allowDefaultCustomerProperties
+            else -> true
+        }
     }
 }

@@ -1,6 +1,18 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.12.0
+#### March 28, 2024
+* Features
+  * In-app message load refactoring (show on the first load etc.)
+  * In-app message documentation extended with tracking and consent information
+* Bug Fixes
+  * Fixed: NotificationChannel is not registered after autobackup and app reinstall
+  * Fixed: Config for automaticPushNotification is not stored locally
+  * Fixed: Image for App Inbox "PUSH" message detail is not shown correctly
+  * Fixed: PUSH token tracking event is not consider allowDefaultCustomerProperties flag
+
+
 ## Release Notes for 3.11.2
 #### January 11, 2024
 * Bug Fixes

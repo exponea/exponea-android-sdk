@@ -15,6 +15,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageCallback
@@ -35,7 +36,9 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.mainThreadDispatcher
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -54,6 +57,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -81,25 +87,32 @@ internal class InAppMessageManagerImplTest {
     fun before() {
         fetchManager = mockk()
         messagesCache = mockk()
-        every { messagesCache.set(any()) } just Runs
-        every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
+        var messageCacheTimestamp = 0L
+        every { messagesCache.set(any()) } answers {
+            messageCacheTimestamp = System.currentTimeMillis()
+            every { messagesCache.getTimestamp() } returns messageCacheTimestamp
+        }
+        every { messagesCache.getTimestamp() } returns messageCacheTimestamp
         every { messagesCache.get() } returns arrayListOf()
         bitmapCache = mockk()
         every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
+        every { bitmapCache.preload(any(), any()) } answers {
+            lastArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
         every { bitmapCache.clearExcept(any()) } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
         every { fontCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
-        every { customerIdsRepository.get() } returns CustomerIds()
+        every { customerIdsRepository.get() } returns CustomerIds(cookie = "mock-cookie")
         inAppMessageDisplayStateRepository = mockk()
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(null, null)
         every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.isPresenting() } returns false
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
@@ -108,7 +121,6 @@ internal class InAppMessageManagerImplTest {
         val configuration = ExponeaConfiguration(projectToken = "mock-token")
         projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
         manager = InAppMessageManagerImpl(
-            configuration,
             customerIdsRepository,
             messagesCache,
             fetchManager,
@@ -129,7 +141,7 @@ internal class InAppMessageManagerImplTest {
             lastArg<(Result<FetchError>) -> Unit>().invoke(Result(false, FetchError(null, "error")))
         }
         waitForIt {
-            manager.preload { result ->
+            manager.reload { result ->
                 it.assertTrue(result.isFailure)
                 verify(exactly = 0) { messagesCache.set(any()) }
                 it()
@@ -149,7 +161,7 @@ internal class InAppMessageManagerImplTest {
         }
 
         waitForIt {
-            manager.preload { result ->
+            manager.reload { result ->
                 it.assertTrue(result.isSuccess)
                 verify(exactly = 1) { messagesCache.set(arrayListOf(InAppMessageTest.getInAppMessage())) }
                 it()
@@ -184,8 +196,7 @@ internal class InAppMessageManagerImplTest {
     }
 
     private fun getEventManager(): EventManager {
-        val customerIdsRepo = mockk<CustomerIdsRepository>()
-        every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
+        every { customerIdsRepository.get() } returns CustomerIds(cookie = "mock-cookie")
         val eventRepo = mockk<EventRepository>()
         every { eventRepo.add(any()) } just Runs
         val flushManager = mockk<FlushManager>()
@@ -193,7 +204,7 @@ internal class InAppMessageManagerImplTest {
         val eventManager = EventManagerImpl(
             ExponeaConfiguration(projectToken = "mock-project-token"),
             eventRepo,
-            customerIdsRepo,
+            customerIdsRepository,
             flushManager,
             projectFactory,
             onEventCreated = { event, type ->
@@ -209,8 +220,6 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        every { messagesCache.get() } returns arrayListOf()
-        messagesCache.set(arrayListOf())
 
         val numberOfThreads = 5
         val service: ExecutorService = Executors.newFixedThreadPool(10)
@@ -218,13 +227,20 @@ internal class InAppMessageManagerImplTest {
 
         for (i in 0 until numberOfThreads) {
             service.submit {
-                eventManager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+                eventManager.track(
+                    "test-event",
+                    currentTimeSeconds(),
+                    hashMapOf("prop" to "value"),
+                    EventType.TRACK_EVENT
+                )
                 latch.countDown()
             }
         }
         latch.await()
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(any(), any(), any(), any())
         }
+    }
 
     @Test
     fun `should always track trigger events regardless on in app message preload state`() {
@@ -271,11 +287,29 @@ internal class InAppMessageManagerImplTest {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
-        manager.preloadIfNeeded(Date().time.toDouble())
+        manager.inAppShowingTriggered(
+            EventType.SESSION_START,
+            "session_start",
+            hashMapOf(),
+            currentTimeSeconds(),
+            customerIdsRepository.get().toHashMap()
+        )
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
-        manager.preloadIfNeeded(Date().time.toDouble())
+        manager.inAppShowingTriggered(
+            EventType.SESSION_START,
+            "session_start",
+            hashMapOf(),
+            currentTimeSeconds(),
+            customerIdsRepository.get().toHashMap()
+        )
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
-        manager.preloadIfNeeded(Date().time.toDouble())
+        manager.inAppShowingTriggered(
+            EventType.SESSION_START,
+            "session_start",
+            hashMapOf(),
+            currentTimeSeconds(),
+            customerIdsRepository.get().toHashMap()
+        )
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
     }
 
@@ -299,7 +333,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get null if no messages available`() {
         every { messagesCache.get() } returns arrayListOf()
-        assertNull(manager.getRandom("testEvent", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("testEvent", hashMapOf(), null).firstOrNull())
     }
 
     @Test
@@ -309,16 +343,10 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage()
         )
         every { bitmapCache.has(any()) } returns true
-        assertEquals(InAppMessageTest.getInAppMessage(), manager.getRandom("session_start", hashMapOf(), null))
-    }
-
-    @Test
-    fun `should not get message if bitmap is not available`() {
-        every { messagesCache.get() } returns arrayListOf(
+        assertEquals(
             InAppMessageTest.getInAppMessage(),
-            InAppMessageTest.getInAppMessage()
+            manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull()
         )
-        assertEquals(null, manager.getRandom("session_start", hashMapOf(), null))
     }
 
     @Test
@@ -329,7 +357,7 @@ internal class InAppMessageManagerImplTest {
         )
         assertEquals(
             InAppMessageTest.getInAppMessage(imageUrl = ""),
-            manager.getRandom("session_start", hashMapOf(), null)
+            manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull()
         )
     }
 
@@ -343,28 +371,28 @@ internal class InAppMessageManagerImplTest {
         val currentTime = (System.currentTimeMillis() / 1000).toInt()
 
         setupStoredEvent(DateFilter(true, null, null))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, null, currentTime - 100))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, null, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, currentTime + 100, null))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, currentTime - 100, null))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, currentTime - 100, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(true, currentTime + 100, currentTime + 100))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(DateFilter(false, currentTime + 100, currentTime + 100))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
     }
 
     @Test
@@ -375,13 +403,13 @@ internal class InAppMessageManagerImplTest {
         }
 
         setupStoredEvent(EventFilter(eventType = "", filter = arrayListOf()))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(EventFilter(eventType = "session_start", filter = arrayListOf()))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(EventFilter(eventType = "payment", filter = arrayListOf()))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
 
         setupStoredEvent(
             EventFilter(
@@ -391,9 +419,9 @@ internal class InAppMessageManagerImplTest {
                 )
             )
         )
-        assertNull(manager.getRandom("payment", hashMapOf(), null))
-        assertNull(manager.getRandom("payment", hashMapOf("property" to "something"), null))
-        assertNotNull(manager.getRandom("payment", hashMapOf("property" to "value"), null))
+        assertNull(manager.findMessagesByFilter("payment", hashMapOf(), null).firstOrNull())
+        assertNull(manager.findMessagesByFilter("payment", hashMapOf("property" to "something"), null).firstOrNull())
+        assertNotNull(manager.findMessagesByFilter("payment", hashMapOf("property" to "value"), null).firstOrNull())
     }
 
     @Test
@@ -405,7 +433,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(id = "3")
         )
         assertEquals(
-            manager.getFilteredMessages("session_start", hashMapOf(), null),
+            manager.findMessagesByFilter("session_start", hashMapOf(), null),
             arrayListOf(
                 InAppMessageTest.getInAppMessage(id = "1"),
                 InAppMessageTest.getInAppMessage(id = "2"),
@@ -418,11 +446,11 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(id = "3", priority = -1)
         )
         assertEquals(
-            manager.getFilteredMessages("session_start", hashMapOf(), null),
             arrayListOf(
                 InAppMessageTest.getInAppMessage(id = "1", priority = 0),
                 InAppMessageTest.getInAppMessage(id = "2")
-            )
+            ),
+            manager.findMessagesByFilter("session_start", hashMapOf(), null)
         )
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(id = "1", priority = 2),
@@ -430,7 +458,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(id = "3", priority = 1)
         )
         assertEquals(
-            manager.getFilteredMessages("session_start", hashMapOf(), null),
+            manager.findMessagesByFilter("session_start", hashMapOf(), null),
             arrayListOf(
                 InAppMessageTest.getInAppMessage(id = "1", priority = 2),
                 InAppMessageTest.getInAppMessage(id = "2", priority = 2)
@@ -445,8 +473,8 @@ internal class InAppMessageManagerImplTest {
         )
         every { bitmapCache.has(any()) } returns true
 
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
     }
 
     @Test
@@ -455,9 +483,9 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
         )
         every { bitmapCache.has(any()) } returns true
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
     }
 
     @Test
@@ -466,11 +494,11 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
         )
         every { bitmapCache.has(any()) } returns true
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), Date(1000))
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
     }
 
     @Test
@@ -484,13 +512,15 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.has(any()) } returns true
         manager.sessionStarted(Date(1000))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1500), null)
-        assertNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         manager.sessionStarted(Date(2000))
-        assertNotNull(manager.getRandom("session_start", hashMapOf(), null))
+        assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
     }
 
     @Test
     fun `should set message displayed and interacted`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -508,22 +538,33 @@ internal class InAppMessageManagerImplTest {
             )
         } returns mockk()
 
-        waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { manager.reload { it() } }
+        runBlocking {
+            manager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
         actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setInteracted(any(), any()) }
+        resetThreadsBehaviour()
     }
 
     @Test
     fun `should track dialog lifecycle`() {
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        val inAppMessage = InAppMessageTest.getInAppMessage()
+        every { messagesCache.get() } returns arrayListOf(inAppMessage)
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+                .invoke(Result(true, arrayListOf(inAppMessage)))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
@@ -535,21 +576,18 @@ internal class InAppMessageManagerImplTest {
                 capture(actionCallbackSlot), capture(dismissedCallbackSlot), capture(errorCallbackSlot)
             )
         } returns mockk()
-
-        waitForIt { spykManager.preload { it() } }
-
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
-
+        waitForIt { spykManager.reload { it() } }
+        registerPendingRequest("session_start", spykManager)
+        spykManager.pickAndShowMessage()
         Robolectric.flushForegroundThreadScheduler()
-
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageShown(inAppMessage, CONSIDER_CONSENT)
         }
-        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        val button = inAppMessage.payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClick(
-                InAppMessageTest.getInAppMessage(),
+                inAppMessage,
                 "Action",
                 "https://someaddress.com",
                 CONSIDER_CONSENT
@@ -561,13 +599,15 @@ internal class InAppMessageManagerImplTest {
         dismissedCallbackSlot.captured.invoke(mockActivity, false)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(
-                InAppMessageTest.getInAppMessage(), false, CONSIDER_CONSENT
+                inAppMessage, false, CONSIDER_CONSENT
             )
         }
     }
 
     @Test
     fun `should open deeplink once button is clicked`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -580,17 +620,27 @@ internal class InAppMessageManagerImplTest {
             any(), any(), any(), any(),
             capture(actionCallbackSlot), any(), capture(errorCallbackSlot)
         ) } returns mockk()
-        waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { manager.reload { it() } }
+        runBlocking {
+            manager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
         Robolectric.flushForegroundThreadScheduler()
 
         val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
         assertNull(shadowOf(mockActivity).nextStartedActivityForResult)
+        assertTrue(actionCallbackSlot.isCaptured)
         actionCallbackSlot.captured.invoke(mockActivity, button)
         assertEquals(
             button.buttonLink,
             shadowOf(mockActivity).nextStartedActivityForResult.intent.data?.toString()
         )
+        resetThreadsBehaviour()
     }
 
     @Test
@@ -623,8 +673,11 @@ internal class InAppMessageManagerImplTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should preload pending message image first and show it`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val activeEventType = Constants.EventTypes.sessionEnd
         val pendingMessage = InAppMessageTest.getInAppMessage(
-            trigger = EventFilter("session_start", arrayListOf()),
+            trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
         val otherMessage1 = InAppMessageTest.getInAppMessage(
@@ -645,24 +698,34 @@ internal class InAppMessageManagerImplTest {
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
         every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
-        manager.showRandom("session_start", hashMapOf(), null)
+        manager.inAppShowingTriggered(
+            EventType.SESSION_END,
+            activeEventType,
+            hashMapOf(),
+            currentTimeSeconds(),
+            customerIds
+        )
 
-        waitForIt { manager.preload { _ -> it() } }
+        waitForIt { manager.reload { _ -> it() } }
 
         verifySequence {
+            presenter.isPresenting()
+            messagesCache.get()
+            bitmapCache.preload(arrayListOf("pending_image_url"), any())
+            presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any(), any())
+            messagesCache.get()
+            bitmapCache.preload(arrayListOf(), any())
             messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             bitmapCache.clearExcept(arrayListOf("pending_image_url", "other_image_url_1", "other_image_url_2"))
-            messagesCache.get()
-            bitmapCache.preload(listOf("pending_image_url"), any())
-            presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any(), any())
-            bitmapCache.preload(listOf("other_image_url_1"), any())
-            bitmapCache.preload(listOf("other_image_url_2"), any())
         }
         confirmVerified(messagesCache, bitmapCache, presenter)
+        resetThreadsBehaviour()
     }
 
     @Test
     fun `should delay in-app message presenting`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         val message = InAppMessageTest.getInAppMessage(delay = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
         every { bitmapCache.has(any()) } returns true
@@ -672,8 +735,16 @@ internal class InAppMessageManagerImplTest {
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
-        waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { manager.reload { it() } }
+        runBlocking {
+            manager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         verify(exactly = 0) {
             presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any(), any())
@@ -682,10 +753,13 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             presenter.show(InAppMessageType.MODAL, message.payload, any(), any(), any(), any(), any())
         }
+        resetThreadsBehaviour()
     }
 
     @Test
     fun `should pass timeout to in-app message presenter`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         val message = InAppMessageTest.getInAppMessage(timeout = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
         every { bitmapCache.has(any()) } returns true
@@ -695,16 +769,53 @@ internal class InAppMessageManagerImplTest {
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
-        waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { manager.reload { it() } }
+        runBlocking {
+            manager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
         Robolectric.flushForegroundThreadScheduler()
         verify {
             presenter.show(InAppMessageType.MODAL, message.payload, any(), 1234, any(), any(), any())
         }
+        resetThreadsBehaviour()
+    }
+
+    private fun resetThreadsBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
+    }
+
+    private fun setAllThreadsRunOnMain() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
+    }
+
+    private fun registerPendingRequest(
+        eventType: String,
+        managerInstance: InAppMessageManagerImpl = manager,
+        customerIds: HashMap<String, String?> = customerIdsRepository.get().toHashMap()
+    ) {
+        managerInstance.pendingShowRequests = arrayListOf(
+            InAppMessageShowRequest(
+                eventType,
+                hashMapOf(),
+                currentTimeSeconds(),
+                System.currentTimeMillis(),
+                customerIds
+            )
+        )
     }
 
     @Test
     fun `should track control group message without showing it`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         val message = InAppMessageTest.getInAppMessage(
             payload = null,
             variantId = -1,
@@ -718,17 +829,28 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
-        waitForIt { manager.preload { it() } }
-        runBlocking { manager.showRandom("session_start", hashMapOf(), null) }
+        waitForIt { manager.reload { it() } }
+        runBlocking {
+            manager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
         Robolectric.flushForegroundThreadScheduler()
         verify(exactly = 1) { trackingConsentManager.trackInAppMessageShown(message, CONSIDER_CONSENT) }
         verify(exactly = 0) { presenter.show(any(), any(), any(), any(), any(), any(), any()) }
+        resetThreadsBehaviour()
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should track and perform all actions if its enabled in callback`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -760,9 +882,16 @@ internal class InAppMessageManagerImplTest {
             )
         } returns mockk()
 
-        waitForIt { spykManager.preload { it() } }
-
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { spykManager.reload { it() } }
+        runBlocking {
+            spykManager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
 
         Robolectric.flushForegroundThreadScheduler()
 
@@ -802,12 +931,15 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), false, CONSIDER_CONSENT)
         }
+        resetThreadsBehaviour()
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should not track and perform any actions if its disabled in callback`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -839,9 +971,16 @@ internal class InAppMessageManagerImplTest {
             )
         } returns mockk()
 
-        waitForIt { spykManager.preload { it() } }
-
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { spykManager.reload { it() } }
+        runBlocking {
+            spykManager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
 
         Robolectric.flushForegroundThreadScheduler()
 
@@ -876,12 +1015,15 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 0) {
             trackingConsentManager.trackInAppMessageClose(any(), any(), any())
         }
+        resetThreadsBehaviour()
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should track action when track is called in callback`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
         every { bitmapCache.has(any()) } returns true
         every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
@@ -916,9 +1058,16 @@ internal class InAppMessageManagerImplTest {
             )
         } returns mockk()
 
-        waitForIt { spykManager.preload { it() } }
-
-        runBlocking { spykManager.showRandom("session_start", hashMapOf(), null)?.join() }
+        waitForIt { spykManager.reload { it() } }
+        runBlocking {
+            spykManager.inAppShowingTriggered(
+                EventType.SESSION_START,
+                "session_start",
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
 
         Robolectric.flushForegroundThreadScheduler()
 
@@ -935,5 +1084,385 @@ internal class InAppMessageManagerImplTest {
                 CONSIDER_CONSENT
             )
         }
+        resetThreadsBehaviour()
+    }
+
+    @Test
+    fun `should clear pendingShowRequests on identifyCustomer for MANUAL flushMode`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        Exponea.flushMode = FlushMode.MANUAL
+        // track event for future to prevent messages reload
+        val distantFutureSeconds = (System.currentTimeMillis() / 1000.0) + TimeUnit.HOURS.toSeconds(1)
+        manager.pendingShowRequests += InAppMessageShowRequest(
+            "mock-type",
+            mapOf("mock-prop" to "mock-val"),
+            distantFutureSeconds,
+            System.currentTimeMillis(),
+            customerIds
+        )
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        messagesCache.set(arrayListOf())
+        // use null eventType to skip message showing
+        eventManager.track(null, Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        assertEquals(0, manager.pendingShowRequests.size)
+    }
+
+    @Test
+    fun `should clear pendingShowRequests on identifyCustomer for IMMEDIATE flushMode`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        Exponea.flushMode = FlushMode.IMMEDIATE
+        // track event for future to prevent messages reload
+        val distantFutureSeconds = (System.currentTimeMillis() / 1000.0) + TimeUnit.HOURS.toSeconds(1)
+        manager.pendingShowRequests += InAppMessageShowRequest(
+            "mock-type",
+            mapOf("mock-prop" to "mock-val"),
+            distantFutureSeconds,
+            System.currentTimeMillis(),
+            customerIds
+        )
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        messagesCache.set(arrayListOf())
+        // use null eventType to skip message showing
+        eventManager.track(null, Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        assertTrue(manager.pendingShowRequests.isEmpty())
+    }
+
+    @Test
+    fun `should not clear pendingShowRequests on track event for MANUAL flushMode`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        Exponea.flushMode = FlushMode.MANUAL
+        // track event for future to prevent messages reload
+        val distantFutureSeconds = (System.currentTimeMillis() / 1000.0) + TimeUnit.HOURS.toSeconds(1)
+        manager.pendingShowRequests += InAppMessageShowRequest(
+            "mock-type",
+            mapOf("mock-prop" to "mock-val"),
+            distantFutureSeconds,
+            System.currentTimeMillis(),
+            customerIds
+        )
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        // simulate loading, to invoke STOP ReloadMode
+        manager.preloadStarted()
+        messagesCache.set(arrayListOf())
+        // trigger
+        eventManager.track(null, Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        assertEquals(1, manager.pendingShowRequests.size)
+    }
+
+    @Test
+    fun `should not clear pendingShowRequests on track event for IMMEDIATE flushMode`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        Exponea.flushMode = FlushMode.IMMEDIATE
+        // track event for future to prevent messages reload
+        val distantFutureSeconds = (System.currentTimeMillis() / 1000.0) + TimeUnit.HOURS.toSeconds(1)
+        manager.pendingShowRequests += InAppMessageShowRequest(
+            "mock-type",
+            mapOf("mock-prop" to "mock-val"),
+            distantFutureSeconds,
+            System.currentTimeMillis(),
+            customerIds
+        )
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        // simulate loading, to invoke STOP ReloadMode
+        manager.preloadStarted()
+        messagesCache.set(arrayListOf())
+        // trigger
+        eventManager.track(null, Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.SESSION_START)
+        assertEquals(1, manager.pendingShowRequests.size)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should register pending request with trigger immediately`() {
+        setAllThreadsRunOnMain()
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val activeEventType = Constants.EventTypes.sessionStart
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        val otherMessage1 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("other_event", arrayListOf()),
+            imageUrl = "other_image_url_1"
+        )
+        val otherMessage2 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("other_event", arrayListOf()),
+            imageUrl = "other_image_url_2"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage, otherMessage1, otherMessage2)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+
+        // simulate loading, to invoke STOP ReloadMode
+        manager.preloadStarted()
+        messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
+        // trigger
+        manager.inAppShowingTriggered(
+            EventType.SESSION_START,
+            activeEventType,
+            hashMapOf(),
+            currentTimeSeconds(),
+            customerIds
+        )
+        assertEquals(1, manager.pendingShowRequests.size)
+        assertNotNull(manager.pendingShowRequests.firstOrNull())
+        assertEquals(activeEventType, manager.pendingShowRequests.first().eventType)
+        resetThreadsBehaviour()
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should register single pending request for multiple same triggers`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val activeEventType = Constants.EventTypes.sessionEnd
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf())
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf()
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+
+        for (i in 0..10) {
+            manager.registerPendingShowRequest(
+                activeEventType,
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+        }
+        assertEquals(1, manager.pendingShowRequests.size)
+        assertNotNull(manager.pendingShowRequests.firstOrNull())
+        assertEquals(activeEventType, manager.pendingShowRequests.first().eventType)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should register pending request by latest event timestamp`() {
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+
+        val latestEventTimestamp = currentTimeSeconds()
+        for (i in 0..10) {
+            manager.registerPendingShowRequest(
+                activeEventType,
+                hashMapOf(),
+                latestEventTimestamp - (i * 1000),
+                customerIds
+            )
+        }
+        assertEquals(1, manager.pendingShowRequests.size)
+        assertNotNull(manager.pendingShowRequests.firstOrNull())
+        assertEquals(activeEventType, manager.pendingShowRequests.first().eventType)
+        assertEquals(latestEventTimestamp, manager.pendingShowRequests.first().eventTimestamp)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick no message if another is shown`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        registerPendingRequest(activeEventType)
+        every { presenter.isPresenting() } returns true
+        val pickedMessage = manager.pickPendingMessage()
+        assertNull(pickedMessage)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick no message if customer IDs not matched`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        val customerIds = hashMapOf<String, String?>(
+            "cookie" to "123456",
+            "registed" to "john@doe.com"
+        )
+        registerPendingRequest(activeEventType, customerIds = customerIds)
+        every { presenter.isPresenting() } returns false
+        val pickedMessage = manager.pickPendingMessage()
+        assertNull(pickedMessage)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick no message if filter not matched`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter("not_active_event_type", arrayListOf()),
+            imageUrl = "pending_image_url"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        registerPendingRequest(activeEventType)
+        every { presenter.isPresenting() } returns false
+        val pickedMessage = manager.pickPendingMessage()
+        assertNull(pickedMessage)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick message with top priority`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessageTopPrio = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = 100,
+            id = "12345"
+        )
+        val pendingMessageSecond = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = 10,
+            id = "67890"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessageTopPrio, pendingMessageSecond))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessageTopPrio, pendingMessageSecond)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        registerPendingRequest(activeEventType)
+        every { presenter.isPresenting() } returns false
+        val pickedMessage = manager.pickPendingMessage()
+        assertNotNull(pickedMessage)
+        assertEquals(pendingMessageTopPrio.id, pickedMessage.second.id)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick random message with same priority`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage1 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = 100,
+            id = "12345"
+        )
+        val pendingMessage2 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = 100,
+            id = "67890"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage1, pendingMessage2))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage1, pendingMessage2)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        registerPendingRequest(activeEventType)
+        every { presenter.isPresenting() } returns false
+        val pickedMessage = manager.pickPendingMessage()
+        assertNotNull(pickedMessage)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should pick random message with null priority`() {
+        val activeEventType = Constants.EventTypes.sessionEnd
+        val pendingMessage1 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = null,
+            id = "12345"
+        )
+        val pendingMessage2 = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(activeEventType, arrayListOf()),
+            imageUrl = "pending_image_url",
+            priority = null,
+            id = "67890"
+        )
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(pendingMessage1, pendingMessage2))
+            )
+        }
+        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { messagesCache.get() } returns arrayListOf(pendingMessage1, pendingMessage2)
+        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        registerPendingRequest(activeEventType)
+        every { presenter.isPresenting() } returns false
+        val pickedMessage = manager.pickPendingMessage()
+        assertNotNull(pickedMessage)
     }
 }

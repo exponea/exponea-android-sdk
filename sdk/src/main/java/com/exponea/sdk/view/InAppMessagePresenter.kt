@@ -133,11 +133,11 @@ internal class InAppMessagePresenter(
         failedCallback: (String) -> Unit
     ): PresentedMessage? = runCatching {
         Logger.i(this, "Attempting to present in-app message.")
-        val activity = currentActivity
-        if (presentedMessage != null) {
+        if (isPresenting()) {
             Logger.i(this, "Already presenting another in-app message.")
             return null
         }
+        val activity = currentActivity
         if (activity == null) {
             Logger.w(this, "No activity available to present in-app message.")
             return null
@@ -192,5 +192,9 @@ internal class InAppMessagePresenter(
         Logger.w(this, "Presenting in-app message failed. $it")
         presentedMessage = null
         null
+    }
+
+    fun isPresenting(): Boolean {
+        return presentedMessage != null
     }
 }

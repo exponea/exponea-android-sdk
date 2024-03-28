@@ -98,7 +98,7 @@ internal class ExponeaServiceImpl(
         )
     }
 
-    private fun doPost(
+    internal fun doPost(
         exponeaProject: ExponeaProject,
         endPointName: ApiEndPoint.EndPointName,
         bodyContent: Any?

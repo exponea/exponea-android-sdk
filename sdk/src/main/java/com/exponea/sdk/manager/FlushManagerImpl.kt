@@ -12,7 +12,6 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
 import java.io.IOException
-import kotlin.Result
 import okhttp3.Call
 import okhttp3.Response
 
@@ -21,7 +20,7 @@ internal open class FlushManagerImpl(
     private val eventRepository: EventRepository,
     private val exponeaService: ExponeaService,
     private val connectionManager: ConnectionManager,
-    private val customerIdentifiedHandler: () -> Unit
+    private val onEventUploaded: (ExportedEvent) -> Unit
 ) : FlushManager {
     @Volatile override var isRunning: Boolean = false
         internal set
@@ -143,7 +142,7 @@ internal open class FlushManagerImpl(
         }
     }
 
-    private fun routeSendingEvent(exportedEvent: ExportedEvent): Call? {
+    internal fun routeSendingEvent(exportedEvent: ExportedEvent): Call? {
         // for older event in database without exponeaProject, fallback to current configuration data
         @Suppress("DEPRECATION")
         val exponeaProject = exportedEvent.exponeaProject ?: ExponeaProject(
@@ -175,7 +174,7 @@ internal open class FlushManagerImpl(
     private fun onEventSentSuccess(exportedEvent: ExportedEvent) {
         Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
         if (exportedEvent.route == Route.TRACK_CUSTOMERS) {
-            customerIdentifiedHandler()
+            onEventUploaded(exportedEvent)
         }
         eventRepository.remove(exportedEvent.id)
     }

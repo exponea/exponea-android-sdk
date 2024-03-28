@@ -251,15 +251,20 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             throw Exception("Exponea SDK was not initialized properly!")
         }
         target.pushContainer.visibility = VISIBLE
-        dataSource?.imageUrl?.let { imageUrl ->
-            bitmapCache.preload(listOf(imageUrl), { loaded ->
+        val imageUrl = dataSource?.imageUrl
+        if (imageUrl != null) {
+            bitmapCache.preload(listOf(imageUrl)) { loaded ->
                 if (loaded) {
                     val bitmapToShow = bitmapCache.get(imageUrl)
                     runOnMainThread {
                         target.imageView.setImageBitmap(bitmapToShow)
                     }
+                } else {
+                    target.imageView.setImageResource(R.drawable.app_inbox_placeholder_gray)
                 }
-            })
+            }
+        } else {
+            target.imageView.setImageResource(R.drawable.app_inbox_placeholder_gray)
         }
         val receivedMillis: Long = source.receivedTime?.times(1000)?.toLong() ?: System.currentTimeMillis()
         target.receivedTimeView.text = DateUtils.getRelativeTimeSpanString(

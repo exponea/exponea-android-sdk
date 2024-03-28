@@ -55,6 +55,7 @@ internal class ExponeaMockService(
             addRule()
                 .get().or().post().or().put()
                 .url(dummyUrl)
+                .anyTimes()
                 .respond(HTTP_400_BAD_REQUEST, response)
         }
         val okHttpClient = OkHttpClient
@@ -70,6 +71,7 @@ internal class ExponeaMockService(
             addRule()
                 .get().or().post().or().put()
                 .url(dummyUrl)
+                .anyTimes()
                 .respond(HTTP_200_OK, response)
         }
         val okHttpClient = OkHttpClient

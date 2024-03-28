@@ -77,7 +77,6 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
         }
         for (fileUrl in urls) {
             if (has(fileUrl)) {
-                counter.getAndDecrement()
                 perFileCallback.invoke(true)
             } else {
                 downloadFile(fileUrl, perFileCallback)?.let {

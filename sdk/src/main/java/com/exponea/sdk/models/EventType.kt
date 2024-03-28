@@ -1,5 +1,7 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.util.Logger
+
 enum class EventType {
     // Install event is fired only once when the app is first installed.
     INSTALL,
@@ -38,5 +40,16 @@ enum class EventType {
     APP_INBOX_OPENED,
 
     // For tracking app inbox action clicked
-    APP_INBOX_CLICKED
+    APP_INBOX_CLICKED;
+
+    companion object {
+        fun valueOfOrNull(source: String): EventType? {
+            return try {
+                valueOf(source)
+            } catch (e: Exception) {
+                Logger.e(this, "Unknown EventType name '$source'")
+                null
+            }
+        }
+    }
 }

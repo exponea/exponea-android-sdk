@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.exponea.sdk.models.ExportedEvent
 
-@Database(entities = [ExportedEvent::class], version = 1)
+@Database(entities = [ExportedEvent::class], version = 2)
 @TypeConverters(Converters::class)
 internal abstract class ExponeaDatabase : RoomDatabase() {
 

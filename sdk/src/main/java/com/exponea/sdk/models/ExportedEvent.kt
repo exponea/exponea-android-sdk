@@ -19,5 +19,6 @@ internal data class ExportedEvent(
     @ColumnInfo(name = "timestamp") var timestamp: Double? = currentTimeSeconds(),
     @ColumnInfo(name = "age") var age: Double? = null,
     @ColumnInfo(name = "customer_ids") var customerIds: HashMap<String, String?>? = null,
-    @ColumnInfo(name = "properties") var properties: HashMap<String, Any>? = null
+    @ColumnInfo(name = "properties") var properties: HashMap<String, Any>? = null,
+    @ColumnInfo(name = "sdk_event_type") var sdkEventType: String? = null
 )

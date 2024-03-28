@@ -122,14 +122,15 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_invalid_NoPayload() {
+    fun testHandleIntent_valid_NoPayload() {
         val deepLinkIntent = createDeeplinkIntent()
         deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         val storedEvents = eventRepository.all()
 
-        assertFalse { handled }
-        assertEquals(0, storedEvents.size)
+        assertTrue { handled }
+        assertEquals(1, storedEvents.size)
+        assertEquals(Constants.EventTypes.push, storedEvents.first().type)
     }
 
     @Test

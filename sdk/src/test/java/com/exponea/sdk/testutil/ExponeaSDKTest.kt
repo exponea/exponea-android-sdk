@@ -2,8 +2,12 @@ package com.exponea.sdk.testutil
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.FetchManagerImpl
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppMessageManagerImpl
+import com.exponea.sdk.manager.ReloadMode
+import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
@@ -33,13 +37,21 @@ internal open class ExponeaSDKTest {
     @Before
     fun disableInAppMessagePrefetch() {
         mockkConstructor(InAppMessageManagerImpl::class)
-        every { anyConstructed<InAppMessageManagerImpl>().preload() } just Runs
+        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } returns ReloadMode.STOP
+        every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } just Runs
     }
 
     @Before
     fun disableInAppContentBlocksPrefetch() {
         mockkConstructor(InAppContentBlocksManagerImpl::class)
         every { anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders() } just Runs
+    }
+
+    @Before
+    fun mockNetworkManagers() {
+        mockkConstructor(FetchManagerImpl::class)
+        mockkConstructor(ExponeaServiceImpl::class)
+        mockkConstructor(FlushManagerImpl::class)
     }
 
     @After

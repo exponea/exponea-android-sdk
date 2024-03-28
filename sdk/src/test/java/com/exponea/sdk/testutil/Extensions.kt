@@ -39,7 +39,6 @@ internal fun Exponea.reset() {
     componentForTesting.eventRepository.clear()
     (componentForTesting.eventRepository as EventRepositoryImpl).close()
     componentForTesting.pushTokenRepository.clear()
-    componentForTesting.pushNotificationRepository.set(false)
     componentForTesting.inAppContentBlockManager.clearAll()
 
     componentForTesting.sessionManager.stopSessionListener()

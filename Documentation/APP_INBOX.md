@@ -208,7 +208,7 @@ override fun getAppInboxListFragment(context: Context): Fragment {
 ### Building App Inbox detail View
 
 Method `getAppInboxDetailView(Context, String)` is used to build a `android.view.View` to show an App Inbox message detail. All data handling has to be done here (fetching, showing data, action listeners...).
-Default implementation builds a simple View that shows data by multiple `android.widget.TextView`s and `com.exponea.sdk.view.SquareImageView`, whole layout wrapped by `android.widget.ScrollView`.
+Default implementation builds a simple View that shows data by multiple `android.widget.TextView`s and `android.widget.ImageView`, whole layout wrapped by `android.widget.ScrollView`.
 App Inbox message actions are shown and invoked by multiple `android.widget.Button`s.
 To override this behavior you are able to write own method:
 

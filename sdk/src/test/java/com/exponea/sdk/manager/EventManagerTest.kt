@@ -480,7 +480,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.PUSH_TOKEN.name
             ), firstAddedEvent
         )
     }
@@ -510,7 +511,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf("prop" to "value"),
                 projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS
+                route = Route.TRACK_CUSTOMERS,
+                sdkEventType = EventType.PUSH_TOKEN.name
             ), firstAddedEvent
         )
     }

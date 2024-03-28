@@ -8,10 +8,12 @@ import android.net.Uri
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
-import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
@@ -28,22 +30,21 @@ import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
-import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.Job
 
 internal data class InAppMessageShowRequest(
     val eventType: String,
     val properties: Map<String, Any?>,
-    val timestamp: Double?,
-    val requestedAt: Long
+    val eventTimestamp: Double,
+    val requestedAt: Long,
+    val customerIds: HashMap<String, String?>
 )
 internal class InAppMessageManagerImpl(
-    private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
     private val inAppMessagesCache: InAppMessagesCache,
     private val fetchManager: FetchManager,
@@ -57,126 +58,139 @@ internal class InAppMessageManagerImpl(
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
         const val MAX_PENDING_MESSAGE_AGE = 1000 * 3 // time window to show pending message after preloading
+        const val MAX_RETRY_COUNT = 3 // message fetch retry count for failure
     }
 
-    private var preloaded = false
-    private var preloadInProgress = false
-    private var pendingShowRequests: List<InAppMessageShowRequest> = arrayListOf()
+    private var isLoading = false
+    private var pendingShowRequestsMap: Map<String, InAppMessageShowRequest> = mutableMapOf()
+    internal var pendingShowRequests: List<InAppMessageShowRequest>
+        get() {
+            return pendingShowRequestsMap.values.toList()
+        }
+        set(value) {
+            pendingShowRequestsMap = value
+                .sortedBy { it.eventTimestamp }
+                .associateBy { it.eventType }
+        }
 
     private var sessionStartDate = Date()
 
-    @Synchronized
-    override fun preloadIfNeeded(timestamp: Double) {
-        if (shouldPreload(timestamp)) {
-            preloadStarted()
-            preload()
-        }
+    override fun reload(callback: ((Result<Unit>) -> Unit)?) {
+        reload(
+            customerIdsRepository.get().toHashMap(),
+            callback,
+            0
+        )
     }
 
-    override fun preload(callback: ((Result<Unit>) -> Unit)?) {
+    internal fun reload(
+        customerIds: HashMap<String, String?>,
+        callback: ((Result<Unit>) -> Unit)? = null,
+        retryCount: Int = 0
+    ) {
+        preloadStarted()
+        val customerIdsForFetch = CustomerIds(HashMap(customerIds)).apply {
+            // CustomerIds constructor removes cookie, add it back:
+            cookie = customerIds[CustomerIds.COOKIE]
+        }
         fetchManager.fetchInAppMessages(
             exponeaProject = projectFactory.mainExponeaProject,
-            customerIds = customerIdsRepository.get(),
+            customerIds = customerIdsForFetch,
             onSuccess = { result ->
-                inAppMessagesCache.set(result.results)
-                Logger.i(this, "In-app messages preloaded successfully, preloading images.")
-                preloadImageAndShowPending(result.results, callback)
+                if (areCustomerIdsActual(customerIds)) {
+                    inAppMessagesCache.set(result.results)
+                    bitmapCache.clearExcept(loadImageUrls(result.results))
+                    Logger.d(this, "[InApp] In-app messages preloaded successfully")
+                    preloadFinished()
+                    callback?.invoke(Result.success(Unit))
+                } else {
+                    preloadFinished()
+                    notifyAboutObsoleteFetch(callback)
+                }
             },
             onFailure = {
-                Logger.e(this, "Preloading in-app messages failed. ${it.results.message}")
-                preloadFinished()
-                showPendingMessage()
-                callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
+                if (retryCount < MAX_RETRY_COUNT) {
+                    Logger.w(this, "[InApp] Preloading in-app messages failed, going to retry")
+                    reload(customerIds, callback, retryCount + 1)
+                } else if (areCustomerIdsActual(customerIds)) {
+                    Logger.e(this, "[InApp] Preloading in-app messages failed. ${it.results.message}")
+                    preloadFinished()
+                    callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
+                } else {
+                    preloadFinished()
+                    notifyAboutObsoleteFetch(callback)
+                }
             }
         )
     }
 
-    private fun preloadStarted() {
-        preloaded = false
-        preloadInProgress = true
+    private fun notifyAboutObsoleteFetch(callback: ((Result<Unit>) -> Unit)?) {
+        Logger.w(this, "[InApp] In-app loading was done for obsolete customer IDs, ignoring result")
+        preloadFinished()
+        callback?.invoke(Result.failure(Exception("Preloading in-app messages expired.")))
     }
 
-    private fun preloadFinished() {
-        preloaded = true
-        preloadInProgress = false
+    private fun areCustomerIdsActual(customerIds: HashMap<String, String?>): Boolean {
+        return customerIdsRepository.get().toHashMap() == customerIds
     }
 
-    private fun shouldPreload(timestamp: Double): Boolean {
-        if (preloadInProgress) {
-            return false
+    internal fun preloadStarted() {
+        isLoading = true
+    }
+
+    internal fun preloadFinished() {
+        isLoading = false
+    }
+
+    internal fun detectReloadMode(eventType: EventType, timestamp: Double): ReloadMode {
+        if (eventType == EventType.PUSH_DELIVERED ||
+            eventType == EventType.PUSH_OPENED ||
+            eventType == EventType.SESSION_END
+        ) {
+            Logger.d(
+                this,
+                "[InApp] Auto-skipping messages fetch for type $eventType"
+            )
+            return ReloadMode.SHOW
         }
-        return !preloaded || inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER < timestamp
+        if (eventType == EventType.TRACK_CUSTOMER) {
+            Logger.d(this, "[InApp] Forcing messages fetch for type $eventType")
+            return ReloadMode.FETCH_AND_SHOW
+        }
+        if (isLoading) {
+            Logger.d(
+                this,
+                "[InApp] Skipping messages fetch for type $eventType because of running fetch"
+            )
+            return ReloadMode.STOP
+        }
+        val cacheExpired = (inAppMessagesCache.getTimestamp() + REFRESH_CACHE_AFTER) < timestamp
+        if (cacheExpired) {
+            Logger.d(
+                this,
+                "[InApp] Loading messages fetch for type $eventType because cache expires"
+            )
+            return ReloadMode.FETCH_AND_SHOW
+        }
+        Logger.d(
+            this,
+            "[InApp] Skipping messages fetch for type $eventType because cache is valid"
+        )
+        return ReloadMode.SHOW
     }
 
     override fun sessionStarted(sessionStartDate: Date) {
+        Logger.d(this, "[InApp] Updating session start value to $sessionStartDate")
         this.sessionStartDate = sessionStartDate
     }
 
-    private fun preloadImageAndShowPending(
-        messages: List<InAppMessage>,
-        callback: ((Result<Unit>) -> Unit)?
-    ) = runCatching {
-        bitmapCache.clearExcept(
-            messages.mapNotNull { it.payload }
-                .mapNotNull { it.imageUrl }
-                .filter { it.isNotBlank() }
-        )
-        var shouldWaitWithPreload = false
-        if (pendingShowRequests.isNotEmpty()) {
-            Logger.i(this, "Attempt to show pending in-app message before loading all images.")
-            val message = pickPendingMessage(false)
-            if (message != null) {
-                val imageUrls = loadImageUrls(message.second)
-                if (imageUrls.isEmpty()) {
-                    showPendingMessage(message)
-                } else {
-                    shouldWaitWithPreload = true
-                    Logger.i(this, "First preload pending in-app message image, load rest later.")
-                    bitmapCache.preload(imageUrls) { preloaded ->
-                        if (preloaded) {
-                            showPendingMessage(message)
-                        } else {
-                            eventManager.trackInAppMessageError(
-                                message.second, "Images has not been preloaded", CONSIDER_CONSENT
-                            )
-                        }
-                        preloadImagesAfterPendingShown(messages.filter { it != message.second }, callback)
-                    }
-                }
-            }
-        }
-        if (!shouldWaitWithPreload) {
-            preloadImagesAfterPendingShown(messages, callback)
-        }
-    }.logOnException()
+    private fun loadImageUrls(messages: List<InAppMessage>): List<String> {
+        return messages
+            .flatMap { loadImageUrls(it) }
+            .distinct()
+    }
 
-    private fun preloadImagesAfterPendingShown(
-        messages: List<InAppMessage>,
-        callback: ((Result<Unit>) -> Unit)?
-    ) = runCatching {
-        val onPreloaded = {
-            preloadFinished()
-            showPendingMessage()
-            Logger.i(this, "All in-app message images loaded.")
-            callback?.invoke(Result.success(Unit))
-        }
-        if (messages.isEmpty()) {
-            onPreloaded()
-            return@runCatching
-        }
-        val counter = AtomicInteger(messages.size)
-        for (message in messages) {
-            val imageUrls = loadImageUrls(message)
-            bitmapCache.preload(imageUrls) { messagePreloaded ->
-                if (messagePreloaded && counter.decrementAndGet() <= 0) {
-                    // this and ALL messages are preloaded
-                    onPreloaded()
-                }
-            }
-        }
-    }.logOnException()
-
-    private fun loadImageUrls(message: InAppMessage): ArrayList<String> {
+    private fun loadImageUrls(message: InAppMessage): List<String> {
         val imageURLs = ArrayList<String>()
         if (message.messageType == InAppMessageType.FREEFORM) {
             imageURLs.addAll(HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml!!).collectImages())
@@ -186,178 +200,184 @@ internal class InAppMessageManagerImpl(
         return imageURLs
     }
 
-    private fun pickPendingMessage(requireImageLoaded: Boolean): Pair<InAppMessageShowRequest, InAppMessage>? {
-        var pendingMessages: List<Pair<InAppMessageShowRequest, InAppMessage>> = arrayListOf()
-        pendingShowRequests
-            .filter { it.requestedAt + MAX_PENDING_MESSAGE_AGE > System.currentTimeMillis() }
-            .forEach { request ->
-                val messages = getFilteredMessages(
-                    request.eventType,
-                    request.properties,
-                    request.timestamp,
-                    requireImageLoaded
-                )
-                for (message in messages) {
-                        pendingMessages += request to message
+    internal fun pickPendingMessage(): Pair<InAppMessageShowRequest, InAppMessage>? {
+        synchronized(this) {
+            // collect messages by pending requests
+            val currentCustomerIds = customerIdsRepository.get().toHashMap()
+            val pendingMessages: List<Pair<InAppMessageShowRequest, InAppMessage>> = pendingShowRequests
+                // if any In-app is shown, pick is meaningless
+                .filter {
+                    val isOtherMsgPresenting = !presenter.isPresenting()
+                    if (!isOtherMsgPresenting) {
+                        Logger.d(
+                            this,
+                            "[InApp] Show request ${it.eventType} skipped, another In-app message is shown"
+                        )
                     }
-            }
-
-        val highestPriority = pendingMessages.mapNotNull { it.second.priority }.maxOrNull() ?: 0
-        pendingMessages = pendingMessages.filter { it.second.priority ?: 0 >= highestPriority }
-        return if (pendingMessages.isNotEmpty()) pendingMessages.random() else null
-    }
-
-    private fun showPendingMessage(pickedMessage: Pair<InAppMessageShowRequest, InAppMessage>? = null) {
-        val message = pickedMessage ?: pickPendingMessage(true)
-        if (message != null) {
-            show(message.second)
+                    return@filter isOtherMsgPresenting
+                }
+                // show request lifetime
+                .filter {
+                    val requestTimeStillValid = it.requestedAt + MAX_PENDING_MESSAGE_AGE > System.currentTimeMillis()
+                    if (!requestTimeStillValid) {
+                        Logger.d(
+                            this,
+                            "[InApp] Show request ${it.eventType} has time-outed"
+                        )
+                    }
+                    return@filter requestTimeStillValid
+                }
+                // show request meant for current customer
+                .filter {
+                    val customerStillValid = it.customerIds == currentCustomerIds
+                    if (!customerStillValid) {
+                        Logger.d(
+                            this,
+                            "[InApp] Show request ${it.eventType} has been created for different customer"
+                        )
+                    }
+                    return@filter customerStillValid
+                }
+                // message filter
+                .mapNotNull { request ->
+                    val topMessageForRequest = findMessagesByFilter(
+                        request.eventType,
+                        request.properties,
+                        request.eventTimestamp
+                    ).randomOrNull()
+                    Logger.i(
+                        this, "[InApp] Picking top message '${topMessageForRequest?.name ?: "none"}'" +
+                        " for eventType ${request.eventType}"
+                    )
+                    return@mapNotNull topMessageForRequest?.let { Pair(request, it) }
+                }
+            Logger.d(this, "[InApp] Clearing all show requests because messages has been selected")
+            clearPendingShowRequests()
+            // find messages with highest priority
+            Logger.i(
+                this,
+                "[InApp] Got ${pendingMessages.size} messages available to show." +
+                    " ${pendingMessages.map { it.second.name }}"
+            )
+            val highestPriorityFound = pendingMessages.maxOfOrNull { it.second.priority ?: 0 } ?: 0
+            val prioritizedMessages = pendingMessages.filter { (it.second.priority ?: 0) >= highestPriorityFound }
+            // return random from priority messages or top priority message for single
+            val topMessage = prioritizedMessages.randomOrNull()
+            Logger.i(
+                this,
+                "[InApp] Picking top message '${topMessage?.second?.name ?: "none"}' to be shown."
+            )
+            return topMessage
         }
-        pendingShowRequests = arrayListOf()
     }
 
-    private fun hasImageFor(message: InAppMessage): Boolean {
-        val imageUrl = message.payload?.imageUrl
-        val result = imageUrl.isNullOrEmpty() || bitmapCache.has(imageUrl)
-        if (!result) {
-            Logger.i(this, "Image not available for ${message.name}")
-        }
-        return result
-    }
-
-    override fun getFilteredMessages(
+    override fun findMessagesByFilter(
         eventType: String,
         properties: Map<String, Any?>,
-        timestamp: Double?,
-        requireImageLoaded: Boolean
+        timestamp: Double?
     ): List<InAppMessage> {
         var messages = inAppMessagesCache.get()
         Logger.i(
             this,
-            "Picking in-app message for eventType $eventType. " +
+            "[InApp] Picking in-app message for eventType $eventType. " +
                 "${messages.size} messages available: ${messages.map { it.name } }."
         )
         messages = messages.filter {
-            (!requireImageLoaded || hasImageFor(it)) &&
                 it.applyDateFilter(System.currentTimeMillis() / 1000) &&
                 it.applyEventFilter(eventType, properties, timestamp) &&
                 it.applyFrequencyFilter(displayStateRepository.get(it), sessionStartDate)
         }
-        Logger.i(this, "${messages.size} messages available after filtering. Picking highest priority message.")
+        Logger.i(this,
+            "[InApp] ${messages.size} messages available after filtering." +
+                " Going to pick the highest priority messages."
+        )
         val highestPriority = messages.mapNotNull { it.priority }.maxOrNull() ?: 0
-        messages = messages.filter { it.priority ?: 0 >= highestPriority }
-        Logger.i(this, "Got ${messages.size} messages with highest priority. ${messages.map { it.name } }")
+        messages = messages.filter { (it.priority ?: 0) >= highestPriority }
+        Logger.i(
+            this,
+            "[InApp] Got ${messages.size} messages with highest priority for eventType $eventType." +
+                " ${messages.map { it.name } }"
+        )
         return messages
     }
 
-    override fun getRandom(
-        eventType: String,
-        properties: Map<String, Any?>,
-        timestamp: Double?,
-        requireImageLoaded: Boolean
-    ): InAppMessage? {
-        val messages = getFilteredMessages(eventType, properties, timestamp, requireImageLoaded)
-        if (messages.size > 1) {
-            Logger.i(this, "Multiple candidate messages found, picking at random.")
-        }
-        return if (messages.isNotEmpty()) messages.random() else null
-    }
-
-    override fun showRandom(
-        eventType: String,
-        properties: Map<String, Any?>,
-        timestamp: Double?
-    ): Job? {
-        Logger.i(this, "Requesting to show in-app message for event type $eventType")
-        if (preloaded) {
-            return runOnBackgroundThread {
-                Logger.i(this, "In-app message data preloaded, picking a message to display")
-                val message = getRandom(eventType, properties, timestamp)
-                if (message != null) {
-                    show(message)
-                }
-            }
-        } else {
-            Logger.i(this, "Add pending in-app message to be shown after data is loaded")
-            pendingShowRequests += InAppMessageShowRequest(
-                eventType,
-                properties,
-                timestamp,
-                System.currentTimeMillis()
-            )
-            return null
-        }
-    }
-
-    private fun show(message: InAppMessage) {
+    internal fun show(message: InAppMessage) {
         if (message.variantId == -1 && !message.hasPayload()) {
-            Logger.i(this, "Only logging in-app message for control group '${message.name}'")
+            Logger.i(this, "[InApp] Only logging in-app message for control group '${message.name}'")
             trackShowEvent(message)
             return
         }
         if (!message.hasPayload()) {
-            Logger.i(this, "Not showing message with empty payload '${message.name}'")
+            Logger.e(this, "[InApp] Not showing message with empty payload '${message.name}'")
             return
         }
-        Logger.i(this, "Attempting to show in-app message '${message.name}'")
+        Logger.i(this, "[InApp] Attempting to show in-app message '${message.name}'")
         val htmlPayload: HtmlNormalizer.NormalizedResult?
         if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
             htmlPayload = HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml).normalize()
         } else {
             htmlPayload = null
         }
-        Logger.i(this, "Posting show to main thread with delay ${message.delay ?: 0}ms.")
+        Logger.i(this, "[InApp] Posting show to main thread with delay ${message.delay ?: 0}ms.")
         runOnMainThread(message.delay ?: 0) {
-            val presented = presenter.show(
-                messageType = message.messageType,
-                payload = message.payload,
-                payloadHtml = htmlPayload,
-                timeout = message.timeout,
-                actionCallback = { activity, button ->
-                    Logger.i(this, "In-app message button clicked!")
-                    displayStateRepository.setInteracted(message, Date())
-                    if (Exponea.inAppMessageActionCallback.trackActions) {
-                        eventManager.trackInAppMessageClick(
-                            message,
-                            button.buttonText,
-                            button.buttonLink,
-                            CONSIDER_CONSENT
-                        )
+            runCatching {
+                val presented = presenter.show(
+                    messageType = message.messageType,
+                    payload = message.payload,
+                    payloadHtml = htmlPayload,
+                    timeout = message.timeout,
+                    actionCallback = { activity, button ->
+                        Logger.i(this, "In-app message button clicked!")
+                        displayStateRepository.setInteracted(message, Date())
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            eventManager.trackInAppMessageClick(
+                                message,
+                                button.buttonText,
+                                button.buttonLink,
+                                CONSIDER_CONSENT
+                            )
+                        }
+                        val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
+                        runOnMainThread {
+                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                                message,
+                                buttonInfo,
+                                true,
+                                activity
+                            )
+                        }
+                        if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+                            processInAppMessageAction(activity, button)
+                        }
+                    },
+                    dismissedCallback = { activity, userInteraction ->
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            eventManager.trackInAppMessageClose(message, userInteraction, CONSIDER_CONSENT)
+                        }
+                        runOnMainThread {
+                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                                message,
+                                null,
+                                userInteraction,
+                                activity
+                            )
+                        }
+                    },
+                    failedCallback = { error ->
+                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                            trackError(message, error)
+                        }
                     }
-                    val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
-                    runOnMainThread {
-                        Exponea.inAppMessageActionCallback.inAppMessageAction(
-                            message,
-                            buttonInfo,
-                            true,
-                            activity
-                        )
-                    }
-                    if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
-                        processInAppMessageAction(activity, button)
-                    }
-                },
-                dismissedCallback = { activity, userInteraction ->
-                    if (Exponea.inAppMessageActionCallback.trackActions) {
-                        eventManager.trackInAppMessageClose(message, userInteraction, CONSIDER_CONSENT)
-                    }
-                    runOnMainThread {
-                        Exponea.inAppMessageActionCallback.inAppMessageAction(
-                            message,
-                            null,
-                            userInteraction,
-                            activity
-                        )
-                    }
-                },
-                failedCallback = { error ->
-                    if (Exponea.inAppMessageActionCallback.trackActions) {
-                        eventManager.trackInAppMessageError(message, error, CONSIDER_CONSENT)
-                    }
+                )
+                runOnBackgroundThread {
+                    runCatching {
+                        if (presented != null) {
+                            trackShowEvent(message)
+                        }
+                    }.logOnException()
                 }
-            )
-            if (presented != null) {
-                trackShowEvent(message)
-            }
+                return@runCatching
+            }.logOnException()
         }
     }
 
@@ -385,33 +405,163 @@ internal class InAppMessageManagerImpl(
         }
     }
 
+    override fun onEventUploaded(event: ExportedEvent) {
+        val eventType = event.type
+        val sdkEventType = event.sdkEventType?.let { EventType.valueOfOrNull(it) }
+        if (sdkEventType != EventType.TRACK_CUSTOMER) {
+            Logger.d(this, "[InApp] Event $sdkEventType is ignored for In-app fetch")
+            return
+        }
+        Logger.d(
+            this,
+            "[InApp] Event $sdkEventType is uploaded to backend, going to trigger In-app handling"
+        )
+        val properties = event.properties?.toMap() ?: mapOf()
+        val timestamp = event.timestamp ?: currentTimeSeconds()
+        val customerIds = event.customerIds ?: customerIdsRepository.get().toHashMap()
+        inAppShowingTriggered(sdkEventType, eventType, properties, timestamp, customerIds)
+    }
+
     override fun onEventCreated(event: Event, type: EventType) {
         val eventType = event.type
         val properties = event.properties?.toMap() ?: mapOf()
-        val timestamp = event.timestamp
-        val eventTimestamp = timestamp ?: currentTimeSeconds()
-        val eventTimestampInMillis = eventTimestamp * 1000
-
-        // do not initiate in-app preload on push events and session_end event
-        // user may not even end up in the app and in-app fetch would run unnecessarily
-        if (type != EventType.PUSH_DELIVERED &&
-            type != EventType.PUSH_OPENED &&
-            type != EventType.SESSION_END
-        ) {
-            preloadIfNeeded(eventTimestampInMillis)
+        val timestamp = event.timestamp ?: currentTimeSeconds()
+        val customerIds = event.customerIds ?: customerIdsRepository.get().toHashMap()
+        if (type == EventType.TRACK_CUSTOMER) {
+            Logger.d(this, "[InApp] Clearing all show requests due to customers login")
+            clearPendingShowRequests()
+            if (Exponea.flushMode == FlushMode.IMMEDIATE) {
+                Logger.d(
+                    this,
+                    "[InApp] Skipping messages handling due to upcoming customer online login"
+                )
+                return
+            }
         }
+        inAppShowingTriggered(type, eventType, properties, timestamp, customerIds)
+    }
 
-        if (type == EventType.SESSION_START) {
-            sessionStarted(Date(eventTimestampInMillis.toLong()))
-        }
-        if (eventType != null) {
-            showRandom(
-                eventType,
-                properties,
-                timestamp
-            )
+    private fun clearPendingShowRequests() {
+        synchronized(this) {
+            pendingShowRequests = arrayListOf()
+            Logger.d(this, "[InApp] Pending ShowRequests have been cleared")
         }
     }
+
+    internal fun inAppShowingTriggered(
+        type: EventType,
+        eventType: String?,
+        properties: Map<String, Any>,
+        timestamp: Double,
+        customerIds: HashMap<String, String?>
+    ) {
+        ensureOnBackgroundThread {
+            Logger.i(
+                this,
+                "[InApp] Event $type:$eventType occurred, going to trigger In-app show process"
+            )
+            registerPendingShowRequest(eventType, properties, timestamp, customerIds)
+            val eventTimestampInMillis = timestamp * 1000
+            if (type == EventType.SESSION_START) {
+                sessionStarted(Date(eventTimestampInMillis.toLong()))
+            }
+            Logger.v(this, "[InApp] Detecting reload mode for $type")
+            synchronized(this) {
+                when (detectReloadMode(type, eventTimestampInMillis)) {
+                    ReloadMode.FETCH_AND_SHOW -> {
+                        reload(customerIds, callback = { result ->
+                            if (result.isFailure) {
+                                Logger.e(
+                                    this,
+                                    "[InApp] Messages fetch failed: ${result.exceptionOrNull()?.localizedMessage}"
+                                )
+                            } else {
+                                Logger.i(this, "[InApp] In-app message data preloaded. Picking a message to display")
+                                pickAndShowMessage()
+                            }
+                        })
+                    }
+                    ReloadMode.SHOW -> {
+                        Logger.d(this, "[InApp] Picking a message to display")
+                        runOnBackgroundThread {
+                            pickAndShowMessage()
+                        }
+                    }
+                    ReloadMode.STOP -> {
+                        Logger.w(
+                            this,
+                            "[InApp] Waits with message show because of running fetch"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    internal fun pickAndShowMessage() {
+        val message = pickPendingMessage()
+        message?.let { preloadAndShow(message.second, message.first) }
+        runOnBackgroundThread {
+            val otherImageUrls = loadImageUrls(
+                inAppMessagesCache.get().filter { it.id != message?.second?.id }
+            )
+            bitmapCache.preload(otherImageUrls, callback = {
+                Logger.d(this, "[InApp] Rest of images has been cached: $it")
+            })
+        }
+    }
+
+    internal fun preloadAndShow(message: InAppMessage, origin: InAppMessageShowRequest) {
+        val imageUrls = loadImageUrls(message)
+        bitmapCache.preload(imageUrls, callback = { imagesLoaded ->
+            val customerIdsAfterLoad = customerIdsRepository.get().toHashMap()
+            if (customerIdsAfterLoad != origin.customerIds) {
+                trackError(message, "Another customer login while image load")
+            } else if (imagesLoaded) {
+                show(message)
+            } else {
+                trackError(message, "Images has not been preloaded")
+            }
+        })
+    }
+
+    internal fun trackError(message: InAppMessage, error: String) {
+        eventManager.trackInAppMessageError(message, error, CONSIDER_CONSENT)
+    }
+
+    internal fun registerPendingShowRequest(
+        eventType: String?,
+        properties: Map<String, Any>,
+        timestamp: Double,
+        customerIds: HashMap<String, String?>
+    ) {
+        if (eventType == null) {
+            Logger.v(this, "[InApp] Pending show request registration skipped due to no event type")
+            return
+        }
+        Logger.i(
+            this,
+            "[InApp] Register request for in-app message to be shown for $eventType"
+        )
+        pendingShowRequests += InAppMessageShowRequest(
+            eventType,
+            properties,
+            timestamp,
+            System.currentTimeMillis(),
+            customerIds
+        )
+    }
+
+    override fun clear() {
+        Logger.d(this, "[InApp] Clearing all data")
+        inAppMessagesCache.clear()
+        displayStateRepository.clear()
+        clearPendingShowRequests()
+    }
+}
+
+internal enum class ReloadMode {
+    FETCH_AND_SHOW, SHOW, STOP
 }
 
 internal class EventManagerInAppMessageTrackingDelegate(

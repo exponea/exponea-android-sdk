@@ -7,46 +7,70 @@ No developer work is required for in-app messages; they work automatically after
 As with everything that's supposed to work automatically, the biggest problem is what to do when it doesn't. 
 
 ### Logging
-The SDK logs a lot of useful information about presenting in-app messages on the default `INFO` level. To see why each message was/wasn't displayed, make sure your logger level is most `INFO`. You can set the logger level using `Exponea.loggerLevel = Logger.Level.DEBUG` before initializing the SDK.
+The SDK logs a lot of useful information about presenting in-app messages on the default `INFO` level. To see why each message was/wasn't displayed, make sure your logger level is most `INFO`. You can set the logger level using `Exponea.loggerLevel = Logger.Level.INFO` before initializing the SDK.
+If you are facing any unexpected behaviour and `INFO` logs are not sufficient enough, try to set log level do `VERBOSE` to got more detailed information.
 
+> Note: All logs assigned to In-app handling process are prefixed with `[InApp]` shortcut to bring easier search-ability to you. Bear in mind that some supporting processes (such as Image caching) are logging without this prefix. 
 ### Example logs
 
 Let's look at an example of how the logs may look when displaying an in-app message.
 1. ```
-    In-app message data preloaded, picking a message to display
+   Event {eventCategory}:{eventType} occurred, going to trigger In-app show process
+   ```
+   In-app process has been triggered by SDK usage of identifyCustomer() or event tracking.
+1. ```
+    Register request for in-app message to be shown for $eventType
     ```
-    In-app message definitions must be preloaded in order to display the message. If the preload is still in progress, we store the events until preload is complete and perform the message picking logic afterward.
-
+   Each non-null `eventType` registers a 'show request' to show an In-app message after whole process is done.
+1. ```
+    [In-app message data preloaded. ]Picking a message to display
+    ```
+   In-app show process starts successfully and messages are prepared to be selected and shown. Log message `In-app message data preloaded.` means that In-app message definitions preload has to be done here.
 2. ```
-    Picking in-app message for eventType payment. 2 messages available: [App load in-app message, Payment in-app message].
+    Picking in-app message for eventType {eventType}. {X} messages available: [{message1 name}, {message2 name}, ...].
     ```
-    This log contains the list of **all** message names we received from the server. If you don't see your message here, double-check the setup on the Exponea web application. Make sure your targeting includes the current customer.
-
+    This log contains `eventType` for which the messages going to be searched. Then count of `X` messages and the names of **all** messages received from the server is listed in log.
 3.  ```
-    Message 'App load in-app message' failed event filter. Message filter: {"event_type":"session_start","filter":[]} Event type: payment properties: {price=2011.1, product_title=Item #1} timestamp: 1.59921557821E9
+    Message '{message name}' failed event filter. Message filter: {"event_type":"session_start","filter":[]} Event type: payment properties: {price=2011.1, product_title=Item #1} timestamp: 1.59921557821E9
     ```
     We show reasons why some messages are not picked. In this example, message failed event filter - the type was set for `session_start`, but `payment` was tracked.
+3. ```
+   {X} messages available after filtering. Going to pick the highest priority messages.
+   ```
+   Log informs that `X` messages match all requirements given by own filter. Filter could be configured on Bloomreach engagement app for each message. See `Schedule`, `Show on` and `Display` in In-app message settings.
 4. ```
-    1 messages available after filtering. Picking the highest priority message.
-    ```
-    After applying all the filters, we have one message left. You can set priority on your messages. The highest priority message should be displayed.
-5. ```
-    Got 1 messages with highest priority. [Payment in-app message]
-    ```
-    There may be a tie between a few messages with the same priority. In that case, we pick one at random.
+   Got {X} messages with highest priority for eventType {eventType}. [{message1 name}, {message2 name}, ...]
+   ```
+   There may be a tie between a few messages with the same priority. All messages with same highest priority are listed.
 6. ```
-    Attempting to show in-app message 'Payment in-app message'
-    ```
-    The message picked for displaying was `Payment in-app message`
+    Picking top message '{message name}' for eventType {eventType}
+   ```
+   The single message is randomly picked from filtered messages with same highest priority for `eventType`
+7. ```
+   Got {X} messages available to show. [{message1 name}, {message2 name}, ...].
+   ```
+    All `X` messages has been collected for registered 'show requests'. Process continues with selecting of message with highest priority.
 8. ```
-    Posting show to the main thread with delay 0ms.
-    ```
-    Message display request is posted to the main thread, where it will be displayed in the last resumed Activity. 
+   Picking top message '{message name}' to be shown.
+   ```
+   The single message is randomly picked from all filtered messages. This message is going to be shown to user.
 9. ```
+   Only logging in-app message for control group '${message.name}'
+   ```
+   A/B testing In-app message or message without payload is not shown to user but 'show' event is tracked for your analysis.
+6. ```
+    Attempting to show in-app message '{message name}'
+    ```
+    In-app message that meant to be show to user (not A/B testing) is going to be shown
+7. ```
+    Posting show to main thread with delay {X}ms.
+    ```
+    Message display request is posted to the main thread with delay of `X` milliseconds. Delay is configured by `Display delay` in In-app message settings. Message will be displayed in the last resumed Activity. 
+8. ```
     Attempting to present in-app message.
     ```
     Called from the main thread, if a failure happens after this point, please check next section about `Displaying in-app messages`.
-10. ```
+9. ```
     In-app message presented.
     ```
     Everything went well, and you should see your message. It was presented in the current Activity. In case you don't see the message, it's possible that the view hierarchy has changed, and the message is no longer on screen.

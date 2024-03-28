@@ -142,8 +142,9 @@ internal class ExponeaComponent(
         eventRepository,
         exponeaService,
         connectionManager,
-        // once customer is identified(and potentially merged with another), refresh the in-app messages
-        { inAppMessageManager.preload() }
+        onEventUploaded = { uploadedEvent ->
+            inAppMessageManager.onEventUploaded(uploadedEvent)
+        }
     )
 
     internal val eventManager: EventManager = EventManagerImpl(
@@ -203,7 +204,6 @@ internal class ExponeaComponent(
     )
 
     internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
-        exponeaConfiguration,
         customerIdsRepository,
         inAppMessagesCache,
         fetchManager,
@@ -248,8 +248,7 @@ internal class ExponeaComponent(
         fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.HMS)
         deviceInitiatedRepository.set(false)
         campaignRepository.clear()
-        inAppMessagesCache.clear()
-        inAppMessageDisplayStateRepository.clear()
+        inAppMessageManager.clear()
         uniqueIdentifierRepository.clear()
         customerIdsRepository.clear()
         inAppContentBlockManager.clearAll()
@@ -270,7 +269,7 @@ internal class ExponeaComponent(
         }
         // Do not use TokenFrequency from the configuration, setup token from new customer immediately during anonymize
         fcmManager.trackToken(token, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, tokenType)
-        inAppMessageManager.preload()
+        inAppMessageManager.reload()
         appInboxManager.reload()
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
     }

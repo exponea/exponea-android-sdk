@@ -11,7 +11,6 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.util.currentTimeSeconds
-import kotlin.collections.HashMap
 import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -426,6 +426,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should allow markAsRead action after fetched AppInbox`() {
+        skipInstallEvent()
+        identifyCustomer(cookie = "hash-cookie")
         val testMessage = buildMessage("id1", type = "push")
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)

@@ -260,37 +260,45 @@ internal var backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
 
 internal inline fun runOnMainThread(crossinline block: () -> Unit): Job {
     return mainThreadDispatcher.launch {
-        block.invoke()
+        runCatching {
+            block.invoke()
+        }.logOnException()
     }
 }
 
 internal inline fun runOnMainThread(delayMillis: Long, crossinline block: () -> Unit): Job {
     return mainThreadDispatcher.launch {
-        try {
-            delay(delayMillis)
-        } catch (e: Exception) {
-            Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
-            return@launch
-        }
-        block.invoke()
+        runCatching {
+            try {
+                delay(delayMillis)
+            } catch (e: Exception) {
+                Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
+                return@runCatching
+            }
+            block.invoke()
+        }.logOnException()
     }
 }
 
 internal inline fun runOnBackgroundThread(crossinline block: () -> Unit): Job {
     return backgroundThreadDispatcher.launch {
-        block.invoke()
+        runCatching {
+            block.invoke()
+        }.logOnException()
     }
 }
 
 internal inline fun runOnBackgroundThread(delayMillis: Long, crossinline block: () -> Unit): Job {
     return backgroundThreadDispatcher.launch {
-        try {
-            delay(delayMillis)
-        } catch (e: Exception) {
-            Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
-            return@launch
-        }
-        block.invoke()
+        runCatching {
+            try {
+                delay(delayMillis)
+            } catch (e: Exception) {
+                Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
+                return@runCatching
+            }
+            block.invoke()
+        }.logOnException()
     }
 }
 

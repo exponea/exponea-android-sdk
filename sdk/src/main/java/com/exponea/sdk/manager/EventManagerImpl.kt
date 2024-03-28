@@ -35,14 +35,15 @@ internal open class EventManagerImpl(
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
         for (project in projects.distinct()) {
             val exportedEvent = ExportedEvent(
-                    type = event.type,
-                    timestamp = event.timestamp,
-                    age = event.age,
-                    customerIds = event.customerIds,
-                    properties = event.properties,
-                    projectId = project.projectToken,
-                    route = route,
-                    exponeaProject = project
+                type = event.type,
+                timestamp = event.timestamp,
+                age = event.age,
+                customerIds = event.customerIds,
+                properties = event.properties,
+                projectId = project.projectToken,
+                route = route,
+                exponeaProject = project,
+                sdkEventType = eventType.name
             )
             if (trackingAllowed) {
                 Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")

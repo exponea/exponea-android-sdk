@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
@@ -11,14 +12,14 @@ internal class TimeLimitedFlushManagerImpl(
     eventRepository: EventRepository,
     exponeaService: ExponeaService,
     connectionManager: ConnectionManager,
-    customerIdentifiedHandler: () -> Unit,
+    onEventUploaded: (ExportedEvent) -> Unit,
     val flushTimeLimit: Long
 ) : FlushManagerImpl(
     configuration,
     eventRepository,
     exponeaService,
     connectionManager,
-    customerIdentifiedHandler
+    onEventUploaded
 ) {
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
         runWithTimeout(flushTimeLimit, {

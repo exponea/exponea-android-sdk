@@ -7,7 +7,9 @@ data class CustomerIds(
 ) {
 
     init {
-        externalIds.remove(COOKIE)
+        externalIds = HashMap(externalIds).apply {
+            remove(COOKIE)
+        }
     }
 
     companion object {
@@ -33,8 +35,8 @@ data class CustomerIds(
         if (cookie.isNullOrEmpty()) {
             Logger.e(this, "Empty cookie")
         }
-        return externalIds.apply {
-            set(COOKIE, cookie)
+        return HashMap(externalIds).apply {
+            cookie?.let { set(COOKIE, it) }
         }
     }
 }

@@ -39,6 +39,7 @@ import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.mainThreadDispatcher
+import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -51,8 +52,6 @@ import io.mockk.verify
 import io.mockk.verifySequence
 import java.util.Date
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -222,11 +221,10 @@ internal class InAppMessageManagerImplTest {
         }
 
         val numberOfThreads = 5
-        val service: ExecutorService = Executors.newFixedThreadPool(10)
         val latch = CountDownLatch(numberOfThreads)
 
         for (i in 0 until numberOfThreads) {
-            service.submit {
+            runOnBackgroundThread {
                 eventManager.track(
                     "test-event",
                     currentTimeSeconds(),
@@ -244,6 +242,7 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should always track trigger events regardless on in app message preload state`() {
+        Exponea.flushMode = FlushMode.MANUAL
         val customerIdsRepo = mockk<CustomerIdsRepository>()
         every { customerIdsRepo.get() } returns CustomerIds(cookie = "mock-cookie")
         val eventRepo = mockk<EventRepository>()
@@ -267,19 +266,18 @@ internal class InAppMessageManagerImplTest {
         every { eventRepo.add(capture(addedEvents)) } just Runs
 
         val numberOfThreads = 5
-        val service: ExecutorService = Executors.newFixedThreadPool(10)
         val latch = CountDownLatch(numberOfThreads)
 
         for (i in 0 until numberOfThreads) {
-            service.submit {
+            runOnBackgroundThread {
                 eventManager.track("test-event-$i", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
                 latch.countDown()
             }
         }
         latch.await()
         assertEquals(
-                addedEvents.size,
-                numberOfThreads
+            numberOfThreads,
+            addedEvents.size
         )
     }
     @Test

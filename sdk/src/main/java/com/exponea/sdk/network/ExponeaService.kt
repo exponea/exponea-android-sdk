@@ -32,4 +32,15 @@ internal interface ExponeaService {
         customerIds: CustomerIds,
         contentBlockIds: List<String>
     ): Call
+
+    fun fetchSegments(
+        exponeaProject: ExponeaProject,
+        engagementCookieId: String
+    ): Call
+
+    fun linkIdsToCookie(
+        exponeaProject: ExponeaProject,
+        engagementCookieId: String,
+        externalIds: HashMap<String, String?>
+    ): Call
 }

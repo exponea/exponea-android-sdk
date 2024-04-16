@@ -18,6 +18,7 @@ import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
@@ -25,6 +26,8 @@ import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.backgroundThreadDispatcher
+import com.exponea.sdk.util.mainThreadDispatcher
 import com.exponea.sdk.util.runOnBackgroundThread
 import io.mockk.Runs
 import io.mockk.every
@@ -37,14 +40,18 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.mock.HttpCode
 import okhttp3.mock.MockInterceptor
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
@@ -90,6 +97,15 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 Result(true, arrayListOf())
             )
         }
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
+                Result(true, SegmentationCategories())
+            )
+        }
+        mockkConstructor(FcmManagerImpl::class)
+        mockkConstructor(TimeLimitedFcmManagerImpl::class)
+        every { anyConstructed<FcmManagerImpl>().trackToken(any(), any(), any()) } just Runs
+        every { anyConstructed<TimeLimitedFcmManagerImpl>().trackToken(any(), any(), any()) } just Runs
     }
 
     @Before
@@ -107,7 +123,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             .Builder()
             .addInterceptor(mockInterceptor)
             .build()
-        every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any(), any()) } answers {
+        every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any<String>(), any()) } answers {
             okHttpClient.newCall(Request.Builder().url(mockUrl).get().build())
         }
     }
@@ -118,9 +134,17 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         mockkConstructor(InAppMessagesCacheImpl::class)
     }
 
+    @Before
+    fun disableSegmentsManager() {
+        mockkConstructor(SegmentsManagerImpl::class)
+        every { anyConstructed<SegmentsManagerImpl>().onEventUploaded(any()) } just Runs
+        every { anyConstructed<SegmentsManagerImpl>().onSdkInit() } just Runs
+        every { anyConstructed<SegmentsManagerImpl>().onCallbackAdded(any()) } just Runs
+    }
+
     @Test
     fun `should preload and show for session_start for IMMEDIATE flush with delay`() {
-        val threadAwaitSeconds = 5L
+        val threadAwaitSeconds = 10L
         Exponea.flushMode = FlushMode.IMMEDIATE
         Exponea.loggerLevel = Logger.Level.VERBOSE
         // allow process
@@ -166,7 +190,10 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     }
 
     @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should preload and show for each session_start`() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
@@ -186,6 +213,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         verify(exactly = 3) {
             anyConstructed<InAppMessageManagerImpl>().show(any())
         }
+    }
+
+    @After
+    fun resetThreadBehaviour() {
+        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
+        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test
@@ -256,6 +289,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     fun `should not show message for session_start if another customer identifies`() {
         val threadAwaitSeconds = 5L
         Exponea.flushMode = FlushMode.MANUAL
+        Exponea.loggerLevel = Logger.Level.VERBOSE
         // allow process
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
@@ -270,7 +304,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         initSdk()
         identifyCustomerForTest(hashMapOf("registered" to "test001"))
         // ensure that session_start picks message but image load finishes after another customer login
-        val sessionStartImageLoaded = CountDownLatch(1)
+        val sessionStartProcessed = CountDownLatch(1)
         val identifyCustomerProcessed = CountDownLatch(1)
         every {
             anyConstructed<InAppMessageManagerImpl>().preloadAndShow(any(), any())
@@ -278,7 +312,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             Logger.e(this, "[InApp] SessionStart preloadAndShow occurs")
             assertTrue(identifyCustomerProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
             Logger.e(this, "[InApp] SessionStart waiting for identifyCustomerProcessed ends")
-            sessionStartImageLoaded.countDown()
+            sessionStartProcessed.countDown()
             callOriginal()
         }
         every {
@@ -291,14 +325,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             callOriginal()
         }
         // invoke test scenario
-        runOnBackgroundThread {
-            Exponea.trackSessionStart()
-        }
+        Exponea.trackSessionStart()
         runOnBackgroundThread {
             Exponea.anonymize()
             identifyCustomerForTest(hashMapOf("registered" to "test002"))
         }
-        assertTrue(sessionStartImageLoaded.await(threadAwaitSeconds, TimeUnit.SECONDS))
+        assertTrue(sessionStartProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
         assertTrue(identifyCustomerProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
         verify(exactly = 0) {
             anyConstructed<InAppMessageManagerImpl>().show(pendingMessage)
@@ -335,6 +367,9 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             firstArg<String>() == "pending_image_url"
         }
         every { anyConstructed<InAppMessagesCacheImpl>().get() } returns pendingMessages
+        every { anyConstructed<InAppMessagesCacheImpl>().set(any()) } just Runs
+        every { anyConstructed<InAppMessagesCacheImpl>().clear() } returns true
+        every { anyConstructed<InAppMessagesCacheImpl>().getTimestamp() } returns System.currentTimeMillis()
     }
 
     private fun simulateCustomerUsage(customerIdsMap: java.util.HashMap<String, String?>) {
@@ -358,6 +393,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     }
 
     private fun initSdk() {
+        skipInstallEvent()
         val initialProject = ExponeaProject(
             "https://base-url.com",
             "project-token",

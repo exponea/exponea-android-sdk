@@ -25,14 +25,17 @@ internal fun Exponea.shutdown() {
 }
 
 internal fun Exponea.reset() {
+    val wasInitialized = isInitialized
+    isInitialized = false
     resetField(Exponea, "application")
     resetField(Exponea, "configuration")
     safeModeOverride = null
     runDebugModeOverride = null
+    segmentationDataCallbacks.clear()
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
     initGate.clear()
-    if (!isInitialized) return
+    if (!wasInitialized) return
     componentForTesting.campaignRepository.clear()
     componentForTesting.customerIdsRepository.clear()
     componentForTesting.deviceInitiatedRepository.set(false)
@@ -40,6 +43,7 @@ internal fun Exponea.reset() {
     (componentForTesting.eventRepository as EventRepositoryImpl).close()
     componentForTesting.pushTokenRepository.clear()
     componentForTesting.inAppContentBlockManager.clearAll()
+    componentForTesting.segmentsManager.clearAll()
 
     componentForTesting.sessionManager.stopSessionListener()
     componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
@@ -47,7 +51,6 @@ internal fun Exponea.reset() {
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
         .edit().clear().commit()
     loggerLevel = Constants.Logger.defaultLoggerLevel
-    isInitialized = false
     telemetry = null
     CookieManager.getInstance().setAcceptCookie(true)
 }

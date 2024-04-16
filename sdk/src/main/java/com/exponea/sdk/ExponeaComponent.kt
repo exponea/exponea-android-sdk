@@ -25,6 +25,8 @@ import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.InAppMessageTrackingDelegate
 import com.exponea.sdk.manager.PushNotificationSelfCheckManager
 import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
+import com.exponea.sdk.manager.SegmentsManager
+import com.exponea.sdk.manager.SegmentsManagerImpl
 import com.exponea.sdk.manager.ServiceManager
 import com.exponea.sdk.manager.ServiceManagerImpl
 import com.exponea.sdk.manager.SessionManager
@@ -64,6 +66,7 @@ import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
+import com.exponea.sdk.repository.SegmentsCacheImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
@@ -71,6 +74,7 @@ import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDeleg
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 
 internal class ExponeaComponent(
@@ -137,6 +141,15 @@ internal class ExponeaComponent(
     internal val inAppMessagesBitmapCache = InAppMessageBitmapCacheImpl(context)
     internal val inAppMessagePresenter = InAppMessagePresenter(context, inAppMessagesBitmapCache)
 
+    internal val segmentsCache = SegmentsCacheImpl(context, ExponeaGson.instance)
+
+    internal val segmentsManager: SegmentsManager = SegmentsManagerImpl(
+        fetchManager = fetchManager,
+        projectFactory = projectFactory,
+        customerIdsRepository = customerIdsRepository,
+        segmentsCache = segmentsCache
+    )
+
     internal val flushManager: FlushManager = FlushManagerImpl(
         exponeaConfiguration,
         eventRepository,
@@ -144,6 +157,7 @@ internal class ExponeaComponent(
         connectionManager,
         onEventUploaded = { uploadedEvent ->
             inAppMessageManager.onEventUploaded(uploadedEvent)
+            segmentsManager.onEventUploaded(uploadedEvent)
         }
     )
 
@@ -253,6 +267,7 @@ internal class ExponeaComponent(
         customerIdsRepository.clear()
         inAppContentBlockManager.clearAll()
         sessionManager.reset()
+        segmentsManager.clearAll()
 
         exponeaConfiguration.baseURL = exponeaProject.baseUrl
         exponeaConfiguration.projectToken = exponeaProject.projectToken
@@ -261,7 +276,13 @@ internal class ExponeaComponent(
             exponeaProject.inAppContentBlockPlaceholdersAutoLoad
         exponeaConfiguration.projectRouteMap = projectRouteMap
         ExponeaConfigRepository.set(application, exponeaConfiguration)
-        projectFactory.reset(exponeaConfiguration)
+        runCatching {
+            projectFactory.reset(exponeaConfiguration)
+            // Advanced auth could be invalid while reset.
+            // We cannot throw exception directly, it will be catch-ed anyway without runCatching
+            // but we need to complete anonymization process
+            // Exception will be still re-thrown for `safeModeEnabled` == false
+        }.logOnException()
 
         Exponea.trackInstallEvent()
         if (exponeaConfiguration.automaticSessionTracking) {

@@ -18,7 +18,10 @@ import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.Segment
+import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.AppInboxCacheImplTest
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KFunction
 import kotlin.reflect.KFunction1
 import kotlin.reflect.KFunction2
@@ -42,7 +45,8 @@ internal object PublicApiTestCases {
         Pair(Exponea::checkPushSetup, false),
         Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider),
         Pair(Exponea::safeModeEnabled, true),
-        Pair(Exponea::runDebugMode, false)
+        Pair(Exponea::runDebugMode, false),
+        Pair(Exponea::segmentationDataCallbacks, CopyOnWriteArrayList<SegmentationDataCallback>())
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(
@@ -275,6 +279,29 @@ internal object PublicApiTestCases {
                     "placeholder1",
                     InAppContentBlocksManagerImplTest.buildMessage()
             )
+        },
+        Pair(Exponea::registerSegmentationDataCallback) {
+            Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
+                override val exposingCategory = "discovery"
+                override val includeFirstLoad = false
+                override fun onNewData(segments: List<Segment>) {
+                    // nothing
+                }
+            })
+        },
+        Pair(Exponea::unregisterSegmentationDataCallback) {
+            Exponea.unregisterSegmentationDataCallback(object : SegmentationDataCallback() {
+                override val exposingCategory = "discovery"
+                override val includeFirstLoad = false
+                override fun onNewData(segments: List<Segment>) {
+                    // nothing
+                }
+            })
+        },
+        Pair(Exponea::getSegments) {
+            Exponea.getSegments("discovery") {
+                // nothing
+            }
         }
     )
 
@@ -311,7 +338,8 @@ internal object PublicApiTestCases {
         Exponea::trackAppInboxOpenedWithoutTrackingConsent,
         Exponea::trackAppInboxClick,
         Exponea::trackAppInboxClickWithoutTrackingConsent,
-        Exponea::markAppInboxAsRead
+        Exponea::markAppInboxAsRead,
+        Exponea::getSegments
     )
 
     val sdkLessMethods = arrayOf(

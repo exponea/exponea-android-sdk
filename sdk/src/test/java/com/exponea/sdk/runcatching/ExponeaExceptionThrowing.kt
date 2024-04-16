@@ -3,6 +3,7 @@ package com.exponea.sdk.runcatching
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
+import com.exponea.sdk.manager.SegmentsManagerImpl
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.services.DefaultAppInboxProvider
 import io.mockk.every
@@ -18,6 +19,7 @@ object ExponeaExceptionThrowing {
         mockkConstructor(DefaultAppInboxProvider::class)
         Exponea.appInboxProvider = DefaultAppInboxProvider()
         mockkObject(NotificationsPermissionReceiver)
+        mockkConstructor(SegmentsManagerImpl::class)
     }
 
     fun makeExponeaThrow() {
@@ -52,5 +54,6 @@ object ExponeaExceptionThrowing {
         every { anyConstructed<BackgroundTimerManagerImpl>().stopTimer() } throws TestPurposeException()
         every { anyConstructed<ExponeaComponent>().inAppContentBlockManager } throws TestPurposeException()
         every { NotificationsPermissionReceiver.requestPushAuthorization(any(), any()) } throws TestPurposeException()
+        every { anyConstructed<ExponeaComponent>().segmentsManager } throws TestPurposeException()
     }
 }

@@ -126,7 +126,7 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
 
     @After
     fun closeDB() {
-        denit()
+        db.clear()
         db.openHelper.close()
     }
 }

@@ -55,6 +55,8 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.Segment
+import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
@@ -74,6 +76,7 @@ import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import com.exponea.sdk.view.InAppMessagePresenter
 import com.exponea.sdk.view.InAppMessageView
+import java.util.concurrent.CopyOnWriteArrayList
 
 @SuppressLint("StaticFieldLeak")
 object Exponea {
@@ -289,6 +292,29 @@ object Exponea {
      * Self-check only runs in debug mode and does not do anything in release builds.
      */
     var checkPushSetup: Boolean = false
+
+    /**
+     * Callback is notified for segmentation data updates.
+     */
+    internal var segmentationDataCallbacks = CopyOnWriteArrayList<SegmentationDataCallback>()
+
+    /**
+     * Registers callback to be notified for segmentation data updates.
+     */
+    fun registerSegmentationDataCallback(callback: SegmentationDataCallback) = runCatching {
+        segmentationDataCallbacks.add(callback)
+        getComponent()?.segmentsManager?.onCallbackAdded(callback)
+        return@runCatching
+    }.logOnException()
+
+    /**
+     * Unregisters callback from to be notified for segmentation data updates.
+     * Removing of already unregistered callback does nothing.
+     */
+    fun unregisterSegmentationDataCallback(callback: SegmentationDataCallback) = runCatching {
+        segmentationDataCallbacks.removeAll { it == callback }
+        return@runCatching
+    }.logOnException()
 
     /**
      * Use this method using a file as configuration. The SDK searches for a file called
@@ -743,6 +769,8 @@ object Exponea {
         startSessionTracking(configuration.automaticSessionTracking)
 
         component.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+
+        component.segmentsManager.onSdkInit()
 
         context.addAppStateCallbacks(
             onOpen = {
@@ -1335,6 +1363,35 @@ object Exponea {
                     error = errorMessage,
                     mode = IGNORE_CONSENT
             )
+        }
+    }.logOnException()
+
+    internal fun getSegmentationDataCallbacks(categoryName: String): List<SegmentationDataCallback> {
+        return segmentationDataCallbacks.filter { it.exposingCategory == categoryName }
+    }
+
+    /**
+     * Retrieves segmentation data for given category once.
+     */
+    fun getSegments(
+        exposingCategory: String,
+        successCallback: ((List<Segment>) -> Unit)
+    ) = runCatching {
+        initGate.waitForInitialize {
+            registerSegmentationDataCallback(object : SegmentationDataCallback() {
+                override val exposingCategory = exposingCategory
+                override val includeFirstLoad = true
+                override fun onNewData(segments: List<Segment>) {
+                    this.unregister()
+                    Logger.i(
+                        this,
+                        "Segments: Manual segmentation fetch for $exposingCategory has been done successfully"
+                    )
+                    runCatching {
+                        successCallback.invoke(segments)
+                    }.logOnException()
+                }
+            })
         }
     }.logOnException()
 }

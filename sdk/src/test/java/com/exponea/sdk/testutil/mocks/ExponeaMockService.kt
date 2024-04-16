@@ -119,4 +119,16 @@ internal class ExponeaMockService(
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
+
+    override fun fetchSegments(exponeaProject: ExponeaProject, engagementCookieId: String): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun linkIdsToCookie(
+        exponeaProject: ExponeaProject,
+        engagementCookieId: String,
+        externalIds: HashMap<String, String?>
+    ): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
 }

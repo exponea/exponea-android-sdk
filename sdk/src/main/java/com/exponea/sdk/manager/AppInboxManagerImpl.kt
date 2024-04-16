@@ -34,7 +34,7 @@ internal class AppInboxManagerImpl(
         }
         message.read = true
         // ensure to message change is stored
-        appInboxCache.setMessages(appInboxCache.getMessages())
+        markCachedMessageAsRead(message.id)
         requireMutualExponeaProject { expoProject ->
             if (expoProject.authorization == null) {
                 Logger.e(this, "AppInbox loading failed. Authorization token is missing")
@@ -66,6 +66,16 @@ internal class AppInboxManagerImpl(
                 }
             )
         }
+    }
+
+    private fun markCachedMessageAsRead(messageId: String) {
+        val messages = appInboxCache.getMessages()
+        messages.forEach { cachedMessage ->
+            if (cachedMessage.id == messageId) {
+                cachedMessage.read = true
+            }
+        }
+        appInboxCache.setMessages(messages)
     }
 
     public override fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) {

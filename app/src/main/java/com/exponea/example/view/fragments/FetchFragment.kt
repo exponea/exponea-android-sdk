@@ -20,6 +20,7 @@ import kotlinx.android.synthetic.main.fragment_fetch.consentsButton
 import kotlinx.android.synthetic.main.fragment_fetch.progressBar
 import kotlinx.android.synthetic.main.fragment_fetch.recommendationsButton
 import kotlinx.android.synthetic.main.fragment_fetch.resultTextView
+import kotlinx.android.synthetic.main.fragment_fetch.segmentationButton
 import kotlinx.android.synthetic.main.fragment_fetch.view.buttonsContainer
 
 class FetchFragment : BaseFragment() {
@@ -65,6 +66,14 @@ class FetchFragment : BaseFragment() {
         consentsButton.setOnClickListener {
             setProgressBarVisible(true)
             Exponea.getConsents({ onFetchSuccess(it) }, { onFetchFailed(it) })
+        }
+        segmentationButton.setOnClickListener {
+            val exposingCategory = "discovery"
+            Exponea.getSegments(exposingCategory) { segments ->
+                runOnUiThread {
+                    resultTextView.text = "Segments for $exposingCategory category:\n$segments"
+                }
+            }
         }
     }
 

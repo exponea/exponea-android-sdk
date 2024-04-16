@@ -99,3 +99,8 @@ dependencies {
     // WorkManager testing
     testImplementation 'androidx.work:work-testing:2.4.0'
 }
+
+// turn logging for unit tests
+tasks.withType(Test) {
+    systemProperty "robolectric.logging", "stdout"
+}

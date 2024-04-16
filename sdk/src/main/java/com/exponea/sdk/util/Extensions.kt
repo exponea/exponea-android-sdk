@@ -306,7 +306,9 @@ internal inline fun ensureOnBackgroundThread(crossinline block: () -> Unit) {
     if (isRunningOnUiThread()) {
         runOnBackgroundThread(block)
     } else {
-        block.invoke()
+        runCatching {
+            block.invoke()
+        }.logOnException()
     }
 }
 

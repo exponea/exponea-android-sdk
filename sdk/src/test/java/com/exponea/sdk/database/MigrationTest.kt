@@ -106,6 +106,7 @@ internal class MigrationTest : ExponeaSDKTest() {
 
     @After
     fun closeDB() {
+        repo.clear()
         (repo as EventRepositoryImpl).close()
     }
 }

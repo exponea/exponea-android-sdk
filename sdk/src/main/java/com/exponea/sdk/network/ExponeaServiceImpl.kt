@@ -100,10 +100,21 @@ internal class ExponeaServiceImpl(
 
     internal fun doPost(
         exponeaProject: ExponeaProject,
-        endPointName: ApiEndPoint.EndPointName,
+        endpointTemplate: ApiEndPoint.EndPointName,
         bodyContent: Any?
     ): Call {
-        val endpoint = ApiEndPoint(endPointName, exponeaProject.projectToken).toString()
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.forName(endpointTemplate).withToken(exponeaProject.projectToken).toString(),
+            bodyContent
+        )
+    }
+
+    internal fun doPost(
+        exponeaProject: ExponeaProject,
+        endpoint: String,
+        bodyContent: Any?
+    ): Call {
         val jsonBody = bodyContent?.let { gson.toJson(it) }
         return networkManager.post(exponeaProject.baseUrl + endpoint, exponeaProject.authorization, jsonBody)
     }
@@ -128,6 +139,38 @@ internal class ExponeaServiceImpl(
         return doPost(
             exponeaProject,
             ApiEndPoint.EndPointName.INAPP_CONTENT_BLOCKS_PERSONAL,
+            reqBody
+        )
+    }
+
+    override fun fetchSegments(
+        exponeaProject: ExponeaProject,
+        engagementCookieId: String
+    ): Call {
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.forName(ApiEndPoint.EndPointName.SEGMENTS)
+                .withToken(exponeaProject.projectToken)
+                .withQueryParam("cookie", engagementCookieId)
+                .toString(),
+            null
+        )
+    }
+
+    override fun linkIdsToCookie(
+        exponeaProject: ExponeaProject,
+        engagementCookieId: String,
+        externalIds: HashMap<String, String?>
+    ): Call {
+        val reqBody = hashMapOf(
+            "external_ids" to externalIds
+        )
+        return doPost(
+            exponeaProject,
+            ApiEndPoint.forName(ApiEndPoint.EndPointName.LINK_CUSTOMER_IDS)
+                .withToken(exponeaProject.projectToken)
+                .withPathParam(ApiEndPoint.COOKIE_ID_PATH_PARAM, engagementCookieId)
+                .toString(),
             reqBody
         )
     }

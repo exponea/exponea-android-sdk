@@ -11,6 +11,7 @@ import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.SegmentationCategories
 
 internal interface FetchManager {
     fun fetchConsents(
@@ -63,4 +64,16 @@ internal interface FetchManager {
         onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
+
+    fun fetchSegments(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        onSuccess: (Result<SegmentationCategories>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
+    )
+
+    fun linkCustomerIdsSync(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds
+    ): Result<out Any?>
 }

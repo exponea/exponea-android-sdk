@@ -5,11 +5,16 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.SegmentTest
+import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -968,6 +973,207 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 contentBlockIds = emptyList(),
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns null data for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns empty data for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(
+                "{\"discovery\":[]}"
+            ))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it() },
+                onFailure = { _ -> it.fail("This should not happen") }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onSuccess when server returns some data for Segments`() {
+        var parsedSegmentations = SegmentationCategories()
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(SegmentTest.segmentationsJson))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { response ->
+                    parsedSegmentations = response.results
+                    it()
+                },
+                onFailure = { response -> it.fail("This should not happen: ${response.results.message}") }
+            )
+        }
+        assertTrue(parsedSegmentations.isNotEmpty())
+        assertEquals(3, parsedSegmentations.size)
+        val discoverySegments = parsedSegmentations["discovery"]
+        assertNotNull(discoverySegments)
+        assertEquals(2, discoverySegments.size)
+        assertEquals("val1", discoverySegments[0]["prop1"])
+        assertEquals("2", discoverySegments[0]["prop2"])
+        assertEquals("true", discoverySegments[0]["prop3"])
+        assertEquals("valA", discoverySegments[1]["prop1"])
+        assertEquals("two", discoverySegments[1]["prop2"])
+        assertEquals("false", discoverySegments[1]["prop3"])
+        val contentSegments = parsedSegmentations["content"]
+        assertNotNull(contentSegments)
+        assertEquals(2, contentSegments.size)
+        assertEquals("val1", contentSegments[0]["cont1"])
+        assertEquals("2", contentSegments[0]["cont2"])
+        assertEquals("true", contentSegments[0]["cont3"])
+        assertEquals("valA", contentSegments[1]["cont1"])
+        assertEquals("two", contentSegments[1]["cont2"])
+        assertEquals("false", contentSegments[1]["cont3"])
+        val merchandisingSegments = parsedSegmentations["merchandising"]
+        assertNotNull(merchandisingSegments)
+        assertEquals(2, merchandisingSegments.size)
+        assertEquals("val1", merchandisingSegments[0]["merch1"])
+        assertEquals("2", merchandisingSegments[0]["merch2"])
+        assertEquals("true", merchandisingSegments[0]["merch3"])
+        assertEquals("valA", merchandisingSegments[1]["merch1"])
+        assertEquals("two", merchandisingSegments[1]["merch2"])
+        assertEquals("false", merchandisingSegments[1]["merch3"])
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns false state for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(false, getResponse(null))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns invalid json for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns raw-empty json for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns null for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure when server returns error for Segments`() {
+        waitForIt {
+            val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
+            val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
+            fetchManagerImpl.fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                CustomerIds(hashMapOf("user" to "test")).apply {
+                    cookie = "mock-cookie"
+                },
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should call onFailure for customerIds without cookie`() {
+        val invalidCustomerIds = CustomerIds().apply {
+            externalIds = hashMapOf("registered" to "test")
+        }
+        waitForIt {
+            FetchManagerImpl(
+                ExponeaMockService(true, getResponse("{success: true, results:[]}")),
+                ExponeaGson.instance
+            ).fetchSegments(
+                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                invalidCustomerIds,
+                onSuccess = { _ -> it.fail("This should not happen") },
+                onFailure = { _ -> it() }
             )
         }
     }

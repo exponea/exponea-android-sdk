@@ -1,6 +1,14 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.13.0
+#### April 16, 2024
+* Features
+  * Segmentation API feature support
+* Bug Fixes
+  * Fixed: Customer Token authorization could be forced to used after anonymization
+
+
 ## Release Notes for 3.12.0
 #### March 28, 2024
 * Features

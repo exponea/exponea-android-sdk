@@ -74,6 +74,7 @@ import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDeleg
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
 
 internal class ExponeaComponent(
@@ -275,7 +276,13 @@ internal class ExponeaComponent(
             exponeaProject.inAppContentBlockPlaceholdersAutoLoad
         exponeaConfiguration.projectRouteMap = projectRouteMap
         ExponeaConfigRepository.set(application, exponeaConfiguration)
-        projectFactory.reset(exponeaConfiguration)
+        runCatching {
+            projectFactory.reset(exponeaConfiguration)
+            // Advanced auth could be invalid while reset.
+            // We cannot throw exception directly, it will be catch-ed anyway without runCatching
+            // but we need to complete anonymization process
+            // Exception will be still re-thrown for `safeModeEnabled` == false
+        }.logOnException()
 
         Exponea.trackInstallEvent()
         if (exponeaConfiguration.automaticSessionTracking) {

@@ -13,22 +13,11 @@ internal open class ExponeaProjectFactory(
     exponeaConfiguration: ExponeaConfiguration
 ) {
 
-    private var configuration: ExponeaConfiguration
+    private lateinit var configuration: ExponeaConfiguration
     private var customAuthProvider: AuthorizationProvider? = null
 
     init {
-        configuration = exponeaConfiguration
-        if (configuration.advancedAuthEnabled) {
-            customAuthProvider = tryLoadAuthorizationProvider(context)
-            if (customAuthProvider == null) {
-                Logger.e(this, "Advanced auth has been enabled but provider has not been found")
-                throw InvalidConfigurationException("""
-                Customer token authorization provider is enabled but cannot be found.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/develop/Documentation/AUTHORIZATION.md
-                """.trimIndent()
-                )
-            }
-        }
+        reset(exponeaConfiguration)
     }
 
     val mainExponeaProject
@@ -66,7 +55,17 @@ internal open class ExponeaProjectFactory(
 
     fun reset(newConfiguration: ExponeaConfiguration) {
         configuration = newConfiguration
-        customAuthProvider = tryLoadAuthorizationProvider(context)
+        if (configuration.advancedAuthEnabled) {
+            customAuthProvider = tryLoadAuthorizationProvider(context)
+            if (customAuthProvider == null) {
+                Logger.e(this, "Advanced auth has been enabled but provider has not been found")
+                throw InvalidConfigurationException("""
+                Customer token authorization provider is enabled but cannot be found.
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/develop/Documentation/AUTHORIZATION.md
+                """.trimIndent()
+                )
+            }
+        }
     }
 
     internal fun tryLoadAuthorizationProvider(context: Context): AuthorizationProvider? {

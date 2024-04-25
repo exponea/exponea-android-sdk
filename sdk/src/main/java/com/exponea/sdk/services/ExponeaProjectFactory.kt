@@ -61,7 +61,7 @@ internal open class ExponeaProjectFactory(
                 Logger.e(this, "Advanced auth has been enabled but provider has not been found")
                 throw InvalidConfigurationException("""
                 Customer token authorization provider is enabled but cannot be found.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/develop/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
                 """.trimIndent()
                 )
             }
@@ -81,7 +81,7 @@ internal open class ExponeaProjectFactory(
             Logger.e(this, "Registered $customProviderClassname class has not been found", e)
             throw InvalidConfigurationException("""
                 Customer token authorization provider is registered but cannot be found.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/develop/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
                 """.trimIndent()
             )
         }
@@ -93,7 +93,7 @@ internal open class ExponeaProjectFactory(
             "${AuthorizationProvider::class.qualifiedName}")
         throw InvalidConfigurationException("""
                 Customer token authorization provider is registered but mismatches implementation requirements.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/develop/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
                 """.trimIndent()
         )
     }

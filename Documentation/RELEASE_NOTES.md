@@ -1,6 +1,12 @@
 ## :arrow_double_up: [SDK version update guide](./../Guides/VERSION_UPDATE.md)
 
 ## Release Notes
+## Release Notes for 3.13.1
+#### April 25, 2024
+* Bug Fixes
+  * Fixed: Segmentation API callback with includeFirstLoad=true wasn't notified for empty (cache) vs empty (fetch) segmentations data
+
+
 ## Release Notes for 3.13.0
 #### April 16, 2024
 * Features

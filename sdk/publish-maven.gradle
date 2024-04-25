@@ -1,6 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply plugin: 'io.codearte.nexus-staging'
+//apply plugin: 'io.codearte.nexus-staging'
 
 ext["signing.keyId"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_KEY_ID')
 ext["signing.password"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_PASSWORD')

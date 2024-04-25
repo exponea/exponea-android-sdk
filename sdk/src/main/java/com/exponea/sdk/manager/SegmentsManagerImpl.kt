@@ -174,8 +174,9 @@ internal class SegmentsManagerImpl(
             segmentations = newData
         )
         val syncResult = synchronizeSegments(newSegmentsData)
-        Logger.i(this, "Segments: Diff detected for segmentations ${syncResult.diffs}")
-        for (categoryDiff in syncResult.diffs) {
+        val extendedSyncResult = enhanceWithWantedCategories(syncResult, forceNotifyCallbacks)
+        Logger.i(this, "Segments: Diff detected for segmentations ${extendedSyncResult.diffs}")
+        for (categoryDiff in extendedSyncResult.diffs) {
             val categoryName = categoryDiff.key
             val newSegmentsForCategory = (newData[categoryName] ?: emptyList()).map {
                 it.deepClone()
@@ -188,6 +189,23 @@ internal class SegmentsManagerImpl(
                 }
             }
         }
+    }
+
+    /**
+     * Original SyncResult as 'source' could miss some segmentation categories. This could occur in case
+     * that both cached and fetched segmentation data are empty or doesn't contain (i.e.) 'discovery' category.
+     * This is OK for SegmentationDataCallback instances with `includeFirstLoad=FALSE` because data has not changed
+     * (are empty before and after synchronization) but instances with `includeFirstLoad=TRUE` has to be notified
+     * according to described behaviour.
+     */
+    private fun enhanceWithWantedCategories(source: SyncResult, newbies: List<SegmentationDataCallback>): SyncResult {
+        val targetMap = source.diffs.toMutableMap()
+        newbies.forEach { newbie ->
+            if (!targetMap.containsKey(newbie.exposingCategory)) {
+                targetMap[newbie.exposingCategory] = Diff.SAME
+            }
+        }
+        return SyncResult(targetMap.toMap())
     }
 
     private fun shouldNotifyCallback(

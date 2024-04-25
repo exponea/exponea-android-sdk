@@ -946,6 +946,64 @@ internal class SegmentsManagerImplTest {
         assertEquals(1, notifCount)
     }
 
+    @Test
+    fun `should notify callback for empty category if includeFirstLoad is true - discovery`() {
+        Exponea.segmentationDataCallbacks.clear()
+        val emptyData = SegmentationCategories()
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = emptyData
+        ))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                emptyData
+            ))
+        }
+        Exponea.reset()
+        val callbackNotified = CountDownLatch(1)
+        val callback = object : SegmentationDataCallback() {
+            override val exposingCategory = "discovery"
+            override val includeFirstLoad = true
+            override fun onNewData(segments: List<Segment>) {
+                assertEquals(0, segments.size)
+                callbackNotified.countDown()
+            }
+        }
+        Exponea.registerSegmentationDataCallback(callback)
+        segmentsManager.onCallbackAdded(callback)
+        assertTrue(callbackNotified.await(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
+    fun `should notify callback for empty category if includeFirstLoad is true - custom_future_category`() {
+        Exponea.segmentationDataCallbacks.clear()
+        val emptyData = SegmentationCategories()
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = emptyData
+        ))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                emptyData
+            ))
+        }
+        Exponea.reset()
+        val callbackNotified = CountDownLatch(1)
+        val callback = object : SegmentationDataCallback() {
+            override val exposingCategory = "custom_future_category"
+            override val includeFirstLoad = true
+            override fun onNewData(segments: List<Segment>) {
+                assertEquals(0, segments.size)
+                callbackNotified.countDown()
+            }
+        }
+        Exponea.registerSegmentationDataCallback(callback)
+        segmentsManager.onCallbackAdded(callback)
+        assertTrue(callbackNotified.await(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500, TimeUnit.MILLISECONDS))
+    }
+
     private fun buildExportedEvent(): ExportedEvent {
         return ExportedEvent(
             id = "1234",

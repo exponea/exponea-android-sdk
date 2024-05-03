@@ -1,39 +1,20 @@
-# Exponea web app push notification configuration
+# Bloomreach Engagement - Firebase Push Notifications setup
 
-  1. Go to your project's Firebase Console and navigate to Project Settings using cog icon
+This document describes how Firebase can be set up in the Bloomreach Engagement web application in order to be used for sending push notifications.
 
-  ![](pics/push1.png)
+The setup requires you to use a private key from a Service Account that you create in Google Cloud and then copy-paste that key into the integration authentication in Bloomreach Engagement.
 
-  2. Open **Cloud Messaging Tab**
+Follow the steps below:
 
-  ![](pics/push2.png)
+1. **Create a service account.** To create a new service account in Google Cloud, go to `Service Accounts`, then choose your project. On the Service Accounts page, select `Create Service Account`. It is possible to use roles to define more granular access.
 
-  3. Locate **Server Key** property, thats your Firebase Cloud Messaging API Key, which you will setup in **Exponea Web app**
+2. **Generate new Private Key**. Locate the FCM service account you created in step 1, then select `Actions` > `Manage Keys`. Select `Add Key` > `Create new key`. Download the JSON key file.
 
-  ![](pics/push3.png)
+3. **Add Firebase Cloud Messaging integration** to your Engagement project. Go to `Data & Assets` > `Integration`. Click on `Add new integration` and select `Firebase Cloud Messaging` for sending push notifications via the push notification node. Please note that if you’d like to send Push Notifications via webhooks, you must select `Firebase Service Account Authentication`.
+![](pics/firebase-1.png)
 
-  5. Go to [Exponea Web App](https://app.exponea.com), login and navigate to `Project Settings`
+4. **Insert the key from step 2** into the Firebase Cloud Messaging integration settings page in Bloomreach Engagement in `Service Account JSON Credentials`. 
+![](pics/firebase-2.png)
 
-  ![](pics/push4.png)
+5. **Set this integration** in `Project Settings` > `Channels` > `Push notifications` > `Firebase Cloud Messaging integration`, so that this integration can be used to send push notifications for Android devices via the push notification node.
 
-  6. Navigate to `Channels->Push notifications`. Locate `Firebase Cloud Messaging integration` section and click `Integration section link`
-
-  ![](pics/push5.png)
-
-  7. Click to `Add new integration`
-
-  ![](pics/push6.png)
-
-  8. Choose `Firebase Cloud Messaging` from options. Feel free to use `Mobile push notification` tag to filter options.
-
-  ![](pics/push7.png)
-
-  9. Locate `API key` input field and pass value you have copied from **Firebase** and click `Save integration`
-
-  ![](pics/push8.png)
-
-  10. Navigate back to `Channels->Push notifications` in project settings. Now you are able to choose an option `Firebase Cloud Messaging` in `Firebase Cloud Messaging integration` section
-
-  ![](pics/push9.png)
-
-  7. Save Changes

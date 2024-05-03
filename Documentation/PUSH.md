@@ -17,6 +17,8 @@ For firebase push notifications to work, you'll need to setup a few things:
 
 We've created a [Firebase quick start guide](../Guides/PUSH_QUICKSTART_FIREBASE.md) that will guide you through these steps.
 
+> Please note that with Google deprecating and removing the FCM legacy API in June 2024, Bloomreach Engagement is now using Firebase HTTP v1 API.
+
 ## Huawei integration
 For huawei push notifications to work, you'll need to setup a few things:
 - register for a Huawei developer account at https://id7.cloud.huawei.com

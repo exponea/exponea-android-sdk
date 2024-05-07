@@ -131,7 +131,7 @@ internal class InAppMessageManagerImplTest {
             projectFactory
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
-        Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
+        Exponea.inAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
     }
 
     @Test
@@ -865,8 +865,10 @@ internal class InAppMessageManagerImplTest {
                 interaction: Boolean,
                 context: Context
             ) {}
+
+            override fun inAppMessageShow(message: InAppMessage) {}
         })
-        Exponea.inAppMessageActionCallback = spykCallback
+        Exponea.inAppMessageCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
@@ -954,8 +956,10 @@ internal class InAppMessageManagerImplTest {
                 interaction: Boolean,
                 context: Context
             ) {}
+
+            override fun inAppMessageShow(message: InAppMessage) {}
         })
-        Exponea.inAppMessageActionCallback = spykCallback
+        Exponea.inAppMessageCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
@@ -1041,8 +1045,12 @@ internal class InAppMessageManagerImplTest {
                 trackingConsentManager.trackInAppMessageClick(message, button?.text, button?.url, CONSIDER_CONSENT)
                 trackingConsentManager.trackInAppMessageClose(message, interaction, CONSIDER_CONSENT)
             }
+
+            override fun inAppMessageShow(message: InAppMessage) {
+                trackingConsentManager.trackInAppMessageShown(message, CONSIDER_CONSENT)
+            }
         })
-        Exponea.inAppMessageActionCallback = spykCallback
+        Exponea.inAppMessageCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()

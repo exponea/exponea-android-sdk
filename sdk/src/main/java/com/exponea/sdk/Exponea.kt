@@ -197,7 +197,7 @@ object Exponea {
      * Whenever a in-app message button is clicked, this callback is called, if set up.
      * Otherwise default button behaviour is handled by the SDK
      */
-    var inAppMessageActionCallback: InAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
+    var inAppMessageCallback: InAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
         set(value) = runCatching {
             field = value
         }.logOnException()

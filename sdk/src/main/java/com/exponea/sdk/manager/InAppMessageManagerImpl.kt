@@ -304,6 +304,9 @@ internal class InAppMessageManagerImpl(
     internal fun show(message: InAppMessage) {
         if (message.variantId == -1 && !message.hasPayload()) {
             Logger.i(this, "[InApp] Only logging in-app message for control group '${message.name}'")
+            runOnMainThread {
+                Exponea.inAppMessageCallback.inAppMessageShow(message)
+            }
             trackShowEvent(message)
             return
         }
@@ -329,7 +332,7 @@ internal class InAppMessageManagerImpl(
                     actionCallback = { activity, button ->
                         Logger.i(this, "In-app message button clicked!")
                         displayStateRepository.setInteracted(message, Date())
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                        if (Exponea.inAppMessageCallback.trackActions) {
                             eventManager.trackInAppMessageClick(
                                 message,
                                 button.buttonText,
@@ -339,23 +342,23 @@ internal class InAppMessageManagerImpl(
                         }
                         val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
                         runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            Exponea.inAppMessageCallback.inAppMessageAction(
                                 message,
                                 buttonInfo,
                                 true,
                                 activity
                             )
                         }
-                        if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+                        if (!Exponea.inAppMessageCallback.overrideDefaultBehavior) {
                             processInAppMessageAction(activity, button)
                         }
                     },
                     dismissedCallback = { activity, userInteraction ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                        if (Exponea.inAppMessageCallback.trackActions) {
                             eventManager.trackInAppMessageClose(message, userInteraction, CONSIDER_CONSENT)
                         }
                         runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            Exponea.inAppMessageCallback.inAppMessageAction(
                                 message,
                                 null,
                                 userInteraction,
@@ -364,7 +367,7 @@ internal class InAppMessageManagerImpl(
                         }
                     },
                     failedCallback = { error ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
+                        if (Exponea.inAppMessageCallback.trackActions) {
                             trackError(message, error)
                         }
                     }
@@ -372,6 +375,9 @@ internal class InAppMessageManagerImpl(
                 runOnBackgroundThread {
                     runCatching {
                         if (presented != null) {
+                            runOnMainThread {
+                                Exponea.inAppMessageCallback.inAppMessageShow(message)
+                            }
                             trackShowEvent(message)
                         }
                     }.logOnException()

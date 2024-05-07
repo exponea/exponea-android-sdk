@@ -18,4 +18,6 @@ interface InAppMessageCallback {
      * On in-app close, the button is null and the interaction is true if user closes message manually.
      */
     fun inAppMessageAction(message: InAppMessage, button: InAppMessageButton?, interaction: Boolean, context: Context)
+
+    fun inAppMessageShow(message: InAppMessage)
 }

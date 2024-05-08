@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -14,7 +15,6 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -205,7 +205,9 @@ internal class ExponeaTrackPushDeliveredTest(
     }
     @Before
     fun before() {
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)

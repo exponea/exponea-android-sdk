@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -14,7 +15,6 @@ import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -28,7 +28,9 @@ import org.robolectric.RobolectricTestRunner
 internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
     @Before
     fun before() {
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         skipInstallEvent()
     }
 

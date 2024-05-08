@@ -1,11 +1,11 @@
 package com.exponea.sdk.runcatching
 
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
-import io.mockk.mockkConstructor
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -37,7 +37,7 @@ internal class ExponeaSafeModeInitTest(
 
     @Test
     fun callInitWithExceptionWithSafeModeEnabled() {
-        mockkConstructor(TelemetryManager::class)
+        mockkConstructorFix(TelemetryManager::class)
         every {
             anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()
@@ -49,7 +49,7 @@ internal class ExponeaSafeModeInitTest(
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
     fun callInitWithExceptionWithSafeModeDisabled() {
-        mockkConstructor(TelemetryManager::class)
+        mockkConstructorFix(TelemetryManager::class)
         every {
             anyConstructed<TelemetryManager>().start()
         } throws ExponeaExceptionThrowing.TestPurposeException()

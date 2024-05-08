@@ -13,7 +13,6 @@ import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
 import io.mockk.every
-import io.mockk.mockkConstructor
 import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -27,11 +26,13 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
 
     @Before
     fun before() {
-        mockkConstructor(FetchManagerImpl::class)
+        mockkConstructorFix(FetchManagerImpl::class) {
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+        }
         every { anyConstructed<FetchManagerImpl>().linkCustomerIdsSync(any(), any()) } answers {
             Result<Any?>(true, null)
         }
-        mockkConstructor(CustomerIdsRepositoryImpl::class)
+        mockkConstructorFix(CustomerIdsRepositoryImpl::class)
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns SegmentTest.getCustomerIds()
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()

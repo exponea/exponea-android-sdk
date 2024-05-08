@@ -17,11 +17,15 @@ internal class InAppMessageSlideInImageView(
     /**
      * Clip the image to a rounded rectangle.
      */
-    override fun onDraw(canvas: Canvas?) {
-        val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
-        val path = Path()
-        path.addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW)
-        canvas?.clipPath(path)
+    override fun onDraw(canvas: Canvas) {
+        canvas.clipPath(getRoundPath())
         super.onDraw(canvas)
+    }
+
+    private fun getRoundPath(): Path {
+        val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+        return Path().apply {
+            addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW)
+        }
     }
 }

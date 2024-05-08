@@ -2,11 +2,11 @@ package com.exponea.sdk.telemetry
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.every
-import io.mockk.mockkConstructor
 import java.io.File
 import java.util.Date
 import kotlin.test.assertEquals
@@ -66,7 +66,7 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
 
     @Test
     fun `should not crash when unable to create storage folder`() {
-        mockkConstructor(FileTelemetryStorage::class) // I'm not able to mock file, I'll mock this method
+        mockkConstructorFix(FileTelemetryStorage::class) // I'm not able to mock file, I'll mock this method
         every { anyConstructed<FileTelemetryStorage>()["getLogsDirectory"]() } returns null
 
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())
@@ -77,7 +77,7 @@ internal class FileTelemetryStorageTest : ExponeaSDKTest() {
 
     @Test
     fun `should not crash when unable to creating storage folder throws`() {
-        mockkConstructor(FileTelemetryStorage::class) // I'm not able to mock file, I'll mock this method
+        mockkConstructorFix(FileTelemetryStorage::class) // I'm not able to mock file, I'll mock this method
         every { anyConstructed<FileTelemetryStorage>()["getLogsDirectory"]() } throws RuntimeException()
 
         val storage = FileTelemetryStorage(ApplicationProvider.getApplicationContext())

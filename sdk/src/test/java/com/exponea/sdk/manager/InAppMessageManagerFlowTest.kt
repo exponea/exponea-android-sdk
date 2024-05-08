@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
@@ -32,7 +33,6 @@ import com.exponea.sdk.util.runOnBackgroundThread
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import java.util.concurrent.CountDownLatch
@@ -102,8 +102,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 Result(true, SegmentationCategories())
             )
         }
-        mockkConstructor(FcmManagerImpl::class)
-        mockkConstructor(TimeLimitedFcmManagerImpl::class)
+        mockkConstructorFix(FcmManagerImpl::class) {
+            every { anyConstructed<FcmManagerImpl>().trackToken(any(), any(), any()) }
+        }
+        mockkConstructorFix(TimeLimitedFcmManagerImpl::class) {
+            every { anyConstructed<TimeLimitedFcmManagerImpl>().trackToken(any(), any(), any()) }
+        }
         every { anyConstructed<FcmManagerImpl>().trackToken(any(), any(), any()) } just Runs
         every { anyConstructed<TimeLimitedFcmManagerImpl>().trackToken(any(), any(), any()) } just Runs
     }
@@ -130,13 +134,15 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Before
     fun prepareInAppMocks() {
-        mockkConstructor(InAppMessageBitmapCacheImpl::class)
-        mockkConstructor(InAppMessagesCacheImpl::class)
+        mockkConstructorFix(InAppMessageBitmapCacheImpl::class) {
+            every { anyConstructed<InAppMessageBitmapCacheImpl>().preload(any(), any()) }
+        }
+        mockkConstructorFix(InAppMessagesCacheImpl::class)
     }
 
     @Before
     fun disableSegmentsManager() {
-        mockkConstructor(SegmentsManagerImpl::class)
+        mockkConstructorFix(SegmentsManagerImpl::class)
         every { anyConstructed<SegmentsManagerImpl>().onEventUploaded(any()) } just Runs
         every { anyConstructed<SegmentsManagerImpl>().onSdkInit() } just Runs
         every { anyConstructed<SegmentsManagerImpl>().onCallbackAdded(any()) } just Runs

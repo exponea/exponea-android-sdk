@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.ACTIONS_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.BASIC_NOTIFICATION
@@ -9,7 +10,6 @@ import com.exponea.sdk.testutil.data.NotificationTestPayloads.NOTIFICATION_WITH_
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.PRODUCTION_NOTIFICATION
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.SILENT_NOTIFICATION
 import io.mockk.every
-import io.mockk.mockkConstructor
 import java.util.Date
 import kotlin.test.assertEquals
 import org.junit.Before
@@ -353,7 +353,7 @@ internal class NotificationPayloadTest(
 
     @Before
     fun setup() {
-        mockkConstructor(Date::class)
+        mockkConstructorFix(Date::class)
         every { anyConstructed<Date>().time } returns 10 * 1000 // mock current time
     }
 

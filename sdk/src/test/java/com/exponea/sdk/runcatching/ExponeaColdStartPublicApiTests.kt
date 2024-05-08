@@ -3,6 +3,7 @@ package com.exponea.sdk.runcatching
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -10,7 +11,6 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import kotlin.reflect.KFunction
 import kotlin.test.assertFalse
@@ -46,7 +46,9 @@ internal class ExponeaColdStartPublicApiTests(
     fun invokePublicMethod_withoutCachedExponeaConfiguration() {
         assertFalse(Exponea.isInitialized,
             "Ensure non-initialized SDK for method ${method.name}")
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         val processTrackSlot = slot<EventType>()
         every {
             anyConstructed<EventManagerImpl>()
@@ -69,7 +71,9 @@ internal class ExponeaColdStartPublicApiTests(
                 baseURL = "https://api.exponea.com"
             )
         )
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         val processTrackSlot = slot<EventType>()
         every {
             anyConstructed<EventManagerImpl>()

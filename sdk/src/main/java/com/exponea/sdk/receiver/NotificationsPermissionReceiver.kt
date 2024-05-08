@@ -65,7 +65,8 @@ class NotificationsPermissionReceiver(
                     }
                     context.registerReceiver(
                         NotificationsPermissionReceiver(listener),
-                        IntentFilter().apply { addAction(ACTION_PERMISSIONS_RESPONSE) }
+                        IntentFilter().apply { addAction(ACTION_PERMISSIONS_RESPONSE) },
+                        Context.RECEIVER_NOT_EXPORTED
                     )
                     context.startActivity(intent)
                 }.logOnException()

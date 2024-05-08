@@ -7,6 +7,7 @@ import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.ReloadMode
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
@@ -14,7 +15,6 @@ import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
@@ -30,28 +30,34 @@ internal open class ExponeaSDKTest {
 
     @Before
     fun disableTelemetry() {
-        mockkConstructor(VSAppCenterTelemetryUpload::class)
+        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
+            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        }
         every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
     }
 
     @Before
     fun disableInAppMessagePrefetch() {
-        mockkConstructor(InAppMessageManagerImpl::class)
+        mockkConstructorFix(InAppMessageManagerImpl::class)
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } returns ReloadMode.STOP
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } just Runs
     }
 
     @Before
     fun disableInAppContentBlocksPrefetch() {
-        mockkConstructor(InAppContentBlocksManagerImpl::class)
+        mockkConstructorFix(InAppContentBlocksManagerImpl::class)
         every { anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders() } just Runs
     }
 
     @Before
     fun mockNetworkManagers() {
-        mockkConstructor(FetchManagerImpl::class)
-        mockkConstructor(ExponeaServiceImpl::class)
-        mockkConstructor(FlushManagerImpl::class)
+        mockkConstructorFix(FetchManagerImpl::class) {
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+        }
+        mockkConstructorFix(ExponeaServiceImpl::class) {
+            every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any(), any()) }
+        }
+        mockkConstructorFix(FlushManagerImpl::class)
     }
 
     @After

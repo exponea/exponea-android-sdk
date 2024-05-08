@@ -9,6 +9,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
@@ -23,7 +24,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
-import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
@@ -207,7 +207,7 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
         every { Exponea.trackClickedPush(any(), any(), any()) } just Runs
-        mockkConstructor(Date::class)
+        mockkConstructorFix(Date::class)
     }
 
     @Test

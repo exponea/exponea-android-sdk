@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaExtras
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_BUTTON
@@ -22,7 +23,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
-import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
@@ -719,7 +719,7 @@ internal class FcmManagerImplNotificationsTest(
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
-        mockkConstructor(Date::class)
+        mockkConstructorFix(Date::class)
     }
 
     @Test

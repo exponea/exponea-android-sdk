@@ -6,6 +6,7 @@ import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
@@ -13,7 +14,7 @@ import com.exponea.sdk.receiver.AppUpdateReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import io.mockk.mockkConstructor
+import io.mockk.every
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.junit.Before
@@ -33,7 +34,9 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         Exponea.flushMode = FlushMode.MANUAL
     }
 

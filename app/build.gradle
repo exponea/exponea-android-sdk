@@ -10,18 +10,18 @@ if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().c
 }
 
 android {
-    compileSdkVersion 33
     defaultConfig {
         applicationId "com.exponea.example"
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
+        compileSdk 34
         versionCode 81
         versionName "3.13.1"
         vectorDrawables.useSupportLibrary = true
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     signingConfigs {
         config {

@@ -7,6 +7,7 @@ import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -24,7 +25,6 @@ import com.exponea.sdk.util.mainThreadDispatcher
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -43,9 +43,13 @@ import org.robolectric.annotation.LooperMode
 internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
     @Before
     fun before() {
-        mockkConstructor(EventManagerImpl::class)
-        mockkConstructor(FetchManagerImpl::class)
-        mockkConstructor(CustomerIdsRepositoryImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
+        mockkConstructorFix(FetchManagerImpl::class) {
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+        }
+        mockkConstructorFix(CustomerIdsRepositoryImpl::class)
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(

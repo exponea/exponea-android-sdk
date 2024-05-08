@@ -35,7 +35,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
         "sdkName":"ExponeaSDK.android",
         "sdkVersion":"1.0.0",
         "osName":"Android",
-        "osVersion":"13",
+        "osVersion":"14",
         "model":"robolectric",
         "locale":"en_US"
     }"""
@@ -158,7 +158,7 @@ internal class VSAppCenterTelemetryUploadTest : ExponeaSDKTest() {
                 )
                 upload.uploadCrashLog(crashLog, callback)
             },
-            """ {"logs":[
+            """{"logs":[
                 {
                     "id":"ca46cb38-3c0f-46fb-91ef-5c5345619af7",
                     "sid":"mock-run-id",

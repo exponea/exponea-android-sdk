@@ -10,13 +10,13 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FlushFinishedCallback
 import com.exponea.sdk.manager.FlushManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.FlushPeriod
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertFalse
@@ -68,7 +68,7 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Test
     fun `worker should flush in periodic mode`() {
-        mockkConstructor(FlushManagerImpl::class)
+        mockkConstructorFix(FlushManagerImpl::class)
         Exponea.flushMode = FlushMode.PERIOD
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
 
@@ -85,7 +85,7 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
 
     @Test
     fun `worker should fail and not flush in manual mode`() {
-        mockkConstructor(FlushManagerImpl::class)
+        mockkConstructorFix(FlushManagerImpl::class)
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
 
@@ -137,7 +137,7 @@ internal class PeriodicFlushTest : ExponeaSDKTest() {
     fun `should run flush periodically`() {
         val testDriver = WorkManagerTestInitHelper.getTestDriver(ApplicationProvider.getApplicationContext())!!
 
-        mockkConstructor(FlushManagerImpl::class)
+        mockkConstructorFix(FlushManagerImpl::class)
         var flushCalls = 0
         val slot = slot<FlushFinishedCallback>()
         every { anyConstructed<FlushManagerImpl>().flushData(capture(slot)) } answers {

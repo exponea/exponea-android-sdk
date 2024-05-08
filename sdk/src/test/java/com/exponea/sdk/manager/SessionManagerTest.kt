@@ -6,6 +6,7 @@ import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepository
@@ -16,7 +17,6 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.verify
 import java.util.Date
@@ -41,7 +41,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         mockkObject(Exponea)
         every { Exponea.sessionTimeout } returns 20.0
 
-        mockkConstructor(Date::class)
+        mockkConstructorFix(Date::class)
         every { anyConstructed<Date>().time } returns 10 * 1000 // mock current time
 
         val context = ApplicationProvider.getApplicationContext<Context>()

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -12,7 +13,6 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -27,7 +27,9 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
     lateinit var configuration: ExponeaConfiguration
     @Before
     fun before() {
-        mockkConstructor(EventManagerImpl::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
         context = ApplicationProvider.getApplicationContext<Context>()
         configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
         Exponea.flushMode = FlushMode.MANUAL

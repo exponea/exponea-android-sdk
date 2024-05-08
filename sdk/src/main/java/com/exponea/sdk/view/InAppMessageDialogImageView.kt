@@ -19,11 +19,13 @@ internal class InAppMessageDialogImageView(
     /**
      * Clip the image to a rounded rectangle.
      */
-    override fun onDraw(canvas: Canvas?) {
-        val path = Path()
-        path.addRoundRect(getRect(), cornerRadius, cornerRadius, Path.Direction.CW)
-        canvas?.clipPath(path)
+    override fun onDraw(canvas: Canvas) {
+        canvas.clipPath(getRoundPath())
         super.onDraw(canvas)
+    }
+
+    private fun getRoundPath(): Path = Path().apply {
+        addRoundRect(getRect(), cornerRadius, cornerRadius, Path.Direction.CW)
     }
 
     private fun getRect(): RectF {

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -15,7 +16,6 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -28,8 +28,10 @@ import org.robolectric.RobolectricTestRunner
 internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     @Before
     fun before() {
-        mockkConstructor(EventManagerImpl::class)
-        mockkConstructor(TelemetryManager::class)
+        mockkConstructorFix(EventManagerImpl::class) {
+            every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
+        }
+        mockkConstructorFix(TelemetryManager::class)
         skipInstallEvent()
     }
 

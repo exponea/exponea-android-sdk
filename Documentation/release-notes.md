@@ -11,6 +11,20 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
 
 ## Release Notes
+## Release Notes for 3.13.1
+#### April 25, 2024
+* Bug Fixes
+    * Fixed: Segmentation API callback with includeFirstLoad=true wasn't notified for empty (cache) vs empty (fetch) segmentations data
+
+
+## Release Notes for 3.13.0
+#### April 16, 2024
+* Features
+    * Segmentation API feature support
+* Bug Fixes
+    * Fixed: Customer Token authorization could be forced to used after anonymization
+
+
 ## Release Notes for 3.12.0
 #### March 28, 2024
 * Features

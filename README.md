@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./Documentation/logo_yellow.png?raw=true" alt="Exponea"/>
+  <img src="./Documentation/images/logo_engagement.png?raw=true" alt="Bloomreach Engagement"/>
 </p>
 
 ### Specs
@@ -8,11 +8,14 @@
 
 ## Exponea Android SDK
 
-This library allows you to interact from your application or game with the Exponea App.
+This library allows you to interact from your application or game with the Bloomreach Engagement.
 
-Exponea empowers B2C marketers to raise conversion rates, improve acquisition ROI, and maximize customer lifetime value.
+Bloomreach Engagement empowers B2C marketers to raise conversion rates, improve acquisition ROI, and maximize customer lifetime value.
 
 It has been written 100% in Kotlin with ❤️
+
+> 
+> Bloomreach Engagement was formerly known as Exponea. For backward compatibility, the Exponea name continues to be used in the iOS SDK.
 
 ## 📦 Installation
 
@@ -44,40 +47,41 @@ Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tr
 
 ### Getting Started
 
-To implement the Exponea SDK you must configure the SDK first:
+Follow the detailed [step by step guide here](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup) to get started.
 
-*  **[Detailed Guides about ExponeaSDK Integrations](./Guides/README.md)**
-    * [SDK version update guide](./Guides/VERSION_UPDATE.md)
-* [Configuration](./Documentation/CONFIG.md)
-* [Project Mapping](./Documentation/PROJECT_MAPPING.md)
+### Documentation
 
-Then you can start using all supported features:
-
-* [Track Events / Customer properties](./Documentation/TRACK.md)
-* [Track Android App Links](./Documentation/APP_LINKS.md)
-* [Push Notification Events](./Documentation/PUSH.md)
-* [Flush](./Documentation/FLUSH.md)
-* [Fetch Data](./Documentation/FETCH.md)
-* [Payments](./Documentation/PAYMENT.md)
-* [Anonymize](./Documentation/ANONYMIZE.md)
-* In-App Personalization
-    * [In-app messages](./Documentation/IN_APP_MESSAGES.md)
-    * [In-app content blocks](./Documentation/IN_APP_CONTENT_BLOCKS.md)
-* [App Inbox](./Documentation/APP_INBOX.md)
-
-If facing any issues, look for **Troubleshooting** section in the respective document.
+- [Initial SDK Setup](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup)
+  - [Configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration)
+  - [Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization)
+  - [Data Flushing](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing)
+- [Tracking](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking)
+  - [Tracking Consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent)
+- [Android App Links](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-links)
+- [Push Notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications)
+  - [Firebase Cloud Messaging](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-firebase)
+  - [Huawei Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-huawei)
+- [Fetch Data](https://documentation.bloomreach.com/engagement/docs/android-sdk-fetch-data)
+- [In-App Personalization](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-personalization)
+  - [In-App Messages](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages)
+  - [In-App Content Blocks](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-content-blocks)
+- [App Inbox](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox)
+- [Segmentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-segmentation)
+- [Example App](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app)
+- [Release Notes](https://documentation.bloomreach.com/engagement/docs/android-sdk-release-notes)
+   - [SDK Version Update Guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update)
 
 ## 🔗 Useful links
 
-* [Exponea App](https://app.exponea.com/login)
+* [Bloomreach Engagement App](https://app.exponea.com/login)
 
 ## 📝 Release Notes
 
-Release notes can be found [here](./Documentation/RELEASE_NOTES.md).
+Release notes can be found [here](https://documentation.bloomreach.com/engagement/docs/android-sdk-release-notes).
 
 ## ⚠️ Version Disclaimer
 
-This SDK supports **API 17+** and **Android 4.2+**. If you wish to interact with Exponea on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
+This SDK supports **API 17+** and **Android 4.2+**. If you wish to interact with Bloomreach Engagement on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
 
 ## Support
 

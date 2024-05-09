@@ -10,6 +10,7 @@ parentDocSlug: android-sdk
 >
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
 
+## Release Notes
 ## Release Notes for 3.12.0
 #### March 28, 2024
 * Features

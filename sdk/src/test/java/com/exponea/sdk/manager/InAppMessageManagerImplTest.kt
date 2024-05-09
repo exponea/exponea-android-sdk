@@ -131,7 +131,7 @@ internal class InAppMessageManagerImplTest {
             projectFactory
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
-        Exponea.inAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
+        Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
     }
 
     @Test
@@ -868,7 +868,7 @@ internal class InAppMessageManagerImplTest {
 
             override fun inAppMessageShow(message: InAppMessage) {}
         })
-        Exponea.inAppMessageCallback = spykCallback
+        Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
@@ -959,7 +959,7 @@ internal class InAppMessageManagerImplTest {
 
             override fun inAppMessageShow(message: InAppMessage) {}
         })
-        Exponea.inAppMessageCallback = spykCallback
+        Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
@@ -1050,7 +1050,7 @@ internal class InAppMessageManagerImplTest {
                 trackingConsentManager.trackInAppMessageShown(message, CONSIDER_CONSENT)
             }
         })
-        Exponea.inAppMessageCallback = spykCallback
+        Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()

@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import androidx.annotation.WorkerThread
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -11,6 +12,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import java.io.IOException
 import okhttp3.Call
 import okhttp3.Response
@@ -44,27 +46,29 @@ internal open class FlushManagerImpl(
             return
         }
 
-        val allEvents = eventRepository.all().sortedBy { it.timestamp }
-        Logger.d(this, "flushEvents: Count ${allEvents.size}")
+        ensureOnBackgroundThread {
+            val allEvents = eventRepository.all().sortedBy { it.timestamp }
+            Logger.d(this, "flushEvents: Count ${allEvents.size}")
 
-        val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
+            val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
 
-        if (firstEvent != null) {
-            Logger.i(this, "Flushing Event: ${firstEvent.id}")
-            trySendingEvent(firstEvent, onFlushFinished)
-        } else {
-            Logger.i(this, "No events left to flush: ${allEvents.size}")
-            for (event in eventRepository.all()) {
-                event.shouldBeSkipped = false
-                eventRepository.update(event)
-            }
-            isRunning = false
-            if (allEvents.isEmpty()) {
-                onFlushFinished?.invoke(Result.success(Unit))
+            if (firstEvent != null) {
+                Logger.i(this, "Flushing Event: ${firstEvent.id}")
+                trySendingEvent(firstEvent, onFlushFinished)
             } else {
-                onFlushFinished?.invoke(
-                    Result.failure(Exception("Failed to upload ${allEvents.size} events."))
-                )
+                Logger.i(this, "No events left to flush: ${allEvents.size}")
+                for (event in eventRepository.all()) {
+                    event.shouldBeSkipped = false
+                    eventRepository.update(event)
+                }
+                isRunning = false
+                if (allEvents.isEmpty()) {
+                    onFlushFinished?.invoke(Result.success(Unit))
+                } else {
+                    onFlushFinished?.invoke(
+                        Result.failure(Exception("Failed to upload ${allEvents.size} events."))
+                    )
+                }
             }
         }
     }
@@ -110,14 +114,16 @@ internal open class FlushManagerImpl(
         onFlushFinished: FlushFinishedCallback?
     ): (Call, IOException) -> Unit {
         return { _, ioException ->
-            Logger.e(
-                this@FlushManagerImpl,
-                "Sending Event Failed ${exportedEvent.id}",
-                ioException
-            )
-            onEventSentFailed(exportedEvent)
-            // Once done continue and try to flush the rest of events
-            flushDataInternal(onFlushFinished)
+            ensureOnBackgroundThread {
+                Logger.e(
+                    this@FlushManagerImpl,
+                    "Sending Event Failed ${exportedEvent.id}",
+                    ioException
+                )
+                onEventSentFailed(exportedEvent)
+                // Once done continue and try to flush the rest of events
+                flushDataInternal(onFlushFinished)
+            }
         }
     }
 
@@ -126,19 +132,21 @@ internal open class FlushManagerImpl(
         onFlushFinished: FlushFinishedCallback?
     ): (Call, Response) -> Unit {
         return { _, response ->
-            val responseCode = response.code
-            Logger.d(this, "Response Code: $responseCode")
-            when (response.code) {
-                in 200..299 -> onEventSentSuccess(exportedEvent)
-                in 500..599 -> {
-                    exportedEvent.shouldBeSkipped = true
-                    eventRepository.update(exportedEvent)
+            ensureOnBackgroundThread {
+                val responseCode = response.code
+                Logger.d(this, "Response Code: $responseCode")
+                when (response.code) {
+                    in 200..299 -> onEventSentSuccess(exportedEvent)
+                    in 500..599 -> {
+                        exportedEvent.shouldBeSkipped = true
+                        eventRepository.update(exportedEvent)
+                    }
+                    else -> onEventSentFailed(exportedEvent)
                 }
-                else -> onEventSentFailed(exportedEvent)
+                // Once done continue and try to flush the rest of events
+                flushDataInternal(onFlushFinished)
+                response.close()
             }
-            // Once done continue and try to flush the rest of events
-            flushDataInternal(onFlushFinished)
-            response.close()
         }
     }
 
@@ -171,6 +179,7 @@ internal open class FlushManagerImpl(
         }
     }
 
+    @WorkerThread
     private fun onEventSentSuccess(exportedEvent: ExportedEvent) {
         Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
         if (exportedEvent.route == Route.TRACK_CUSTOMERS) {
@@ -179,6 +188,7 @@ internal open class FlushManagerImpl(
         eventRepository.remove(exportedEvent.id)
     }
 
+    @WorkerThread
     private fun onEventSentFailed(exportedEvent: ExportedEvent) {
         Logger.d(this, "Event ${exportedEvent.id} failed")
         exportedEvent.tries++

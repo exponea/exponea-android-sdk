@@ -8,6 +8,7 @@ import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -25,22 +26,25 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
      * Hot start with resume session, campaign click start, SDK init after onResume
      */
     @Test
-    fun testBehavior_009() {
+    fun testBehavior_009() = runInSingleThread { idleThreads ->
         ExponeaConfigRepository.set(InstrumentationRegistry.getInstrumentation().context, configuration)
         // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
         firstRun.resume()
+        idleThreads()
         val sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
             it.type == Constants.EventTypes.sessionStart
         }
         firstRun.pause()
         firstRun.destroy()
+        idleThreads()
 
         // second run will handle Campaign Intent, but session will be resumed
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
+        idleThreads()
 
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
@@ -48,6 +52,7 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         secondRun.resume()
+        idleThreads()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {

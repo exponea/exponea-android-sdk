@@ -6,22 +6,30 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
+import com.exponea.sdk.manager.InAppMessageManagerImpl
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import java.util.Random
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
@@ -58,6 +66,11 @@ internal class FlushStressTest : ExponeaSDKTest() {
 
     @Before
     fun init() {
+        mockkConstructorFix(EventRepositoryImpl::class)
+        mockkConstructorFix(InAppMessageManagerImpl::class)
+        every {
+            anyConstructed<InAppMessageManagerImpl>().show(any())
+        } just Runs
         val context = ApplicationProvider.getApplicationContext<Context>()
         properties = PropertiesList(properties = DeviceProperties(context).toHashMap())
         val connectedManager = mockk<ConnectionManager>()
@@ -74,6 +87,11 @@ internal class FlushStressTest : ExponeaSDKTest() {
 
     @Test
     fun testFlushingStressed() {
+        val semaphore = Semaphore(0)
+        every { repo.add(any()) } answers {
+            callOriginal()
+            semaphore.release()
+        }
         val r = Random()
         var insertedCount = 0
         for (i in 0 until stressCount) {
@@ -87,14 +105,21 @@ internal class FlushStressTest : ExponeaSDKTest() {
                 i % 2 == 0 -> Constants.EventTypes.payment
                 else -> Constants.EventTypes.push
             }
+            if (repo.all().size != insertedCount) {
+                assertEquals(repo.all().size, insertedCount)
+            }
             Exponea.trackEvent(
                 eventType = eventType,
                 timestamp = currentTimeSeconds(),
                 properties = properties
             )
+            // wait for event to be inserted
+            assertTrue(semaphore.tryAcquire(2, TimeUnit.SECONDS))
             insertedCount++
             if (r.nextInt(10) == 3) {
-                assertEquals(repo.all().size, insertedCount)
+                if (repo.all().size != insertedCount) {
+                    assertEquals(repo.all().size, insertedCount)
+                }
                 insertedCount = 0
                 waitForIt {
                     manager.flushData { _ ->

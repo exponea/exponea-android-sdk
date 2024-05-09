@@ -22,6 +22,7 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.mainThreadDispatcher
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -281,7 +282,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should add default properties`() {
+    fun `should add default properties`() = runInSingleThread { idleThreads ->
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -291,6 +292,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        idleThreads()
         val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEvent(
@@ -311,7 +313,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should not accumulate default properties`() {
+    fun `should not accumulate default properties`() = runInSingleThread { idleThreads ->
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -322,6 +324,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        idleThreads()
         val firstEvent = addedEvents[0]
         val secondEvent = addedEvents[1]
         assertEquals(
@@ -364,7 +367,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should add default properties to customer properties by default`() {
+    fun `should add default properties to customer properties by default`() = runInSingleThread { idleThreads ->
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -374,6 +377,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        idleThreads()
         val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEvent(
@@ -394,7 +398,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should add default properties to customer properties if allowed`() {
+    fun `should add default properties to customer properties if allowed`() = runInSingleThread { idleThreads ->
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -405,6 +409,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        idleThreads()
         val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEvent(
@@ -425,7 +430,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should NOT add default properties to customer properties if denied`() {
+    fun `should NOT add default properties to customer properties if denied`() = runInSingleThread { idleThreads ->
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -436,6 +441,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_CUSTOMER)
+        idleThreads()
         val firstAddedEvent = addedEvents.first()
         assertEquals(
             ExportedEvent(
@@ -457,63 +463,69 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should add default properties to customer properties if allowed - push token update`() {
-        setup(
-            ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(
-                projectToken = "mock-project-token",
-                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
-                allowDefaultCustomerProperties = true
-            ),
-            FlushMode.MANUAL
-        )
-        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
-        val firstAddedEvent = addedEvents.first()
-        assertEquals(
-            ExportedEvent(
-                id = firstAddedEvent.id,
-                type = "test-event",
-                timestamp = 123.0,
-                exponeaProject = ExponeaProject(
-                    baseUrl = "https://api.exponea.com",
+        runInSingleThread { idleThreads ->
+            setup(
+                ApplicationProvider.getApplicationContext(),
+                ExponeaConfiguration(
                     projectToken = "mock-project-token",
-                    authorization = null),
-                customerIds = hashMapOf("cookie" to "mock-cookie"),
-                properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
-                projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS,
-                sdkEventType = EventType.PUSH_TOKEN.name
-            ), firstAddedEvent
-        )
+                    defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                    allowDefaultCustomerProperties = true
+                ),
+                FlushMode.MANUAL
+            )
+            manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
+            idleThreads()
+            val firstAddedEvent = addedEvents.first()
+            assertEquals(
+                ExportedEvent(
+                    id = firstAddedEvent.id,
+                    type = "test-event",
+                    timestamp = 123.0,
+                    exponeaProject = ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "mock-project-token",
+                        authorization = null),
+                    customerIds = hashMapOf("cookie" to "mock-cookie"),
+                    properties = hashMapOf("prop" to "value", "default-prop1" to "value1", "default-prop2" to "value2"),
+                    projectId = "mock-project-token",
+                    route = Route.TRACK_CUSTOMERS,
+                    sdkEventType = EventType.PUSH_TOKEN.name
+                ), firstAddedEvent
+            )
+        }
     }
 
     @Test
     fun `should NOT add default properties to customer properties if denied - push token update`() {
-        setup(
-            ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(
-                projectToken = "mock-project-token",
-                defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
-                allowDefaultCustomerProperties = false
-            ),
-            FlushMode.MANUAL
-        )
-        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
-        val firstAddedEvent = addedEvents.first()
-        assertEquals(
-            ExportedEvent(
-                id = firstAddedEvent.id,
-                type = "test-event",
-                timestamp = 123.0,
-                exponeaProject = ExponeaProject(
-                    baseUrl = "https://api.exponea.com",
+        runInSingleThread { idleThreads ->
+            setup(
+                ApplicationProvider.getApplicationContext(),
+                ExponeaConfiguration(
                     projectToken = "mock-project-token",
-                    authorization = null),
-                customerIds = hashMapOf("cookie" to "mock-cookie"),
-                properties = hashMapOf("prop" to "value"),
-                projectId = "mock-project-token",
-                route = Route.TRACK_CUSTOMERS,
-                sdkEventType = EventType.PUSH_TOKEN.name
-            ), firstAddedEvent
-        )
+                    defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
+                    allowDefaultCustomerProperties = false
+                ),
+                FlushMode.MANUAL
+            )
+            manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.PUSH_TOKEN)
+            idleThreads()
+            val firstAddedEvent = addedEvents.first()
+            assertEquals(
+                ExportedEvent(
+                    id = firstAddedEvent.id,
+                    type = "test-event",
+                    timestamp = 123.0,
+                    exponeaProject = ExponeaProject(
+                        baseUrl = "https://api.exponea.com",
+                        projectToken = "mock-project-token",
+                        authorization = null),
+                    customerIds = hashMapOf("cookie" to "mock-cookie"),
+                    properties = hashMapOf("prop" to "value"),
+                    projectId = "mock-project-token",
+                    route = Route.TRACK_CUSTOMERS,
+                    sdkEventType = EventType.PUSH_TOKEN.name
+                ), firstAddedEvent
+            )
+        }
     }
 }

@@ -17,6 +17,7 @@ import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.every
 import kotlin.test.assertEquals
@@ -47,7 +48,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should anonymize sdk and switch projects`() {
+    fun `should anonymize sdk and switch projects`() = runInSingleThread { idleThreads ->
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
@@ -73,9 +74,8 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             properties = PropertiesList(hashMapOf("name" to "test")),
             timestamp = currentTimeSeconds()
         )
-
+        idleThreads()
         val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
-
         val events = Exponea.componentForTesting.eventRepository.all()
         events.sortedBy { it.timestamp }
         assertEquals(events.size, 9)
@@ -93,40 +93,41 @@ internal class AnonymizeTest : ExponeaSDKTest() {
 
     @Test
     fun `should not track session start on anonymize when automaticSessionTracking is off`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
-        Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, ExponeaConfiguration(
+        runInSingleThread { idleThreads ->
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(context, ExponeaConfiguration(
                 baseURL = initialProject.baseUrl,
                 projectToken = initialProject.projectToken,
                 authorization = initialProject.authorization,
                 automaticSessionTracking = false)
-        )
-        val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
-        Exponea.trackEvent(
+            )
+            val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+            Exponea.trackEvent(
                 eventType = "test",
                 properties = PropertiesList(hashMapOf("name" to "test")),
                 timestamp = currentTimeSeconds()
-        )
-
-        val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
-        Exponea.anonymize(exponeaProject = newProject)
-        val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
-        Exponea.trackEvent(
+            )
+            val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
+            Exponea.anonymize(exponeaProject = newProject)
+            val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+            Exponea.trackEvent(
                 eventType = "test",
                 properties = PropertiesList(hashMapOf("name" to "test")),
                 timestamp = currentTimeSeconds()
-        )
-
-        val events = Exponea.componentForTesting.eventRepository.all()
-        events.sortedBy { it.timestamp }
-        assertEquals(events.size, 6)
-        checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-        checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
-        checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
-        checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(HUAWEI_PUSH_KEY to " "))
-        checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[5], "test", newProject, newUserId, hashMapOf("name" to "test"))
+            )
+            idleThreads()
+            val events = Exponea.componentForTesting.eventRepository.all()
+            events.sortedBy { it.timestamp }
+            assertEquals(events.size, 6)
+            checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
+            checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
+            checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to " "))
+            checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(HUAWEI_PUSH_KEY to " "))
+            checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
+            checkEvent(events[5], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        }
     }
 
     @Test

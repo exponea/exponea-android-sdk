@@ -11,6 +11,7 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnBackgroundThread
 
 internal open class EventManagerImpl(
     private val configuration: ExponeaConfiguration,
@@ -47,7 +48,9 @@ internal open class EventManagerImpl(
             )
             if (trackingAllowed) {
                 Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
-                eventRepository.add(exportedEvent)
+                ensureOnBackgroundThread {
+                    eventRepository.add(exportedEvent)
+                }
             } else {
                 Logger.d(this, "Event has not been added to Queue: ${exportedEvent.id}" +
                     "because real tracking is not allowed")

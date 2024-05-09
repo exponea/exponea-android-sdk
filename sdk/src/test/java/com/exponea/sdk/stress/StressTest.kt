@@ -14,6 +14,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.currentTimeSeconds
 import java.util.Random
 import kotlin.coroutines.CoroutineContext
@@ -68,7 +69,7 @@ internal class StressTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun testTrackEventStressed() {
+    fun testTrackEventStressed() = runInSingleThread { idleThreads ->
 
         val eventList = mutableListOf<String>()
         for (i in 0 until stressCount) {
@@ -87,6 +88,7 @@ internal class StressTest : ExponeaSDKTest() {
                 properties = properties
             )
         }
+        idleThreads()
 
         val installCount = eventList.filter { it == Constants.EventTypes.installation }.size
         val sessionEndCount = eventList.filter { it == Constants.EventTypes.sessionEnd }.size
@@ -120,7 +122,7 @@ internal class StressTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun testTrackCustomerStressed() {
+    fun testTrackCustomerStressed() = runInSingleThread { idleThreads ->
         // Track event
         for (i in 0 until stressCount) {
             Exponea.identifyCustomer(
@@ -128,6 +130,7 @@ internal class StressTest : ExponeaSDKTest() {
                 properties = PropertiesList(hashMapOf("first_name" to "NewName"))
             )
         }
+        idleThreads()
         assertEquals(stressCount, repo.all().size)
     }
 

@@ -12,6 +12,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
 import com.google.gson.Gson
@@ -122,10 +123,11 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_valid_NoPayload() {
+    fun testHandleIntent_valid_NoPayload() = runInSingleThread { idleThreads ->
         val deepLinkIntent = createDeeplinkIntent()
         deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
+        idleThreads()
         val storedEvents = eventRepository.all()
 
         assertTrue { handled }
@@ -145,10 +147,10 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_checkEventProperties() {
+    fun testHandleIntent_checkEventProperties() = runInSingleThread { idleThreads ->
         val deepLinkIntent = createDeeplinkIntent()
         Exponea.handleCampaignIntent(deepLinkIntent, context)
-
+        idleThreads()
         val storedEvent = eventRepository.all().first()
 
         assertTrue(storedEvent.properties!!.contains("timestamp"))
@@ -193,12 +195,12 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_sessionUpdate() {
+    fun testHandleIntent_sessionUpdate() = runInSingleThread { idleThreads ->
         val deepLinkIntent = createDeeplinkIntent()
         Exponea.handleCampaignIntent(deepLinkIntent, context)
         val campaignEvent = campaignRepository.get()!!
         Exponea.trackSessionStart(currentTimeSeconds())
-
+        idleThreads()
         val storedEvents = eventRepository.all()
         assertEquals(2, storedEvents.size)
 

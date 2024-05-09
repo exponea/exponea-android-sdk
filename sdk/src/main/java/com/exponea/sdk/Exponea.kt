@@ -69,6 +69,7 @@ import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.VersionChecker
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.logOnExceptionWithResult
@@ -753,10 +754,12 @@ object Exponea {
 
         component.eventRepository.tryToMigrateFromPaper()
 
-        telemetry?.reportEvent(
-            com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,
-            hashMapOf("count" to component.eventRepository.count().toString())
-        )
+        ensureOnBackgroundThread {
+            telemetry?.reportEvent(
+                com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,
+                hashMapOf("count" to component.eventRepository.count().toString())
+            )
+        }
 
         initWorkManager(context)
 

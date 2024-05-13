@@ -11,6 +11,15 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
 
 ## Release Notes
+## Release Notes for 3.14.0
+#### May 13, 2024
+* Features
+  * Introducing SDK documentation 2.0
+  * Added support for Android API 34
+* Bug Fixes
+  * Fixed: Track events has been storing in UI thread that violates StrictMode policy
+
+
 ## Release Notes for 3.13.1
 #### April 25, 2024
 * Bug Fixes

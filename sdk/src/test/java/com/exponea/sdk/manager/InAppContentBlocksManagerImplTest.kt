@@ -15,8 +15,8 @@ import com.exponea.sdk.models.InAppContentBlockStatus
 import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.repository.SimpleFileCache
@@ -270,7 +270,7 @@ internal class InAppContentBlocksManagerImplTest {
     }
 
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: BitmapCache
+    private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
     private lateinit var apiService: ExponeaService
     private lateinit var displayStateRepository: InAppContentBlockDisplayStateRepository
@@ -290,10 +290,10 @@ internal class InAppContentBlocksManagerImplTest {
         every { displayStateRepository.setDisplayed(any(), any()) } just Runs
         every { displayStateRepository.setInteracted(any(), any()) } just Runs
         every { displayStateRepository.clear() } just Runs
-        bitmapCache = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
-        every { bitmapCache.clearExcept(any()) } just Runs
+        drawableCache = mockk()
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
@@ -314,7 +314,7 @@ internal class InAppContentBlocksManagerImplTest {
             fetchManager = fetchManager,
             projectFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
-            imageCache = bitmapCache,
+            imageCache = drawableCache,
             htmlCache = htmlCache,
             fontCache = fontCache
         )
@@ -497,7 +497,7 @@ internal class InAppContentBlocksManagerImplTest {
             fetchManager = fetchManager,
             projectFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
-            imageCache = bitmapCache,
+            imageCache = drawableCache,
             htmlCache = htmlCache,
             fontCache = fontCache
         )

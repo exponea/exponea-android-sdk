@@ -12,7 +12,7 @@ import com.exponea.sdk.models.InAppContentBlockType.HTML
 import com.exponea.sdk.models.InAppContentBlockType.NATIVE
 import com.exponea.sdk.models.InAppContentBlockType.NOT_DEFINED
 import com.exponea.sdk.models.InAppContentBlockType.UNKNOWN
-import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.util.HtmlNormalizer
@@ -26,7 +26,7 @@ import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 internal class InAppContentBlockViewController(
     internal val placeholderId: String,
     private val config: InAppContentBlockPlaceholderConfiguration,
-    private val imageCache: BitmapCache,
+    private val imageCache: DrawableCache,
     private val fontCache: SimpleFileCache,
     private val htmlCache: HtmlNormalizedCache,
     private val actionDispatcher: InAppContentBlockActionDispatcher,

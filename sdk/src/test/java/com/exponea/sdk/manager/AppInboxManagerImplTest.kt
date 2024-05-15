@@ -14,8 +14,8 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
@@ -237,18 +237,18 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     private lateinit var appInboxManager: AppInboxManager
     private lateinit var appInboxCache: AppInboxCache
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: BitmapCache
+    private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
     private lateinit var apiService: ExponeaService
 
     @Before
     fun before() {
         fetchManager = mockk()
-        bitmapCache = mockk()
+        drawableCache = mockk()
         customerIdsRepository = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
-        every { bitmapCache.clearExcept(any()) } just Runs
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
         identifyCustomer()
         apiService = ExponeaMockService(true)
         appInboxCache = AppInboxCacheImpl(
@@ -265,7 +265,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         )
         appInboxManager = AppInboxManagerImpl(
             fetchManager = fetchManager,
-            bitmapCache = bitmapCache,
+            drawableCache = drawableCache,
             projectFactory = Exponea.componentForTesting.projectFactory,
             customerIdsRepository = customerIdsRepository,
             appInboxCache = appInboxCache

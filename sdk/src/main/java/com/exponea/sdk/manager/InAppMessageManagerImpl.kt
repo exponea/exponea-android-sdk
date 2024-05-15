@@ -20,8 +20,8 @@ import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
 import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
@@ -51,7 +51,7 @@ internal class InAppMessageManagerImpl(
     private val inAppMessagesCache: InAppMessagesCache,
     private val fetchManager: FetchManager,
     private val displayStateRepository: InAppMessageDisplayStateRepository,
-    private val bitmapCache: BitmapCache,
+    private val drawableCache: DrawableCache,
     private val fontCache: SimpleFileCache,
     private val presenter: InAppMessagePresenter,
     private val eventManager: TrackingConsentManager,
@@ -109,7 +109,7 @@ internal class InAppMessageManagerImpl(
             onSuccess = { result ->
                 if (areCustomerIdsActual(customerIds)) {
                     inAppMessagesCache.set(result.results)
-                    bitmapCache.clearExcept(loadImageUrls(result.results))
+                    drawableCache.clearExcept(loadImageUrls(result.results))
                     Logger.d(this, "[InApp] In-app messages preloaded successfully")
                     preloadFinished()
                     callback?.invoke(Result.success(Unit))
@@ -210,7 +210,7 @@ internal class InAppMessageManagerImpl(
     private fun loadImageUrls(message: InAppMessage): List<String> {
         val imageURLs = ArrayList<String>()
         if (message.messageType == InAppMessageType.FREEFORM) {
-            imageURLs.addAll(HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml!!).collectImages())
+            imageURLs.addAll(HtmlNormalizer(drawableCache, fontCache, message.payloadHtml!!).collectImages())
         } else if (!message.payload?.imageUrl.isNullOrEmpty()) {
             imageURLs.add(message.payload!!.imageUrl!!)
         }
@@ -334,7 +334,7 @@ internal class InAppMessageManagerImpl(
         Logger.i(this, "[InApp] Attempting to show in-app message '${message.name}'")
         val htmlPayload: HtmlNormalizer.NormalizedResult?
         if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
-            htmlPayload = HtmlNormalizer(bitmapCache, fontCache, message.payloadHtml).normalize()
+            htmlPayload = HtmlNormalizer(drawableCache, fontCache, message.payloadHtml).normalize()
         } else {
             htmlPayload = null
         }
@@ -527,7 +527,7 @@ internal class InAppMessageManagerImpl(
             val otherImageUrls = loadImageUrls(
                 inAppMessagesCache.get().filter { it.id != message?.second?.id }
             )
-            bitmapCache.preload(otherImageUrls, callback = {
+            drawableCache.preload(otherImageUrls, callback = {
                 Logger.d(this, "[InApp] Rest of images has been cached: $it")
             })
         }
@@ -535,7 +535,7 @@ internal class InAppMessageManagerImpl(
 
     internal fun preloadAndShow(message: InAppMessage, origin: InAppMessageShowRequest) {
         val imageUrls = loadImageUrls(message)
-        bitmapCache.preload(imageUrls, callback = { imagesLoaded ->
+        drawableCache.preload(imageUrls, callback = { imagesLoaded ->
             val customerIdsAfterLoad = customerIdsRepository.get().toHashMap()
             if (customerIdsAfterLoad != origin.customerIds) {
                 "Another customer login while image load".let {

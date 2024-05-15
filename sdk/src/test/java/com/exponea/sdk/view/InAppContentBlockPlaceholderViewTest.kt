@@ -1,11 +1,9 @@
 package com.exponea.sdk.view
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.os.Looper.getMainLooper
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.R
 import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
@@ -23,12 +21,13 @@ import com.exponea.sdk.models.InAppContentBlockFrequency
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.mainThreadDispatcher
@@ -57,7 +56,7 @@ import org.robolectric.annotation.LooperMode
 internal class InAppContentBlockPlaceholderViewTest {
 
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: BitmapCache
+    private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
     private lateinit var apiService: ExponeaService
     private lateinit var displayStateRepository: InAppContentBlockDisplayStateRepository
@@ -72,12 +71,11 @@ internal class InAppContentBlockPlaceholderViewTest {
         fetchManager = mockk()
         customerIdsRepository = mockk()
         displayStateRepository = InAppContentBlockDisplayStateMock()
-        bitmapCache = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
-        every { bitmapCache.clearExcept(any()) } just Runs
-        every { bitmapCache.get(any()) } returns
-            BitmapFactory.decodeResource(context.resources, R.drawable.message_inbox_button)
+        drawableCache = mockk()
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
+        every { drawableCache.getFile(any()) } returns MockFile()
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
@@ -98,7 +96,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             fetchManager = fetchManager,
             projectFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
-            imageCache = bitmapCache,
+            imageCache = drawableCache,
             htmlCache = htmlCache,
             fontCache = fontCache
         )

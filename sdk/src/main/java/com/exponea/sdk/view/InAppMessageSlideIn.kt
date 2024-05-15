@@ -2,7 +2,6 @@ package com.exponea.sdk.view
 
 import android.animation.Animator
 import android.app.Activity
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.text.TextUtils
 import android.util.TypedValue
@@ -23,6 +22,7 @@ import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.MessagePosition
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
 
@@ -35,7 +35,8 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
     private var onDismiss: ((Boolean) -> Unit)?
-    private val bitmap: Bitmap
+    private var onError: (String) -> Unit
+    private val imageCache: DrawableCache
     private var userInteraction = false
 
     override val isPresented: Boolean
@@ -44,15 +45,17 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     constructor(
         activity: Activity,
         payload: InAppMessagePayload,
-        image: Bitmap,
+        image: DrawableCache,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: (Boolean) -> Unit
+        onDismiss: (Boolean) -> Unit,
+        onError: (String) -> Unit
     ) : super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) {
         this.activity = activity
         this.payload = payload
-        this.bitmap = image
+        this.imageCache = image
         this.onButtonClick = onButtonClick
         this.onDismiss = onDismiss
+        this.onError = onError
 
         val inflater = LayoutInflater.from(activity)
         contentView = inflater.inflate(R.layout.in_app_message_slide_in, null, false)
@@ -131,7 +134,15 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     private fun setupImage() {
         val imageViewImage = contentView.findViewById<ImageView>(R.id.imageViewImage)
-        imageViewImage.setImageBitmap(bitmap)
+        imageCache.showImage(
+            payload.imageUrl,
+            imageViewImage,
+            onImageNotLoaded = {
+                onError("Image '${payload.imageUrl}' not loaded successfully")
+                onDismiss = null // clear the dismiss listener, we called the button listener
+                dismiss()
+            }
+        )
     }
 
     private fun setupTitleText() {

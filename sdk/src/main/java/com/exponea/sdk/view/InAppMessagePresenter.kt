@@ -4,12 +4,11 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
-import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
@@ -18,7 +17,7 @@ import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessagePresenter(
     internal val context: Context,
-    private var bitmapCache: BitmapCache
+    private var drawableCache: DrawableCache
 ) {
     class PresentedMessage(
         val messageType: InAppMessageType,
@@ -70,32 +69,34 @@ internal class InAppMessagePresenter(
         actionCallback: (InAppMessagePayloadButton) -> Unit,
         dismissedCallback: (Boolean) -> Unit,
         errorCallback: (String) -> Unit
-    ): InAppMessageView? {
+    ): InAppMessageView {
         var messageTimeout = timeout
         val view = when (messageType) {
             InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
-                    activity,
-                    messageType == InAppMessageType.FULLSCREEN,
-                    payload!!,
-                    loadImageByPayload(payload) ?: return null,
-                    actionCallback,
-                    dismissedCallback
+                activity,
+                messageType == InAppMessageType.FULLSCREEN,
+                payload!!,
+                drawableCache,
+                actionCallback,
+                dismissedCallback,
+                errorCallback
             )
             InAppMessageType.ALERT -> InAppMessageAlert(
-                    activity,
-                    payload!!,
-                    actionCallback,
-                    dismissedCallback
+                activity,
+                payload!!,
+                actionCallback,
+                dismissedCallback
             )
             InAppMessageType.SLIDE_IN -> {
                 // slide-in message has 4 second auto-dismiss default
                 if (timeout == null) messageTimeout = 4000
                 InAppMessageSlideIn(
-                        activity,
-                        payload!!,
-                        loadImageByPayload(payload) ?: return null,
-                        actionCallback,
-                        dismissedCallback
+                    activity,
+                    payload!!,
+                    drawableCache,
+                    actionCallback,
+                    dismissedCallback,
+                    errorCallback
                 )
             }
             InAppMessageType.FREEFORM -> InAppMessageWebview(
@@ -117,10 +118,6 @@ internal class InAppMessagePresenter(
             }
         }
         return view
-    }
-
-    private fun loadImageByPayload(payload: InAppMessagePayload): Bitmap? {
-        return payload.imageUrl?.let { bitmapCache.get(it) }
     }
 
     fun show(

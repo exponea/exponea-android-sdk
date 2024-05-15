@@ -2,7 +2,6 @@ package com.exponea.sdk.view
 
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -20,6 +19,7 @@ import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.TextPosition
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.setBackgroundColor
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction1
 import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction2
@@ -37,7 +37,8 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
     private var onDismiss: ((Boolean) -> Unit)?
-    private val bitmap: Bitmap
+    private var onError: (String) -> Unit
+    private val imageCache: DrawableCache
 
     override val isPresented: Boolean
         get() = isShowing
@@ -46,15 +47,17 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         context: Context,
         fullScreen: Boolean,
         payload: InAppMessagePayload,
-        image: Bitmap,
+        image: DrawableCache,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: (Boolean) -> Unit
+        onDismiss: (Boolean) -> Unit,
+        onError: (String) -> Unit
     ) : super(context) {
         this.fullScreen = fullScreen
         this.payload = payload
-        this.bitmap = image
+        this.imageCache = image
         this.onButtonClick = onButtonClick
         this.onDismiss = onDismiss
+        this.onError = onError
         val inflater = LayoutInflater.from(context)
         setContentView(inflater.inflate(R.layout.in_app_message_dialog, null, false))
     }
@@ -164,7 +167,15 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private fun setupImage() {
         imageViewImage.isOnTop = payload.textPosition == TextPosition.BOTTOM
         imageViewImage.textOverImage = payload.isTextOverImage == true
-        imageViewImage.setImageBitmap(bitmap)
+        imageCache.showImage(
+            payload.imageUrl,
+            imageViewImage,
+            onImageNotLoaded = {
+                onError("Image '${payload.imageUrl}' not loaded successfully")
+                onDismiss = null // clear the dismiss listener, we called the button listener
+                dismiss()
+            }
+        )
     }
 
     private fun setupTitleText() {

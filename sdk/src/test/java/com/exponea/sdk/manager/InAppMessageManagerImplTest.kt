@@ -3,7 +3,6 @@ package com.exponea.sdk.manager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
@@ -28,14 +27,15 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.models.eventfilter.EventPropertyFilter
 import com.exponea.sdk.models.eventfilter.StringConstraint
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.currentTimeSeconds
@@ -76,7 +76,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     private lateinit var messagesCache: InAppMessagesCache
-    private lateinit var bitmapCache: BitmapCache
+    private lateinit var drawableCache: DrawableCache
     private lateinit var fontCache: SimpleFileCache
     private lateinit var presenter: InAppMessagePresenter
     private lateinit var manager: InAppMessageManagerImpl
@@ -95,12 +95,12 @@ internal class InAppMessageManagerImplTest {
         }
         every { messagesCache.getTimestamp() } returns messageCacheTimestamp
         every { messagesCache.get() } returns arrayListOf()
-        bitmapCache = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } answers {
+        drawableCache = mockk()
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } answers {
             lastArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
-        every { bitmapCache.clearExcept(any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
@@ -127,7 +127,7 @@ internal class InAppMessageManagerImplTest {
             messagesCache,
             fetchManager,
             inAppMessageDisplayStateRepository,
-            bitmapCache,
+            drawableCache,
             fontCache,
             presenter,
             trackingConsentManager,
@@ -158,7 +158,7 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(InAppMessageTest.getInAppMessage()))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers {
+        every { drawableCache.preload(any(), any()) } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
 
@@ -371,7 +371,7 @@ internal class InAppMessageManagerImplTest {
             InAppMessageTest.getInAppMessage(),
             InAppMessageTest.getInAppMessage()
         )
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         assertEquals(
             InAppMessageTest.getInAppMessage(),
             manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull()
@@ -392,7 +392,7 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should apply date filter`() {
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         val setupStoredEvent = { dateFilter: DateFilter ->
             every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(dateFilter = dateFilter))
         }
@@ -426,7 +426,7 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should apply event filter`() {
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         val setupStoredEvent = { trigger: EventFilter ->
             every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(trigger = trigger))
         }
@@ -455,7 +455,7 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should filter by priority`() {
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(id = "1"),
             InAppMessageTest.getInAppMessage(id = "2"),
@@ -500,7 +500,7 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ALWAYS.value)
         )
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
 
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -511,7 +511,7 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
         )
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
         assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -522,7 +522,7 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
         )
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1000), null)
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -538,7 +538,7 @@ internal class InAppMessageManagerImplTest {
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
         )
-        every { bitmapCache.has(any()) } returns true
+        every { drawableCache.has(any()) } returns true
         manager.sessionStarted(Date(1000))
         every { inAppMessageDisplayStateRepository.get(any()) } returns InAppMessageDisplayState(Date(1500), null)
         assertNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -551,8 +551,8 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -589,8 +589,8 @@ internal class InAppMessageManagerImplTest {
     fun `should track dialog lifecycle`() {
         val inAppMessage = InAppMessageTest.getInAppMessage()
         every { messagesCache.get() } returns arrayListOf(inAppMessage)
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
                 .invoke(Result(true, arrayListOf(inAppMessage)))
@@ -638,8 +638,8 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -722,10 +722,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage, otherMessage1, otherMessage2)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
         manager.inAppShowingTriggered(
             EventType.SESSION_END,
@@ -740,15 +740,15 @@ internal class InAppMessageManagerImplTest {
         verifySequence {
             presenter.isPresenting()
             messagesCache.get()
-            bitmapCache.preload(arrayListOf("pending_image_url"), any())
+            drawableCache.preload(arrayListOf("pending_image_url"), any())
             presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any(), any())
             presenter.context
             messagesCache.get()
-            bitmapCache.preload(arrayListOf(), any())
+            drawableCache.preload(arrayListOf(), any())
             messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
-            bitmapCache.clearExcept(arrayListOf("pending_image_url", "other_image_url_1", "other_image_url_2"))
+            drawableCache.clearExcept(arrayListOf("pending_image_url", "other_image_url_1", "other_image_url_2"))
         }
-        confirmVerified(messagesCache, bitmapCache, presenter)
+        confirmVerified(messagesCache, drawableCache, presenter)
         resetThreadsBehaviour()
     }
 
@@ -758,8 +758,8 @@ internal class InAppMessageManagerImplTest {
         val customerIds = customerIdsRepository.get().toHashMap()
         val message = InAppMessageTest.getInAppMessage(delay = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -792,8 +792,8 @@ internal class InAppMessageManagerImplTest {
         val customerIds = customerIdsRepository.get().toHashMap()
         val message = InAppMessageTest.getInAppMessage(timeout = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -853,8 +853,8 @@ internal class InAppMessageManagerImplTest {
             timeout = 1234
         )
         every { messagesCache.get() } returns arrayListOf(message)
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -882,8 +882,8 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -972,8 +972,8 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -1057,8 +1057,8 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -1240,10 +1240,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage, otherMessage1, otherMessage2)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
         // simulate loading, to invoke STOP ReloadMode
         manager.preloadStarted()
@@ -1273,10 +1273,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf())
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf()
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
         for (i in 0..10) {
             manager.registerPendingShowRequest(
@@ -1306,10 +1306,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
 
         val latestEventTimestamp = currentTimeSeconds()
         for (i in 0..10) {
@@ -1340,10 +1340,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         registerPendingRequest(activeEventType)
         every { presenter.isPresenting() } returns true
         val pickedMessage = manager.pickPendingMessage()
@@ -1364,10 +1364,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         val customerIds = hashMapOf<String, String?>(
             "cookie" to "123456",
             "registed" to "john@doe.com"
@@ -1392,10 +1392,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         registerPendingRequest(activeEventType)
         every { presenter.isPresenting() } returns false
         val pickedMessage = manager.pickPendingMessage()
@@ -1424,10 +1424,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessageTopPrio, pendingMessageSecond))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessageTopPrio, pendingMessageSecond)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         registerPendingRequest(activeEventType)
         every { presenter.isPresenting() } returns false
         val pickedMessage = manager.pickPendingMessage()
@@ -1457,10 +1457,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage1, pendingMessage2))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage1, pendingMessage2)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         registerPendingRequest(activeEventType)
         every { presenter.isPresenting() } returns false
         val pickedMessage = manager.pickPendingMessage()
@@ -1489,10 +1489,10 @@ internal class InAppMessageManagerImplTest {
                 Result(true, arrayListOf(pendingMessage1, pendingMessage2))
             )
         }
-        every { bitmapCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
         every { messagesCache.get() } returns arrayListOf(pendingMessage1, pendingMessage2)
-        every { bitmapCache.get(any()) } returns BitmapFactory.decodeFile("mock-file")
-        every { bitmapCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.has(any()) } answers { firstArg<String>() == "pending_image_url" }
         registerPendingRequest(activeEventType)
         every { presenter.isPresenting() } returns false
         val pickedMessage = manager.pickPendingMessage()

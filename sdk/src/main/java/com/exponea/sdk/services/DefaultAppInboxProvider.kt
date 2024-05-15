@@ -36,7 +36,6 @@ import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
-import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.AppInboxDetailFragment
 import com.exponea.sdk.view.AppInboxDetailView
 import com.exponea.sdk.view.AppInboxListActivity
@@ -78,7 +77,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         if (bitmapCache == null) {
             throw Exception("Exponea SDK was not initialized properly!")
         }
-        val appInboxAdapter = AppInboxAdapter(bitmapCache = bitmapCache, onItemClicked = onItemClickedProxy)
+        val appInboxAdapter = AppInboxAdapter(drawableCache = bitmapCache, onItemClicked = onItemClickedProxy)
         listView.listView.adapter = appInboxAdapter
         showLoading(listView)
         Exponea.fetchAppInbox { data ->
@@ -247,25 +246,15 @@ open class DefaultAppInboxProvider : AppInboxProvider {
     private fun showPushMessageDetail(source: MessageItem, target: AppInboxDetailView) {
         val dataSource = source.content
         val bitmapCache = Exponea.getComponent()?.inAppMessagesBitmapCache
-        if (bitmapCache == null) {
-            throw Exception("Exponea SDK was not initialized properly!")
-        }
+            ?: throw Exception("Exponea SDK was not initialized properly!")
         target.pushContainer.visibility = VISIBLE
-        val imageUrl = dataSource?.imageUrl
-        if (imageUrl != null) {
-            bitmapCache.preload(listOf(imageUrl)) { loaded ->
-                if (loaded) {
-                    val bitmapToShow = bitmapCache.get(imageUrl)
-                    runOnMainThread {
-                        target.imageView.setImageBitmap(bitmapToShow)
-                    }
-                } else {
-                    target.imageView.setImageResource(R.drawable.app_inbox_placeholder_gray)
-                }
+        bitmapCache.showImage(
+            url = dataSource?.imageUrl,
+            target = target.imageView,
+            onImageNotLoaded = {
+                target.imageView.setImageResource(R.drawable.app_inbox_placeholder_gray)
             }
-        } else {
-            target.imageView.setImageResource(R.drawable.app_inbox_placeholder_gray)
-        }
+        )
         val receivedMillis: Long = source.receivedTime?.times(1000)?.toLong() ?: System.currentTimeMillis()
         target.receivedTimeView.text = DateUtils.getRelativeTimeSpanString(
             receivedMillis,

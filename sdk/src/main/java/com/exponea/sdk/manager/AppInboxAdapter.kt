@@ -8,14 +8,13 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R.layout
 import com.exponea.sdk.models.MessageItem
-import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.MessageItemViewHolder
-import com.exponea.sdk.util.runOnMainThread
 
 internal class AppInboxAdapter(
     private val items: MutableList<MessageItem> = mutableListOf<MessageItem>(),
-    private val bitmapCache: BitmapCache,
+    private val drawableCache: DrawableCache,
     private val onItemClicked: (MessageItem, Int) -> Unit
 ) : Adapter<MessageItemViewHolder>() {
 
@@ -36,22 +35,13 @@ internal class AppInboxAdapter(
         )
         target.title.text = contentSource?.title ?: ""
         target.content.text = contentSource?.message ?: ""
-        if (contentSource?.imageUrl.isNullOrBlank()) {
-            target.image.visibility = View.GONE
-        } else {
-            target.image.visibility = View.VISIBLE
-            contentSource?.imageUrl?.let { imageUrl ->
-                bitmapCache.preload(listOf(imageUrl), { preloaded ->
-                    runOnMainThread {
-                        if (preloaded) {
-                            target.image.setImageBitmap(bitmapCache.get(imageUrl))
-                        } else {
-                            target.image.visibility = View.GONE
-                        }
-                    }
-                })
+        drawableCache.showImage(
+            contentSource?.imageUrl,
+            target.image,
+            onImageNotLoaded = {
+                it.visibility = View.GONE
             }
-        }
+        )
         target.itemContainer.setOnClickListener(View.OnClickListener {
             trackItemClicked(source)
             onItemClicked.invoke(source, position)

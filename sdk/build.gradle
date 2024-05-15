@@ -81,6 +81,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp-brotli:4.9.1'
     // Html handling for in-app freeform messages
     implementation 'org.jsoup:jsoup:1.15.4'
+    // Images handling
+    implementation 'io.coil-kt:coil:1.4.0'
+    implementation 'io.coil-kt:coil-gif:1.4.0'
 
     // Base Test
     testImplementation 'junit:junit:4.12'

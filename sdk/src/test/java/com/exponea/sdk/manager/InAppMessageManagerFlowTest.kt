@@ -1,6 +1,5 @@
 package com.exponea.sdk.manager
 
-import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.mockkConstructorFix
@@ -27,6 +26,7 @@ import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.mainThreadDispatcher
@@ -361,7 +361,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(false)
         }
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().get(any()) } returns null
+        every { anyConstructed<InAppMessageBitmapCacheImpl>().getFile(any()) } returns null
         every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) } returns false
     }
 
@@ -377,8 +377,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().get(any())
-        } returns BitmapFactory.decodeFile("mock-file")
+            anyConstructed<InAppMessageBitmapCacheImpl>().getFile(any())
+        } returns MockFile()
         every {
             anyConstructed<InAppMessageBitmapCacheImpl>().has(any())
         } answers {

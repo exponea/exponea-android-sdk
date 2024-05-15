@@ -11,8 +11,8 @@ import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockStatus.OK
 import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.InAppContentBlockType.NOT_DEFINED
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.repository.SimpleFileCache
@@ -38,7 +38,7 @@ internal class InAppContentBlocksManagerImpl(
     private val fetchManager: FetchManager,
     private val projectFactory: ExponeaProjectFactory,
     private val customerIdsRepository: CustomerIdsRepository,
-    private val imageCache: BitmapCache,
+    private val imageCache: DrawableCache,
     private val htmlCache: HtmlNormalizedCache,
     private val fontCache: SimpleFileCache
 ) : InAppContentBlockManager, InAppContentBlockActionDispatcher, InAppContentBlockDataLoader {

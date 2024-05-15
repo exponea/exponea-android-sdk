@@ -34,7 +34,7 @@ internal class HtmlNormalizedCacheImpl(
             return null
         }
         val cachedHtmlFile = fileCache.getFile(fileName)
-        if (!cachedHtmlFile.exists()) {
+        if (cachedHtmlFile == null) {
             Logger.w(this, "HTML cache file missing, removing it")
             remove(key)
             return null
@@ -71,7 +71,7 @@ internal class HtmlNormalizedCacheImpl(
             val cachedResult = ExponeaGson.instance.toJson(normalizedResult)
             val file = createTempFile()
             file.writeText(cachedResult)
-            file.renameTo(fileCache.getFile(fileName))
+            file.renameTo(fileCache.retrieveFileDirectly(fileName))
         } catch (e: Exception) {
             Logger.e(this, "Hash for HTML cannot be stored", e)
             return
@@ -90,7 +90,7 @@ internal class HtmlNormalizedCacheImpl(
         val fileName = preferences.getString(fileKey, "")
         if (fileName.isNotEmpty()) {
             try {
-                fileCache.getFile(fileName).delete()
+                fileCache.getFile(fileName)?.delete()
             } catch (e: Exception) {
                 Logger.e(this, "HTML cache file cannot be removed", e)
             }

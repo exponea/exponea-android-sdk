@@ -126,7 +126,9 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
         return File(directory, getFileName(url)).exists()
     }
 
-    fun getFile(url: String): File {
-        return File(directory, getFileName(url))
+    fun getFile(url: String): File? {
+        return retrieveFileDirectly(url).takeIf { it.exists() }
     }
+
+    internal fun retrieveFileDirectly(url: String) = File(directory, getFileName(url))
 }

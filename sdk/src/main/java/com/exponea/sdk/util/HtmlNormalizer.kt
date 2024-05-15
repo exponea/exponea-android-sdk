@@ -1,14 +1,12 @@
 package com.exponea.sdk.util
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Base64
 import androidx.annotation.WorkerThread
-import com.exponea.sdk.repository.BitmapCache
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
 import com.exponea.sdk.repository.SimpleFileCache
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Collections
 import java.util.UUID
@@ -16,7 +14,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.text.RegexOption.DOT_MATCHES_ALL
 import kotlin.text.RegexOption.IGNORE_CASE
-import okhttp3.internal.closeQuietly
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
@@ -32,13 +29,13 @@ import org.jsoup.nodes.Document
  */
 public class HtmlNormalizer {
 
-    private val imageCache: BitmapCache
+    private val imageCache: DrawableCache
     private val fontCache: SimpleFileCache
     private val originalHtml: String
     private val document: Document?
 
     internal constructor(
-        imageCache: BitmapCache,
+        imageCache: DrawableCache,
         fontCache: SimpleFileCache,
         originalHtml: String
     ) {
@@ -419,7 +416,7 @@ public class HtmlNormalizer {
             try {
                 image.attr("src", asBase64Image(imageSource))
             } catch (e: Exception) {
-                Logger.w(this, "[HTML] Image url $imageSource has not been preloaded")
+                Logger.w(this, "[HTML] Image url $imageSource has not been preloaded: ${e.localizedMessage}")
                 throw e
             }
         }
@@ -430,10 +427,7 @@ public class HtmlNormalizer {
             return imageSource
         }
         val imageData = getImageFromUrl(imageSource)
-        val os = ByteArrayOutputStream()
-        imageData!!.compress(Bitmap.CompressFormat.PNG, 100, os)
-        val result = Base64.encodeToString(os.toByteArray(), Base64.NO_WRAP)
-        os.closeQuietly()
+        val result = Base64.encodeToString(imageData.readBytes(), Base64.NO_WRAP)
         // image type is not needed to be checked from source, WebView will fix it anyway...
         return "data:$IMAGE_MIMETYPE;base64,$result"
     }
@@ -442,15 +436,19 @@ public class HtmlNormalizer {
         if (isBase64Uri(fontSource)) {
             return fontSource
         }
-        var fontData = getFileFromUrl(fontSource)
+        val fontData = getFileFromUrl(fontSource)
+        if (fontData == null) {
+            Logger.e(this, "Unable to load font $fontSource for HTML")
+            return fontSource
+        }
         val result = Base64.encodeToString(fontData.readBytes(), Base64.NO_WRAP)
         // font type is not needed to be precise, WebView will fix it anyway...
         return "data:$FONT_MIMETYPE;charset=utf-8;base64,$result"
     }
 
-    private fun getFileFromUrl(url: String): File {
+    private fun getFileFromUrl(url: String): File? {
         var fileData = fontCache.getFile(url)
-        if (!fileData.exists()) {
+        if (fileData == null) {
             val semaphore = CountDownLatch(1)
             fontCache.preload(listOf(url)) { loaded ->
                 if (loaded) {
@@ -460,20 +458,20 @@ public class HtmlNormalizer {
             }
             semaphore.await(10, SECONDS)
         }
-        if (!fileData.exists()) {
+        if (fileData == null) {
             Logger.e(this, "Unable to load file $url for HTML")
             throw IllegalStateException("File is not preloaded")
         }
         return fileData
     }
 
-    private fun getImageFromUrl(url: String): Bitmap? {
-        var fileData = imageCache.get(url)
+    private fun getImageFromUrl(url: String): File {
+        var fileData = imageCache.getFile(url)
         if (fileData == null) {
             val semaphore = CountDownLatch(1)
             imageCache.preload(listOf(url)) { loaded ->
                 if (loaded) {
-                    fileData = imageCache.get(url)
+                    fileData = imageCache.getFile(url)
                 }
                 semaphore.countDown()
             }
@@ -483,7 +481,7 @@ public class HtmlNormalizer {
             Logger.e(this, "Unable to load image $url for HTML")
             throw IllegalStateException("Image is not preloaded")
         }
-        return fileData
+        return fileData!!
     }
 
     /**

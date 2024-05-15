@@ -14,8 +14,8 @@ import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Route
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
@@ -53,7 +53,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var customerIdsRepository: CustomerIdsRepository
     lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     lateinit var messagesCache: InAppMessagesCache
-    lateinit var bitmapCache: BitmapCache
+    lateinit var drawableCache: DrawableCache
     lateinit var fontCache: SimpleFileCache
     lateinit var presenter: InAppMessagePresenter
     lateinit var trackingConsentManager: TrackingConsentManager
@@ -86,10 +86,10 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { messagesCache.set(any()) } just Runs
         every { messagesCache.getTimestamp() } returns System.currentTimeMillis()
         every { messagesCache.get() } returns arrayListOf()
-        bitmapCache = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
-        every { bitmapCache.clearExcept(any()) } just Runs
+        drawableCache = mockk()
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
@@ -114,7 +114,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             messagesCache,
             fetchManager,
             inAppMessageDisplayStateRepository,
-            bitmapCache,
+            drawableCache,
             fontCache,
             presenter,
             trackingConsentManager,

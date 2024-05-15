@@ -211,7 +211,7 @@ internal class ExponeaComponent(
 
     internal val appInboxManager: AppInboxManager = AppInboxManagerImpl(
         fetchManager = fetchManager,
-        bitmapCache = appInboxMessagesBitmapCache,
+        drawableCache = appInboxMessagesBitmapCache,
         projectFactory = projectFactory,
         customerIdsRepository = customerIdsRepository,
         appInboxCache = appInboxCache

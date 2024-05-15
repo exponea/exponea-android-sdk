@@ -19,7 +19,7 @@ import org.robolectric.RobolectricTestRunner
 internal class HtmlCacheImplTest {
 
     private lateinit var cache: HtmlNormalizedCache
-    private lateinit var imageCache: BitmapCache
+    private lateinit var imageCache: DrawableCache
     private lateinit var fontCache: SimpleFileCache
 
     @Before
@@ -84,7 +84,7 @@ internal class HtmlCacheImplTest {
         // file corruption
         val context = ApplicationProvider.getApplicationContext<Context>()
         val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
-        fileCache.getFile("InAppContentBlock_cached_$key.json").writeText("{{{")
+        fileCache.retrieveFileDirectly("InAppContentBlock_cached_$key.json").writeText("{{{")
         // verify
         assertNull(cache.get(key, originalHtml))
     }

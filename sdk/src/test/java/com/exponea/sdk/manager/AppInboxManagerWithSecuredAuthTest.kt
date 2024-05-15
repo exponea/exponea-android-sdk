@@ -9,8 +9,8 @@ import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
-import com.exponea.sdk.repository.BitmapCache
 import com.exponea.sdk.repository.CustomerIdsRepository
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.services.AuthorizationProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -42,17 +42,17 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
     private lateinit var appInboxManager: AppInboxManager
     private lateinit var appInboxCache: AppInboxCache
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var bitmapCache: BitmapCache
+    private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
 
     @Before
     fun before() {
         fetchManager = mockk()
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } just Runs
-        bitmapCache = mockk()
-        every { bitmapCache.has(any()) } returns false
-        every { bitmapCache.preload(any(), any()) } just Runs
-        every { bitmapCache.clearExcept(any()) } just Runs
+        drawableCache = mockk()
+        every { drawableCache.has(any()) } returns false
+        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         appInboxCache = AppInboxCacheImpl(
@@ -150,7 +150,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         }
         appInboxManager = AppInboxManagerImpl(
             fetchManager = fetchManager,
-            bitmapCache = bitmapCache,
+            drawableCache = drawableCache,
             customerIdsRepository = customerIdsRepository,
             appInboxCache = appInboxCache,
             projectFactory = projectFactory

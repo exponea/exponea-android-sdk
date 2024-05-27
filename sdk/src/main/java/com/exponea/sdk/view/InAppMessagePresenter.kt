@@ -17,7 +17,7 @@ import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessagePresenter(
-    context: Context,
+    internal val context: Context,
     private var bitmapCache: BitmapCache
 ) {
     class PresentedMessage(

@@ -85,6 +85,14 @@ internal object Constants {
             ) {
                 // do nothing here as default
             }
+
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {
+                // do nothing here as default
+            }
+
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
+                // do nothing here as default
+            }
         }
     }
 

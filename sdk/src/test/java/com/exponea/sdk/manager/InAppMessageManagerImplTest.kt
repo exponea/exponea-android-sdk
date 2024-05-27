@@ -112,6 +112,7 @@ internal class InAppMessageManagerImplTest {
         presenter = mockk()
         every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         every { presenter.isPresenting() } returns false
+        every { presenter.context } returns ApplicationProvider.getApplicationContext()
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
@@ -711,6 +712,7 @@ internal class InAppMessageManagerImplTest {
             messagesCache.get()
             bitmapCache.preload(arrayListOf("pending_image_url"), any())
             presenter.show(InAppMessageType.MODAL, pendingMessage.payload, any(), any(), any(), any(), any())
+            presenter.context
             messagesCache.get()
             bitmapCache.preload(arrayListOf(), any())
             messagesCache.set(arrayListOf(pendingMessage, otherMessage1, otherMessage2))
@@ -858,13 +860,14 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = false
             override var trackActions = true
-
             override fun inAppMessageAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
             ) {}
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
@@ -947,13 +950,14 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
             override var trackActions = false
-
             override fun inAppMessageAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
             ) {}
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
@@ -1031,7 +1035,6 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
             override var trackActions = false
-
             override fun inAppMessageAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
@@ -1041,6 +1044,8 @@ internal class InAppMessageManagerImplTest {
                 trackingConsentManager.trackInAppMessageClick(message, button?.text, button?.url, CONSIDER_CONSENT)
                 trackingConsentManager.trackInAppMessageClose(message, interaction, CONSIDER_CONSENT)
             }
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 

@@ -312,6 +312,16 @@ internal inline fun ensureOnBackgroundThread(crossinline block: () -> Unit) {
     }
 }
 
+internal inline fun ensureOnMainThread(crossinline block: () -> Unit) {
+    if (isRunningOnUiThread()) {
+        runCatching {
+            block.invoke()
+        }.logOnException()
+    } else {
+        runOnMainThread(block)
+    }
+}
+
 internal fun isRunningOnUiThread(): Boolean {
     return Looper.myLooper() == Looper.getMainLooper()
 }

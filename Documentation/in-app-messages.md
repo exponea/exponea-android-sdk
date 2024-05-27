@@ -56,6 +56,17 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
         // On in-app close by user interaction, the button is null and the interaction is true
         // On in-app close by non-user interaction (i.e. timeout), the button is null and the interaction is false
     }
+
+    override fun inAppMessageShown(message: InAppMessage, context: Context) {
+        // Here goes your code
+        // Method called when in-app message is shown.
+    }
+
+    override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
+        // Here goes your code
+        // Method called when any error occurs while showing in-app message.
+        // In-app message could be NULL if error is not related to in-app message.
+    }
 }
 
 ```

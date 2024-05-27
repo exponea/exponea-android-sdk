@@ -31,6 +31,7 @@ import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
@@ -305,6 +306,9 @@ internal class InAppMessageManagerImpl(
         if (message.variantId == -1 && !message.hasPayload()) {
             Logger.i(this, "[InApp] Only logging in-app message for control group '${message.name}'")
             trackShowEvent(message)
+            ensureOnMainThread {
+                Exponea.inAppMessageActionCallback.inAppMessageShown(message, presenter.context)
+            }
             return
         }
         if (!message.hasPayload()) {
@@ -364,17 +368,19 @@ internal class InAppMessageManagerImpl(
                         }
                     },
                     failedCallback = { error ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            trackError(message, error)
+                        trackError(message, error)
+                        ensureOnMainThread {
+                            Exponea.inAppMessageActionCallback.inAppMessageError(message, error, presenter.context)
                         }
                     }
                 )
-                runOnBackgroundThread {
-                    runCatching {
-                        if (presented != null) {
-                            trackShowEvent(message)
-                        }
-                    }.logOnException()
+                presented?.let {
+                    ensureOnBackgroundThread {
+                        trackShowEvent(message)
+                    }
+                    ensureOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageShown(message, presenter.context)
+                    }
                 }
                 return@runCatching
             }.logOnException()
@@ -516,11 +522,21 @@ internal class InAppMessageManagerImpl(
         bitmapCache.preload(imageUrls, callback = { imagesLoaded ->
             val customerIdsAfterLoad = customerIdsRepository.get().toHashMap()
             if (customerIdsAfterLoad != origin.customerIds) {
-                trackError(message, "Another customer login while image load")
+                "Another customer login while image load".let {
+                    trackError(message, it)
+                    ensureOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageError(message, it, presenter.context)
+                    }
+                }
             } else if (imagesLoaded) {
                 show(message)
             } else {
-                trackError(message, "Images has not been preloaded")
+                "Images has not been preloaded".let {
+                    trackError(message, it)
+                    ensureOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageError(message, it, presenter.context)
+                    }
+                }
             }
         })
     }

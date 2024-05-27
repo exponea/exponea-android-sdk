@@ -159,6 +159,14 @@ class MainActivity : AppCompatActivity() {
                         .create()
                         .show()
             }
+
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {
+                Logger.i(this, "In app message ${message.name} has been shown")
+            }
+
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
+                Logger.e(this, "Error occurred '$errorMessage' while showing in app message ${message?.name}")
+            }
         }
     }
 }

@@ -173,65 +173,69 @@ Let's look at an example of how the logs may look when displaying an in-app mess
    ```
    For each non-null event of type `eventType`, the SDK registers a 'show request' to display an in-app message once the process finishes.
 3. ```
+   Skipping messages fetch for type {eventType} because app is not in foreground state
+   ```
+   The in-app message process was triggered while application UI is not visible to user therefore no in-app message could be shown anyway.
+4. ```
    --> POST https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?v=1
    ```  
    The SDK requested in-app messages from the Engagement platform.
-4. ```
+5. ```
    <-- 200 https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?v=1 (2293ms)
    ```
    The SDK received in-app messages from the Engagement platform. You should see the in-app messages data in JSON format a few lines below the above message:
    ```
    {"success":true,"data":[{"id":"65baf899dd467ee54357e371","name":"Payment in-app message","date_filter":{"enabled":false},"frequency":"until_visitor_interacts","load_priority":null,"load_delay":null,"close_timeout":null,"trigger":{"event_type": "payment", "filter": [], "type": "event"},"has_tracking_consent":true,"message_type":"slide_in","variant_id":0,"variant_name":"Variant A","is_html":false,"payload":{"title":"Payment In-App Message","body_text":"This is an example of your in-app personalization body text.","image_url":"https://asset-templates.exponea.com/misc/media/canyon/canyon.jpg","title_text_color":"#000000","title_text_size":"22px","body_text_color":"#000000","body_text_size":"14px","background_color":"#ffffff","message_position":"top","buttons":[{"button_text":"Action","button_type":"deep-link","button_link":"https://www.bloomreach.com","button_text_color":"#2dbaee","button_background_color":"#ffffff"}]}}]}
    ```
-5. ```
+6. ```
    [In-app message data preloaded. ]Picking a message to display
    ```
    In-app messages were preloaded in the local cache. The SDK will proceed with the logic to select an in-app message to display.
-6. ```
+7. ```
    Picking in-app message for eventType {eventType}. {X} messages available: [{message1 name}, {message2 name}, ...].
    ```
    This log message includes a list of **all** in-app messages received from the server and preloaded in the local cache. If you don't see your message here, it may not have been available yet the last time the SDK requested in-app messages. If you have confirmed the message was available when the last preload occurred, the current user may not match the audience targeted by the in-app message. Check the in-app message set up in Engagement. 
-7. ```
+8. ```
    Message '{message name}' failed event filter. Message filter: {"event_type":"session_start","filter":[]} Event type: payment properties: {price=2011.1, product_title=Item #1} timestamp: 1.59921557821E9
    ```
    The SDK tells you why it didn't select this particular message. In this example, the message failed the event filter - the event type was set for `payment`, but `session_start` was tracked.
-8. ```
+9. ```
    {X} messages available after filtering. Going to pick the highest priority messages.
    ```
    After applying all the filters, there are `X` in-app messages left that satisfy the criteria to be displayed to the current user. The filters are determined by the in-app messages' settings in Engagement, including `Schedule`, `Show on` and `Display`.
-9. ```
-   Got {X} messages with highest priority for eventType {eventType}. [{message1 name}, {message2 name}, ...]
-   ```
-   There may be multiple messages with the same priority. All messages with the highest priority are listed.
 10. ```
+    Got {X} messages with highest priority for eventType {eventType}. [{message1 name}, {message2 name}, ...]
+    ```
+    There may be multiple messages with the same priority. All messages with the highest priority are listed.
+11. ```
     Picking top message '{message name}' for eventType {eventType}
     ```
     If more than one messages is eligible, the SDK will select the one that has the highest priority for `eventType`.
-11. ```
+12. ```
     Got {X} messages available to show. [{message1 name}, {message2 name}, ...].
     ```
     The SDK has collected all `X` messages eligible to be displayed. The process to select a single message to display continues.
-12. ```
+13. ```
     Picking top message '{message name}' to be shown.
     ```
     The SDK selects the in-app message with the highest priority configured in Engagement. If there are multiple messages with the highest priority, the SDK randomly selects a single  message from the candidates. This message will be displayed to user.
-13. ```
+14. ```
     Only logging in-app message for control group '${message.name}'
     ```
     An A/B testing variant of an in-app message or a message without payload is not displayed to the user but the SDK tracks a 'show' event for analysis.
-14. ```
+15. ```
     Attempting to show in-app message '{message name}'
     ```
     An in-app message has been selected to be displayed in the app (no A/B testing).
-15. ```
+16. ```
     Posting show to main thread with delay {X}ms.
     ```
     A message display request is posted to the main thread with a delay of `X` milliseconds. The delay can be configured using the `Display delay` field in the in-app message's settings in Engagement. The message will be displayed in the last resumed Activity. 
-16. ```
+17. ```
     Attempting to present in-app message.
     ```
     Logged from the main thread. If a failure happens after this point, refer to [Troubleshoot In-App Message Display Issues](#troubleshoot-in-app-message-display-issues) above for pointers.
-17. ```
+18. ```
     In-app message presented.
     ```
     Everything went well and you should see your message. It was presented in the current Activity. In case you don't see the message, it's possible that the view hierarchy changed and the message is no longer on screen. Refer to [Troubleshoot In-App Message Display Issues](#troubleshoot-in-app-message-display-issues) above for details.

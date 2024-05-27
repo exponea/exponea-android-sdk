@@ -11,6 +11,7 @@ import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import io.mockk.Runs
 import io.mockk.every
@@ -58,6 +59,11 @@ internal open class ExponeaSDKTest {
             every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any(), any()) }
         }
         mockkConstructorFix(FlushManagerImpl::class)
+    }
+
+    @Before
+    fun movesToForegroundStateAppCheck() {
+        ExponeaContextProvider.applicationIsForeground = true
     }
 
     @After

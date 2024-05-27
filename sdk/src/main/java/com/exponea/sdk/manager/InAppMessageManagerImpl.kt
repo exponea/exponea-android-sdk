@@ -25,6 +25,7 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
@@ -89,6 +90,14 @@ internal class InAppMessageManagerImpl(
         callback: ((Result<Unit>) -> Unit)? = null,
         retryCount: Int = 0
     ) {
+        if (!ExponeaContextProvider.applicationIsForeground) {
+            Logger.d(
+                this,
+                "[InApp] Skipping messages fetch because app is not in foreground state"
+            )
+            callback?.invoke(Result.failure(Exception("Preloading in-app messages stopped for background state.")))
+            return
+        }
         preloadStarted()
         val customerIdsForFetch = CustomerIds(HashMap(customerIds)).apply {
             // CustomerIds constructor removes cookie, add it back:
@@ -144,6 +153,13 @@ internal class InAppMessageManagerImpl(
     }
 
     internal fun detectReloadMode(eventType: EventType, timestamp: Double): ReloadMode {
+        if (!ExponeaContextProvider.applicationIsForeground) {
+            Logger.d(
+                this,
+                "[InApp] Skipping messages fetch for type $eventType because app is not in foreground state"
+            )
+            return ReloadMode.STOP
+        }
         if (eventType == EventType.PUSH_DELIVERED ||
             eventType == EventType.PUSH_OPENED ||
             eventType == EventType.SESSION_END
@@ -496,7 +512,7 @@ internal class InAppMessageManagerImpl(
                     ReloadMode.STOP -> {
                         Logger.w(
                             this,
-                            "[InApp] Waits with message show because of running fetch"
+                            "[InApp] Stops loading and showing a message for event type $type"
                         )
                     }
                 }

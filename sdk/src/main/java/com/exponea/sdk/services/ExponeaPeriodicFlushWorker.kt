@@ -8,6 +8,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.returnOnException
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 internal class ExponeaPeriodicFlushWorker(
     context: Context,
@@ -33,7 +34,7 @@ internal class ExponeaPeriodicFlushWorker(
                 countDownLatch.countDown()
             }
             try {
-                countDownLatch.await()
+                countDownLatch.await(20, TimeUnit.SECONDS)
             } catch (e: InterruptedException) {
                 Logger.e(this, "doWork -> flush was interrupted", e)
                 return Result.failure()

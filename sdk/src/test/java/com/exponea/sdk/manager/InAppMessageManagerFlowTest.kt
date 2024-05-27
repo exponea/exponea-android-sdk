@@ -11,6 +11,7 @@ import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
@@ -148,6 +149,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<SegmentsManagerImpl>().onCallbackAdded(any()) } just Runs
     }
 
+    @Before
+    fun disableInAppContentBlockManager() {
+        mockkConstructorFix(InAppContentBlocksManagerImpl::class)
+        every { anyConstructed<InAppContentBlocksManagerImpl>().onEventCreated(any(), any()) } just Runs
+    }
+
     @Test
     fun `should preload and show for session_start for IMMEDIATE flush with delay`() {
         val threadAwaitSeconds = 10L
@@ -172,9 +179,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             // only identifyCustomer could invoke this
             anyConstructed<InAppMessageManagerImpl>().onEventUploaded(any())
         } answers {
-            assertTrue(sessionStartProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
+            val isCustomerUploaded = firstArg<ExportedEvent>().sdkEventType == EventType.TRACK_CUSTOMER.name
+            if (isCustomerUploaded) {
+                assertTrue(sessionStartProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
+            }
             callOriginal()
-            identifyCustomerProcessed.countDown()
+            if (isCustomerUploaded) {
+                identifyCustomerProcessed.countDown()
+            }
         }
         every {
             anyConstructed<InAppMessageManagerImpl>().onEventCreated(any(), any())

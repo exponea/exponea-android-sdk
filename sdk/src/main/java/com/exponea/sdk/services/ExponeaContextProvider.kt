@@ -1,11 +1,14 @@
 package com.exponea.sdk.services
 
+import android.app.Activity
+import android.app.Application
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
 import com.exponea.sdk.util.Logger
 
 /**
@@ -24,10 +27,11 @@ internal class ExponeaContextProvider : ContentProvider() {
                 }
                 return field
             }
+        var applicationIsForeground = false
     }
 
     override fun onCreate(): Boolean {
-        applicationContext = context
+        applicationContext = context?.applicationContext
         val contextAvailable = context != null
         if (contextAvailable) {
             Logger.d(this, "Application context loaded")
@@ -36,7 +40,41 @@ internal class ExponeaContextProvider : ContentProvider() {
                 Application context not found, Check ContextProvider registration in the Manifest!
             """.trimIndent())
         }
+        registerActivityLifecycleCallbacks()
         return contextAvailable
+    }
+
+    private fun registerActivityLifecycleCallbacks() {
+        if (applicationContext == null || applicationContext !is Application) {
+            Logger.e(this, """
+                Unable to register App lifecycle for no App context.
+            """.trimIndent())
+            // Do not block processes that rely on this provider
+            applicationIsForeground = true
+            return
+        }
+        (applicationContext as? Application)?.registerActivityLifecycleCallbacks(
+            object : Application.ActivityLifecycleCallbacks {
+                private var numStarted = 0
+                override fun onActivityPaused(activity: Activity) {}
+                override fun onActivityResumed(activity: Activity) {}
+                override fun onActivityStarted(activity: Activity) {
+                    if (numStarted == 0) {
+                        applicationIsForeground = true
+                    }
+                    numStarted++
+                }
+                override fun onActivityDestroyed(activity: Activity) {}
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+                override fun onActivityStopped(activity: Activity) {
+                    numStarted--
+                    if (numStarted == 0) {
+                        applicationIsForeground = false
+                    }
+                }
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            }
+        )
     }
 
     override fun attachInfo(context: Context?, info: ProviderInfo?) {

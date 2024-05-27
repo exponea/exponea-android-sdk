@@ -34,6 +34,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.backgroundThreadDispatcher
@@ -84,6 +85,7 @@ internal class InAppMessageManagerImplTest {
     private lateinit var projectFactory: ExponeaProjectFactory
     @Before
     fun before() {
+        ExponeaContextProvider.applicationIsForeground = true
         fetchManager = mockk()
         messagesCache = mockk()
         var messageCacheTimestamp = 0L
@@ -182,6 +184,34 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    fun `should not preload messages on first event while in background`() {
+        ExponeaContextProvider.applicationIsForeground = false
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        messagesCache.set(arrayListOf())
+
+        eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        verify(exactly = 0) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should not preload messages for identifyCustomer while in background`() {
+        ExponeaContextProvider.applicationIsForeground = false
+        val eventManager = getEventManager()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        }
+        messagesCache.set(arrayListOf())
+
+        eventManager.track(
+            type = EventType.TRACK_CUSTOMER
+        )
+        verify(exactly = 0) { fetchManager.fetchInAppMessages(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `should not preload messages on push events and session-end`() {
         val eventManager = getEventManager()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -235,7 +265,7 @@ internal class InAppMessageManagerImplTest {
                 latch.countDown()
             }
         }
-        latch.await()
+        latch.await(20, TimeUnit.SECONDS)
         verify(exactly = 1) {
             fetchManager.fetchInAppMessages(any(), any(), any(), any())
         }
@@ -275,7 +305,7 @@ internal class InAppMessageManagerImplTest {
                 latch.countDown()
             }
         }
-        latch.await()
+        latch.await(20, TimeUnit.SECONDS)
         assertEquals(
             numberOfThreads,
             addedEvents.size

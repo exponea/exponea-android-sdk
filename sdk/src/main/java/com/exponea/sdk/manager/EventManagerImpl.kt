@@ -32,34 +32,34 @@ internal open class EventManagerImpl(
             else -> Route.TRACK_EVENTS
         }
 
-        var projects = arrayListOf(projectFactory.mainExponeaProject)
+        val projects = arrayListOf(projectFactory.mainExponeaProject)
         projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
-        for (project in projects.distinct()) {
-            val exportedEvent = ExportedEvent(
-                type = event.type,
-                timestamp = event.timestamp,
-                age = event.age,
-                customerIds = event.customerIds,
-                properties = event.properties,
-                projectId = project.projectToken,
-                route = route,
-                exponeaProject = project,
-                sdkEventType = eventType.name
-            )
-            if (trackingAllowed) {
-                Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
-                ensureOnBackgroundThread {
+        ensureOnBackgroundThread {
+            for (project in projects.distinct()) {
+                val exportedEvent = ExportedEvent(
+                    type = event.type,
+                    timestamp = event.timestamp,
+                    age = event.age,
+                    customerIds = event.customerIds,
+                    properties = event.properties,
+                    projectId = project.projectToken,
+                    route = route,
+                    exponeaProject = project,
+                    sdkEventType = eventType.name
+                )
+                if (trackingAllowed) {
+                    Logger.d(this, "Added Event To Queue: ${exportedEvent.id}")
                     eventRepository.add(exportedEvent)
+                } else {
+                    Logger.d(this, "Event has not been added to Queue: ${exportedEvent.id}" +
+                        "because real tracking is not allowed")
                 }
-            } else {
-                Logger.d(this, "Event has not been added to Queue: ${exportedEvent.id}" +
-                    "because real tracking is not allowed")
             }
-        }
 
-        // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
-        if (Exponea.flushMode == FlushMode.IMMEDIATE) {
-            flushManager.flushData()
+            // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
+            if (Exponea.flushMode == FlushMode.IMMEDIATE) {
+                flushManager.flushData()
+            }
         }
     }
 

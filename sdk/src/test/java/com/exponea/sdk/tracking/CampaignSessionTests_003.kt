@@ -6,6 +6,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -23,22 +24,27 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
      * Hot Start with Resumed Session, Campaign Click Start, SDK init before onResume
      */
     @Test
-    fun testBehavior_003() {
+    fun testBehavior_003() = runInSingleThread { idleThreads ->
         // first run will initialize SDK
         val firstRun = Robolectric.buildActivity(TestActivity::class.java)
         firstRun.create(Bundle.EMPTY)
+        firstRun.start()
+        firstRun.postCreate(null)
         firstRun.resume()
-        var sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
+        idleThreads()
+        val sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
             it.type == Constants.EventTypes.sessionStart
         }
         firstRun.pause()
         firstRun.destroy()
-
+        idleThreads()
         // second run will handle Campaign Intent, but session will be resumed
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
-
+        secondRun.start()
+        secondRun.postCreate(null)
+        idleThreads()
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
@@ -46,7 +52,7 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
 
         secondRun.resume() // session is resumed, so no campaign cache clear is done
         secondRun.pause()
-
+        idleThreads()
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
             it.type == Constants.EventTypes.sessionStart

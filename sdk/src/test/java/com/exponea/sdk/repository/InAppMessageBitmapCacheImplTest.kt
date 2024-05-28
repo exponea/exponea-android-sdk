@@ -129,32 +129,6 @@ internal class InAppMessageBitmapCacheImplTest {
         assertFalse(repo.has(image3Url))
     }
 
-//    @Test @Config(qualifiers = "w200dp-h300dp-xhdpi") // screen size is 400x600
-//    fun `should downsample image`() {
-//        server.enqueue(MockResponse().setBody("mock-response"))
-//        val imageUrl = server.url("image.jpg").toString()
-//
-//        val repo = InAppMessageDrawableCacheImpl(context)
-//        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-//
-//        val storedFilePath = File(
-//            File(context.cacheDir, InAppMessageDrawableCacheImpl.DIRECTORY),
-//            repo.getFileName(imageUrl)
-//        ).absolutePath
-//
-//        ShadowBitmapFactory.provideWidthAndHeightHints(storedFilePath, 800, 600)
-//        assertEquals(800, repo.getFile(imageUrl)?.width)
-//        assertEquals(600, repo.getFile(imageUrl)?.height)
-//
-//        ShadowBitmapFactory.provideWidthAndHeightHints(storedFilePath, 1200, 600)
-//        assertEquals(600, repo.get(imageUrl)?.width)
-//        assertEquals(300, repo.get(imageUrl)?.height)
-//
-//        ShadowBitmapFactory.provideWidthAndHeightHints(storedFilePath, 2000, 1200)
-//        assertEquals(666, repo.get(imageUrl)?.width)
-//        assertEquals(400, repo.get(imageUrl)?.height)
-//    }
-
     @Test
     fun `should download and store image with URL length up to 2000 characters`() {
         val repo = spyk(InAppMessageBitmapCacheImpl(context))

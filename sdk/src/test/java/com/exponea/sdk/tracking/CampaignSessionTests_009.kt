@@ -17,6 +17,7 @@ import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.Robolectric.buildActivity
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -29,14 +30,20 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
     fun testBehavior_009() = runInSingleThread { idleThreads ->
         ExponeaConfigRepository.set(InstrumentationRegistry.getInstrumentation().context, configuration)
         // first run will initialize SDK
-        val firstRun = Robolectric.buildActivity(TestActivity::class.java)
-        firstRun.create(Bundle.EMPTY)
+        val firstRun = buildActivity(TestActivity::class.java)
+        firstRun.create()
+        firstRun.start()
+        firstRun.postCreate(null)
         firstRun.resume()
+        firstRun.postResume()
+        firstRun.visible()
+        firstRun.topActivityResumed(true)
         idleThreads()
         val sessionStartRecord = Exponea.componentForTesting.eventRepository.all().last {
             it.type == Constants.EventTypes.sessionStart
         }
         firstRun.pause()
+        firstRun.stop()
         firstRun.destroy()
         idleThreads()
 
@@ -51,7 +58,12 @@ internal class CampaignSessionTests_009 : CampaignSessionTests_Base() {
         assertNotNull(campaignEvent)
         assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
+        secondRun.start()
+        secondRun.postCreate(null)
         secondRun.resume()
+        secondRun.postResume()
+        secondRun.visible()
+        secondRun.topActivityResumed(true)
         idleThreads()
 
         assertNull(Exponea.componentForTesting.campaignRepository.get())

@@ -24,6 +24,7 @@ import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
@@ -157,6 +158,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Test
     fun `should preload and show for session_start for IMMEDIATE flush with delay`() {
+        ExponeaContextProvider.applicationIsForeground = true
         val threadAwaitSeconds = 10L
         Exponea.flushMode = FlushMode.IMMEDIATE
         Exponea.loggerLevel = Logger.Level.VERBOSE
@@ -210,6 +212,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should preload and show for each session_start`() {
+        ExponeaContextProvider.applicationIsForeground = true
         mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
         backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
         Exponea.flushMode = FlushMode.MANUAL
@@ -241,6 +244,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Test
     fun `should show message only for last identifyCustomer for MANUAL flush`() {
+        ExponeaContextProvider.applicationIsForeground = true
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
@@ -280,6 +284,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Test
     fun `should try to show message for unloaded image`() {
+        ExponeaContextProvider.applicationIsForeground = true
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
@@ -308,6 +313,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         val threadAwaitSeconds = 5L
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.loggerLevel = Logger.Level.VERBOSE
+        ExponeaContextProvider.applicationIsForeground = true
         // allow process
         every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }

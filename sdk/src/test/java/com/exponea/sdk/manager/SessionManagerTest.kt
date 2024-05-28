@@ -65,6 +65,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should track session start if initialized before onResume`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         sm.startSessionListener()
         controller.resume()
         controller.pause()
@@ -77,6 +79,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should track session start on pause if initialized after onResume with Activity`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         controller.resume()
         sm.startSessionListener()
         verify(exactly = 0) {
@@ -93,6 +97,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should track session start immediately if initialized after onResume with AppCompatActivity`() {
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         controller.resume()
         // if we intitialize session manager with resumed activity, it will track session start right away
         sm = SessionManagerImpl(controller.get(), prefs, campaignRepository, eventManager, backgroundTimer)
@@ -106,6 +112,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should resume running session if withing session timeout`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         sm.startSessionListener()
         controller.resume()
         every { anyConstructed<Date>().time } returns 100 * 1000 // app paused after 90 sec
@@ -121,6 +129,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should start new session if outside of session timeout`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         sm.startSessionListener()
         controller.resume()
         every { anyConstructed<Date>().time } returns 100 * 1000 // app paused after 90 sec
@@ -138,6 +148,8 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     @Test
     fun `should stop tracking`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
         sm.startSessionListener()
         controller.resume()
         every { anyConstructed<Date>().time } returns 100 * 1000 // app paused after 90 sec

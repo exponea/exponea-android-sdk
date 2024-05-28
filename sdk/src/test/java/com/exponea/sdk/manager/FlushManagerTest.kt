@@ -21,10 +21,14 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -145,17 +149,31 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         setup(connected = true, serviceSuccess = false)
         createTestEvent(true)
 
-        waitForIt {
-            var done = 0
-            for (i in 1..10) {
+        val testRunMaxMillis = 10000L
+        val firstRunGate = CountDownLatch(1)
+        // first flush locks everything
+        thread(start = true) {
+            manager.flushData {
+                // waits for all other flushes to finish (by rejecting)
+                assertTrue(firstRunGate.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+            }
+        }
+        // other flushes has to be rejected
+        waitForIt(timeoutMS = testRunMaxMillis) {
+            val done = AtomicInteger(0)
+            val flushInvokeTries = 1000
+            for (i in 1..flushInvokeTries) {
                 thread(start = true) {
                     manager.flushData {
-                        if (++done == 10) it()
+                        assertEquals("Flushing already in progress", it.exceptionOrNull()?.localizedMessage)
+                        if (done.incrementAndGet() == flushInvokeTries) it()
                     }
                 }
             }
         }
-
+        // let first flush to finish
+        firstRunGate.countDown()
+        // verify that first flush tries to upload event with maxTries
         verify(exactly = 1) {
             service.postEvent(any(), any())
         }

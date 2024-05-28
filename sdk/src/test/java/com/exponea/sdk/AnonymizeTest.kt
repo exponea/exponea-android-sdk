@@ -78,7 +78,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
         val events = Exponea.componentForTesting.eventRepository.all()
         events.sortedBy { it.timestamp }
-        assertEquals(events.size, 9)
+        assertEquals(9, events.size)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
         checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(PUSH_KEY to "push_token"))

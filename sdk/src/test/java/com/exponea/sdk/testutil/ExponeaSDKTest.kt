@@ -1,5 +1,7 @@
 package com.exponea.sdk.testutil
 
+import android.content.Context
+import android.content.pm.ProviderInfo
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FetchManagerImpl
@@ -19,6 +21,7 @@ import io.mockk.just
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
+import org.robolectric.Robolectric
 
 internal open class ExponeaSDKTest {
     companion object {
@@ -62,8 +65,14 @@ internal open class ExponeaSDKTest {
     }
 
     @Before
-    fun movesToForegroundStateAppCheck() {
-        ExponeaContextProvider.applicationIsForeground = true
+    fun registersForegroundStateAppCheck() {
+        ExponeaContextProvider.applicationIsForeground = false
+        Robolectric
+            .buildContentProvider(ExponeaContextProvider::class.java)
+            .create(ProviderInfo().apply {
+                authority = "${ApplicationProvider.getApplicationContext<Context>().packageName}.sdk.contextprovider"
+                grantUriPermissions = true
+            }).get()
     }
 
     @After

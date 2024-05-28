@@ -7,6 +7,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -23,19 +24,22 @@ internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
      * Hot start with new session, Campaign click start, SDK init before onResume
      */
     @Test
-    fun testbehavior_002() {
+    fun testbehavior_002() = runInSingleThread { idleThreads ->
         initExponea(InstrumentationRegistry.getInstrumentation().context)
         val campaignIntent = createDeeplinkIntent()
         val controller = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         controller.create()
+        idleThreads()
 
         assertTrue(Exponea.isInitialized)
         val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
         assertNotNull(campaignEvent)
         assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
 
+        controller.start()
+        controller.postCreate(null)
         controller.resume()
-
+        idleThreads()
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
             it.type == Constants.EventTypes.sessionStart

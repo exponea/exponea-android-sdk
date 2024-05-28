@@ -13,7 +13,9 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.logOnException
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 import okhttp3.Call
 import okhttp3.Response
 
@@ -24,25 +26,36 @@ internal open class FlushManagerImpl(
     private val connectionManager: ConnectionManager,
     private val onEventUploaded: (ExportedEvent) -> Unit
 ) : FlushManager {
-    @Volatile override var isRunning: Boolean = false
-        internal set
+
+    internal val isRunningAtomic = AtomicBoolean(false)
+    override val isRunning: Boolean
+        get() = isRunningAtomic.get()
+
+    internal fun tryStartFlushProcess() = isRunningAtomic.compareAndSet(false, true)
+
+    internal fun endsFlushProcess() {
+        if (!isRunningAtomic.compareAndSet(true, false)) {
+            Logger.e(this, "Flushing process ends prematurely")
+            isRunningAtomic.set(false)
+        }
+    }
 
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
-        synchronized(this) {
-            if (isRunning) {
-                onFlushFinished?.invoke(Result.failure(Exception("Flushing already in progress")))
-                return
-            }
-            isRunning = true
+        if (tryStartFlushProcess()) {
+            flushDataInternal(onFlushFinished)
+        } else {
+            onFlushFinished?.invoke(Result.failure(Exception("Flushing already in progress")))
         }
-        flushDataInternal(onFlushFinished)
     }
 
     private fun flushDataInternal(onFlushFinished: FlushFinishedCallback?) {
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flush")
-            onFlushFinished?.invoke(Result.failure(Exception("Internet connection is not available.")))
-            isRunning = false
+            runCatching {
+                onFlushFinished?.invoke(Result.failure(Exception("Internet connection is not available.")))
+                return@runCatching
+            }.logOnException()
+            endsFlushProcess()
             return
         }
 
@@ -61,14 +74,17 @@ internal open class FlushManagerImpl(
                     event.shouldBeSkipped = false
                     eventRepository.update(event)
                 }
-                isRunning = false
-                if (allEvents.isEmpty()) {
-                    onFlushFinished?.invoke(Result.success(Unit))
-                } else {
-                    onFlushFinished?.invoke(
-                        Result.failure(Exception("Failed to upload ${allEvents.size} events."))
-                    )
-                }
+                runCatching {
+                    if (allEvents.isEmpty()) {
+                        onFlushFinished?.invoke(Result.success(Unit))
+                    } else {
+                        onFlushFinished?.invoke(
+                            Result.failure(Exception("Failed to upload ${allEvents.size} events."))
+                        )
+                    }
+                    return@runCatching
+                }.logOnException()
+                endsFlushProcess()
             }
         }
     }

@@ -19,7 +19,7 @@ internal fun Exponea.shutdown() {
     componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
     componentForTesting.backgroundTimerManager.stopTimer()
     loggerLevel = Constants.Logger.defaultLoggerLevel
-    (componentForTesting.flushManager as FlushManagerImpl).isRunning = false
+    (componentForTesting.flushManager as FlushManagerImpl).endsFlushProcess()
     initGate.clear()
     telemetry = null
 }

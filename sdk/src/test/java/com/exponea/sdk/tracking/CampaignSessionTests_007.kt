@@ -36,6 +36,8 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
         val campaignIntent = createDeeplinkIntent()
         val controller = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         controller.create()
+        controller.start()
+        controller.postCreate(null)
         idleThreads()
         assertFalse(Exponea.isInitialized)
         val preferences = ExponeaPreferencesImpl(applicationContext)

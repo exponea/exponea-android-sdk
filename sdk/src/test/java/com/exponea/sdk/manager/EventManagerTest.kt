@@ -20,6 +20,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.runInSingleThread
@@ -148,6 +149,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should track event`() {
+        ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(projectToken = "mock-project-token"),
@@ -190,6 +192,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should track event for all projects`() {
+        ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
@@ -233,6 +236,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should start flush in immediate flush mode`() {
+        ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(projectToken = "mock-project-token"),
@@ -257,7 +261,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should notify in-app message manager of session start`() {
+    fun `should notify in-app message manager of session start`() = runInSingleThread { idleThreads ->
+        ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(projectToken = "mock-project-token"),
@@ -265,6 +270,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
         Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())

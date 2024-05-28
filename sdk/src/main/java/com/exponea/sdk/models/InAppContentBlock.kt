@@ -12,24 +12,24 @@ data class InAppContentBlock(
     @SerializedName("name")
     val name: String,
     @SerializedName("date_filter")
-    var dateFilter: DateFilter?,
+    val dateFilter: DateFilter?,
     @SerializedName("frequency")
-    var rawFrequency: String?,
+    val rawFrequency: String?,
     @SerializedName("load_priority")
     val priority: Int?,
     @SerializedName("consent_category_tracking")
-    var consentCategoryTracking: String?,
+    val consentCategoryTracking: String?,
     @SerializedName("content_type")
-    var rawContentType: String?,
+    val rawContentType: String?,
     @SerializedName("content")
-    var content: Map<String, Any?>?,
+    val content: Map<String, Any?>?,
     @SerializedName("placeholders")
     val placeholders: List<String>
 ) {
 
     internal var customerIds: Map<String, String?> = mapOf()
 
-    internal var personalizedData: InAppContentBlockPersonalizedData? = null
+    var personalizedData: InAppContentBlockPersonalizedData? = null
 
     val frequency: InAppContentBlockFrequency
         get() {

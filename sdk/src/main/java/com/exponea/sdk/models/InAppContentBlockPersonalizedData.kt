@@ -8,19 +8,19 @@ data class InAppContentBlockPersonalizedData(
     @SerializedName("id")
     val blockId: String,
     @SerializedName("status")
-    var rawStatus: String?,
+    val rawStatus: String?,
     @SerializedName("ttl_seconds")
-    var timeToLive: Int?,
+    val timeToLive: Int?,
     @SerializedName("has_tracking_consent")
-    var rawHasTrackingConsent: Boolean?,
+    val rawHasTrackingConsent: Boolean?,
     @SerializedName("variant_id")
-    var variantId: Int?,
+    val variantId: Int?,
     @SerializedName("variant_name")
-    var variantName: String?,
+    val variantName: String?,
     @SerializedName("content_type")
-    var rawContentType: String?,
+    val rawContentType: String?,
     @SerializedName("content")
-    var content: Map<String, Any?>?
+    val content: Map<String, Any?>?
 ) {
     @Expose
     var loadedAt: Date? = null

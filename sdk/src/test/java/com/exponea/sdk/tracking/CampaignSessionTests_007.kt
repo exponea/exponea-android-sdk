@@ -11,6 +11,7 @@ import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.ExponeaGson
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -29,22 +30,24 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
      * Cold start, Campaign click start, SDK init after onResume
      */
     @Test
-    fun testBehavior_007() {
+    fun testBehavior_007() = runInSingleThread { idleThreads ->
         val applicationContext = InstrumentationRegistry.getInstrumentation().context
         ExponeaConfigRepository.set(applicationContext, configuration)
         val campaignIntent = createDeeplinkIntent()
         val controller = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         controller.create()
-
+        idleThreads()
         assertFalse(Exponea.isInitialized)
         val preferences = ExponeaPreferencesImpl(applicationContext)
         val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
         val eventRepository = EventRepositoryImpl(applicationContext, preferences)
+        idleThreads()
         val campaignEvent = campaignRepository.get()
         assertNotNull(campaignEvent)
         assertTrue(eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         controller.resume()
+        idleThreads()
         assertTrue(Exponea.isInitialized)
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {

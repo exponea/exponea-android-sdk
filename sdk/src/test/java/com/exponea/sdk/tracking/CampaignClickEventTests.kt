@@ -91,10 +91,10 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_normal() {
+    fun testHandleIntent_normal() = runInSingleThread { idleThreads ->
         val deepLinkIntent = createDeeplinkIntent()
         assertTrue(Exponea.handleCampaignIntent(deepLinkIntent, context))
-
+        idleThreads()
         val storedEvents = eventRepository.all()
         assertEquals(1, storedEvents.size)
         assertEquals(Constants.EventTypes.push, storedEvents.first().type)

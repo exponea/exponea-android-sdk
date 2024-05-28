@@ -12,6 +12,7 @@ import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.ExponeaGson
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -32,7 +33,7 @@ internal class CampaignSessionTests_004 : CampaignSessionTests_Base() {
      */
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
-    fun testBehavior_004() {
+    fun testBehavior_004() = runInSingleThread { idleThreads ->
         val applicationContext = InstrumentationRegistry.getInstrumentation().context
         ExponeaConfigRepository.set(applicationContext, configuration)
         val campaignIntent = createDeeplinkIntent()
@@ -40,24 +41,29 @@ internal class CampaignSessionTests_004 : CampaignSessionTests_Base() {
         Exponea.flushMode = MANUAL
         controller.create()
         controller.start()
+        idleThreads()
         assertFalse(Exponea.isInitialized)
         val preferences = ExponeaPreferencesImpl(applicationContext)
         val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
         val eventRepository = EventRepositoryImpl(applicationContext, preferences)
+        idleThreads()
         val campaignEvent = campaignRepository.get()
         assertNotNull(campaignEvent)
         assertTrue(eventRepository.all().any { it.type == Constants.EventTypes.push })
 
         controller.resume()
+        idleThreads()
         assertTrue(Exponea.isInitialized)
         controller.pause()
         controller.stop()
         controller.destroy()
 
+        idleThreads()
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {
             it.type == Constants.EventTypes.sessionStart
         }, "Only single session_start has to exists")
+        idleThreads()
         val sessionEvent = Exponea.componentForTesting.eventRepository.all().find {
             it.type == Constants.EventTypes.sessionStart
         }

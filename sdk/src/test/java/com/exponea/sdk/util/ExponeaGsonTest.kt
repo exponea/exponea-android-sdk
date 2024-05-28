@@ -1,7 +1,9 @@
 package com.exponea.sdk.util
 
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import java.util.Date
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -30,5 +32,37 @@ internal class ExponeaGsonTest : ExponeaSDKTest() {
                 "nan" to Double.NaN
             ))
         )
+    }
+
+    @Test
+    fun `any soon change to builder should not affect instance singleton`() {
+        val dataToSerialize = mapOf(
+            "html" to "<html><body>Minimal</body></html>",
+            "date" to Date()
+        )
+        val changedInstance = ExponeaGson.builder
+            .generateNonExecutableJson()
+            .setDateFormat(java.text.DateFormat.MEDIUM)
+            .create()
+        val serializedBySDK = ExponeaGson.instance.toJson(dataToSerialize)
+        val serializedByCustomInstance = changedInstance.toJson(dataToSerialize)
+        assertNotEquals(serializedBySDK, serializedByCustomInstance)
+    }
+
+    @Test
+    fun `any change to builder should not affect instance singleton`() {
+        val dataToSerialize = mapOf(
+            "html" to "<html><body>Minimal</body></html>",
+            "date" to Date()
+        )
+        val serializedBySDK = ExponeaGson.instance.toJson(dataToSerialize)
+        val changedInstance = ExponeaGson.builder
+            .generateNonExecutableJson()
+            .setDateFormat(java.text.DateFormat.MEDIUM)
+            .create()
+        val serializedByCustomInstance = changedInstance.toJson(dataToSerialize)
+        val serializedBySdkAfterChange = ExponeaGson.instance.toJson(dataToSerialize)
+        assertEquals(serializedBySDK, serializedBySdkAfterChange)
+        assertNotEquals(serializedBySDK, serializedByCustomInstance)
     }
 }

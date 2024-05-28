@@ -28,7 +28,9 @@ internal inline fun runInSingleThread(crossinline testBlock: (() -> Unit) -> Uni
     backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
     try {
         testBlock.invoke {
-            ShadowLooper.idleMainLooper()
+            for (i in 0..10) {
+                ShadowLooper.idleMainLooper()
+            }
         }
     } finally {
         mainThreadDispatcher = CoroutineScope(Dispatchers.Main)

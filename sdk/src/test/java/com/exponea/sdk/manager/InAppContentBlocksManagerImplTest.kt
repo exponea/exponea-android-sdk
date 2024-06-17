@@ -452,7 +452,7 @@ internal class InAppContentBlocksManagerImplTest {
         assertNotNull(message)
         assertNotNull(message.personalizedData)
         assertNotNull(message.personalizedData!!.content)
-        assertEquals(2, (message.personalizedData!!.content!!.get("loadCount") as Double).toInt())
+        assertEquals(2, (message.personalizedData!!.content!!.get("loadCount") as Number).toInt())
     }
 
     @Test

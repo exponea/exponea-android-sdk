@@ -99,6 +99,10 @@ internal open class EventManagerImpl(
             properties = trackedProperties
         )
         addEventToQueue(event, type, trackingAllowed)
+        notifyEventCreated(event, type)
+    }
+
+    internal fun notifyEventCreated(event: Event, type: EventType) {
         onEventCreated(event, type)
     }
 

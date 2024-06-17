@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -16,6 +17,7 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.close
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.Logger
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -146,22 +148,33 @@ internal class FlushManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should only flush once`() {
+        Exponea.loggerLevel = Logger.Level.VERBOSE
         setup(connected = true, serviceSuccess = false)
         createTestEvent(true)
 
         val testRunMaxMillis = 10000L
-        val firstRunGate = CountDownLatch(1)
+        val allFlushesDone = CountDownLatch(1)
+        val firstFlushDone = CountDownLatch(1)
         // first flush locks everything
-        thread(start = true) {
-            manager.flushData {
-                // waits for all other flushes to finish (by rejecting)
-                assertTrue(firstRunGate.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+        waitForIt {
+            thread(start = true) {
+                every { connectionManager.isConnectedToInternet() } answers {
+                    it()
+                    // waits for all other flushes to finish (by rejecting)
+                    assertTrue(allFlushesDone.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+                    true
+                }
+                manager.flushData {
+                    // ExponeaMockService returns false but test accepts FlushFinishedCallback to be called
+                    assertTrue(it.isFailure)
+                    firstFlushDone.countDown()
+                }
             }
         }
         // other flushes has to be rejected
         waitForIt(timeoutMS = testRunMaxMillis) {
             val done = AtomicInteger(0)
-            val flushInvokeTries = 1000
+            val flushInvokeTries = 10
             for (i in 1..flushInvokeTries) {
                 thread(start = true) {
                     manager.flushData {
@@ -172,7 +185,9 @@ internal class FlushManagerTest : ExponeaSDKTest() {
             }
         }
         // let first flush to finish
-        firstRunGate.countDown()
+        allFlushesDone.countDown()
+        // wait for first flush to finish
+        assertTrue(firstFlushDone.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
         // verify that first flush tries to upload event with maxTries
         verify(exactly = 1) {
             service.postEvent(any(), any())

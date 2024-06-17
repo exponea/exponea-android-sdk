@@ -51,11 +51,11 @@ internal open class FlushManagerImpl(
     private fun flushDataInternal(onFlushFinished: FlushFinishedCallback?) {
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flush")
+            endsFlushProcess()
             runCatching {
                 onFlushFinished?.invoke(Result.failure(Exception("Internet connection is not available.")))
                 return@runCatching
             }.logOnException()
-            endsFlushProcess()
             return
         }
 
@@ -74,6 +74,7 @@ internal open class FlushManagerImpl(
                     event.shouldBeSkipped = false
                     eventRepository.update(event)
                 }
+                endsFlushProcess()
                 runCatching {
                     if (allEvents.isEmpty()) {
                         onFlushFinished?.invoke(Result.success(Unit))
@@ -84,7 +85,6 @@ internal open class FlushManagerImpl(
                     }
                     return@runCatching
                 }.logOnException()
-                endsFlushProcess()
             }
         }
     }
@@ -159,9 +159,9 @@ internal open class FlushManagerImpl(
                     }
                     else -> onEventSentFailed(exportedEvent)
                 }
+                response.close()
                 // Once done continue and try to flush the rest of events
                 flushDataInternal(onFlushFinished)
-                response.close()
             }
         }
     }

@@ -8,6 +8,7 @@ import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
 import com.exponea.sdk.manager.InAppMessageManagerImpl
+import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
 import com.exponea.sdk.manager.ReloadMode
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.network.ExponeaServiceImpl
@@ -62,6 +63,14 @@ internal open class ExponeaSDKTest {
             every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any(), any()) }
         }
         mockkConstructorFix(FlushManagerImpl::class)
+    }
+
+    @Before
+    fun disablePushNotificationSelfCheck() {
+        mockkConstructorFix(PushNotificationSelfCheckManagerImpl::class)
+        every {
+            anyConstructed<PushNotificationSelfCheckManagerImpl>().start()
+        } just Runs
     }
 
     @Before

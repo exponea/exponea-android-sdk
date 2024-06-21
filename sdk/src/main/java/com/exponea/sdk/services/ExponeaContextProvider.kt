@@ -10,6 +10,9 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.OnForegroundStateListener
+import com.exponea.sdk.util.logOnException
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Uses Android app lifecycle system - ContentProviders are loaded in main thread after App start
@@ -18,6 +21,17 @@ import com.exponea.sdk.util.Logger
 internal class ExponeaContextProvider : ContentProvider() {
 
     companion object {
+
+        private val foregroundStateListeners = CopyOnWriteArrayList<OnForegroundStateListener>()
+
+        fun registerForegroundStateListener(listener: OnForegroundStateListener) {
+            foregroundStateListeners.add(listener)
+        }
+
+        fun removeForegroundStateListener(listener: OnForegroundStateListener) {
+            foregroundStateListeners.removeAll { it == listener }
+        }
+
         var applicationContext: Context? = null
             get() {
                 if (field == null) {
@@ -28,6 +42,22 @@ internal class ExponeaContextProvider : ContentProvider() {
                 return field
             }
         var applicationIsForeground = false
+            set(value) {
+                field = value
+                foregroundStateListeners.forEach {
+                    notifyForegroundStateListener(it, value)
+                }
+            }
+
+        private fun notifyForegroundStateListener(listener: OnForegroundStateListener, value: Boolean) {
+            runCatching {
+                listener.onStateChanged(value)
+            }.logOnException()
+        }
+
+        internal fun reset() {
+            foregroundStateListeners.clear()
+        }
     }
 
     override fun onCreate(): Boolean {

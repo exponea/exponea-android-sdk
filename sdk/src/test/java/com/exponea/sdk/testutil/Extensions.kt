@@ -8,19 +8,23 @@ import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.EventRepositoryImpl
+import com.exponea.sdk.services.ExponeaContextProvider
 import kotlin.test.fail
 
 internal fun Exponea.shutdown() {
+    val wasInitialized = isInitialized
     isInitialized = false
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
+    initGate.clear()
+    ExponeaContextProvider.reset()
+    if (!wasInitialized) return
     (componentForTesting.eventRepository as EventRepositoryImpl).close()
     componentForTesting.sessionManager.stopSessionListener()
     componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
     componentForTesting.backgroundTimerManager.stopTimer()
     loggerLevel = Constants.Logger.defaultLoggerLevel
     (componentForTesting.flushManager as FlushManagerImpl).endsFlushProcess()
-    initGate.clear()
     telemetry = null
 }
 
@@ -35,6 +39,7 @@ internal fun Exponea.reset() {
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
     initGate.clear()
+    ExponeaContextProvider.reset()
     if (!wasInitialized) return
     componentForTesting.campaignRepository.clear()
     componentForTesting.customerIdsRepository.clear()

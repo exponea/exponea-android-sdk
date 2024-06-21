@@ -32,30 +32,36 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
     }
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
-    fun `should throw internal error on onResume when not in safe mode`() {
+    fun `should throw internal error on onStart when not in safe mode`() {
         Exponea.safeModeEnabled = false
         ExponeaExceptionThrowing.makeExponeaThrow()
         try {
-            controller.resume()
+            controller.start()
+            controller.postCreate(null)
         } catch (e: RuntimeException) { // robolectric wraps exception into runtime exception
             if (e.cause != null) throw e.cause!!
         }
     }
 
     @Test
-    fun `should not throw internal error on onPause when in safe mode`() {
+    fun `should not throw internal error on onStop when in safe mode`() {
         Exponea.safeModeEnabled = true
+        controller.start()
         controller.resume()
         ExponeaExceptionThrowing.makeExponeaThrow()
         controller.pause()
+        controller.stop()
     }
 
     @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
-    fun `should throw internal error on onPause when not in safe mode`() {
+    fun `should throw internal error on onStop when not in safe mode`() {
         Exponea.safeModeEnabled = false
+        controller.start()
+        controller.postCreate(null)
         controller.resume()
         ExponeaExceptionThrowing.makeExponeaThrow()
         controller.pause()
+        controller.stop()
     }
 
     class TestActivity : Activity() {

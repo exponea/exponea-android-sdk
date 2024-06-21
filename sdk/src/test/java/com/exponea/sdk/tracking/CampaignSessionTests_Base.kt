@@ -10,6 +10,8 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.reset
+import com.exponea.sdk.testutil.shutdown
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -66,6 +68,12 @@ internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
             this.addCategory(Intent.CATEGORY_BROWSABLE)
             this.data = Uri.parse(CAMPAIGN_URL)
         }
+    }
+
+    @Before
+    fun deinitExponea() {
+        Exponea.reset()
+        Exponea.shutdown()
     }
 
     @Before

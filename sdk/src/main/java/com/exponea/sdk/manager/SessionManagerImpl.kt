@@ -8,9 +8,9 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.repository.CampaignRepository
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
-import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.toDate
 
 internal class SessionManagerImpl(
@@ -23,7 +23,6 @@ internal class SessionManagerImpl(
     private val initTime = currentTimeSeconds()
 
     var application = context.applicationContext as Application
-    private val initializedWithResumedActivity = context.isResumedActivity()
     private var isListenerActive = false
 
     companion object {
@@ -47,15 +46,15 @@ internal class SessionManagerImpl(
     }
 
     /**
-     * Starts session listener by enabling activityLifecycleCallbacks
-     * If the context provided is a resumed activity, automatically start a session
+     * Registers session listener by using activityLifecycleCallbacks
+     * Starts a session If application is already in foreground state
      */
     override fun startSessionListener() {
         if (!isListenerActive) {
-            if (initializedWithResumedActivity) {
+            if (ExponeaContextProvider.applicationIsForeground) {
                 onSessionStart()
             }
-            application.registerActivityLifecycleCallbacks(this)
+            ExponeaContextProvider.registerForegroundStateListener(this)
             isListenerActive = true
         }
     }
@@ -65,7 +64,7 @@ internal class SessionManagerImpl(
      */
     override fun stopSessionListener() {
         if (isListenerActive) {
-            application.unregisterActivityLifecycleCallbacks(this)
+            ExponeaContextProvider.removeForegroundStateListener(this)
             isListenerActive = false
         }
     }

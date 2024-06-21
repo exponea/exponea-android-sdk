@@ -36,22 +36,24 @@ internal class CampaignSessionTests_003 : CampaignSessionTests_Base() {
             it.type == Constants.EventTypes.sessionStart
         }
         firstRun.pause()
+        firstRun.stop()
         firstRun.destroy()
         idleThreads()
         // second run will handle Campaign Intent, but session will be resumed
         val campaignIntent = createDeeplinkIntent()
         val secondRun = Robolectric.buildActivity(TestActivity::class.java, campaignIntent)
         secondRun.create()
-        secondRun.start()
+        val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
+        assertNotNull(campaignEvent)
+        secondRun.start() // session is resumed, so no campaign cache clear is done
         secondRun.postCreate(null)
         idleThreads()
         assertTrue(Exponea.isInitialized)
-        val campaignEvent = Exponea.componentForTesting.campaignRepository.get()
-        assertNotNull(campaignEvent)
+        assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertTrue(Exponea.componentForTesting.eventRepository.all().any { it.type == Constants.EventTypes.push })
-
-        secondRun.resume() // session is resumed, so no campaign cache clear is done
+        secondRun.resume()
         secondRun.pause()
+        secondRun.stop()
         idleThreads()
         assertNull(Exponea.componentForTesting.campaignRepository.get())
         assertEquals(1, Exponea.componentForTesting.eventRepository.all().count {

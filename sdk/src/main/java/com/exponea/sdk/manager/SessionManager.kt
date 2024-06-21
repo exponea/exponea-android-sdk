@@ -1,12 +1,10 @@
 package com.exponea.sdk.manager
 
-import android.app.Activity
-import android.app.Application
-import android.os.Bundle
+import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 
-internal abstract class SessionManager : Application.ActivityLifecycleCallbacks {
+internal abstract class SessionManager : OnForegroundStateListener {
 
     abstract fun onSessionStart()
 
@@ -22,21 +20,13 @@ internal abstract class SessionManager : Application.ActivityLifecycleCallbacks 
 
     abstract fun reset()
 
-    override fun onActivityPaused(activity: Activity) {
+    override fun onStateChanged(isForeground: Boolean) {
         runCatching {
-            onSessionEnd()
+            if (isForeground) {
+                onSessionStart()
+            } else {
+                onSessionEnd()
+            }
         }.logOnException()
     }
-
-    override fun onActivityResumed(activity: Activity) {
-        runCatching {
-            onSessionStart()
-        }.logOnException()
-    }
-
-    override fun onActivityStarted(activity: Activity) {}
-    override fun onActivityDestroyed(activity: Activity) {}
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-    override fun onActivityStopped(activity: Activity) {}
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
 }

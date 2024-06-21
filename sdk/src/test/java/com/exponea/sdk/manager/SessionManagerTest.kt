@@ -77,19 +77,14 @@ internal class SessionManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track session start on pause if initialized after onResume with Activity`() {
+    fun `should track session start if initialized after onResume with Activity`() {
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
         controller.resume()
         sm.startSessionListener()
-        verify(exactly = 0) {
-            eventManager.track("session_start", any(), any(), EventType.SESSION_START)
-        }
-        // the session manager is initialized with application context, we have to pause for session start to be tracked
-        controller.pause()
         verify(exactly = 1) {
-            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+            eventManager.track("session_start", any(), any(), EventType.SESSION_START)
         }
         confirmVerified(eventManager)
     }
@@ -135,7 +130,10 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         controller.resume()
         every { anyConstructed<Date>().time } returns 100 * 1000 // app paused after 90 sec
         controller.pause()
+        controller.stop()
         every { anyConstructed<Date>().time } returns 120 * 1000 // app resumed after being backgrounded for 20 sec
+        controller.start()
+        controller.postCreate(null)
         controller.resume()
         verify(exactly = 1) {
             eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)

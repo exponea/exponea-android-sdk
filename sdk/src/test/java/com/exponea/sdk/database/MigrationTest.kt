@@ -99,9 +99,15 @@ internal class MigrationTest : ExponeaSDKTest() {
         setup(20)
         assertEquals(repo.count(), 0)
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
-        // migrated db should contain previous evens + install event
-        assertEquals(repo.count(), 21)
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(
+                projectToken = "mock-token",
+                automaticSessionTracking = false
+            )
+        )
+        // migrated db should contain previous events + install event
+        assertEquals(21, repo.count())
     }
 
     @After

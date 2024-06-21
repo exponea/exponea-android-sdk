@@ -51,6 +51,10 @@ object ExponeaExceptionThrowing {
             if (throwException) throw TestPurposeException()
             callOriginal()
         }
+        every { anyConstructed<BackgroundTimerManagerImpl>().stopTimer() } answers {
+            if (throwException) throw TestPurposeException()
+            callOriginal()
+        }
         every { anyConstructed<ExponeaComponent>().serviceManager } answers {
             if (throwException) throw TestPurposeException()
             callOriginal()

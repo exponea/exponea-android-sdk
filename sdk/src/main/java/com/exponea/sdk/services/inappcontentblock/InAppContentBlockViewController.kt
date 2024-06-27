@@ -23,7 +23,7 @@ import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 
-internal class InAppContentBlockViewController(
+internal open class InAppContentBlockViewController(
     internal val placeholderId: String,
     private val config: InAppContentBlockPlaceholderConfiguration,
     private val imageCache: DrawableCache,
@@ -38,7 +38,7 @@ internal class InAppContentBlockViewController(
     private var isViewAttachedToWindow: Boolean = false
     private var contentLoaded: Boolean = false
     private var assignedHtmlContent: NormalizedResult? = null
-    private var assignedMessage: InAppContentBlock? = null
+    internal var assignedMessage: InAppContentBlock? = null
 
     internal fun onUrlClick(url: String) {
         Logger.i(this, "InAppCB: Placeholder $placeholderId is clicked for action $url")

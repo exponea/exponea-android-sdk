@@ -19,7 +19,7 @@ import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.FlushManager
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppContentBlockManager
-import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
+import com.exponea.sdk.manager.InAppContentBlockManagerImpl
 import com.exponea.sdk.manager.InAppMessageManager
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.InAppMessageTrackingDelegate
@@ -240,7 +240,7 @@ internal class ExponeaComponent(
 
     internal val inAppContentBlocksBitmapCache = InAppContentBlockBitmapCacheImpl(context)
 
-    internal val inAppContentBlockManager: InAppContentBlockManager = InAppContentBlocksManagerImpl(
+    internal val inAppContentBlockManager: InAppContentBlockManager = InAppContentBlockManagerImpl(
         inAppContentBlockDisplayStateRepository,
         fetchManager,
         projectFactory,

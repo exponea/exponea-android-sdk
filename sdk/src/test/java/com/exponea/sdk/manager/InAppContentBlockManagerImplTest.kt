@@ -1,7 +1,10 @@
 package com.exponea.sdk.manager
 
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -11,6 +14,7 @@ import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockDisplayState
 import com.exponea.sdk.models.InAppContentBlockFrequency
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
+import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockStatus
 import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.Result
@@ -21,18 +25,22 @@ import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
+import com.exponea.sdk.telemetry.TelemetryManager
+import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
+import com.exponea.sdk.testutil.runInSingleThread
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
+import java.util.Date
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -41,7 +49,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
-internal class InAppContentBlocksManagerImplTest {
+internal class InAppContentBlockManagerImplTest {
 
     companion object {
         fun buildMessage(
@@ -51,12 +59,14 @@ internal class InAppContentBlocksManagerImplTest {
             placeholders: List<String> = listOf("placeholder_1"),
             trackingConsentCategory: String? = null,
             priority: Int? = null,
-            rawFrequency: String = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+            rawFrequency: String = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
+            dateFilter: DateFilter? = null,
+            name: String = "Random name"
         ): InAppContentBlock {
             return InAppContentBlock(
                 id = id,
-                name = "Random name",
-                dateFilter = null,
+                name = name,
+                dateFilter = dateFilter,
                 rawFrequency = rawFrequency,
                 priority = priority,
                 consentCategoryTracking = trackingConsentCategory,
@@ -280,7 +290,16 @@ internal class InAppContentBlocksManagerImplTest {
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
 
     @Before
+    fun disableTelemetry() {
+        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
+            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        }
+        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
+    }
+
+    @Before
     fun before() {
+        Exponea.telemetry = null
         fetchManager = mockk()
         customerIdsRepository = mockk()
         displayStateRepository = mockk()
@@ -309,7 +328,7 @@ internal class InAppContentBlocksManagerImplTest {
         every { htmlCache.get(any(), any()) } returns null
         every { htmlCache.set(any(), any(), any()) } just Runs
         apiService = ExponeaMockService(true)
-        inAppContentBlockManager = InAppContentBlocksManagerImpl(
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
             projectFactory = projectFactory,
@@ -321,21 +340,14 @@ internal class InAppContentBlocksManagerImplTest {
         identifyCustomer()
     }
 
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
     @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
+    fun after() {
+        Exponea.telemetry = null
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should load only supported messages`() {
+    fun `should load only supported messages`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "native"),
@@ -344,21 +356,23 @@ internal class InAppContentBlocksManagerImplTest {
             )))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        assertEquals(1, (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData.size)
+        assertEquals(1, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse HTML message in Static-InAppContentBlock`() {
+    fun `should parse HTML message in Static-InAppContentBlock`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "html", data = mapOf(
-                    "html" to buildHtmlMessageContent()
-                ))
+                buildMessage(
+                    "id1", type = "html", data = mapOf(
+                        "html" to buildHtmlMessageContent()
+                    )
+                )
             )))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        val staticForm = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData.firstOrNull()
+        val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.firstOrNull()
         assertNotNull(staticForm)
         assertEquals("id1", staticForm.id)
         assertEquals(InAppContentBlockType.HTML, staticForm.contentType)
@@ -367,14 +381,15 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should update non-loaded Personalized InAppContentBlock with fresh content`() {
+    fun `should update non-loaded Personalized InAppContentBlock with fresh content`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 buildMessage(
                     messageId,
-                    placeholders = listOf(placeholderId)
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
                 ) // static has not contentType nor data
             )))
         }
@@ -392,14 +407,14 @@ internal class InAppContentBlocksManagerImplTest {
             )))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        val staticForm = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData
+        val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
             .firstOrNull()
         assertNotNull(staticForm)
         assertEquals(messageId, staticForm.id)
         assertEquals(InAppContentBlockType.NOT_DEFINED, staticForm.contentType)
         assertNull(staticForm.htmlContent)
-        (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
-        val personalizedForm = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData
+        (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
+        val personalizedForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
             .firstOrNull()
         assertNotNull(personalizedForm)
         assertNotNull(personalizedForm.personalizedData)
@@ -411,7 +426,7 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should refresh message only after expiration of ttl`() {
+    fun `should refresh message only after expiration of ttl`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val messageId = "id1"
         var personalizedLoadCount: Int = 0
@@ -420,7 +435,8 @@ internal class InAppContentBlocksManagerImplTest {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 buildMessage(
                     messageId,
-                    placeholders = listOf(placeholderId)
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
                 ) // static has not contentType nor data
             )))
         }
@@ -441,14 +457,14 @@ internal class InAppContentBlocksManagerImplTest {
             )))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertEquals(1, personalizedLoadCount)
-        (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertEquals(1, personalizedLoadCount)
         Thread.sleep((ttlSeconds + 1) * 1000L)
-        (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertEquals(2, personalizedLoadCount)
-        val message = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData.firstOrNull()
+        val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.firstOrNull()
         assertNotNull(message)
         assertNotNull(message.personalizedData)
         assertNotNull(message.personalizedData!!.content)
@@ -457,17 +473,19 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should auto-load messages content by configuration`() {
+    fun `should auto-load messages content by configuration`() = runInSingleThread { idleThreads ->
         val placeholderToAutoLoad = "ph1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 buildMessage(
                     "id1",
-                    placeholders = listOf(placeholderToAutoLoad, "ph2")
+                    placeholders = listOf(placeholderToAutoLoad, "ph2"),
+                    dateFilter = null
                 ), // static has not contentType nor data
                 buildMessage(
                     "id2",
-                    placeholders = listOf("ph3")
+                    placeholders = listOf("ph3"),
+                    dateFilter = null
                 ) // static has not contentType nor data
             )))
         }
@@ -492,7 +510,7 @@ internal class InAppContentBlocksManagerImplTest {
             inAppContentBlockPlaceholdersAutoLoad = listOf(placeholderToAutoLoad)
         )
         projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
-        inAppContentBlockManager = InAppContentBlocksManagerImpl(
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
             projectFactory = projectFactory,
@@ -502,7 +520,7 @@ internal class InAppContentBlocksManagerImplTest {
             fontCache = fontCache
         )
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        val messages = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData
+        val messages = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
         assertEquals(2, messages.size)
         val message1 = messages.find { it.id == "id1" }
         assertNotNull(message1)
@@ -514,7 +532,7 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should track event with original customer`() {
+    fun `should track event with original customer`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val messageId = "id1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
@@ -537,7 +555,7 @@ internal class InAppContentBlocksManagerImplTest {
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        val message = (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message)
         assertEquals("brownie1", message.customerIds.get("cookie"))
         assertEquals("test", message.customerIds.get("login"))
@@ -545,7 +563,7 @@ internal class InAppContentBlocksManagerImplTest {
         assertNotNull(message)
         assertEquals("brownie1", message.customerIds.get("cookie"))
         assertEquals("test", message.customerIds.get("login"))
-        val message2 = (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        val message2 = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message2)
         assertEquals(message.id, message2.id)
         assertEquals("brownie2", message2.customerIds.get("cookie"))
@@ -554,7 +572,7 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should remove personal data after customer login`() {
+    fun `should remove personal data after customer login`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val messageId = "id1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
@@ -577,14 +595,14 @@ internal class InAppContentBlocksManagerImplTest {
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        val message = (inAppContentBlockManager as InAppContentBlocksManagerImpl).loadContent(placeholderId)
+        val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message)
         assertNotNull(message.personalizedData)
         identifyCustomer(cookie = "brownie2", ids = hashMapOf("login" to "another"))
         // picked message hasn't to be intact
         assertNotNull(message)
         assertNotNull(message.personalizedData)
-        val internalMessage = (inAppContentBlockManager as InAppContentBlocksManagerImpl).contentBlocksData
+        val internalMessage = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
             .firstOrNull()
         assertNotNull(internalMessage)
         assertEquals(message.id, internalMessage.id)
@@ -601,29 +619,33 @@ internal class InAppContentBlocksManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should prioritize message by priority value`() {
+    fun `should prioritize message by priority value`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                     buildMessage(
-                            id = "1",
-                            placeholders = listOf(placeholderId),
-                            priority = null
+                        id = "1",
+                        placeholders = listOf(placeholderId),
+                        priority = null,
+                        dateFilter = null
                     ),
                     buildMessage(
-                            id = "2",
-                            placeholders = listOf(placeholderId),
-                            priority = 0
+                        id = "2",
+                        placeholders = listOf(placeholderId),
+                        priority = 0,
+                        dateFilter = null
                     ),
                     buildMessage(
-                            id = "3",
-                            placeholders = listOf(placeholderId),
-                            priority = 1000
+                        id = "3",
+                        placeholders = listOf(placeholderId),
+                        priority = 1000,
+                        dateFilter = null
                     ),
                     buildMessage(
-                            id = "4",
-                            placeholders = listOf(placeholderId),
-                            priority = 10
+                        id = "4",
+                        placeholders = listOf(placeholderId),
+                        priority = 10,
+                        dateFilter = null
                     )
             )))
         }
@@ -643,7 +665,7 @@ internal class InAppContentBlocksManagerImplTest {
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         for (i in 0..1000) {
-            val chosenContentBlock = (inAppContentBlockManager as InAppContentBlocksManagerImpl)
+            val chosenContentBlock = (inAppContentBlockManager as InAppContentBlockManagerImpl)
                     .loadContent(placeholderId)
             assertNotNull(chosenContentBlock)
             assertNotNull(chosenContentBlock.personalizedData)
@@ -652,5 +674,399 @@ internal class InAppContentBlocksManagerImplTest {
             assertEquals(InAppContentBlockType.HTML, chosenContentBlock.contentType)
             assertNotNull(chosenContentBlock.htmlContent)
         }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should track show message into telemetry`() = runInSingleThread { idleThreads ->
+        val contentBlock = buildMessage("id2", type = "html")
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                contentBlock
+            )))
+        }
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryEventTypeSlot = slot<com.exponea.sdk.telemetry.model.EventType>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryEventTypeSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            object : InAppContentBlockDataLoader {
+                override fun loadContent(placeholderId: String): InAppContentBlock? {
+                    return contentBlock
+                }
+            },
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(defferedLoad = false)
+        )
+        idleThreads()
+        assertTrue(telemetryEventTypeSlot.isCaptured)
+        val capturedEventType = telemetryEventTypeSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertEquals("content_block", capturedProps["messageType"])
+    }
+
+    @Test
+    fun `should get placeholder with defined loader`() = runInSingleThread { idleThreads ->
+        val contentBlock = buildMessage("id1", type = "html")
+        var askedPlaceholderId: String? = null
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_id",
+            object : InAppContentBlockDataLoader {
+                override fun loadContent(placeholderId: String): InAppContentBlock {
+                    askedPlaceholderId = placeholderId
+                    return contentBlock
+                }
+            },
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(defferedLoad = true)
+        )
+        assertNotNull(placeholder)
+        placeholder.refreshContent()
+        idleThreads()
+        assertEquals("placeholder_id", askedPlaceholderId)
+        assertEquals("placeholder_id", placeholder.controller.placeholderId)
+        assertEquals(contentBlock.id, placeholder.controller.assignedMessage?.id)
+    }
+
+    @Test
+    fun `should pass for empty date filter`() {
+        val contentBlock = buildMessage("id1", type = "html")
+        assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for disabled date filter`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage("id1", type = "html", dateFilter = DateFilter(
+            enabled = false,
+            fromDate = nowSeconds + 10,
+            toDate = nowSeconds + 20
+        ))
+        assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
+    }
+
+    @Test
+    fun `should not pass for date filter with missed time`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage("id1", type = "html", dateFilter = DateFilter(
+            enabled = true,
+            fromDate = nowSeconds + 10,
+            toDate = nowSeconds + 20
+        ))
+        assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show ALWAYS`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show ONLY_ONCE but not shown`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, null, 0
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show ONLY_ONCE but interacted`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, Date(), 1
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should not pass for frequency filter if show ONLY_ONCE and already shown`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show ONCE_PER_VISIT but not shown`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, null, 0
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show ONCE_PER_VISIT but interacted`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, Date(), 1
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should not pass for frequency filter if show ONCE_PER_VISIT and already shown`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show UNTIL_VISITOR_INTERACTS but not interacted`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, null, 0
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass for frequency filter if show UNTIL_VISITOR_INTERACTS but only shown`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should not pass for frequency filter if show UNTIL_VISITOR_INTERACTS and interacted`() {
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            null, 0, Date(), 1
+        )
+        assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+    }
+
+    @Test
+    fun `should pass filter if passed all inner filters`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            dateFilter = DateFilter(
+                enabled = false,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            ),
+            rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+        assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
+        assertTrue(inAppContentBlockManager.passesFilters(contentBlock))
+    }
+
+    @Test
+    fun `should not pass filter if not passed date filter`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            dateFilter = DateFilter(
+                enabled = true,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            ),
+            rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+        )
+        assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+        assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
+        assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
+    }
+
+    @Test
+    fun `should not pass filter if not passed frequency filter`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            dateFilter = DateFilter(
+                enabled = false,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            ),
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+        assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
+        assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
+    }
+
+    @Test
+    fun `should not pass filter if none inner filters pass`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val contentBlock = buildMessage(
+            "id1",
+            type = "html",
+            dateFilter = DateFilter(
+                enabled = true,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            ),
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        every {
+            displayStateRepository.get(contentBlock)
+        } returns InAppContentBlockDisplayState(
+            Date(), 1, null, 0
+        )
+        assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
+        assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
+        assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
+    }
+
+    @Test
+    fun `should return all content blocks but only for placeholder`() = runInSingleThread { idleThreads ->
+        val placeholderId = "ph1"
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        every {
+            displayStateRepository.get(any())
+        } answers {
+            if (firstArg<InAppContentBlock>().id == "invalidByFrequency") {
+                InAppContentBlockDisplayState(
+                    Date(), 1, null, 0
+                )
+            } else {
+                InAppContentBlockDisplayState(
+                    null, 0, null, 0
+                )
+            }
+        }
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    id = "invalidByDate",
+                    placeholders = listOf(placeholderId),
+                    dateFilter = DateFilter(
+                        enabled = true,
+                        fromDate = nowSeconds + 10,
+                        toDate = nowSeconds + 20
+                    ),
+                    rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+                ),
+                buildMessage(
+                    id = "invalidByFrequency",
+                    placeholders = listOf(placeholderId),
+                    rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+                ),
+                buildMessage(
+                    id = "valid",
+                    placeholders = listOf(placeholderId),
+                    priority = 1000
+                ),
+                buildMessage(
+                    id = "invalidByPlaceholder",
+                    placeholders = listOf("ph2"),
+                    priority = 10
+                )
+            )))
+        }
+        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
+            val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
+            arg<List<String>>(2).forEach { messageId ->
+                msgData.add(buildMessageData(
+                    messageId,
+                    type = "html",
+                    hasTrackingConsent = false,
+                    data = mapOf(
+                        "html" to buildHtmlMessageContent()
+                    )
+                ))
+            }
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, msgData))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val contentBlocks = inAppContentBlockManager.getAllInAppContentBlocksForPlaceholder(placeholderId = "ph1")
+        assertEquals(3, contentBlocks.size)
+        val loadedBlockIds = contentBlocks.map { it.id }
+        assertTrue(loadedBlockIds.contains("invalidByDate"))
+        assertTrue(loadedBlockIds.contains("invalidByFrequency"))
+        assertTrue(loadedBlockIds.contains("valid"))
+        assertFalse(loadedBlockIds.contains("invalidByPlaceholder"))
     }
 }

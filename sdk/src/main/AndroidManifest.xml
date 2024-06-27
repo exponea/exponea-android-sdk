@@ -73,6 +73,17 @@
             android:authorities="${applicationId}.sdk.contextprovider"
             android:exported="false"
             android:enabled="true" />
+
     </application>
+
+    <queries>
+        <intent>
+            <action android:name=
+                "android.support.customtabs.action.CustomTabsService" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
 
 </manifest>

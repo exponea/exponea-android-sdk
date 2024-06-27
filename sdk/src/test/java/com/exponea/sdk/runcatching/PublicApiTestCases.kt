@@ -8,7 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
@@ -231,53 +231,53 @@ internal object PublicApiTestCases {
         Pair(Exponea::trackInAppContentBlockClick) {
             Exponea.trackInAppContentBlockClick(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildAction(),
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildAction(),
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::trackInAppContentBlockClickWithoutTrackingConsent) {
             Exponea.trackInAppContentBlockClickWithoutTrackingConsent(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildAction(),
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildAction(),
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::trackInAppContentBlockClose) {
             Exponea.trackInAppContentBlockClose(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::trackInAppContentBlockCloseWithoutTrackingConsent) {
             Exponea.trackInAppContentBlockCloseWithoutTrackingConsent(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::trackInAppContentBlockError) {
             Exponea.trackInAppContentBlockError(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage(),
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null),
                     "Failure message"
             )
         },
         Pair(Exponea::trackInAppContentBlockErrorWithoutTrackingConsent) {
             Exponea.trackInAppContentBlockErrorWithoutTrackingConsent(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage(),
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null),
                     "Failure message"
             )
         },
         Pair(Exponea::trackInAppContentBlockShown) {
             Exponea.trackInAppContentBlockShown(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::trackInAppContentBlockShownWithoutTrackingConsent) {
             Exponea.trackInAppContentBlockShownWithoutTrackingConsent(
                     "placeholder1",
-                    InAppContentBlocksManagerImplTest.buildMessage()
+                    InAppContentBlockManagerImplTest.buildMessage(dateFilter = null)
             )
         },
         Pair(Exponea::registerSegmentationDataCallback) {
@@ -302,6 +302,12 @@ internal object PublicApiTestCases {
             Exponea.getSegments("discovery") {
                 // nothing
             }
+        },
+        Pair(Exponea::getInAppContentBlocksCarousel) {
+            Exponea.getInAppContentBlocksCarousel(
+                ApplicationProvider.getApplicationContext(),
+                "placeholder1"
+            )
         }
     )
 

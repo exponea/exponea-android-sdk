@@ -5,8 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FetchManagerImpl
-import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
-import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest
+import com.exponea.sdk.manager.InAppContentBlockManagerImpl
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
@@ -89,7 +89,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                InAppContentBlocksManagerImplTest.buildMessage(messageId, placeholders = listOf(placeholderId))
+                InAppContentBlockManagerImplTest.buildMessage(
+                    messageId,
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
+                )
             )))
         }
         every {
@@ -97,23 +101,23 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 // htmlContent
-                InAppContentBlocksManagerImplTest.buildMessageData(
+                InAppContentBlockManagerImplTest.buildMessageData(
                     messageId,
                     type = "html",
                     hasTrackingConsent = true,
                     data = mapOf(
-                        "html" to InAppContentBlocksManagerImplTest.buildHtmlMessageContent()
+                        "html" to InAppContentBlockManagerImplTest.buildHtmlMessageContent()
                     )
                 )
             )))
         }
         // turn init-load on
-        every { anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders() } answers {
+        every { anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders() } answers {
             callOriginal()
         }
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertTrue(
-            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlocksManagerImpl)
+            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
                 .isNotEmpty()
         )
@@ -158,7 +162,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                InAppContentBlocksManagerImplTest.buildMessage(messageId, placeholders = listOf(placeholderId))
+                InAppContentBlockManagerImplTest.buildMessage(
+                    messageId,
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
+                )
             )))
         }
         every {
@@ -166,25 +174,25 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 // htmlContent
-                InAppContentBlocksManagerImplTest.buildMessageData(
+                InAppContentBlockManagerImplTest.buildMessageData(
                     messageId,
                     type = "html",
                     hasTrackingConsent = false,
                     data = mapOf(
-                        "html" to InAppContentBlocksManagerImplTest.buildHtmlMessageContent()
+                        "html" to InAppContentBlockManagerImplTest.buildHtmlMessageContent()
                     )
                 )
             )))
         }
         // turn init-load on
         every {
-            anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders()
+            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders()
         } answers {
             callOriginal()
         }
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertTrue(
-            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlocksManagerImpl)
+            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
                 .isNotEmpty()
         )
@@ -214,7 +222,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                InAppContentBlocksManagerImplTest.buildMessage(messageId, placeholders = listOf(placeholderId))
+                InAppContentBlockManagerImplTest.buildMessage(
+                    messageId,
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
+                )
             )))
         }
         every {
@@ -223,25 +235,25 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, arrayListOf(
                     // htmlContent
-                    InAppContentBlocksManagerImplTest.buildMessageData(
+                    InAppContentBlockManagerImplTest.buildMessageData(
                         messageId,
                         type = "html",
                         hasTrackingConsent = true,
                         data = mapOf(
-                            "html" to InAppContentBlocksManagerImplTest.buildHtmlMessageContent()
+                            "html" to InAppContentBlockManagerImplTest.buildHtmlMessageContent()
                         )
                     )
             )))
         }
         // turn init-load on
         every {
-            anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders()
+            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders()
         } answers {
             callOriginal()
         }
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertTrue(
-            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlocksManagerImpl)
+            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
                 .isNotEmpty()
         )
@@ -275,7 +287,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                InAppContentBlocksManagerImplTest.buildMessage(messageId, placeholders = listOf(placeholderId))
+                InAppContentBlockManagerImplTest.buildMessage(
+                    messageId,
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
+                )
             )))
         }
         every {
@@ -284,25 +300,25 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, arrayListOf(
                     // htmlContent
-                    InAppContentBlocksManagerImplTest.buildMessageData(
+                    InAppContentBlockManagerImplTest.buildMessageData(
                         messageId,
                         type = "html",
                         hasTrackingConsent = false,
                         data = mapOf(
-                            "html" to InAppContentBlocksManagerImplTest.buildHtmlMessageContent()
+                            "html" to InAppContentBlockManagerImplTest.buildHtmlMessageContent()
                         )
                     )
             )))
         }
         // turn init-load on
         every {
-            anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders()
+            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders()
         } answers {
             callOriginal()
         }
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertTrue(
-            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlocksManagerImpl)
+            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
                 .isNotEmpty()
         )

@@ -5,6 +5,7 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 
 interface InAppContentBlockManager {
@@ -13,9 +14,20 @@ interface InAppContentBlockManager {
         context: Context,
         config: InAppContentBlockPlaceholderConfiguration
     ): InAppContentBlockPlaceholderView
+    fun getPlaceholderView(
+        placeholderId: String,
+        dataLoader: InAppContentBlockDataLoader,
+        context: Context,
+        config: InAppContentBlockPlaceholderConfiguration
+    ): InAppContentBlockPlaceholderView
     fun loadInAppContentBlockPlaceholders()
     fun clearAll()
     fun onEventCreated(event: Event, type: EventType)
+    fun getAllInAppContentBlocksForPlaceholder(placeholderId: String): List<InAppContentBlock>
+    fun passesFilters(contentBlock: InAppContentBlock): Boolean
+    fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>)
+    fun passesFrequencyFilter(contentBlock: InAppContentBlock): Boolean
+    fun passesDateFilter(contentBlock: InAppContentBlock): Boolean
 }
 
 internal interface InAppContentBlockTrackingDelegate {

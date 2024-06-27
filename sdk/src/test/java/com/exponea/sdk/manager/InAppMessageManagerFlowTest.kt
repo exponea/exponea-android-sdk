@@ -152,8 +152,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Before
     fun disableInAppContentBlockManager() {
-        mockkConstructorFix(InAppContentBlocksManagerImpl::class)
-        every { anyConstructed<InAppContentBlocksManagerImpl>().onEventCreated(any(), any()) } just Runs
+        mockkConstructorFix(InAppContentBlockManagerImpl::class)
+        every { anyConstructed<InAppContentBlockManagerImpl>().onEventCreated(any(), any()) } just Runs
     }
 
     @Test

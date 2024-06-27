@@ -6,7 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.FlushManagerImpl
-import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
+import com.exponea.sdk.manager.InAppContentBlockManagerImpl
 import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
 import com.exponea.sdk.manager.ReloadMode
@@ -50,8 +50,8 @@ internal open class ExponeaSDKTest {
 
     @Before
     fun disableInAppContentBlocksPrefetch() {
-        mockkConstructorFix(InAppContentBlocksManagerImpl::class)
-        every { anyConstructed<InAppContentBlocksManagerImpl>().loadInAppContentBlockPlaceholders() } just Runs
+        mockkConstructorFix(InAppContentBlockManagerImpl::class)
+        every { anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders() } just Runs
     }
 
     @Before

@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
@@ -35,6 +36,8 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.telemetry.TelemetryManager
+import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.backgroundThreadDispatcher
@@ -61,6 +64,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -83,8 +87,18 @@ internal class InAppMessageManagerImplTest {
     private lateinit var mockActivity: Activity
     private lateinit var trackingConsentManager: TrackingConsentManager
     private lateinit var projectFactory: ExponeaProjectFactory
+
+    @Before
+    fun disableTelemetry() {
+        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
+            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        }
+        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
+    }
+
     @Before
     fun before() {
+        Exponea.telemetry = null
         ExponeaContextProvider.applicationIsForeground = true
         fetchManager = mockk()
         messagesCache = mockk()
@@ -135,6 +149,11 @@ internal class InAppMessageManagerImplTest {
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
         Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
+    }
+
+    @After
+    fun after() {
+        Exponea.telemetry = null
     }
 
     @Test
@@ -1497,5 +1516,46 @@ internal class InAppMessageManagerImplTest {
         every { presenter.isPresenting() } returns false
         val pickedMessage = manager.pickPendingMessage()
         assertNotNull(pickedMessage)
+    }
+
+    @Test
+    fun `should track telemetry on message shown`() {
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryEventTypeSlot = slot<com.exponea.sdk.telemetry.model.EventType>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryEventTypeSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        val inAppMessage = InAppMessageTest.getInAppMessage()
+        every { messagesCache.get() } returns arrayListOf(inAppMessage)
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+                .invoke(Result(true, arrayListOf(inAppMessage)))
+        }
+        val spykManager = spyk(manager)
+        every {
+            presenter.show(any(), any(), any(), any(), any(), any(), any())
+        } returns mockk()
+        waitForIt { spykManager.reload { it() } }
+        registerPendingRequest("session_start", spykManager)
+        spykManager.pickAndShowMessage()
+        Robolectric.flushForegroundThreadScheduler()
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageShown(inAppMessage, CONSIDER_CONSENT)
+        }
+        assertTrue(telemetryEventTypeSlot.isCaptured)
+        val capturedEventType = telemetryEventTypeSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertEquals("modal", capturedProps["messageType"])
     }
 }

@@ -6,9 +6,9 @@ import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.InAppContentBlockManager
-import com.exponea.sdk.manager.InAppContentBlocksManagerImpl
-import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest.Companion.buildHtmlMessageContent
-import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest.Companion.buildMessage
+import com.exponea.sdk.manager.InAppContentBlockManagerImpl
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildHtmlMessageContent
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildMessage
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -91,7 +91,7 @@ internal class InAppContentBlockPlaceholderViewTest {
         every { htmlCache.get(any(), any()) } returns null
         every { htmlCache.set(any(), any(), any()) } just Runs
         apiService = ExponeaMockService(true)
-        inAppContentBlockManager = InAppContentBlocksManagerImpl(
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
             projectFactory = projectFactory,
@@ -211,9 +211,10 @@ internal class InAppContentBlockPlaceholderViewTest {
                 buildMessage(
                     "id1",
                     type = "html",
-                    placeholders = listOf(placeholderId),
                     data = mapOf("html" to buildHtmlMessageContent()),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                    placeholders = listOf(placeholderId),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                    dateFilter = null
                 )
             )))
         }
@@ -282,9 +283,10 @@ internal class InAppContentBlockPlaceholderViewTest {
                 buildMessage(
                     "id1",
                     type = "html",
-                    placeholders = listOf(placeholderId),
                     data = mapOf("html" to buildHtmlMessageContent()),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                    placeholders = listOf(placeholderId),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                    dateFilter = null
                 )
             )))
         }
@@ -352,9 +354,10 @@ internal class InAppContentBlockPlaceholderViewTest {
                 buildMessage(
                     "id1",
                     type = "html",
-                    placeholders = listOf(placeholderId),
                     data = mapOf("html" to buildHtmlMessageContent()),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+                    placeholders = listOf(placeholderId),
+                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                    dateFilter = null
                 )
             )))
         }

@@ -142,6 +142,10 @@ data class InAppContentBlock(
     fun isContentPersonalized(): Boolean {
         return rawContentType == null
     }
+
+    fun isStatusValid(): Boolean {
+        return status == OK
+    }
 }
 
 enum class InAppContentBlockStatus(val value: String) {

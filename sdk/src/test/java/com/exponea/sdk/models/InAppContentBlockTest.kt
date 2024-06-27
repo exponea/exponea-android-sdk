@@ -1,6 +1,6 @@
 package com.exponea.sdk.models
 
-import com.exponea.sdk.manager.InAppContentBlocksManagerImplTest
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest
 import java.util.Date
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 internal class InAppContentBlockTest {
     @Test
     fun `should have fresh content for Static-InAppContentBlock`() {
-        val staticMessage = InAppContentBlocksManagerImplTest.buildMessage(
+        val staticMessage = InAppContentBlockManagerImplTest.buildMessage(
             "id1", type = "html"
         )
         assertTrue(staticMessage.hasFreshContent())
@@ -20,10 +20,11 @@ internal class InAppContentBlockTest {
 
     @Test
     fun `should have fresh content for fresh Personalized-InAppContentBlock`() {
-        val message = InAppContentBlocksManagerImplTest.buildMessage(
-            "id1"
+        val message = InAppContentBlockManagerImplTest.buildMessage(
+            "id1",
+            dateFilter = null
         )
-        val content = InAppContentBlocksManagerImplTest.buildMessageData(
+        val content = InAppContentBlockManagerImplTest.buildMessageData(
             "id1",
             ttl = 5
         ).apply {
@@ -36,10 +37,11 @@ internal class InAppContentBlockTest {
 
     @Test
     fun `should NOT have fresh content for old Personalized-InAppContentBlock`() {
-        val message = InAppContentBlocksManagerImplTest.buildMessage(
-            "id1"
+        val message = InAppContentBlockManagerImplTest.buildMessage(
+            "id1",
+            dateFilter = null
         )
-        val content = InAppContentBlocksManagerImplTest.buildMessageData(
+        val content = InAppContentBlockManagerImplTest.buildMessageData(
             "id1",
             ttl = 5
         ).apply {

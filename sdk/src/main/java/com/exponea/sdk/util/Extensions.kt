@@ -26,6 +26,7 @@ import com.google.gson.reflect.TypeToken
 import java.io.IOException
 import java.util.Date
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlin.reflect.KClass
 import kotlinx.coroutines.CoroutineScope
@@ -461,4 +462,25 @@ internal fun Drawable?.applyTint(color: Int): Drawable? {
     val wrappedIcon: Drawable = DrawableCompat.wrap(this)
     DrawableCompat.setTint(wrappedIcon, color)
     return wrappedIcon
+}
+
+private val awaitingBlocks = ConcurrentHashMap<String, () -> Unit>()
+
+/**
+ * Runs block after initialization of SDK. Last block registered by blockId will be executed.
+ */
+internal fun runForInitializedSDK(
+    blockId: String,
+    afterInitBlock: () -> Unit
+) {
+    val isNewBlock = !awaitingBlocks.containsKey(blockId)
+    awaitingBlocks[blockId] = afterInitBlock
+    if (isNewBlock) {
+        Exponea.initGate.waitForInitialize {
+            awaitingBlocks[blockId]?.let {
+                awaitingBlocks.remove(blockId)
+                it.invoke()
+            }
+        }
+    }
 }

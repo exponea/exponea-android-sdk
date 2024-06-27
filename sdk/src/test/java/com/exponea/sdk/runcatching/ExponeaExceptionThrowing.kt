@@ -6,6 +6,7 @@ import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.services.DefaultAppInboxProvider
+import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController
 import io.mockk.every
 import io.mockk.mockkObject
 
@@ -112,6 +113,11 @@ object ExponeaExceptionThrowing {
             callOriginal()
         }
         Exponea.appInboxProvider = DefaultAppInboxProvider()
+        mockkConstructorFix(ContentBlockCarouselViewController::class)
+        every { anyConstructed<ContentBlockCarouselViewController>().contentBlockCarouselAdapter } answers {
+            if (throwException) throw TestPurposeException()
+            callOriginal()
+        }
     }
 
     fun makeExponeaThrow() {

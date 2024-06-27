@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ContentBlockCarouselView">
+        <!-- Shows In-app content blocks assigned to this placeholder ID.  -->
+        <attr name="placeholderId" format="reference|string"/>
+        <!-- Shows at most 'maxMessagesCount' content blocks. Value 0 means no limit.  -->
+        <attr name="maxMessagesCount" format="reference|integer"/>
+        <!-- Scrolls automatically to the next content block after 'scrollDelay' seconds. Value 0 means no scrolling.  -->
+        <attr name="scrollDelay" format="reference|integer"/>
+    </declare-styleable>
+</resources>

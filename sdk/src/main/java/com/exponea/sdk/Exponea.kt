@@ -63,6 +63,8 @@ import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaInitManager
+import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_MAX_MESSAGES_COUNT
+import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
@@ -74,6 +76,7 @@ import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.logOnExceptionWithResult
 import com.exponea.sdk.util.returnOnException
+import com.exponea.sdk.view.ContentBlockCarouselView
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import com.exponea.sdk.view.InAppMessagePresenter
 import com.exponea.sdk.view.InAppMessageView
@@ -1246,6 +1249,24 @@ object Exponea {
                     placeholderId,
                     context,
                     config ?: InAppContentBlockPlaceholderConfiguration()
+                )
+            }
+        )
+    }.logOnExceptionWithResult().getOrNull()
+
+    fun getInAppContentBlocksCarousel(
+        context: Context,
+        placeholderId: String,
+        maxMessagesCount: Int? = null,
+        scrollDelay: Int? = null
+    ): ContentBlockCarouselView? = runCatching<ContentBlockCarouselView?> {
+        requireInitialized<ContentBlockCarouselView>(
+            initializedBlock = {
+                ContentBlockCarouselView(
+                        context,
+                        placeholderId,
+                        maxMessagesCount ?: DEFAULT_MAX_MESSAGES_COUNT,
+                        scrollDelay ?: DEFAULT_SCROLL_DELAY
                 )
             }
         )

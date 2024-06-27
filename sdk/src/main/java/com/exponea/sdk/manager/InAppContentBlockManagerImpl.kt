@@ -8,7 +8,6 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
-import com.exponea.sdk.models.InAppContentBlockStatus.OK
 import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.InAppContentBlockType.NOT_DEFINED
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -33,7 +32,7 @@ import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 
-internal class InAppContentBlocksManagerImpl(
+internal class InAppContentBlockManagerImpl(
     private val displayStateRepository: InAppContentBlockDisplayStateRepository,
     private val fetchManager: FetchManager,
     private val projectFactory: ExponeaProjectFactory,
@@ -43,9 +42,12 @@ internal class InAppContentBlocksManagerImpl(
     private val fontCache: SimpleFileCache
 ) : InAppContentBlockManager, InAppContentBlockActionDispatcher, InAppContentBlockDataLoader {
 
-    private val SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW = listOf(
-        InAppContentBlockType.HTML
-    )
+    companion object {
+        internal val SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW = listOf(
+            InAppContentBlockType.HTML
+        )
+    }
+
     private val SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD = SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW + NOT_DEFINED
     private val CONTENT_LOAD_TIMEOUT: Long = 10
 
@@ -78,6 +80,18 @@ internal class InAppContentBlocksManagerImpl(
         placeholderId: String,
         context: Context,
         config: InAppContentBlockPlaceholderConfiguration
+    ): InAppContentBlockPlaceholderView = getPlaceholderView(
+        placeholderId,
+        this,
+        context,
+        config
+    )
+
+    override fun getPlaceholderView(
+        placeholderId: String,
+        dataLoader: InAppContentBlockDataLoader,
+        context: Context,
+        config: InAppContentBlockPlaceholderConfiguration
     ): InAppContentBlockPlaceholderView {
         val controller = InAppContentBlockViewController(
             placeholderId,
@@ -86,7 +100,7 @@ internal class InAppContentBlocksManagerImpl(
             fontCache,
             htmlCache,
             this,
-            this,
+            dataLoader,
             DefaultInAppContentCallback(context)
         )
         val view = InAppContentBlockPlaceholderView(
@@ -138,10 +152,10 @@ internal class InAppContentBlocksManagerImpl(
 
     private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafely {
         val dataMap = source.groupBy { it.id }
-        Logger.d(this, "InAppCB: Request to update content of ${dataMap.keys.joinToString()}")
-        contentBlocksData.forEach { targetContentBlock ->
-            dataMap[targetContentBlock.id]?.firstOrNull()?.let { sourceContentBlock ->
-                targetContentBlock.personalizedData = sourceContentBlock.personalizedData
+        Logger.d(this, "InAppCB: Request to update personalized content of ${dataMap.keys.joinToString()}")
+        contentBlocksData.forEach { localContentBlock ->
+            dataMap[localContentBlock.id]?.firstOrNull()?.let { newContentBlock ->
+                localContentBlock.personalizedData = newContentBlock.personalizedData
             }
         }
     }
@@ -149,7 +163,7 @@ internal class InAppContentBlocksManagerImpl(
     /**
      * Loads missing or obsolete content for block.
      */
-    private fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafely {
+    override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafely {
         val blockIds = contentBlocks
             .filter { !it.hasFreshContent() }
             .map { it.id }
@@ -163,11 +177,14 @@ internal class InAppContentBlocksManagerImpl(
             blockIds,
             onSuccess = { contentData ->
                 val dataMap = contentData.groupBy { it.blockId }
+                // update personalized data for requested 'contentBlocks'
                 contentBlocks.forEach { contentBlock ->
                     dataMap[contentBlock.id]?.firstOrNull()?.let {
                         contentBlock.personalizedData = it
                     }
                 }
+                // update personalized data for local 'contentBlocksData'
+                updateContentForLocalContentBlocks(contentBlocks)
                 semaphore.countDown()
             },
             onFailure = {
@@ -218,10 +235,9 @@ internal class InAppContentBlocksManagerImpl(
 
     private fun pickInAppContentBlock(placeholderId: String): InAppContentBlock? {
         Logger.i(this, "InAppCB: Picking of InAppContentBlock for placeholder $placeholderId starts")
-        val allContentBlocks = getInAppContentBlocksForPlaceholder(placeholderId)
+        val allContentBlocks = getAllInAppContentBlocksForPlaceholder(placeholderId)
         val filteredContentBlocks = allContentBlocks.filter { each -> passesFilters(each) }
         loadContentIfNeededSync(filteredContentBlocks)
-        updateContentForLocalContentBlocks(filteredContentBlocks)
         val validFilteredContentBlocks = filteredContentBlocks
             .filter { each -> isStatusValid(each) }
             .filter { each -> isContentSupportedToShow(each) }
@@ -236,7 +252,7 @@ internal class InAppContentBlocksManagerImpl(
     }
 
     private fun isStatusValid(contentBlock: InAppContentBlock): Boolean {
-        if (contentBlock.status == OK) {
+        if (contentBlock.isStatusValid()) {
             return true
         }
         Logger.i(this, """
@@ -275,22 +291,27 @@ internal class InAppContentBlocksManagerImpl(
         return target
     }
 
-    private fun passesFilters(contentBlock: InAppContentBlock): Boolean {
+    override fun passesFilters(contentBlock: InAppContentBlock): Boolean {
         Logger.i(this, "InAppCB: Validating filters for Content Block ${contentBlock.id}")
+        return passesDateFilter(contentBlock) && passesFrequencyFilter(contentBlock)
+    }
+
+    override fun passesDateFilter(contentBlock: InAppContentBlock): Boolean {
         val dateFilterPass = contentBlock.applyDateFilter(System.currentTimeMillis() / 1000)
         Logger.i(this, "InAppCB: Block ${contentBlock.id} date-filter passed: $dateFilterPass")
-        if (!dateFilterPass) {
-            return false
-        }
-        val frequencyFilter = contentBlock.applyFrequencyFilter(
+        return dateFilterPass
+    }
+
+    override fun passesFrequencyFilter(contentBlock: InAppContentBlock): Boolean {
+        val passessByFrequency = contentBlock.applyFrequencyFilter(
             displayStateRepository.get(contentBlock),
             sessionStartDate
         )
-        Logger.i(this, "InAppCB: Block ${contentBlock.id} frequency-filter passed: $frequencyFilter")
-        return frequencyFilter
+        Logger.i(this, "InAppCB: Block ${contentBlock.id} frequency-filter passed: $passessByFrequency")
+        return passessByFrequency
     }
 
-    private fun getInAppContentBlocksForPlaceholder(
+    override fun getAllInAppContentBlocksForPlaceholder(
         placeholderId: String
     ): List<InAppContentBlock> = runThreadSafelyWithResult {
         val contentBlocksForPlaceholder = contentBlocksData.filter { block ->
@@ -404,8 +425,6 @@ internal class InAppContentBlocksManagerImpl(
                 "InAppCB: InApp Content Block ${contentBlock.id} for placeholder $placeholderId"
             )
             loadContentIfNeededSync(listOf(contentBlock))
-            // update content in storage just in case
-            updateContentForLocalContentBlocks(listOf(contentBlock))
         }
         return contentBlock
     }

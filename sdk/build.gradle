@@ -84,6 +84,8 @@ dependencies {
     // Images handling
     implementation 'io.coil-kt:coil:1.4.0'
     implementation 'io.coil-kt:coil-gif:1.4.0'
+    // Custom Tabs
+    implementation 'androidx.browser:browser:1.5.0'
 
     // Base Test
     testImplementation 'junit:junit:4.12'

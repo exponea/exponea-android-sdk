@@ -206,7 +206,7 @@ internal class FcmManagerImplTest {
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
         val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-        payload["image"] = "https://www.bloomreach.com/static/br-logo-primary.svg"
+        payload["image"] = "https://www.bloomreach.com/wp-content/uploads/2024/04/bloomreach.svg"
         manager.handleRemoteMessage(payload, notificationManager, true)
         assertNotNull(shadowOf(notificationSlot.captured).bigPicture)
     }

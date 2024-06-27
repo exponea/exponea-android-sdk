@@ -11,6 +11,18 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
 
 ## Release Notes
+## Release Notes for 3.15.0
+#### June 27, 2024
+* Added:
+  * Adds support for multiple In-App Content Blocks in the same placeholder through `ContentBlockCarouselView`. The SDK will loop through the content blocks one at a time in order of the configured Priority.
+  * Adds improved session handling based on the Activity lifecycle.
+  * Adds `inAppMessageShown` and `inAppMessageError` methods to `InAppMessageCallback` to improve support for customized In-App Message behavior.
+  * Aligns GIF support across App Inbox, In-App Messages, and In-App Content Blocks.
+  * Adds an improvement ensuring that In-App Messages are only fetched while the app is in the foreground.
+* Fixed:
+  * Fixes broken links on the main documentation page.
+
+
 ## Release Notes for 3.14.0
 #### May 13, 2024
 * Features

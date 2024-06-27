@@ -66,9 +66,9 @@ class InAppContentBlocksFragment : BaseFragment() {
             val initName = it.getShownContentBlock()?.name
             val initIndex = it.getShownIndex()
             val initCount = it.getShownCount()
-            content_blocks_carousel_status.text = "Showing ${initName ?: ""} as ${initIndex + 1} of $initCount"
+            content_blocks_carousel_status?.text = "Showing ${initName ?: ""} as ${initIndex + 1} of $initCount"
         }
-        content_blocks_carousel_default.behaviourCallback = object : ContentBlockCarouselCallback {
+        content_blocks_carousel_default?.behaviourCallback = object : ContentBlockCarouselCallback {
             private var count: Int = 0
             private var index: Int = -1
             private var blockName: String? = null
@@ -86,7 +86,7 @@ class InAppContentBlocksFragment : BaseFragment() {
             }
 
             private fun updateCarouselStatus() {
-                content_blocks_carousel_status.text = "Showing ${blockName ?: ""} as ${index + 1} of $count"
+                content_blocks_carousel_status?.text = "Showing ${blockName ?: ""} as ${index + 1} of $count"
             }
 
             override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
@@ -101,7 +101,7 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleListCbPlaceholder() {
-        content_blocks_list.layoutManager = LinearLayoutManager(requireContext())
+        content_blocks_list?.layoutManager = LinearLayoutManager(requireContext())
         val data = ArrayList<ProductsViewModel>()
         for (i in 1..1000) {
             val icon = listOf(
@@ -122,11 +122,11 @@ class InAppContentBlocksFragment : BaseFragment() {
                 desc
             ))
         }
-        content_blocks_list.adapter = ProductsAdapter(data)
+        content_blocks_list?.adapter = ProductsAdapter(data)
     }
 
     private fun prepareExampleCustomCarouselCbPlaceholder() {
-        content_blocks_carousel_custom.contentBlockSelector = object : ContentBlockSelector() {
+        content_blocks_carousel_custom?.contentBlockSelector = object : ContentBlockSelector() {
             override fun filterContentBlocks(source: List<InAppContentBlock>): List<InAppContentBlock> {
                 return source.filter { !it.name.lowercase().contains("discarded") }
             }
@@ -138,9 +138,9 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleAndroidCbPlaceholder() {
-        content_blocks_layout.addView(TextView(requireContext()).apply { text = "Placeholder: ph_x_example_Android" })
+        content_blocks_layout?.addView(TextView(requireContext()).apply { text = "Placeholder: ph_x_example_Android" })
         Exponea.getInAppContentBlocksPlaceholder("ph_x_example_Android", requireContext())?.let {
-            content_blocks_layout.addView(it, ViewGroup.LayoutParams(
+            content_blocks_layout?.addView(it, ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))
@@ -148,7 +148,7 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleTopCbPlaceholder() {
-        content_blocks_layout.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
+        content_blocks_layout?.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
         Exponea.getInAppContentBlocksPlaceholder(
             "example_top",
             requireContext(),
@@ -207,7 +207,7 @@ class InAppContentBlocksFragment : BaseFragment() {
                     }
                 }
             }
-            content_blocks_layout.addView(it, ViewGroup.LayoutParams(
+            content_blocks_layout?.addView(it, ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))

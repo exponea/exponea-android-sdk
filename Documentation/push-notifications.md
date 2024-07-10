@@ -193,7 +193,7 @@ Exponea.trackPushToken(
 )
 ```
 
-Invoking this method will track the push token immediately regardless of the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configutation) for `tokenTrackFrequency`.
+Invoking this method will track the push token immediately regardless of the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) for `tokenTrackFrequency`.
 
 #### Track Delivered Push Notification
 

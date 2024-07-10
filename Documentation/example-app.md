@@ -63,8 +63,9 @@ The app provides several views, accessible using the bottom navigation, to test 
 - The **Anonymize** view lets you anonimyze the current user.
   > [`AnonymizeFragment.kt`](https://github.com/exponea/exponea-android-sdk/blob/bf48aba5a58e5632bdc5d963c18ee24d7e200ec9/app/src/main/java/com/exponea/example/view/fragments/AnonymizeFragment.kt)
 
-- The **InAppCB** view displays in-app content blocks. Use placeholder IDs `example_top`, `ph_x_example_iOS`, and `example_list` in your in-app content block settings.
-  > [InAppContentBlocksFragment.kt](https://github.com/exponea/exponea-android-sdk/blob/bf48aba5a58e5632bdc5d963c18ee24d7e200ec9/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt)
+- The **InAppCB** view displays in-app content blocks. Use placeholder IDs `example_top`, `ph_x_example_iOS`, `example_list`, `example_carousel`, and `example_carousel_and` in your in-app content block settings.
+  > [`InAppContentBlocksFragment.kt`](https://github.com/exponea/exponea-android-sdk/blob/bf48aba5a58e5632bdc5d963c18ee24d7e200ec9/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt)
+  > [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml)
 
 Try out the different features in the app, then find the customer profile in the Engagement web app (under `Data & Assets` > `Customers`) to see the properties and events tracked by the SDK.
 

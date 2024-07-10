@@ -49,7 +49,7 @@ After the SDK [initializes](https://documentation.bloomreach.com/engagement/docs
 
 ### Add a Carousel View
 
-Get a Carousel view for the specified `placeholderId` from the API using `getInAppContentBlocksCarousel` method:
+Get a carousel view for the specified `placeholderId` from the API using the `getInAppContentBlocksCarousel` method:
 
 ```kotlin
 val carouselView = Exponea.getInAppContentBlocksCarousel(
@@ -61,11 +61,12 @@ val carouselView = Exponea.getInAppContentBlocksCarousel(
 ```
 
 Then, place the placeholder view at the desired location by adding it to your layout:
+
 ```kotlin
 yourLayout.addView(carouselView)
 ```
 
-Or you may add Carousel view directly into your layout XML:
+Or you may add the carousel view directly into your layout XML:
 
 ```xml
 <com.exponea.sdk.view.ContentBlockCarouselView
@@ -79,7 +80,7 @@ Or you may add Carousel view directly into your layout XML:
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) and [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 > 👍
 >
@@ -231,7 +232,7 @@ placeholderView.behaviourCallback = object : InAppContentBlockCallback {
 
 ### Handle Carousel Presentation Status
 
-If you want to show additional information about Carousel shown content block, position and list size, check methods:
+If you need to access additional information about content blocks displayed in a carousel, you can use the following methods:
 
 ```kotlin
 // returns complete InAppContentBlock structure of shown content block or null
@@ -242,8 +243,7 @@ val index = carouselView.getShownIndex()
 val count = carouselView.getShownCount()
 ```
 
-You are able to register a `behaviourCallback` to Carousel view instance to retrieve information for each update.
-The callback behavior object must implement `ContentBlockCarouselCallback`.
+You can register a `behaviourCallback` to a carousel view instance to retrieve information for each update. The callback behavior object must implement `ContentBlockCarouselCallback`.
 
 ```kotlin
 carouselView.behaviourCallback = object : ContentBlockCarouselCallback {
@@ -340,16 +340,18 @@ Your `CustomView` will now receive all in-app content block data.
 
 ### Customize Carousel View Filtration and Sorting
 
-Carousel View default filtration has same behaviour as Placeholder view:
-- content block is show-able according to `Schedule` configuration
-- content block is show-able according to `Display` configuration
-- content is valid and supported by SDK
+A carousel view filters available content blocks in the same way as a placeholder view:
 
-Order of shown content blocks is determined by:
-- primarily by `Priority` descending
-- secondary by `name` ascending (alphabetically)
+- The content block must meet the `Schedule` setting configured in the Engagement web app
+- The content block must meet the `Display` setting configured in the Engagement web app
+- The content must be valid and supported by the SDK
 
-You could put additional filtration and/or sorting by registering of your own `contentBlockSelector` upon Carousel view instance:
+The order in which content blocks are displayed is determined by:
+
+1. By the `Priority` setting, descending
+2. By the `Name`, ascending (alphabetically)
+
+You can implement additional filtration and sorting by registering your own `contentBlockSelector` on the carousel view instance:
 
 ```kotlin
 carouselView.contentBlockSelector = object : ContentBlockSelector() {
@@ -370,11 +372,11 @@ carouselView.contentBlockSelector = object : ContentBlockSelector() {
 
 > ❗️
 >
-> Carousel view fully accepts result from filtration and sorting implementations. Ensure that you return all wanted items as result from your implementations to avoid any missing items.
+> A carousel view accepts the results from the filtration and sorting implementations. Ensure that you return all wanted items as result from your implementations to avoid any missing items.
 
 > ❗️
 >
-> Carousel view could be configured with `maxMessagesCount`. Any value higher than zero applies max limit of shown content blocks independently of size of lists as results from filtration and sorting methods. So if you return 10 items from filtration and sorting method but `maxMessagesCount` is set to 5 then only first 5 items from your results.
+> A carousel view can be configured with `maxMessagesCount`. Any value higher than zero applies a maximum number of content blocks displayed, independently of the number of results from filtration and sorting methods. So if you return 10 items from filtration and sorting method but `maxMessagesCount` is set to 5 then only first 5 items from your results.
 
 ## Troubleshooting
 

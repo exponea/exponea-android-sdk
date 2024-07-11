@@ -265,20 +265,18 @@ internal open class FcmManagerImpl(
                 Logger.d(this, "Won't play notification sound, DnD mode is on")
                 shouldPlaySound = false
             }
-
             // if application is not allowed to show notifications
             if (!manager.areNotificationsEnabled()) {
                 Logger.d(this, "Won't play notification sound, notifications are not allowed")
                 shouldPlaySound = false
             }
-
             // if the notification channel is blocked/deleted
             val channel = MessagingUtils.getNotificationChannel(application, manager, configuration.pushChannelId)
             if (channel == null) {
                 Logger.d(this, "Won't play notification sound, channel not found.")
                 shouldPlaySound = false
-            } else if (channel.importance == NotificationManager.IMPORTANCE_NONE) {
-                Logger.d(this, "Won't play notification sound, channel is blocked.")
+            } else if (channel.importance <= NotificationManager.IMPORTANCE_LOW) {
+                Logger.d(this, "Won't play notification sound, channel has low importance.")
                 shouldPlaySound = false
             }
 

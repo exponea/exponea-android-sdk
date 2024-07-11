@@ -26,6 +26,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -50,19 +51,26 @@ internal class FcmManagerImplTest {
 
     @Before
     fun setUp() {
+        ShadowRingtone.lastRingtone = null
         context = ApplicationProvider.getApplicationContext<Context>()
         eventManager = mockkClass(EventManagerImpl::class)
         every { eventManager.track(any(), any(), any(), any()) } just Runs
         pushTokenRepository = spyk(PushTokenRepositoryProvider.get(context))
-        manager = FcmManagerImpl(
-            context,
-            ExponeaConfiguration(),
-            eventManager,
-            pushTokenRepository,
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
-        )
+        manager = createFcmManager()
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
     }
+
+    private fun createFcmManager(
+        notifImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
+    ) = FcmManagerImpl(
+        context,
+        ExponeaConfiguration(
+            pushNotificationImportance = notifImportance
+        ),
+        eventManager,
+        pushTokenRepository,
+        PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+    )
 
     @After
     fun tearDown() {
@@ -176,6 +184,66 @@ internal class FcmManagerImplTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should not play sound when channel importance is IMPORTANCE_NONE`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_NONE)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertFalse(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should not play sound when channel importance is IMPORTANCE_MIN`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_MIN)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertFalse(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should not play sound when channel importance is IMPORTANCE_LOW`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_LOW)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertFalse(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should play sound when channel importance is IMPORTANCE_DEFAULT`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_DEFAULT)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNotNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should play sound when channel importance is IMPORTANCE_HIGH`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_HIGH)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNotNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [ShadowRingtone::class])
+    fun `should play sound when channel importance is IMPORTANCE_MAX`() {
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_MAX)
+        val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertNotNull(ShadowRingtone.lastRingtone)
+    }
+
+    @Test
     @Config(shadows = [ShadowRingtone::class, ShadowResourcesWithAllResources::class], sdk = [Build.VERSION_CODES.P])
     fun `should play sound from notification payload for sound name with extension`() {
         val payload = NotificationTestPayloads.PRODUCTION_NOTIFICATION
@@ -199,6 +267,66 @@ internal class FcmManagerImplTest {
             "android.resource://com.exponea.sdk.test/raw/mock-sound",
             ShadowRingtone.lastRingtone?.withUri.toString()
         )
+    }
+
+    @Test
+    fun `should not show notification when channel importance is IMPORTANCE_NONE`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_NONE)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertFalse(notificationSlot.isCaptured)
+    }
+
+    @Test
+    fun `should show notification when channel importance is IMPORTANCE_MIN`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_MIN)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(notificationSlot.isCaptured)
+    }
+
+    @Test
+    fun `should show notification when channel importance is IMPORTANCE_LOW`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_LOW)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(notificationSlot.isCaptured)
+    }
+
+    @Test
+    fun `should show notification when channel importance is IMPORTANCE_DEFAULT`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_DEFAULT)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(notificationSlot.isCaptured)
+    }
+
+    @Test
+    fun `should show notification when channel importance is IMPORTANCE_HIGH`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_HIGH)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(notificationSlot.isCaptured)
+    }
+
+    @Test
+    fun `should show notification when channel importance is IMPORTANCE_MAX`() {
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+        manager = createFcmManager(notifImportance = NotificationManager.IMPORTANCE_MAX)
+        val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
+        manager.handleRemoteMessage(payload, notificationManager, true)
+        assertTrue(notificationSlot.isCaptured)
     }
 
     @Test

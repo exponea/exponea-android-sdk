@@ -40,6 +40,8 @@ data class CampaignData(
             completeUrl = data.toString()
     )
 
+    fun isValidForCampaignTrack(): Boolean = payload?.isNotEmpty() == true
+
     fun getTrackingData(): Map<String, String> {
         return hashMapOf(
             "url" to completeUrl,
@@ -48,7 +50,8 @@ data class CampaignData(
             "utm_medium" to medium,
             "utm_campaign" to campaign,
             "utm_content" to content,
-            "utm_term" to term
+            "utm_term" to term,
+            "xnpe_cmp" to payload
         ).filterValues { it != null }.mapValues { it.value as String }
     }
 

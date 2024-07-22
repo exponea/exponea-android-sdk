@@ -129,10 +129,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         idleThreads()
         val storedEvents = eventRepository.all()
-
-        assertTrue { handled }
-        assertEquals(1, storedEvents.size)
-        assertEquals(Constants.EventTypes.push, storedEvents.first().type)
+        assertFalse { handled }
+        assertEquals(0, storedEvents.size)
     }
 
     @Test
@@ -195,7 +193,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_sessionUpdate() = runInSingleThread { idleThreads ->
+    fun testHandleIntent_sessionUpdate_valid() = runInSingleThread { idleThreads ->
         val deepLinkIntent = createDeeplinkIntent()
         Exponea.handleCampaignIntent(deepLinkIntent, context)
         val campaignEvent = campaignRepository.get()!!
@@ -203,13 +201,34 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         idleThreads()
         val storedEvents = eventRepository.all()
         assertEquals(2, storedEvents.size)
-
         val sessionEvent = storedEvents.first {
             Constants.EventTypes.sessionStart == it.type
         }
-
         assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])
         assertEquals(campaignEvent.source, sessionEvent.properties!!["utm_source"])
+        assertEquals(campaignEvent.medium, sessionEvent.properties!!["utm_medium"])
+        assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
+        assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
+        assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
+        assertEquals(campaignEvent.payload, sessionEvent.properties!!["xnpe_cmp"])
+    }
+
+    @Test
+    fun testHandleIntent_sessionUpdate_campaignWithoutPayload() = runInSingleThread { idleThreads ->
+        val deepLinkIntent = createDeeplinkIntent()
+        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
+        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val campaignEvent = campaignRepository.get()!!
+        Exponea.trackSessionStart(currentTimeSeconds())
+        idleThreads()
+        val storedEvents = eventRepository.all()
+        assertEquals(1, storedEvents.size)
+        val sessionEvent = storedEvents.first {
+            Constants.EventTypes.sessionStart == it.type
+        }
+        assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])
+        assertEquals(campaignEvent.source, sessionEvent.properties!!["utm_source"])
+        assertEquals(campaignEvent.medium, sessionEvent.properties!!["utm_medium"])
         assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
         assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
         assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])

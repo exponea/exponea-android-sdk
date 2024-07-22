@@ -951,30 +951,36 @@ object Exponea {
         if (!intent.isViewUrlIntent("http")) {
             return false
         }
-        val campaignData = CampaignData(intent!!.data!!)
-        val campaingManager = getCampaingManager(appContext)
-        if (campaingManager != null) {
-            campaingManager.trackCampaignClick(campaignData)
+        val campaignUri = intent?.data
+        if (campaignUri == null) {
+            Logger.v(this, "Campaign click not tracked because URL is missing")
+            return false
         }
-        return true
+        val campaignData = CampaignData(campaignUri)
+        return getCampaignManager(appContext)?.trackCampaignClick(campaignData) ?: false
     }.returnOnException { false }
 
-    private fun getCampaingManager(applicationContext: Context): CampaignManager? {
+    private fun getCampaignManager(applicationContext: Context): CampaignManager? {
         if (isInitialized) {
             return component.campaignManager
         }
-        // Camaign manager - without SDK init
+        // Campaign  manager - without SDK init
         val configuration = ExponeaConfigRepository.get(applicationContext)
         if (configuration == null) {
-            Logger.w(this, "Campaign click not handled," +
-                " previous SDK configuration not found")
+            Logger.w(
+                this,
+                "Campaign click not handled, previous SDK configuration not found"
+            )
             return null
         }
         try {
             return CampaignManagerImpl.createSdklessInstance(applicationContext, configuration)
         } catch (e: Exception) {
-            Logger.e(this, "Campaign click not handled," +
-                " error occured while preparing a handling process, see logs", e)
+            Logger.e(
+                this,
+                "Campaign click not handled, error occurred while preparing a handling process, see logs",
+                e
+            )
             return null
         }
     }

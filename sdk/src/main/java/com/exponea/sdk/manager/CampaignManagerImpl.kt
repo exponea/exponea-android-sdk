@@ -62,8 +62,14 @@ internal class CampaignManagerImpl(
         }
     }
 
-    override fun trackCampaignClick(campaignData: CampaignData) {
+    override fun trackCampaignClick(campaignData: CampaignData): Boolean {
+        // store campaign data to be used by session_start event
         campaignRepository.set(campaignData)
+        // but stop tracking campaign click if is not valid
+        if (!campaignData.isValidForCampaignTrack()) {
+            Logger.v(this, "Campaign click not tracked because ${campaignData.completeUrl} is invalid")
+            return false
+        }
         val properties = HashMap<String, Any>()
         properties["platform"] = "Android"
         properties["timestamp"] = campaignData.createdAt
@@ -73,5 +79,6 @@ internal class CampaignManagerImpl(
             properties = properties,
             type = EventType.CAMPAIGN_CLICK
         )
+        return true
     }
 }

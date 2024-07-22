@@ -68,7 +68,9 @@ Example:
 
 The SDK can automatically decide whether the intent that opened your application is an App Link. All that is required is calling `Exponea.handleCampaignIntent(intent, applicationContext)`.
 
-App Link parameters are automatically tracked in `session_start` events when a new session is started. If your app starts a new session, campaign parameters (`utm_source`, `utm_campaign`, `utm_content`, `utm_medium`, `utm_term` and `xnpe_cmp`) are sent within the session parameters to enable you to attribute the new session to an App Link click.
+App Link parameters are automatically tracked in `session_start` events when a new session is started for given Universal Link click. If your app starts a new session, campaign parameters (`utm_source`, `utm_campaign`, `utm_content`, `utm_medium`, `utm_term` and `xnpe_cmp`) are sent within the session parameters to enable you to attribute the new session to an App Link click.
+
+If App Link contains a parameter `xnpe_cmp` then additional `campaign` event is tracked. Parameter `xnpe_cmp` represents campaign identifier generated typically for Email or SMS campaigns.
 
 To track session events with App Link parameters, you must call `Exponea.handleCampaignIntent` **before** your Activity `onResume` method is called. Ideally, make the call in your MainActivity `.onCreate` method.
 

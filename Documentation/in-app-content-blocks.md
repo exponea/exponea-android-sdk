@@ -55,8 +55,8 @@ Get a carousel view for the specified `placeholderId` from the API using the `ge
 val carouselView = Exponea.getInAppContentBlocksCarousel(
         context = activityContext,
         placeholderId = "example_content_block",
-        maxMessagesCount = 5,  // max count of visible content blocks; 0 for show all
-        scrollDelay = 5 // delay in seconds between automatic scroll; 0 for no scroll
+        maxMessagesCount = 5,  // max count of visible content blocks; 0 for show all; default value is 0
+        scrollDelay = 5 // delay in seconds between automatic scroll; 0 for no scroll; default value is 3
 )
 ```
 

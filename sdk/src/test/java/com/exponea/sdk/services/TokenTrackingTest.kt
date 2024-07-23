@@ -44,7 +44,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("google_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "google_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -63,7 +65,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().track(
                 "campaign",
                 any(),
-                hashMapOf("google_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "google_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -125,7 +129,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("google_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "google_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -152,7 +158,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("google_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "google_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -179,7 +187,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("huawei_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "huawei_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -195,7 +205,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("huawei_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "huawei_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -214,7 +226,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().track(
                 "campaign",
                 any(),
-                hashMapOf("huawei_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "huawei_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }
@@ -235,7 +249,9 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 "campaign",
                 any(),
-                hashMapOf("huawei_push_notification_id" to "mock token"),
+                hashMapOf(
+                    "huawei_push_notification_id" to "mock token"
+                ),
                 EventType.PUSH_TOKEN
             )
         }

@@ -76,6 +76,14 @@ The SDK will only handle push notification messages sent from the Engagement pla
 
 If you run the app, the SDK should the track push token to the Engagement platform. If you enabled the self-check, it will you inform you of this. Alternatively, you can find the customer in the Engagement web app and check the customer property `google_push_notification_id`.
 
+A push token is typically generated at the first application start, but it has its own lifecycle. Your `FirebaseMessagingService` implementation is triggered only if a token is created or its value has changed. Please validate your expectations against the defined [token update triggers](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register)
+
+> ❗️
+>
+> As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
+>
+> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
+
 > ❗️
 >
 > If you are integrating a new Firebase project in an existing project, or if you are changing Firebase project completely, you may face an issue that your 'FirebaseMessagingService' is not called automatically.

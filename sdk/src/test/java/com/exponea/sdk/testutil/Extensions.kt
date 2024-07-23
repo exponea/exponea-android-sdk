@@ -9,6 +9,7 @@ import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.services.ExponeaContextProvider
+import io.mockk.clearMocks
 import kotlin.test.fail
 
 internal fun Exponea.shutdown() {
@@ -104,3 +105,14 @@ internal fun assertEqualsIgnoreOrder(
 }
 
 internal fun messagePrefix(message: String?) = if (message == null) "" else "$message. "
+
+internal fun Any.resetVerifyMockkCount() {
+    clearMocks(
+        this,
+        answers = false,
+        recordedCalls = true,
+        childMocks = false,
+        verificationMarks = true,
+        exclusionRules = false
+    )
+}

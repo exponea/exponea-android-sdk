@@ -20,7 +20,7 @@ This section describes the steps to add the minimum push notification functional
 
 ### Standard (Firebase) Integration
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must:
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must:
 
 1. Set up a Firebase project.
 2. Implement Firebase messaging in your app.
@@ -42,7 +42,7 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 
 ### Huawei Integration
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must:
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must:
 
 1. Set up Huawei Mobile Services (HMS)
 2. Implement HMS in your app.
@@ -58,7 +58,7 @@ As of Android 13 (API level 33), a new runtime notification permission `POST_NOT
 
 The SDK already registers the `POST_NOTIFICATIONS` permission.
 
-The runtime permission dialog to ask the user to grant the permission must be triggered from your application. You may use SDK API for that purpose:
+The runtime permission dialog to ask the user to grant the permission must be triggered from your application. You can use the SDK API for that purpose:
 
 ```kotlin
 Exponea.requestPushAuthorization(requireContext()) { granted ->
@@ -73,6 +73,12 @@ The behavior of this callback is as follows:
 * For Android API level 33+:
   * Show the dialog, return the user's decision (`true`/`false`).
   * In case of previously granted permission, don't show the dialog return `true`.
+
+#### Require Notification Permission
+
+On Android 13 and higher, the app may not be able to send normal push notifications, even though a freshly generated token (at application start) is valid, if the user didn't grant permission to receive notifications.
+
+If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. The SDK will track push tokens only if the user granted push notification permission, otherwise the push token will be removed. If you leave `requirePushAuthorization` to `false` (the default value), the SDK will track the push token regardless of the user's permission. These tokens can only be used to send silent push notifications.
 
 ## Customization
 

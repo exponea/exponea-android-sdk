@@ -16,9 +16,9 @@ import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.SegmentsCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.reset
+import com.exponea.sdk.testutil.resetVerifyMockkCount
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.currentTimeSeconds
-import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -99,7 +99,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should not store segments on error`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
             every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
                 arg<(Result<FetchError>) -> Unit>(3).invoke(Result(false, FetchError(null, "error")))
@@ -116,21 +116,10 @@ internal class SegmentsManagerImplTest {
         assertEquals("mock-val", cachedSegments.first()["prop"])
     }
 
-    private fun resetInvokesCount(mock: Any) {
-        clearMocks(
-            mock,
-            answers = false,
-            recordedCalls = true,
-            childMocks = false,
-            verificationMarks = true,
-            exclusionRules = false
-        )
-    }
-
     @Test
     fun `should store empty segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         waitForIt(50000) { done ->
             every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
@@ -149,7 +138,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should store some segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
             every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
@@ -172,7 +161,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should not override same segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
             every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
@@ -195,7 +184,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should notify callback for new segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         var newSegmentsFound: List<Segment>? = null
         Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
             override val exposingCategory = "discovery"
@@ -223,7 +212,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should not notify callback for same segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         var newSegmentsFound: List<Segment>? = null
         Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
             override val exposingCategory = "discovery"
@@ -249,7 +238,7 @@ internal class SegmentsManagerImplTest {
     @Test
     fun `should not notify callback on error`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         var newSegmentsFound: List<Segment>? = null
         Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
             override val exposingCategory = "discovery"
@@ -402,7 +391,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
@@ -499,7 +488,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
@@ -529,7 +518,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        resetInvokesCount(segmentsCache)
+        segmentsCache.resetVerifyMockkCount()
         every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,

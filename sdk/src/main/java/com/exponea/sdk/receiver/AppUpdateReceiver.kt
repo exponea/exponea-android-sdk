@@ -39,7 +39,8 @@ class AppUpdateReceiver : BroadcastReceiver() {
         newRepo.setTrackedToken(
             obsoleteRepo.get()!!,
             obsoleteRepo.getLastTrackDateInMilliseconds() ?: 0,
-            obsoleteRepo.getLastTokenType()
+            obsoleteRepo.getLastTokenType(),
+            obsoleteRepo.getLastPermissionFlag()
         )
         obsoleteRepo.clear()
         Logger.d(this, "FCM migration has been done")

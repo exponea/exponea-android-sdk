@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.RECEIVER_NOT_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -18,12 +19,12 @@ class NotificationsPermissionReceiver(
     private val listener: (Boolean) -> Unit
 ) : BroadcastReceiver() {
 
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action != ACTION_PERMISSIONS_RESPONSE) {
-            Logger.e(this, "Invalid action value ${intent?.action}")
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != getBroadcastAction(context)) {
+            Logger.e(this, "Invalid action value ${intent.action}")
             return
         }
-        context?.unregisterReceiver(this)
+        context.unregisterReceiver(this)
         val permissionGranted = intent.getBooleanExtra(
             ACTION_PERMISSIONS_RESULT_BOOL,
             false
@@ -39,8 +40,23 @@ class NotificationsPermissionReceiver(
     }
 
     companion object {
-        val ACTION_PERMISSIONS_RESPONSE = "NotificationPermission.RESPONSE"
-        val ACTION_PERMISSIONS_RESULT_BOOL = "NotificationPermission.RESULT"
+        private const val ACTION_PERMISSIONS_RESPONSE = "NotificationPermission.RESPONSE"
+        internal const val ACTION_PERMISSIONS_RESULT_BOOL = "NotificationPermission.RESULT"
+
+        fun getBroadcastAction(context: Context): String {
+            return context.packageName + "." + ACTION_PERMISSIONS_RESPONSE
+        }
+
+        fun isPermissionGranted(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                return true
+            }
+            val permissionState: Int = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+            return permissionState == PackageManager.PERMISSION_GRANTED
+        }
 
         fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) {
             runOnBackgroundThread {
@@ -63,10 +79,10 @@ class NotificationsPermissionReceiver(
                     if (context !is Activity) {
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
-                    context.registerReceiver(
+                    context.applicationContext.registerReceiver(
                         NotificationsPermissionReceiver(listener),
-                        IntentFilter().apply { addAction(ACTION_PERMISSIONS_RESPONSE) },
-                        Context.RECEIVER_NOT_EXPORTED
+                        IntentFilter(getBroadcastAction(context)),
+                        RECEIVER_NOT_EXPORTED
                     )
                     context.startActivity(intent)
                 }.logOnException()

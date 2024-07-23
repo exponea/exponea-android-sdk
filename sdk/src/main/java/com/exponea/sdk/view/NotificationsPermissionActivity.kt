@@ -38,7 +38,8 @@ class NotificationsPermissionActivity : Activity() {
 
     private fun sendBroadcastResult(result: Boolean) {
         val intent = Intent()
-        intent.action = NotificationsPermissionReceiver.ACTION_PERMISSIONS_RESPONSE
+        intent.setPackage(packageName)
+        intent.action = NotificationsPermissionReceiver.getBroadcastAction(this)
         intent.putExtra(NotificationsPermissionReceiver.ACTION_PERMISSIONS_RESULT_BOOL, result)
         sendBroadcast(intent)
     }

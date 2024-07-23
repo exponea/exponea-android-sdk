@@ -67,6 +67,7 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewContro
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.VersionChecker
 import com.exponea.sdk.util.addAppStateCallbacks
@@ -384,6 +385,21 @@ object Exponea {
         initializeSdk(context)
         isInitialized = true
         initGate.notifyInitializedState()
+        ExponeaContextProvider.registerForegroundStateListener(object : OnForegroundStateListener {
+            override fun onStateChanged(isForeground: Boolean) {
+                requireInitialized(
+                    notInitializedBlock = {
+                        Logger.w(this, "Exponea deinitialized meanwhile, stopping PushNotifPermission checker")
+                        ExponeaContextProvider.removeForegroundStateListener(this)
+                    },
+                    initializedBlock = {
+                        if (isForeground) {
+                            trackSavedToken()
+                        }
+                    }
+                )
+            }
+        })
     }.run {
         val exception = exceptionOrNull()
         if (exception != null) {
@@ -1068,7 +1084,8 @@ object Exponea {
                 val pushTokenRepository = PushTokenRepositoryProvider.get(context)
                 pushTokenRepository.setUntrackedToken(
                     token,
-                    tokenType
+                    tokenType,
+                    NotificationsPermissionReceiver.isPermissionGranted(context)
                 )
             } else {
                 Logger.d(this, "Token refresh")
@@ -1279,7 +1296,12 @@ object Exponea {
     }.logOnExceptionWithResult().getOrNull()
 
     fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) = runCatching {
-        NotificationsPermissionReceiver.requestPushAuthorization(context, listener)
+        NotificationsPermissionReceiver.requestPushAuthorization(context) { granted ->
+            trackSavedToken()
+            runCatching {
+                listener(granted)
+            }.logOnException()
+        }
     }.logOnException()
 
     fun trackInAppContentBlockClick(

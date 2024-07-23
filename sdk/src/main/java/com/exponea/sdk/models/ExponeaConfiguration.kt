@@ -24,6 +24,8 @@ data class ExponeaConfiguration(
     var automaticSessionTracking: Boolean = Constants.Session.defaultAutomaticTracking,
     /** Flag to control if the App will handle push notifications automatically. */
     var automaticPushNotification: Boolean = Constants.PushNotif.defaultAutomaticListening,
+    /** Flag if the SDK can check ([push notification permission status](https://developer.android.com/develop/ui/views/notifications/notification-permission)) and only tracks the push token if the user is authorized to receive push notifications. */
+    var requirePushAuthorization: Boolean = Constants.PushNotif.defaultPushAuthorizationRequired,
     /** Icon to be showed in push notifications. */
     var pushIcon: Int? = null,
     /** Accent color of push notification icon and buttons.

@@ -21,6 +21,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushTrackingActivity
@@ -56,22 +57,39 @@ internal open class FcmManagerImpl(
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?
     ) {
+        val permissionGranted = NotificationsPermissionReceiver.isPermissionGranted(application)
+        val permissionRequired = configuration.requirePushAuthorization
+        val permissionMismatched = permissionRequired && !permissionGranted
         val shouldUpdateToken = run {
             val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
-            if (lastTrackDateInMilliseconds == null) { // if the token wasn't ever tracked, track it
+            if (lastTrackDateInMilliseconds == null) {
+                // if the token wasn't ever tracked, track it
+                true
+            } else if (permissionMismatched) {
+                // if permission expectation mismatched, track (empty token)
                 true
             } else {
+                // decide by the frequency
                 when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
-                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != pushTokenRepository.get()
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE ->
+                        token != pushTokenRepository.get() ||
+                            permissionGranted != pushTokenRepository.getLastPermissionFlag()
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
                 }
             }
         }
-
         if (token != null && tokenType != null && shouldUpdateToken) {
-            pushTokenRepository.setTrackedToken(token, System.currentTimeMillis(), tokenType)
-            val properties = PropertiesList(hashMapOf(tokenType.apiProperty to token))
+            pushTokenRepository.setTrackedToken(
+                token,
+                System.currentTimeMillis(),
+                tokenType,
+                permissionGranted
+            )
+            val tokenToTrack = if (permissionMismatched) { "" } else { token }
+            val properties = PropertiesList(hashMapOf(
+                tokenType.apiProperty to tokenToTrack
+            ))
             eventManager.track(
                 eventType = Constants.EventTypes.push,
                 properties = properties.properties,

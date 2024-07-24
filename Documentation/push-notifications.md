@@ -185,6 +185,21 @@ class MyReceiver : BroadcastReceiver() {
 
 The Engagement web app allows you to set up silent push notifications, that are not displayed to the user. The SDK tracks a `campaign` event when a silent push notification is delivered. Silent push notifications cannot be opened but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handle Extra Data Payload](#handle-extra-data-payload).
 
+### Push notification alert sound
+
+Received push notifications handled by `Exponea.handleRemoteMessage()` will play a default or customized sound when the notification is displayed.
+
+To use the default sound for a notification, keep empty or enter `default` as value for `Media > Sound` in your push notification scenario in the Engagement web app.
+![Configure sound for a push notification in Engagement](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/push-sound-config.png)
+
+To use a custom sound for a notification, you must create a sound file that [Android supports](https://developer.android.com/media/platform/supported-formats#audio-formats). Include the sound file in your 'raw' Android resources.
+
+Once the custom sound is in place in your app, enter the file name of the sound file as value for `Media > Sound` in your push notification scenario in the Engagement web app. Ensure that you enter the exact file name (case sensitive) without extension.
+
+> ❗️
+>
+> The notification sound play may be affected by the notification channel importance, user's setup of app notification behaviour or by active Do Not Disturb mode. Read more in the [notifications overview](https://developer.android.com/develop/ui/views/notifications).
+
 ### Manually Track Push Notifications
 
 If you disable [automatic push notification tracking](#configure-automatic-push-notification-tracking) or if you want to track push notification from other providers, you can manually track events related to push notifications.

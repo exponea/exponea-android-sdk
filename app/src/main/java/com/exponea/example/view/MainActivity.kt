@@ -94,11 +94,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
         fun String.toDeeplinkDestination() = when {
-            this.contains("fetch") -> DeeplinkDestination.Fetch
             this.contains("track") -> DeeplinkDestination.Track
-            this.contains("manual") -> DeeplinkDestination.Manual
-            this.contains("anonymize") -> DeeplinkDestination.Anonymize
+            this.contains("flush") -> DeeplinkDestination.Manual
+            this.contains("fetch") -> DeeplinkDestination.Fetch
             this.contains("inappcb") -> DeeplinkDestination.InAppCb
+            this.contains("anonymize") -> DeeplinkDestination.Anonymize
             else -> null
         }
         return if (intent.isViewUrlIntent("http")) {

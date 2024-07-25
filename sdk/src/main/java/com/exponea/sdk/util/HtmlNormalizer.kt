@@ -90,10 +90,8 @@ public class HtmlNormalizer {
         private const val cssKeyFormat = "-?[_a-zA-Z]+[_a-zA-Z0-9-]*"
         private const val cssDelimiterFormat = "[\\s]*:[\\s]*"
         private const val cssValueFormat = "[^;\\n]+"
-        private const val keyGroupName = "attrKey"
-        private const val valueGroupName = "attrVal"
         private val cssAttributeRegexp = Regex(
-            pattern = "(?<$keyGroupName>$cssKeyFormat)$cssDelimiterFormat(?<$valueGroupName>$cssValueFormat)",
+            pattern = "($cssKeyFormat)$cssDelimiterFormat($cssValueFormat)",
             options = regExpOptions
         )
 
@@ -378,12 +376,16 @@ public class HtmlNormalizer {
         // CSS definitions search
         val cssDefinitionMatches = cssAttributeRegexp.findAll(cssStyle)
         for (cssDefinitionMatch in cssDefinitionMatches) {
-            val cssKey = cssDefinitionMatch.groups[keyGroupName]?.value
+            if (cssDefinitionMatch.groups.size != 3) {
+                // skip
+                continue
+            }
+            val cssKey = cssDefinitionMatch.groups[1]?.value
             if (cssKey == null || !SUPPORTED_CSS_URL_PROPERTIES.contains(cssKey.lowercase())) {
                 // skip
                 continue
             }
-            val cssValue = cssDefinitionMatch.groups[valueGroupName]?.value
+            val cssValue = cssDefinitionMatch.groups[2]?.value
             if (cssValue == null) {
                 // skip
                 continue

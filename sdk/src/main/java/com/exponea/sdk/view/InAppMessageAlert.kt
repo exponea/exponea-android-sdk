@@ -5,6 +5,7 @@ import android.content.Context
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
+import com.exponea.sdk.util.Logger
 
 internal class InAppMessageAlert : InAppMessageView {
     val dialog: AlertDialog
@@ -50,6 +51,10 @@ internal class InAppMessageAlert : InAppMessageView {
     }
 
     override fun dismiss() {
-        dialog.dismiss()
+        try {
+            dialog.dismiss()
+        } catch (e: Exception) {
+            Logger.e(this, "InAppMessageAlert dismiss failed")
+        }
     }
 }

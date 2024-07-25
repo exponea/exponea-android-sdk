@@ -23,6 +23,7 @@ import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.MessagePosition
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
 
@@ -93,7 +94,13 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     }
 
     override fun dismiss() {
-        val superDismiss = { super.dismiss() }
+        val superDismiss = {
+            try {
+                super.dismiss()
+            } catch (e: Exception) {
+                Logger.e(this, "InAppMessageSlideIn dismiss failed")
+            }
+        }
         contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         contentView
             .animate()

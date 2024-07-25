@@ -33,17 +33,19 @@ data class NotificationData(
         parcel.writeByte(if (hasTrackingConsent) 1 else 0)
     }
 
-    private fun writeMapToParcel(map: Map<String, Any>, parcel: Parcel) {
+    @Suppress("UNCHECKED_CAST")
+    private fun writeMapToParcel(mapWithNulls: Map<String, Any?>, parcel: Parcel) {
+        val mapNonNullables: Map<String, Any> = mapWithNulls.filterValues { it != null } as Map<String, Any>
         parcel.writeSerializable(MAP_SIZE_EXTRA)
-        parcel.writeInt(map.size)
-        for ((key, value) in map.entries) {
+        parcel.writeInt(mapNonNullables.size)
+        for ((key, value) in mapNonNullables.entries) {
             parcel.writeString(key)
             when (value) {
                 is Map<*, *> -> {
-                    writeMapToParcel(value as Map<String, Any>, parcel)
+                    writeMapToParcel(value as Map<String, Any?>, parcel)
                 }
                 is Array<*> -> {
-                    writeArrayToParcel(value as Array<Any>, parcel)
+                    writeArrayToParcel(value as Array<Any?>, parcel)
                 }
                 else -> {
                     parcel.writeSerializable(value as Serializable)
@@ -52,16 +54,18 @@ data class NotificationData(
         }
     }
 
-    private fun writeArrayToParcel(array: Array<Any>, parcel: Parcel) {
+    @Suppress("UNCHECKED_CAST")
+    private fun writeArrayToParcel(arrayWithNulls: Array<Any?>, parcel: Parcel) {
+        val arrayNonNullables: List<Any> = arrayWithNulls.filterNotNull()
         parcel.writeSerializable(ARRAY_SIZE_EXTRA)
-        parcel.writeInt(array.size)
-        for (value in array) {
+        parcel.writeInt(arrayNonNullables.size)
+        for (value in arrayNonNullables) {
             when (value) {
                 is Map<*, *> -> {
-                    writeMapToParcel(value as Map<String, Any>, parcel)
+                    writeMapToParcel(value as Map<String, Any?>, parcel)
                 }
                 is Array<*> -> {
-                    writeArrayToParcel(value as Array<Any>, parcel)
+                    writeArrayToParcel(value as Array<Any?>, parcel)
                 }
                 else -> {
                     parcel.writeSerializable(value as Serializable)

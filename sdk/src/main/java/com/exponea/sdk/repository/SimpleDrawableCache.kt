@@ -5,14 +5,14 @@ import android.content.res.Resources
 import android.os.Build
 import android.view.View
 import android.widget.ImageView
-import coil.ImageLoader
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.load
-import coil.request.CachePolicy
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
+import freeze.coil.ImageLoader
+import freeze.coil.decode.GifDecoder
+import freeze.coil.decode.ImageDecoderDecoder
+import freeze.coil.request.CachePolicy
+import freeze.coil.request.ImageRequest
 import kotlin.math.max
 import kotlin.math.min
 
@@ -72,19 +72,18 @@ internal open class SimpleDrawableCache(
                         val imageToShow = getFile(url)
                         if (imageToShow != null) {
                             runOnMainThread {
-                                target.load(imageToShow, imageLoader) {
-                                    this.memoryCachePolicy(CachePolicy.DISABLED)
-                                    this.diskCachePolicy(CachePolicy.DISABLED)
-                                    this.networkCachePolicy(CachePolicy.DISABLED)
-                                    this.allowConversionToBitmap(false)
-                                    this.listener(
+                                val request = ImageRequest.Builder(context)
+                                    .data(imageToShow)
+                                    .target(target)
+                                    .listener(
                                         onError = { _, result ->
                                             onImageNotLoadedFallback(
                                                 "Image showing failed due error: ${result.localizedMessage}"
                                             )
                                         }
                                     )
-                                }
+                                .build()
+                                imageLoader.enqueue(request)
                                 target.visibility = View.VISIBLE
                             }
                         } else {

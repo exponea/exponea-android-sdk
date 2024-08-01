@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply from: 'publish-maven.gradle'
 apply from: '../jacoco.gradle'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.panaxeo.shadow-aar'
 
 android {
 
@@ -82,8 +83,9 @@ dependencies {
     // Html handling for in-app freeform messages
     implementation 'org.jsoup:jsoup:1.15.4'
     // Images handling
-    implementation 'io.coil-kt:coil:1.4.0'
-    implementation 'io.coil-kt:coil-gif:1.4.0'
+    implementationEmbed 'io.coil-kt:coil:1.4.0'
+    implementationEmbed 'io.coil-kt:coil-base:1.4.0'
+    implementationEmbed 'io.coil-kt:coil-gif:1.4.0'
     // Custom Tabs
     implementation 'androidx.browser:browser:1.5.0'
 
@@ -104,6 +106,11 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // WorkManager testing
     testImplementation 'androidx.work:work-testing:2.4.0'
+}
+
+shadowAar {
+    transformR = "com.exponea.sdk.R"
+    repackages.put("coil", "freeze.coil")
 }
 
 // turn logging for unit tests

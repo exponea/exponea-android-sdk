@@ -24,6 +24,7 @@ buildscript {
         classpath "org.jlleitschuh.gradle:ktlint-gradle:9.2.1"
         classpath 'com.huawei.agconnect:agcp:1.6.4.300'
         classpath 'com.dipien:bye-bye-jetifier:1.2.2'
+        classpath 'com.panaxeo:shadow-aar:0.1.1'
     }
 }
 

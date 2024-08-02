@@ -11,6 +11,21 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
 
 ## Release Notes
+## Release Notes for 3.16.0
+#### August 02, 2024
+* Added:
+  * Updates tracking of campaign/click events to only track when the xnpe_cmp campaign identifier is present, updates the App Links documentation with details.
+  * Adds a Push Notification Alert Sound section to the Push Notifications documentation.
+  * Updates In-App Content Blocks carousel documentation.
+* Fixed:
+  * Aligns display of push notifications and playing of alert sounds with the Google guidelines.
+  * Adds NULL handing to notification data parsing.
+  * Resolves a dependency conflicts related to internal usage by the SDK of the Coil library.
+  * Standardizes regexp parsing of HTML.
+  * Updates push token correctly according to authorization requirements and permission status
+  * Dismisses In-app message dialog correctly for already closing application
+
+
 ## Release Notes for 3.15.0
 #### June 27, 2024
 * Added:

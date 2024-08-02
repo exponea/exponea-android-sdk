@@ -25,7 +25,7 @@ Download via Gradle:
 
 ```groovy
 dependencies {
-  implementation 'com.exponea.sdk:sdk:3.15.0'
+  implementation 'com.exponea.sdk:sdk:3.16.0'
 }
 ```
 
@@ -35,7 +35,7 @@ Download via Maven:
 <dependency>
     <groupId>com.exponea.sdk</groupId>
     <artifactId>sdk</artifactId>
-    <version>3.15.0</version>
+    <version>3.16.0</version>
 </dependency>
 ```
 

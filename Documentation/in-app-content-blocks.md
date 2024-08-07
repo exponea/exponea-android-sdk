@@ -20,10 +20,6 @@ You can strategically position placeholders for in-app content blocks within you
 
 You can integrate in-app content blocks by adding one or more placeholder views in your app. Each in-app content block must have a `Placeholder ID` specified in its [settings](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks#3-fill-the-settings) in Engagement. The SDK will display an in-app content block in the corresponding placeholder in the app if the current app user matches the target audience. In-app content block is shown until user interacts with it or placeholder view instance is reloaded programmatically.
 
-## Integration of a Carousel View
-
-If you want to show multiple in-app content blocks to user for same `Placeholder ID` then consider to use ContentBlockCarouselView. The SDK will display multiple in-app content blocks for current app user with expected order and loop behaviour. In-app content block is shown in loop until user interacts with it or carousel view instance is reloaded programmatically.
-
 ### Add a Placeholder View
 
 Get a placeholder view for the specified `placeholderId` from the API using the `getInAppContentBlocksPlaceholder` method:
@@ -46,6 +42,12 @@ After the SDK [initializes](https://documentation.bloomreach.com/engagement/docs
 > 👍
 >
 > Always us descriptive, human-readable placeholder IDs. They are tracked as an event property and can be used for analytics within Engagement.
+
+## Integration of a Carousel View
+
+If you want to show multiple in-app content blocks to the user for the same `Placeholder ID`, consider using `ContentBlockCarouselView`. The SDK will display the in-app content blocks for the current app user in a loop, in order of `Priority`. The in-app content blocks are displayed in a loop until the user interacts with them or until the carousel view instance is reloaded programmatically.
+
+If the carousel view's placeholder ID only matches a single in-app content block, it will behave like a static placeholder view with no loop effect.
 
 ### Add a Carousel View
 

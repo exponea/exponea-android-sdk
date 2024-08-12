@@ -232,6 +232,44 @@ placeholderView.behaviourCallback = object : InAppContentBlockCallback {
 >
 > Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
+### Override Button Action Type in HTML Message
+
+The SDK automatically processes button action URLs as follows:
+
+* If the URL starts with `http` or `https`, the action type is set to `browser`.
+* In all other cases, the action type is set to `deep-link`.
+
+It's possible to override this behavior by explicitly specifying the optional attribute `data-actiontype` with one of the following values:
+
+* `browser` - web URL, to be opened in a browser
+* `deep-link` - custom URL scheme or Universal Link, to be processed by the app accordingly
+
+You can do this in the HTML builder by inserting the `data-actiontype` attribute as in the example below:
+
+```html
+<div class="bee-block bee-block-4 bee-button">
+   <div data-link="https://example.com" data-actiontype="browser" style="font-size: 14px; background-color: #f84cac; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 4px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; direction: ltr; font-family: inherit; font-weight: 700; max-width: 100%; padding-bottom: 4px; padding-left: 18px; padding-right: 18px; padding-top: 4px; width: auto; display: inline-block;" class="bee-button-content"><span style="word-break: break-word; font-size: 14px; line-height: 200%;">Action</span></div>
+</div>
+```
+
+The SDK also supports the `data-actiontype` attribute in `<a>` elements for compatibility with the Visual builder:
+
+```html
+<div class="bee-block bee-block-4 bee-button">
+   <a data-link="https://example.com" data-actiontype="deep-link">Click me</a>
+</div>
+```
+
+In the Visual builder, you can set the action type as follows:
+
+1) In the preview, select the button you want to override the action type for
+2) In the editor on the right side, scroll down to the `Attributes` section
+3) Click on `ADD NEW ATTRIBUTE`
+4) Select `data-actiontype`
+5) Insert a value (either `browser` or  `deep-link`)
+
+![Screenshot](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/actiontype.png)
+
 ### Handle Carousel Presentation Status
 
 If you need to access additional information about content blocks displayed in a carousel, you can use the following methods:

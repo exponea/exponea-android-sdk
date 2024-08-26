@@ -66,13 +66,14 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     private val UTM_MEDIUM = "medium_98765rfghjmnb"
     private val UTM_TERM = "term_098765rtyuk"
     private val XNPE_CMP = "3456476768iu-ilkujyfgcvbi7gukgvbnp-oilgvjkjyhgdxcvbiu"
-    private val CAMPAIGN_URL = "http://example.com/route/to/campaing" +
-            "?utm_source=" + UTM_SOURCE +
-            "&utm_campaign=" + UTM_CAMPAIGN +
-            "&utm_content=" + UTM_CONTENT +
-            "&utm_medium=" + UTM_MEDIUM +
-            "&utm_term=" + UTM_TERM +
-            "&xnpe_cmp=" + XNPE_CMP
+    private val CAMPAIGN_UNIVERSAL_LINK_URL = "http://example.com/route/to/campaing" +
+        "?utm_source=" + UTM_SOURCE +
+        "&utm_campaign=" + UTM_CAMPAIGN +
+        "&utm_content=" + UTM_CONTENT +
+        "&utm_medium=" + UTM_MEDIUM +
+        "&utm_term=" + UTM_TERM +
+        "&xnpe_cmp=" + XNPE_CMP
+    private val CAMPAIGN_DEEPLINK_LINK_URL = CAMPAIGN_UNIVERSAL_LINK_URL.replaceFirst("http", "example")
 
     private lateinit var eventRepository: EventRepository
     private lateinit var campaignRepository: CampaignRepository
@@ -92,8 +93,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_normal() = runInSingleThread { idleThreads ->
-        val deepLinkIntent = createDeeplinkIntent()
-        assertTrue(Exponea.handleCampaignIntent(deepLinkIntent, context))
+        val universalLinkIntent = createUniversalLinkIntent()
+        assertTrue(Exponea.handleCampaignIntent(universalLinkIntent, context))
         idleThreads()
         val storedEvents = eventRepository.all()
         assertEquals(1, storedEvents.size)
@@ -102,9 +103,9 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_invalid_NullData() {
-        val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = null
-        val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        universalLinkIntent.data = null
+        val handled = Exponea.handleCampaignIntent(universalLinkIntent, context)
         val storedEvents = eventRepository.all()
 
         assertFalse { handled }
@@ -112,9 +113,22 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_invalid_InvalidUrl() {
-        val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("http", "invalid"))
+    fun testHandleIntent_invalid_InvalidUrl_UL() {
+        val universalLinkIntent = createUniversalLinkIntent()
+        val invalidUrl = CAMPAIGN_UNIVERSAL_LINK_URL.removePrefix("http://")
+        universalLinkIntent.data = Uri.parse(invalidUrl)
+        val handled = Exponea.handleCampaignIntent(universalLinkIntent, context)
+        val storedEvents = eventRepository.all()
+
+        assertFalse { handled }
+        assertEquals(0, storedEvents.size)
+    }
+
+    @Test
+    fun testHandleIntent_invalid_InvalidUrl_DL() {
+        val deepLinkIntent = createDeepLinkIntent()
+        val invalidUrl = CAMPAIGN_DEEPLINK_LINK_URL.removePrefix("example://")
+        deepLinkIntent.data = Uri.parse(invalidUrl)
         val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
         val storedEvents = eventRepository.all()
 
@@ -124,9 +138,9 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_valid_NoPayload() = runInSingleThread { idleThreads ->
-        val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
-        val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        universalLinkIntent.data = Uri.parse(CAMPAIGN_UNIVERSAL_LINK_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
+        val handled = Exponea.handleCampaignIntent(universalLinkIntent, context)
         idleThreads()
         val storedEvents = eventRepository.all()
         assertFalse { handled }
@@ -135,9 +149,9 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_invalid_IncompatibleAction() {
-        val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.action = Intent.ACTION_PASTE
-        val handled = Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        universalLinkIntent.action = Intent.ACTION_PASTE
+        val handled = Exponea.handleCampaignIntent(universalLinkIntent, context)
         val storedEvents = eventRepository.all()
 
         assertFalse { handled }
@@ -146,8 +160,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_checkEventProperties() = runInSingleThread { idleThreads ->
-        val deepLinkIntent = createDeeplinkIntent()
-        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
         idleThreads()
         val storedEvent = eventRepository.all().first()
 
@@ -155,14 +169,14 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertTrue(storedEvent.properties!!.contains("platform"))
         assertTrue(storedEvent.properties!!.contains("url"))
 
-        assertEquals(CAMPAIGN_URL, storedEvent.properties!!["url"])
+        assertEquals(CAMPAIGN_UNIVERSAL_LINK_URL, storedEvent.properties!!["url"])
         assertEquals("Android", storedEvent.properties!!["platform"])
     }
 
     @Test
     fun testHandleIntent_checkCampaignValues() {
-        val deepLinkIntent = createDeeplinkIntent()
-        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
 
         val campaignEvent = campaignRepository.get()
 
@@ -174,14 +188,14 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertEquals(UTM_MEDIUM, campaignEvent.medium)
         assertEquals(XNPE_CMP, campaignEvent.payload)
         assertEquals(UTM_SOURCE, campaignEvent.source)
-        assertEquals(CAMPAIGN_URL, campaignEvent.completeUrl)
+        assertEquals(CAMPAIGN_UNIVERSAL_LINK_URL, campaignEvent.completeUrl)
         assertNotNull(campaignEvent.createdAt)
     }
 
     @Test
     fun testHandleIntent_oldCampaign() {
-        val deepLinkIntent = createDeeplinkIntent()
-        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
 
         runBlocking {
             delay(Exponea.campaignTTL.plus(1).times(1000).toLong())
@@ -193,8 +207,29 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     @Test
-    fun testHandleIntent_sessionUpdate_valid() = runInSingleThread { idleThreads ->
-        val deepLinkIntent = createDeeplinkIntent()
+    fun testHandleIntent_sessionUpdate_valid_UL() = runInSingleThread { idleThreads ->
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
+        val campaignEvent = campaignRepository.get()!!
+        Exponea.trackSessionStart(currentTimeSeconds())
+        idleThreads()
+        val storedEvents = eventRepository.all()
+        assertEquals(2, storedEvents.size)
+        val sessionEvent = storedEvents.first {
+            Constants.EventTypes.sessionStart == it.type
+        }
+        assertEquals(campaignEvent.completeUrl, sessionEvent.properties!!["location"])
+        assertEquals(campaignEvent.source, sessionEvent.properties!!["utm_source"])
+        assertEquals(campaignEvent.medium, sessionEvent.properties!!["utm_medium"])
+        assertEquals(campaignEvent.campaign, sessionEvent.properties!!["utm_campaign"])
+        assertEquals(campaignEvent.content, sessionEvent.properties!!["utm_content"])
+        assertEquals(campaignEvent.term, sessionEvent.properties!!["utm_term"])
+        assertEquals(campaignEvent.payload, sessionEvent.properties!!["xnpe_cmp"])
+    }
+
+    @Test
+    fun testHandleIntent_sessionUpdate_valid_DL() = runInSingleThread { idleThreads ->
+        val deepLinkIntent = createDeepLinkIntent()
         Exponea.handleCampaignIntent(deepLinkIntent, context)
         val campaignEvent = campaignRepository.get()!!
         Exponea.trackSessionStart(currentTimeSeconds())
@@ -215,9 +250,9 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_sessionUpdate_campaignWithoutPayload() = runInSingleThread { idleThreads ->
-        val deepLinkIntent = createDeeplinkIntent()
-        deepLinkIntent.data = Uri.parse(CAMPAIGN_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
-        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        universalLinkIntent.data = Uri.parse(CAMPAIGN_UNIVERSAL_LINK_URL.replaceFirst("xnpe_cmp", "x_xnpe_cmp"))
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
         val campaignEvent = campaignRepository.get()!!
         Exponea.trackSessionStart(currentTimeSeconds())
         idleThreads()
@@ -236,8 +271,8 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     @Test
     fun testHandleIntent_campaignFlush() {
-        val deepLinkIntent = createDeeplinkIntent()
-        Exponea.handleCampaignIntent(deepLinkIntent, context)
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
 
         val request = flushAndWaitForRequest()
 
@@ -246,7 +281,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertNotNull(parsedRequest["age"])
         assertNotNull(parsedRequest["properties"])
         assertEquals("Android", (parsedRequest["properties"] as Map<*, *>)["platform"])
-        assertEquals(CAMPAIGN_URL, parsedRequest["url"])
+        assertEquals(CAMPAIGN_UNIVERSAL_LINK_URL, parsedRequest["url"])
     }
 
     private fun flushAndWaitForRequest(): RecordedRequest? {
@@ -259,10 +294,18 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         waitForIt { Exponea.flushData { _ -> it() } }
     }
 
-    private fun createDeeplinkIntent() = Intent().apply {
+    private fun createUniversalLinkIntent() = Intent().apply {
+        createLinkIntent(CAMPAIGN_UNIVERSAL_LINK_URL)
+    }
+
+    private fun createDeepLinkIntent() = Intent().apply {
+        createLinkIntent(CAMPAIGN_DEEPLINK_LINK_URL)
+    }
+
+    private fun Intent.createLinkIntent(linkUrl: String) {
         this.action = Intent.ACTION_VIEW
         this.addCategory(Intent.CATEGORY_DEFAULT)
         this.addCategory(Intent.CATEGORY_BROWSABLE)
-        this.data = Uri.parse(CAMPAIGN_URL)
+        this.data = Uri.parse(linkUrl)
     }
 }

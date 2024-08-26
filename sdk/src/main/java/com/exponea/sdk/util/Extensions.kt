@@ -126,7 +126,22 @@ internal fun String?.adjustUrl(): String? {
 }
 
 fun Intent?.isViewUrlIntent(schemePrefix: String): Boolean {
-    return Intent.ACTION_VIEW == this?.action && data?.scheme?.startsWith(schemePrefix, true) == true
+    return isViewUrlIntent() && this?.data?.scheme?.startsWith(schemePrefix, true) == true
+}
+
+internal fun Intent?.isViewUrlIntent(): Boolean {
+    if (this == null) {
+        return false
+    }
+    if (Intent.ACTION_VIEW != this.action) {
+        Logger.v(this, "Only '${Intent.ACTION_VIEW}' is allowed for ViewUrl intent")
+        return false
+    }
+    if (scheme.isNullOrBlank()) {
+        Logger.v(this, "Deeplinks and Android applinks must contains scheme")
+        return false
+    }
+    return true
 }
 
 fun <T> Result<T>.returnOnException(mapThrowable: (e: Throwable) -> T): T {

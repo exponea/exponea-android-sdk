@@ -964,7 +964,7 @@ object Exponea {
      * is returned.
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
-        if (!intent.isViewUrlIntent("http")) {
+        if (!intent.isViewUrlIntent()) {
             return false
         }
         val campaignUri = intent?.data

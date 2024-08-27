@@ -254,9 +254,12 @@ internal class ExponeaComponent(
         exponeaProject: ExponeaProject,
         projectRouteMap: Map<EventType, List<ExponeaProject>> = hashMapOf()
     ) {
+        if (exponeaConfiguration.automaticSessionTracking) {
+            sessionManager.trackSessionEnd(currentTimeSeconds())
+        }
+
         val token = pushTokenRepository.get()
         val tokenType = pushTokenRepository.getLastTokenType()
-
         // Do not use TokenFrequency from the configuration, clear tokens immediately during anonymize
         fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
         fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.HMS)

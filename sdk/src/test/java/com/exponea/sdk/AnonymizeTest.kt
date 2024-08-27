@@ -78,25 +78,26 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
         val events = Exponea.componentForTesting.eventRepository.all()
         events.sortedBy { it.timestamp }
-        assertEquals(9, events.size)
+        assertEquals(10, events.size)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
         checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
         checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(
             PUSH_KEY to "push_token"
         ))
+        checkEvent(events[3], Constants.EventTypes.sessionEnd, initialProject, userId, null)
         // anonymize is called. We clear push token in old user and track initial events for new user
-        checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(
+        checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(
             PUSH_KEY to " "
         ))
-        checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(
+        checkEvent(events[5], Constants.EventTypes.push, initialProject, userId, hashMapOf(
             HUAWEI_PUSH_KEY to " "
         ))
-        checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-        checkEvent(events[7], Constants.EventTypes.push, newProject, newUserId, hashMapOf(
+        checkEvent(events[6], Constants.EventTypes.installation, newProject, newUserId!!, null)
+        checkEvent(events[7], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+        checkEvent(events[8], Constants.EventTypes.push, newProject, newUserId, hashMapOf(
             PUSH_KEY to "push_token"
         ))
-        checkEvent(events[8], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        checkEvent(events[9], "test", newProject, newUserId, hashMapOf("name" to "test"))
     }
 
     @Test
@@ -139,6 +140,51 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             ))
             checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
             checkEvent(events[5], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        }
+    }
+
+    @Test
+    fun `should track session start and end on anonymize when automaticSessionTracking is on`() {
+        runInSingleThread { idleThreads ->
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(context, ExponeaConfiguration(
+                baseURL = initialProject.baseUrl,
+                projectToken = initialProject.projectToken,
+                authorization = initialProject.authorization,
+                automaticSessionTracking = true)
+            )
+            val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+            Exponea.trackEvent(
+                eventType = "test",
+                properties = PropertiesList(hashMapOf("name" to "test")),
+                timestamp = currentTimeSeconds()
+            )
+            val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
+            Exponea.anonymize(exponeaProject = newProject)
+            val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
+            Exponea.trackEvent(
+                eventType = "test",
+                properties = PropertiesList(hashMapOf("name" to "test")),
+                timestamp = currentTimeSeconds()
+            )
+            idleThreads()
+            val events = Exponea.componentForTesting.eventRepository.all()
+            events.sortedBy { it.timestamp }
+            assertEquals(events.size, 8)
+            checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
+            checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
+            checkEvent(events[2], Constants.EventTypes.sessionEnd, initialProject, userId, null)
+            checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(
+                PUSH_KEY to " "
+            ))
+            checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(
+                HUAWEI_PUSH_KEY to " "
+            ))
+            checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
+            checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+            checkEvent(events[7], "test", newProject, newUserId, hashMapOf("name" to "test"))
         }
     }
 

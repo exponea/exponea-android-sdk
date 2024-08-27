@@ -69,7 +69,13 @@ data class ExponeaConfiguration(
      * could affect all WebView instances used by application. If your application is using WebView and page logic
      * depends on cookies, you may allow them with `true` value.
      */
-    var allowWebViewCookies: Boolean = false
+    var allowWebViewCookies: Boolean = false,
+
+    /**
+     * Flag that enables or disables manual session auto-close.
+     * It determines whether the SDK automatically tracks `session_end` for sessions that remain open when `Exponea.trackSessionStart()` is called multiple times in manual session tracking mode.
+     */
+    var manualSessionAutoClose: Boolean = true
 ) {
 
     companion object {

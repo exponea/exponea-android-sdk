@@ -30,7 +30,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = MockApplication::class)
 internal class SessionManagerTest : ExponeaSDKTest() {
-    private lateinit var sm: SessionManager
     private lateinit var eventManager: EventManager
     private lateinit var backgroundTimer: BackgroundTimerManager
     private lateinit var campaignRepository: CampaignRepository
@@ -58,12 +57,11 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
         prefs = ExponeaPreferencesImpl(context)
-
-        sm = SessionManagerImpl(context, prefs, campaignRepository, eventManager, backgroundTimer)
     }
 
     @Test
     fun `should track session start if initialized before onResume`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
@@ -78,6 +76,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should track session start if initialized after onResume with Activity`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
@@ -96,7 +95,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         controller.postCreate(null)
         controller.resume()
         // if we intitialize session manager with resumed activity, it will track session start right away
-        sm = SessionManagerImpl(controller.get(), prefs, campaignRepository, eventManager, backgroundTimer)
+        val sm = buildSessionManager(controller.get())
         sm.startSessionListener()
         verify(exactly = 1) {
             eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
@@ -104,8 +103,21 @@ internal class SessionManagerTest : ExponeaSDKTest() {
         confirmVerified(eventManager)
     }
 
+    private fun buildSessionManager(
+        context: Context,
+        manualSessionAutoClose: Boolean = false
+    ) = SessionManagerImpl(
+        context,
+        prefs,
+        campaignRepository,
+        eventManager,
+        backgroundTimer,
+        manualSessionAutoClose
+    )
+
     @Test
     fun `should resume running session if withing session timeout`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
@@ -123,6 +135,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should start new session if outside of session timeout`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
@@ -145,6 +158,7 @@ internal class SessionManagerTest : ExponeaSDKTest() {
 
     @Test
     fun `should stop tracking`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
         val controller = Robolectric.buildActivity(Activity::class.java).create()
         controller.start()
         controller.postCreate(null)
@@ -159,5 +173,73 @@ internal class SessionManagerTest : ExponeaSDKTest() {
             eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
         }
         confirmVerified(eventManager)
+    }
+
+    @Test
+    fun `should close active session when multiple manual session started`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext(), true)
+        sm.trackSessionStart(10.0)
+        sm.trackSessionStart(20.0)
+        verify(exactly = 1) {
+            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+        }
+        verify(exactly = 1) {
+            eventManager.track("session_end", 20.0, any(), EventType.SESSION_END)
+        }
+        verify(exactly = 1) {
+            eventManager.track("session_start", 20.0, any(), EventType.SESSION_START)
+        }
+    }
+
+    @Test
+    fun `should not close active session when multiple manual session started and autoClose is off`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext(), false)
+        sm.trackSessionStart(10.0)
+        sm.trackSessionStart(20.0)
+        verify(exactly = 1) {
+            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+        }
+        verify(exactly = 0) {
+            eventManager.track("session_end", any(), any(), EventType.SESSION_END)
+        }
+        verify(exactly = 1) {
+            eventManager.track("session_start", 20.0, any(), EventType.SESSION_START)
+        }
+    }
+
+    @Test
+    fun `should not close active automatic session when another manual session start is tracked - autoClose off`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext(), false)
+        every { anyConstructed<Date>().time } returns 10 * 1000
+        sm.startSessionListener()
+        sm.onSessionStart()
+        verify(exactly = 1) {
+            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+        }
+        sm.trackSessionStart(20.0)
+        verify(exactly = 1) {
+            eventManager.track("session_start", 20.0, any(), EventType.SESSION_START)
+        }
+        verify(exactly = 0) {
+            eventManager.track("session_end", any(), any(), EventType.SESSION_END)
+        }
+    }
+
+    @Test
+    fun `should not close active automatic session when another manual session start is tracked - autoClose on`() {
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext(), true)
+        every { anyConstructed<Date>().time } returns 10 * 1000
+        sm.startSessionListener()
+        sm.onSessionStart()
+        verify(exactly = 1) {
+            eventManager.track("session_start", 10.0, any(), EventType.SESSION_START)
+        }
+        sm.trackSessionStart(20.0)
+        verify(exactly = 1) {
+            eventManager.track("session_start", 20.0, any(), EventType.SESSION_START)
+        }
+        verify(exactly = 0) {
+            eventManager.track("session_end", any(), any(), EventType.SESSION_END)
+        }
     }
 }

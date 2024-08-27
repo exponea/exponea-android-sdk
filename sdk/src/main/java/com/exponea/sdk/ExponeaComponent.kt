@@ -179,7 +179,12 @@ internal class ExponeaComponent(
     )
 
     internal val sessionManager: SessionManager = SessionManagerImpl(
-        context, preferences, campaignRepository, eventManager, backgroundTimerManager
+        context,
+        preferences,
+        campaignRepository,
+        eventManager,
+        backgroundTimerManager,
+        exponeaConfiguration.manualSessionAutoClose
     )
 
     internal val pushNotificationSelfCheckManager: PushNotificationSelfCheckManager =

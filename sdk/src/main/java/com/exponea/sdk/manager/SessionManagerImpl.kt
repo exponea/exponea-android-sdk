@@ -18,12 +18,14 @@ internal class SessionManagerImpl(
     private val prefs: ExponeaPreferences,
     private val campaignRepository: CampaignRepository,
     private val eventManager: EventManager,
-    private val backgroundTimerManager: BackgroundTimerManager
+    private val backgroundTimerManager: BackgroundTimerManager,
+    private val manualSessionAutoClose: Boolean
 ) : SessionManager() {
     private val initTime = currentTimeSeconds()
 
     var application = context.applicationContext as Application
     private var isListenerActive = false
+    private var isAutomaticSessionMode = false
 
     companion object {
         const val PREF_SESSION_END = "SessionEndTimeDouble"
@@ -50,6 +52,7 @@ internal class SessionManagerImpl(
      * Starts a session If application is already in foreground state
      */
     override fun startSessionListener() {
+        isAutomaticSessionMode = true
         if (!isListenerActive) {
             if (ExponeaContextProvider.applicationIsForeground) {
                 onSessionStart()
@@ -63,6 +66,7 @@ internal class SessionManagerImpl(
      * Stops session listener
      */
     override fun stopSessionListener() {
+        isAutomaticSessionMode = false
         if (isListenerActive) {
             ExponeaContextProvider.removeForegroundStateListener(this)
             isListenerActive = false
@@ -119,9 +123,14 @@ internal class SessionManagerImpl(
      */
     override fun trackSessionStart(timestamp: Double) {
         Logger.d(this, "Tracking session start at: ${timestamp.toDate()}")
-
+        // Check if other session is active
+        if (!isAutomaticSessionMode && manualSessionAutoClose && isSessionActive()) {
+            val previousStart = prefs.getDouble(PREF_SESSION_START, -1.0).toDate()
+            Logger.d(this, "Closing already active session that starts at $previousStart")
+            trackSessionEnd(timestamp)
+        }
         // Save session start time if session tracking is manual
-        if (!isListenerActive) {
+        if (!isAutomaticSessionMode) {
             prefs.setDouble(PREF_SESSION_START, timestamp)
         }
         val properties = DeviceProperties(application).toHashMap()
@@ -134,6 +143,12 @@ internal class SessionManagerImpl(
         )
     }
 
+    private fun isSessionActive(): Boolean {
+        val lastTimeStarted = prefs.getDouble(PREF_SESSION_START, -1.0)
+        val lastTimeFinished = prefs.getDouble(PREF_SESSION_END, -1.0)
+        return lastTimeStarted != -1.0 && lastTimeFinished == -1.0
+    }
+
     /**
      * Tracking Session End
      */
@@ -141,7 +156,7 @@ internal class SessionManagerImpl(
         Logger.d(this, "Tracking session end at: ${timestamp.toDate()}")
 
         // Save session end time if session tracking is manual
-        if (!isListenerActive) {
+        if (!isAutomaticSessionMode) {
             prefs.setDouble(PREF_SESSION_END, timestamp)
         }
 

@@ -224,6 +224,10 @@ Exponea.trackSessionStart()
 Exponea.trackSessionEnd()
 ```
 
+> 👍
+>
+> The default behavior for manually calling `Exponea.trackSessionStart()` multiple times can be controlled by the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag, which is set to `true` by default. If a previous session is still open (i.e. it has not been manually closed with `Exponea.trackSessionEnd()`) and `Exponea.trackSessionStart()` is called again, the SDK will automatically track a `session_end` for the previous session and then tracks a new `session_start` event. To prevent this behavior, set the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag to `false`.
+
 ## Push Notifications
 
 If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks the push notification token by default.

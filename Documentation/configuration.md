@@ -127,3 +127,6 @@ This page provides an overview of all configuration parameters for the SDK. You 
     > * DO NOT CHANGE THIS SETTING unless you know the risks associated with enabling and storing cookies.
     > * By changing this setting and enabling cookies in WebViews you take full responsibility for any security vulnerabilities or incidents caused by them.
 
+* `manualSessionAutoClose`
+    * Determines whether the SDK automatically tracks `session_end` for sessions that remain open when `Exponea.trackSessionStart()` is called multiple times in manual session tracking mode.
+    * Default value: `true`

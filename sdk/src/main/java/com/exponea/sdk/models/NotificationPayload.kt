@@ -4,8 +4,6 @@ import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.fromJson
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
-import java.util.ArrayList
-import java.util.HashMap
 import org.json.JSONArray
 
 internal class NotificationPayload(val rawData: HashMap<String, String>) {

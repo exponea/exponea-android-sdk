@@ -101,4 +101,9 @@ internal object Constants {
     object AppInbox {
         val defaulAppInboxProvider = DefaultAppInboxProvider()
     }
+
+    enum class PushNotifShownStatus(val value: String) {
+        NOT_SHOWN("not_shown"),
+        SHOWN("shown")
+    }
 }

@@ -352,3 +352,26 @@ Keep in mind that invoking the `anonymize` method will remove the push notificat
 This is most likely because your app does not call [`anonymize`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#anonymize) when a user logs out.
 
 It's essential to call `anonymize` when a user logs out of your app to ensure that the push notification token is removed from that user's profile. The token will be assigned to the user who logs in next. If your app fails to call `anonymize` at one user's logout and a different user logs in, both users will have the same token in their profile.
+
+### Push notification click events are too rare on production (low conversion)
+
+Android 8 (API level 26) introduced the concepts "notification channel" and "importance level". The importance level determines the visual and auditory behavior of a channel's notifications, as [defined by the Android system](https://developer.android.com/develop/ui/views/notifications/channels#importance). 
+
+Developers set a default importance level when creating a notification channel. However, users have the option to configure how visible and intrusive a channel is, overriding its default importance. This may result in notifications not being shown to a user at all, even if you set a channel's default importance to `IMPORTANCE_MAX`.
+
+If a user overrides a notification channel's importance with `IMPORTANCE_NONE`, notifications won't be shown. This means a "campaign" event with `status=clicked` won't be tracked as the notification can't be clicked or interacted with.
+
+The SDK is not able to avoid this. However, it will still track a "campaign" event with `status=delivered` and the following additional properties that may be helpful in analyzing and filtering:
+
+* **state** contains the value `shown` if the notification was shown to the customer successfully. If not, the value is `not_shown`.
+* **notification_importance** contains a readable value of the current notification channel importance. Possible values are:
+  * **importance_none** reflects value of `NotificationManager.IMPORTANCE_NONE`.
+  * **importance_min** reflects value of `NotificationManager.IMPORTANCE_MIN`.
+  * **importance_low** reflects value of `NotificationManager.IMPORTANCE_LOW`.
+  * **importance_default** reflects value of `NotificationManager.IMPORTANCE_DEFAULT`.
+  * **importance_high** reflects value of `NotificationManager.IMPORTANCE_HIGH`.
+  * **importance_max** reflects value of `NotificationManager.IMPORTANCE_MAX`.
+  * **importance_unspecified** reflects value of `NotificationManager.IMPORTANCE_UNSPECIFIED`.
+  * **importance_unspecified** reflects value of `NotificationManager.IMPORTANCE_UNSPECIFIED`.
+  * **importance_unknown** is tracked in case the notification channel could not be found due to invalid registration or an old Android version that doesn't support notification channels.
+  * **importance_unsupported** is tracked in case the notification channel exists but the `importance` feature is unsupported by Android (pre API level 26).

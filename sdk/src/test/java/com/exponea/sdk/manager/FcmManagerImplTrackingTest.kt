@@ -42,6 +42,7 @@ internal class FcmManagerImplTrackingTest(
     private lateinit var manager: FcmManager
     private lateinit var notificationManager: NotificationManager
     private lateinit var context: Context
+    private lateinit var trackingConsentManager: TrackingConsentManager
 
     companion object {
         data class TestCase(
@@ -117,12 +118,20 @@ internal class FcmManagerImplTrackingTest(
         context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
         ExponeaConfigRepository.set(context, ExponeaConfiguration())
+        trackingConsentManager = mockkClass(TrackingConsentManagerImpl::class)
+        every {
+            trackingConsentManager.trackDeliveredPush(any(), any(), any(), any(), any())
+        } just Runs
+        every {
+            trackingConsentManager.trackClickedPush(any(), any(), any(), any())
+        } just Runs
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
-                PushTokenRepositoryProvider.get(context),
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+            PushTokenRepositoryProvider.get(context),
+            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
+            trackingConsentManager
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)
@@ -140,7 +149,7 @@ internal class FcmManagerImplTrackingTest(
 
         manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
         verify(exactly = 1) {
-            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+            trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
         ExponeaPushTrackingActivity().processPushClick(
             context,
@@ -164,7 +173,7 @@ internal class FcmManagerImplTrackingTest(
 
         manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
         verify(exactly = 1) {
-            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+            trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
         ExponeaPushTrackingActivity().processPushClick(
             context,
@@ -189,7 +198,7 @@ internal class FcmManagerImplTrackingTest(
 
         manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
         verify(exactly = 0) {
-            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+            trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
         ExponeaPushTrackingActivity().processPushClick(
             context,
@@ -211,7 +220,7 @@ internal class FcmManagerImplTrackingTest(
 
         manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
         verify(exactly = 0) {
-            Exponea.trackDeliveredPush(any(), capture(deliveredTimestampSlot))
+            trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
         ExponeaPushTrackingActivity().processPushClick(
             context,

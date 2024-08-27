@@ -9,6 +9,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.FcmManagerImpl
+import com.exponea.sdk.manager.TrackingConsentManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -195,13 +196,20 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
 
         Exponea.flushMode = FlushMode.MANUAL
         ExponeaConfigRepository.set(context, ExponeaConfiguration())
-
+        val trackingConsentManager = mockkClass(TrackingConsentManagerImpl::class)
+        every {
+            trackingConsentManager.trackDeliveredPush(any(), any(), any(), any(), any())
+        } just Runs
+        every {
+            trackingConsentManager.trackClickedPush(any(), any(), any(), any())
+        } just Runs
         manager = FcmManagerImpl(
             context,
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
             PushTokenRepositoryProvider.get(context),
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
+            trackingConsentManager
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)

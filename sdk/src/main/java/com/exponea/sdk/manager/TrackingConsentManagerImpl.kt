@@ -13,6 +13,7 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.NotificationAction
+import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.network.ExponeaServiceImpl
@@ -82,14 +83,25 @@ internal class TrackingConsentManagerImpl(
         )
     }
 
-    override fun trackDeliveredPush(data: NotificationData?, timestamp: Double, mode: MODE) {
+    override fun trackDeliveredPush(
+        data: NotificationData?,
+        timestamp: Double,
+        mode: MODE,
+        shownStatus: Constants.PushNotifShownStatus,
+        notificationChannelImportance: NotificationChannelImportance
+    ) {
         var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && data?.hasTrackingConsent == false) {
             Logger.e(this, "Event for delivered notification is not tracked because consent is not given")
             trackingAllowed = false
         }
         val properties = PropertiesList(
-            hashMapOf("status" to "delivered", "platform" to "android")
+            hashMapOf(
+                "status" to "delivered",
+                "platform" to "android",
+                "state" to shownStatus.value,
+                "notification_importance" to notificationChannelImportance.trackValue
+            )
         )
         if (data?.getTrackingData() != null) {
             for (item in data.getTrackingData()) {

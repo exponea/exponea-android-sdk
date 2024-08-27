@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.util.Logger
 
 internal class MessagingUtils {
@@ -69,6 +70,30 @@ internal class MessagingUtils {
                 notificationManager.getNotificationChannel(channelId)
             } else {
                 NotificationManagerCompat.from(context).getNotificationChannel(channelId)
+            }
+        }
+
+        fun getNotificationChannelImportance(
+            context: Context,
+            notificationManager: NotificationManager,
+            channelId: String
+        ): NotificationChannelImportance {
+            val notificationChannel = getNotificationChannel(context, notificationManager, channelId)
+            if (notificationChannel == null) {
+                return NotificationChannelImportance.UNKNOWN
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                return NotificationChannelImportance.UNSUPPORTED
+            }
+            when (notificationChannel.importance) {
+                NotificationManager.IMPORTANCE_UNSPECIFIED -> return NotificationChannelImportance.UNSPECIFIED
+                NotificationManager.IMPORTANCE_NONE -> return NotificationChannelImportance.NONE
+                NotificationManager.IMPORTANCE_MIN -> return NotificationChannelImportance.MIN
+                NotificationManager.IMPORTANCE_LOW -> return NotificationChannelImportance.LOW
+                NotificationManager.IMPORTANCE_DEFAULT -> return NotificationChannelImportance.DEFAULT
+                NotificationManager.IMPORTANCE_HIGH -> return NotificationChannelImportance.HIGH
+                NotificationManager.IMPORTANCE_MAX -> return NotificationChannelImportance.MAX
+                else -> return NotificationChannelImportance.UNKNOWN
             }
         }
     }

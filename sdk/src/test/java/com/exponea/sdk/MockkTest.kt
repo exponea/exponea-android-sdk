@@ -1,5 +1,6 @@
 package com.exponea.sdk
 
+import io.mockk.MockKAdditionalAnswerScope
 import io.mockk.every
 import io.mockk.mockkConstructor
 import kotlin.reflect.full.declaredFunctions
@@ -98,9 +99,22 @@ inline fun <reified T : kotlin.Any, reified S : kotlin.Any> mockkConstructorFix(
     clazz: kotlin.reflect.KClass<T>,
     noinline stubBlock: (() -> io.mockk.MockKStubScope<S, S>)? = null
 ) {
+    if (stubBlock != null) {
+        mockkConstructorFixWithAnswer(clazz) {
+            stubBlock() answers { callOriginal() }
+        }
+    } else {
+        mockkConstructorFixWithAnswer<T, Any>(clazz)
+    }
+}
+
+inline fun <reified T : kotlin.Any, reified S : kotlin.Any> mockkConstructorFixWithAnswer(
+    clazz: kotlin.reflect.KClass<T>,
+    noinline stubBlock: (() -> MockKAdditionalAnswerScope<S, S>)? = null
+) {
     mockkConstructor(clazz)
     stubBlock?.let {
-        it() answers { callOriginal() }
+        it()
         return
     }
     val noArgsFun = clazz.declaredFunctions

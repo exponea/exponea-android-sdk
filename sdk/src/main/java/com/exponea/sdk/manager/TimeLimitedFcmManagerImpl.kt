@@ -1,14 +1,10 @@
 package com.exponea.sdk.manager
 
-import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.exceptions.InvalidConfigurationException
-import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency
-import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
@@ -23,7 +19,6 @@ import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.runWithTimeout
 
 /**
@@ -34,7 +29,21 @@ import com.exponea.sdk.util.runWithTimeout
  * !!! Dont use ExponeaSDK API nor internal parts here
  * !!! All implementations must be limited by total time (max 10s) due to Android OS limitations and usage
  */
-internal class TimeLimitedFcmManagerImpl : FcmManagerImpl {
+internal class TimeLimitedFcmManagerImpl(
+    context: Context,
+    configuration: ExponeaConfiguration,
+    eventManager: EventManager,
+    pushTokenRepository: PushTokenRepository,
+    pushNotificationRepository: PushNotificationRepository,
+    trackingConsentManager: TrackingConsentManager
+) : FcmManagerImpl(
+    context,
+    configuration,
+    eventManager,
+    pushTokenRepository,
+    pushNotificationRepository,
+    trackingConsentManager
+) {
 
     companion object {
 
@@ -98,30 +107,6 @@ internal class TimeLimitedFcmManagerImpl : FcmManagerImpl {
         }
     }
 
-    private val trackingConsentManager: TrackingConsentManager
-
-    constructor(
-        context: Context,
-        configuration: ExponeaConfiguration,
-        eventManager: EventManager,
-        pushTokenRepository: PushTokenRepository,
-        pushNotificationRepository: PushNotificationRepository,
-        trackingConsentManager: TrackingConsentManager
-    ) : super(
-        context,
-        configuration,
-        eventManager,
-        pushTokenRepository,
-        pushNotificationRepository
-    ) {
-        this.trackingConsentManager = trackingConsentManager
-    }
-
-    override fun trackToken(token: String?, tokenTrackFrequency: TokenFrequency?, tokenType: TokenType?) {
-        // keep flow with FcmManagerImpl, time limit will be applied in `TimeLimitedEventManagerImpl`
-        super.trackToken(token, tokenTrackFrequency, tokenType)
-    }
-
     override fun onSelfCheckReceived() {
         // self check has no meaning while usage of this manager
         // but there is chance that SDK may be initialized meanwhile
@@ -130,21 +115,6 @@ internal class TimeLimitedFcmManagerImpl : FcmManagerImpl {
         } else {
             Logger.w(this, "Self-check notification has been delivered but not handled")
         }
-    }
-
-    override fun trackDeliveredPush(payload: NotificationPayload, deliveredTimestamp: Double) {
-        if (payload.notificationData.hasTrackingConsent) {
-            trackingConsentManager.trackDeliveredPush(
-                payload.notificationData, deliveredTimestamp, CONSIDER_CONSENT
-            )
-        } else {
-            Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
-        }
-    }
-
-    override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
-        // keep flow with FcmManagerImpl, time limit will be applied in `getBitmapFromUrl`
-        super.showNotification(manager, payload)
     }
 
     /**
@@ -158,15 +128,5 @@ internal class TimeLimitedFcmManagerImpl : FcmManagerImpl {
             Logger.w(this, "Bitmap download takes too long")
             null
         })
-    }
-
-    override fun handleRemoteMessage(
-        messageData: Map<String, String>?,
-        manager: NotificationManager,
-        showNotification: Boolean,
-        timestamp: Double
-    ) {
-        // keep flow with FcmManagerImpl, time limit will be applied while tracking and showing of notification
-        super.handleRemoteMessage(messageData, manager, showNotification, timestamp)
     }
 }

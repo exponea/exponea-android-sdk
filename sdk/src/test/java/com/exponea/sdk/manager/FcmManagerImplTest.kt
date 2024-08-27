@@ -54,6 +54,7 @@ internal class FcmManagerImplTest {
     private lateinit var notificationManager: NotificationManager
     private lateinit var eventManager: EventManager
     private lateinit var pushTokenRepository: PushTokenRepository
+    private lateinit var trackingConsentManager: TrackingConsentManager
 
     @Before
     fun setUp() {
@@ -64,8 +65,12 @@ internal class FcmManagerImplTest {
         eventManager = mockkClass(EventManagerImpl::class)
         every { eventManager.track(any(), any(), any(), any()) } just Runs
         pushTokenRepository = spyk(PushTokenRepositoryProvider.get(context))
-        manager = createFcmManager()
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+        trackingConsentManager = mockkClass(TrackingConsentManagerImpl::class)
+        every {
+            trackingConsentManager.trackDeliveredPush(any(), any(), any(), any(), any())
+        } just Runs
+        manager = createFcmManager()
     }
 
     private fun createFcmManager(
@@ -79,7 +84,8 @@ internal class FcmManagerImplTest {
         ),
         eventManager,
         pushTokenRepository,
-        PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+        PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
+        trackingConsentManager
     )
 
     @After
@@ -589,7 +595,8 @@ internal class FcmManagerImplTest {
             ExponeaConfiguration(pushIcon = 123),
             eventManager,
             pushTokenRepository,
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
+            trackingConsentManager
         )
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs

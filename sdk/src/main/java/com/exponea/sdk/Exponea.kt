@@ -585,7 +585,11 @@ object Exponea {
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackDeliveredPush(
-                data, timestamp, IGNORE_CONSENT
+                data,
+                timestamp,
+                IGNORE_CONSENT,
+                Constants.PushNotifShownStatus.SHOWN,
+                component.fcmManager.findNotificationChannelImportance()
             )
         }
     }.logOnException()
@@ -600,7 +604,11 @@ object Exponea {
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackDeliveredPush(
-                data, timestamp, CONSIDER_CONSENT
+                data,
+                timestamp,
+                CONSIDER_CONSENT,
+                Constants.PushNotifShownStatus.SHOWN,
+                component.fcmManager.findNotificationChannelImportance()
             )
         }
     }.logOnException()

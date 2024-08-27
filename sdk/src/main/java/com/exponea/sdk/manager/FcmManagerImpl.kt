@@ -19,6 +19,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
+import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
@@ -46,7 +47,8 @@ internal open class FcmManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventManager: EventManager,
     private val pushTokenRepository: PushTokenRepository,
-    private val pushNotificationRepository: PushNotificationRepository
+    private val pushNotificationRepository: PushNotificationRepository,
+    internal val trackingConsentManager: TrackingConsentManager
 ) : FcmManager {
     private val application = context.applicationContext
     private val requestCodeGenerator: Random = Random()
@@ -114,11 +116,6 @@ internal open class FcmManagerImpl(
             return
         }
         ensureNotificationChannelExistence(application, manager)
-        if (MessagingUtils.areNotificationsBlockedForTheApp(application, manager, configuration.pushChannelId)) {
-            Logger.w(this, "Notification delivery not handled," +
-                " notifications for the app are turned off in the settings")
-            return
-        }
         if (messageData == null) {
             Logger.w(this, "Push notification not handled because of no data")
             return
@@ -134,16 +131,57 @@ internal open class FcmManagerImpl(
             onSelfCheckReceived()
             return
         }
+        val notificationChannelImportance = findNotificationChannelImportance(manager)
+        if (MessagingUtils.areNotificationsBlockedForTheApp(application, manager, configuration.pushChannelId)) {
+            Logger.w(
+                this,
+                "Notification delivery not handled, notifications for the app are turned off in the settings"
+            )
+            trackDeliveredPush(
+                payload,
+                payload.deliveredTimestamp!!,
+                Constants.PushNotifShownStatus.NOT_SHOWN,
+                notificationChannelImportance
+            )
+            return
+        }
         if (payload.notificationId == lastPushNotificationId) {
             Logger.i(this, "Ignoring push notification with id ${payload.notificationId} that was already received.")
             return
         }
         lastPushNotificationId = payload.notificationId
-        trackDeliveredPush(payload, payload.deliveredTimestamp!!)
         callNotificationDataCallback(payload)
         if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
+            trackDeliveredPush(
+                payload,
+                payload.deliveredTimestamp!!,
+                Constants.PushNotifShownStatus.SHOWN,
+                notificationChannelImportance
+            )
             showNotification(manager, payload)
+        } else {
+            trackDeliveredPush(
+                payload,
+                payload.deliveredTimestamp!!,
+                Constants.PushNotifShownStatus.NOT_SHOWN,
+                notificationChannelImportance
+            )
         }
+    }
+
+    override fun findNotificationChannelImportance(): NotificationChannelImportance {
+        return findNotificationChannelImportance(
+            application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        )
+    }
+
+    private fun findNotificationChannelImportance(manager: NotificationManager): NotificationChannelImportance {
+        val notificationChannelImportance = MessagingUtils.getNotificationChannelImportance(
+            application,
+            manager,
+            configuration.pushChannelId
+        )
+        return notificationChannelImportance
     }
 
     private fun parseNotificationPayload(
@@ -165,9 +203,20 @@ internal open class FcmManagerImpl(
         Exponea.selfCheckPushReceived()
     }
 
-    protected open fun trackDeliveredPush(payload: NotificationPayload, deliveredTimestamp: Double) {
+    protected open fun trackDeliveredPush(
+        payload: NotificationPayload,
+        deliveredTimestamp: Double,
+        shownStatus: Constants.PushNotifShownStatus,
+        notificationChannelImportance: NotificationChannelImportance
+    ) {
         if (payload.notificationData.hasTrackingConsent) {
-            Exponea.trackDeliveredPush(data = payload.notificationData, timestamp = deliveredTimestamp)
+            trackingConsentManager.trackDeliveredPush(
+                data = payload.notificationData,
+                timestamp = deliveredTimestamp,
+                mode = TrackingConsentManager.MODE.CONSIDER_CONSENT,
+                shownStatus = shownStatus,
+                notificationChannelImportance = notificationChannelImportance
+            )
         } else {
             Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
         }
@@ -192,7 +241,7 @@ internal open class FcmManagerImpl(
         manager.notify(payload.notificationId, notification.build())
     }
 
-    private fun ensureNotificationChannelExistence(context: Context, manager: NotificationManager) {
+    internal fun ensureNotificationChannelExistence(context: Context, manager: NotificationManager) {
         // Configure the notification channel for push notifications on API 26+
         // This configuration runs only once.
         if (!MessagingUtils.doesChannelExists(context, manager, configuration.pushChannelId)) {

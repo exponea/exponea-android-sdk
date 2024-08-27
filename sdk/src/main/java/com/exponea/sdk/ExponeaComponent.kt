@@ -174,8 +174,25 @@ internal class ExponeaComponent(
         campaignRepository, eventManager
     )
 
+    internal val inAppMessageTrackingDelegate: InAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
+        context, eventManager
+    )
+
+    internal val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
+        context, eventManager
+    )
+
+    internal val trackingConsentManager: TrackingConsentManager = TrackingConsentManagerImpl(
+        eventManager, campaignRepository, inAppMessageTrackingDelegate, inAppContentBlockTrackingDelegate
+    )
+
     internal val fcmManager: FcmManager = FcmManagerImpl(
-        context, exponeaConfiguration, eventManager, pushTokenRepository, pushNotificationRepository
+        context,
+        exponeaConfiguration,
+        eventManager,
+        pushTokenRepository,
+        pushNotificationRepository,
+        trackingConsentManager
     )
 
     internal val sessionManager: SessionManager = SessionManagerImpl(
@@ -197,18 +214,6 @@ internal class ExponeaComponent(
             exponeaService,
             projectFactory
         )
-
-    internal val inAppMessageTrackingDelegate: InAppMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
-        context, eventManager
-    )
-
-    internal val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
-        context, eventManager
-    )
-
-    internal val trackingConsentManager: TrackingConsentManager = TrackingConsentManagerImpl(
-        eventManager, campaignRepository, inAppMessageTrackingDelegate, inAppContentBlockTrackingDelegate
-    )
 
     internal val appInboxMessagesBitmapCache = AppInboxMessageBitmapCacheImpl(context)
 

@@ -8,7 +8,7 @@ import org.robolectric.annotation.Implements
 
 @Suppress("UNUSED_PARAMETER")
 @Implements(Ringtone::class)
-class ShadowRingtone {
+open class ShadowRingtone {
     companion object {
         var lastRingtone: ShadowRingtone? = null
     }
@@ -26,7 +26,7 @@ class ShadowRingtone {
     }
 
     @Implementation
-    fun play() {
+    open fun play() {
         wasPlayed = true
     }
 }

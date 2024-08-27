@@ -299,9 +299,19 @@ internal open class FcmManagerImpl(
             }
 
             if (shouldPlaySound) {
-                RingtoneManager.getRingtone(application, soundUri)?.play()
+                try {
+                    playNotificationSound(soundUri)
+                } catch (e: Throwable) {
+                    Logger.e(this, "Failed to play notification sound", e)
+                    // playing fallback - default one
+                    playNotificationSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                }
             }
         }
+    }
+
+    private fun playNotificationSound(soundUri: Uri?) {
+        RingtoneManager.getRingtone(application, soundUri)?.play()
     }
 
     private fun handlePayloadButtons(

@@ -24,7 +24,7 @@ internal class ExceptionHandlingTest : ExponeaSDKTest() {
 
     private val LOGTAG_TO_WATCH = Exponea.javaClass.simpleName
 
-    private class TestPurposeException : RuntimeException("Exception to test purposes")
+    internal class TestPurposeException : RuntimeException("Exception to test purposes")
 
     private var errorLogCount: Int = 0
 

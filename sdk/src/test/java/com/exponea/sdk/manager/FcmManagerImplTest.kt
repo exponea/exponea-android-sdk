@@ -16,6 +16,7 @@ import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
+import com.exponea.sdk.shadows.OnlyDefaultShadowRingtone
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
@@ -388,6 +389,19 @@ internal class FcmManagerImplTest {
     @Config(shadows = [ShadowRingtone::class], sdk = [Build.VERSION_CODES.P])
     fun `should play default sound`() {
         val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        manager.handleRemoteMessage(notification, notificationManager, true)
+        assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
+        assertEquals("content://settings/system/notification_sound", ShadowRingtone.lastRingtone?.withUri.toString())
+    }
+
+    @Test
+    @Config(
+        shadows = [OnlyDefaultShadowRingtone::class, ShadowResourcesWithAllResources::class],
+        sdk = [Build.VERSION_CODES.P]
+    )
+    fun `should play default sound as fallback`() {
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        notification["sound"] = "beep"
         manager.handleRemoteMessage(notification, notificationManager, true)
         assertTrue(ShadowRingtone.lastRingtone?.wasPlayed ?: false)
         assertEquals("content://settings/system/notification_sound", ShadowRingtone.lastRingtone?.withUri.toString())

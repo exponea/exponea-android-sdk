@@ -5,7 +5,7 @@
   "httpLoggingLevel": "BASIC",
   "contentType": "application/json",
   "maxTries": 10,
-  "sessionTimeout": 20.0,
+  "sessionTimeout": 60.0,
   "automaticSessionTracking": true,
   "automaticPushNotification": true,
   "pushIcon": null,

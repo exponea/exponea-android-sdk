@@ -131,7 +131,7 @@ internal class ConfigurationTest : ExponeaSDKTest() {
             baseURL = "https://api.exponea.com",
             httpLoggingLevel = BASIC,
             maxTries = 20,
-            sessionTimeout = 20.0,
+            sessionTimeout = 60.0,
             campaignTTL = 20.0,
             automaticSessionTracking = true,
             automaticPushNotification = true,

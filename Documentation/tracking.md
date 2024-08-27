@@ -206,7 +206,7 @@ The SDK tracks sessions automatically by default, producing two events: `session
 
 The session represents the actual time spent in the app. It starts when the application is launched and ends when it goes into the background. If the user returns to the app before the session times out, the application will continue the current session.
 
-The default session timeout is 20 seconds. Set `sessionTimeout` in the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration#automaticsessiontracking) to specify a different timeout.
+The default session timeout is 60 seconds. Set `sessionTimeout` in the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration#automaticsessiontracking) to specify a different timeout.
 
 ### Track Session Manually
 

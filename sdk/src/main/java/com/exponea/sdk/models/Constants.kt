@@ -29,7 +29,7 @@ internal object Constants {
 
     // Default session values
     object Session {
-        const val defaultTimeout = 20.0
+        const val defaultTimeout = 60.0
         const val defaultAutomaticTracking = true
     }
 

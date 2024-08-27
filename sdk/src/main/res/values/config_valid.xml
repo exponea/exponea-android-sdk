@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="sessionTimeout">20</string>
+    <string name="sessionTimeout">60</string>
     <string name="projectToken">testToken</string>
     <string name="automaticSessionTracking">false</string>
 </resources>

@@ -57,7 +57,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
 * `sessionTimeout`
   * The session is the actual time spent in the app. It starts when the app is launched and ends when the app goes into the background.
   * This value is used to calculate the session timing.
-  * Default value: `20` seconds.
+  * Default value: `60` seconds.
   * Read more about [Tracking Sessions](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#session)
 
 * `automaticPushNotification`

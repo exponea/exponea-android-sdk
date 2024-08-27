@@ -193,7 +193,7 @@ internal class TelemetryUtilityTest {
                     "pushChannelName" to "Exponea [default]",
                     "automaticPushNotification" to "false",
                     "pushNotificationImportance" to "3 [default]",
-                    "sessionTimeout" to "20.0 [default]"
+                    "sessionTimeout" to "60.0 [default]"
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
                     projectToken = "mock_project_token",

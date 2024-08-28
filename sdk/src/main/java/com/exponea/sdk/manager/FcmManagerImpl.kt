@@ -411,8 +411,7 @@ internal open class FcmManagerImpl(
             payload.notificationId,
             payload.notificationData,
             payload.rawData,
-            payload.deliveredTimestamp,
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+            payload.deliveredTimestamp
         )
     }
 
@@ -426,16 +425,6 @@ internal open class FcmManagerImpl(
         trackingIntent.putExtra(ExponeaExtras.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {
-            NotificationPayload.Actions.APP -> {
-                trackingIntent.action = ExponeaExtras.ACTION_CLICKED
-                val launchIntent: Intent? = getIntentAppOpen(application)
-                PendingIntent.getActivities(
-                    application,
-                    requestCode,
-                    arrayOf(launchIntent, trackingIntent),
-                    MessagingUtils.getPendingIntentFlags()
-                )
-            }
             NotificationPayload.Actions.BROWSER -> {
                 trackingIntent.action = ExponeaExtras.ACTION_URL_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
@@ -444,17 +433,34 @@ internal open class FcmManagerImpl(
                 trackingIntent.action = ExponeaExtras.ACTION_DEEPLINK_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
+            // NotificationPayload.Actions.APP
             else -> {
                 trackingIntent.action = ExponeaExtras.ACTION_CLICKED
-                val launchIntent: Intent? = getIntentAppOpen(application)
-                PendingIntent.getActivities(
-                    application,
-                    requestCode,
-                    arrayOf(launchIntent, trackingIntent),
-                    MessagingUtils.getPendingIntentFlags()
-                )
+                getAppIntent(requestCode, trackingIntent)
             }
         }
+    }
+
+    private fun getAppIntent(
+        requestCode: Int,
+        trackingIntent: Intent
+    ): PendingIntent? {
+        if (MessagingUtils.multiPendingIntentsAllowed()) {
+            val launchIntent = MessagingUtils.getIntentAppOpen(application)
+            return PendingIntent.getActivities(
+                application,
+                requestCode,
+                arrayOf(launchIntent, trackingIntent),
+                MessagingUtils.getPendingIntentFlags()
+            )
+        }
+        // for older SDKs, launch intent will be started directly from the tracking activity
+        return PendingIntent.getActivity(
+            application,
+            requestCode,
+            trackingIntent,
+            MessagingUtils.getPendingIntentFlags()
+        )
     }
 
     private fun getUrlIntent(
@@ -462,43 +468,24 @@ internal open class FcmManagerImpl(
         trackingIntent: Intent,
         url: String?
     ): PendingIntent {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            // for older SDKs, web and deeplink intent will be started directly from the tracking activity
-            PendingIntent.getActivity(
-                application,
-                requestCode,
-                trackingIntent,
-                MessagingUtils.getPendingIntentFlags()
-            )
-        } else {
+        if (MessagingUtils.multiPendingIntentsAllowed()) {
             val urlIntent = Intent(Intent.ACTION_VIEW)
             urlIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-            if (url != null && url.isNotEmpty()) urlIntent.data = Uri.parse(url)
-            PendingIntent.getActivities(
+            if (!url.isNullOrEmpty()) urlIntent.data = Uri.parse(url)
+            return PendingIntent.getActivities(
                 application,
                 requestCode,
                 arrayOf(urlIntent, trackingIntent),
                 MessagingUtils.getPendingIntentFlags()
             )
         }
-    }
-
-    private fun getIntentAppOpen(context: Context): Intent? {
-
-        val launchIntent =
-            context.packageManager.getLaunchIntentForPackage(
-                context.packageName
-            )
-                ?: return null
-
-        // Removing "package" from the intent treats the app as if it was started externally
-        // and prevents another instance of the Activity from being created.
-        launchIntent.setPackage(null)
-        launchIntent.flags =
-            Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-
-        return launchIntent
+        // for older SDKs, web and deeplink intent will be started directly from the tracking activity
+        return PendingIntent.getActivity(
+            application,
+            requestCode,
+            trackingIntent,
+            MessagingUtils.getPendingIntentFlags()
+        )
     }
 
     protected open fun getBitmapFromUrl(url: String): Bitmap? {

@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_ACTION_INFO
@@ -26,15 +27,9 @@ internal open class ExponeaPushTrackingActivity : Activity() {
             id: Int,
             data: NotificationData?,
             messageData: HashMap<String, String>,
-            deliveredTimestamp: Double?,
-            olderApi: Boolean
+            deliveredTimestamp: Double?
         ): Intent {
-            val klass = if (olderApi) {
-                ExponeaPushTrackingActivityOlderApi::class.java
-            } else {
-                ExponeaPushTrackingActivity::class.java
-            }
-            return Intent(context, klass).apply {
+            return Intent(context, MessagingUtils.determinePushTrackingActivityClass()).apply {
                 putExtra(EXTRA_NOTIFICATION_ID, id)
                 putExtra(EXTRA_DATA, data)
                 putExtra(EXTRA_CUSTOM_DATA, messageData)
@@ -114,8 +109,7 @@ internal open class ExponeaPushTrackingActivity : Activity() {
     }
 
     private fun closeNotificationTray(context: Context) {
-        // target version is hardcoded until compileSDKversion is increased
-        if (context.applicationInfo.targetSdkVersion <= 30) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
             val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
             context.sendBroadcast(it)
         }

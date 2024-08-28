@@ -4,9 +4,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.util.Logger
 
@@ -95,6 +97,33 @@ internal class MessagingUtils {
                 NotificationManager.IMPORTANCE_MAX -> return NotificationChannelImportance.MAX
                 else -> return NotificationChannelImportance.UNKNOWN
             }
+        }
+
+        fun getIntentAppOpen(context: Context): Intent? {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(
+                context.packageName
+            )
+            if (launchIntent == null) {
+                Logger.e(this, "Unable to get launch intent of app, please check your manifest")
+                return null
+            }
+            // Removing "package" from the intent treats the app as if it was started externally
+            // and prevents another instance of the Activity from being created.
+            launchIntent.setPackage(null)
+            launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+            return launchIntent
+        }
+
+        fun multiPendingIntentsAllowed(): Boolean =
+            determinePushTrackingActivityClass() == ExponeaPushTrackingActivity::class.java
+
+        fun determinePushTrackingActivityClass() = when {
+            DeviceProperties.isXiaomi() && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q ->
+                ExponeaPushTrackingActivityOlderApi::class.java
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.M ->
+                ExponeaPushTrackingActivityOlderApi::class.java
+            else ->
+                ExponeaPushTrackingActivity::class.java
         }
     }
 }

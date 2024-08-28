@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
+            return
         }
 
         val deeplinkDestination = resolveDeeplinkDestination(intent)

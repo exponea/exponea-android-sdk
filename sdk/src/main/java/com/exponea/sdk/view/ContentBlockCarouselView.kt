@@ -166,7 +166,6 @@ public class ContentBlockCarouselView : RelativeLayout {
             Logger.e(this, "InAppCbCarousel: Placeholder ID is required")
         }
         this.viewController = ContentBlockCarouselViewController(
-            context,
             this,
             placeholderId,
             maxMessagesCount,

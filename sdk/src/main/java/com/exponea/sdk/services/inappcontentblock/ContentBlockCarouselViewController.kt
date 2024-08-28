@@ -1,6 +1,5 @@
 package com.exponea.sdk.services.inappcontentblock
 
-import android.content.Context
 import androidx.viewpager2.widget.ViewPager2
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
@@ -21,7 +20,6 @@ import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.concurrent.TimeUnit
 
 internal class ContentBlockCarouselViewController(
-    context: Context,
     private val carouselView: ContentBlockCarouselView,
     private val placeholderId: String = EMPTY_PLACEHOLDER_ID,
     private val maxMessagesCount: Int = DEFAULT_MAX_MESSAGES_COUNT,
@@ -37,7 +35,6 @@ internal class ContentBlockCarouselViewController(
 
     private val showTrackedContentBlockIds = mutableSetOf<String>()
     internal var contentBlockSelector: ContentBlockSelector = ContentBlockSelector()
-    private var defaultBehaviour = CarouselDefaultInAppContentCallback(context)
     internal var behaviourCallback: ContentBlockCarouselCallback? = null
     private val autoscrollJob: RepeatableJob = RepeatableJob(TimeUnit.SECONDS.toMillis(scrollDelay.toLong())) {
         scrollToNext()
@@ -125,6 +122,9 @@ internal class ContentBlockCarouselViewController(
                     updateAutoHeight(true)
                 }
                 behaviourCallback?.onMessagesChanged(limitedContentBlocks.size, limitedContentBlocks)
+                if (limitedContentBlocks.isEmpty()) {
+                    behaviourCallback?.onNoMessageFound(placeholderId)
+                }
                 restartAutoScroll()
             }
         }
@@ -180,8 +180,7 @@ internal class ContentBlockCarouselViewController(
         }
     }
 
-    private fun modifyPlaceholderBehaviour(placeholder: InAppContentBlockPlaceholderView) {
-        val originalBehaviour = placeholder.behaviourCallback
+    internal fun modifyPlaceholderBehaviour(placeholder: InAppContentBlockPlaceholderView) {
         placeholder.setOnContentReadyListener {
             updateAutoHeight(true)
         }
@@ -190,13 +189,30 @@ internal class ContentBlockCarouselViewController(
                 // 'show' event is handled by 'onSelectedBlockIndexChanged'
             }
             override fun onNoMessageFound(placeholderId: String) {
-                originalBehaviour.onNoMessageFound(placeholderId)
+                Logger.i(this, "InAppCbCarousel: InApp Content Block has no content for $placeholderId")
             }
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
-                originalBehaviour.onError(placeholderId, contentBlock, errorMessage)
+                behaviourCallback?.onError(
+                    placeholderId,
+                    contentBlock,
+                    errorMessage
+                )
+                if (contentBlock == null) {
+                    Logger.e(this, "InApp Content Block is empty!!! Nothing to track")
+                    return
+                }
+                Logger.d(this, "InAppCbCarousel: Tracking of InApp Content Block ${contentBlock.id} error")
+                Exponea.trackInAppContentBlockError(placeholderId, contentBlock, errorMessage)
             }
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
-                originalBehaviour.onCloseClicked(placeholderId, contentBlock)
+                if (behaviourCallback?.trackActions != false) {
+                    Logger.d(this, "InAppCbCarousel: Tracking of InApp Content Block ${contentBlock.id} close")
+                    Exponea.trackInAppContentBlockClose(placeholderId, contentBlock)
+                }
+                behaviourCallback?.onCloseClicked(
+                    placeholderId,
+                    contentBlock
+                )
                 if (shouldBeRemovedAfterAction(contentBlock)) {
                     removeFromData(contentBlock)
                     restartAutoScroll()
@@ -207,12 +223,21 @@ internal class ContentBlockCarouselViewController(
                 contentBlock: InAppContentBlock,
                 action: InAppContentBlockAction
             ) {
-                Logger.d(
-                    this,
-                    "InAppCbCarousel: Tracking of InApp Content Block ${contentBlock.id} action ${action.name}"
+                if (behaviourCallback?.trackActions != false) {
+                    Logger.d(
+                        this,
+                        "InAppCbCarousel: Tracking of InApp Content Block ${contentBlock.id} action ${action.name}"
+                    )
+                    Exponea.trackInAppContentBlockClick(placeholderId, action, contentBlock)
+                }
+                if (behaviourCallback?.overrideDefaultBehavior != true) {
+                    invokeAction(action)
+                }
+                behaviourCallback?.onActionClicked(
+                    placeholderId,
+                    contentBlock,
+                    action
                 )
-                Exponea.trackInAppContentBlockClick(placeholderId, action, contentBlock)
-                invokeAction(action)
                 if (shouldBeRemovedAfterAction(contentBlock)) {
                     removeFromData(contentBlock)
                     // will be paused BUT we need to restart delay time
@@ -282,7 +307,12 @@ internal class ContentBlockCarouselViewController(
         val shownContentBlock = getShownContentBlock() ?: return
         if (showTrackedContentBlockIds.add(shownContentBlock.id)) {
             // will track 'shown' event and manages DisplayStatus
-            defaultBehaviour.onMessageShown(placeholderId, shownContentBlock)
+            Logger.d(this, "InAppCbCarousel: Tracking of InApp Content Block ${shownContentBlock.id} show")
+            Exponea.trackInAppContentBlockShown(placeholderId, shownContentBlock)
+            Exponea.telemetry?.reportEvent(
+                com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
+                hashMapOf("messageType" to "content_block_carousel")
+            )
         } else {
             Logger.v(this, "InAppCbCarousel: Content block with ID ${shownContentBlock.id} already tracked as shown")
         }

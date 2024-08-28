@@ -10,13 +10,16 @@ import com.exponea.sdk.manager.InAppContentBlockManagerImpl
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildHtmlMessageContent
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildMessage
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselAdapter
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -99,6 +102,77 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         val capturedProps = telemetryPropertiesSlot.captured
         assertNotNull(capturedProps)
         assertEquals("content_block_carousel", capturedProps["messageType"])
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify shown message assigned to placeholder ID`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var shownPlaceholderId: String? = null
+        var shownContentBlock: InAppContentBlock? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onMessageShown(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                index: Int,
+                count: Int
+            ) {
+                shownPlaceholderId = placeholderId
+                shownContentBlock = contentBlock
+            }
+        }
+        carousel.reload()
+        idleThreads()
+        assertEquals("placeholder_1", shownPlaceholderId)
+        assertNotNull(shownContentBlock)
+        assertEquals("id1", shownContentBlock?.id)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify not-shown message`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_2"
+        )
+        assertNotNull(carousel)
+        var notifiedPlaceholderId: String? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onNoMessageFound(placeholderId: String) {
+                notifiedPlaceholderId = placeholderId
+            }
+        }
+        carousel.reload()
+        idleThreads()
+        assertEquals("placeholder_2", notifiedPlaceholderId)
     }
 
     @Test
@@ -300,6 +374,161 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         assertEquals(com.exponea.sdk.models.EventType.BANNER, eventTypeSlot.captured)
     }
 
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify error for message`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var notifiedPlaceholderId: String? = null
+        var notifiedContentBlock: InAppContentBlock? = null
+        var notifiedError: String? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                notifiedPlaceholderId = placeholderId
+                notifiedContentBlock = contentBlock
+                notifiedError = errorMessage
+            }
+        }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        val cbViewHolder = carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        cbViewHolder.updateContent(carousel.getShownContentBlock())
+        assertNotNull(createdCbView)
+        createdCbView?.controller?.loadContent(false)
+        createdCbView?.controller?.onUrlClick("invalid_url")
+        assertEquals("placeholder_1", notifiedPlaceholderId)
+        assertNotNull(notifiedContentBlock)
+        assertEquals("id1", notifiedContentBlock?.id)
+        assertEquals("Invalid action definition", notifiedError)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify click for message`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var notifiedPlaceholderId: String? = null
+        var notifiedContentBlock: InAppContentBlock? = null
+        var notifiedAction: InAppContentBlockAction? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override val overrideDefaultBehavior = true
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                notifiedPlaceholderId = placeholderId
+                notifiedContentBlock = contentBlock
+                notifiedAction = action
+            }
+        }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        val cbViewHolder = carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        cbViewHolder.updateContent(carousel.getShownContentBlock())
+        assertNotNull(createdCbView)
+        createdCbView?.controller?.loadContent(false)
+        createdCbView?.controller?.onUrlClick("https://exponea.com?xnpe_force_track=true")
+        assertEquals("placeholder_1", notifiedPlaceholderId)
+        assertNotNull(notifiedContentBlock)
+        assertEquals("id1", notifiedContentBlock?.id)
+        assertEquals("https://exponea.com?xnpe_force_track=true", notifiedAction?.url)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify close for message`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var notifiedPlaceholderId: String? = null
+        var notifiedContentBlock: InAppContentBlock? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                notifiedPlaceholderId = placeholderId
+                notifiedContentBlock = contentBlock
+            }
+        }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        val cbViewHolder = carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        cbViewHolder.updateContent(carousel.getShownContentBlock())
+        assertNotNull(createdCbView)
+        createdCbView?.controller?.loadContent(false)
+        createdCbView?.controller?.onUrlClick("https://exponea.com/close_action")
+        assertEquals("placeholder_1", notifiedPlaceholderId)
+        assertNotNull(notifiedContentBlock)
+        assertEquals("id1", notifiedContentBlock?.id)
+    }
+
     private fun prepareContentBlockMessages(messages: ArrayList<InAppContentBlock>) {
         every {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
@@ -323,5 +552,38 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             projectToken = initialProject.projectToken,
             authorization = initialProject.authorization)
         )
+    }
+}
+
+open class EmptyCarouselBehaviourCallback(
+    override val overrideDefaultBehavior: Boolean = false,
+    override val trackActions: Boolean = true
+) : ContentBlockCarouselCallback {
+    override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock, index: Int, count: Int) {
+        // nothing to do
+    }
+
+    override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+        // nothing to do
+    }
+
+    override fun onNoMessageFound(placeholderId: String) {
+        // nothing to do
+    }
+
+    override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+        // nothing to do
+    }
+
+    override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+        // nothing to do
+    }
+
+    override fun onActionClicked(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        action: InAppContentBlockAction
+    ) {
+        // nothing to do
     }
 }

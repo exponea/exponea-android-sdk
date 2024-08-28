@@ -69,6 +69,10 @@ class InAppContentBlocksFragment : BaseFragment() {
             content_blocks_carousel_status?.text = "Showing ${initName ?: ""} as ${initIndex + 1} of $initCount"
         }
         content_blocks_carousel_default?.behaviourCallback = object : ContentBlockCarouselCallback {
+
+            override val overrideDefaultBehavior = false
+            override val trackActions = true
+
             private var count: Int = 0
             private var index: Int = -1
             private var blockName: String? = null
@@ -96,6 +100,26 @@ class InAppContentBlocksFragment : BaseFragment() {
                 }
                 this.count = count
                 updateCarouselStatus()
+            }
+
+            override fun onNoMessageFound(placeholderId: String) {
+                Logger.i(this, "Carousel $placeholderId is empty")
+            }
+
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                Logger.e(this, "Carousel $placeholderId error: $errorMessage")
+            }
+
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                Logger.i(this, "Message ${contentBlock.name} has been closed in carousel $placeholderId")
+            }
+
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                Logger.i(this, "Action ${action.name} has been clicked in carousel $placeholderId")
             }
         }
     }

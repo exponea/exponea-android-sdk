@@ -283,19 +283,54 @@ val index = carouselView.getShownIndex()
 val count = carouselView.getShownCount()
 ```
 
-You can register a `behaviourCallback` to a carousel view instance to retrieve information for each update. The callback behavior object must implement `ContentBlockCarouselCallback`.
+You can register a `behaviourCallback` to a carousel view instance to retrieve information for each update and change behaviour by setting the `trackActions` and `overrideDefaultBehavior` flags.
+
+* trackActions
+  * If `false`, events "close" and "click" on banners won't be tracked by the SDK. Events "show" and "error" are tracked regardless from this flag.
+  * If `true`, events "close" and "click" are tracked by the SDK.
+  * Default behaviour is as with value `true`, all events are tracked by the SDK
+* overrideDefaultBehavior
+  * If `true`, deep-links and universal links won't be opened by SDK. This does not affect tracking behaviour.
+  * If `false`, deep-links and universal links will be opened by SDK.
+  * Default behaviour is as with value `false`, action links are opened by SDK.
+
+The callback behavior object must implement `ContentBlockCarouselCallback`. 
 
 ```kotlin
 carouselView.behaviourCallback = object : ContentBlockCarouselCallback {
-            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock, index: Int, count: Int) {
-                // This is triggered on each scroll so 'contentBlock' parameter represents currently shown content block,
-                // so as 'index' represents position index of currently shown content block 
-            }
-            override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
-                // This is triggered after 'reload' or if a content block is removed because interaction has been done
-                // and message has to be shown until interaction.
-            }
-        }
+    // If overrideDefaultBehavior is set to true, default action will not be performed (deep link, universal link, etc.)
+    override val overrideDefaultBehavior = false
+    // If trackActions is set to false, click and close in-app content block events will not be tracked automatically
+    override val trackActions = true
+    
+    override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock, index: Int, count: Int) {
+        // This is triggered on each scroll so 'contentBlock' parameter represents currently shown content block,
+        // so as 'index' represents position index of currently shown content block 
+    }
+    override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+        // This is triggered after 'reload' or if a content block is removed because interaction has been done
+        // and message has to be shown until interaction.
+    }
+    override fun onNoMessageFound(placeholderId: String) {
+        // This is triggered after `reload` when no content block has been found for a given placeholder.
+    }
+    override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+        // This is triggered when an error occurs while loading or showing of content block.
+        // Parameter `contentBlock` is the content block which caused the error or null in case of general problem.
+        // Parameter `errorMessage` is the error message that describes the problem.
+    }
+    override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+        // This is triggered when a content block is closed.
+    }
+    override fun onActionClicked(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        action: InAppContentBlockAction
+    ) {
+        // This is triggered when a content block action is clicked.
+        // Parameter `action` contains the action information.
+    }
+}
 ```
 
 ### Customize Presentation of Placeholder View

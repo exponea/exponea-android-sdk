@@ -17,7 +17,7 @@ internal class InAppMessageAlert : InAppMessageView {
         context: Context,
         payload: InAppMessagePayload,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: (Boolean) -> Unit
+        onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit
     ) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle(payload.title)
@@ -27,7 +27,7 @@ internal class InAppMessageAlert : InAppMessageView {
                 if (button.buttonType == InAppMessageButtonType.CANCEL) {
                     builder.setNegativeButton(button.buttonText) { _, _ ->
                         userInteraction = true
-                        onDismiss(true)
+                        onDismiss(true, button)
                         dismiss()
                     }
                 } else {
@@ -40,7 +40,7 @@ internal class InAppMessageAlert : InAppMessageView {
         }
         builder.setOnDismissListener {
             if (!userInteraction) {
-                onDismiss(false)
+                onDismiss(false, null)
             }
         }
         dialog = builder.create()

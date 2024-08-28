@@ -19,7 +19,7 @@ internal class InAppMessageWebview(
     private val activity: Activity,
     private val normalizedResult: HtmlNormalizer.NormalizedResult,
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit,
-    onDismiss: (Boolean) -> Unit,
+    onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
     onError: (String) -> Unit
 ) : PopupWindow(
             LayoutInflater.from(activity).inflate(R.layout.in_app_message_webview, null, false),
@@ -27,7 +27,7 @@ internal class InAppMessageWebview(
             RelativeLayout.LayoutParams.MATCH_PARENT,
             true),
             InAppMessageView {
-    private var onDismiss: ((Boolean) -> Unit)? = onDismiss
+    private var onDismiss: ((Boolean, InAppMessagePayloadButton?) -> Unit)? = onDismiss
     private var onError: ((String) -> Unit)? = onError
     private var webView: ExponeaWebView
     private var userInteraction = false
@@ -43,7 +43,7 @@ internal class InAppMessageWebview(
         }
         setOnDismissListener {
             if (!userInteraction) {
-                this.onDismiss?.invoke(false)
+                this.onDismiss?.invoke(false, null)
             }
         }
         if (normalizedResult.valid && normalizedResult.html != null) {
@@ -61,7 +61,7 @@ internal class InAppMessageWebview(
         when {
             normalizedResult.isCloseAction(url) -> {
                 userInteraction = true
-                this.onDismiss?.invoke(true)
+                this.onDismiss?.invoke(true, toPayloadButton(url!!))
             }
             normalizedResult.isActionUrl(url) -> {
                 userInteraction = true
@@ -75,7 +75,7 @@ internal class InAppMessageWebview(
     private fun toPayloadButton(url: String): InAppMessagePayloadButton {
         return InAppMessagePayloadButton(
                 buttonLink = url,
-                buttonText = normalizedResult.findActionByUrl(url)?.buttonText ?: "Unknown",
+                buttonText = normalizedResult.findActionByUrl(url)?.buttonText,
                 rawButtonType = detectActionType(url).value
         )
     }

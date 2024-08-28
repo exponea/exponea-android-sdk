@@ -145,7 +145,12 @@ internal class TrackingConsentManagerImpl(
         )
     }
 
-    override fun trackInAppMessageClose(message: InAppMessage, userInteraction: Boolean, mode: MODE) {
+    override fun trackInAppMessageClose(
+        message: InAppMessage,
+        buttonText: String?,
+        userInteraction: Boolean,
+        mode: MODE
+    ) {
         var trackingAllowed = true
         if (mode == CONSIDER_CONSENT && !message.hasTrackingConsent) {
             Logger.e(this, "Event for closed inAppMessage is not tracked because consent is not given")
@@ -155,7 +160,8 @@ internal class TrackingConsentManagerImpl(
             message,
             "close",
             userInteraction,
-            trackingAllowed
+            trackingAllowed,
+            text = buttonText
         )
     }
 

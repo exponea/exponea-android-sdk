@@ -32,7 +32,7 @@ internal class InAppMessageDialogTest {
             payload!!,
             imageCache,
             {},
-            {},
+            { _, _ -> },
             {}
         )
         dialog.show()

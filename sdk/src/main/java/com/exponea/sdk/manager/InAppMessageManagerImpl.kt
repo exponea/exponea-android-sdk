@@ -359,10 +359,9 @@ internal class InAppMessageManagerImpl(
                         }
                         val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
                         runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            Exponea.inAppMessageActionCallback.inAppMessageClickAction(
                                 message,
                                 buttonInfo,
-                                true,
                                 activity
                             )
                         }
@@ -370,14 +369,22 @@ internal class InAppMessageManagerImpl(
                             processInAppMessageAction(activity, button)
                         }
                     },
-                    dismissedCallback = { activity, userInteraction ->
+                    dismissedCallback = { activity, userInteraction, cancelButton ->
                         if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageClose(message, userInteraction, CONSIDER_CONSENT)
+                            eventManager.trackInAppMessageClose(
+                                message,
+                                cancelButton?.buttonText,
+                                userInteraction,
+                                CONSIDER_CONSENT
+                            )
+                        }
+                        val buttonInfo = cancelButton?.let {
+                            InAppMessageButton(it.buttonText, it.buttonLink)
                         }
                         runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageAction(
+                            Exponea.inAppMessageActionCallback.inAppMessageCloseAction(
                                 message,
-                                null,
+                                buttonInfo,
                                 userInteraction,
                                 activity
                             )

@@ -145,27 +145,37 @@ class MainActivity : AppCompatActivity() {
             override var overrideDefaultBehavior = true
             override var trackActions = false
 
-            override fun inAppMessageAction(
-                message: InAppMessage,
-                button: InAppMessageButton?,
-                interaction: Boolean,
-                context: Context
-            ) {
-                AlertDialog.Builder(context)
-                        .setTitle("In app action")
-                        .setMessage(" Message id: ${message.id} \n " +
-                                "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
-                        .setPositiveButton("OK") { _, _ -> }
-                        .create()
-                        .show()
-            }
-
             override fun inAppMessageShown(message: InAppMessage, context: Context) {
                 Logger.i(this, "In app message ${message.name} has been shown")
             }
 
             override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
                 Logger.e(this, "Error occurred '$errorMessage' while showing in app message ${message?.name}")
+            }
+
+            override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+                AlertDialog.Builder(context)
+                    .setTitle("In app action clicked")
+                    .setMessage(" Message id: ${message.id} \n " +
+                        "Interaction: \n ${button.text} \n ${button.url}")
+                    .setPositiveButton("OK") { _, _ -> }
+                    .create()
+                    .show()
+            }
+
+            override fun inAppMessageCloseAction(
+                message: InAppMessage,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {
+                AlertDialog.Builder(context)
+                    .setTitle("In app closed")
+                    .setMessage(" Message id: ${message.id} \n " +
+                        "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
+                    .setPositiveButton("OK") { _, _ -> }
+                    .create()
+                    .show()
             }
         }
     }

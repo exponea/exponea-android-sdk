@@ -8,7 +8,7 @@ parentDocSlug: android-sdk
 
 > 📘
 >
-> Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating from version 2.x.x to 3.x.x.
+> Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to upper major version
 
 ## Release Notes
 ## Release Notes for 3.16.0

@@ -1035,8 +1035,8 @@ object Exponea {
                     presenting.actionCallback(button)
                     activity.finish()
                 },
-                {
-                    presenting.dismissedCallback(it)
+                { userInteraction, cancelButton ->
+                    presenting.dismissedCallback(userInteraction, cancelButton)
                     activity.finish()
                 },
                 { error: String ->
@@ -1142,11 +1142,12 @@ object Exponea {
      */
     fun trackInAppMessageClose(
         message: InAppMessage,
+        buttonText: String? = null,
         interaction: Boolean? = null
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
-                message, interaction ?: true, CONSIDER_CONSENT
+                message, buttonText, interaction ?: true, CONSIDER_CONSENT
             )
         }
     }.logOnException()
@@ -1157,11 +1158,12 @@ object Exponea {
      */
     fun trackInAppMessageCloseWithoutTrackingConsent(
         message: InAppMessage,
+        buttonText: String? = null,
         interaction: Boolean? = null
     ) = runCatching {
         initGate.waitForInitialize {
             component.trackingConsentManager.trackInAppMessageClose(
-                message, interaction ?: true, IGNORE_CONSENT
+                message, buttonText, interaction ?: true, IGNORE_CONSENT
             )
         }
     }.logOnException()

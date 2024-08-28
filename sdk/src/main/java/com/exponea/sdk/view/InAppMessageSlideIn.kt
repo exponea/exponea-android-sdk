@@ -35,7 +35,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     private val activity: Activity
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
-    private var onDismiss: ((Boolean) -> Unit)?
+    private var onDismiss: ((Boolean, InAppMessagePayloadButton?) -> Unit)?
     private var onError: (String) -> Unit
     private val imageCache: DrawableCache
     private var userInteraction = false
@@ -48,7 +48,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         payload: InAppMessagePayload,
         image: DrawableCache,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: (Boolean) -> Unit,
+        onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
         onError: (String) -> Unit
     ) : super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) {
         this.activity = activity
@@ -69,7 +69,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
         setOnDismissListener {
             if (!userInteraction) {
-                this.onDismiss?.invoke(false)
+                this.onDismiss?.invoke(false, null)
             }
         }
     }
@@ -124,7 +124,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         swipeToDismissBehavior.setSwipeDirection(SwipeDismissBehavior.SWIPE_DIRECTION_START_TO_END)
         swipeToDismissBehavior.setListener(object : SwipeDismissBehavior.OnDismissListener {
                 override fun onDismiss(view: View) {
-                    onCloseManually()
+                    onCloseManually(null)
                 }
                 override fun onDragStateChanged(state: Int) {}
             })
@@ -205,7 +205,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         )
         if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
             buttonAction.setOnClickListener {
-                onCloseManually()
+                onCloseManually(buttonPayload)
             }
         } else {
             buttonAction.setOnClickListener {
@@ -214,9 +214,9 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         }
     }
 
-    private fun onCloseManually() {
+    private fun onCloseManually(cancelButtonPayload: InAppMessagePayloadButton?) {
         userInteraction = true
-        onDismiss?.invoke(true)
+        onDismiss?.invoke(true, cancelButtonPayload)
         onDismiss = null // clear the dismiss listener, we called the button listener
         dismiss()
     }

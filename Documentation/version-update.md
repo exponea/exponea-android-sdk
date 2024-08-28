@@ -136,3 +136,49 @@ has changed to
 > ❗️
 >
 > Invoking `Exponea.handleNewToken`, `Exponea.handleNewHmsToken`, and `Exponea.handleRemoteMessage` is allowed before SDK initialization in case it was initialized previously. In such a case, these methods will track events with the configuration of the last initialization. Please consider initializing the SDK in `Application::onCreate` to ensure a fresh configuration is applied in case of an update of your application.
+
+## Update from version 3.x.x to 4.x.x
+
+Updating Exponea SDK to version 4 or higher requires you to make some changes related to In-app messages callback implementation.
+
+InAppMessageCallback interface was simplified and changed so you have to migrate your implementation of In-app action and close handling. This migration only requires to divide implementation from `inAppMessageAction` to `inAppMessageClickAction` and `inAppMessageCloseAction` respectively.
+
+Your implementation may was as:
+
+```kotlin
+override fun inAppMessageAction(
+    message: InAppMessage,
+    button: InAppMessageButton?,
+    interaction: Boolean,
+    context: Context
+) {
+    if (button == null) {
+        // is close action
+        onMessageClose(message, interaction)
+    } else {
+        // is click action
+        onMessageClick(message, button)
+    }
+}
+```
+
+So please remove `inAppMessageAction` method and move your code as:
+
+```kotlin
+override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+    // is click action
+    onMessageClick(message, button)
+}
+
+override fun inAppMessageCloseAction(
+    message: InAppMessage,
+    button: InAppMessageButton?,
+    interaction: Boolean,
+    context: Context
+) {
+    // is close action
+    onMessageClose(message, interaction)
+}
+```
+
+You may benefit from new behaviour as method `inAppMessageCloseAction` could be called with non-null `button` parameter. This case happens when user clicks on CANCEL button and so you are able to determine which button has been clicked by button text.

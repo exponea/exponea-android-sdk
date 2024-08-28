@@ -78,20 +78,24 @@ internal object Constants {
             override var overrideDefaultBehavior = false
             override var trackActions = true
 
-            override fun inAppMessageAction(
-                message: InAppMessage,
-                button: InAppMessageButton?,
-                interaction: Boolean,
-                context: Context
-            ) {
-                // do nothing here as default
-            }
-
             override fun inAppMessageShown(message: InAppMessage, context: Context) {
                 // do nothing here as default
             }
 
             override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
+                // do nothing here as default
+            }
+
+            override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+                // do nothing here as default
+            }
+
+            override fun inAppMessageCloseAction(
+                message: InAppMessage,
+                button: InAppMessageButton?,
+                interaction: Boolean,
+                context: Context
+            ) {
                 // do nothing here as default
             }
         }

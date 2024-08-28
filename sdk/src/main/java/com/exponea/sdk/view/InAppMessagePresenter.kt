@@ -25,7 +25,7 @@ internal class InAppMessagePresenter(
         val payloadHtml: HtmlNormalizer.NormalizedResult?,
         val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
-        val dismissedCallback: ((Boolean) -> Unit),
+        val dismissedCallback: ((Boolean, InAppMessagePayloadButton?) -> Unit),
         val failedCallback: ((String) -> Unit)
     )
 
@@ -67,7 +67,7 @@ internal class InAppMessagePresenter(
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: (Boolean) -> Unit,
+        dismissedCallback: (Boolean, InAppMessagePayloadButton?) -> Unit,
         errorCallback: (String) -> Unit
     ): InAppMessageView {
         var messageTimeout = timeout
@@ -126,7 +126,7 @@ internal class InAppMessagePresenter(
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (Activity, InAppMessagePayloadButton) -> Unit,
-        dismissedCallback: (Activity, Boolean) -> Unit,
+        dismissedCallback: (Activity, Boolean, InAppMessagePayloadButton?) -> Unit,
         failedCallback: (String) -> Unit
     ): PresentedMessage? = runCatching {
         Logger.i(this, "Attempting to present in-app message.")
@@ -144,10 +144,10 @@ internal class InAppMessagePresenter(
             presentedMessage = null
             actionCallback(activity, button)
         }
-        val presenterDismissedCallback = { userInteraction: Boolean ->
+        val presenterDismissedCallback = { userInteraction: Boolean, cancelButton: InAppMessagePayloadButton? ->
             Logger.i(this, "InApp dismissed by user: ${if (userInteraction) "true" else "false"}")
             presentedMessage = null
-            dismissedCallback(activity, userInteraction)
+            dismissedCallback(activity, userInteraction, cancelButton)
         }
         val presenterFailedCallback = { error: String ->
             Logger.i(this, "InApp got error $error")

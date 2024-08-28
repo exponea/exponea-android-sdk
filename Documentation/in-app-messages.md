@@ -45,16 +45,30 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
     // If trackActions is set to false, click and close in-app events will not be tracked automatically
     override var trackActions = false  
   
-    override fun inAppMessageAction(  
-        message: InAppMessage,
-        button: InAppMessageButton?,  
-        interaction: Boolean,  
-        context: Context  
-    ) {  
+    override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
         // Here goes your code
-        // On in-app click, the button contains button text and button URL, and the interaction is true
-        // On in-app close by user interaction, the button is null and the interaction is true
-        // On in-app close by non-user interaction (i.e. timeout), the button is null and the interaction is false
+        // Method called when action button has been clicked by user.
+        // The button contains button text and button URL
+    }
+
+    override fun inAppMessageCloseAction(
+        message: InAppMessage,
+        button: InAppMessageButton?,
+        interaction: Boolean,
+        context: Context
+    ) {
+        // Here goes your code
+        // Method called when in-app message has been closed.
+        // On in-app close by click on CANCEL button:
+        //  - the `button` is not null
+        //  - the `button` contains button text
+        //  - the `interaction` is true
+        // On in-app close with default interaction by user (close button, dismiss, etc...):
+        //  - the `button` is null
+        //  - the `interaction` is null
+        // On in-app close without interaction by user (in-app message timeout)
+        //  - the `button` is null
+        //  - the `interaction` is false
     }
 
     override fun inAppMessageShown(message: InAppMessage, context: Context) {
@@ -71,23 +85,24 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
 
 ```
 
-If you set `trackActions` to **false** but you still want to track click and close events under some circumstances, you can use the methods `trackInAppMessageClick` or `trackInAppMessageClose` in the action method:
+If you set `trackActions` to **false** but you still want to track click and close events under some circumstances, you can use the methods `trackInAppMessageClick` or `trackInAppMessageClose` in the action methods:
 
 ```kotlin
-override fun inAppMessageAction(  
-        message: InAppMessage,  
-        button: InAppMessageButton?,  
-        interaction: Boolean,  
-        context: Context  
-    ) {    
-        if (<your-special-condition>) {
-            if (interaction) {  
-                Exponea.trackInAppMessageClick(message, button?.text, button?.url)  
-            } else {  
-                Exponea.trackInAppMessageClose(message)  
-            }
-        }
-    }  
+override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+    if (<your-special-condition>) {
+        Exponea.trackInAppMessageClick(message, button.text, button.url)
+    }
+}
+override fun inAppMessageCloseAction(
+    message: InAppMessage,
+    button: InAppMessageButton?,
+    interaction: Boolean,
+    context: Context
+) {
+    if (<your-special-condition>) {
+        EExponea.trackInAppMessageClose(message)
+    }
+}
 ```
 
 The `trackInAppMessageClose` method will track a 'close' event with the 'interaction' property set to `true` by default. You can use the method's optional parameter `interaction` to override this value.

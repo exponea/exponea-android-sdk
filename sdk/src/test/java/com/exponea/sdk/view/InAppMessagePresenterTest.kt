@@ -12,6 +12,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageTest
@@ -65,7 +66,7 @@ internal class InAppMessagePresenterTest(
         }
     }
 
-    private val emptyDismiss: (Activity, Boolean) -> Unit = { _, _ -> }
+    private val emptyDismiss: (Activity, Boolean, InAppMessagePayloadButton?) -> Unit = { _, _, _ -> }
     lateinit var context: Context
     lateinit var server: MockWebServer
     var payload: InAppMessagePayload? = null
@@ -139,7 +140,7 @@ internal class InAppMessagePresenterTest(
         val presented =
             presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
         assertNotNull(presented)
-        presented.dismissedCallback(false)
+        presented.dismissedCallback(false, null)
         buildActivity(AppCompatActivity::class.java).setup().resume().pause()
         assertNull(presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {}))
     }
@@ -157,7 +158,7 @@ internal class InAppMessagePresenterTest(
             presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
         assertNotNull(presented)
         assertNull(presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {}))
-        presented.dismissedCallback(false)
+        presented.dismissedCallback(false, null)
         Robolectric.flushForegroundThreadScheduler() // skip animations
         assertNotNull(
             presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
@@ -181,11 +182,13 @@ internal class InAppMessagePresenterTest(
         preloadMessageImages(bitmapCache)
         var dismissActivity: Activity? = null
         var dismissInteraction: Boolean? = null
+        var dismissButton: InAppMessagePayloadButton? = null
         val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
         val presented =
-            presenter.show(inAppMessageType, payload, payloadHtml, 1234, emptyAction, { a, b ->
+            presenter.show(inAppMessageType, payload, payloadHtml, 1234, emptyAction, { a, b, c ->
                 dismissActivity = a
                 dismissInteraction = b
+                dismissButton = c
             }, {})
 
         mockkObject(Exponea)
@@ -197,9 +200,11 @@ internal class InAppMessagePresenterTest(
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         assertNull(dismissActivity)
         assertNull(dismissInteraction)
+        assertNull(dismissButton)
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
         assertEquals(activity.get(), dismissActivity)
         assertEquals(false, dismissInteraction)
+        assertNull(dismissButton)
     }
 
     private fun preloadMessageImages(bitmapCache: InAppMessageBitmapCacheImpl) {
@@ -223,6 +228,7 @@ internal class InAppMessagePresenterTest(
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
+        var catchedCancelButton: InAppMessagePayloadButton? = null
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
@@ -234,10 +240,11 @@ internal class InAppMessagePresenterTest(
                 assertNull(catchedActionButton)
                 catchedActionButton = actionButton
             },
-            { closedByUser ->
+            { closedByUser, cancelButton ->
                 // should be called only once
                 assertNull(catchedClosedByUser)
                 catchedClosedByUser = closedByUser
+                catchedCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
@@ -269,6 +276,7 @@ internal class InAppMessagePresenterTest(
         // validate callbacks
         assertNotNull(catchedActionButton)
         assertNull(catchedClosedByUser)
+        assertNull(catchedCancelButton)
         assertNull(catchedError)
     }
 
@@ -286,6 +294,7 @@ internal class InAppMessagePresenterTest(
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
+        var catchedCancelButton: InAppMessagePayloadButton? = null
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
@@ -297,10 +306,11 @@ internal class InAppMessagePresenterTest(
                 assertNull(catchedActionButton)
                 catchedActionButton = actionButton
             },
-            { closedByUser ->
+            { closedByUser, cancelButton ->
                 // should be called only once
                 assertNull(catchedClosedByUser)
                 catchedClosedByUser = closedByUser
+                catchedCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
@@ -334,6 +344,16 @@ internal class InAppMessagePresenterTest(
         assertNull(catchedActionButton)
         assertNotNull(catchedClosedByUser)
         assertTrue(catchedClosedByUser!!)
+        if (inAppMessageType == InAppMessageType.MODAL || inAppMessageType == InAppMessageType.FULLSCREEN) {
+            // X button doesn't deliver button info
+            assertNull(catchedCancelButton)
+        } else {
+            assertNotNull(catchedCancelButton)
+            assertEquals(
+                payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.buttonText,
+                catchedCancelButton!!.buttonText
+            )
+        }
         assertNull(catchedError)
     }
 
@@ -354,6 +374,7 @@ internal class InAppMessagePresenterTest(
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
+        var catchedCancelButton: InAppMessagePayloadButton? = null
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
@@ -365,10 +386,11 @@ internal class InAppMessagePresenterTest(
                 assertNull(catchedActionButton)
                 catchedActionButton = actionButton
             },
-            { closedByUser ->
+            { closedByUser, cancelButton ->
                 // should be called only once
                 assertNull(catchedClosedByUser)
                 catchedClosedByUser = closedByUser
+                catchedCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
@@ -387,6 +409,7 @@ internal class InAppMessagePresenterTest(
         assertNull(catchedActionButton)
         assertNotNull(catchedClosedByUser)
         assertTrue(catchedClosedByUser!!)
+        assertNull(catchedCancelButton)
         assertNull(catchedError)
     }
 
@@ -404,6 +427,7 @@ internal class InAppMessagePresenterTest(
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
+        var catchedCancelButton: InAppMessagePayloadButton? = null
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
@@ -415,10 +439,11 @@ internal class InAppMessagePresenterTest(
                 assertNull(catchedActionButton)
                 catchedActionButton = actionButton
             },
-            { closedByUser ->
+            { closedByUser, cancelButton ->
                 // should be called only once
                 assertNull(catchedClosedByUser)
                 catchedClosedByUser = closedByUser
+                catchedCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
@@ -435,6 +460,7 @@ internal class InAppMessagePresenterTest(
         assertNull(catchedActionButton)
         assertNotNull(catchedClosedByUser)
         assertFalse(catchedClosedByUser!!)
+        assertNull(catchedCancelButton)
         assertNull(catchedError)
     }
 }

@@ -36,7 +36,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private val fullScreen: Boolean
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
-    private var onDismiss: ((Boolean) -> Unit)?
+    private var onDismiss: ((Boolean, InAppMessagePayloadButton?) -> Unit)?
     private var onError: (String) -> Unit
     private val imageCache: DrawableCache
 
@@ -49,7 +49,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         payload: InAppMessagePayload,
         image: DrawableCache,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
-        onDismiss: (Boolean) -> Unit,
+        onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
         onError: (String) -> Unit
     ) : super(context) {
         this.fullScreen = fullScreen
@@ -73,7 +73,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         setupWindow()
 
         setOnDismissListener {
-            this.onDismiss?.invoke(false)
+            this.onDismiss?.invoke(false, null)
         }
     }
 
@@ -200,12 +200,16 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     private fun setupCloseButton() {
         buttonClose.setOnClickListener {
-            onDismiss?.invoke(true)
-            // clear the dismiss listener, we called the manual listener
-            onDismiss = null
-            dismiss()
+            dismissMessageWithClosingInteraction(null)
         }
         buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))
+    }
+
+    private fun dismissMessageWithClosingInteraction(buttonPayload: InAppMessagePayloadButton?) {
+        onDismiss?.invoke(true, buttonPayload)
+        // clear the dismiss listener, we called the manual listener
+        onDismiss = null
+        dismiss()
     }
 
     private fun setupButtons() {
@@ -237,7 +241,9 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
         )
         if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
-            buttonAction.setOnClickListener { dismiss() }
+            buttonAction.setOnClickListener {
+                dismissMessageWithClosingInteraction(buttonPayload)
+            }
         } else {
             buttonAction.setOnClickListener {
                 onButtonClick(buttonPayload)

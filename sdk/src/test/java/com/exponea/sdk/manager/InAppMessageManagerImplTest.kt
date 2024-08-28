@@ -131,7 +131,7 @@ internal class InAppMessageManagerImplTest {
         every { presenter.context } returns ApplicationProvider.getApplicationContext()
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs
-        every { trackingConsentManager.trackInAppMessageClose(any(), any(), any()) } just Runs
+        every { trackingConsentManager.trackInAppMessageClose(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
         val configuration = ExponeaConfiguration(projectToken = "mock-token")
@@ -576,7 +576,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         every {
             presenter.show(
@@ -615,7 +615,7 @@ internal class InAppMessageManagerImplTest {
                 .invoke(Result(true, arrayListOf(inAppMessage)))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
         every {
@@ -632,6 +632,7 @@ internal class InAppMessageManagerImplTest {
             trackingConsentManager.trackInAppMessageShown(inAppMessage, CONSIDER_CONSENT)
         }
         val button = inAppMessage.payload!!.buttons!![0]
+        val cancelButton = inAppMessage.payload!!.buttons!![1]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClick(
@@ -644,10 +645,26 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             spykManager.processInAppMessageAction(mockActivity, button)
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity, false)
+        // dismiss by non-interaction (system)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false, null)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(
-                inAppMessage, false, CONSIDER_CONSENT
+                inAppMessage, null, false, CONSIDER_CONSENT
+            )
+        }
+        // dismiss by interaction with default close button/gesture
+        dismissedCallbackSlot.captured.invoke(mockActivity, true, null)
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageClose(
+                inAppMessage, null, true, CONSIDER_CONSENT
+            )
+        }
+        // dismiss by interaction with cancel button
+        dismissedCallbackSlot.captured.invoke(mockActivity, true, cancelButton)
+        assertEquals("Cancel", cancelButton.buttonText)
+        verify(exactly = 1) {
+            trackingConsentManager.trackInAppMessageClose(
+                inAppMessage, "Cancel", true, CONSIDER_CONSENT
             )
         }
     }
@@ -909,19 +926,20 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = false
             override var trackActions = true
-            override fun inAppMessageAction(
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
+            override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {}
+            override fun inAppMessageCloseAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
             ) {}
-            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
-            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
@@ -959,19 +977,18 @@ internal class InAppMessageManagerImplTest {
             )
         }
         verify(exactly = 1) {
-            spykCallback.inAppMessageAction(
+            spykCallback.inAppMessageClickAction(
                 InAppMessageTest.getInAppMessage(),
                 InAppMessageButton(button.buttonText, button.buttonLink),
-                true,
                 mockActivity
             )
         }
         verify(exactly = 1) {
             spykManager.processInAppMessageAction(mockActivity, button)
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity, false)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false, null)
         verify(exactly = 1) {
-            spykCallback.inAppMessageAction(
+            spykCallback.inAppMessageCloseAction(
                 InAppMessageTest.getInAppMessage(),
                 null,
                 false,
@@ -979,7 +996,12 @@ internal class InAppMessageManagerImplTest {
             )
         }
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageClose(InAppMessageTest.getInAppMessage(), false, CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageClose(
+                InAppMessageTest.getInAppMessage(),
+                null,
+                false,
+                CONSIDER_CONSENT
+            )
         }
         resetThreadsBehaviour()
     }
@@ -999,19 +1021,20 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
             override var trackActions = false
-            override fun inAppMessageAction(
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
+            override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {}
+            override fun inAppMessageCloseAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
             ) {}
-            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
-            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 
@@ -1044,19 +1067,18 @@ internal class InAppMessageManagerImplTest {
             trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any())
         }
         verify(exactly = 1) {
-            spykCallback.inAppMessageAction(
+            spykCallback.inAppMessageClickAction(
                 InAppMessageTest.getInAppMessage(),
                 InAppMessageButton(button.buttonText, button.buttonLink),
-                true,
                 mockActivity
             )
         }
         verify(exactly = 0) {
             spykManager.processInAppMessageAction(any(), any())
         }
-        dismissedCallbackSlot.captured.invoke(mockActivity, false)
+        dismissedCallbackSlot.captured.invoke(mockActivity, false, null)
         verify(exactly = 1) {
-            spykCallback.inAppMessageAction(
+            spykCallback.inAppMessageCloseAction(
                 InAppMessageTest.getInAppMessage(),
                 null,
                 false,
@@ -1064,7 +1086,7 @@ internal class InAppMessageManagerImplTest {
             )
         }
         verify(exactly = 0) {
-            trackingConsentManager.trackInAppMessageClose(any(), any(), any())
+            trackingConsentManager.trackInAppMessageClose(any(), any(), any(), any())
         }
         resetThreadsBehaviour()
     }
@@ -1084,22 +1106,24 @@ internal class InAppMessageManagerImplTest {
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
             override var trackActions = false
-            override fun inAppMessageAction(
+            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
+            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
+            override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+                trackingConsentManager.trackInAppMessageClick(message, button.text, button.url, CONSIDER_CONSENT)
+            }
+            override fun inAppMessageCloseAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
             ) {
-                trackingConsentManager.trackInAppMessageClick(message, button?.text, button?.url, CONSIDER_CONSENT)
-                trackingConsentManager.trackInAppMessageClose(message, interaction, CONSIDER_CONSENT)
+                trackingConsentManager.trackInAppMessageClose(message, button?.text, interaction, CONSIDER_CONSENT)
             }
-            override fun inAppMessageShown(message: InAppMessage, context: Context) {}
-            override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {}
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
-        val dismissedCallbackSlot = slot<(Activity, Boolean) -> Unit>()
+        val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
         val spykManager = spyk(manager)
 

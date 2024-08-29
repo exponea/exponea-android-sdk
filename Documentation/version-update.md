@@ -6,7 +6,53 @@ categorySlug: integrations
 parentDocSlug: android-sdk-release-notes
 ---
 
-This guide will help you upgrade your Exponea SDK to the new version.
+This guide will help you upgrade your Exponea SDK to the latest major version.
+
+## Update from version 3.x.x to 4.x.x
+
+Updating Exponea SDK to version 4 or higher requires making some changes related to in-app messages callback implementations.
+
+The `InAppMessageCallback` interface was changed and simplified, so you have to migrate your implementation of in-app message action and close handling. This migration requires to split your implementation from `inAppMessageAction` into `inAppMessageClickAction` and `inAppMessageCloseAction`, respectively.
+
+Your implementation may have been similar to the following example:
+
+```kotlin
+override fun inAppMessageAction(
+    message: InAppMessage,
+    button: InAppMessageButton?,
+    interaction: Boolean,
+    context: Context
+) {
+    if (button == null) {
+        // is close action
+        onMessageClose(message, interaction)
+    } else {
+        // is click action
+        onMessageClick(message, button)
+    }
+}
+```
+
+To update to version 4 of the SDK, you must remove the `inAppMessageAction` method and refactor your code as follows:
+
+```kotlin
+override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+    // is click action
+    onMessageClick(message, button)
+}
+
+override fun inAppMessageCloseAction(
+    message: InAppMessage,
+    button: InAppMessageButton?,
+    interaction: Boolean,
+    context: Context
+) {
+    // is close action
+    onMessageClose(message, interaction)
+}
+```
+
+A benefit of the new behaviour is that the method `inAppMessageCloseAction` can be called with a non-null `button` parameter. This happens when a user clicks on the Cancel button and enables you to determine which button has been clicked by reading the button text.
 
 ## Update from version 2.x.x to 3.x.x
 
@@ -137,48 +183,3 @@ has changed to
 >
 > Invoking `Exponea.handleNewToken`, `Exponea.handleNewHmsToken`, and `Exponea.handleRemoteMessage` is allowed before SDK initialization in case it was initialized previously. In such a case, these methods will track events with the configuration of the last initialization. Please consider initializing the SDK in `Application::onCreate` to ensure a fresh configuration is applied in case of an update of your application.
 
-## Update from version 3.x.x to 4.x.x
-
-Updating Exponea SDK to version 4 or higher requires you to make some changes related to In-app messages callback implementation.
-
-InAppMessageCallback interface was simplified and changed so you have to migrate your implementation of In-app action and close handling. This migration only requires to divide implementation from `inAppMessageAction` to `inAppMessageClickAction` and `inAppMessageCloseAction` respectively.
-
-Your implementation may was as:
-
-```kotlin
-override fun inAppMessageAction(
-    message: InAppMessage,
-    button: InAppMessageButton?,
-    interaction: Boolean,
-    context: Context
-) {
-    if (button == null) {
-        // is close action
-        onMessageClose(message, interaction)
-    } else {
-        // is click action
-        onMessageClick(message, button)
-    }
-}
-```
-
-So please remove `inAppMessageAction` method and move your code as:
-
-```kotlin
-override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
-    // is click action
-    onMessageClick(message, button)
-}
-
-override fun inAppMessageCloseAction(
-    message: InAppMessage,
-    button: InAppMessageButton?,
-    interaction: Boolean,
-    context: Context
-) {
-    // is close action
-    onMessageClose(message, interaction)
-}
-```
-
-You may benefit from new behaviour as method `inAppMessageCloseAction` could be called with non-null `button` parameter. This case happens when user clicks on CANCEL button and so you are able to determine which button has been clicked by button text.

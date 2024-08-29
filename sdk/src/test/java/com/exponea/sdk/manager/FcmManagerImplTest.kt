@@ -11,9 +11,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationPayload
-import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
-import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.shadows.OnlyDefaultShadowRingtone
@@ -84,7 +82,6 @@ internal class FcmManagerImplTest {
         ),
         eventManager,
         pushTokenRepository,
-        PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
         trackingConsentManager
     )
 
@@ -595,7 +592,6 @@ internal class FcmManagerImplTest {
             ExponeaConfiguration(pushIcon = 123),
             eventManager,
             pushTokenRepository,
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
             trackingConsentManager
         )
         val notificationSlot = slot<Notification>()

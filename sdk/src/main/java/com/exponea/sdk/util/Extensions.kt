@@ -20,6 +20,9 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.PushNotificationDelegate
+import com.exponea.sdk.models.PushOpenedData
+import com.exponea.sdk.services.MessagingUtils
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
@@ -497,5 +500,25 @@ internal fun runForInitializedSDK(
                 it.invoke()
             }
         }
+    }
+}
+
+internal fun PushNotificationDelegate.handleReceivedPushUpdate(data: Map<String, Any>) {
+    runOnMainThread {
+        if (MessagingUtils.isSilentPush(data)) {
+            this.onSilentPushNotificationReceived(data)
+        } else {
+            this.onPushNotificationReceived(data)
+        }
+    }
+}
+
+internal fun PushNotificationDelegate.handleClickedPushUpdate(data: PushOpenedData) {
+    runOnMainThread {
+        this.onPushNotificationOpened(
+            data.actionType,
+            data.actionUrl,
+            data.extraData
+        )
     }
 }

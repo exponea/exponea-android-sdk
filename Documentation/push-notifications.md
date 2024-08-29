@@ -128,6 +128,37 @@ The "Open web browser" action is handled automatically by the SDK and no work is
 
 ### Handle Additional Data Payload
 
+When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `pushNotificationsDelegate`, which you can set on the `Exponea` object.
+
+``` kotlin
+Exponea.pushNotificationsDelegate = object : PushNotificationDelegate {
+    override fun onSilentPushNotificationReceived(notificationData: Map<String, Any>) {
+        // handle the additional data of silent push notification
+    }
+
+    override fun onPushNotificationReceived(notificationData: Map<String, Any>) {
+        // handle the additional data of normal push notification
+    }
+
+    override fun onPushNotificationOpened(
+        action: ExponeaNotificationActionType,
+        url: String?,
+        notificationData: Map<String, Any>
+    ) {
+        // handle the additional data of clicked push notification action
+    }
+}
+```
+
+Note that if the SDK previously received any additional data while no listener was attached to the callback, it will dispatch all received and clicked push notification data as soon as a listener is attached.
+
+> ❗️
+>
+> Using of `notificationDataCallback` is now deprecated. Please consider to use new `pushNotificationsDelegate` with these benefits:
+> * multiple received push notifications are kept until listener is set
+> * clicked push notification actions are delivered to listener also (with multiple records keeping feature too)
+> * you are able to determine if received notification is silent or was shown to user
+
 When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `notificationCallback`, which you can set on the `Exponea` object. The additional data is provided as a `Map<String, String>`.
 
 ``` kotlin
@@ -136,7 +167,7 @@ Exponea.notificationDataCallback = {
 }
 ```
 
-Note that if the SDK previously received any additional data while no listener was attached to the callback, it will dispatch that data as soon as a listener is attached.
+Note that if the SDK previously received any additional data while no listener was attached to the callback, it will dispatch last received push notification data as soon as a listener is attached.
 
 > 👍
 >

@@ -18,19 +18,18 @@ import com.exponea.sdk.ExponeaExtras
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
-import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
-import com.exponea.sdk.util.runOnMainThread
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -47,7 +46,6 @@ internal open class FcmManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventManager: EventManager,
     private val pushTokenRepository: PushTokenRepository,
-    private val pushNotificationRepository: PushNotificationRepository,
     internal val trackingConsentManager: TrackingConsentManager
 ) : FcmManager {
     private val application = context.applicationContext
@@ -126,7 +124,7 @@ internal open class FcmManagerImpl(
             Logger.e(this, "Push notification needs info about time delivery")
             payload.deliveredTimestamp = timestamp
         }
-        if (payload.notificationAction.action == NotificationPayload.Actions.SELFCHECK) {
+        if (payload.notificationAction.action == ExponeaNotificationActionType.SELFCHECK) {
             Logger.d(this, "Self-check notification received")
             onSelfCheckReceived()
             return
@@ -150,7 +148,6 @@ internal open class FcmManagerImpl(
             return
         }
         lastPushNotificationId = payload.notificationId
-        callNotificationDataCallback(payload)
         if (showNotification && !payload.silent && (payload.title.isNotBlank() || payload.message.isNotBlank())) {
             trackDeliveredPush(
                 payload,
@@ -220,6 +217,7 @@ internal open class FcmManagerImpl(
         } else {
             Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
         }
+        Exponea.notifyCallbacksForNotificationDelivery(payload)
     }
 
     override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {
@@ -393,18 +391,6 @@ internal open class FcmManagerImpl(
         }
     }
 
-    private fun callNotificationDataCallback(messageData: NotificationPayload) {
-        if (messageData.attributes != null) {
-            if (Exponea.notificationDataCallback == null) {
-                pushNotificationRepository.setExtraData(messageData.attributes)
-                return
-            }
-            runOnMainThread {
-                Exponea.notificationDataCallback?.invoke(messageData.attributes)
-            }
-        }
-    }
-
     private fun getPushReceiverIntent(payload: NotificationPayload): Intent {
         return ExponeaPushTrackingActivity.getClickIntent(
             application,
@@ -417,7 +403,7 @@ internal open class FcmManagerImpl(
 
     private fun generateActionPendingIntent(
         payload: NotificationPayload,
-        action: NotificationPayload.Actions?,
+        action: ExponeaNotificationActionType?,
         actionInfo: NotificationAction,
         requestCode: Int
     ): PendingIntent? {
@@ -425,11 +411,11 @@ internal open class FcmManagerImpl(
         trackingIntent.putExtra(ExponeaExtras.EXTRA_ACTION_INFO, actionInfo)
 
         return when (action) {
-            NotificationPayload.Actions.BROWSER -> {
+            ExponeaNotificationActionType.BROWSER -> {
                 trackingIntent.action = ExponeaExtras.ACTION_URL_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }
-            NotificationPayload.Actions.DEEPLINK -> {
+            ExponeaNotificationActionType.DEEPLINK -> {
                 trackingIntent.action = ExponeaExtras.ACTION_DEEPLINK_CLICKED
                 getUrlIntent(requestCode, trackingIntent, actionInfo.url)
             }

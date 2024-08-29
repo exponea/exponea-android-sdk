@@ -1,5 +1,6 @@
 package com.exponea.sdk.models
 
+import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.fromJson
 import com.google.gson.FieldNamingPolicy
@@ -8,7 +9,7 @@ import org.json.JSONArray
 
 internal class NotificationPayload(val rawData: HashMap<String, String>) {
     val notificationId: Int = rawData["notification_id"]?.toInt() ?: 0
-    val silent: Boolean = rawData["silent"] == "true"
+    val silent: Boolean = MessagingUtils.isSilentPush(rawData)
     val title: String = rawData["title"] ?: ""
     val message: String = rawData["message"] ?: ""
     val image: String? = rawData["image"]
@@ -20,7 +21,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
     var deliveredTimestamp: Double? = notificationData.sentTimestamp
 
     data class ActionPayload(
-        val action: Actions? = null,
+        val action: ExponeaNotificationActionType? = null,
         val url: String? = null,
         val title: String? = null
     )
@@ -63,7 +64,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
             // if we have a button payload, verify each button action
             for (i in 0 until buttonsJsonArray.length()) {
                 val item: Map<String, String> = gson.fromJson(buttonsJsonArray[i].toString())
-                val actionEnum = Actions.find(item["action"])
+                val actionEnum = ExponeaNotificationActionType.find(item["action"])
                 buttonsArray.add(ActionPayload(actionEnum, item["url"], item["title"]))
             }
 
@@ -71,21 +72,7 @@ internal class NotificationPayload(val rawData: HashMap<String, String>) {
         }
 
         private fun parseMainAction(actionString: String?, actionUrl: String?): ActionPayload {
-            return ActionPayload(Actions.find(actionString), actionUrl)
-        }
-    }
-
-    /**
-     * Each action is used to trigger a different event when clicking a notification body or button
-     */
-    enum class Actions(val value: String) {
-        APP("app"),
-        BROWSER("browser"),
-        DEEPLINK("deeplink"),
-        SELFCHECK("self-check");
-
-        companion object {
-            fun find(value: String?) = Actions.values().find { it.value == value }
+            return ActionPayload(ExponeaNotificationActionType.find(actionString), actionUrl)
         }
     }
 }

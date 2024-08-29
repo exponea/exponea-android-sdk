@@ -75,6 +75,8 @@ internal class MessagingUtils {
             }
         }
 
+        fun isSilentPush(data: Map<String, Any>): Boolean = data["silent"] == "true"
+
         fun getNotificationChannelImportance(
             context: Context,
             notificationManager: NotificationManager,

@@ -12,12 +12,8 @@ import com.exponea.sdk.util.Logger
 
 internal class ExponeaPushTrackingActivityOlderApi : ExponeaPushTrackingActivity() {
 
-    override fun processPushClick(
-        context: Context,
-        intent: Intent,
-        timestamp: Double
-    ) {
-        super.processPushClick(context, intent, timestamp)
+    override fun processPushClick(context: Context, intent: Intent) {
+        super.processPushClick(context, intent)
         if (intent.action == ACTION_URL_CLICKED || intent.action == ACTION_DEEPLINK_CLICKED) {
             val intentWithUrl = Intent(Intent.ACTION_VIEW)
             intentWithUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)

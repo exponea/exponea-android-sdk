@@ -46,7 +46,8 @@ internal object PublicApiTestCases {
         Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider),
         Pair(Exponea::safeModeEnabled, true),
         Pair(Exponea::runDebugMode, false),
-        Pair(Exponea::segmentationDataCallbacks, CopyOnWriteArrayList<SegmentationDataCallback>())
+        Pair(Exponea::segmentationDataCallbacks, CopyOnWriteArrayList<SegmentationDataCallback>()),
+        Pair(Exponea::pushNotificationsDelegate, null)
     )
 
     val initMethods: Array<Pair<KFunction<Any>, () -> Any>> = arrayOf(

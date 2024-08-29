@@ -57,7 +57,7 @@ internal class NotificationPayloadTest(
                 assertEquals(null, it.sound)
                 assertEquals(null, it.buttons)
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.APP),
                         it.notificationAction
                 )
                 assertEquals(NotificationData(), it.notificationData)
@@ -74,7 +74,7 @@ internal class NotificationPayloadTest(
                 assertEquals(null, it.sound)
                 assertEquals(null, it.buttons)
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.DEEPLINK, "app://test"),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.DEEPLINK, "app://test"),
                         it.notificationAction
                 )
                 assertEquals(NotificationData(), it.notificationData)
@@ -91,7 +91,7 @@ internal class NotificationPayloadTest(
                 assertEquals(null, it.sound)
                 assertEquals(null, it.buttons)
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.BROWSER, "http://google.com"),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.BROWSER, "http://google.com"),
                         it.notificationAction
                 )
                 assertEquals(NotificationData(), it.notificationData)
@@ -109,17 +109,17 @@ internal class NotificationPayloadTest(
                 assertEquals(
                         arrayListOf(
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.APP,
+                                        ExponeaNotificationActionType.APP,
                                         null,
                                         "Action 1 title"
                                 ),
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.DEEPLINK,
+                                        ExponeaNotificationActionType.DEEPLINK,
                                         "app://deeplink",
                                         "Action 2 title"
                                 ),
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.BROWSER,
+                                        ExponeaNotificationActionType.BROWSER,
                                         "http://google.com",
                                         "Action 3 title"
                                 )
@@ -127,7 +127,7 @@ internal class NotificationPayloadTest(
                         it.buttons
                 )
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.APP),
                         it.notificationAction
                 )
                 assertEquals(NotificationData(), it.notificationData)
@@ -145,17 +145,17 @@ internal class NotificationPayloadTest(
                 assertEquals(
                         arrayListOf(
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.APP,
+                                        ExponeaNotificationActionType.APP,
                                         null,
                                         "Action 1 title"
                                 ),
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.DEEPLINK,
+                                        ExponeaNotificationActionType.DEEPLINK,
                                         "http://deeplink?search=something",
                                         "Action 2 title"
                                 ),
                                 NotificationPayload.ActionPayload(
-                                        NotificationPayload.Actions.BROWSER,
+                                        ExponeaNotificationActionType.BROWSER,
                                         "http://google.com?search=something",
                                         "Action 3 title"
                                 )
@@ -163,7 +163,7 @@ internal class NotificationPayloadTest(
                         it.buttons
                 )
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.APP),
                         it.notificationAction
                 )
                 assertEquals(
@@ -222,7 +222,7 @@ internal class NotificationPayloadTest(
                 assertEquals(null, it.sound)
                 assertEquals(null, it.buttons)
                 assertEquals(
-                        NotificationPayload.ActionPayload(NotificationPayload.Actions.APP),
+                        NotificationPayload.ActionPayload(ExponeaNotificationActionType.APP),
                         it.notificationAction
                 )
                 assertEquals(NotificationData(hashMapOf("silent_test" to "value")), it.notificationData)

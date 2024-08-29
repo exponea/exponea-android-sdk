@@ -2,14 +2,14 @@ package com.exponea.sdk.util
 
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CampaignData
+import com.exponea.sdk.models.ExponeaNotificationActionType.APP
+import com.exponea.sdk.models.ExponeaNotificationActionType.BROWSER
+import com.exponea.sdk.models.ExponeaNotificationActionType.DEEPLINK
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type
 import com.exponea.sdk.models.MessageItemContent
 import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.NotificationPayload.ActionPayload
-import com.exponea.sdk.models.NotificationPayload.Actions.APP
-import com.exponea.sdk.models.NotificationPayload.Actions.BROWSER
-import com.exponea.sdk.models.NotificationPayload.Actions.DEEPLINK
 import com.exponea.sdk.util.HtmlNormalizer.ActionInfo
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.google.gson.FieldNamingPolicy

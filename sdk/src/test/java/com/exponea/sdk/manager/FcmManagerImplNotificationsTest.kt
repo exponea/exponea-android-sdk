@@ -12,6 +12,7 @@ import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_BUTTON
 import com.exponea.sdk.models.NotificationAction.Companion.ACTION_TYPE_NOTIFICATION
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
@@ -732,7 +733,6 @@ internal class FcmManagerImplNotificationsTest(
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
             PushTokenRepositoryProvider.get(context),
-            pushNotificationRepository,
             trackingConsentManager
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
@@ -763,5 +763,10 @@ internal class FcmManagerImplNotificationsTest(
             expectedNotificationMatcher(notificationSlot.captured)
         }
         assertEquals(expectedNotificationData, pushNotificationRepository.getExtraData())
+        val storedReceivedPushes = pushNotificationRepository.popDeliveredPushData()
+        assertEquals(1, storedReceivedPushes.size)
+        val storedAsPayload = NotificationPayload(HashMap(storedReceivedPushes[0] as Map<String, String>))
+        assertEquals(expectedNotificationData, storedAsPayload.attributes)
+        assertEquals(0, pushNotificationRepository.popDeliveredPushData().size)
     }
 }

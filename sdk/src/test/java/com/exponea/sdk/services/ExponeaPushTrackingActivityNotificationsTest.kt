@@ -15,9 +15,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
-import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
-import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
@@ -208,7 +206,6 @@ internal class ExponeaPushTrackingActivityNotificationsTest(
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
             PushTokenRepositoryProvider.get(context),
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
             trackingConsentManager
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)

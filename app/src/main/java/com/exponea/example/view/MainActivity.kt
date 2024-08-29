@@ -19,10 +19,13 @@ import com.exponea.example.view.fragments.FlushFragment
 import com.exponea.example.view.fragments.InAppContentBlocksFragment
 import com.exponea.example.view.fragments.TrackFragment
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageCallback
+import com.exponea.sdk.models.PushNotificationDelegate
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.isViewUrlIntent
 import kotlinx.android.synthetic.main.activity_main.navigation
 import kotlinx.android.synthetic.main.activity_main.toolbar
@@ -38,6 +41,43 @@ class MainActivity : AppCompatActivity() {
         Exponea.loggerLevel = Logger.Level.DEBUG
         Exponea.checkPushSetup = true
         Exponea.handleCampaignIntent(intent, applicationContext)
+        Exponea.pushNotificationsDelegate = object : PushNotificationDelegate {
+            override fun onSilentPushNotificationReceived(notificationData: Map<String, Any>) {
+                informPushNotificationAction("Silent", "received", notificationData)
+            }
+
+            override fun onPushNotificationReceived(notificationData: Map<String, Any>) {
+                informPushNotificationAction("Normal", "received", notificationData)
+            }
+
+            override fun onPushNotificationOpened(
+                action: ExponeaNotificationActionType,
+                url: String?,
+                notificationData: Map<String, Any>
+            ) {
+                informPushNotificationAction(action.name, "clicked $url", notificationData)
+            }
+
+            private fun informPushNotificationAction(
+                notifType: String,
+                notifFlow: String,
+                notificationData: Map<String, Any>
+            ) {
+                val message = """
+                    $notifType Push data $notifFlow:
+                    ${notificationData.entries.joinToString { "${it.key}: ${it.value}" }}
+                    """.trimIndent()
+                if (this@MainActivity.isResumedActivity()) {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("$notifType Push notification $notifFlow")
+                        .setMessage(message)
+                        .setPositiveButton("OK") { _, _ -> }
+                        .show()
+                } else {
+                    Logger.i(this, message)
+                }
+            }
+        }
 
 //        Uncomment this section, if you want to test in-app callback
 //        Exponea.inAppMessageActionCallback = getInAppMessageCallback()

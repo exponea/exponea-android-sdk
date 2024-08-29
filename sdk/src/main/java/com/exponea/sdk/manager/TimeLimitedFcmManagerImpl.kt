@@ -10,7 +10,6 @@ import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
-import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
@@ -34,14 +33,12 @@ internal class TimeLimitedFcmManagerImpl(
     configuration: ExponeaConfiguration,
     eventManager: EventManager,
     pushTokenRepository: PushTokenRepository,
-    pushNotificationRepository: PushNotificationRepository,
     trackingConsentManager: TrackingConsentManager
 ) : FcmManagerImpl(
     context,
     configuration,
     eventManager,
     pushTokenRepository,
-    pushNotificationRepository,
     trackingConsentManager
 ) {
 
@@ -101,8 +98,7 @@ internal class TimeLimitedFcmManagerImpl(
                 eventManager, campaignRepository, inappMessageTrackingDelegate, inAppContentBlockTrackingDelegate
             )
             return TimeLimitedFcmManagerImpl(
-                context, configuration, eventManager, pushTokenRepository,
-                pushNotificationRepository, trackingConsentManager
+                context, configuration, eventManager, pushTokenRepository, trackingConsentManager
             )
         }
     }

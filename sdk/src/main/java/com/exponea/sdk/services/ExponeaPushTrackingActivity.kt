@@ -2,21 +2,17 @@ package com.exponea.sdk.services
 
 import android.app.Activity
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_ACTION_INFO
 import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_CUSTOM_DATA
 import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_DATA
 import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_DELIVERED_TIMESTAMP
 import com.exponea.sdk.ExponeaExtras.Companion.EXTRA_NOTIFICATION_ID
-import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 
 internal open class ExponeaPushTrackingActivity : Activity() {
@@ -48,56 +44,11 @@ internal open class ExponeaPushTrackingActivity : Activity() {
         finish()
     }
 
-    open fun processPushClick(
-        context: Context,
-        intent: Intent,
-        timestamp: Double = currentTimeSeconds()
-    ) {
+    open fun processPushClick(context: Context, intent: Intent) {
         Logger.i(this, "Push notification clicked")
-
-        val action = intent.getSerializableExtra(EXTRA_ACTION_INFO) as? NotificationAction?
-        Logger.d(this, "Interaction: $action")
-
-        val data = intent.getParcelableExtra(EXTRA_DATA) as NotificationData?
-        val deliveredTimestamp = intent.getDoubleExtra(EXTRA_DELIVERED_TIMESTAMP, 0.0)
-
-        val clickedTimestamp: Double = if (timestamp <= deliveredTimestamp) {
-            deliveredTimestamp + 1
-        } else {
-            timestamp
-        }
-        if (data?.hasTrackingConsent == true || action?.isTrackingForced == true) {
-            Exponea.trackClickedPush(
-                data = data,
-                actionData = action,
-                timestamp = clickedTimestamp
-            )
-        } else {
-            Logger.e(this,
-                "Event for clicked notification is not tracked because consent is not given nor forced")
-        }
-
-        // After clicking the notification button (action), dismiss it
+        Exponea.processPushNotificationClickInternally(intent)
         dismissNotification(context, intent)
-
-        // And close the notification tray
         closeNotificationTray(context)
-
-        // send also broadcast with this action, so client app can also react to push open event
-
-        Intent().also { broadcastIntent ->
-            broadcastIntent.action = intent.action
-            broadcastIntent.putExtra(EXTRA_ACTION_INFO, action)
-            broadcastIntent.putExtra(EXTRA_DATA, data)
-            broadcastIntent.putExtra(EXTRA_CUSTOM_DATA, intent.getSerializableExtra(EXTRA_CUSTOM_DATA))
-            broadcastIntent.`package` = context.packageName
-            PendingIntent.getBroadcast(
-                context,
-                0,
-                broadcastIntent,
-                MessagingUtils.getPendingIntentFlags()
-            ).send()
-        }
     }
 
     private fun dismissNotification(context: Context, intent: Intent) {

@@ -5,11 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.MessageItem
-import com.exponea.sdk.models.NotificationPayload.Actions
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.AppInboxCache
@@ -311,8 +311,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                     "title" to "Title",
                     "message" to "Message",
                     "actions" to arrayOf(
-                        buildActionAsMap(Actions.BROWSER, "https://google.com", "Web"),
-                        buildActionAsMap(Actions.DEEPLINK, "mail:something", "Deeplink")
+                        buildActionAsMap(ExponeaNotificationActionType.BROWSER, "https://google.com", "Web"),
+                        buildActionAsMap(ExponeaNotificationActionType.DEEPLINK, "mail:something", "Deeplink")
                     )
                 ))
             )))
@@ -325,11 +325,15 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 assertEquals("Title", pushMessage.title)
                 assertEquals("Message", pushMessage.message)
                 assertEquals(2, pushMessage.actions.size)
-                val webAction = pushMessage.actions.find { act -> act.type.value == Actions.BROWSER.value }
+                val webAction = pushMessage.actions.find {
+                    act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
+                }
                 assertNotNull(webAction)
                 assertEquals("https://google.com", webAction.url)
                 assertEquals("Web", webAction.title)
-                val deeplinkAction = pushMessage.actions.find { act -> act.type.value == Actions.DEEPLINK.value }
+                val deeplinkAction = pushMessage.actions.find {
+                    act -> act.type.value == ExponeaNotificationActionType.DEEPLINK.value
+                }
                 assertNotNull(deeplinkAction)
                 assertEquals("mail:something", deeplinkAction.url)
                 assertEquals("Deeplink", deeplinkAction.title)
@@ -339,7 +343,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     }
 
     private fun buildActionAsMap(
-        type: Actions,
+        type: ExponeaNotificationActionType,
         url: String,
         title: String
     ) = mapOf(
@@ -367,11 +371,15 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             assertEquals("Title", pushMessage.title)
             assertEquals("Message", pushMessage.message)
             assertEquals(2, pushMessage.actions.size)
-            val webAction = pushMessage.actions.find { act -> act.type.value == Actions.BROWSER.value }
+            val webAction = pushMessage.actions.find {
+                act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
+            }
             assertNotNull(webAction)
             assertEquals("https://exponea.com", webAction.url)
             assertEquals("Web", webAction.title)
-            val deeplinkAction = pushMessage.actions.find { act -> act.type.value == Actions.DEEPLINK.value }
+            val deeplinkAction = pushMessage.actions.find {
+                act -> act.type.value == ExponeaNotificationActionType.DEEPLINK.value
+            }
             assertNotNull(deeplinkAction)
             assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
             assertEquals("Deeplink", deeplinkAction.title)

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -35,6 +36,7 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency
+import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
@@ -52,17 +54,24 @@ import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
+import com.exponea.sdk.models.PushNotificationDelegate
+import com.exponea.sdk.models.PushOpenedData
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentationDataCallback
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.PushNotificationRepository
+import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaInitManager
+import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_MAX_MESSAGES_COUNT
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.telemetry.TelemetryManager
@@ -73,10 +82,13 @@ import com.exponea.sdk.util.VersionChecker
 import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.handleClickedPushUpdate
+import com.exponea.sdk.util.handleReceivedPushUpdate
 import com.exponea.sdk.util.isViewUrlIntent
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.logOnExceptionWithResult
 import com.exponea.sdk.util.returnOnException
+import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.ContentBlockCarouselView
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -186,6 +198,7 @@ object Exponea {
      * If a previous data was received and no listener was attached to the callback,
      * that data i'll be dispatched as soon as a listener is attached
      */
+    @Deprecated("Use pushNotificationDelegate instead")
     var notificationDataCallback: ((data: Map<String, Any>) -> Unit)? = null
         set(value) = runCatching {
             initGate.waitForInitialize {
@@ -195,6 +208,28 @@ object Exponea {
                     field?.invoke(storeData)
                     component.pushNotificationRepository.clearExtraData()
                 }
+            }
+        }.logOnException()
+
+    /**
+     * Whenever a notification is received or clicked, this callback is called
+     * with the values.
+     *
+     * If a notification is received or clicked and no listener was attached to the callback,
+     * that data will be dispatched as soon as a listener is attached.
+     */
+    var pushNotificationsDelegate: PushNotificationDelegate? = null
+        set(value) = runCatching {
+            field = value
+            if (value == null) {
+                return@runCatching
+            }
+            val repository = getPushNotificationRepository()
+            repository?.popDeliveredPushData()?.forEach {
+                value.handleReceivedPushUpdate(it)
+            }
+            repository?.popClickedPushData()?.forEach {
+                value.handleClickedPushUpdate(it)
             }
         }.logOnException()
 
@@ -753,6 +788,34 @@ object Exponea {
         } catch (e: Exception) {
             Logger.e(this, "Notification delivery not handled," +
                 " error occured while preparing a handling process, see logs", e)
+            return null
+        }
+    }
+
+    /**
+     * Returns PushNotificationRepository implementation that fits current SDK state:
+     * - SDK is initialized = PushNotificationRepository impl from SDK is returned
+     * - SDK is not initialized = Lightweigt PushNotificationRepository is returned
+     */
+    internal fun getPushNotificationRepository(): PushNotificationRepository? {
+        if (isInitialized) {
+            return component.pushNotificationRepository
+        }
+        val applicationContext = ExponeaContextProvider.applicationContext
+        if (applicationContext == null) {
+            Logger.e(
+                this,
+                "Notification data not stored, application context not found"
+            )
+            return null
+        }
+        // Simple PushNotificationRepository - without SDK init
+        try {
+            return PushNotificationRepositoryImpl(ExponeaPreferencesImpl(applicationContext))
+        } catch (e: Exception) {
+            Logger.e(
+                this,
+                "Notification data not stored due to error, see logs", e)
             return null
         }
     }
@@ -1456,4 +1519,102 @@ object Exponea {
             })
         }
     }.logOnException()
+
+    internal fun processPushNotificationClickInternally(openedPushDataIntent: Intent) {
+        val action = openedPushDataIntent.getSerializableExtra(ExponeaExtras.EXTRA_ACTION_INFO) as? NotificationAction?
+        Logger.d(this, "Interaction: $action")
+        val notifActionType = when (openedPushDataIntent.action) {
+            ExponeaExtras.ACTION_DEEPLINK_CLICKED -> ExponeaNotificationActionType.DEEPLINK
+            ExponeaExtras.ACTION_URL_CLICKED -> ExponeaNotificationActionType.BROWSER
+            else -> ExponeaNotificationActionType.APP
+        }
+        val data = openedPushDataIntent.getParcelableExtra(ExponeaExtras.EXTRA_DATA) as NotificationData?
+        val payloadRawData = openedPushDataIntent
+            .getSerializableExtra(ExponeaExtras.EXTRA_CUSTOM_DATA) as? HashMap<String, String>
+        val deliveredTimestamp = openedPushDataIntent.getDoubleExtra(ExponeaExtras.EXTRA_DELIVERED_TIMESTAMP, 0.0)
+        val payload = payloadRawData?.let {
+            NotificationPayload(it).apply {
+                this.deliveredTimestamp = deliveredTimestamp
+            }
+        }
+        val now = currentTimeSeconds()
+        val clickedTimestamp: Double = if (now <= deliveredTimestamp) {
+            deliveredTimestamp + 1
+        } else {
+            now
+        }
+        if (data?.hasTrackingConsent == true || action?.isTrackingForced == true) {
+            trackClickedPush(
+                data = data,
+                actionData = action,
+                timestamp = clickedTimestamp
+            )
+        } else {
+            Logger.e(this,
+                "Event for clicked notification is not tracked because consent is not given nor forced")
+        }
+        if (payload != null) {
+            notifyCallbacksForNotificationClick(notifActionType, action?.url, payload)
+        }
+        // send also broadcast with this action, so client app can also react to push open event
+        ExponeaContextProvider.applicationContext?.let { context: Context ->
+            Intent().also { broadcastIntent ->
+                broadcastIntent.action = openedPushDataIntent.action
+                broadcastIntent.putExtra(ExponeaExtras.EXTRA_ACTION_INFO, action)
+                broadcastIntent.putExtra(ExponeaExtras.EXTRA_DATA, data)
+                broadcastIntent.putExtra(
+                    ExponeaExtras.EXTRA_CUSTOM_DATA,
+                    openedPushDataIntent.getSerializableExtra(ExponeaExtras.EXTRA_CUSTOM_DATA)
+                )
+                broadcastIntent.`package` = context.packageName
+                PendingIntent.getBroadcast(
+                    context,
+                    0,
+                    broadcastIntent,
+                    MessagingUtils.getPendingIntentFlags()
+                ).send()
+            }
+        }
+    }
+
+    internal fun notifyCallbacksForNotificationDelivery(messageData: NotificationPayload) {
+        val pushNotificationRepository = getPushNotificationRepository()
+        // older pushNotificationRepository
+        messageData.attributes?.let {
+            if (notificationDataCallback == null) {
+                pushNotificationRepository?.setExtraData(it)
+            } else {
+                runOnMainThread {
+                    notificationDataCallback?.invoke(it)
+                }
+            }
+        }
+        // new pushNotificationsDelegate
+        val pushNotificationsDelegateLocal = pushNotificationsDelegate
+        val pushNotificationData = messageData.rawData
+        if (pushNotificationsDelegateLocal == null) {
+            pushNotificationRepository?.appendDeliveredNotification(pushNotificationData)
+        } else {
+            pushNotificationsDelegateLocal.handleReceivedPushUpdate(pushNotificationData)
+        }
+    }
+
+    private fun notifyCallbacksForNotificationClick(
+        actionType: ExponeaNotificationActionType,
+        actionUrl: String?,
+        messageData: NotificationPayload
+    ) {
+        val pushNotificationRepository = getPushNotificationRepository()
+        val pushNotificationsDelegateLocal = pushNotificationsDelegate
+        val pushOpenedData = PushOpenedData(
+            actionType = actionType,
+            actionUrl = actionUrl,
+            extraData = messageData.rawData
+        )
+        if (pushNotificationsDelegateLocal == null) {
+            pushNotificationRepository?.appendClickedNotification(pushOpenedData)
+        } else {
+            pushNotificationsDelegateLocal.handleClickedPushUpdate(pushOpenedData)
+        }
+    }
 }

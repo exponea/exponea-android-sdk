@@ -6,10 +6,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.NotificationPayload
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.ExponeaPushTrackingActivity
@@ -23,6 +26,8 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import java.util.Date
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -35,7 +40,7 @@ internal class FcmManagerImplTrackingTest(
     @Suppress("UNUSED_PARAMETER")
     name: String,
     private val deliveredTimestamp: Double,
-    private val clickedTimestamp: Double,
+    private val currentTimestamp: Double,
     private val intentGetter: (notification: Notification) -> Intent
 
 ) : ExponeaSDKTest() {
@@ -43,12 +48,13 @@ internal class FcmManagerImplTrackingTest(
     private lateinit var notificationManager: NotificationManager
     private lateinit var context: Context
     private lateinit var trackingConsentManager: TrackingConsentManager
+    private lateinit var pushNotificationRepository: PushNotificationRepository
 
     companion object {
         data class TestCase(
             val name: String,
             val deliveredTimestamp: Double,
-            val clickedTimestamp: Double,
+            val currentTimestamp: Double,
             val intentGetter: (notification: Notification) -> Intent
         )
 
@@ -58,43 +64,43 @@ internal class FcmManagerImplTrackingTest(
             TestCase(
                 name = "sent -> delivered -> clicked",
                 deliveredTimestamp = SENT_TIMESTAMP + 2,
-                clickedTimestamp = SENT_TIMESTAMP + 4,
+                currentTimestamp = SENT_TIMESTAMP + 4,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "sent -> clicked -> delivered",
                 deliveredTimestamp = SENT_TIMESTAMP + 4,
-                clickedTimestamp = SENT_TIMESTAMP + 2,
+                currentTimestamp = SENT_TIMESTAMP + 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "delivered -> sent -> clicked",
                 deliveredTimestamp = SENT_TIMESTAMP - 2,
-                clickedTimestamp = SENT_TIMESTAMP + 2,
+                currentTimestamp = SENT_TIMESTAMP + 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "clicked -> sent -> delivered",
                 deliveredTimestamp = SENT_TIMESTAMP + 2,
-                clickedTimestamp = SENT_TIMESTAMP - 2,
+                currentTimestamp = SENT_TIMESTAMP - 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "delivered -> clicked -> sent",
                 deliveredTimestamp = SENT_TIMESTAMP - 4,
-                clickedTimestamp = SENT_TIMESTAMP - 2,
+                currentTimestamp = SENT_TIMESTAMP - 2,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "clicked -> delivered -> sent",
                 deliveredTimestamp = SENT_TIMESTAMP - 2,
-                clickedTimestamp = SENT_TIMESTAMP - 4,
+                currentTimestamp = SENT_TIMESTAMP - 4,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             ),
             TestCase(
                 name = "clicked == delivered == sent",
                 deliveredTimestamp = SENT_TIMESTAMP,
-                clickedTimestamp = SENT_TIMESTAMP,
+                currentTimestamp = SENT_TIMESTAMP,
                 intentGetter = { Shadows.shadowOf(it.contentIntent).savedIntent }
             )
         )
@@ -106,7 +112,7 @@ internal class FcmManagerImplTrackingTest(
                 arrayOf(
                     it.name,
                     it.deliveredTimestamp,
-                    it.clickedTimestamp,
+                    it.currentTimestamp,
                     it.intentGetter
                 )
             }
@@ -115,7 +121,7 @@ internal class FcmManagerImplTrackingTest(
 
     @Before
     fun setUp() {
-        context = ApplicationProvider.getApplicationContext<Context>()
+        context = ApplicationProvider.getApplicationContext()
         Exponea.flushMode = FlushMode.MANUAL
         ExponeaConfigRepository.set(context, ExponeaConfiguration())
         trackingConsentManager = mockkClass(TrackingConsentManagerImpl::class)
@@ -130,13 +136,14 @@ internal class FcmManagerImplTrackingTest(
             ExponeaConfiguration(),
             mockkClass(EventManagerImpl::class),
             PushTokenRepositoryProvider.get(context),
-            PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context)),
             trackingConsentManager
         )
         notificationManager = spyk(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
         mockkObject(Exponea)
         every { Exponea.trackDeliveredPush(any(), any()) } just Runs
         every { Exponea.trackClickedPush(any(), any(), any()) } just Runs
+        pushNotificationRepository = PushNotificationRepositoryImpl(ExponeaPreferencesImpl(context))
+        every { Exponea.getPushNotificationRepository() } returns pushNotificationRepository
     }
 
     @Test
@@ -151,16 +158,48 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 1) {
             trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
+        mockkConstructorFix(Date::class)
+        every { anyConstructed<Date>().time } returns (currentTimestamp * 1000).toLong()
         ExponeaPushTrackingActivity().processPushClick(
             context,
-            intentGetter(notificationSlot.captured),
-            clickedTimestamp
+            intentGetter(notificationSlot.captured)
         )
         verify(exactly = 1) {
             Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
         }
         assertTrue { clickedTimestampSlot.captured > deliveredTimestampSlot.captured }
         assertTrue { deliveredTimestampSlot.captured > SENT_TIMESTAMP }
+    }
+
+    @Test
+    fun `should store delivered and clicked push data`() {
+        val notification = NotificationTestPayloads.PRODUCTION_NOTIFICATION
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+
+        manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
+        verify(exactly = 1) {
+            trackingConsentManager.trackDeliveredPush(any(), any(), any(), any(), any())
+        }
+        ExponeaPushTrackingActivity().processPushClick(
+            context,
+            intentGetter(notificationSlot.captured)
+        )
+        verify(exactly = 1) {
+            Exponea.trackClickedPush(any(), any(), any())
+        }
+        val expectedNotificationData = NotificationPayload(notification).attributes
+        assertEquals(expectedNotificationData, pushNotificationRepository.getExtraData())
+        val storedReceivedPushes = pushNotificationRepository.popDeliveredPushData()
+        assertEquals(1, storedReceivedPushes.size)
+        val storedAsPayload = NotificationPayload(HashMap(storedReceivedPushes[0] as Map<String, String>))
+        assertEquals(expectedNotificationData, storedAsPayload.attributes)
+        assertEquals(0, pushNotificationRepository.popDeliveredPushData().size)
+        val storedClickedPushes = pushNotificationRepository.popClickedPushData()
+        assertEquals(1, storedClickedPushes.size)
+        val storedClickAsPayload = NotificationPayload(HashMap(storedClickedPushes[0].extraData))
+        assertEquals(expectedNotificationData, storedClickAsPayload.attributes)
+        assertEquals(0, pushNotificationRepository.popClickedPushData().size)
     }
 
     @Test
@@ -175,10 +214,11 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 1) {
             trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
+        mockkConstructorFix(Date::class)
+        every { anyConstructed<Date>().time } returns (currentTimestamp * 1000).toLong()
         ExponeaPushTrackingActivity().processPushClick(
             context,
-            intentGetter(notificationSlot.captured),
-            clickedTimestamp
+            intentGetter(notificationSlot.captured)
         )
         verify(exactly = 1) {
             Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
@@ -200,10 +240,11 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 0) {
             trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
+        mockkConstructorFix(Date::class)
+        every { anyConstructed<Date>().time } returns (currentTimestamp * 1000).toLong()
         ExponeaPushTrackingActivity().processPushClick(
             context,
-            intentGetter(notificationSlot.captured),
-            clickedTimestamp
+            intentGetter(notificationSlot.captured)
         )
         verify(exactly = 0) {
             Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
@@ -222,13 +263,45 @@ internal class FcmManagerImplTrackingTest(
         verify(exactly = 0) {
             trackingConsentManager.trackDeliveredPush(any(), capture(deliveredTimestampSlot), any(), any(), any())
         }
+        mockkConstructorFix(Date::class)
+        every { anyConstructed<Date>().time } returns (currentTimestamp * 1000).toLong()
         ExponeaPushTrackingActivity().processPushClick(
             context,
-            intentGetter(notificationSlot.captured),
-            clickedTimestamp
+            intentGetter(notificationSlot.captured)
         )
         verify(exactly = 1) {
             Exponea.trackClickedPush(any(), any(), capture(clickedTimestampSlot))
         }
+    }
+
+    @Test
+    fun `should store delivered and clicked push data when consent is not given`() {
+        val notification = NotificationTestPayloads.NOTIFICATION_WITH_DENIED_CONSENT
+        val notificationSlot = slot<Notification>()
+        every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
+
+        manager.handleRemoteMessage(notification, notificationManager, true, timestamp = deliveredTimestamp)
+        verify(exactly = 0) {
+            Exponea.trackDeliveredPush(any(), any())
+        }
+        ExponeaPushTrackingActivity().processPushClick(
+            context,
+            intentGetter(notificationSlot.captured)
+        )
+        verify(exactly = 0) {
+            Exponea.trackClickedPush(any(), any(), any())
+        }
+        val expectedNotificationData = NotificationPayload(notification).attributes
+        assertEquals(expectedNotificationData, pushNotificationRepository.getExtraData())
+        val storedReceivedPushes = pushNotificationRepository.popDeliveredPushData()
+        assertEquals(1, storedReceivedPushes.size)
+        val storedAsPayload = NotificationPayload(HashMap(storedReceivedPushes[0] as Map<String, String>))
+        assertEquals(expectedNotificationData, storedAsPayload.attributes)
+        assertEquals(0, pushNotificationRepository.popDeliveredPushData().size)
+        val storedClickedPushes = pushNotificationRepository.popClickedPushData()
+        assertEquals(1, storedClickedPushes.size)
+        val storedClickAsPayload = NotificationPayload(HashMap(storedClickedPushes[0].extraData))
+        assertEquals(expectedNotificationData, storedClickAsPayload.attributes)
+        assertEquals(0, pushNotificationRepository.popClickedPushData().size)
     }
 }

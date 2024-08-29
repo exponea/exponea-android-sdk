@@ -191,7 +191,6 @@ internal class ExponeaComponent(
         exponeaConfiguration,
         eventManager,
         pushTokenRepository,
-        pushNotificationRepository,
         trackingConsentManager
     )
 
@@ -281,6 +280,7 @@ internal class ExponeaComponent(
         inAppContentBlockManager.clearAll()
         sessionManager.reset()
         segmentsManager.clearAll()
+        pushNotificationRepository.clearAll()
 
         exponeaConfiguration.baseURL = exponeaProject.baseUrl
         exponeaConfiguration.projectToken = exponeaProject.projectToken

@@ -80,7 +80,7 @@ internal class InAppMessagePresenterTest(
         File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
         val bitmapCache = InAppMessageBitmapCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        inAppMessage = InAppMessageTest.getInAppMessage(
+        inAppMessage = InAppMessageTest.buildInAppMessage(
             environment = server,
             type = inAppMessageType
         )

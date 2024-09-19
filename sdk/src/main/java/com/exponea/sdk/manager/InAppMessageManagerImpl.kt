@@ -152,7 +152,11 @@ internal class InAppMessageManagerImpl(
         isLoading = false
     }
 
-    internal fun detectReloadMode(eventType: EventType, timestamp: Double): ReloadMode {
+    internal fun detectReloadMode(
+        eventType: EventType,
+        timestamp: Double,
+        properties: Map<String, Any>
+    ): ReloadMode {
         if (!ExponeaContextProvider.applicationIsForeground) {
             Logger.d(
                 this,
@@ -174,6 +178,10 @@ internal class InAppMessageManagerImpl(
             Logger.d(this, "[InApp] Forcing messages fetch for type $eventType")
             return ReloadMode.FETCH_AND_SHOW
         }
+        if (isInAppShowEvent(eventType, properties)) {
+            Logger.d(this, "[InApp] Skipping messages process for In-app show event")
+            return ReloadMode.STOP
+        }
         if (isLoading) {
             Logger.d(
                 this,
@@ -194,6 +202,10 @@ internal class InAppMessageManagerImpl(
             "[InApp] Skipping messages fetch for type $eventType because cache is valid"
         )
         return ReloadMode.SHOW
+    }
+
+    private fun isInAppShowEvent(eventType: EventType, properties: Map<String, Any>): Boolean {
+        return eventType == EventType.BANNER && properties["action"] == "show"
     }
 
     override fun sessionStarted(sessionStartDate: Date) {
@@ -496,7 +508,7 @@ internal class InAppMessageManagerImpl(
             }
             Logger.v(this, "[InApp] Detecting reload mode for $type")
             synchronized(this) {
-                when (detectReloadMode(type, eventTimestampInMillis)) {
+                when (detectReloadMode(type, eventTimestampInMillis, properties)) {
                     ReloadMode.FETCH_AND_SHOW -> {
                         reload(customerIds, callback = { result ->
                             if (result.isFailure) {

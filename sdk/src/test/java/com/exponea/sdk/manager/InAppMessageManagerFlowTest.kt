@@ -28,6 +28,7 @@ import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.backgroundThreadDispatcher
 import com.exponea.sdk.util.mainThreadDispatcher
@@ -163,10 +164,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.IMMEDIATE
         Exponea.loggerLevel = Logger.Level.VERBOSE
         // allow process
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -217,10 +222,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -247,13 +256,17 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         prepareMessagesMocks(arrayListOf())
         initSdk()
 
         // login customerA, message pendingMessageA has to be loaded
-        val pendingMessageA = InAppMessageTest.getInAppMessage(
+        val pendingMessageA = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -263,7 +276,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         prepareMessagesMocks(arrayListOf(pendingMessageA))
         identifyCustomerForTest(hashMapOf("registered" to "customerA"))
         // login customerB, message pendingMessageB has to be loaded
-        val pendingMessageB = InAppMessageTest.getInAppMessage(
+        val pendingMessageB = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -287,10 +300,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -315,10 +332,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         Exponea.loggerLevel = Logger.Level.VERBOSE
         ExponeaContextProvider.applicationIsForeground = true
         // allow process
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } answers { callOriginal() }
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -358,6 +379,47 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         assertTrue(identifyCustomerProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
         verify(exactly = 0) {
             anyConstructed<InAppMessageManagerImpl>().show(pendingMessage)
+        }
+    }
+
+    @Test
+    fun `should not show message after control group message show was tracked`() = runInSingleThread { awaitThreads ->
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.loggerLevel = Logger.Level.VERBOSE
+        ExponeaContextProvider.applicationIsForeground = true
+        // allow process
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } answers {
+            callOriginal()
+        }
+        every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
+        val controlGroupMessage = InAppMessageTest.getInAppMessage(
+            trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
+            id = "12345",
+            variantId = -1,
+            variantName = "Control Group",
+            payloadHtml = null,
+            payload = null
+        )
+        prepareMessagesMocks(arrayListOf(controlGroupMessage))
+        initSdk()
+        // invoke test scenario
+        Exponea.trackSessionStart()
+        awaitThreads()
+        verify {
+            // session_start event handling
+            anyConstructed<InAppMessageManagerImpl>().onEventCreated(any(), EventType.SESSION_START)
+            anyConstructed<InAppMessageManagerImpl>().registerPendingShowRequest(any(), any(), any(), any())
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(EventType.SESSION_START, any(), any())
+            anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage()
+            anyConstructed<InAppMessageManagerImpl>().preloadAndShow(any(), any())
+            anyConstructed<InAppMessageManagerImpl>().show(controlGroupMessage)
+            // banner+show event handling
+            anyConstructed<InAppMessageManagerImpl>().onEventCreated(any(), EventType.BANNER)
+            anyConstructed<InAppMessageManagerImpl>().registerPendingShowRequest(any(), any(), any(), any())
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(EventType.BANNER, any(), any())
+            // and stops
         }
     }
 

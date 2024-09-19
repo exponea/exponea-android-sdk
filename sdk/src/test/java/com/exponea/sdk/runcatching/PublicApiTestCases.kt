@@ -159,24 +159,24 @@ internal object PublicApiTestCases {
         Pair(
             Exponea::trackInAppMessageClick
         ) { Exponea.trackInAppMessageClick(
-            InAppMessageTest.getInAppMessage(),
+            InAppMessageTest.buildInAppMessage(),
             "mock-button-text",
             "mock-button-link") },
         Pair(
             Exponea::trackInAppMessageClickWithoutTrackingConsent
         ) { Exponea.trackInAppMessageClickWithoutTrackingConsent(
-            InAppMessageTest.getInAppMessage(),
+            InAppMessageTest.buildInAppMessage(),
             "mock-button-text",
             "mock-button-link") },
         Pair(
             Exponea::trackInAppMessageClose
-        ) { Exponea.trackInAppMessageClose(InAppMessageTest.getInAppMessage())
+        ) { Exponea.trackInAppMessageClose(InAppMessageTest.buildInAppMessage())
         },
         Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
-            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessage())
         },
         Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
-            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.getInAppMessage())
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessage())
         },
         Pair(Exponea::getAppInboxButton) {
             Exponea.getAppInboxButton(ApplicationProvider.getApplicationContext())

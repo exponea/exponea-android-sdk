@@ -62,7 +62,7 @@ internal class InAppMessageTest {
         }
         """
 
-        fun getInAppMessage(
+        fun buildInAppMessage(
             id: String? = null,
             dateFilter: DateFilter? = null,
             trigger: EventFilter? = null,
@@ -182,6 +182,6 @@ internal class InAppMessageTest {
 
     @Test
     fun `should parse in-app message from json`() {
-        assertEquals(getInAppMessage(timeout = 1000, delay = 2000), Gson().fromJson(json, InAppMessage::class.java))
+        assertEquals(buildInAppMessage(timeout = 1000, delay = 2000), Gson().fromJson(json, InAppMessage::class.java))
     }
 }

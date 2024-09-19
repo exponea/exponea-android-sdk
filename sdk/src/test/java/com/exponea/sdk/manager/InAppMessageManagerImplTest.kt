@@ -174,7 +174,7 @@ internal class InAppMessageManagerImplTest {
     fun `should preload messages`() {
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
-                Result(true, arrayListOf(InAppMessageTest.getInAppMessage()))
+                Result(true, arrayListOf(InAppMessageTest.buildInAppMessage()))
             )
         }
         every { drawableCache.preload(any(), any()) } answers {
@@ -184,7 +184,7 @@ internal class InAppMessageManagerImplTest {
         waitForIt {
             manager.reload { result ->
                 it.assertTrue(result.isSuccess)
-                verify(exactly = 1) { messagesCache.set(arrayListOf(InAppMessageTest.getInAppMessage())) }
+                verify(exactly = 1) { messagesCache.set(arrayListOf(InAppMessageTest.buildInAppMessage())) }
                 it()
             }
         }
@@ -387,12 +387,12 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get message if both message and bitmap available`() {
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(),
-            InAppMessageTest.getInAppMessage()
+            InAppMessageTest.buildInAppMessage(),
+            InAppMessageTest.buildInAppMessage()
         )
         every { drawableCache.has(any()) } returns true
         assertEquals(
-            InAppMessageTest.getInAppMessage(),
+            InAppMessageTest.buildInAppMessage(),
             manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull()
         )
     }
@@ -400,11 +400,11 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should get message if bitmap is blank`() {
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(imageUrl = ""),
-            InAppMessageTest.getInAppMessage()
+            InAppMessageTest.buildInAppMessage(imageUrl = ""),
+            InAppMessageTest.buildInAppMessage()
         )
         assertEquals(
-            InAppMessageTest.getInAppMessage(imageUrl = ""),
+            InAppMessageTest.buildInAppMessage(imageUrl = ""),
             manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull()
         )
     }
@@ -413,7 +413,9 @@ internal class InAppMessageManagerImplTest {
     fun `should apply date filter`() {
         every { drawableCache.has(any()) } returns true
         val setupStoredEvent = { dateFilter: DateFilter ->
-            every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(dateFilter = dateFilter))
+            every {
+                messagesCache.get()
+            } returns arrayListOf(InAppMessageTest.buildInAppMessage(dateFilter = dateFilter))
         }
 
         val currentTime = (System.currentTimeMillis() / 1000).toInt()
@@ -447,7 +449,7 @@ internal class InAppMessageManagerImplTest {
     fun `should apply event filter`() {
         every { drawableCache.has(any()) } returns true
         val setupStoredEvent = { trigger: EventFilter ->
-            every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage(trigger = trigger))
+            every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage(trigger = trigger))
         }
 
         setupStoredEvent(EventFilter(eventType = "", filter = arrayListOf()))
@@ -476,40 +478,40 @@ internal class InAppMessageManagerImplTest {
     fun `should filter by priority`() {
         every { drawableCache.has(any()) } returns true
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(id = "1"),
-            InAppMessageTest.getInAppMessage(id = "2"),
-            InAppMessageTest.getInAppMessage(id = "3")
+            InAppMessageTest.buildInAppMessage(id = "1"),
+            InAppMessageTest.buildInAppMessage(id = "2"),
+            InAppMessageTest.buildInAppMessage(id = "3")
         )
         assertEquals(
             manager.findMessagesByFilter("session_start", hashMapOf(), null),
             arrayListOf(
-                InAppMessageTest.getInAppMessage(id = "1"),
-                InAppMessageTest.getInAppMessage(id = "2"),
-                InAppMessageTest.getInAppMessage(id = "3")
+                InAppMessageTest.buildInAppMessage(id = "1"),
+                InAppMessageTest.buildInAppMessage(id = "2"),
+                InAppMessageTest.buildInAppMessage(id = "3")
             )
         )
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(id = "1", priority = 0),
-            InAppMessageTest.getInAppMessage(id = "2"),
-            InAppMessageTest.getInAppMessage(id = "3", priority = -1)
+            InAppMessageTest.buildInAppMessage(id = "1", priority = 0),
+            InAppMessageTest.buildInAppMessage(id = "2"),
+            InAppMessageTest.buildInAppMessage(id = "3", priority = -1)
         )
         assertEquals(
             arrayListOf(
-                InAppMessageTest.getInAppMessage(id = "1", priority = 0),
-                InAppMessageTest.getInAppMessage(id = "2")
+                InAppMessageTest.buildInAppMessage(id = "1", priority = 0),
+                InAppMessageTest.buildInAppMessage(id = "2")
             ),
             manager.findMessagesByFilter("session_start", hashMapOf(), null)
         )
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(id = "1", priority = 2),
-            InAppMessageTest.getInAppMessage(id = "2", priority = 2),
-            InAppMessageTest.getInAppMessage(id = "3", priority = 1)
+            InAppMessageTest.buildInAppMessage(id = "1", priority = 2),
+            InAppMessageTest.buildInAppMessage(id = "2", priority = 2),
+            InAppMessageTest.buildInAppMessage(id = "3", priority = 1)
         )
         assertEquals(
             manager.findMessagesByFilter("session_start", hashMapOf(), null),
             arrayListOf(
-                InAppMessageTest.getInAppMessage(id = "1", priority = 2),
-                InAppMessageTest.getInAppMessage(id = "2", priority = 2)
+                InAppMessageTest.buildInAppMessage(id = "1", priority = 2),
+                InAppMessageTest.buildInAppMessage(id = "2", priority = 2)
             )
         )
     }
@@ -517,7 +519,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should apply 'always' frequency filter`() {
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ALWAYS.value)
+            InAppMessageTest.buildInAppMessage(frequency = InAppMessageFrequency.ALWAYS.value)
         )
         every { drawableCache.has(any()) } returns true
 
@@ -528,7 +530,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should apply 'only_once' frequency filter`() {
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
+            InAppMessageTest.buildInAppMessage(frequency = InAppMessageFrequency.ONLY_ONCE.value)
         )
         every { drawableCache.has(any()) } returns true
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -539,7 +541,7 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should apply 'until_visitor_interacts' frequency filter`() {
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
+            InAppMessageTest.buildInAppMessage(frequency = InAppMessageFrequency.UNTIL_VISITOR_INTERACTS.value)
         )
         every { drawableCache.has(any()) } returns true
         assertNotNull(manager.findMessagesByFilter("session_start", hashMapOf(), null).firstOrNull())
@@ -555,7 +557,7 @@ internal class InAppMessageManagerImplTest {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
         every { messagesCache.get() } returns arrayListOf(
-            InAppMessageTest.getInAppMessage(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
+            InAppMessageTest.buildInAppMessage(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
         )
         every { drawableCache.has(any()) } returns true
         manager.sessionStarted(Date(1000))
@@ -569,7 +571,7 @@ internal class InAppMessageManagerImplTest {
     fun `should set message displayed and interacted`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage())
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -599,14 +601,14 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) }
-        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.getInAppMessage().payload!!.buttons!![0])
+        actionCallbackSlot.captured.invoke(mockActivity, InAppMessageTest.buildInAppMessage().payload!!.buttons!![0])
         verify(exactly = 1) { inAppMessageDisplayStateRepository.setInteracted(any(), any()) }
         resetThreadsBehaviour()
     }
 
     @Test
     fun `should track dialog lifecycle`() {
-        val inAppMessage = InAppMessageTest.getInAppMessage()
+        val inAppMessage = InAppMessageTest.buildInAppMessage()
         every { messagesCache.get() } returns arrayListOf(inAppMessage)
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
@@ -673,7 +675,7 @@ internal class InAppMessageManagerImplTest {
     fun `should open deeplink once button is clicked`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage())
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -697,7 +699,7 @@ internal class InAppMessageManagerImplTest {
         }
         Robolectric.flushForegroundThreadScheduler()
 
-        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        val button = InAppMessageTest.buildInAppMessage().payload!!.buttons!![0]
         assertNull(shadowOf(mockActivity).nextStartedActivityForResult)
         assertTrue(actionCallbackSlot.isCaptured)
         actionCallbackSlot.captured.invoke(mockActivity, button)
@@ -722,7 +724,7 @@ internal class InAppMessageManagerImplTest {
             ApplicationProvider.getApplicationContext(),
             eventManager
         )
-        delegate.track(InAppMessageTest.getInAppMessage(), "mock-action", false, true)
+        delegate.track(InAppMessageTest.buildInAppMessage(), "mock-action", false, true)
         assertEquals(Constants.EventTypes.banner, eventTypeSlot.captured)
         assertEquals(EventType.BANNER, typeSlot.captured)
         assertEquals("5dd86f44511946ea55132f29", propertiesSlot.captured["banner_id"])
@@ -741,15 +743,15 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        val otherMessage1 = InAppMessageTest.getInAppMessage(
+        val otherMessage1 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_1"
         )
-        val otherMessage2 = InAppMessageTest.getInAppMessage(
+        val otherMessage2 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_2"
         )
@@ -792,7 +794,7 @@ internal class InAppMessageManagerImplTest {
     fun `should delay in-app message presenting`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        val message = InAppMessageTest.getInAppMessage(delay = 1234)
+        val message = InAppMessageTest.buildInAppMessage(delay = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
@@ -826,7 +828,7 @@ internal class InAppMessageManagerImplTest {
     fun `should pass timeout to in-app message presenter`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        val message = InAppMessageTest.getInAppMessage(timeout = 1234)
+        val message = InAppMessageTest.buildInAppMessage(timeout = 1234)
         every { messagesCache.get() } returns arrayListOf(message)
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
@@ -917,7 +919,7 @@ internal class InAppMessageManagerImplTest {
     fun `should track and perform all actions if its enabled in callback`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage())
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -964,13 +966,13 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.buildInAppMessage(), CONSIDER_CONSENT)
         }
-        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        val button = InAppMessageTest.buildInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClick(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 "Action",
                 "https://someaddress.com",
                 CONSIDER_CONSENT
@@ -978,7 +980,7 @@ internal class InAppMessageManagerImplTest {
         }
         verify(exactly = 1) {
             spykCallback.inAppMessageClickAction(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 InAppMessageButton(button.buttonText, button.buttonLink),
                 mockActivity
             )
@@ -989,7 +991,7 @@ internal class InAppMessageManagerImplTest {
         dismissedCallbackSlot.captured.invoke(mockActivity, false, null)
         verify(exactly = 1) {
             spykCallback.inAppMessageCloseAction(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 null,
                 false,
                 mockActivity
@@ -997,7 +999,7 @@ internal class InAppMessageManagerImplTest {
         }
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClose(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 null,
                 false,
                 CONSIDER_CONSENT
@@ -1012,7 +1014,7 @@ internal class InAppMessageManagerImplTest {
     fun `should not track and perform any actions if its disabled in callback`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage())
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -1059,16 +1061,16 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.buildInAppMessage(), CONSIDER_CONSENT)
         }
-        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        val button = InAppMessageTest.buildInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 0) {
             trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any())
         }
         verify(exactly = 1) {
             spykCallback.inAppMessageClickAction(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 InAppMessageButton(button.buttonText, button.buttonLink),
                 mockActivity
             )
@@ -1079,7 +1081,7 @@ internal class InAppMessageManagerImplTest {
         dismissedCallbackSlot.captured.invoke(mockActivity, false, null)
         verify(exactly = 1) {
             spykCallback.inAppMessageCloseAction(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 null,
                 false,
                 mockActivity
@@ -1097,7 +1099,7 @@ internal class InAppMessageManagerImplTest {
     fun `should track action when track is called in callback`() {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
-        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.getInAppMessage())
+        every { messagesCache.get() } returns arrayListOf(InAppMessageTest.buildInAppMessage())
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
@@ -1148,13 +1150,13 @@ internal class InAppMessageManagerImplTest {
         Robolectric.flushForegroundThreadScheduler()
 
         verify(exactly = 1) {
-            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.getInAppMessage(), CONSIDER_CONSENT)
+            trackingConsentManager.trackInAppMessageShown(InAppMessageTest.buildInAppMessage(), CONSIDER_CONSENT)
         }
-        val button = InAppMessageTest.getInAppMessage().payload!!.buttons!![0]
+        val button = InAppMessageTest.buildInAppMessage().payload!!.buttons!![0]
         actionCallbackSlot.captured.invoke(mockActivity, button)
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageClick(
-                InAppMessageTest.getInAppMessage(),
+                InAppMessageTest.buildInAppMessage(),
                 "Action",
                 "https://someaddress.com",
                 CONSIDER_CONSENT
@@ -1266,15 +1268,15 @@ internal class InAppMessageManagerImplTest {
         setAllThreadsRunOnMain()
         val customerIds = customerIdsRepository.get().toHashMap()
         val activeEventType = Constants.EventTypes.sessionStart
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        val otherMessage1 = InAppMessageTest.getInAppMessage(
+        val otherMessage1 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_1"
         )
-        val otherMessage2 = InAppMessageTest.getInAppMessage(
+        val otherMessage2 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_2"
         )
@@ -1340,7 +1342,7 @@ internal class InAppMessageManagerImplTest {
     fun `should register pending request by latest event timestamp`() {
         val customerIds = customerIdsRepository.get().toHashMap()
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
@@ -1374,7 +1376,7 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick no message if another is shown`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
@@ -1398,7 +1400,7 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick no message if customer IDs not matched`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
@@ -1426,7 +1428,7 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick no message if filter not matched`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage = InAppMessageTest.getInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter("not_active_event_type", arrayListOf()),
             imageUrl = "pending_image_url"
         )
@@ -1450,13 +1452,13 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick message with top priority`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessageTopPrio = InAppMessageTest.getInAppMessage(
+        val pendingMessageTopPrio = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = 100,
             id = "12345"
         )
-        val pendingMessageSecond = InAppMessageTest.getInAppMessage(
+        val pendingMessageSecond = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = 10,
@@ -1483,13 +1485,13 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick random message with same priority`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage1 = InAppMessageTest.getInAppMessage(
+        val pendingMessage1 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = 100,
             id = "12345"
         )
-        val pendingMessage2 = InAppMessageTest.getInAppMessage(
+        val pendingMessage2 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = 100,
@@ -1515,13 +1517,13 @@ internal class InAppMessageManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should pick random message with null priority`() {
         val activeEventType = Constants.EventTypes.sessionEnd
-        val pendingMessage1 = InAppMessageTest.getInAppMessage(
+        val pendingMessage1 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
             id = "12345"
         )
-        val pendingMessage2 = InAppMessageTest.getInAppMessage(
+        val pendingMessage2 = InAppMessageTest.buildInAppMessage(
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -1554,7 +1556,7 @@ internal class InAppMessageManagerImplTest {
             )
         } just Runs
         Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
-        val inAppMessage = InAppMessageTest.getInAppMessage()
+        val inAppMessage = InAppMessageTest.buildInAppMessage()
         every { messagesCache.get() } returns arrayListOf(inAppMessage)
         every { drawableCache.has(any()) } returns true
         every { drawableCache.getFile(any()) } returns MockFile()

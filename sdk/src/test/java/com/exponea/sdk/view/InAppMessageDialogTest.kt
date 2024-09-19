@@ -21,7 +21,7 @@ import org.robolectric.RobolectricTestRunner
 internal class InAppMessageDialogTest {
     @Test
     fun `should setup dialog`() {
-        val payload = InAppMessageTest.getInAppMessage().payload
+        val payload = InAppMessageTest.buildInAppMessage().payload
         val imageCache = mockk<DrawableCache>()
         every { imageCache.showImage(any(), any(), any()) } just Runs
         every { imageCache.has(any()) } returns true

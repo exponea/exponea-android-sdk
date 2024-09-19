@@ -35,20 +35,20 @@ internal class InAppMessagesCacheImplTest {
     @Test
     fun `should store messages`() {
         cache.set(
-            arrayListOf(InAppMessageTest.getInAppMessage("id1"), InAppMessageTest.getInAppMessage("id2"))
+            arrayListOf(InAppMessageTest.buildInAppMessage("id1"), InAppMessageTest.buildInAppMessage("id2"))
         )
         assertEquals(
-            arrayListOf(InAppMessageTest.getInAppMessage("id1"), InAppMessageTest.getInAppMessage("id2")),
+            arrayListOf(InAppMessageTest.buildInAppMessage("id1"), InAppMessageTest.buildInAppMessage("id2")),
             cache.get()
         )
     }
 
     @Test
     fun `should overwrite old stored messages`() {
-        cache.set(arrayListOf(InAppMessageTest.getInAppMessage("id1")))
-        assertEquals(arrayListOf(InAppMessageTest.getInAppMessage("id1")), cache.get())
-        cache.set(arrayListOf(InAppMessageTest.getInAppMessage("id2")))
-        assertEquals(arrayListOf(InAppMessageTest.getInAppMessage("id2")), cache.get())
+        cache.set(arrayListOf(InAppMessageTest.buildInAppMessage("id1")))
+        assertEquals(arrayListOf(InAppMessageTest.buildInAppMessage("id1")), cache.get())
+        cache.set(arrayListOf(InAppMessageTest.buildInAppMessage("id2")))
+        assertEquals(arrayListOf(InAppMessageTest.buildInAppMessage("id2")), cache.get())
     }
 
     @Test

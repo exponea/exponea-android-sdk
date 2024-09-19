@@ -44,7 +44,9 @@ internal open class ExponeaSDKTest {
     @Before
     fun disableInAppMessagePrefetch() {
         mockkConstructorFix(InAppMessageManagerImpl::class)
-        every { anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any()) } returns ReloadMode.STOP
+        every {
+            anyConstructed<InAppMessageManagerImpl>().detectReloadMode(any(), any(), any())
+        } returns ReloadMode.STOP
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } just Runs
     }
 

@@ -115,8 +115,8 @@ internal class ContentBlockCarouselViewController(
                 val filteredContentBlocks = contentBlockSelector.filterContentBlocks(validContentBlocks)
                 val sortedContentBlocks = contentBlockSelector.sortContentBlocks(filteredContentBlocks)
                 val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
-                contentBlockCarouselAdapter.updateData(limitedContentBlocks)
                 runOnMainThread {
+                    contentBlockCarouselAdapter.updateData(limitedContentBlocks)
                     carouselView.prepareOffscreenPages(limitedContentBlocks.size + 2)
                     moveToIndex(0, false)
                     updateAutoHeight(true)

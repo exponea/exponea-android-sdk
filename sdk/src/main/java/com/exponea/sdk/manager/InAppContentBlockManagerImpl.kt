@@ -25,12 +25,10 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
 import com.exponea.sdk.util.currentTimeSeconds
+import com.exponea.sdk.util.deepCopy
 import com.exponea.sdk.util.ensureOnBackgroundThread
-import com.exponea.sdk.util.fromJson
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.Date
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit.SECONDS
 
 internal class InAppContentBlockManagerImpl(
     private val displayStateRepository: InAppContentBlockDisplayStateRepository,
@@ -49,7 +47,6 @@ internal class InAppContentBlockManagerImpl(
     }
 
     private val SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD = SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW + NOT_DEFINED
-    private val CONTENT_LOAD_TIMEOUT: Long = 10
 
     private var sessionStartDate = Date()
     internal var contentBlocksData: List<InAppContentBlock> = emptyList()
@@ -124,19 +121,15 @@ internal class InAppContentBlockManagerImpl(
 
     private fun runThreadSafelyInBackground(action: () -> Unit) {
         ensureOnBackgroundThread {
-            runThreadSafely(action)
+            dataAccess.waitForAccess(action)
         }
-    }
-
-    private fun runThreadSafely(action: () -> Unit) {
-        dataAccess.waitForAccess(action)
     }
 
     private fun <T> runThreadSafelyWithResult(action: () -> T): T? {
         return dataAccess.waitForAccessWithResult(action).getOrNull()
     }
 
-    private fun clearPersonalizationAssignments() = runThreadSafely {
+    private fun clearPersonalizationAssignments() = runThreadSafelyInBackground {
         contentBlocksData.forEach {
             it.personalizedData = null
         }
@@ -144,13 +137,16 @@ internal class InAppContentBlockManagerImpl(
         Logger.d(this, "InAppCB: All Content Blocks was cleared from personalized data")
     }
 
-    private fun reassignCustomerIds() = runThreadSafely {
-        contentBlocksData.forEach {
-            it.customerIds = customerIdsRepository.get().toHashMap()
+    private fun reassignCustomerIds() {
+        val currentCustomerIds = customerIdsRepository.get().toHashMap()
+        runThreadSafelyInBackground {
+            contentBlocksData.forEach {
+                it.customerIds = currentCustomerIds
+            }
         }
     }
 
-    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) = runThreadSafely {
+    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) {
         val dataMap = source.groupBy { it.id }
         Logger.d(this, "InAppCB: Request to update personalized content of ${dataMap.keys.joinToString()}")
         contentBlocksData.forEach { localContentBlock ->
@@ -163,39 +159,37 @@ internal class InAppContentBlockManagerImpl(
     /**
      * Loads missing or obsolete content for block.
      */
-    override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) = runThreadSafely {
-        val blockIds = contentBlocks
-            .filter { !it.hasFreshContent() }
-            .map { it.id }
-        if (blockIds.isEmpty()) {
-            Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
-            return@runThreadSafely
-        }
-        Logger.i(this, "InAppCB: Loading content for blocks: ${blockIds.joinToString()}")
-        val semaphore = CountDownLatch(1)
-        prefetchContentForBlocks(
-            blockIds,
-            onSuccess = { contentData ->
-                val dataMap = contentData.groupBy { it.blockId }
-                // update personalized data for requested 'contentBlocks'
-                contentBlocks.forEach { contentBlock ->
-                    dataMap[contentBlock.id]?.firstOrNull()?.let {
-                        contentBlock.personalizedData = it
-                    }
-                }
-                // update personalized data for local 'contentBlocksData'
-                updateContentForLocalContentBlocks(contentBlocks)
-                semaphore.countDown()
-            },
-            onFailure = {
-                // dont do anything, showing will fail
-                semaphore.countDown()
+    override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) {
+        dataAccess.waitForAccessWithDone { done ->
+            val blockIdsToCheck = contentBlocks.map { it.id }
+            val blockIdsToUpdate = contentBlocksData
+                .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
+                .map { it.id }
+            if (blockIdsToUpdate.isEmpty()) {
+                Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
+                done()
+                return@waitForAccessWithDone
             }
-        )
-        if (semaphore.await(CONTENT_LOAD_TIMEOUT, SECONDS)) {
-            Logger.i(this, "InAppCB: Loading content for blocks was done")
-        } else {
-            Logger.w(this, "InAppCB: Loading content for InApp Content Blocks has timeouted")
+            Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToUpdate.joinToString()}")
+            prefetchContentForBlocks(
+                blockIdsToUpdate,
+                onSuccess = { contentData ->
+                    val dataMap = contentData.groupBy { it.blockId }
+                    // update personalized data for requested 'contentBlocks'
+                    contentBlocks.forEach { contentBlock ->
+                        dataMap[contentBlock.id]?.firstOrNull()?.let {
+                            contentBlock.personalizedData = it
+                        }
+                    }
+                    // update personalized data for local 'contentBlocksData'
+                    updateContentForLocalContentBlocks(contentBlocks)
+                    done()
+                },
+                onFailure = {
+                    // dont do anything, showing will fail
+                    done()
+                }
+            )
         }
     }
 
@@ -248,7 +242,7 @@ internal class InAppContentBlockManagerImpl(
             ${ExponeaGson.instance.toJson(sortedContentBlocks)}
             """.trimIndent())
         // create unmutable copy due to updating of content blocks data while other loadings
-        return deepCopy(sortedContentBlocks.firstOrNull())
+        return sortedContentBlocks.firstOrNull()?.deepCopy()
     }
 
     private fun isStatusValid(contentBlock: InAppContentBlock): Boolean {
@@ -278,19 +272,6 @@ internal class InAppContentBlockManagerImpl(
         return false
     }
 
-    internal fun deepCopy(source: InAppContentBlock?): InAppContentBlock? {
-        if (source == null) {
-            return null
-        }
-        val sourceJson = ExponeaGson.instance.toJson(source)
-        val target: InAppContentBlock = ExponeaGson.instance.fromJson(sourceJson)
-        source.personalizedData?.let { sourcePersonData ->
-            // if source has data, target must too
-            target.personalizedData!!.loadedAt = Date(sourcePersonData.loadedAt!!.time)
-        }
-        return target
-    }
-
     override fun passesFilters(contentBlock: InAppContentBlock): Boolean {
         Logger.i(this, "InAppCB: Validating filters for Content Block ${contentBlock.id}")
         return passesDateFilter(contentBlock) && passesFrequencyFilter(contentBlock)
@@ -317,6 +298,7 @@ internal class InAppContentBlockManagerImpl(
         val contentBlocksForPlaceholder = contentBlocksData.filter { block ->
             block.placeholders.contains(placeholderId)
         }
+        // ^ DEEPCOPY
         Logger.i(this,
             """InAppCB: ${contentBlocksForPlaceholder.size} blocks found for placeholder $placeholderId
             """.trimIndent()
@@ -346,11 +328,11 @@ internal class InAppContentBlockManagerImpl(
                         supportedContentBlocks.forEach {
                             it.customerIds = customerIds.toHashMap()
                         }
+                        contentBlocksData = supportedContentBlocks
                         forceContentByPlaceholders(
                             supportedContentBlocks,
                             exponeaProject.inAppContentBlockPlaceholdersAutoLoad
                         )
-                        contentBlocksData = supportedContentBlocks
                         Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
                         done()
                     },

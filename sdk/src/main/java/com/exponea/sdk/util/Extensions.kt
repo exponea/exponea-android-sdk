@@ -20,6 +20,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.PushNotificationDelegate
 import com.exponea.sdk.models.PushOpenedData
 import com.exponea.sdk.services.MessagingUtils
@@ -521,4 +522,14 @@ internal fun PushNotificationDelegate.handleClickedPushUpdate(data: PushOpenedDa
             data.extraData
         )
     }
+}
+
+internal fun InAppContentBlock.deepCopy(): InAppContentBlock {
+    val sourceJson = ExponeaGson.instance.toJson(this)
+    val target: InAppContentBlock = ExponeaGson.instance.fromJson(sourceJson)
+    this.personalizedData?.let { sourcePersonData ->
+        // if source has data, target must too
+        target.personalizedData!!.loadedAt = Date(sourcePersonData.loadedAt!!.time)
+    }
+    return target
 }

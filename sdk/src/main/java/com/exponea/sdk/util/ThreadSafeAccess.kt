@@ -2,7 +2,6 @@ package com.exponea.sdk.util
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
-import kotlinx.coroutines.runBlocking
 
 internal class ThreadSafeAccess {
 
@@ -10,7 +9,7 @@ internal class ThreadSafeAccess {
         private const val LOCK = "GATE"
     }
 
-    fun waitForAccess(action: () -> Unit) = runBlocking {
+    fun waitForAccess(action: () -> Unit) {
         runCatching {
             synchronized(LOCK) {
                 executeSafely(action)
@@ -18,15 +17,15 @@ internal class ThreadSafeAccess {
         }.logOnException()
     }
 
-    fun <T> waitForAccessWithResult(action: () -> T) = runBlocking {
-        return@runBlocking runCatching {
+    fun <T> waitForAccessWithResult(action: () -> T): Result<T> {
+        return runCatching {
             synchronized(LOCK) {
-                return@runBlocking executeSafelyWithResult(action)
+                return executeSafelyWithResult(action)
             }
         }.logOnExceptionWithResult()
     }
 
-    fun waitForAccessWithDone(action: (done: () -> Unit) -> Unit) = runBlocking {
+    fun waitForAccessWithDone(action: (done: () -> Unit) -> Unit) {
         runCatching {
             synchronized(LOCK) {
                 val timeout = CountDownLatch(1)

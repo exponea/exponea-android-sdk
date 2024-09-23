@@ -1,15 +1,19 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.Event
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.AppInboxCache
@@ -17,29 +21,30 @@ import com.exponea.sdk.repository.AppInboxCacheImpl
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.waitForIt
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
 import com.google.gson.Gson
 import io.mockk.CapturingSlot
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkClass
 import io.mockk.slot
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
@@ -244,12 +249,22 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     @Before
     fun before() {
         fetchManager = mockk()
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf()))
+        }
         drawableCache = mockk()
-        customerIdsRepository = mockk()
-        every { drawableCache.has(any()) } returns false
-        every { drawableCache.preload(any(), any()) } just Runs
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.preload(any(), any()) } answers {
+            arg<(Boolean) -> Unit>(1).invoke(true)
+        }
         every { drawableCache.clearExcept(any()) } just Runs
-        identifyCustomer()
+        every { drawableCache.showImage(any(), any(), any()) } just Runs
+        every { drawableCache.getFile(any()) } returns MockFile()
+        customerIdsRepository = mockk()
+        every { customerIdsRepository.get() } returns CustomerIds().apply {
+            this.cookie = null
+            this.externalIds = hashMapOf()
+        }
         apiService = ExponeaMockService(true)
         appInboxCache = AppInboxCacheImpl(
             ApplicationProvider.getApplicationContext(), Gson()
@@ -258,6 +273,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
+        skipInstallEvent()
         Exponea.init(context, ExponeaConfiguration(
             baseURL = initialProject.baseUrl,
             projectToken = initialProject.projectToken,
@@ -272,21 +288,9 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         )
     }
 
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
-    @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
-    }
-
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should load only supported messages`() {
+    fun `should load only supported messages`() = runInSingleThread {
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push"),
@@ -294,17 +298,17 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 buildMessage("id3", type = "whatSoEver")
             )))
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.fetchAppInbox { data ->
                 assertEquals(2, data?.size)
-                it()
+                done()
             }
         }
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse PUSH message`() {
+    fun `should parse PUSH message`() = runInSingleThread {
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push", data = mapOf(
@@ -317,7 +321,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 ))
             )))
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.fetchAppInbox { data ->
                 assertEquals(1, data?.size)
                 val pushMessage = data?.get(0)?.content
@@ -337,7 +341,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 assertNotNull(deeplinkAction)
                 assertEquals("mail:something", deeplinkAction.url)
                 assertEquals("Deeplink", deeplinkAction.title)
-                it()
+                done()
             }
         }
     }
@@ -354,7 +358,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse HTML message`() {
+    fun `should parse HTML message`() = runInSingleThread {
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "html", data = mapOf(
@@ -384,30 +388,34 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
             assertEquals("Deeplink", deeplinkAction.title)
         }
-//        waitForIt(200000) {
-//            appInboxManager.fetchAppInbox { data ->
-//                assertEquals(1, data?.size)
-//                val pushMessage = data?.get(0)?.content
-//                assertNotNull(pushMessage)
-//                assertEquals("Title", pushMessage.title)
-//                assertEquals("Message", pushMessage.message)
-//                assertEquals(2, pushMessage.actions.size)
-//                val webAction = pushMessage.actions.find { act -> act.type.value == Actions.BROWSER.value }
-//                assertNotNull(webAction)
-//                assertEquals("https://exponea.com", webAction.url)
-//                assertEquals("Web", webAction.title)
-//                val deeplinkAction = pushMessage.actions.find { act -> act.type.value == Actions.DEEPLINK.value }
-//                assertNotNull(deeplinkAction)
-//                assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
-//                assertEquals("Deeplink", deeplinkAction.title)
-//                it()
-//            }
-//        }
+        waitForIt { done ->
+            appInboxManager.fetchAppInbox { data ->
+                assertEquals(1, data?.size)
+                val pushMessage = data?.get(0)?.content
+                assertNotNull(pushMessage)
+                assertEquals("Title", pushMessage.title)
+                assertEquals("Message", pushMessage.message)
+                assertEquals(2, pushMessage.actions.size)
+                val webAction = pushMessage.actions.find { act ->
+                    act.type.value == MessageItemAction.Type.BROWSER.value
+                }
+                assertNotNull(webAction)
+                assertEquals("https://exponea.com", webAction.url)
+                assertEquals("Web", webAction.title)
+                val deeplinkAction = pushMessage.actions.find { act ->
+                    act.type.value == MessageItemAction.Type.DEEPLINK.value
+                }
+                assertNotNull(deeplinkAction)
+                assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
+                assertEquals("Deeplink", deeplinkAction.title)
+                done()
+            }
+        }
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should deny markAsRead action for empty AppInbox`() {
+    fun `should deny markAsRead action for empty AppInbox`() = runInSingleThread {
         // fetchManager should not be called but keep it
         val testMessage = buildMessage("id1", type = "push")
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
@@ -423,7 +431,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                     )
                 )
         }
-        waitForIt(20000) { done ->
+        waitForIt { done ->
             appInboxManager.markMessageAsRead(testMessage) { marked ->
                 assertFalse(marked)
                 done()
@@ -433,7 +441,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should allow markAsRead action after fetched AppInbox`() {
+    fun `should allow markAsRead action after fetched AppInbox`() = runInSingleThread {
         skipInstallEvent()
         identifyCustomer(cookie = "hash-cookie")
         val testMessage = buildMessage("id1", type = "push")
@@ -455,16 +463,16 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             arg<(Result<FetchError>) -> Unit>(5)
                 .invoke(Result(false, FetchError(null, "Should not be called")))
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.markMessageAsRead(testMessage) { marked ->
                 assertFalse(marked)
-                it.invoke()
+                done()
             }
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.fetchAppInbox { data ->
                 assertEquals(2, data?.size)
-                it()
+                done()
             }
         }
         // fetchManager should be asked for marking so valid answer is expected
@@ -472,17 +480,17 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             arg<(Result<Any?>) -> Unit>(4)
                 .invoke(Result(true, null))
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.markMessageAsRead(testMessage) { marked ->
                 assertTrue(marked)
-                it()
+                done()
             }
         }
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should call markAsRead action with same customerIds as fetched AppInbox - onlyCookie`() {
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - onlyCookie`() = runInSingleThread {
         // setup
         identifyCustomer(cookie = "hash-cookie")
         val customerIdsWhileFetch = slot<CustomerIds>()
@@ -499,61 +507,174 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should call markAsRead action with same customerIds as fetched AppInbox - singleExternal`() {
-        // setup
-        identifyCustomer(ids = hashMapOf("registered" to "email@test.com"))
-        val customerIdsWhileFetch = slot<CustomerIds>()
-        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
-        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
-        assertTrue(customerIdsWhileFetch.isCaptured)
-        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
-        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
-        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
-        assertEquals(1, customerIdsMapWhileFetch.size)
-        assertEquals(1, customerIdsMapWhileRead.size)
-        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
-    }
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - singleExternal`() =
+        runInSingleThread {
+            // setup
+            identifyCustomer(ids = hashMapOf("registered" to "email@test.com"))
+            val customerIdsWhileFetch = slot<CustomerIds>()
+            val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+            runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+            assertTrue(customerIdsWhileFetch.isCaptured)
+            assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+            val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+            val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+            assertEquals(1, customerIdsMapWhileFetch.size)
+            assertEquals(1, customerIdsMapWhileRead.size)
+            assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+        }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should call markAsRead action with same customerIds as fetched AppInbox - multipleExternal`() {
-        // setup
-        identifyCustomer(ids = hashMapOf(
-            "registered" to "email@test.com",
-            "registered2" to "email2@test.com",
-            "registered3" to "email3@test.com"
-        ))
-        val customerIdsWhileFetch = slot<CustomerIds>()
-        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
-        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
-        assertTrue(customerIdsWhileFetch.isCaptured)
-        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
-        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
-        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
-        assertEquals(3, customerIdsMapWhileFetch.size)
-        assertEquals(3, customerIdsMapWhileRead.size)
-        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
-    }
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - multipleExternal`() =
+        runInSingleThread {
+            // setup
+            identifyCustomer(
+                ids = hashMapOf(
+                    "registered" to "email@test.com",
+                    "registered2" to "email2@test.com",
+                    "registered3" to "email3@test.com"
+                )
+            )
+            val customerIdsWhileFetch = slot<CustomerIds>()
+            val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+            runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+            assertTrue(customerIdsWhileFetch.isCaptured)
+            assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+            val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+            val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+            assertEquals(3, customerIdsMapWhileFetch.size)
+            assertEquals(3, customerIdsMapWhileRead.size)
+            assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+        }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should call markAsRead action with same customerIds as fetched AppInbox - cookieAndExternal`() {
-        // setup
-        identifyCustomer(cookie = "hash-cookie", ids = hashMapOf(
-            "registered" to "email@test.com",
-            "registered2" to "email2@test.com",
-            "registered3" to "email3@test.com"
-        ))
-        val customerIdsWhileFetch = slot<CustomerIds>()
-        val customerIdsWhileMarkAsRead = slot<CustomerIds>()
-        runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
-        assertTrue(customerIdsWhileFetch.isCaptured)
-        assertTrue(customerIdsWhileMarkAsRead.isCaptured)
-        val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
-        val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
-        assertEquals(4, customerIdsMapWhileFetch.size)
-        assertEquals(4, customerIdsMapWhileRead.size)
-        assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+    fun `should call markAsRead action with same customerIds as fetched AppInbox - cookieAndExternal`() =
+        runInSingleThread {
+            // setup
+            identifyCustomer(
+                cookie = "hash-cookie", ids = hashMapOf(
+                    "registered" to "email@test.com",
+                    "registered2" to "email2@test.com",
+                    "registered3" to "email3@test.com"
+                )
+            )
+            val customerIdsWhileFetch = slot<CustomerIds>()
+            val customerIdsWhileMarkAsRead = slot<CustomerIds>()
+            runFetchAndMarkAsRead(customerIdsWhileFetch, customerIdsWhileMarkAsRead)
+            assertTrue(customerIdsWhileFetch.isCaptured)
+            assertTrue(customerIdsWhileMarkAsRead.isCaptured)
+            val customerIdsMapWhileFetch = customerIdsWhileFetch.captured.toHashMap().filter { it.value != null }
+            val customerIdsMapWhileRead = customerIdsWhileMarkAsRead.captured.toHashMap().filter { it.value != null }
+            assertEquals(4, customerIdsMapWhileFetch.size)
+            assertEquals(4, customerIdsMapWhileRead.size)
+            assertEquals(customerIdsMapWhileFetch, customerIdsMapWhileRead)
+        }
+
+    @Test
+    fun `should return actual messages for customer`() {
+        val awaitSeconds = 5L
+        val untilCustomerChanged = CountDownLatch(1)
+        val untilFirstFetchStarted = CountDownLatch(1)
+        val untilFetchProcessIsDone = CountDownLatch(1)
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+            val customerIdsUsedForFetch = arg<CustomerIds>(1).toHashMap()["registered"]
+            untilFirstFetchStarted.countDown()
+            assertTrue(untilCustomerChanged.await(awaitSeconds, TimeUnit.SECONDS))
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1", type = "html", data = mapOf(
+                                "title" to "Assigned to $customerIdsUsedForFetch",
+                                "pre_header" to "Message",
+                                "message" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
+        }
+        // step 1: be customer 'user1'
+        identifyCustomer(cookie = "cookie1", ids = hashMapOf("registered" to "user1"))
+        // step 2: invoke fetching while customer is 'user1'
+        var fetchedAppInboxData: List<MessageItem>? = null
+        appInboxManager.fetchAppInbox {
+            fetchedAppInboxData = it
+            untilFetchProcessIsDone.countDown()
+        }
+        // step 3: change to customer 'user2' while first fetch is running
+        assertTrue(untilFirstFetchStarted.await(awaitSeconds, TimeUnit.SECONDS))
+        identifyCustomer(cookie = "cookie2", ids = hashMapOf("registered" to "user2"))
+        untilCustomerChanged.countDown()
+        // step 4: wait until second fetch is done
+        val fetchDataReceived = untilFetchProcessIsDone.await(1, TimeUnit.SECONDS)
+        if (!fetchDataReceived) {
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+        assertTrue(untilFetchProcessIsDone.await(awaitSeconds, TimeUnit.SECONDS))
+        // validate:
+        assertNotNull(fetchedAppInboxData)
+        assertEquals(1, fetchedAppInboxData?.size)
+        val message = fetchedAppInboxData?.get(0)?.content
+        assertEquals("Assigned to user2", message?.title)
+    }
+
+    @Test
+    fun `should return actual messages for customer for all fetch attempts`() {
+        var fetchedAppInboxData1: List<MessageItem>? = null
+        var fetchedAppInboxData2: List<MessageItem>? = null
+        var fetchedAppInboxData3: List<MessageItem>? = null
+        val awaitSeconds = 5L
+        val releaseFetchProces = CountDownLatch(1)
+        val untilFirstFetchStarted = CountDownLatch(1)
+        val untilFetchProcessIsDone1 = CountDownLatch(1)
+        val untilFetchProcessIsDone2 = CountDownLatch(1)
+        val untilFetchProcessIsDone3 = CountDownLatch(1)
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+            val customerIdsUsedForFetch = arg<CustomerIds>(1).toHashMap()["registered"] ?: "not-registered"
+            untilFirstFetchStarted.countDown()
+            assertTrue(releaseFetchProces.await(awaitSeconds, TimeUnit.SECONDS))
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1", type = "html", data = mapOf(
+                                "title" to "Assigned to $customerIdsUsedForFetch",
+                                "pre_header" to "Message",
+                                "message" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
+        }
+        appInboxManager.fetchAppInbox {
+            fetchedAppInboxData1 = it
+            untilFetchProcessIsDone1.countDown()
+        }
+        identifyCustomer(cookie = "cookie1", ids = hashMapOf("registered" to "user1"))
+        appInboxManager.fetchAppInbox {
+            fetchedAppInboxData2 = it
+            untilFetchProcessIsDone2.countDown()
+        }
+        assertTrue(untilFirstFetchStarted.await(awaitSeconds, TimeUnit.SECONDS))
+        identifyCustomer(cookie = "cookie2", ids = hashMapOf("registered" to "user2"))
+        appInboxManager.fetchAppInbox {
+            fetchedAppInboxData3 = it
+            untilFetchProcessIsDone3.countDown()
+        }
+        releaseFetchProces.countDown()
+        val fetchDataReceived = untilFetchProcessIsDone1.await(1, TimeUnit.SECONDS)
+        if (!fetchDataReceived) {
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+        assertTrue(untilFetchProcessIsDone1.await(awaitSeconds, TimeUnit.SECONDS))
+        for (fetchedData in listOf(fetchedAppInboxData1, fetchedAppInboxData2, fetchedAppInboxData3)) {
+            assertNotNull(fetchedData)
+            assertEquals(1, fetchedData.size)
+            assertEquals("Assigned to user2", fetchedData[0].content?.title)
+        }
     }
 
     private fun runFetchAndMarkAsRead(
@@ -583,14 +704,14 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             arg<(Result<Any?>) -> Unit>(4)
                 .invoke(Result(true, null))
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.fetchAppInbox { data ->
-                it()
+                done()
             }
         }
-        waitForIt(20000) {
+        waitForIt { done ->
             appInboxManager.markMessageAsRead(testMessage) { marked ->
-                it()
+                done()
             }
         }
     }
@@ -600,5 +721,6 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             this.cookie = cookie
             this.externalIds = ids
         }
+        appInboxManager.onEventCreated(mockkClass(Event::class), EventType.TRACK_CUSTOMER)
     }
 }

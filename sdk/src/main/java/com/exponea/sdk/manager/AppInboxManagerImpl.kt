@@ -14,7 +14,8 @@ import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AppInboxManagerImpl(
     private val fetchManager: FetchManager,
@@ -23,6 +24,10 @@ internal class AppInboxManagerImpl(
     private val appInboxCache: AppInboxCache,
     private val projectFactory: ExponeaProjectFactory
 ) : AppInboxManager {
+
+    internal var lastCustomerIdsForFetch: CustomerIds? = null
+    internal val isFetching = AtomicBoolean(false)
+    internal val onFetchDoneCallbacks = LinkedBlockingQueue<(List<MessageItem>?) -> Unit>()
 
     public override fun markMessageAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) {
         if (message.syncToken == null || message.customerIds.isEmpty()) {
@@ -79,31 +84,76 @@ internal class AppInboxManagerImpl(
     }
 
     public override fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) {
+        val customerIds = customerIdsRepository.get()
+        onFetchDoneCallbacks.add(callback)
+        if (!isFetching.compareAndSet(false, true)) {
+            Logger.d(this, "AppInbox fetch already in progress, waiting for response")
+            lastCustomerIdsForFetch = customerIds
+            return
+        }
+        invokeFetchAppInbox(customerIds)
+    }
+
+    private fun invokeFetchAppInbox(customerIds: CustomerIds) {
         requireMutualExponeaProject { expoProject ->
             if (expoProject.authorization == null) {
                 Logger.e(this, "AppInbox loading failed. Authorization token is missing")
-                runOnMainThread {
-                    callback.invoke(null)
-                }
+                notifyFetchCallbacks(null)
+                isFetching.set(false)
                 return@requireMutualExponeaProject
             }
-            val customerIds = customerIdsRepository.get()
             fetchManager.fetchAppInbox(
                 exponeaProject = expoProject,
                 customerIds = customerIds,
                 syncToken = appInboxCache.getSyncToken(),
                 onSuccess = { result ->
-                    Logger.i(this, "AppInbox loaded successfully")
-                    enhanceMessages(result.results, customerIds, result.syncToken)
-                    onAppInboxDataLoaded(result, callback)
+                    Logger.d(this, "AppInbox fetch is done for customerIds ${customerIds.toHashMap()}")
+                    handleDataFetchResult(result, customerIds)
                 },
                 onFailure = {
                     Logger.e(this, "AppInbox loading failed. ${it.results.message}")
-                    runOnMainThread {
-                        callback.invoke(null)
-                    }
+                    handleDataFetchResult(null, customerIds)
                 }
             )
+        }
+    }
+
+    private fun handleDataFetchResult(
+        result: Result<ArrayList<MessageItem>?>?,
+        processCustomerIds: CustomerIds
+    ) {
+        val fetchProcessIsValid: Boolean
+        val lastCustomerIdsForFetchLocal = lastCustomerIdsForFetch
+        if (lastCustomerIdsForFetchLocal == null) {
+            fetchProcessIsValid = true
+        } else if (lastCustomerIdsForFetchLocal.toHashMap() == processCustomerIds.toHashMap()) {
+            fetchProcessIsValid = true
+            lastCustomerIdsForFetch = null
+        } else {
+            fetchProcessIsValid = false
+            Logger.w(
+                this,
+                "AppInbox fetch is outdated for last customer IDs ${lastCustomerIdsForFetchLocal.toHashMap()}"
+            )
+        }
+        if (fetchProcessIsValid) {
+            onAppInboxDataLoaded(result, processCustomerIds)
+        } else {
+            appInboxCache.clear()
+            val customerIdsToRepeat = lastCustomerIdsForFetchLocal ?: customerIdsRepository.get()
+            lastCustomerIdsForFetch = null
+            Logger.i(this, "AppInbox fetch is going to repeat for ${customerIdsToRepeat.toHashMap()}")
+            invokeFetchAppInbox(customerIdsToRepeat)
+        }
+    }
+
+    private fun notifyFetchCallbacks(data: List<MessageItem>?) {
+        val activeCallbacks = mutableListOf<(List<MessageItem>?) -> Unit>()
+        onFetchDoneCallbacks.drainTo(activeCallbacks)
+        activeCallbacks.forEach { activeCallback ->
+            runOnMainThread {
+                activeCallback.invoke(data)
+            }
         }
     }
 
@@ -118,41 +168,45 @@ internal class AppInboxManagerImpl(
      * These values will be used for tracking and markAsRead future calls
      */
     private fun enhanceMessages(messages: List<MessageItem>?, customerIds: CustomerIds, syncToken: String?) {
-        if (messages == null || messages.isEmpty()) {
-            return
-        }
-        messages.forEach { messageItem ->
+        messages?.forEach { messageItem ->
             messageItem.customerIds = customerIds.toHashMap()
             messageItem.syncToken = syncToken
         }
     }
 
-    private fun onAppInboxDataLoaded(result: Result<ArrayList<MessageItem>?>, callback: (List<MessageItem>) -> Unit) {
-        result.syncToken?.let {
-            appInboxCache.setSyncToken(it)
+    private fun onAppInboxDataLoaded(
+        result: Result<ArrayList<MessageItem>?>?,
+        customerIds: CustomerIds
+    ) {
+        if (customerIds.toHashMap() != customerIdsRepository.get().toHashMap()) {
+            Logger.i(this, "AppInbox data for ${customerIds.toHashMap()} will replace old data")
+            appInboxCache.clear()
         }
-        val messages = result.results ?: arrayListOf()
-        var supportedMessages = messages.filter { it.type != UNKNOWN }
-        val imageUrls = supportedMessages
-            .mapNotNull { messageItem -> messageItem.content?.imageUrl }
-            .filter { imageUrl -> !imageUrl.isNullOrBlank() }
-        appInboxCache.addMessages(supportedMessages)
-        var allMessages = appInboxCache.getMessages()
-        if (imageUrls.isEmpty()) {
-            runOnMainThread {
-                callback.invoke(allMessages)
+        val dataFetchFinalization = { appInboxData: List<MessageItem>? ->
+            isFetching.set(false)
+            notifyFetchCallbacks(appInboxData)
+        }
+        if (result == null) {
+            // failure => no data
+            Logger.e(this, "AppInbox loading failed")
+            dataFetchFinalization(null)
+        } else {
+            // we have data => success
+            Logger.i(this, "AppInbox loaded successfully")
+            enhanceMessages(result.results, customerIds, result.syncToken)
+            result.syncToken?.let {
+                appInboxCache.setSyncToken(it)
             }
-            return
-        }
-        val counter = AtomicInteger(imageUrls.size)
-        imageUrls.forEach { imageUrl ->
-            drawableCache.preload(listOf(imageUrl), {
-                if (counter.decrementAndGet() <= 0) {
-                    runOnMainThread {
-                        callback.invoke(allMessages)
-                    }
-                }
-            })
+            val loadedMessages = result.results ?: arrayListOf()
+            val supportedMessages = loadedMessages.filter { it.type != UNKNOWN }
+            appInboxCache.addMessages(supportedMessages)
+            val allMessages = appInboxCache.getMessages()
+            val imageUrls = supportedMessages
+                .mapNotNull { messageItem -> messageItem.content?.imageUrl }
+                .filter { imageUrl -> imageUrl.isNotBlank() }
+            drawableCache.preload(imageUrls) {
+                dataFetchFinalization(allMessages)
+            }
         }
     }
 
@@ -171,7 +225,7 @@ internal class AppInboxManagerImpl(
     override fun onEventCreated(event: Event, type: EventType) {
         if (EventType.TRACK_CUSTOMER == type) {
             Logger.i(this, "CustomerIDs are updated, clearing AppInbox messages")
-            reload()
+            fetchAppInbox { Logger.d(this, "AppInbox loaded") }
         }
     }
 }

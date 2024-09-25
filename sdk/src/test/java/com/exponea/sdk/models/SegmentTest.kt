@@ -43,13 +43,15 @@ internal class SegmentTest {
 
         fun getSegmentsData(
             customerIds: HashMap<String, String?> = getCustomerIds().toHashMap(),
-            data: SegmentationCategories = getSegmentations()
+            data: SegmentationCategories = getSegmentations(),
+            updateMillis: Long = System.currentTimeMillis()
         ): SegmentationData {
             return SegmentationData(
                 customerIds = CustomerIds(customerIds).apply {
                     cookie = customerIds[CustomerIds.COOKIE]
                 },
-                segmentations = data
+                segmentations = data,
+                updatedAtMillis = updateMillis
             )
         }
 

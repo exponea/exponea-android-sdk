@@ -1500,23 +1500,22 @@ object Exponea {
      */
     fun getSegments(
         exposingCategory: String,
+        force: Boolean = false,
         successCallback: ((List<Segment>) -> Unit)
     ) = runCatching {
         initGate.waitForInitialize {
-            registerSegmentationDataCallback(object : SegmentationDataCallback() {
-                override val exposingCategory = exposingCategory
-                override val includeFirstLoad = true
-                override fun onNewData(segments: List<Segment>) {
-                    this.unregister()
-                    Logger.i(
-                        this,
-                        "Segments: Manual segmentation fetch for $exposingCategory has been done successfully"
-                    )
-                    runCatching {
-                        successCallback.invoke(segments)
-                    }.logOnException()
-                }
-            })
+            component.segmentsManager.fetchSegmentsManually(
+                category = exposingCategory,
+                forceFetch = force
+            ) { segments ->
+                Logger.i(
+                    this,
+                    "Segments: Manual segmentation fetch for $exposingCategory has been done successfully"
+                )
+                runCatching {
+                    successCallback.invoke(segments)
+                }.logOnException()
+            }
         }
     }.logOnException()
 

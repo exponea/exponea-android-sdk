@@ -1,6 +1,8 @@
 package com.exponea.sdk.models
 
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,10 +38,77 @@ internal class CustomerIdsTest : ExponeaSDKTest() {
         assertTrue(customerIds.toHashMap()["registered"] == "email")
     }
 
+    @Test
     fun testCookieGetter() {
         val customerIds = CustomerIds()
         assertTrue(customerIds.cookie == null)
-        customerIds.cookie = "cookiee"
+        customerIds.cookie = "cookie"
         assertTrue(customerIds.cookie == "cookie")
+    }
+
+    @Test
+    fun `should compare CustomerIds correctly`() {
+        val equalVariants = listOf(
+            Pair(CustomerIds(), CustomerIds()),
+            Pair(CustomerIds(hashMapOf()), CustomerIds(hashMapOf())),
+            Pair(
+                CustomerIds(hashMapOf()).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf()).apply { cookie = "cookie" }),
+            Pair(CustomerIds("cookie"), CustomerIds("cookie")),
+            Pair(CustomerIds(hashMapOf("registered" to "user1")), CustomerIds(hashMapOf("registered" to "user1"))),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")),
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com"))
+            ),
+            Pair(
+                CustomerIds(hashMapOf("email" to "test@user.com", "registered" to "user1")),
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com"))
+            ),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user1")).apply { cookie = "cookie" }
+            ),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")).apply { cookie = "cookie" }
+            ),
+            Pair(
+                CustomerIds(hashMapOf("email" to "test@user.com", "registered" to "user1")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")).apply { cookie = "cookie" }
+            )
+        )
+        equalVariants.forEach {
+            assertEquals(it.first, it.second)
+        }
+        val notEqualVariants = listOf(
+            Pair(
+                CustomerIds(hashMapOf()).apply { cookie = "cookie1" },
+                CustomerIds(hashMapOf()).apply { cookie = "cookie2" }),
+            Pair(CustomerIds("cookie1"), CustomerIds("cookie2")),
+            Pair(CustomerIds(hashMapOf("registered" to "user1")), CustomerIds(hashMapOf("registered" to "user2"))),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")),
+                CustomerIds(hashMapOf("registered" to "user2", "email" to "test@user.com"))
+            ),
+            Pair(
+                CustomerIds(hashMapOf("email" to "test@user.com", "registered" to "user1")),
+                CustomerIds(hashMapOf("registered" to "user2", "email" to "test@user.com"))
+            ),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user2")).apply { cookie = "cookie" }
+            ),
+            Pair(
+                CustomerIds(hashMapOf("registered" to "user1", "email" to "test@user.com")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user2", "email" to "test@user.com")).apply { cookie = "cookie" }
+            ),
+            Pair(
+                CustomerIds(hashMapOf("email" to "test@user.com", "registered" to "user1")).apply { cookie = "cookie" },
+                CustomerIds(hashMapOf("registered" to "user2", "email" to "test@user.com")).apply { cookie = "cookie" }
+            )
+        )
+        notEqualVariants.forEach {
+            assertNotEquals(it.first, it.second)
+        }
     }
 }

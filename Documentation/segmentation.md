@@ -55,10 +55,25 @@ The data payload of each `Segment` is as follows:
 The SDK provides an API to get segmentation data directly. Invoke the `Exponea.getSegments` method, passing a `exposingCategory` value as argument:
 
 ```kotlin
-Exponea.getSegments(exposingCategory) { segments ->
+Exponea.getSegments(exposingCategory = exposingCategory) { segments ->
     Logger.i(this, "Segments: Got new segments: $segments")
 }
 ```
+
+Segments data received by `getSegments` method are primary loaded from valid cache. Cache is automatically fetched from server if:
+
+* cache is empty or was loaded for previous customer
+* cache data are older than 5 seconds
+* method is forced to fetch segments from server by developer
+
+If you want to force to fetch segmentations data from server, use `force` parameter with `true` value as argument:
+
+```kotlin
+Exponea.getSegments(exposingCategory = exposingCategory, force = true) { segments ->
+    Logger.i(this, "Segments: Got new segments: $segments")
+}
+```
+
 > 👍
 >
 > The `getSegments` method loads segmentation data for the requested `category` and the current customer as identified by `Exponea.identifyCustomer`. Please bear in mind that the callback is invoked in a background thread.

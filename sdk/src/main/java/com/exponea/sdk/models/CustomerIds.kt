@@ -39,4 +39,10 @@ data class CustomerIds(
             cookie?.let { set(COOKIE, it) }
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return this.toHashMap() == (other as CustomerIds).toHashMap()
+    }
 }

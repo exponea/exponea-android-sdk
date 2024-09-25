@@ -29,33 +29,39 @@ internal class SegmentsCacheImplTest {
 
     @Test
     fun `should store empty segments`() {
+        val updateMillis = System.currentTimeMillis()
         cache.set(SegmentTest.getSegmentsData(
             customerIds = hashMapOf(),
-            data = SegmentationCategories()
+            data = SegmentationCategories(),
+            updateMillis = updateMillis
         ))
         assertEquals(SegmentTest.getSegmentsData(
             customerIds = hashMapOf(),
-            data = SegmentationCategories()
+            data = SegmentationCategories(),
+            updateMillis = updateMillis
         ), cache.get())
     }
 
     @Test
     fun `should store segments`() {
+        val segmentsToStore = SegmentTest.getSegmentsData()
         cache.set(
-            SegmentTest.getSegmentsData()
+            segmentsToStore
         )
         assertEquals(
-            SegmentTest.getSegmentsData(),
+            segmentsToStore,
             cache.get()
         )
     }
 
     @Test
     fun `should overwrite old stored segments`() {
-        cache.set(SegmentTest.getSegmentsData())
-        assertEquals(SegmentTest.getSegmentsData(), cache.get())
-        cache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "val")))
-        assertEquals(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "val")), cache.get())
+        val oldSegmentsToStore = SegmentTest.getSegmentsData()
+        cache.set(oldSegmentsToStore)
+        assertEquals(oldSegmentsToStore, cache.get())
+        val newSegmentsToStore = SegmentTest.buildSegmentDataWithData(mapOf("prop" to "val"))
+        cache.set(newSegmentsToStore)
+        assertEquals(newSegmentsToStore, cache.get())
     }
 
     @Test

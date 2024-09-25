@@ -2,6 +2,7 @@ package com.exponea.sdk.manager
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
@@ -10,17 +11,19 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
-import com.exponea.sdk.models.SegmentationData
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.SegmentsCache
+import com.exponea.sdk.repository.SegmentsCacheImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.resetVerifyMockkCount
 import com.exponea.sdk.testutil.waitForIt
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -59,18 +62,7 @@ internal class SegmentsManagerImplTest {
         every { customerIdsRepository.get() } returns SegmentTest.getCustomerIds()
         val configuration = ExponeaConfiguration(projectToken = "mock-token")
         projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
-        segmentsCache = mockk()
-        var segmentsData: SegmentationData? = null
-        every { segmentsCache.set(any()) } answers {
-            segmentsData = firstArg()
-        }
-        every { segmentsCache.get() } answers {
-            segmentsData
-        }
-        every { segmentsCache.clear() } answers {
-            segmentsData = null
-            true
-        }
+        segmentsCache = spyk(SegmentsCacheImpl(ApplicationProvider.getApplicationContext(), ExponeaGson.instance))
         segmentsManager = SegmentsManagerImpl(
             fetchManager = fetchManager,
             projectFactory = projectFactory,
@@ -991,6 +983,201 @@ internal class SegmentsManagerImplTest {
         Exponea.registerSegmentationDataCallback(callback)
         segmentsManager.onCallbackAdded(callback)
         assertTrue(callbackNotified.await(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
+    fun `should return segments manually from fresh cache`() {
+        val segmentationsData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = segmentationsData
+        ))
+        var catchedSegments: List<Segment>? = null
+        waitForIt { done ->
+            segmentsManager.fetchSegmentsManually("discovery", false) {
+                catchedSegments = it
+                done()
+            }
+        }
+        assertNotNull(catchedSegments)
+        assertEquals(1, catchedSegments?.size)
+        assertEquals("mock-val", catchedSegments?.get(0)?.get("prop"))
+    }
+
+    @Test
+    fun `should fetch segments manually if forced`() {
+        val cachedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = cachedData
+        ))
+        val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                fetchedData
+            ))
+        }
+        var caughtSegments: List<Segment>? = null
+        waitForIt { done ->
+            segmentsManager.fetchSegmentsManually("discovery", true) {
+                caughtSegments = it
+                done()
+            }
+        }
+        assertNotNull(caughtSegments)
+        assertEquals(1, caughtSegments?.size)
+        assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
+    }
+
+    @Test
+    fun `should fetch segments manually if customer changed`() {
+        val cachedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = CustomerIds("obsolete-cookie").toHashMap(),
+            data = cachedData
+        ))
+        val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                fetchedData
+            ))
+        }
+        var caughtSegments: List<Segment>? = null
+        waitForIt { done ->
+            segmentsManager.fetchSegmentsManually("discovery", false) {
+                caughtSegments = it
+                done()
+            }
+        }
+        assertNotNull(caughtSegments)
+        assertEquals(1, caughtSegments?.size)
+        assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
+    }
+
+    @Test
+    fun `should fetch segments manually if cache is old`() {
+        val cachedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = cachedData,
+            updateMillis = System.currentTimeMillis() - SegmentsCacheImpl.CACHE_AGE_MILLIS - 1000
+        ))
+        val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                fetchedData
+            ))
+        }
+        var caughtSegments: List<Segment>? = null
+        waitForIt { done ->
+            segmentsManager.fetchSegmentsManually("discovery", false) {
+                caughtSegments = it
+                done()
+            }
+        }
+        assertNotNull(caughtSegments)
+        assertEquals(1, caughtSegments?.size)
+        assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
+    }
+
+    @Test
+    fun `should re-fetch segments manually if customer changed meanwhile`() {
+        val awaitTime = 5L
+        val cachedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        val customer1 = SegmentTest.getCustomerIds(hashMapOf("registered" to "re-fetch-user-1"))
+        val customer2 = SegmentTest.getCustomerIds(hashMapOf("registered" to "re-fetch-user-2"))
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customer1.toHashMap(),
+            data = cachedData
+        ))
+        val fetchProcessBlock = CountDownLatch(1)
+        val customerChangedBlock = CountDownLatch(1)
+        val segmentsCallbackBlock = CountDownLatch(1)
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            val fetchCustomerId = arg<CustomerIds>(1).toHashMap()["registered"]
+            fetchProcessBlock.countDown()
+            assertTrue(customerChangedBlock.await(awaitTime, TimeUnit.SECONDS))
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                SegmentTest.buildSingleSegmentWithData(mapOf(
+                    "prop" to "mock-val-for-$fetchCustomerId"
+                ))
+            ))
+        }
+        // Step 1: be customer1 and invoke fetch
+        every { customerIdsRepository.get() } returns customer1
+        var caughtSegments: List<Segment>? = null
+        segmentsManager.fetchSegmentsManually("discovery", true) {
+            caughtSegments = it
+            segmentsCallbackBlock.countDown()
+        }
+        // Step 2: wait for fetch and change to customer2
+        assertTrue(fetchProcessBlock.await(awaitTime, TimeUnit.SECONDS))
+        every { customerIdsRepository.get() } returns customer2
+        customerChangedBlock.countDown()
+        // Step 3: wait for re-fetch and check result
+        assertTrue(segmentsCallbackBlock.await(awaitTime, TimeUnit.SECONDS))
+        // validate
+        assertNotNull(caughtSegments)
+        assertEquals(1, caughtSegments?.size)
+        assertEquals("mock-val-for-re-fetch-user-2", caughtSegments?.get(0)?.get("prop"))
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
+    }
+
+    @Test
+    fun `should invoke single request for manual fetch`() {
+        val awaitTime = 5L
+        val fetchProcessBlock = CountDownLatch(1)
+        val fetchReleaseBlock = CountDownLatch(1)
+        val segmentsCallbackBlock1 = CountDownLatch(1)
+        val segmentsCallbackBlock2 = CountDownLatch(1)
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            val fetchCustomerId = arg<CustomerIds>(1).toHashMap()["registered"]
+            fetchProcessBlock.countDown()
+            assertTrue(fetchReleaseBlock.await(awaitTime, TimeUnit.SECONDS))
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                SegmentTest.buildSingleSegmentWithData(mapOf(
+                    "prop" to "mock-val-for-$fetchCustomerId"
+                ))
+            ))
+        }
+        // Step1: invoke first manual fetch
+        var caughtSegments1: List<Segment>? = null
+        var caughtSegments2: List<Segment>? = null
+        segmentsManager.fetchSegmentsManually("discovery", true) {
+            caughtSegments1 = it
+            segmentsCallbackBlock1.countDown()
+        }
+        // Step2: invoke second manual fetch
+        assertTrue(fetchProcessBlock.await(awaitTime, TimeUnit.SECONDS))
+        segmentsManager.fetchSegmentsManually("discovery", true) {
+            caughtSegments2 = it
+            segmentsCallbackBlock2.countDown()
+        }
+        // validate waiting state
+        assertEquals(2, (segmentsManager as SegmentsManagerImpl).manualFetchCallbacks.size)
+        assertTrue((segmentsManager as SegmentsManagerImpl).isManualFetchActive.get())
+        assertNull(caughtSegments1)
+        assertNull(caughtSegments2)
+        // validate final state
+        fetchReleaseBlock.countDown()
+        assertTrue(segmentsCallbackBlock1.await(awaitTime, TimeUnit.SECONDS))
+        assertTrue(segmentsCallbackBlock2.await(awaitTime, TimeUnit.SECONDS))
+        assertEquals(0, (segmentsManager as SegmentsManagerImpl).manualFetchCallbacks.size)
+        assertNotNull(caughtSegments1)
+        assertNotNull(caughtSegments2)
+        assertEquals(1, caughtSegments1?.size)
+        assertEquals(1, caughtSegments2?.size)
+        assertEquals("mock-val-for-mock-registered", caughtSegments1?.get(0)?.get("prop"))
+        assertEquals("mock-val-for-mock-registered", caughtSegments2?.get(0)?.get("prop"))
+        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
     }
 
     private fun buildExportedEvent(): ExportedEvent {

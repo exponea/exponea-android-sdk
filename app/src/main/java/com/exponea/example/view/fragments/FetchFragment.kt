@@ -69,7 +69,7 @@ class FetchFragment : BaseFragment() {
         }
         segmentationButton.setOnClickListener {
             val exposingCategory = "discovery"
-            Exponea.getSegments(exposingCategory) { segments ->
+            Exponea.getSegments(exposingCategory = exposingCategory, force = false) { segments ->
                 runOnUiThread {
                     resultTextView.text = "Segments for $exposingCategory category:\n$segments"
                 }

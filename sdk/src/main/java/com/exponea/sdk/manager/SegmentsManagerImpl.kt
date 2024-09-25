@@ -15,6 +15,8 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.runOnBackgroundThread
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Job
 
 internal class SegmentsManagerImpl(
@@ -31,6 +33,10 @@ internal class SegmentsManagerImpl(
     internal var checkSegmentsJob: Job? = null
 
     internal val newbieCallbacks = CopyOnWriteArrayList<SegmentationDataCallback>()
+
+    internal val isManualFetchActive = AtomicBoolean(false)
+
+    internal val manualFetchCallbacks = LinkedBlockingQueue<SegmentationDataCallback>()
 
     override fun onEventUploaded(event: ExportedEvent) {
         if (areCallbacksInactive()) {
@@ -171,7 +177,8 @@ internal class SegmentsManagerImpl(
     ) {
         val newSegmentsData = SegmentationData(
             customerIds = newCustomerIds,
-            segmentations = newData
+            segmentations = newData,
+            updatedAtMillis = System.currentTimeMillis()
         )
         val syncResult = synchronizeSegments(newSegmentsData)
         val extendedSyncResult = enhanceWithWantedCategories(syncResult, forceNotifyCallbacks)
@@ -287,6 +294,17 @@ internal class SegmentsManagerImpl(
         cancelSegmentsFetchJob()
         segmentsCache.clear()
         newbieCallbacks.clear()
+        notifyManualCallbacks(null)
+    }
+
+    private fun notifyManualCallbacks(segmentationData: SegmentationData?) {
+        val activeCallbacks = mutableListOf<SegmentationDataCallback>()
+        manualFetchCallbacks.drainTo(activeCallbacks)
+        activeCallbacks.forEach {
+            ensureOnBackgroundThread {
+                it.onNewData(segmentationData?.segmentations?.get(it.exposingCategory) ?: emptyList())
+            }
+        }
     }
 
     private fun cancelSegmentsFetchJob() {
@@ -295,4 +313,95 @@ internal class SegmentsManagerImpl(
     }
 
     private fun areCallbacksInactive(): Boolean = Exponea.segmentationDataCallbacks.isEmpty()
+
+    override fun fetchSegmentsManually(
+        category: String,
+        forceFetch: Boolean,
+        callback: (List<Segment>) -> Unit
+    ) {
+        val customerIdsForFetch = customerIdsRepository.get()
+        val requireFetch = forceFetch || !segmentsCache.isAssignedTo(customerIdsForFetch) || !segmentsCache.isFresh()
+        if (requireFetch) {
+            manualFetchCallbacks.add(object : SegmentationDataCallback() {
+                override val exposingCategory = category
+                override val includeFirstLoad = true
+                override fun onNewData(segments: List<Segment>) {
+                    callback.invoke(segments)
+                }
+            })
+            if (isManualFetchActive.compareAndSet(false, true)) {
+                ensureOnBackgroundThread {
+                    runManualSegmentsFetch(customerIdsForFetch)
+                }
+            } else {
+                Logger.d(this, "Segments: Manual fetch is already in progress, waiting for result")
+            }
+        } else {
+            callback(segmentsCache.get()?.segmentations?.get(category) ?: emptyList())
+        }
+    }
+
+    private fun runManualSegmentsFetch(triggeringCustomerIds: CustomerIds) {
+        if (!areCustomerIdsActual(triggeringCustomerIds)) {
+            Logger.w(
+                this,
+                "Segments: Repeating manual fetch because customer has changed"
+            )
+            runManualSegmentsFetch(customerIdsRepository.get())
+            return
+        }
+        if (customerIdsMergeIsRequired(triggeringCustomerIds)) {
+            Logger.i(this, "Segments: Current customer IDs require to be linked")
+            val mergeResult = fetchManager.linkCustomerIdsSync(
+                projectFactory.mainExponeaProject,
+                triggeringCustomerIds
+            )
+            if (mergeResult.success != true) {
+                Logger.e(
+                    this,
+                    "Segments: Customer IDs $triggeringCustomerIds merge failed, unable to fetch segments"
+                )
+                isManualFetchActive.set(false)
+                notifyManualCallbacks(null)
+                return
+            }
+        }
+        fetchManager.fetchSegments(
+            exponeaProject = projectFactory.mainExponeaProject,
+            customerIds = triggeringCustomerIds,
+            onSuccess = {
+                val data = it.results
+                Logger.i(
+                    this,
+                    "Segments: Manual Data load is done successfully, size: ${data.size}"
+                )
+                if (areCustomerIdsActual(triggeringCustomerIds)) {
+                    val newSegmentsData = SegmentationData(
+                        customerIds = triggeringCustomerIds,
+                        segmentations = data,
+                        updatedAtMillis = System.currentTimeMillis()
+                    )
+                    synchronizeSegments(newSegmentsData)
+                    isManualFetchActive.set(false)
+                    // notify with all segments (cached and new)
+                    notifyManualCallbacks(segmentsCache.get())
+                } else {
+                    Logger.w(
+                        this,
+                        "Segments: New data are ignored because were manually loaded for different customer"
+                    )
+                    runManualSegmentsFetch(customerIdsRepository.get())
+                }
+            },
+            onFailure = {
+                val errorMessage = it.results.message
+                Logger.e(
+                    this,
+                    "Segments: Fetch of segments failed: $errorMessage"
+                )
+                isManualFetchActive.set(false)
+                notifyManualCallbacks(null)
+            }
+        )
+    }
 }

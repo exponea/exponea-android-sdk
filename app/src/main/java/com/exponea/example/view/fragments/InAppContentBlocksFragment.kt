@@ -2,6 +2,7 @@ package com.exponea.example.view.fragments
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -126,6 +127,10 @@ class InAppContentBlocksFragment : BaseFragment() {
 
     private fun prepareExampleListCbPlaceholder() {
         content_blocks_list?.layoutManager = LinearLayoutManager(requireContext())
+        content_blocks_list?.layoutParams?.apply {
+            height = Resources.getSystem().getDisplayMetrics().heightPixels / 2
+        }
+        content_blocks_list?.layoutParams = content_blocks_list?.layoutParams
         val data = ArrayList<ProductsViewModel>()
         for (i in 1..1000) {
             val icon = listOf(

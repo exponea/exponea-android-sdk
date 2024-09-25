@@ -11,6 +11,27 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.0.0
+#### September 25, 2024
+* Added:
+  * Improves the behavior of the Segmentation API’s getSegments method.
+  * Adds identification of Cancel button clicks in in-app message close events and inclusion of the button label in the tracked event.
+  * Adds documentation on overriding button action type.
+  * Speeds up loading of in-app content blocks.
+  * Improves in-app content block carousel type documentation.
+  * Updates the default session timeout to 60 seconds.
+  * Adds tracking of session end when calling anonymize() while auto session tracking is enabled.
+  * Adds automatic session end tracking for open sessions when sessionStart is called multiple times. This behavior is consistent with that of the iOS SDK and can be configured using the manualSessionAutoClose configuration parameter.
+  * Adds tracking of new state and notification_importance parameters to push notification delivery events.
+  * Extends ContentBlockCarouselCallback with additional callback methods.
+  * Adds a push notification delegate API to listen for push notification delivery and action clicks.
+* Fixed:
+  * Fixes an issue where fetching App Inbox after calling identifyCustomer returned corrupt data.
+  * Fixes an issue where reloading in-app messages triggered an infinite loop.
+  * Fixes an issue where push notifications would not open the app on Xiaomi devices.
+  * Fixes playing the default notification sound if a custom sound resource could not be loaded.
+
+
 ## Release Notes for 3.16.0
 #### August 02, 2024
 * Added:

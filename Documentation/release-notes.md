@@ -30,6 +30,8 @@ parentDocSlug: android-sdk
   * Fixes an issue where reloading in-app messages triggered an infinite loop.
   * Fixes an issue where push notifications would not open the app on Xiaomi devices.
   * Fixes playing the default notification sound if a custom sound resource could not be loaded.
+  * Fixes an issue where UTM parameters were incorrectly filtered out of deeplink URLs in tracking, for example, session_start events.
+
 
 
 ## Release Notes for 3.16.0

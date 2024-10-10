@@ -24,6 +24,8 @@ import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.PushNotificationDelegate
+import com.exponea.sdk.models.Segment
+import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.isViewUrlIntent
@@ -31,6 +33,40 @@ import kotlinx.android.synthetic.main.activity_main.navigation
 import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class MainActivity : AppCompatActivity() {
+
+    private val contentSegmentsCallback = object : SegmentationDataCallback() {
+        override val exposingCategory = "content"
+        override val includeFirstLoad = false
+        override fun onNewData(segments: List<Segment>) {
+            Logger.i(
+                this@MainActivity,
+                "Segments: New for category $exposingCategory with IDs: $segments"
+            )
+        }
+    }
+
+    private val discoverySegmentsCallback = object : SegmentationDataCallback() {
+        override val exposingCategory = "discovery"
+        override val includeFirstLoad = false
+        override fun onNewData(segments: List<Segment>) {
+            Logger.i(
+                this@MainActivity,
+                "Segments: New for category $exposingCategory with IDs: $segments"
+            )
+        }
+    }
+
+    private val merchandisingSegmentsCallback = object : SegmentationDataCallback() {
+        override val exposingCategory = "merchandising"
+        override val includeFirstLoad = false
+        override fun onNewData(segments: List<Segment>) {
+            Logger.i(
+                this@MainActivity,
+                "Segments: New for category $exposingCategory with IDs: $segments"
+            )
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -38,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = "Examples"
 
         // Set log level before first call to SDK function
-        Exponea.loggerLevel = Logger.Level.DEBUG
+        Exponea.loggerLevel = Logger.Level.VERBOSE
         Exponea.checkPushSetup = true
         Exponea.handleCampaignIntent(intent, applicationContext)
         Exponea.pushNotificationsDelegate = object : PushNotificationDelegate {
@@ -98,6 +134,10 @@ class MainActivity : AppCompatActivity() {
         } else if (savedInstanceState == null) {
             selectTab(BottomTab.Fetch)
         }
+
+        Exponea.registerSegmentationDataCallback(discoverySegmentsCallback)
+        Exponea.registerSegmentationDataCallback(contentSegmentsCallback)
+        Exponea.registerSegmentationDataCallback(merchandisingSegmentsCallback)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -108,6 +148,13 @@ class MainActivity : AppCompatActivity() {
         if (deeplinkDestination != null) {
             handleDeeplinkDestination(deeplinkDestination)
         }
+    }
+
+    override fun onDestroy() {
+        Exponea.unregisterSegmentationDataCallback(discoverySegmentsCallback)
+        Exponea.unregisterSegmentationDataCallback(contentSegmentsCallback)
+        Exponea.unregisterSegmentationDataCallback(merchandisingSegmentsCallback)
+        super.onDestroy()
     }
 
     private fun selectTab(tab: BottomTab) {

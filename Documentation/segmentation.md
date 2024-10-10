@@ -19,7 +19,7 @@ To use real-time segments in your app, you must register one or more customized 
 Each instance must define the following three items:
 
 1. A `exposingCategory` indicating your point of interest for segmentation:
-   * Possible values are `content`, `discovery`, or `merchandise`. You will get updates only for segmentation data assigned to the specified `exposingCategory`.
+   * Possible values are `content`, `discovery`, or `merchandising`. You will get updates only for segmentation data assigned to the specified `exposingCategory`.
 2. A boolean flag `includeFirstLoad` to force a fetch of segmentation data:
    * Setting this flag to `true` triggers a segmentation data fetch immediately.
    * The SDK will notify this callback instance with the new data even if the data has not changed from the last known state.
@@ -148,7 +148,7 @@ Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
     }
 })
 Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
-    override val exposingCategory = "merchandise"
+    override val exposingCategory = "merchandising"
     override val includeFirstLoad = false
     override fun onNewData(segments: List<Segment>) {
         dataCollector.postValue(Pair(exposingCategory, segments))

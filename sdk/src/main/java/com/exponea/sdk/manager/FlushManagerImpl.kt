@@ -198,9 +198,7 @@ internal open class FlushManagerImpl(
     @WorkerThread
     private fun onEventSentSuccess(exportedEvent: ExportedEvent) {
         Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
-        if (exportedEvent.route == Route.TRACK_CUSTOMERS) {
-            onEventUploaded(exportedEvent)
-        }
+        onEventUploaded(exportedEvent)
         eventRepository.remove(exportedEvent.id)
     }
 

@@ -25,7 +25,7 @@ internal data class ApiEndPoint(
         MESSAGE_INBOX_READ("/webxp/projects/$TOKEN_PATH_PARAM/appinbox/markasread"),
         INAPP_CONTENT_BLOCKS_STATIC("/wxstatic/projects/$TOKEN_PATH_PARAM/bundle-android.json?v=2"),
         INAPP_CONTENT_BLOCKS_PERSONAL("/webxp/s/$TOKEN_PATH_PARAM/inappcontentblocks?v=2"),
-        SEGMENTS("/webxp/projects/$TOKEN_PATH_PARAM/segments?cookie="),
+        SEGMENTS("/webxp/projects/$TOKEN_PATH_PARAM/segments"),
         LINK_CUSTOMER_IDS("/webxp/projects/$TOKEN_PATH_PARAM/cookies/$COOKIE_ID_PATH_PARAM/link-ids")
     }
 

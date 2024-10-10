@@ -1,5 +1,5 @@
 ---
-title: In-App Messages
+title: In-app messages
 excerpt: Display native in-app messages based on definitions set up in Engagement using the Android SDK
 slug: android-sdk-in-app-messages
 categorySlug: integrations
@@ -12,7 +12,11 @@ In-app messages work out-of-the-box once the [SDK is installed and configured](h
 
 > 📘
 >
-> Refer to the [In-App Messages](https://documentation.bloomreach.com/engagement/docs/in-app-messages) user guide for instructions on how to create in-app messages in the Engagement web app.
+> Refer to the [In-app messages](https://documentation.bloomreach.com/engagement/docs/in-app-messages) user guide for instructions on how to create in-app messages in the Engagement web app.
+
+> 📘
+>
+> Also see [In-app messages FAQ](https://support.bloomreach.com/hc/en-us/articles/18152718785437-In-App-Messages-FAQ) at Bloomreach Support Help Center.
 
 ## Tracking
 
@@ -34,7 +38,7 @@ The SDK automatically tracks `banner` events for in-app messages with the follow
 
 ## Customization
 
-### Customize In-App Message Actions
+### Customize in-app message actions
 
 You can override the SDK's default behavior when an in-app message action (click button or close message) is performed by setting `inAppMessageActionCallback` on the `Exponea` instance.
 
@@ -115,7 +119,7 @@ The `trackInAppMessageClose` method will track a 'close' event with the 'interac
 
 This section provides helpful pointers for troubleshooting in-app message issues.
 
-> 👍 Set INFO or VERBOSE Log Level
+> 👍 Set INFO or VERBOSE log level
 > The SDK logs a lot of information in at `INFO` level while loading in-app messages. When troubleshooting in-app message issues, first ensure to [set the SDK's log level](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#log-level) at least to `INFO`.
 >
 > If you find that `INFO` log messages are not sufficient for a particular use case, try setting the log level to `VERBOSE` to get more detailed information.
@@ -124,11 +128,11 @@ This section provides helpful pointers for troubleshooting in-app message issues
 >
 > All log messages related to in-app message handling are prefixed with `[InApp]` to make them easier to find. Bear in mind that some supporting processes (such as image caching) are logging messages without this prefix.
 
-### In-App Message Not Displayed
+### In-app message not displayed
 
 When troubleshooting why an in-app message did not display on your device, always first make sure that the in-app message was preloaded to the device, then troubleshoot message display.
 
-#### Troubleshoot In-App Messages Preloading Issues
+#### Troubleshoot in-app messages preloading issues
 
 - The SDK requests in-app messages from the Engagement platform any time one of the following occurs:
   - `Exponea.identifyCustomer` is called
@@ -145,7 +149,7 @@ When troubleshooting why an in-app message did not display on your device, alway
 >
 > Invoking `Exponea.anonymize` triggers fetching in-app messages immediately but `Exponea.identifyCustomer` needs to be flushed to the backend successfully first. This is because the backend must know the customer so it can assign the in-app messages with matching audience. If you have set `Exponea.flushMode` to anything other then `FlushMode.IMMEDIATE`, you must call `Exponea.flushData()` to finalize the `identifyCustomer` process and trigger an in-app messages fetch.
 
-#### Troubleshoot In-App Message Display Issues
+#### Troubleshoot in-app message display issues
 
 If your app is successfully requesting and receiving in-app messages but they are not displayed, consider the following:
 
@@ -165,15 +169,15 @@ If your app is successfully requesting and receiving in-app messages but they ar
 
 - Image downloads are limited to 10 seconds per image. If an in-app message contains a large image that cannot be downloaded within this time limit, the in-app message will not be displayed. For an HTML in-app message that contains multiple images, this restriction applies per image, but failure of any image download will prevent this HTML in-app message from being displayed.
 
-### In-App Message Shows Incorrect Image
+### In-app message shows incorrect image
 
 - To reduce the number of API calls and fetching time of in-app messages, the SDK caches the images contained in messages. Once the SDK downloads an image, an image with the same URL may not be downloaded again. If a message contains a new image with the same URL as a previously used image, the previous image is displayed since it was already cached. For this reason, we recommend always using different URLs for different images.
 
-### In-App Message Actions Not Tracked
+### In-app message actions not tracked
 
 - If you have implemented a custom `inAppMessageActionCallback`, actions are only tracked automatically if `trackActions` is set to `true`. If `trackActions` is set to `false`, you must manually track the action in the `inAppMessageAction` method. Refer to [Customize In-App Message Actions](#customize-in-app-message-actions) above for details.
 
-### Log Messages
+### Log messages
 
 While troubleshooting in-app message issues, you can follow the process of requesting, receiving, preloading, and displaying in-app messages through the information logged by the SDK at verbose log level. Look for messages similar to the ones below:
 

@@ -1,6 +1,6 @@
 ---
-title: Release Notes
-excerpt: Exponea Android SDK Release Notes
+title: Release notes
+excerpt: Exponea Android SDK release notes
 slug: android-sdk-release-notes
 categorySlug: integrations
 parentDocSlug: android-sdk

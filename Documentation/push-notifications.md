@@ -1,5 +1,5 @@
 ---
-title: Push Notifications
+title: Push notifications
 excerpt: Enable push notifications in your app using the Android SDK
 slug: android-sdk-push-notifications
 categorySlug: integrations
@@ -12,13 +12,17 @@ Push notifications can also be silent, used only to update the app’s interface
 
 > 📘
 >
-> Refer to [Mobile Push Notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
+> Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
+
+> 📘
+>
+> Also see [Mobile push notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) at Bloomreach Support Help Center.
 
 ## Integration
 
 This section describes the steps to add the minimum push notification functionality (receive alert notifications) to your app.
 
-### Standard (Firebase) Integration
+### Standard (Firebase) integration
 
 To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must:
 
@@ -32,15 +36,15 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 
 > 👍
 >
-> Please note that with Google deprecating and removing the FCM legacy API in June 2024, Bloomreach Engagement is now using Firebase HTTP v1 API.
+> Please note that with Google deprecating and removing the FCM legacy API in June 2024, Bloomreach Engagement is now using Firebase HTTP v1 API. Refer to [Firebase upgrade to HTTP v1 API](https://support.bloomreach.com/hc/en-us/articles/18931691055133-Firebase-upgrade-to-HTTP-v1-API) at the Bloomreach Support Help Center for upgrade information.
 >
-> If your Engagement project uses a deprecated version of the Firebase integration, you must [readd and reconfigure the FCM integration following the current instructions](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase#configure-the-firebase-cloud-messaging-integration-in-engagement).
+> If your Engagement project uses a deprecated version of the Firebase integration, you must [read and reconfigure the FCM integration following the current instructions](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase#configure-the-firebase-cloud-messaging-integration-in-engagement).
 >
 > ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/fcm-deprecated.png)
 
 
 
-### Huawei Integration
+### Huawei integration
 
 To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must:
 
@@ -52,7 +56,7 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 >
 > Follow the instructions in [Huawei Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei).
 
-### Request Notification Permission
+### Request notification permission
 
 As of Android 13 (API level 33), a new runtime notification permission `POST_NOTIFICATIONS` must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications.
 
@@ -74,7 +78,7 @@ The behavior of this callback is as follows:
   * Show the dialog, return the user's decision (`true`/`false`).
   * In case of previously granted permission, don't show the dialog return `true`.
 
-#### Require Notification Permission
+#### Require notification permission
 
 On Android 13 and higher, the app may not be able to send normal push notifications, even though a freshly generated token (at application start) is valid, if the user didn't grant permission to receive notifications.
 
@@ -84,17 +88,17 @@ If your marketing flow strictly requires normal push notifications usage, config
 
 This section describes the customizations you can implement once you have integrated the minimum push notification functionality.
 
-### Configure Automatic Push Notification Tracking
+### Configure automatic push notification tracking
 
 By default, the SDK tracks push notifications automatically. In the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can set the desired frequency using the `tokenTrackFrequency` property (default value is `ON_TOKEN_CHANGE`). You can also disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`.
 
 If `automaticPushNotification` is enabled, the SDK will display push notifications from Engagement and track a "campaign" event for every delivered/opened push notification with the relevant properties.
 
-### Respond to Push Notifications
+### Respond to push notifications
 
 When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can choose from three different actions to be performed when tapping the notification or additional buttons displayed with the notification.
 
-#### Open App
+#### Open app
 
 The "Open app" action generates an intent with action `com.exponea.sdk.action.PUSH_CLICKED`. The SDK automatically responds to it by opening your app's launcher activity.
 
@@ -126,7 +130,7 @@ The "Deep link" action creates a "view" intent that contains the URL specified w
 
 The "Open web browser" action is handled automatically by the SDK and no work is required from the developer to handle it.
 
-### Handle Additional Data Payload
+### Handle additional data payload
 
 When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `pushNotificationsDelegate`, which you can set on the `Exponea` object.
 
@@ -177,7 +181,7 @@ Note that if the SDK previously received any additional data while no listener w
 >
 > The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
 
-### Custom Processing of Notification Actions
+### Custom processing of notification actions
 
 When a user clicks on a notification or its buttons, the SDK automatically performs the configured action (open app, browser, etc.). If you require additional processing when this event occurs, you can create a receiver for this purpose. The SDK broadcastings `com.exponea.sdk.action.PUSH_CLICKED`, `com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED`, and `com.exponea.sdk.action.PUSH_URL_CLICKED` actions, and you can specify them in an intent filter to respond to them.
 
@@ -212,11 +216,11 @@ class MyReceiver : BroadcastReceiver() {
 }
 ```
 
-### Silent Push Notifications
+### Silent push notifications
 
-The Engagement web app allows you to set up silent push notifications, that are not displayed to the user. The SDK tracks a `campaign` event when a silent push notification is delivered. Silent push notifications cannot be opened but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handle Extra Data Payload](#handle-extra-data-payload).
+The Engagement web app allows you to set up silent push notifications, that are not displayed to the user. The SDK tracks a `campaign` event when a silent push notification is delivered. Silent push notifications cannot be opened but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handle extra data payload](#handle-extra-data-payload).
 
-### Push Notification Alert Sound
+### Push notification alert sound
 
 Received push notifications handled by `Exponea.handleRemoteMessage()` will play a default or customized sound when the notification is displayed.
 
@@ -231,11 +235,11 @@ Once the custom sound is in place in your app, enter the file name of the sound 
 >
 > Playing of the notification sound may be affected by the notification channel importance, the user's app notification behaviour setup, or by active Do Not Disturb mode. Read more in the [notifications overview](https://developer.android.com/develop/ui/views/notifications) in the Android documentation.
 
-### Manually Track Push Notifications
+### Manually track push notifications
 
 If you disable [automatic push notification tracking](#configure-automatic-push-notification-tracking) or if you want to track push notification from other providers, you can manually track events related to push notifications.
 
-#### Track Push Token (FCM)
+#### Track push token (FCM)
 
 Use the `trackPushToken` method to manually track the FCM push token:
 
@@ -247,7 +251,7 @@ Exponea.trackPushToken(
 
 Invoking this method will track the push token immediately regardless of the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) for `tokenTrackFrequency`.
 
-#### Track Delivered Push Notification
+#### Track delivered push notification
 
 Use the `trackDeliveredPush` method to manually track a delivered push notification:
 
@@ -277,7 +281,7 @@ Exponea.trackDeliveredPush(
 >
 > The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [tracking consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
 
-#### Track Clicked Push Notification
+#### Track clicked push notification
 
 Use the `trackClickedPush` method to manually track a clicked push notification:
 
@@ -305,7 +309,7 @@ Exponea.trackClickedPush(
 
 > The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [tracking consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
 
-### Custom Push Notification Data Processing
+### Custom push notification data processing
 
 If the provided `Exponea.handleRemoteMessage` method does not fit the requirements of your app, or you decide to disable automatic push notifications, you must handle push notifications and process their payload yourself.
 
@@ -313,7 +317,7 @@ Notification payloads are generated from (possibly complex) scenarios in the Eng
 
 Notification payloads use a JSON data structure.
 
-#### Payload Example
+#### Payload example
 
 ```json
 {

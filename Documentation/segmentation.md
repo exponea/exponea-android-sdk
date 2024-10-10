@@ -6,13 +6,13 @@ categorySlug: integrations
 parentDocSlug: android-sdk
 ---
 
-The [Real-Time Segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) feature personalizes the product search, category and pathway results in real-time based on customer demographic and behavioral data. The feature combines Bloomreach Discovery’s extensive search algorithms and Bloomreach Engagement’s rich customer data to get the best of both worlds.
+The [Real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) feature personalizes the product search, category and pathway results in real-time based on customer demographic and behavioral data. The feature combines Bloomreach Discovery’s extensive search algorithms and Bloomreach Engagement’s rich customer data to get the best of both worlds.
 
-Refer to the [Discovery Real-Time Segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) documentation for more details about this feature.
+Refer to the [Discovery real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) documentation for more details about this feature.
 
 This page describes the integration steps required to retrieve any segmentation data changes assigned to the current customer.
 
-### Use Real-Time Segments
+### Use real-time segments
 
 To use real-time segments in your app, you must register one or more customized `SegmentationDataCallback` instances.
 
@@ -50,7 +50,7 @@ The data payload of each `Segment` is as follows:
 }
 ```
 
-### Get Segmentation Data Directly
+### Get segmentation data directly
 
 The SDK provides an API to get segmentation data directly. Invoke the `Exponea.getSegments` method, passing a `exposingCategory` value as argument:
 
@@ -78,9 +78,9 @@ Exponea.getSegments(exposingCategory = exposingCategory, force = true) { segment
 >
 > The `getSegments` method loads segmentation data for the requested `category` and the current customer as identified by `Exponea.identifyCustomer`. Please bear in mind that the callback is invoked in a background thread.
 
-### Segmentation Data Reload Triggers
+### Segmentation data reload triggers
 
-There are a few cases when the SDK refreshes segmentation data, and this process could occur multiple times. However, the SDK only notifies registered callbacks if the data have changed or if `includeFirstLoad` is `true`. Refer to [Callback Behavior](#callback-behavior) for more details about the callback notification process.
+There are a few cases when the SDK refreshes segmentation data, and this process could occur multiple times. However, the SDK only notifies registered callbacks if the data have changed or if `includeFirstLoad` is `true`. Refer to [Callback behavior](#callback-behavior) for more details about the callback notification process.
 
 A data reload is triggered in the following cases:
 
@@ -95,7 +95,7 @@ When a segmentation data reload is triggered, the process waits 5 seconds before
 >
 > It is required to [set](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing#flushing-modes) `Exponea.flushMode` to `IMMEDIATE` to get accurate results. The process of segment calculation needs all tracked events to be uploaded to server to calculate results effectively.
 
-### Callback Behavior
+### Callback behavior
 
 The SDK allows you to register multiple `SegmentationDataCallback` instances for multiple categories or for the same category. You may register a callback with the SDK anytime (before and after initialization). Callback instances remain active until the application terminates or until you unregister the callback.
 
@@ -111,7 +111,7 @@ The callback behavior follows the following principles:
 >
 > Consider keeping the number of callbacks within a reasonable value.
 
-### Deregister a Callback
+### Deregister a callback
 
 Deregistration of a callback instance is up to the developer. If you don't deregister a callback instance, the SDK will keep it active until the application terminates.
 
@@ -134,7 +134,7 @@ Exponea.unregisterSegmentationDataCallback(segmentCallbackInstance)
 
 A callback can deregister itself with `segmentCallbackInstance.unregister()` as a shortcut to `Exponea.unregisterSegmentationDataCallback(segmentCallbackInstance)`. Deregistering a callback is effective immediately.
 
-### Listen to Multiple Segmentation Categories
+### Listen to multiple segmentation categories
 
 Although a `SegmentationDataCallback` allows only one `exposingCategory`, you can register multiple callbacks for multiple categories. As the SDK notifies all registered callbacks in a background thread, you may provide a collector of changed values.
 
@@ -162,7 +162,7 @@ dataCollector.observeForever {
 
 ### Troubleshooting
 
-> 👍 Enable Verbose Logging
+> 👍 Enable verbose logging
 >
 > The SDK logs a lot of useful information related to segmentation data updates on the `VERBOSE` level. You can set the logger level using `Exponea.logger.logLevel` before initializing the SDK.
 
@@ -174,7 +174,7 @@ dataCollector.observeForever {
 
 The process of updating segmentation data may be canceled due to the current state of the SDK. Segmentation data are assigned to the current customer and the process is active only if there are any callbacks registered. The SDK logs information about all these validations.
 
-#### Log Messages
+#### Log messages
 
 If you are not receiving segmentation data updates, you may see the following log messages:
 

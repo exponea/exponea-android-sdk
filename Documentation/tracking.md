@@ -16,15 +16,19 @@ By default, the SDK tracks certain events automatically, including:
 
 Additionally, you can track any custom event relevant to your business.
 
+> 📘
+>
+> Also see [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at Bloomreach Support Help Center.
+
 ## Events
 
-### Track Event
+### Track event
 
 Use the `trackEvent()` method to track any custom event type relevant to your business.
 
 You can use any name for a custom event type. We recommended using a descriptive and human-readable name.
 
-Refer to the [Custom Events](https://documentation.bloomreach.com/engagement/docs/custom-events) documentation for an overview of commonly used custom events.
+Refer to the [Custom events](https://documentation.bloomreach.com/engagement/docs/custom-events) documentation for an overview of commonly used custom events.
 
 #### Arguments
 
@@ -208,7 +212,7 @@ The session represents the actual time spent in the app. It starts when the appl
 
 The default session timeout is 60 seconds. Set `sessionTimeout` in the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration#automaticsessiontracking) to specify a different timeout.
 
-### Track Session Manually
+### Track session manually
 
 To disable automatic session tracking, set `automaticSessionTracking` to `false` in the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration#automaticsessiontracking).
 
@@ -228,11 +232,11 @@ Exponea.trackSessionEnd()
 >
 > The default behavior for manually calling `Exponea.trackSessionStart()` multiple times can be controlled by the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag, which is set to `true` by default. If a previous session is still open (i.e. it has not been manually closed with `Exponea.trackSessionEnd()`) and `Exponea.trackSessionStart()` is called again, the SDK will automatically track a `session_end` for the previous session and then tracks a new `session_start` event. To prevent this behavior, set the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag to `false`.
 
-## Push Notifications
+## Push notifications
 
 If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks the push notification token by default.
 
-### Track Token Manually
+### Track token manually
 
 Use either the `trackPushToken()` (Firebase) or `trackHmsPushToken` (Huawei) method to manually track the token for receiving push notifications. The token is assigned to the currently logged-in customer (with the `identifyCustomer` method).
 
@@ -269,7 +273,7 @@ Exponea.trackHmsPushToken("value-of-push-token")
 The SDK provides a convenience method `trackPaymentEvent` to help you track information about a payment for a product or service within the application.
 
 
-### Track Payment Event
+### Track payment event
 
 Use the `trackPaymentEvent()` method to track payments.
 
@@ -316,7 +320,7 @@ val item = PurchasedItem(
 Exponea.trackPaymentEvent(purchasedItem = item)
 ```
 
-## Default Properties
+## Default properties
 
 You can [configure](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) default properties to be tracked with every event. Note that the value of a default property will be overwritten if the tracking event has a property with the same key.
 

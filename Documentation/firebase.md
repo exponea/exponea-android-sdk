@@ -27,7 +27,7 @@ To summarize, you'll create a project using the Firebase console, download a gen
 - [ ] Your **application** Gradle build file (for example, *my-project/app/build.gradle*) contains `apply plugin: 'com.google.gms.google-services'`.
 - [ ] Your **top level** Gradle build file (for example, *my-project/build.gradle*) has `classpath 'com.google.gms:google-services:X.X.X'` listed in build script dependencies.
 
-## Implement Firebase Messaging in Your App
+## Implement Firebase messaging in your app
 
 Next, you must create and register a service that extends `FirebaseMessagingService`. The SDK's automatic tracking relies on your app providing this implementation.
 
@@ -80,9 +80,9 @@ A push token is typically generated at the first application start, but it has i
 
 > ❗️
 >
-> As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
+> As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
 >
-> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
+> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
 
 > ❗️
 >
@@ -109,7 +109,7 @@ A push token is typically generated at the first application start, but it has i
 >
 > The methods `Exponea.handleNewToken` and `Exponea.handleRemoteMessage` can be used before SDK initialization if a previous initialization was done. In such a case, each method will track events with the configuration of the last initialization. Consider initializing the SDK in `Application::onCreate` to make sure a fresh configuration is applied in case of an application update.
 
-## Configure the Firebase Cloud Messaging Integration in Engagement
+## Configure the Firebase Cloud Messaging integration in Engagement
 
 Finally, you must configure the Firebase Cloud Messaging integration in Engagement so the platform can use it to send push notifications.
 
@@ -135,7 +135,7 @@ The Engagement platform should now be able to send push notifications to Android
 
 - [ ] If you run the app, the self-check should be able to send and receive a silent push notification. 
   ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/self-check.png)
-- [ ] You should now be able to send push notifications using the Engagement web app and receive them in your app. Refer to [Mobile Push Notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
+- [ ] You should now be able to send push notifications using the Engagement web app and receive them in your app. Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
 - [ ] Send a test push notification from Engagement to the device and tap on it. Your broadcast receiver should be called.
 
 > 👍

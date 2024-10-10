@@ -1,5 +1,5 @@
 ---
-title: Fetch Data
+title: Fetch data
 excerpt: Fetch data from Bloomreach Engagement using the Android SDK
 slug: android-sdk-fetch-data
 categorySlug: integrations
@@ -8,7 +8,7 @@ parentDocSlug: android-sdk
 
 The SDK provides methods to retrieve data from the Engagement platform. Responses are available in the `onSuccess` and `onFailure` callback properties.
 
-## Fetch Recommendations
+## Fetch recommendations
 
 Use the `fetchRecommendation` method to get personalized recommendations for the current customer from an Engagement [recommendation model](https://documentation.bloomreach.com/engagement/docs/recommendations).
 
@@ -54,7 +54,7 @@ Exponea.fetchRecommendation(
 )
 ```
 
-### Result Object
+### Result object
 
 #### CustomerRecommendation
 
@@ -66,7 +66,7 @@ Exponea.fetchRecommendation(
 | recommendationVariantId | String                   | ID of the recommendation engine variant used. |
 | data                    | Map<String, JsonElement> | The recommendation engine data and recommended item IDs returned from the server. |
 
-## Fetch Consent Categories
+## Fetch consent categories
 
 Use the `getConsents` method to get a list of your consent categories and their definitions.
 
@@ -88,7 +88,7 @@ Exponea.getConsents(
 
 ```
 
-### Result Object
+### Result object
 
 #### Consent
 

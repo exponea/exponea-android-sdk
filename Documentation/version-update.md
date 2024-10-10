@@ -1,5 +1,5 @@
 ---
-title: SDK Version Update Guide
+title: SDK version update guide
 excerpt: Update Exponea Android SDK in your app to a new version
 slug: android-sdk-version-update
 categorySlug: integrations
@@ -58,7 +58,7 @@ A benefit of the new behaviour is that the method `inAppMessageCloseAction` can 
 
 Updating Exponea SDK to version 3 or higher requires you to make some changes related to push notifications.
 
-### Changes Regarding FirebaseMessagingService
+### Changes regarding FirebaseMessagingService
 
 In order to keep the SDK as small as possible and avoid including libraries that are not essential for it functionality, an implementation of `FirebaseMessagingService` is no longer included in the SDK. As a result, the SDK no longer has a dependency on the Firebase library.
 
@@ -106,7 +106,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 </service>
 ```
 
-### Changes Regarding Notification Trampolining
+### Changes regarding notification trampolining
 
 Android (from version 12) restricts starting any `Intent` from a notification action indirectly. This means an activity can no longer be started from a service or receiver. In version 3.0.0 of the SDK, we made changes to comply with these rules. The SDK starts all notification action `Intent`s directly (opening the app, opening a web browser, opening a deep link). Previous versions required creating a `BroadcastReceiver` to handle an Intent with the action `com.exponea.sdk.action.PUSH_CLICKED` and start the app on the application side. You must remove this code since this receiver acts as a notification trampoline, which, when targeting Android S and above, can cause the app to crash. You can safely **remove** this code; opening your Launcher Activity on a push click is now handled by the SDK. 
 
@@ -116,7 +116,7 @@ If you still need to do some processing in your app, when a notification action 
 >
 > Broadcast for `com.exponea.sdk.action.PUSH_CLICKED`, `com.exponea.sdk.action.PUSH_DEEPLINK_CLICKED` and `com.exponea.sdk.action.PUSH_URL_CLICKED` actions was removed by mistake in version 3.0.0 and added back in 3.0.1. Please update directly to this patch, if you need to use it.
 
-#### 💻 Usage
+#### Usage
 
 Registration in AndroidManifest.xml 
 ``` xml
@@ -147,7 +147,7 @@ class MyReceiver : BroadcastReceiver() {
 }
 ```
 
-### Changes in Public API
+### Changes in public API
 
 Exponea SDK no longer has a dependency on the Firebase library. For this reason, the signature of public methods that accepted a Firebase `RemoteMessage` has changed. These methods now accept message data directly instead. You can obtain them by calling `getData()` on the `RemoteMessage` object.
 

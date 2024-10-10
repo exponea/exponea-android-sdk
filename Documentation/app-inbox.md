@@ -50,7 +50,7 @@ That's all that's required to integrate the App Inbox. Optionally, you can [cust
 >
 > See [FetchFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/FetchFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
-## Default App Inbox Behavior
+## Default App Inbox behavior
 
 The SDK fetches and displays the App Inbox automatically as follows:
 
@@ -103,7 +103,7 @@ The SDK provides the following UI labels in English. You can modify these or add
 <string name="exponea_inbox_mainActionTitle">See more</string>
 ```
 
-### Customize UI Styles
+### Customize UI styles
 
 The App Inbox screens are designed to satisfy most customers' needs. However, they may not fit the design of your application. The style rules defined for the App Inbox UI components are listed below. You can override them in your `styles.xml` files.
 
@@ -178,7 +178,7 @@ The App Inbox screens are designed to satisfy most customers' needs. However, th
 </style>
 ```
 
-### Customize UI Components
+### Customize UI components
 
 You can override App Inbox UI elements by registering your own `AppInboxProvider` implementation:
 
@@ -194,7 +194,7 @@ Your `AppInboxProvider` instance must implement all App Inbox UI components. You
 >
 > Refer to [ExampleAppInboxProvider](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/services/ExampleAppInboxProvider.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
-#### App Inbox Button
+#### App Inbox button
 
 The method `getAppInboxButton(Context)` returns an `android.widget.Button` instance.
 
@@ -213,7 +213,7 @@ override fun getAppInboxButton(context: Context): Button {
 }
 ```
 
-#### App Inbox List View
+#### App Inbox list view
 
 The method `getAppInboxListView(Context, (MessageItem, Int) -> Unit)` returns an `android.view.View` instance to display the App Inbox messages list.
 
@@ -240,7 +240,7 @@ override fun getAppInboxListView(context: Context, onItemClicked: (MessageItem, 
 >
 > The methods `Exponea.trackAppInboxOpened` and `Exponea.markAppInboxAsRead` are called when the user clicks on an item. Please call these methods in your custom implementation to maintain correct App Inbox behavior.
 
-#### App Inbox List Fragment
+#### App Inbox list fragment
 
 The method `getAppInboxListFragment(Context)` returns an `androidx.fragment.app.Fragment` instance that shows the [App Inbox list view](#app-inbox-list-view) described in the previous paragraph.
 
@@ -260,7 +260,7 @@ override fun getAppInboxListFragment(context: Context): Fragment {
 }
 ```
 
-#### App Inbox Detail View
+#### App Inbox detail view
 
 The method `getAppInboxDetailView(Context, String)` returns an `android.view.View` implementation to show an App Inbox message detail view.
 
@@ -287,7 +287,7 @@ override fun getAppInboxDetailView(context: Context, messageId: String): View {
 >
 > The method `Exponea.trackAppInboxClick` is called when the user clicks on an action. Please call this method in your custom implementation to maintain correct App Inbox behavior.
 
-#### App Inbox Detail Fragment
+#### App Inbox detail fragment
 
 The method `getAppInboxDetailFragment(Context, String)` returns an `androidx.fragment.app.Fragment` instance that shows the [App Inbox detail view](#app-inbox-detail-view) described in the previous paragraph.
 
@@ -307,7 +307,7 @@ override fun getAppInboxDetailFragment(context: Context, messageId: String): Fra
 }
 ```
 
-### App Inbox Data API
+### App Inbox data API
 
 The SDK provides methods to access App Inbox data directly without accessing the UI layer.
 
@@ -348,7 +348,7 @@ Exponea.fetchAppInboxItem(messageId, { message ->
 
 Fetching a single message triggers fetching the entire App Inbox (including incremental loading) but will retrieve the data from local storage if the App Inbox was fetched previously.
 
-#### Mark Message as Read
+#### Mark message as read
 
 Use the `markAppInboxAsRead` method to mark an App Inbox message (specified by their ID) as read:
 
@@ -362,22 +362,22 @@ Exponea.markAppInboxAsRead(message) { marked ->
 >
 > Marking a message as read using the `markAppInboxAsRead` method does not trigger a tracking event for opening the message. To track an opened message, you need to call the `Exponea.trackAppInboxOpened` method). 
 
-### Track App Inbox Events Manually
+### Track App Inbox events manually
 
 The SDK tracks App Inbox events automatically by default. In case of a [custom implementation](#customize-app-inbox), it is the developers' responsibility to use the relevant tracking methods in the right places.
 
-#### Track Opened App Inbox Message
+#### Track opened App Inbox message
 
 Use the `Exponea.trackAppInboxOpened(MessageItem)` method to track the opening of App Inbox messages.
 
-The behavior of `trackAppInboxOpened` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking Consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+The behavior of `trackAppInboxOpened` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 If you want to ignore tracking consent, use `Exponea.trackAppInboxOpenedWithoutTrackingConsent` instead. This method will track the event regardless of consent.
 
-#### Track Clicked App Inbox Message Action
+#### Track clicked App Inbox message action
 
 Use the `Exponea.trackAppInboxClick(MessageItemAction, MessageItem)` method to track action invocations in App Inbox messages.
 
-The behavior of `trackAppInboxClick` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking Consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+The behavior of `trackAppInboxClick` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 If you want to ignore tracking consent, use `Exponea.trackAppInboxClickWithoutTrackingConsent` instead. This method will track the event regardless of consent.

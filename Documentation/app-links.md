@@ -16,7 +16,7 @@ This page describes the steps required to support and track incoming Android App
 
 To support Android App Links in your app, you must create a two-way association between your app and your website and specify the URLs that your app handles. To this end, you must add an intent filter to your app's Android manifest and host a Digital Asset Link JSON file on your domain.
 
-### Add Intent Filter to Android Manifest
+### Add intent filter to Android manifest
 
 The [App Links Assistant in Android Studio](https://developer.android.com/studio/write/app-link-indexing.html#intent) can help you create intent filters in your manifest and map existing URLs from your website to activities in your app. The App Links Assistant also adds template code in each corresponding activity to handle the intent.
 
@@ -39,7 +39,7 @@ Example:
 </activity>
 ```
 
-### Add Digital Asset Link JSON to Your Domain
+### Add Digital Asset Link JSON to your domain
 
 You must declare the association between your website and your intent filters by hosting a [Digital Asset Links](https://developers.google.com/digital-asset-links/v1/getting-started) JSON file at the following location:
 
@@ -91,7 +91,7 @@ Example:
 
 > ❗️
 >
-> If an existing session is resumed by opening an App Link, the resumed session is **NOT** attributed to the App Link click, and the App Link click parameters are not tracked in the `session_start` event. Session behavior is determined by the `automaticSessionTracking` and `sessionTimeout` parameters described in [SDK Configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration). Please consider this in case of manual session handling or while testing universal link tracking during the development.
+> If an existing session is resumed by opening an App Link, the resumed session is **NOT** attributed to the App Link click, and the App Link click parameters are not tracked in the `session_start` event. Session behavior is determined by the `automaticSessionTracking` and `sessionTimeout` parameters described in [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration). Please consider this in case of manual session handling or while testing universal link tracking during the development.
 
 > ❗️
 >

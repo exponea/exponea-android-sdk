@@ -1,5 +1,5 @@
 ---
-title: Example App
+title: Example app
 excerpt: Build, run, and navigate the example app included with the Android SDK
 slug: android-sdk-example-app
 categorySlug: integrations
@@ -14,7 +14,7 @@ You must have the following software installed to be able to build and run the e
 
 - [Android Studio](https://developer.android.com/studio) with a [virtual device](https://developer.android.com/studio/run/managing-avds) set up
 
-## Build and Run the Example App
+## Build and run the example app
 
 1. Clone the [exponea-android-sdk](https://github.com/exponea/exponea-android-sdk) repository on GitHub:
    ```shell
@@ -35,7 +35,7 @@ You must have the following software installed to be able to build and run the e
 >
 > To enable push notifications in the example app, you must also configure the [Firebase integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-firebase) or [Huawei integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-huawei) in the Exponea web app.
 
-## Navigate the Example App
+## Navigate the example app
 
 ![Example app screens: configuration, fetch, track, track event](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/android-example-app-1.png)
 
@@ -75,7 +75,7 @@ If you entered a hard ID (use an email address as value) in the `Registered` fie
 
 > 📘
 >
-> Refer to [Customer Identification](https://documentation.bloomreach.com/engagement/docs/customer-identification) for more information on soft IDs and hard IDs.
+> Refer to [Customer identification](https://documentation.bloomreach.com/engagement/docs/customer-identification) for more information on soft IDs and hard IDs.
 
 ![Example app screens: identify, flush, anonymize, content blocks](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/android-example-app-2.png)
 

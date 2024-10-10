@@ -35,7 +35,7 @@ First, you must set up Huawei Mobile Services:
 >
 > For detailed instructions, please refer to [Preparations for Integrating HUAWEI HMS Core](https://developer.huawei.com/consumer/en/codelab/HMSPreparation/index.html#0) in the official HMS documentation.
 
-## Implement HMS Message Service in Your App
+## Implement HMS Message Service in your app
 
 Next, you must create and register a service that extends `HmsMessageService`. The SDK's automatic tracking relies on your app providing this implementation.
 
@@ -89,9 +89,9 @@ A push token is typically generated at the first application start, but it has i
 
 > ❗️
 >
-> As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
+> As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
 >
-> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require Notification Permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
+> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
 
 > ❗️
 >
@@ -105,7 +105,7 @@ A push token is typically generated at the first application start, but it has i
 >
 > The methods `Exponea.handleNewToken` and `Exponea.handleRemoteMessage` can be used before SDK initialization if a previous initialization was done. In such a case, each method will track events with the configuration of the last initialization. Consider initializing the SDK in `Application::onCreate` to make sure a fresh configuration is applied in case of an application update.
 
-## Configure the Huawei Push Service Integration in Engagement
+## Configure the Huawei Push Service integration in Engagement
 
 1. In Huawei App Gallery Connect, navigate to `Project settings` > `App information` > `OAuth 2.0 client ID`. Locate the `Client ID` and `Client secret` copy their values. You will use these to configure the Huawei Push Service integration in Engagement.
    ![HMS - Client ID and Client secret](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei1.png)

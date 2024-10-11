@@ -11,6 +11,17 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.0.1
+#### October 11, 2024
+* Added:
+  * Adds several minor documentation improvements.
+* Fixed:
+  * Fixes invalid cookie parameter sending for fetch segments.
+  * Fixes missing item in version 4.0.0 release notes.
+  * Fixes incorrect Segmentation API category type in documentation from merchandise to merchandising.
+  * Fixes triggering of segments fetch for PUSH token track.
+
+
 ## Release Notes for 4.0.0
 #### September 25, 2024
 * Added:

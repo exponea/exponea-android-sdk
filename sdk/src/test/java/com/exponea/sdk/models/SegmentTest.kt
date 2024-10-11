@@ -249,24 +249,27 @@ internal class SegmentTest {
 
     @Test
     fun `should compare SegmentsData that are equal by default customerIds and data`() {
-        assertEquals(getSegmentsData(), getSegmentsData())
+        val now = System.currentTimeMillis()
+        assertEquals(getSegmentsData(updateMillis = now), getSegmentsData(updateMillis = now))
     }
 
     @Test
     fun `should compare SegmentsData that are equal by custom customerIds and default data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(customerIds = hashMapOf(
             "cookie" to "cookie1",
             "registered" to "registered1"
-        ))
+        ), updateMillis = now)
         val data2 = getSegmentsData(customerIds = hashMapOf(
             "cookie" to "cookie1",
             "registered" to "registered1"
-        ))
+        ), updateMillis = now)
         assertEquals(data1, data2)
     }
 
     @Test
     fun `should compare SegmentsData that are equal by default customerIDs and custom data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(data = getSegmentations(
             discovery = arrayListOf(
                 getSegment(mapOf(
@@ -275,7 +278,7 @@ internal class SegmentTest {
                     "segment3" to "true"
                 ))
             )
-        ))
+        ), updateMillis = now)
         val data2 = getSegmentsData(data = getSegmentations(
             discovery = arrayListOf(
                 getSegment(mapOf(
@@ -284,12 +287,13 @@ internal class SegmentTest {
                     "segment3" to "true"
                 ))
             )
-        ))
+        ), updateMillis = now)
         assertEquals(data1, data2)
     }
 
     @Test
     fun `should compare SegmentsData that are equal by custom customerIDs and custom data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(
             customerIds = hashMapOf(
                 "cookie" to "cookie1",
@@ -303,7 +307,8 @@ internal class SegmentTest {
                         "segment3" to "true"
                     ))
                 )
-            )
+            ),
+            updateMillis = now
         )
         val data2 = getSegmentsData(
             customerIds = hashMapOf(
@@ -318,26 +323,29 @@ internal class SegmentTest {
                         "segment3" to "true"
                     ))
                 )
-            )
+            ),
+            updateMillis = now
         )
         assertEquals(data1, data2)
     }
 
     @Test
     fun `should compare SegmentsData that are non-equal by custom customerIds and default data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(customerIds = hashMapOf(
             "cookie" to "cookie1",
             "registered" to "registered1"
-        ))
+        ), updateMillis = now)
         val data2 = getSegmentsData(customerIds = hashMapOf(
             "cookie" to "cookie2",
             "registered" to "registered2"
-        ))
+        ), updateMillis = now)
         assertNotEquals(data1, data2)
     }
 
     @Test
     fun `should compare SegmentsData that are non-equal by default customerIDs and custom data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(data = getSegmentations(
             discovery = arrayListOf(
                 getSegment(mapOf(
@@ -346,7 +354,7 @@ internal class SegmentTest {
                     "segment3" to "true"
                 ))
             )
-        ))
+        ), updateMillis = now)
         val data2 = getSegmentsData(data = getSegmentations(
             discovery = arrayListOf(
                 getSegment(mapOf(
@@ -355,12 +363,13 @@ internal class SegmentTest {
                     "segment3" to "false"
                 ))
             )
-        ))
+        ), updateMillis = now)
         assertNotEquals(data1, data2)
     }
 
     @Test
     fun `should compare SegmentsData that are non-equal by custom customerIDs and custom data`() {
+        val now = System.currentTimeMillis()
         val data1 = getSegmentsData(
             customerIds = hashMapOf(
                 "cookie" to "cookie1",
@@ -374,7 +383,8 @@ internal class SegmentTest {
                         "segment3" to "true"
                     ))
                 )
-            )
+            ),
+            updateMillis = now
         )
         val data2 = getSegmentsData(
             customerIds = hashMapOf(
@@ -389,7 +399,8 @@ internal class SegmentTest {
                         "segment3" to "false"
                     ))
                 )
-            )
+            ),
+            updateMillis = now
         )
         assertNotEquals(data1, data2)
     }

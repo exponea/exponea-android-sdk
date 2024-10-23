@@ -234,13 +234,19 @@ Exponea.trackSessionEnd()
 
 ## Push notifications
 
-If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks the push notification token by default.
+If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks push notifications by default.
+
+In the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`. It is then up to the developer to [manually track push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#manually-track-push-notifications).
+
+> ❗️
+>
+> The behavior of push notification tracking may be affected by the tracking consent feature, which in enabled mode requires explicit consent for tracking. Refer to the [consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 ### Track token manually
 
-Use either the `trackPushToken()` (Firebase) or `trackHmsPushToken` (Huawei) method to manually track the token for receiving push notifications. The token is assigned to the currently logged-in customer (with the `identifyCustomer` method).
+Use either the `trackPushToken()` (Firebase) or `trackHmsPushToken` (Huawei) method to [manually track the token](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#track-push-token-fcm) for receiving push notifications. The token is assigned to the currently logged-in customer (with the `identifyCustomer` method).
 
-Invoking this method will track a push token immediately regardless of the value of 'tokenTrackFrequency' (refer to the [Configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) documentation for details).
+Invoking this method will track a push token immediately regardless of the value of the `tokenTrackFrequency` [configuration parameter](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 
 Each time the app becomes active, the SDK calls `verifyPushStatusAndTrackPushToken` and tracks the token.
 
@@ -268,10 +274,109 @@ Exponea.trackHmsPushToken("value-of-push-token")
 >
 > Remember to invoke [anonymize](#anonymize) whenever the user signs out to ensure the push notification token is removed from the user's customer profile. Failing to do this may cause multiple customer profiles share the same token, resulting in duplicate push notifications.
 
+### Track push notification delivery manually
+
+Use the `trackDeliveredPush()` method to [manually track push notification delivery](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#track-delivered-push-notification).
+
+#### Arguments
+
+| Name      | Type                                   | Description |
+| ----------| -------------------------------------- | ----------- |
+| data      | [NotificationData](#notificationdata)? | Notification data. |
+| timestamp | Double                                 | Unix timestamp (in seconds) specifying when the event was tracked. Specify nil value to use the current time. |
+
+#### NotificationData
+
+| Name                    | Type                          | Description |
+| ------------------------| ----------------------------- | ----------- |
+| attributes              | HashMap<String, Any>          | Map of data attributes. |
+| campaignData            | [CampaignData](#campaigndata) | Campaign data. |
+| consentCategoryTracking | String?                       | Consent category. |
+| hasTrackingConsent      | Boolean                       | Indicates whether explicit [tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) has been obtained. |
+| hasCustomEventType      | Boolean                       | Indicates whether the notification has a custom event type. |
+| eventType               | String?                       | Event type for the notification (default: campaign). |
+| sentTimestamp           | Double?                       | Unix timestamp (in seconds). Specify nil value to use the current time. |
+
+#### CampaignData
+
+| Name        | Type    | Description |
+| ------------| ------- | ----------- |
+| source      | String? | UTM source code. |
+| campaign    | String? | UTM campaign code. |
+| content     | String? | UTM content code. |
+| medium      | String? | UTM method code.|
+| term        | String? | UTM term code. |
+| payload     | String? | Notification payload in JSON format. |
+| createdAt   | Double  | Unix timestamp (in seconds). Specify nil value to use the current time. |
+| completeUrl | String? | Campaign URL, defaults to null for push notifications.| 
+
+> 📘
+>
+> Refer to [UTM parameters](https://documentation.bloomreach.com/engagement/docs/utm-parameters) in the campaigns documentation for details. 
+
+#### Example
+
+```kotlin
+// create NotificationData from your push payload
+val notificationData = NotificationData(
+    dataMap = hashMapOf(
+        "platform" to "android",
+        "subject" to "Subject",
+        "type" to "push",
+        ...
+    ),
+    campaignMap = mapOf(
+       "utm_campaign" to "Campaign name",
+       "utm_medium" to "mobile_push_notification",
+       "utm_content" to "en",
+       ...
+    )
+)
+Exponea.trackDeliveredPush(
+        data = notificationData
+        timestamp = currentTimeSeconds()
+)
+```
+
+### Track push notification click manually
+
+Use the `trackClickedPush()` method to [manually track push notification clicks](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#track-clicked-push-notification).
+
+#### Arguments
+
+| Name       | Type                                   | Description |
+| -----------| -------------------------------------- | ----------- |
+| data       | [NotificationData](#notificationdata)? | Notification data. |
+| actionData | [NotificationData](#notificationdata)? | Action data.|
+| timestamp  | Double?                                | Unix timestamp (in seconds) specifying when the event was tracked. Specify nil value to use the current time. |
+
+#### Example
+
+```kotlin
+// create NotificationData from your push payload
+val notificationData = NotificationData(
+    dataMap = hashMapOf(
+        "platform" to "android",
+        "subject" to "Subject",
+        "type" to "push",
+        ...
+    ),
+    campaignMap = mapOf(
+       "utm_campaign" to "Campaign name",
+       "utm_medium" to "mobile_push_notification",
+       "utm_content" to "en",
+       ...
+    )
+)
+Exponea.trackClickedPush(
+        data = notificationData
+        timestamp = currentTimeSeconds()
+)
+```
+
 ## Payments
 
 The SDK provides a convenience method `trackPaymentEvent` to help you track information about a payment for a product or service within the application.
-
 
 ### Track payment event
 

@@ -42,8 +42,6 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 >
 > ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/fcm-deprecated.png)
 
-
-
 ### Huawei integration
 
 To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must:
@@ -241,7 +239,7 @@ If you disable [automatic push notification tracking](#configure-automatic-push-
 
 #### Track push token (FCM)
 
-Use the `trackPushToken` method to manually track the FCM push token:
+Use the [`trackPushToken`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#track-token-manually) method to manually track the FCM push token:
 
 ``` kotlin
 Exponea.trackPushToken(
@@ -253,7 +251,7 @@ Invoking this method will track the push token immediately regardless of the [SD
 
 #### Track delivered push notification
 
-Use the `trackDeliveredPush` method to manually track a delivered push notification:
+Use the [`trackDeliveredPush`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#track-push-notification-delivery-manually) method to manually track a delivered push notification:
 
 ```kotlin
 // create NotificationData from your push payload
@@ -283,7 +281,7 @@ Exponea.trackDeliveredPush(
 
 #### Track clicked push notification
 
-Use the `trackClickedPush` method to manually track a clicked push notification:
+Use the [`trackClickedPush`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#track-push-notification-click-manually) method to manually track a clicked push notification:
 
 ``` kotlin
 // create NotificationData from your push payload
@@ -359,6 +357,10 @@ Notification payloads use a JSON data structure.
 ```
 
 ## Troubleshooting
+
+> 📘
+>
+> Refer to [Mobile Push Notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) in our support portal for frequently asked questions related to push notifications.
 
 If push notifications aren't working as expected in your app, consider the following frequent issues and their possible solutions:
 

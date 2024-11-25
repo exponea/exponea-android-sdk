@@ -16,6 +16,7 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.Result
@@ -523,7 +524,10 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         cbViewHolder.updateContent(carousel.getShownContentBlock())
         assertNotNull(createdCbView)
         createdCbView?.controller?.loadContent(false)
-        createdCbView?.controller?.onUrlClick("https://exponea.com/close_action")
+        val manualCloseUrl = createdCbView?.controller?.assignedHtmlContent?.actions?.find {
+            it.actionType == HtmlActionType.CLOSE
+        }
+        createdCbView?.controller?.onUrlClick(manualCloseUrl?.actionUrl!!)
         assertEquals("placeholder_1", notifiedPlaceholderId)
         assertNotNull(notifiedContentBlock)
         assertEquals("id1", notifiedContentBlock?.id)

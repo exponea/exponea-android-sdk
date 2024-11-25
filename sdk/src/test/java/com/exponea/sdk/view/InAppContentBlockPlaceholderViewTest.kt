@@ -13,6 +13,7 @@ import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
@@ -296,7 +297,6 @@ internal class InAppContentBlockPlaceholderViewTest {
             ApplicationProvider.getApplicationContext(),
             InAppContentBlockPlaceholderConfiguration(true)
         )
-        val manualCloseUrl = "https://exponea.com/close_action"
         var stepIndex = 0
         var messageShown = 0
         var actionClosed = 0
@@ -330,7 +330,10 @@ internal class InAppContentBlockPlaceholderViewTest {
         shadowOf(getMainLooper()).idle()
         assertEquals(1, messageShown)
         assertNotNull(shownMessage)
-        placeholder.invokeActionClick(manualCloseUrl)
+        val manualCloseUrl = placeholder.controller.assignedHtmlContent?.actions?.find {
+            it.actionType == HtmlActionType.CLOSE
+        }
+        placeholder.invokeActionClick(manualCloseUrl?.actionUrl!!)
         placeholder.refreshContent()
         shadowOf(getMainLooper()).idle()
         assertEquals(2, actionClosed)

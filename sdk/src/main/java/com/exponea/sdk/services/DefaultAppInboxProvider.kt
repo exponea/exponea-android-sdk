@@ -22,6 +22,7 @@ import com.exponea.sdk.R
 import com.exponea.sdk.manager.AppInboxAdapter
 import com.exponea.sdk.models.AppInboxMessateType.HTML
 import com.exponea.sdk.models.AppInboxMessateType.PUSH
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type
@@ -230,11 +231,10 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         val target = MessageItemAction()
         target.title = source.buttonText
         target.url = source.actionUrl
-        if (source.actionUrl.startsWith("http://") ||
-            source.actionUrl.startsWith("https://")) {
-            target.type = Type.BROWSER
-        } else {
-            target.type = Type.DEEPLINK
+        target.type = when (source.actionType) {
+            HtmlActionType.BROWSER -> Type.BROWSER
+            HtmlActionType.DEEPLINK -> Type.DEEPLINK
+            else -> Type.NO_ACTION
         }
         return target
     }

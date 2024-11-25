@@ -5,6 +5,7 @@ import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.ExponeaNotificationActionType.APP
 import com.exponea.sdk.models.ExponeaNotificationActionType.BROWSER
 import com.exponea.sdk.models.ExponeaNotificationActionType.DEEPLINK
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type
 import com.exponea.sdk.models.MessageItemContent
@@ -110,14 +111,13 @@ internal class AppInboxParser {
         }
 
         private fun toAppInboxAction(source: ActionInfo): MessageItemAction {
-            var target = MessageItemAction()
+            val target = MessageItemAction()
             target.title = source.buttonText
             target.url = source.actionUrl
-            if (source.actionUrl.startsWith("http://") ||
-                source.actionUrl.startsWith("https://")) {
-                target.type = Type.BROWSER
-            } else {
-                target.type = Type.DEEPLINK
+            target.type = when (source.actionType) {
+                HtmlActionType.BROWSER -> Type.BROWSER
+                HtmlActionType.DEEPLINK -> Type.DEEPLINK
+                else -> Type.NO_ACTION
             }
             return target
         }

@@ -7,8 +7,10 @@ import android.view.LayoutInflater
 import android.widget.PopupWindow
 import android.widget.RelativeLayout
 import com.exponea.sdk.R
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessageButtonType.BROWSER
+import com.exponea.sdk.models.InAppMessageButtonType.CANCEL
 import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.HtmlNormalizer
@@ -58,33 +60,36 @@ internal class InAppMessageWebview(
 
     internal fun handleActionClick(url: String?) {
         Logger.i(this@InAppMessageWebview, "[HTML] action for $url")
-        when {
-            normalizedResult.isCloseAction(url) -> {
-                userInteraction = true
-                this.onDismiss?.invoke(true, toPayloadButton(url!!))
+        val htmlAction = url?.let { normalizedResult.findActionInfoByUrl(it) }
+        when (htmlAction?.actionType) {
+            null -> {
+                Logger.w(this, "[HTML] Unknown action URL: $url")
             }
-            normalizedResult.isActionUrl(url) -> {
+            HtmlActionType.CLOSE -> {
                 userInteraction = true
-                this.onButtonClick.invoke(toPayloadButton(url!!))
+                this.onDismiss?.invoke(true, toPayloadButton(htmlAction))
             }
-            else -> Logger.w(this, "[HTML] Unknown action URL: $url")
+            else -> {
+                userInteraction = true
+                this.onButtonClick.invoke(toPayloadButton(htmlAction))
+            }
         }
         dismiss()
     }
 
-    private fun toPayloadButton(url: String): InAppMessagePayloadButton {
+    private fun toPayloadButton(action: HtmlNormalizer.ActionInfo): InAppMessagePayloadButton {
         return InAppMessagePayloadButton(
-                buttonLink = url,
-                buttonText = normalizedResult.findActionByUrl(url)?.buttonText,
-                rawButtonType = detectActionType(url).value
+                buttonLink = action.actionUrl,
+                buttonText = action.buttonText,
+                rawButtonType = detectActionType(action.actionType).value
         )
     }
 
-    private fun detectActionType(url: String): InAppMessageButtonType {
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            return BROWSER
-        } else {
-            return DEEPLINK
+    private fun detectActionType(from: HtmlActionType): InAppMessageButtonType {
+        return when (from) {
+            HtmlActionType.DEEPLINK -> DEEPLINK
+            HtmlActionType.BROWSER -> BROWSER
+            HtmlActionType.CLOSE -> CANCEL
         }
     }
 

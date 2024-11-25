@@ -374,7 +374,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             assertNotNull(pushMessage)
             assertEquals("Title", pushMessage.title)
             assertEquals("Message", pushMessage.message)
-            assertEquals(2, pushMessage.actions.size)
+            assertEquals(3, pushMessage.actions.size)
             val webAction = pushMessage.actions.find {
                 act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
             }
@@ -395,7 +395,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 assertNotNull(pushMessage)
                 assertEquals("Title", pushMessage.title)
                 assertEquals("Message", pushMessage.message)
-                assertEquals(2, pushMessage.actions.size)
+                assertEquals(3, pushMessage.actions.size)
                 val webAction = pushMessage.actions.find { act ->
                     act.type.value == MessageItemAction.Type.BROWSER.value
                 }

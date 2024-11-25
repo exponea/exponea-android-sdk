@@ -11,6 +11,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
@@ -336,23 +337,34 @@ internal class InAppMessagePresenterTest(
             }
             FREEFORM -> {
                 val realView = view as InAppMessageWebview
-                assertNotNull(payloadHtml?.closeActionUrl)
-                realView.handleActionClick(payloadHtml!!.closeActionUrl!!)
+                val closeAction = payloadHtml?.actions?.find { it.actionType == HtmlActionType.CLOSE }
+                assertNotNull(closeAction)
+                realView.handleActionClick(closeAction.actionUrl)
             }
         }
         // validate callbacks
         assertNull(catchedActionButton)
         assertNotNull(catchedClosedByUser)
         assertTrue(catchedClosedByUser!!)
-        if (inAppMessageType == InAppMessageType.MODAL || inAppMessageType == InAppMessageType.FULLSCREEN) {
-            // X button doesn't deliver button info
-            assertNull(catchedCancelButton)
-        } else {
-            assertNotNull(catchedCancelButton)
-            assertEquals(
-                payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.buttonText,
-                catchedCancelButton!!.buttonText
-            )
+        when (inAppMessageType) {
+            MODAL, FULLSCREEN -> {
+                // X button doesn't deliver button info
+                assertNull(catchedCancelButton)
+            }
+            FREEFORM -> {
+                assertNotNull(catchedCancelButton)
+                assertEquals(
+                    payloadHtml?.actions?.find { it.actionType == HtmlActionType.CLOSE }?.buttonText,
+                    catchedCancelButton!!.buttonText
+                )
+            }
+            ALERT, SLIDE_IN -> {
+                assertNotNull(catchedCancelButton)
+                assertEquals(
+                    payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.buttonText,
+                    catchedCancelButton!!.buttonText
+                )
+            }
         }
         assertNull(catchedError)
     }

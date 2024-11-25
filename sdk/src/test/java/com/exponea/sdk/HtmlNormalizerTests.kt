@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -17,6 +18,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,8 +44,8 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(1, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(2, result.actions.size)
     }
 
     @Test
@@ -53,8 +56,8 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(2, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(3, result.actions.size)
     }
 
     @Test
@@ -66,8 +69,8 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
-        assertNull(result.closeActionUrl)
-        assertEquals(1, result.actions?.size)
+        assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(1, result.actions.size)
     }
 
     @Test
@@ -79,8 +82,8 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
-        assertNull(result.closeActionUrl)
-        assertEquals(2, result.actions?.size)
+        assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(2, result.actions.size)
     }
 
     @Test
@@ -91,8 +94,8 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
-        assertNull(result.closeActionUrl)
-        assertEquals(1, result.actions?.size)
+        assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(1, result.actions.size)
         assertFalse { result.html!!.contains("target") }
     }
 
@@ -102,8 +105,8 @@ internal class HtmlNormalizerTests {
             "<div data-actiontype='close'>Close</div>" +
             "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(0, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(1, result.actions.size)
     }
 
     @Test
@@ -112,8 +115,8 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl) // default close
-        assertEquals(1, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
+        assertEquals(2, result.actions.size)
     }
 
     @Test
@@ -123,8 +126,8 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl) // default close
-        assertEquals(2, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
+        assertEquals(3, result.actions.size)
     }
 
     @Test
@@ -133,8 +136,8 @@ internal class HtmlNormalizerTests {
                 "<div>Hello world</div>" +
                 "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl) // default close
-        assertEquals(0, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
+        assertEquals(1, result.actions.size)
     }
 
     @Test
@@ -254,8 +257,8 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(3, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(4, result.actions.size)
     }
 
     @Test
@@ -278,8 +281,8 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(3, result.actions?.size)
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(4, result.actions.size)
     }
 
     @Test
@@ -302,10 +305,10 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
         val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(3, result.actions?.size)
-        assertTrue { result.actions!!.any { it.actionUrl == "https://example.com/anchor2" } }
-        assertTrue { result.actions!!.none { it.actionUrl == "https://example.com/anchor" } }
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(4, result.actions.size)
+        assertTrue { result.actions.any { it.actionUrl == "https://example.com/anchor2" } }
+        assertTrue { result.actions.none { it.actionUrl == "https://example.com/anchor" } }
     }
 
     @Test
@@ -352,11 +355,11 @@ internal class HtmlNormalizerTests {
             "</body></html>"
         val bitmapCache = InAppMessageBitmapCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
-        assertNotNull(result.closeActionUrl)
-        assertEquals(2, result.actions?.size)
-        val action1 = result.actions!!.firstOrNull { it.actionUrl == "https://example.com/1" }
+        assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
+        assertEquals(3, result.actions.size)
+        val action1 = result.actions.firstOrNull { it.actionUrl == "https://example.com/1" }
         assertNotNull(action1)
-        val action2 = result.actions!!.firstOrNull { it.actionUrl == "https://example.com/2" }
+        val action2 = result.actions.firstOrNull { it.actionUrl == "https://example.com/2" }
         assertNotNull(action2)
         assertEquals("Action 1", action1.buttonText)
         assertEquals("Action 2", action2.buttonText)
@@ -776,5 +779,87 @@ internal class HtmlNormalizerTests {
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
         assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64,"))
+    }
+
+    @Test
+    fun `should keep original class`() {
+        val rawHtml = """
+        <html><body>
+        <div class='test-class-1'>Hello</div>
+        <div data-actiontype='close' class='test-class-2'>Close 1</div>
+        <a data-actiontype='close' href='https://example.com/close2' class='test-class-3'>Close 2</a>
+        <div data-link='https://example.com/1' class='test-class-4'>Action 1</div>
+        <a href='https://example.com/2' class='test-class-5'>Action 2</a>
+        <a data-link='https://example.com/3' class='test-class-6'>Action 3</a>
+        </body></html>
+        """.trimIndent()
+        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize().html
+        assertNotNull(result)
+        assertTrue(result.contains("class=\"test-class-1\""))
+        assertTrue(result.contains("class=\"test-class-2\""))
+        assertTrue(result.contains("class=\"test-class-3\""))
+        assertTrue(result.contains("class=\"test-class-4\""))
+        assertTrue(result.contains("class=\"test-class-5\""))
+        assertTrue(result.contains("class=\"test-class-6\""))
+    }
+
+    @Test
+    fun `should parse all possible close buttons`() {
+        val rawHtml = """
+        <html><body>
+        <div id="1" data-actiontype='close'>Close 1</div>
+        <div id="2" data-actiontype='close' data-link='https://example.com/close1'>Close 2</div>
+        <a id="3" data-actiontype='close'>Close 3</a>
+        <a id="4" data-actiontype='close' href='https://example.com/close2'>Close 4</a>
+        <div id="5" data-link='https://example.com/1'>Action 1</div>
+        <a id="6" href='https://example.com/2'>Action 2</a>
+        <a id="7" href='https://example.com/close2'>Prioritized Action 3</a>
+        <a id="8" data-link='https://example.com/3'>Action 4</a>
+        <a id="9" data-link='https://example.com/4' href='https://example.com/invalid'>Action 5</a>
+        </body></html>
+        """.trimIndent()
+        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        assertTrue(result.valid)
+        assertEquals(9, result.actions.size)
+        assertEquals(4, result.actions.filter { it.actionType == HtmlActionType.CLOSE }.size)
+        // HTML validation
+        val document = Jsoup.parse(result.html!!)
+        validateChildElement(document.selectFirst("#1"), HtmlActionType.CLOSE)
+        validateChildElement(document.selectFirst("#2"), HtmlActionType.CLOSE)
+        validateAhrefElement(document.selectFirst("#3"), HtmlActionType.CLOSE)
+        validateAhrefElement(document.selectFirst("#4"), HtmlActionType.CLOSE)
+        validateChildElement(document.selectFirst("#5"), HtmlActionType.BROWSER)
+        validateAhrefElement(document.selectFirst("#6"), HtmlActionType.BROWSER)
+        validateAhrefElement(document.selectFirst("#7"), HtmlActionType.BROWSER)
+        validateAhrefElement(document.selectFirst("#8"), HtmlActionType.BROWSER)
+        validateAhrefElement(document.selectFirst("#9"), HtmlActionType.BROWSER)
+        // Normalizer validation
+        assertTrue(result.isActionUrl("https://example.com/1"))
+        assertTrue(result.isActionUrl("https://example.com/2"))
+        assertTrue(result.isActionUrl("https://example.com/close2"))
+        assertEquals(HtmlActionType.CLOSE, result.actions.first { it.buttonText == "Close 1" }.actionType)
+        assertEquals(HtmlActionType.CLOSE, result.actions.first { it.buttonText == "Close 2" }.actionType)
+        assertEquals(HtmlActionType.CLOSE, result.actions.first { it.buttonText == "Close 3" }.actionType)
+        assertEquals(HtmlActionType.CLOSE, result.actions.first { it.buttonText == "Close 4" }.actionType)
+        assertEquals(HtmlActionType.BROWSER, result.actions.first { it.buttonText == "Action 1" }.actionType)
+        assertEquals(HtmlActionType.BROWSER, result.actions.first { it.buttonText == "Action 2" }.actionType)
+        assertEquals(HtmlActionType.BROWSER, result.actions.first {
+            it.buttonText == "Prioritized Action 3"
+        }.actionType)
+    }
+
+    private fun validateChildElement(elementToCheck: Element?, actionType: HtmlActionType) {
+        assertNotNull(elementToCheck)
+        assertEquals(elementToCheck.attr("data-actiontype"), actionType.value)
+        val parentToCheck1 = elementToCheck.parent()
+        validateAhrefElement(parentToCheck1, actionType)
+        assertEquals(parentToCheck1?.attr("data-link"), elementToCheck.attr("data-link"))
+    }
+
+    private fun validateAhrefElement(elementToCheck: Element?, actionType: HtmlActionType) {
+        assertNotNull(elementToCheck)
+        assertEquals(true, elementToCheck.`is`("a"))
+        assertEquals(actionType.value, elementToCheck.attr("data-actiontype"))
+        assertEquals(elementToCheck.attr("data-link"), elementToCheck.attr("href"))
     }
 }

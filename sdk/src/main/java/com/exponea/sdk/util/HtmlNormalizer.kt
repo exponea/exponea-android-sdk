@@ -3,6 +3,7 @@ package com.exponea.sdk.util
 import android.content.Context
 import android.util.Base64
 import androidx.annotation.WorkerThread
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
@@ -16,6 +17,7 @@ import kotlin.text.RegexOption.DOT_MATCHES_ALL
 import kotlin.text.RegexOption.IGNORE_CASE
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 /**
  * Implementation is used by InAppMessageWebView to handle HTML inapp message paylod.
@@ -60,11 +62,12 @@ public class HtmlNormalizer {
     )
 
     companion object {
-        private const val CLOSE_ACTION_COMMAND = "close_action"
+        private const val CLOSE_URL_PREFIX = "https://exponea.com/close_action_"
         private const val CLOSE_BUTTON_ATTR_DEF = "data-actiontype='close'"
         private const val CLOSE_BUTTON_SELECTOR = "[$CLOSE_BUTTON_ATTR_DEF]"
-        private const val DATALINK_BUTTON_ATTR = "data-link"
-        private const val DATALINK_BUTTON_SELECTOR = "[$DATALINK_BUTTON_ATTR]"
+        private const val DATA_LINK_ATTR = "data-link"
+        private const val DATA_ACTIONTYPE_ATTR = "data-actiontype"
+        private const val DATA_LINK_SELECTOR = "[$DATA_LINK_ATTR]"
         private const val ANCHOR_BUTTON_SELECTOR = "a[href]"
 
         private const val HREF_ATTR = "href"
@@ -134,8 +137,9 @@ public class HtmlNormalizer {
             if (config.makeResourcesOffline) {
                 makeResourcesToBeOffline()
             }
-            result.actions = ensureActionButtons()
-            result.closeActionUrl = detectCloseButton(config.ensureCloseButton)
+            normalizeCloseButtons(config.ensureCloseButton)
+            normalizeDataLinkButtons()
+            result.actions = collectAnchorLinkButtons()
             result.html = exportHtml()
             result.valid = true
         } catch (e: Exception) {
@@ -147,17 +151,30 @@ public class HtmlNormalizer {
 
     class NormalizedResult {
         var valid: Boolean = true
-        var actions: List<ActionInfo>? = null
-        var closeActionUrl: String? = null
+        var actions: List<ActionInfo> = mutableListOf()
         var html: String? = null
-        fun findActionByUrl(url: String): HtmlNormalizer.ActionInfo? {
-            return actions?.find { URLUtils.areEqualAsURLs(it.actionUrl, url) }
+        fun findActionInfoByUrl(url: String): ActionInfo? {
+            val actionsForUrl = actions.filter { URLUtils.areEqualAsURLs(it.actionUrl, url) }
+            if (actionsForUrl.isEmpty()) {
+                return null
+            }
+            // action has priority over close
+            val actionByUrl = actionsForUrl.firstOrNull { it.actionType != HtmlActionType.CLOSE }
+            if (actionByUrl != null) {
+                return actionByUrl
+            }
+            // anything else (close)
+            return actionsForUrl.firstOrNull()
         }
-        fun isActionUrl(url: String?): Boolean {
-            return url != null && !isCloseAction(url) && findActionByUrl(url) != null
+        fun isActionUrl(url: String): Boolean {
+            return findActionInfoByUrl(url)?.let { actionInfo ->
+                actionInfo.actionType != HtmlActionType.CLOSE
+            } ?: false
         }
-        fun isCloseAction(url: String?): Boolean {
-            return url?.equals(closeActionUrl) ?: false
+        fun isCloseAction(url: String): Boolean {
+            return findActionInfoByUrl(url)?.let { actionInfo ->
+                actionInfo.actionType == HtmlActionType.CLOSE
+            } ?: false
         }
     }
 
@@ -201,22 +218,12 @@ public class HtmlNormalizer {
         return document!!.html()
     }
 
-    private fun ensureActionButtons(): List<ActionInfo> {
-        val result = mutableMapOf<String, ActionInfo>()
-        document?.let {
-            // collect 'data-link' first as it may update href
-            collectDataLinkButtons(it).forEach { action ->
-                result[action.actionUrl] = action
-            }
-            collectAnchorLinkButtons(it).forEach { action ->
-                result[action.actionUrl] = action
-            }
+    private fun collectAnchorLinkButtons(): List<ActionInfo> {
+        val result = hashMapOf<String, ActionInfo>()
+        if (document == null) {
+            Logger.e(this, "[HTML] Original HTML code is invalid, unable to collect buttons")
+            return result.values.toList()
         }
-        return result.values.toList()
-    }
-
-    private fun collectAnchorLinkButtons(document: Document): List<ActionInfo> {
-        val result = ArrayList<ActionInfo>()
         val actionButtons = document.select(ANCHOR_BUTTON_SELECTOR)
         for (actionButton in actionButtons) {
             val targetAction = actionButton.attr(HREF_ATTR)
@@ -224,49 +231,106 @@ public class HtmlNormalizer {
                 Logger.e(this, "[HTML] Action button found but with empty action")
                 continue
             }
-            result.add(ActionInfo(actionButton.text(), targetAction))
+            val buttonText = readButtonText(actionButton)
+            val actionType = HtmlActionType.find(actionButton.attr(DATA_ACTIONTYPE_ATTR))
+                ?: determineActionTypeByUrl(targetAction)
+            applyActionInfo(actionButton, targetAction, actionType)
+            if (result.containsKey(targetAction)) {
+                Logger.e(this, "[HTML] Action button found but with duplicate action $targetAction")
+                continue
+            }
+            result[targetAction] = ActionInfo(
+                buttonText,
+                targetAction,
+                actionType
+            )
         }
-        return result
+        return result.values.toList()
     }
 
-    private fun collectDataLinkButtons(document: Document): List<ActionInfo> {
-        val result = ArrayList<ActionInfo>()
-        val actionButtons = document.select(DATALINK_BUTTON_SELECTOR)
+    /**
+     * Transforms 'data-link' value into clickable <a href> form if is required.
+     * Any href URL is replaced with a data-link URL.
+     */
+    private fun normalizeDataLinkButtons() {
+        if (document == null) {
+            return
+        }
+        val actionButtons = document.select(DATA_LINK_SELECTOR)
         for (actionButton in actionButtons) {
-            val targetAction = actionButton.attr(DATALINK_BUTTON_ATTR)
-            if (targetAction.isNullOrBlank()) {
+            val actionUrl = actionButton.attr(DATA_LINK_ATTR)
+            if (actionUrl.isNullOrBlank()) {
                 Logger.e(this, "[HTML] Action button found but with empty action")
                 continue
             }
-            if (actionButton.`is`(ANCHOR_TAG_SELECTOR)) {
-                actionButton.attr(HREF_ATTR, targetAction)
-            } else if (!actionButton.hasParent() || !actionButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
-                Logger.i(this, "[HTML] Wrapping Action button with a-href")
-                // randomize class name => prevents from CSS styles overriding in HTML
-                val actionButtonHrefClass = "action-button-href-${UUID.randomUUID()}"
-                document.head().append("<style>" +
-                    ".$actionButtonHrefClass {" +
-                    "    text-decoration: none;" +
-                    "}" +
-                    "</style>")
-                actionButton.wrap("<a href='$targetAction' class='$actionButtonHrefClass'></a>")
+            val dataLinkType = HtmlActionType.find(actionButton.attr(DATA_ACTIONTYPE_ATTR))
+                ?: determineActionTypeByUrl(actionUrl)
+            // ensure <a href> existence
+            when {
+                actionButton.`is`(ANCHOR_TAG_SELECTOR) -> {
+                    Logger.v(this, "[HTML] Applying data-link to an a-href link")
+                    applyActionInfo(actionButton, actionUrl, dataLinkType)
+                }
+                actionButton.parent()?.`is`(ANCHOR_TAG_SELECTOR) == true -> {
+                    Logger.v(this, "[HTML] Applying data-link to a parent as an a-href link")
+                    applyActionInfo(actionButton, actionUrl, dataLinkType)
+                    applyActionInfo(actionButton.parent()!!, actionUrl, dataLinkType)
+                }
+                else -> {
+                    Logger.v(this, "[HTML] Wrapping data-link with an a-href")
+                    applyActionInfo(actionButton, actionUrl, dataLinkType)
+                    // randomize class name => prevents from CSS styles overriding in HTML
+                    val actionButtonHrefClass = "action-button-href-${UUID.randomUUID()}"
+                    wrapWithAnchorLink(
+                        actionButton,
+                        actionUrl,
+                        actionButtonHrefClass,
+                        dataLinkType
+                    )
+                }
             }
-            result.add(ActionInfo(actionButton.text(), targetAction))
         }
-        return result
     }
 
-    class ActionInfo(val buttonText: String, val actionUrl: String)
+    private fun readButtonText(actionButton: Element): String? {
+        var buttonText: String? = actionButton.text()
+        if (buttonText.isNullOrEmpty()) {
+            // Close X button produces empty string
+            buttonText = null
+        }
+        return buttonText
+    }
 
-    private fun detectCloseButton(ensureCloseButton: Boolean): String? {
-        var closeButtons = document!!.select(CLOSE_BUTTON_SELECTOR)
+    private fun determineActionTypeByUrl(url: String): HtmlActionType {
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return HtmlActionType.BROWSER
+        } else {
+            return HtmlActionType.DEEPLINK
+        }
+    }
+
+    class ActionInfo(
+        val buttonText: String?,
+        val actionUrl: String,
+        val actionType: HtmlActionType
+    )
+
+    /**
+     * Transforms elements with 'data-actiontype="close"' into clickable <a href> form if is required.
+     * Any existing href URL is replaced with a close URL.
+     */
+    private fun normalizeCloseButtons(ensureCloseButton: Boolean) {
+        if (document == null) {
+            return
+        }
+        var closeButtons = document.select(CLOSE_BUTTON_SELECTOR)
         if (closeButtons.isEmpty() && ensureCloseButton) {
             Logger.i(this, "[HTML] Adding default close-button")
             // randomize class name => prevents from CSS styles overriding in HTML
             val closeButtonClass = "close-button-${UUID.randomUUID()}"
             val buttonSize = "max(min(5vw, 5vh), 16px)"
-            document!!.body().append("<div $CLOSE_BUTTON_ATTR_DEF class='$closeButtonClass'><div>")
-            document!!.head().append("""
+            document.body().append("<div $CLOSE_BUTTON_ATTR_DEF class='$closeButtonClass'><div>")
+            document.head().append("""
                 <style>
                     .$closeButtonClass {
                       display: inline-block;
@@ -293,30 +357,71 @@ public class HtmlNormalizer {
                 </style>
             """.trimIndent()
             )
-            closeButtons = document!!.select(CLOSE_BUTTON_SELECTOR)
+            closeButtons = document.select(CLOSE_BUTTON_SELECTOR)
         }
-        if (closeButtons.isEmpty()) {
-            if (ensureCloseButton) {
-                // defined or default has to exist
-                throw IllegalStateException("Action close cannot be ensured")
+        if (ensureCloseButton && closeButtons.isEmpty()) {
+            // defined or default has to exist
+            throw IllegalStateException("Action close cannot be ensured")
+        }
+        closeButtons.forEach { closeButton ->
+            val closeButtonId = UUID.randomUUID().toString()
+            val closeButtonUrl = "$CLOSE_URL_PREFIX$closeButtonId"
+            // ensure <a href> existence
+            when {
+                closeButton.`is`(ANCHOR_TAG_SELECTOR) -> {
+                    Logger.i(this, "[HTML] Fixing close button as a-href link to close action")
+                    applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
+                }
+                closeButton.parent()?.`is`(ANCHOR_TAG_SELECTOR) == true -> {
+                    Logger.i(this, "[HTML] Fixing parent a-href link to close action")
+                    applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
+                    applyActionInfo(closeButton.parent()!!, closeButtonUrl, HtmlActionType.CLOSE)
+                }
+                else -> {
+                    Logger.i(this, "[HTML] Wrapping Close button with an a-href")
+                    applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
+                    // randomize class name => prevents from CSS styles overriding in HTML
+                    val closeButtonHrefClass = "close-button-href-$closeButtonId"
+                    wrapWithAnchorLink(
+                        closeButton,
+                        closeButtonUrl,
+                        closeButtonHrefClass,
+                        HtmlActionType.CLOSE
+                    )
+                }
             }
-            // no close button found
-            return null
         }
-        // randomize class name => prevents from CSS styles overriding in HTML
-        val closeButtonHrefClass = "close-button-href-${UUID.randomUUID()}"
-        // link has to be valid URL, but is handled by String comparison anyway
-        val closeActionLink = "https://exponea.com/$CLOSE_ACTION_COMMAND"
-        val closeButton = closeButtons.first()!!
-        if (!closeButton.hasParent() || !closeButton.parent()!!.`is`(ANCHOR_TAG_SELECTOR)) {
-            Logger.i(this, "[HTML] Wrapping Close button with a-href")
-            closeButton.wrap("<a href='$closeActionLink' class='$closeButtonHrefClass'></a>")
-        } else if (!closeButton.parent()!!.attr("href").equals(closeActionLink, true)) {
-            Logger.i(this, "[HTML] Fixing parent a-href link to close action")
-            closeButton.parent()!!.attr("href", closeActionLink)
-            closeButton.parent()!!.addClass(closeButtonHrefClass)
+    }
+
+    private fun applyActionInfo(target: Element, url: String, dataActionType: HtmlActionType) {
+        if (target.`is`(ANCHOR_TAG_SELECTOR)) {
+            target.attr("href", url)
         }
-        return closeActionLink
+        target.attr(DATA_LINK_ATTR, url)
+        target.attr(DATA_ACTIONTYPE_ATTR, dataActionType.value)
+    }
+
+    private fun wrapWithAnchorLink(
+        child: Element,
+        href: String,
+        cssClass: String,
+        dataActionType: HtmlActionType
+    ) {
+        document?.head()?.append("""
+            <style>
+            .$cssClass {
+              text-decoration: none;
+            }
+            </style>
+        """.trimIndent())
+        child.wrap("""
+        <a href='$href'
+            class='$cssClass'
+            $DATA_LINK_ATTR='$href'
+            $DATA_ACTIONTYPE_ATTR='${dataActionType.value}'
+            >
+        </a>
+        """.trimIndent())
     }
 
     private fun makeResourcesToBeOffline() {
@@ -500,7 +605,7 @@ public class HtmlNormalizer {
         }
         val onlineUrls = ArrayList<String>()
         // images
-        val images = document!!.select("img")
+        val images = document.select("img")
         for (imgEl in images) {
             val imageUrl = imgEl.attr("src")
             if (!imageUrl.isNullOrEmpty() && !isBase64Uri(imageUrl)) {
@@ -508,7 +613,7 @@ public class HtmlNormalizer {
             }
         }
         // style tags
-        val styleTags = document!!.select("style")
+        val styleTags = document.select("style")
         for (styleTag in styleTags) {
             val styleSource = styleTag.data()
             val onlineSources = collectOnlineUrlStatements(styleSource)
@@ -516,7 +621,7 @@ public class HtmlNormalizer {
             onlineUrls.addAll(imageOnlineSources.map { it.url })
         }
         // style attributes
-        val styledEls = document!!.select("[style]")
+        val styledEls = document.select("[style]")
         for (styledEl in styledEls) {
             val styleAttrSource = styledEl.attr("style")
             if (styleAttrSource.isNullOrBlank()) {

@@ -1,5 +1,6 @@
 package com.exponea.sdk.services.inappcontentblock
 
+import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockActionType
@@ -37,7 +38,7 @@ internal open class InAppContentBlockViewController(
     internal lateinit var view: InAppContentBlockPlaceholderView
     private var isViewAttachedToWindow: Boolean = false
     private var contentLoaded: Boolean = false
-    private var assignedHtmlContent: NormalizedResult? = null
+    internal var assignedHtmlContent: NormalizedResult? = null
     internal var assignedMessage: InAppContentBlock? = null
 
     internal fun onUrlClick(url: String) {
@@ -76,30 +77,23 @@ internal open class InAppContentBlockViewController(
     }
 
     private fun parseInAppContentBlockAction(url: String): InAppContentBlockAction? {
-        val type = detectActionType(url)
-        if (type == CLOSE) {
-            return InAppContentBlockAction(
-                type = type,
-                name = "",
-                url = ""
-            )
+        val htmlAction = assignedHtmlContent?.findActionInfoByUrl(url)
+        if (htmlAction == null) {
+            Logger.e(this, "InAppCB: Placeholder $placeholderId has invalid state - action is invalid")
+            return null
         }
-        val action = assignedHtmlContent?.findActionByUrl(url) ?: return null
         return InAppContentBlockAction(
-            type = type,
-            name = action.buttonText,
-            url = action.actionUrl
+            type = detectActionType(htmlAction.actionType),
+            name = htmlAction.buttonText,
+            url = htmlAction.actionUrl
         )
     }
 
-    private fun detectActionType(url: String): InAppContentBlockActionType {
-        if (assignedHtmlContent?.isCloseAction(url) == true) {
-            return CLOSE
-        }
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            return BROWSER
-        } else {
-            return DEEPLINK
+    private fun detectActionType(from: HtmlActionType): InAppContentBlockActionType {
+        return when (from) {
+            HtmlActionType.DEEPLINK -> DEEPLINK
+            HtmlActionType.BROWSER -> BROWSER
+            HtmlActionType.CLOSE -> CLOSE
         }
     }
 

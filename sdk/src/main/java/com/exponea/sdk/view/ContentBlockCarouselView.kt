@@ -1,5 +1,6 @@
 package com.exponea.sdk.view
 
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.res.Resources
@@ -27,6 +28,7 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewContro
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.EMPTY_PLACEHOLDER_ID
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewHolder
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.UrlOpener
 import kotlinx.android.synthetic.main.inapp_content_block_carousel.view.content_block_carousel_pager
 
 public class ContentBlockCarouselView : RelativeLayout {
@@ -180,9 +182,18 @@ public class ContentBlockCarouselView : RelativeLayout {
                 )
             }
         })
-        CustomTabsClient.bindCustomTabsService(
-            context, CustomTabsClient.getPackageName(context, null), tabsConnection
-        )
+        try {
+            val customTabsPackage = CustomTabsClient.getPackageName(context, null)
+            if (customTabsPackage.isNullOrBlank()) {
+                Logger.w(this, "InAppCbCarousel: App that supports Custom Tabs has not been found")
+                // Still, try invoke `bindCustomTabsService` for old Android
+            }
+            CustomTabsClient.bindCustomTabsService(
+                context, customTabsPackage, tabsConnection
+            )
+        } catch (e: Exception) {
+            Logger.e(this, "InAppCbCarousel: Custom Tabs usage is turned off", e)
+        }
     }
 
     override fun onAttachedToWindow() {
@@ -293,14 +304,22 @@ public class ContentBlockCarouselView : RelativeLayout {
         if (tabsSession == null) {
             Logger.w(this, "InAppCbCarousel: Inner web browser lost session, app session may be closed")
         }
-        CustomTabsIntent.Builder(tabsSession)
-            .setShowTitle(true)
-            .setInstantAppsEnabled(true)
-            .setInitialActivityHeightPx(
-                Resources.getSystem().displayMetrics.heightPixels,
-                CustomTabsIntent.ACTIVITY_HEIGHT_ADJUSTABLE
-            )
-            .build()
-            .launchUrl(context, Uri.parse(url))
+        try {
+            CustomTabsIntent.Builder(tabsSession)
+                .setShowTitle(true)
+                .setInstantAppsEnabled(true)
+                .setInitialActivityHeightPx(
+                    Resources.getSystem().displayMetrics.heightPixels,
+                    CustomTabsIntent.ACTIVITY_HEIGHT_ADJUSTABLE
+                )
+                .build()
+                .launchUrl(context, Uri.parse(url))
+        } catch (e: ActivityNotFoundException) {
+            Logger.v(this, "InAppCbCarousel: Unable to open instant browser for $url")
+            UrlOpener.openUrl(context, url)
+        } catch (e: Exception) {
+            Logger.e(this, "InAppCbCarousel: Unable to open instant browser", e)
+            UrlOpener.openUrl(context, url)
+        }
     }
 }

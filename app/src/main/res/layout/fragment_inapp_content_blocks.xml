@@ -56,19 +56,11 @@
             android:layout_below="@+id/content_blocks_carousel_custom"
             android:text="@string/content_blocks_android_carousel_title"/>
 
-        <com.exponea.sdk.view.ContentBlockCarouselView
-            android:id="@+id/content_blocks_carousel_android"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/content_blocks_carousel_title_3"
-            app:placeholderId="example_carousel_and"
-            />
-
         <LinearLayout
             android:id="@+id/content_blocks_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/content_blocks_carousel_android"
+            android:layout_below="@+id/content_blocks_carousel_title_3"
             android:orientation="vertical"
             >
 

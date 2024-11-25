@@ -59,7 +59,8 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleAndroidCarouselCbPlaceholder() {
-        // nothing to do, keep it with default configuration
+        val androidCarousel = Exponea.getInAppContentBlocksCarousel(requireContext(), "example_carousel_and")
+        content_blocks_layout?.addView(androidCarousel)
     }
 
     private fun prepareExampleDefaultCarouselCbPlaceholder() {

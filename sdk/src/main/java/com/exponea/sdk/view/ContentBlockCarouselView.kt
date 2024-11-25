@@ -101,16 +101,14 @@ public class ContentBlockCarouselView : RelativeLayout {
         placeholderId: String,
         maxMessagesCount: Int = DEFAULT_MAX_MESSAGES_COUNT,
         scrollDelay: Int = DEFAULT_SCROLL_DELAY
-    ) :
-        this(context, placeholderId, maxMessagesCount, scrollDelay, null)
+    ) : this(context, placeholderId, maxMessagesCount, scrollDelay, null)
     constructor(
         context: Context,
         placeholderId: String,
         maxMessagesCount: Int = DEFAULT_MAX_MESSAGES_COUNT,
         scrollDelay: Int = DEFAULT_SCROLL_DELAY,
         attrs: AttributeSet?
-    ) :
-        this(context, placeholderId, maxMessagesCount, scrollDelay, attrs, 0)
+    ) : this(context, placeholderId, maxMessagesCount, scrollDelay, attrs, 0)
     constructor(
         context: Context,
         placeholderId: String,
@@ -118,8 +116,7 @@ public class ContentBlockCarouselView : RelativeLayout {
         scrollDelay: Int = DEFAULT_SCROLL_DELAY,
         attrs: AttributeSet?,
         sAttrs: Int
-    ) :
-        this(context, attrs, sAttrs) {
+    ) : super(context, attrs, sAttrs) {
         init(context, placeholderId, maxMessagesCount, scrollDelay)
     }
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

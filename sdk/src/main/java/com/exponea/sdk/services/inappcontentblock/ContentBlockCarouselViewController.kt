@@ -358,4 +358,8 @@ internal class ContentBlockCarouselViewController(
     fun onViewBecomeBackground() {
         onStateChanged(false)
     }
+
+    fun onHeightChanged(newHeight: Int) {
+        behaviourCallback?.onHeightUpdate(placeholderId, newHeight)
+    }
 }

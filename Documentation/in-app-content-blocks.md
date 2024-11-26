@@ -330,6 +330,12 @@ carouselView.behaviourCallback = object : ContentBlockCarouselCallback {
         // This is triggered when a content block action is clicked.
         // Parameter `action` contains the action information.
     }
+    override fun onHeightUpdate(placeholderId: String, height: Int) {
+        // This is triggered when height of Carousel view has changed:
+        //  - only once if you configure static height (i.e. `android:layout_height="100dp"`)
+        //  - for every relayout for dynamic layout (i.e. `android:layout_height="wrap_content"` or in ConstraintLayout)
+        // Parameter `height` is new height of view in pixels.
+    }
 }
 ```
 

@@ -264,6 +264,15 @@ public class ContentBlockCarouselView : RelativeLayout {
         }
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val oldMeasuredHeight = measuredHeight
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val newMeasuredHeight = measuredHeight
+        if (oldMeasuredHeight != newMeasuredHeight) {
+            viewController.onHeightChanged(newMeasuredHeight)
+        }
+    }
+
     private fun collectActivePlaceholderViews(onlyCurrentView: Boolean): List<InAppContentBlockPlaceholderView> {
         val result = mutableListOf<InAppContentBlockPlaceholderView>()
         val innerRecyclerView = viewPager.getChildAt(0)

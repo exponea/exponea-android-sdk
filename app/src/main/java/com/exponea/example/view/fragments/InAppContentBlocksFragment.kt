@@ -123,6 +123,10 @@ class InAppContentBlocksFragment : BaseFragment() {
             ) {
                 Logger.i(this, "Action ${action.name} has been clicked in carousel $placeholderId")
             }
+
+            override fun onHeightUpdate(placeholderId: String, height: Int) {
+                Logger.i(this, "Carousel $placeholderId has new height $height")
+            }
         }
     }
 

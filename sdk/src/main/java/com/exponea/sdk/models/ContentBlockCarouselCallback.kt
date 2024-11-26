@@ -48,4 +48,9 @@ interface ContentBlockCarouselCallback {
      * Parameter `action` contains the action information.
      */
     fun onActionClicked(placeholderId: String, contentBlock: InAppContentBlock, action: InAppContentBlockAction)
+
+    /**
+     * Triggered when a carousel changed its height.
+     */
+    fun onHeightUpdate(placeholderId: String, height: Int)
 }

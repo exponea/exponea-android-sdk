@@ -590,4 +590,8 @@ open class EmptyCarouselBehaviourCallback(
     ) {
         // nothing to do
     }
+
+    override fun onHeightUpdate(placeholderId: String, height: Int) {
+        // nothing to do
+    }
 }

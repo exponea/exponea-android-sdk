@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/inAppContentBlocks"
+    app:startDestination="@id/inAppContentBlocksFragment">
+
+    <fragment
+        android:id="@+id/inAppContentBlocksFragment"
+        android:name="com.exponea.example.view.fragments.InAppContentBlocksFragment"
+        android:label="InAppContentBlocksFragment"
+        tools:layout="@layout/fragment_inapp_content_blocks">
+        <action
+            android:id="@+id/action_cb_to_carousel"
+            app:destination="@id/inAppCarouselsFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/inAppCarouselsFragment"
+        android:name="com.exponea.example.view.fragments.CarouselsFragment"
+        android:label="CarouselsFragment"
+        tools:layout="@layout/fragment_carousels" />
+
+</navigation>

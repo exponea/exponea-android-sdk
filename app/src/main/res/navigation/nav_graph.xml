@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fetchFragment">
+
+    <fragment
+        android:id="@+id/fetchFragment"
+        android:name="com.exponea.example.view.fragments.FetchFragment"
+        android:label="FetchFragment"
+        tools:layout="@layout/fragment_fetch" />
+
+    <fragment
+        android:id="@+id/trackFragment"
+        android:name="com.exponea.example.view.fragments.TrackFragment"
+        android:label="TrackFragment"
+        tools:layout="@layout/fragment_track" />
+
+    <fragment
+        android:id="@+id/flushFragment"
+        android:name="com.exponea.example.view.fragments.FlushFragment"
+        android:label="FlushFragment"
+        tools:layout="@layout/fragment_flush" />
+
+    <fragment
+        android:id="@+id/anonymizeFragment"
+        android:name="com.exponea.example.view.fragments.AnonymizeFragment"
+        android:label="AnonymizeFragment"
+        tools:layout="@layout/fragment_anonymize" />
+
+    <include app:graph="@navigation/nav_in_app_content_blocks"/>
+
+</navigation>

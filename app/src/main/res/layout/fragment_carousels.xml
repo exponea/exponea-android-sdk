@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimaryDark"
+    tools:context=".view.MainActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/content_blocks_carousel_title_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:text="@string/content_blocks_default_carousel_title"/>
+
+        <com.exponea.sdk.view.ContentBlockCarouselView
+            android:id="@+id/content_blocks_carousel_default"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_title_1"
+            app:placeholderId="example_carousel"
+            />
+
+        <TextView
+            android:id="@+id/content_blocks_carousel_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_default"/>
+
+        <TextView
+            android:id="@+id/content_blocks_carousel_title_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_status"
+            android:text="@string/content_blocks_custom_carousel_title"/>
+
+        <com.exponea.sdk.view.ContentBlockCarouselView
+            android:id="@+id/content_blocks_carousel_custom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_title_2"
+            app:placeholderId="example_carousel"
+            app:scrollDelay="10"
+            app:maxMessagesCount="5"
+            />
+
+        <TextView
+            android:id="@+id/content_blocks_carousel_title_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_custom"
+            android:text="@string/content_blocks_android_carousel_title"/>
+
+        <LinearLayout
+            android:id="@+id/content_blocks_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/content_blocks_carousel_title_3"
+            android:orientation="vertical"
+            >
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</ScrollView>

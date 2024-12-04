@@ -3,21 +3,21 @@ package com.exponea.example.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.exponea.example.R
-import com.exponea.example.R.id
 import com.exponea.example.services.ExampleAppInboxProvider
-import com.exponea.example.view.BottomTab.Anonymize
-import com.exponea.example.view.BottomTab.Fetch
-import com.exponea.example.view.BottomTab.InAppContentBlock
-import com.exponea.example.view.BottomTab.Manual
-import com.exponea.example.view.BottomTab.Track
-import com.exponea.example.view.fragments.AnonymizeFragment
-import com.exponea.example.view.fragments.FetchFragment
-import com.exponea.example.view.fragments.FlushFragment
-import com.exponea.example.view.fragments.InAppContentBlocksFragment
-import com.exponea.example.view.fragments.TrackFragment
+import com.exponea.example.view.NavigationItem.Anonymize
+import com.exponea.example.view.NavigationItem.Fetch
+import com.exponea.example.view.NavigationItem.InAppContentBlock
+import com.exponea.example.view.NavigationItem.Manual
+import com.exponea.example.view.NavigationItem.Track
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.InAppMessage
@@ -33,12 +33,6 @@ import kotlinx.android.synthetic.main.activity_main.navigation
 import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class MainActivity : AppCompatActivity() {
-
-    private val anonymizeFragment: AnonymizeFragment by lazy { AnonymizeFragment() }
-    private val fetchFragment: FetchFragment by lazy { FetchFragment() }
-    private val flushFragment: FlushFragment by lazy { FlushFragment() }
-    private val trackFragment: TrackFragment by lazy { TrackFragment() }
-    private val inAppCbFragment: InAppContentBlocksFragment by lazy { InAppContentBlocksFragment() }
 
     private val contentSegmentsCallback = object : SegmentationDataCallback() {
         override val exposingCategory = "content"
@@ -125,20 +119,20 @@ class MainActivity : AppCompatActivity() {
 //        Exponea.inAppMessageActionCallback = getInAppMessageCallback()
         Exponea.appInboxProvider = ExampleAppInboxProvider()
 
-        if (Exponea.isInitialized) {
-            setupListeners()
-        } else {
+        if (!Exponea.isInitialized) {
             startActivity(Intent(this, AuthenticationActivity::class.java))
             finish()
             return
         }
+
+        setupNavigation()
 
         val deeplinkDestination = resolveDeeplinkDestination(intent)
 
         if (deeplinkDestination != null) {
             handleDeeplinkDestination(deeplinkDestination)
         } else if (savedInstanceState == null) {
-            selectTab(BottomTab.Fetch)
+            navigateToItem(NavigationItem.Fetch)
         }
 
         Exponea.registerSegmentationDataCallback(discoverySegmentsCallback)
@@ -148,9 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-
         val deeplinkDestination = resolveDeeplinkDestination(intent)
-
         if (deeplinkDestination != null) {
             handleDeeplinkDestination(deeplinkDestination)
         }
@@ -163,27 +155,8 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun selectTab(tab: BottomTab) {
-        navigation.selectedItemId = when (tab) {
-            Anonymize -> id.actionAnonymize
-            Fetch -> id.actionMain
-            Manual -> id.actionSettings
-            Track -> id.actionPurchase
-            InAppContentBlock -> id.actionInAppContentBlock
-        }
-
-        val fragment = when (tab) {
-            Anonymize -> anonymizeFragment
-            Fetch -> fetchFragment
-            Manual -> flushFragment
-            Track -> trackFragment
-            InAppContentBlock -> inAppCbFragment
-        }
-
-        supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit()
+    private fun navigateToItem(item: NavigationItem) {
+        getNavController().navigate(item.navigationId)
     }
 
     private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
@@ -206,32 +179,46 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleDeeplinkDestination(deeplinkDestination: DeeplinkDestination) {
         when (deeplinkDestination) {
-            DeeplinkDestination.Anonymize -> selectTab(Anonymize)
-            DeeplinkDestination.Fetch -> selectTab(Fetch)
-            DeeplinkDestination.Manual -> selectTab(Manual)
-            DeeplinkDestination.Track -> selectTab(Track)
-            DeeplinkDestination.InAppCb -> selectTab(InAppContentBlock)
+            DeeplinkDestination.Anonymize -> navigateToItem(Anonymize)
+            DeeplinkDestination.Fetch -> navigateToItem(Fetch)
+            DeeplinkDestination.Manual -> navigateToItem(Manual)
+            DeeplinkDestination.Track -> navigateToItem(Track)
+            DeeplinkDestination.InAppCb -> navigateToItem(InAppContentBlock)
         }
     }
 
-    private fun setupListeners() {
-        fun replaceFragment(fragment: androidx.fragment.app.Fragment): Boolean {
-            supportFragmentManager
-                    .beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .commit()
-            return true
-        }
-
-        navigation.setOnNavigationItemSelectedListener {
-            when (it.itemId) {
-                R.id.actionMain -> replaceFragment(fetchFragment)
-                R.id.actionPurchase -> replaceFragment(trackFragment)
-                R.id.actionAnonymize -> replaceFragment(anonymizeFragment)
-                R.id.actionInAppContentBlock -> replaceFragment(inAppCbFragment)
-                else -> replaceFragment(flushFragment)
+    private fun setupNavigation() {
+        val navController = getNavController()
+        val topLevelDestinationIds = setOf(
+            R.id.fetchFragment,
+            R.id.trackFragment,
+            R.id.flushFragment,
+            R.id.anonymizeFragment,
+            R.id.inAppContentBlocksFragment
+        )
+        val appBarConfiguration = AppBarConfiguration(
+            topLevelDestinationIds = topLevelDestinationIds
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navigation.setupWithNavController(navController)
+        onBackPressedDispatcher.addCallback {
+            if (topLevelDestinationIds.contains(navController.currentDestination?.id)) {
+                finish()
+            } else if (!navController.navigateUp()) {
+                finish()
             }
         }
+    }
+
+    private fun getNavController(): NavController {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        return navController
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = getNavController()
+        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
     private fun getInAppMessageCallback(): InAppMessageCallback {
@@ -272,5 +259,9 @@ class MainActivity : AppCompatActivity() {
                     .show()
             }
         }
+    }
+
+    internal fun openCarousel() {
+        navigateToItem(NavigationItem.InAppCarousel)
     }
 }

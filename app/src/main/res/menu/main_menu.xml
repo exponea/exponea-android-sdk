@@ -2,26 +2,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/actionMain"
+        android:id="@+id/fetchFragment"
         android:icon="@drawable/ic_cloud_download_black_24dp"
         android:title="@string/fetch" />
 
     <item
-        android:id="@+id/actionPurchase"
+        android:id="@+id/trackFragment"
         android:icon="@drawable/ic_track_black"
         android:title="@string/track" />
     <item
-        android:id="@+id/actionSettings"
+        android:id="@+id/flushFragment"
         android:icon="@drawable/ic_cloud_upload_black_24dp"
         android:title="@string/manual_flush" />
 
     <item
-        android:id="@+id/actionAnonymize"
+        android:id="@+id/anonymizeFragment"
         android:icon="@drawable/ic_anonymous"
         android:title="@string/anonymize"/>
 
     <item
-        android:id="@+id/actionInAppContentBlock"
+        android:id="@+id/inAppContentBlocks"
         android:icon="@drawable/ic_content_blocks"
         android:title="@string/content_blocks_title"/>
 </menu>

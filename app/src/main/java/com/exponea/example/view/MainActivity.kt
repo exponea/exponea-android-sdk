@@ -34,6 +34,12 @@ import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class MainActivity : AppCompatActivity() {
 
+    private val anonymizeFragment: AnonymizeFragment by lazy { AnonymizeFragment() }
+    private val fetchFragment: FetchFragment by lazy { FetchFragment() }
+    private val flushFragment: FlushFragment by lazy { FlushFragment() }
+    private val trackFragment: TrackFragment by lazy { TrackFragment() }
+    private val inAppCbFragment: InAppContentBlocksFragment by lazy { InAppContentBlocksFragment() }
+
     private val contentSegmentsCallback = object : SegmentationDataCallback() {
         override val exposingCategory = "content"
         override val includeFirstLoad = false
@@ -167,11 +173,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         val fragment = when (tab) {
-            Anonymize -> AnonymizeFragment()
-            Fetch -> FetchFragment()
-            Manual -> FlushFragment()
-            Track -> TrackFragment()
-            InAppContentBlock -> InAppContentBlocksFragment()
+            Anonymize -> anonymizeFragment
+            Fetch -> fetchFragment
+            Manual -> flushFragment
+            Track -> trackFragment
+            InAppContentBlock -> inAppCbFragment
         }
 
         supportFragmentManager
@@ -219,11 +225,11 @@ class MainActivity : AppCompatActivity() {
 
         navigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.actionMain -> replaceFragment(FetchFragment())
-                R.id.actionPurchase -> replaceFragment(TrackFragment())
-                R.id.actionAnonymize -> replaceFragment(AnonymizeFragment())
-                R.id.actionInAppContentBlock -> replaceFragment(InAppContentBlocksFragment())
-                else -> replaceFragment(FlushFragment())
+                R.id.actionMain -> replaceFragment(fetchFragment)
+                R.id.actionPurchase -> replaceFragment(trackFragment)
+                R.id.actionAnonymize -> replaceFragment(anonymizeFragment)
+                R.id.actionInAppContentBlock -> replaceFragment(inAppCbFragment)
+                else -> replaceFragment(flushFragment)
             }
         }
     }

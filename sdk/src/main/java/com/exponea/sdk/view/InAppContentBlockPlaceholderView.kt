@@ -10,9 +10,12 @@ import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ThreadSafeAccess
+import com.exponea.sdk.util.runOnBackgroundThread
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_placeholder
 import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_webview
+import kotlinx.coroutines.Job
 
 @SuppressLint("ViewConstructor")
 class InAppContentBlockPlaceholderView internal constructor(
@@ -20,10 +23,18 @@ class InAppContentBlockPlaceholderView internal constructor(
     internal val controller: InAppContentBlockViewController
 ) : RelativeLayout(context, null, 0) {
 
+    private companion object {
+        private const val CONTENT_READY_TIMEOUT = 200L
+    }
+
     internal lateinit var htmlContainer: ExponeaWebView
     internal lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
-    private val pageFinishedEvent = AtomicReference<Boolean?>(null)
+    private val contentLoadedFlag = AtomicReference<Boolean?>(null)
+    private var contentLoadedForceUpdate: Job? = null
+    private val jobAccess = ThreadSafeAccess()
+    private val placeholderId: String = controller.placeholderId
+
     /**
      * Whenever a in-app content block message is handled, this callback is called, if set up.
      * Otherwise default behaviour is handled by the SDK
@@ -41,21 +52,35 @@ class InAppContentBlockPlaceholderView internal constructor(
         controller.view = this
         inflateLayout()
         registerHandlers()
+        Logger.v(this, "InAppCB: $placeholderId: View initialized")
     }
 
     private fun registerHandlers() {
         htmlContainer.setOnUrlCallback { url ->
+            Logger.v(this, "InAppCB: $placeholderId: URL $url clicked")
             controller.onUrlClick(url)
         }
         htmlContainer.setOnPageLoadedCallback {
-            pageFinishedEvent.set(true)
+            Logger.v(this, "InAppCB: $placeholderId: HTML content has been fully loaded")
+            startNotifyContentReadyProcess(true)
         }
         this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            pageFinishedEvent.getAndSet(null)?.let { contentLoaded ->
-                Logger.i(this, "InAppCB: Page loaded, notifying content ready with $contentLoaded")
-                onContentReady?.invoke(contentLoaded)
+            Logger.v(this, "InAppCB: $placeholderId: View layout changed")
+            // layout change should notify only if content was loaded
+            contentLoadedFlag.getAndSet(null)?.let { contentLoaded ->
+                jobAccess.waitForAccess {
+                    contentLoadedForceUpdate?.cancel()
+                    contentLoadedForceUpdate = null
+                }
+                Logger.v(this, "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change")
+                notifyContentReadyListener(contentLoaded)
             }
         }
+    }
+
+    private fun notifyContentReadyListener(contentLoaded: Boolean) {
+        Logger.i(this, "InAppCB: $placeholderId: Page loaded, notifying content ready with $contentLoaded")
+        onContentReady?.invoke(contentLoaded)
     }
 
     private fun inflateLayout() {
@@ -63,19 +88,51 @@ class InAppContentBlockPlaceholderView internal constructor(
         this.htmlContainer = this.content_block_webview
         this.htmlContainer.setBackgroundColor(Color.TRANSPARENT)
         this.placeholder = this.content_block_placeholder
-        // all modes has to be hidden before usage
-        this.visibility = VISIBLE
-        this.htmlContainer.visibility = GONE
-        this.placeholder.visibility = GONE
+        applyVisibilityMode(PlaceholderVisibilityMode.INIT)
+    }
+
+    private fun applyVisibilityMode(mode: PlaceholderVisibilityMode) {
+        when (mode) {
+            PlaceholderVisibilityMode.INIT -> {
+                this.visibility = VISIBLE
+                this.htmlContainer.visibility = GONE
+                this.placeholder.visibility = GONE
+            }
+            PlaceholderVisibilityMode.EMPTY -> {
+                this.htmlContainer.visibility = GONE
+                this.placeholder.visibility = VISIBLE
+                if (mayHaveZeroSizeForEmptyContent()) {
+                    this.visibility = GONE
+                } else {
+                    this.visibility = VISIBLE
+                }
+            }
+            PlaceholderVisibilityMode.CONTENT -> {
+                this.visibility = VISIBLE
+                this.htmlContainer.visibility = VISIBLE
+                this.placeholder.visibility = GONE
+            }
+        }
     }
 
     internal fun showNoContent() {
-        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
-        pageFinishedEvent.set(false)
-        this.htmlContainer.visibility = GONE
-        this.placeholder.visibility = VISIBLE
-        if (mayHaveZeroSizeForEmptyContent()) {
-            this.visibility = GONE
+        Logger.i(this, "InAppCB: $placeholderId: View has no content to show")
+        startNotifyContentReadyProcess(false)
+        applyVisibilityMode(PlaceholderVisibilityMode.EMPTY)
+    }
+
+    private fun startNotifyContentReadyProcess(contentLoaded: Boolean) {
+        contentLoadedFlag.set(contentLoaded)
+        // OnLayoutChangeListener should be called in near future or force to notify onContentReady
+        jobAccess.waitForAccess {
+            contentLoadedForceUpdate?.cancel()
+            contentLoadedForceUpdate = runOnBackgroundThread(CONTENT_READY_TIMEOUT) {
+                jobAccess.waitForAccess {
+                    contentLoadedForceUpdate = null
+                }
+                Logger.v(this, "InAppCB: $placeholderId: Force-notifying content ready listener")
+                notifyContentReadyListener(contentLoadedFlag.getAndSet(null) ?: false)
+            }
         }
     }
 
@@ -91,7 +148,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     override fun onAttachedToWindow() {
         Logger.d(
             this,
-            "InAppCB: Placeholder ${controller.placeholderId} view has been attached to window"
+            "InAppCB: $placeholderId: View has been attached to window"
         )
         super.onAttachedToWindow()
         controller.onViewAttachedToWindow()
@@ -100,23 +157,20 @@ class InAppContentBlockPlaceholderView internal constructor(
     override fun onDetachedFromWindow() {
         Logger.d(
             this,
-            "InAppCB: Placeholder ${controller.placeholderId} view has been detached from window"
+            "InAppCB: $placeholderId: View has been detached from window"
         )
         controller.onViewDetachedFromWindow()
         super.onDetachedFromWindow()
     }
 
     internal fun showHtmlContent(html: String) {
-        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view going to show HTML block")
+        Logger.i(this, "InAppCB: $placeholderId: View going to show HTML block")
         htmlContainer.loadData(html)
-        // pageFinishedEvent will be set after html full load
-        this.visibility = VISIBLE
-        this.htmlContainer.visibility = VISIBLE
-        this.placeholder.visibility = GONE
+        applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
     }
 
     fun refreshContent() {
-        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view requested to be refreshed")
+        Logger.i(this, "InAppCB: $placeholderId: View requested to be refreshed")
         controller.loadContent(false)
     }
 
@@ -127,8 +181,12 @@ class InAppContentBlockPlaceholderView internal constructor(
     fun invokeActionClick(actionUrl: String) {
         Logger.i(
             this,
-            "InAppCB: Manual action $actionUrl invoked on placeholder ${controller.placeholderId}"
+            "InAppCB: $placeholderId: Manual action $actionUrl invoked"
         )
         controller.onUrlClick(actionUrl)
+    }
+
+    private enum class PlaceholderVisibilityMode {
+        INIT, EMPTY, CONTENT
     }
 }

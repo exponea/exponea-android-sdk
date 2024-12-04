@@ -1,7 +1,6 @@
 package com.exponea.sdk.view
 
 import android.content.Context
-import android.os.Looper.getMainLooper
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.FetchManager
@@ -30,27 +29,24 @@ import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
+import com.exponea.sdk.testutil.runInSingleThread
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import java.util.Date
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
@@ -104,21 +100,9 @@ internal class InAppContentBlockPlaceholderViewTest {
         identifyCustomer()
     }
 
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
-    @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
-    }
-
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should load message assigned to placeholder ID`() {
+    fun `should load message assigned to placeholder ID`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
@@ -150,11 +134,12 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
+        idleThreads()
     }
 
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
-    fun `should call message changed events in correct order`() {
+    fun `should call message changed events in correct order`() = runInSingleThread { idleThreads ->
         val placeholder = inAppContentBlockManager.getPlaceholderView(
             "placeholder_1",
             ApplicationProvider.getApplicationContext(),
@@ -183,13 +168,13 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertTrue(messageFound)
         assertEquals(View.VISIBLE, placeholder.htmlContainer.visibility)
         assertEquals(View.GONE, placeholder.placeholder.visibility)
         preloadInAppContentBlocks(arrayListOf())
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertFalse(messageFound)
         assertEquals(View.GONE, placeholder.htmlContainer.visibility)
         assertEquals(View.VISIBLE, placeholder.placeholder.visibility)
@@ -197,7 +182,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
         ))
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertTrue(messageFound)
         assertEquals(View.VISIBLE, placeholder.htmlContainer.visibility)
         assertEquals(View.GONE, placeholder.placeholder.visibility)
@@ -205,7 +190,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
-    fun `should store interaction flags by invoking manual action`() {
+    fun `should store interaction flags by invoking manual action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
@@ -257,12 +242,12 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(1, messageShown)
         assertNotNull(shownMessage)
         placeholder.invokeActionClick(manualActionUrl)
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(2, actionClicked)
         assertEquals(3, noMessageFound)
         // message is visible 'until interaction' so next message should not be shown/found
@@ -277,7 +262,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
-    fun `should store interaction flags by invoking close action`() {
+    fun `should store interaction flags by invoking close action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
@@ -327,7 +312,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(1, messageShown)
         assertNotNull(shownMessage)
         val manualCloseUrl = placeholder.controller.assignedHtmlContent?.actions?.find {
@@ -335,7 +320,7 @@ internal class InAppContentBlockPlaceholderViewTest {
         }
         placeholder.invokeActionClick(manualCloseUrl?.actionUrl!!)
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(2, actionClosed)
         assertEquals(3, noMessageFound)
         // message is visible 'until interaction' so next message should not be shown/found
@@ -350,7 +335,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
     @Test
     @LooperMode(LooperMode.Mode.PAUSED)
-    fun `should store interaction flags by invoking invalid action`() {
+    fun `should store interaction flags by invoking invalid action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
@@ -399,11 +384,11 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         placeholder.refreshContent()
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(1, messageShown)
         assertNotNull(shownMessage)
         placeholder.invokeActionClick(manualInvalidUrl)
-        shadowOf(getMainLooper()).idle()
+        idleThreads()
         assertEquals(2, onErrorFound)
         // message is visible 'until interaction' so next message should not be shown/found
         assertEquals(1, messageShown)
@@ -413,6 +398,96 @@ internal class InAppContentBlockPlaceholderViewTest {
         assertNotNull(displayState.displayedLast)
         assertEquals(0, displayState.interactedCount)
         assertNull(displayState.interactedLast)
+    }
+
+    @Test
+    fun `should call content ready - pageLoaded then layouted`() {
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        preloadInAppContentBlocks(arrayListOf(
+            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        ))
+        val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+        placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                messageShownInvoked.release()
+            }
+        }
+        val contentReadyInvoked = CountDownLatch(1)
+        placeholder.setOnContentReadyListener {
+            contentReadyInvoked.countDown()
+        }
+        placeholder.refreshContent()
+        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        // Simulate WebView on page loaded event, then layout change
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.layout(0, 0, 10, 10)
+        assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun `should call content ready - pageLoaded without layouted`() {
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        preloadInAppContentBlocks(arrayListOf(
+            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        ))
+        val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+        placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                messageShownInvoked.release()
+            }
+        }
+        val contentReadyInvoked = CountDownLatch(1)
+        placeholder.setOnContentReadyListener {
+            contentReadyInvoked.countDown()
+        }
+        placeholder.refreshContent()
+        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        // Simulate WebView on page loaded event, then layout change
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun `should call content ready - pageLoaded multiple times with first layout`() {
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        preloadInAppContentBlocks(arrayListOf(
+            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        ))
+        val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+        placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                messageShownInvoked.release()
+            }
+        }
+        val contentReadyInvoked = java.util.concurrent.Semaphore(0, true)
+        placeholder.setOnContentReadyListener {
+            contentReadyInvoked.release()
+        }
+        // first load, onPageLoadedCallback called, layoutChange called
+        placeholder.refreshContent()
+        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        // Simulate WebView on page loaded event, then layout change
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.layout(0, 0, 10, 10)
+        assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
+        // second load, onPageLoadedCallback called, layoutChange not called
+        placeholder.refreshContent()
+        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        // Simulate WebView on page loaded event, then layout change
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
     }
 
     private fun preloadInAppContentBlocks(messages: ArrayList<InAppContentBlock>) {
@@ -429,6 +504,18 @@ internal class InAppContentBlockPlaceholderViewTest {
         }
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
     }
+}
+
+open class EmptyInAppContentBlockCallback : InAppContentBlockCallback {
+    override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {}
+    override fun onNoMessageFound(placeholderId: String) {}
+    override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {}
+    override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {}
+    override fun onActionClicked(
+        placeholderId: String,
+        contentBlock: InAppContentBlock,
+        action: InAppContentBlockAction
+    ) {}
 }
 
 class InAppContentBlockDisplayStateMock : InAppContentBlockDisplayStateRepository {

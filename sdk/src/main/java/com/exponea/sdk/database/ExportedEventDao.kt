@@ -19,7 +19,7 @@ internal interface ExportedEventDao {
     fun count(): Int
 
     @Query("SELECT * FROM exported_event WHERE id = :id LIMIT 1")
-    fun get(id: String): ExportedEvent
+    fun get(id: String): ExportedEvent?
 
     @Insert
     fun add(item: ExportedEvent)

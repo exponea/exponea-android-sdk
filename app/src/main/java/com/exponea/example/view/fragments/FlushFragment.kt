@@ -8,20 +8,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import com.exponea.example.R
+import com.exponea.example.databinding.FragmentFlushBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.fragment_flush.progressBar
-import kotlinx.android.synthetic.main.fragment_flush.settingsBtnFlush
 
 class FlushFragment : BaseFragment() {
+
+    private lateinit var viewBinding: FragmentFlushBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_flush, container, false)
+        viewBinding = FragmentFlushBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -31,12 +33,12 @@ class FlushFragment : BaseFragment() {
         // Track visited screen
         trackPage(Constants.ScreenNames.settingsScreen)
 
-        settingsBtnFlush.setOnClickListener {
-            progressBar.visibility = View.VISIBLE
+        viewBinding.settingsBtnFlush.setOnClickListener {
+            viewBinding.progressBar.visibility = View.VISIBLE
             Exponea.flushData { result ->
                 if (!this.isVisible) return@flushData
                 Handler(Looper.getMainLooper()).post {
-                    progressBar.visibility = View.INVISIBLE
+                    viewBinding.progressBar.visibility = View.INVISIBLE
                     AlertDialog.Builder(context)
                         .setTitle(if (result.isSuccess) "Flush successful" else "Flush failed")
                         .setMessage(if (result.isFailure) result.exceptionOrNull()?.localizedMessage else null)

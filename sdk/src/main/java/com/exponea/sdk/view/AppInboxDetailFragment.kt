@@ -7,8 +7,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout.LayoutParams
 import androidx.fragment.app.Fragment
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.R
-import kotlinx.android.synthetic.main.message_inbox_list_fragment.view.container
+import com.exponea.sdk.databinding.MessageInboxDetailFragmentBinding
 
 class AppInboxDetailFragment : Fragment() {
 
@@ -28,7 +27,7 @@ class AppInboxDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layout: View = inflater.inflate(R.layout.message_inbox_detail_fragment, container, false)
+        val layout = MessageInboxDetailFragmentBinding.inflate(inflater, container, false)
         val messageId = arguments?.getString(MESSAGE_ID)
         if (messageId == null) {
             activity?.finish()
@@ -38,6 +37,6 @@ class AppInboxDetailFragment : Fragment() {
             Exponea.getAppInboxDetailView(requireContext(), messageId),
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         )
-        return layout
+        return layout.root
     }
 }

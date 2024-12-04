@@ -2,7 +2,7 @@ apply plugin: 'jacoco'
 
 jacoco {
     toolVersion = "$jacoco_version"
-    reportsDir = file("$buildDir/reports")
+    reportsDirectory = file("$buildDir/reports")
 }
 
 sourceSets {
@@ -22,8 +22,8 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     description = "Generate Jacoco coverage reports"
 
     reports {
-        xml.enabled = true
-        html.enabled = true
+        xml.required = true
+        html.required = true
     }
 
     def debugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: [])

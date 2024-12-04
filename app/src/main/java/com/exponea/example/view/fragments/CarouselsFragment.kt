@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import com.exponea.example.R
+import com.exponea.example.databinding.FragmentCarouselsBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
@@ -14,19 +14,18 @@ import com.exponea.sdk.models.ContentBlockSelector
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.util.Logger
-import kotlinx.android.synthetic.main.fragment_carousels.content_blocks_carousel_custom
-import kotlinx.android.synthetic.main.fragment_carousels.content_blocks_carousel_default
-import kotlinx.android.synthetic.main.fragment_carousels.content_blocks_carousel_status
-import kotlinx.android.synthetic.main.fragment_inapp_content_blocks.content_blocks_layout
 
 class CarouselsFragment : BaseFragment() {
+
+    private lateinit var viewBinding: FragmentCarouselsBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return layoutInflater.inflate(R.layout.fragment_carousels, container, false)
+    ): View {
+        viewBinding = FragmentCarouselsBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -45,17 +44,19 @@ class CarouselsFragment : BaseFragment() {
 
     private fun prepareExampleAndroidCarouselCbPlaceholder() {
         val androidCarousel = Exponea.getInAppContentBlocksCarousel(requireContext(), "example_carousel_and")
-        content_blocks_layout?.addView(androidCarousel)
+        viewBinding.contentBlocksLayout.addView(androidCarousel)
     }
 
     private fun prepareExampleDefaultCarouselCbPlaceholder() {
-        content_blocks_carousel_default?.let {
+        viewBinding.contentBlocksCarouselDefault.let {
             val initName = it.getShownContentBlock()?.name
             val initIndex = it.getShownIndex()
             val initCount = it.getShownCount()
-            content_blocks_carousel_status?.text = "Showing ${initName ?: ""} as ${initIndex + 1} of $initCount"
+            viewBinding.contentBlocksCarouselStatus.text = """
+                Carousel is emptyShowing ${initName ?: ""} as ${initIndex + 1} of $initCount
+                """.trimIndent()
         }
-        content_blocks_carousel_default?.behaviourCallback = object : ContentBlockCarouselCallback {
+        viewBinding.contentBlocksCarouselDefault.behaviourCallback = object : ContentBlockCarouselCallback {
 
             override val overrideDefaultBehavior = false
             override val trackActions = true
@@ -77,7 +78,7 @@ class CarouselsFragment : BaseFragment() {
             }
 
             private fun updateCarouselStatus() {
-                content_blocks_carousel_status?.text = "Showing ${blockName ?: ""} as ${index + 1} of $count"
+                viewBinding.contentBlocksCarouselStatus.text = "Showing ${blockName ?: ""} as ${index + 1} of $count"
             }
 
             override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
@@ -116,7 +117,7 @@ class CarouselsFragment : BaseFragment() {
     }
 
     private fun prepareExampleCustomCarouselCbPlaceholder() {
-        content_blocks_carousel_custom?.contentBlockSelector = object : ContentBlockSelector() {
+        viewBinding.contentBlocksCarouselCustom.contentBlockSelector = object : ContentBlockSelector() {
             override fun filterContentBlocks(source: List<InAppContentBlock>): List<InAppContentBlock> {
                 return source.filter { !it.name.lowercase().contains("discarded") }
             }

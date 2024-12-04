@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.R.layout
+import com.exponea.sdk.databinding.MessageInboxListItemBinding
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.Logger
@@ -19,8 +19,8 @@ internal class AppInboxAdapter(
 ) : Adapter<MessageItemViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(layout.message_inbox_list_item, parent, false)
-        return MessageItemViewHolder(view)
+        val viewBinding = MessageInboxListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return MessageItemViewHolder(viewBinding)
     }
 
     override fun onBindViewHolder(target: MessageItemViewHolder, position: Int) {

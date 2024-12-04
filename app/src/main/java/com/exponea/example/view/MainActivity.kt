@@ -1,5 +1,6 @@
 package com.exponea.example.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.exponea.example.R
+import com.exponea.example.databinding.ActivityMainBinding
 import com.exponea.example.services.ExampleAppInboxProvider
 import com.exponea.example.view.NavigationItem.Anonymize
 import com.exponea.example.view.NavigationItem.Fetch
@@ -29,8 +31,6 @@ import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.isViewUrlIntent
-import kotlinx.android.synthetic.main.activity_main.navigation
-import kotlinx.android.synthetic.main.activity_main.toolbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -67,10 +67,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private lateinit var viewBinding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+        setSupportActionBar(viewBinding.toolbar)
         supportActionBar?.title = "Examples"
 
         // Set log level before first call to SDK function
@@ -140,6 +143,7 @@ class MainActivity : AppCompatActivity() {
         Exponea.registerSegmentationDataCallback(merchandisingSegmentsCallback)
     }
 
+    @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         val deeplinkDestination = resolveDeeplinkDestination(intent)
@@ -200,7 +204,7 @@ class MainActivity : AppCompatActivity() {
             topLevelDestinationIds = topLevelDestinationIds
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
-        navigation.setupWithNavController(navController)
+        viewBinding.navigation.setupWithNavController(navController)
         onBackPressedDispatcher.addCallback {
             if (topLevelDestinationIds.contains(navController.currentDestination?.id)) {
                 finish()

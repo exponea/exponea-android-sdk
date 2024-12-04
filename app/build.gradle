@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().contains("gms")) {
     apply plugin: 'com.google.gms.google-services'
@@ -10,11 +9,14 @@ if (getGradle().getStartParameter().getTaskRequests().toString().toLowerCase().c
 }
 
 android {
+
+    namespace 'com.exponea.example'
+
     defaultConfig {
         applicationId "com.exponea.example"
         minSdkVersion 21
-        targetSdkVersion 34
-        compileSdk 34
+        targetSdkVersion 35
+        compileSdk 35
         versionCode 86
         versionName "4.0.1"
         vectorDrawables.useSupportLibrary = true
@@ -31,6 +33,9 @@ android {
             keyPassword 'Exponea'
             keyAlias 'key0'
         }
+    }
+    buildFeatures {
+        viewBinding true
     }
     buildTypes {
         debug {

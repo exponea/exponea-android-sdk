@@ -331,7 +331,7 @@ internal class TrackingConsentManagerImpl(
             val configuration = ExponeaConfigRepository.get(context)
                 ?: throw InvalidConfigurationException("No previous Exponea configuration found")
             val preferences = ExponeaPreferencesImpl(context)
-            val eventRepository = TemporaryEventRepositoryImpl(context, preferences)
+            val eventRepository = TemporaryEventRepositoryImpl(context)
             val uniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences

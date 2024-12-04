@@ -29,7 +29,6 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewContro
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewHolder
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
-import kotlinx.android.synthetic.main.inapp_content_block_carousel.view.content_block_carousel_pager
 
 public class ContentBlockCarouselView : RelativeLayout {
 
@@ -171,7 +170,7 @@ public class ContentBlockCarouselView : RelativeLayout {
             scrollDelay
         )
         View.inflate(context, R.layout.inapp_content_block_carousel, this)
-        this.viewPager = this.content_block_carousel_pager
+        this.viewPager = findViewById(R.id.content_block_carousel_pager)
         this.viewPager.adapter = viewController.contentBlockCarouselAdapter
         this.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageScrollStateChanged(state: Int) {

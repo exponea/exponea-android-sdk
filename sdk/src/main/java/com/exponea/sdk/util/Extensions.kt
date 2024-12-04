@@ -102,7 +102,7 @@ internal fun Context.getAppVersion(context: Context): String {
     try {
         val packageManager = context.packageManager
         val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
-        return packageInfo.versionName
+        return packageInfo?.versionName ?: ""
     } catch (e: Exception) {
         Logger.w(this, "Unable to get app version from package manager.")
     }
@@ -259,14 +259,18 @@ fun Context.getMauiSDKVersion(): String? {
 
 private fun Context.isOtherSDK(sdk: String): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    if (appInfo.metaData == null) return false
-    return appInfo.metaData[sdk] == true
+    if (appInfo.metaData == null) {
+        return false
+    }
+    return appInfo.metaData.getBoolean(sdk, false)
 }.returnOnException { false }
 
 fun Context.isCalledFromExampleApp(): Boolean = runCatching {
     val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-    if (appInfo.metaData == null) return false
-    return appInfo.metaData["ExponeaExampleApp"] == true
+    if (appInfo.metaData == null) {
+        return false
+    }
+    return appInfo.metaData.getBoolean("ExponeaExampleApp", false)
 }.returnOnException { false }
 
 private fun Context.getSDKVersion(metadataName: String): String? = runCatching {

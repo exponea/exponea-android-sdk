@@ -113,4 +113,26 @@ class Converters {
         }
         return null
     }
+
+    @TypeConverter
+    fun toOptionalStringMap(value: String?): HashMap<String, String?>? {
+        if (value == null || value.isEmpty()) return null
+        try {
+            return Gson().fromJson<HashMap<String, String?>>(value)
+        } catch (ex: Exception) {
+            Logger.e(this, ex.message ?: "Unable to deserialize the map", ex)
+        }
+        return null
+    }
+
+    @TypeConverter
+    fun fromOptionalStringMap(data: HashMap<String, String?>?): String? {
+        if (data == null) return ""
+        try {
+            return Gson().toJson(data)
+        } catch (ex: Exception) {
+            Logger.e(this, ex.message ?: "Unable to serialize the map", ex)
+        }
+        return null
+    }
 }

@@ -108,7 +108,7 @@ internal class ExponeaComponent(
             preferences
     )
 
-    internal val eventRepository: EventRepository = EventRepositoryImpl(context, preferences)
+    internal val eventRepository: EventRepository = EventRepositoryImpl(context)
 
     internal val pushTokenRepository: PushTokenRepository = PushTokenRepositoryProvider.get(context)
 

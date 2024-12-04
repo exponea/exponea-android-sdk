@@ -10,7 +10,6 @@ import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
-import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -50,7 +49,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         connectionManager = mockk()
         every { connectionManager.isConnectedToInternet() } returns connected
         service = spyk(ExponeaMockService(serviceSuccess))
-        repo = EventRepositoryImpl(context, ExponeaPreferencesImpl(context))
+        repo = EventRepositoryImpl(context)
         repo.clear()
         manager = FlushManagerImpl(configuration, repo, service, connectionManager, {})
     }

@@ -842,8 +842,6 @@ object Exponea {
     private fun initializeSdk(context: Context) {
         this.component = ExponeaComponent(this.configuration, context)
 
-        component.eventRepository.tryToMigrateFromPaper()
-
         ensureOnBackgroundThread {
             telemetry?.reportEvent(
                 com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,

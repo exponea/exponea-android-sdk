@@ -52,7 +52,7 @@ internal class TimeLimitedFcmManagerImpl(
          */
         fun createSdklessInstance(context: Context, configuration: ExponeaConfiguration): TimeLimitedFcmManagerImpl {
             val preferences = ExponeaPreferencesImpl(context)
-            val eventRepository = TemporaryEventRepositoryImpl(context, preferences)
+            val eventRepository = TemporaryEventRepositoryImpl(context)
             val uniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences

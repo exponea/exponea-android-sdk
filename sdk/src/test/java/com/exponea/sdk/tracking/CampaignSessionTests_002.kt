@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
@@ -62,7 +61,7 @@ internal class CampaignSessionTests_002 : CampaignSessionTests_Base() {
     class TestActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            setTheme(R.style.Theme_AppCompat)
+            setTheme(androidx.appcompat.R.style.Theme_AppCompat)
             initExponea(applicationContext)
             Exponea.handleCampaignIntent(intent, applicationContext)
         }

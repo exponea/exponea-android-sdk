@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.exponea.example.R
+import com.exponea.example.databinding.FragmentInappContentBlocksBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.view.MainActivity
 import com.exponea.example.view.base.BaseFragment
@@ -29,17 +30,18 @@ import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import kotlin.math.ceil
-import kotlinx.android.synthetic.main.fragment_inapp_content_blocks.content_blocks_layout
-import kotlinx.android.synthetic.main.fragment_inapp_content_blocks.content_blocks_list
 
 class InAppContentBlocksFragment : BaseFragment() {
+
+    private lateinit var viewBinding: FragmentInappContentBlocksBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return layoutInflater.inflate(R.layout.fragment_inapp_content_blocks, container, false)
+    ): View {
+        viewBinding = FragmentInappContentBlocksBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -84,11 +86,11 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleListCbPlaceholder() {
-        content_blocks_list?.layoutManager = LinearLayoutManager(requireContext())
-        content_blocks_list?.layoutParams?.apply {
+        viewBinding.contentBlocksList.layoutManager = LinearLayoutManager(requireContext())
+        viewBinding.contentBlocksList.layoutParams?.apply {
             height = Resources.getSystem().getDisplayMetrics().heightPixels / 2
         }
-        content_blocks_list?.layoutParams = content_blocks_list?.layoutParams
+        viewBinding.contentBlocksList.layoutParams = viewBinding.contentBlocksList.layoutParams
         val data = ArrayList<ProductsViewModel>()
         for (i in 1..1000) {
             val icon = listOf(
@@ -109,13 +111,15 @@ class InAppContentBlocksFragment : BaseFragment() {
                 desc
             ))
         }
-        content_blocks_list?.adapter = ProductsAdapter(data)
+        viewBinding.contentBlocksList.adapter = ProductsAdapter(data)
     }
 
     private fun prepareExampleAndroidCbPlaceholder() {
-        content_blocks_layout?.addView(TextView(requireContext()).apply { text = "Placeholder: ph_x_example_Android" })
+        viewBinding.contentBlocksLayout.addView(TextView(requireContext()).apply {
+            text = "Placeholder: ph_x_example_Android"
+        })
         Exponea.getInAppContentBlocksPlaceholder("ph_x_example_Android", requireContext())?.let {
-            content_blocks_layout?.addView(it, ViewGroup.LayoutParams(
+            viewBinding.contentBlocksLayout.addView(it, ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))
@@ -123,7 +127,7 @@ class InAppContentBlocksFragment : BaseFragment() {
     }
 
     private fun prepareExampleTopCbPlaceholder() {
-        content_blocks_layout?.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
+        viewBinding.contentBlocksLayout.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
         Exponea.getInAppContentBlocksPlaceholder(
             "example_top",
             requireContext(),
@@ -182,7 +186,7 @@ class InAppContentBlocksFragment : BaseFragment() {
                     }
                 }
             }
-            content_blocks_layout?.addView(it, ViewGroup.LayoutParams(
+            viewBinding.contentBlocksLayout.addView(it, ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))

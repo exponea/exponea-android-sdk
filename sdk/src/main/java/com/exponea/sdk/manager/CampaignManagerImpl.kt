@@ -26,7 +26,7 @@ internal class CampaignManagerImpl(
         fun createSdklessInstance(context: Context, configuration: ExponeaConfiguration): CampaignManagerImpl {
             val preferences = ExponeaPreferencesImpl(context)
             val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
-            val eventRepository = TemporaryEventRepositoryImpl(context, preferences)
+            val eventRepository = TemporaryEventRepositoryImpl(context)
             val uniqueIdentifierRepository = UniqueIdentifierRepositoryImpl(preferences)
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences

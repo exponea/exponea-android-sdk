@@ -5,13 +5,12 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
-import kotlinx.android.synthetic.main.message_inbox_list_activity.toolbar
 
 class AppInboxListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.message_inbox_list_activity)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.title = getString(R.string.exponea_inbox_title)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val listFragment = Exponea.getAppInboxListFragment(this)

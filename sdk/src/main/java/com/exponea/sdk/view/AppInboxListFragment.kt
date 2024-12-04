@@ -7,10 +7,9 @@ import android.view.ViewGroup
 import android.widget.LinearLayout.LayoutParams
 import androidx.fragment.app.Fragment
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.R
+import com.exponea.sdk.databinding.MessageInboxListFragmentBinding
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.util.Logger
-import kotlinx.android.synthetic.main.message_inbox_list_fragment.view.container
 
 class AppInboxListFragment : Fragment() {
 
@@ -24,12 +23,12 @@ class AppInboxListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layout: View = inflater.inflate(R.layout.message_inbox_list_fragment, container, false)
+        val layout = MessageInboxListFragmentBinding.inflate(inflater, container, false)
         layout.container.addView(
             Exponea.getAppInboxListView(requireContext(), onItemClickListener),
             LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         )
-        return layout
+        return layout.root
     }
 
     private fun onMessageItemClicked(item: MessageItem, index: Int) {

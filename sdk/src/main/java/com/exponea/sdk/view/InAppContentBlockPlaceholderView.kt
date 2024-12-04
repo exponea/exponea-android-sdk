@@ -7,14 +7,13 @@ import android.view.View
 import android.widget.RelativeLayout
 import androidx.cardview.widget.CardView
 import com.exponea.sdk.R
+import com.exponea.sdk.databinding.InappContentBlockPlaceholderBinding
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
 import com.exponea.sdk.util.runOnBackgroundThread
 import java.util.concurrent.atomic.AtomicReference
-import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_placeholder
-import kotlinx.android.synthetic.main.inapp_content_block_placeholder.view.content_block_webview
 import kotlinx.coroutines.Job
 
 @SuppressLint("ViewConstructor")
@@ -84,10 +83,12 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     private fun inflateLayout() {
-        View.inflate(context, R.layout.inapp_content_block_placeholder, this)
-        this.htmlContainer = this.content_block_webview
+        val viewBinding = InappContentBlockPlaceholderBinding.bind(
+            View.inflate(context, R.layout.inapp_content_block_placeholder, this)
+        )
+        this.htmlContainer = viewBinding.contentBlockWebview
         this.htmlContainer.setBackgroundColor(Color.TRANSPARENT)
-        this.placeholder = this.content_block_placeholder
+        this.placeholder = viewBinding.contentBlockPlaceholder
         applyVisibilityMode(PlaceholderVisibilityMode.INIT)
     }
 
@@ -116,7 +117,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     internal fun showNoContent() {
-        Logger.i(this, "InAppCB: $placeholderId: View has no content to show")
+        Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
         startNotifyContentReadyProcess(false)
         applyVisibilityMode(PlaceholderVisibilityMode.EMPTY)
     }

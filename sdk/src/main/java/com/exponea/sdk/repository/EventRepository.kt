@@ -10,5 +10,4 @@ internal interface EventRepository {
     fun get(id: String): ExportedEvent?
     fun remove(id: String)
     fun clear()
-    fun tryToMigrateFromPaper()
 }

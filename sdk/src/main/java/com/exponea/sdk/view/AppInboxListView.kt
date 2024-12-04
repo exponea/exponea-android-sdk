@@ -9,13 +9,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.exponea.sdk.R
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_empty_status_message
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_empty_status_title
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_error_status_message
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_error_status_title
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_list
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_status_container
-import kotlinx.android.synthetic.main.message_inbox_list.view.message_inbox_status_progress
+import com.exponea.sdk.databinding.MessageInboxListBinding
 
 class AppInboxListView@JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     ConstraintLayout(context, attrs, defStyleAttr) {
@@ -33,13 +27,13 @@ class AppInboxListView@JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun init() {
-        View.inflate(context, R.layout.message_inbox_list, this)
-        this.statusContainterView = this.message_inbox_status_container
-        this.statusProgressView = this.message_inbox_status_progress
-        this.statusEmptyTitleView = this.message_inbox_empty_status_title
-        this.statusEmptyMessageView = this.message_inbox_empty_status_message
-        this.statusErrorTitleView = this.message_inbox_error_status_title
-        this.statusErrorMessageView = this.message_inbox_error_status_message
-        this.listView = this.message_inbox_list
+        val viewBinding = MessageInboxListBinding.bind(View.inflate(context, R.layout.message_inbox_list, this))
+        this.statusContainterView = viewBinding.messageInboxStatusContainer
+        this.statusProgressView = viewBinding.messageInboxStatusProgress
+        this.statusEmptyTitleView = viewBinding.messageInboxEmptyStatusTitle
+        this.statusEmptyMessageView = viewBinding.messageInboxEmptyStatusMessage
+        this.statusErrorTitleView = viewBinding.messageInboxErrorStatusTitle
+        this.statusErrorMessageView = viewBinding.messageInboxErrorStatusMessage
+        this.listView = viewBinding.messageInboxList
     }
 }

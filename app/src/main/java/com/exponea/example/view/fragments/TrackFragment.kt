@@ -11,7 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
-import com.exponea.example.R
+import com.exponea.example.databinding.FragmentTrackBinding
 import com.exponea.example.managers.CustomerTokenStorage
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
@@ -23,21 +23,18 @@ import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.util.Logger
-import kotlinx.android.synthetic.main.fragment_track.buttonAuthorizePush
-import kotlinx.android.synthetic.main.fragment_track.buttonCustomEvent
-import kotlinx.android.synthetic.main.fragment_track.buttonTrackClicked
-import kotlinx.android.synthetic.main.fragment_track.buttonTrackDelivered
-import kotlinx.android.synthetic.main.fragment_track.buttonTrackToken
-import kotlinx.android.synthetic.main.fragment_track.buttonUpdateProperties
-import kotlinx.android.synthetic.main.fragment_track.listView
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
+
+    private lateinit var viewBinding: FragmentTrackBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return layoutInflater.inflate(R.layout.fragment_track, container, false)
+        viewBinding = FragmentTrackBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
     companion object {
@@ -57,27 +54,27 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         // Track visited screen
         trackPage(Constants.ScreenNames.purchaseScreen)
 
-        listView.adapter = Adapter()
+        viewBinding.listView.adapter = Adapter()
 
         // Init buttons listeners
         initListeners()
     }
 
     private fun initListeners() {
-        listView.onItemClickListener = this
+        viewBinding.listView.onItemClickListener = this
 
-        buttonTrackClicked.setOnClickListener { trackPushClicked() }
-        buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
-        buttonTrackToken.setOnClickListener { trackToken() }
-        buttonAuthorizePush.setOnClickListener { requestPushAuthorization() }
+        viewBinding.buttonTrackClicked.setOnClickListener { trackPushClicked() }
+        viewBinding.buttonTrackDelivered.setOnClickListener { trackPushDelivered() }
+        viewBinding.buttonTrackToken.setOnClickListener { trackToken() }
+        viewBinding.buttonAuthorizePush.setOnClickListener { requestPushAuthorization() }
 
-        buttonUpdateProperties.setOnClickListener {
+        viewBinding.buttonUpdateProperties.setOnClickListener {
             TrackCustomAttributesDialog.show(childFragmentManager) {
                 trackUpdateCustomerProperties(it)
             }
         }
 
-        buttonCustomEvent.setOnClickListener {
+        viewBinding.buttonCustomEvent.setOnClickListener {
             TrackCustomEventDialog.show(childFragmentManager) { eventName, properties ->
                 trackCustomEvent(eventName, properties) }
         }

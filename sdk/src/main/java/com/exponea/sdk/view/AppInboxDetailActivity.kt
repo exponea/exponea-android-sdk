@@ -12,7 +12,6 @@ import com.exponea.sdk.R
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
-import kotlinx.android.synthetic.main.message_inbox_list_activity.toolbar
 
 internal class AppInboxDetailActivity : AppCompatActivity() {
     companion object {
@@ -26,7 +25,7 @@ internal class AppInboxDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.message_inbox_detail_activity)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val messageId = intent.getStringExtra(MESSAGE_ID)
         if (messageId == null) {

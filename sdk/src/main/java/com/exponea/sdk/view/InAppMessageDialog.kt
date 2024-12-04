@@ -13,6 +13,7 @@ import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import com.exponea.sdk.R
+import com.exponea.sdk.databinding.InAppMessageDialogBinding
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
@@ -21,18 +22,9 @@ import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.TextPosition
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.setBackgroundColor
-import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction1
-import kotlinx.android.synthetic.main.in_app_message_dialog.buttonAction2
-import kotlinx.android.synthetic.main.in_app_message_dialog.buttonClose
-import kotlinx.android.synthetic.main.in_app_message_dialog.buttonSpace
-import kotlinx.android.synthetic.main.in_app_message_dialog.imageViewImage
-import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogContainer
-import kotlinx.android.synthetic.main.in_app_message_dialog.inAppMessageDialogRoot
-import kotlinx.android.synthetic.main.in_app_message_dialog.linearLayoutBackground
-import kotlinx.android.synthetic.main.in_app_message_dialog.textViewBody
-import kotlinx.android.synthetic.main.in_app_message_dialog.textViewTitle
 
 internal class InAppMessageDialog : InAppMessageView, Dialog {
+    private var viewBinding: InAppMessageDialogBinding
     private val fullScreen: Boolean
     private val payload: InAppMessagePayload
     private val onButtonClick: (InAppMessagePayloadButton) -> Unit
@@ -58,8 +50,8 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         this.onButtonClick = onButtonClick
         this.onDismiss = onDismiss
         this.onError = onError
-        val inflater = LayoutInflater.from(context)
-        setContentView(inflater.inflate(R.layout.in_app_message_dialog, null, false))
+        this.viewBinding = InAppMessageDialogBinding.inflate(LayoutInflater.from(context), null, false)
+        setContentView(viewBinding.root)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,10 +76,10 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         } else {
             context.resources.getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_dialog_padding)
         }
-        inAppMessageDialogContainer.setPadding(padding, padding, padding, padding)
+        viewBinding.inAppMessageDialogContainer.setPadding(padding, padding, padding, padding)
 
-        val rootParams = inAppMessageDialogRoot.layoutParams as ConstraintLayout.LayoutParams
-        val imageParams = imageViewImage.layoutParams as ConstraintLayout.LayoutParams
+        val rootParams = viewBinding.inAppMessageDialogRoot.layoutParams as ConstraintLayout.LayoutParams
+        val imageParams = viewBinding.imageViewImage.layoutParams as ConstraintLayout.LayoutParams
         if (fullScreen) {
             // remove constraint on dialog max. width
             rootParams.matchConstraintMaxWidth = -1
@@ -101,28 +93,28 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupPositions() {
-        var constraintSet = ConstraintSet()
-        constraintSet.clone(inAppMessageDialogRoot)
-        constraintSet.removeFromVerticalChain(linearLayoutBackground.id)
-        constraintSet.removeFromVerticalChain(imageViewImage.id)
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(viewBinding.inAppMessageDialogRoot)
+        constraintSet.removeFromVerticalChain(viewBinding.linearLayoutBackground.id)
+        constraintSet.removeFromVerticalChain(viewBinding.imageViewImage.id)
 
         if (payload.isTextOverImage == true) { // image is from top to bottom, text is either top or bottom
             constraintSet.connect(
-                imageViewImage.id,
+                viewBinding.imageViewImage.id,
                 ConstraintSet.TOP,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.TOP,
                 0
             )
             constraintSet.connect(
-                imageViewImage.id,
+                viewBinding.imageViewImage.id,
                 ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.BOTTOM,
                 0
             )
             constraintSet.connect(
-                linearLayoutBackground.id,
+                viewBinding.linearLayoutBackground.id,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
@@ -131,7 +123,11 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         } else {
             // which element is at top
             constraintSet.connect(
-                if (payload.textPosition == TextPosition.BOTTOM) imageViewImage.id else linearLayoutBackground.id,
+                if (payload.textPosition == TextPosition.BOTTOM) {
+                    viewBinding.imageViewImage.id
+                } else {
+                    viewBinding.linearLayoutBackground.id
+                },
                 ConstraintSet.TOP,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.TOP,
@@ -139,37 +135,41 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             )
             // 2-way connection between bottom and top of elements
             constraintSet.connect(
-                imageViewImage.id,
+                viewBinding.imageViewImage.id,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
-                linearLayoutBackground.id,
+                viewBinding.linearLayoutBackground.id,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
                 0
             )
             constraintSet.connect(
-                linearLayoutBackground.id,
+                viewBinding.linearLayoutBackground.id,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
-                imageViewImage.id,
+                viewBinding.imageViewImage.id,
                 if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 0
             )
             // which element is at bottom
             constraintSet.connect(
-                if (payload.textPosition == TextPosition.BOTTOM) linearLayoutBackground.id else imageViewImage.id,
+                if (payload.textPosition == TextPosition.BOTTOM) {
+                    viewBinding.linearLayoutBackground.id
+                } else {
+                    viewBinding.imageViewImage.id
+                },
                 ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.BOTTOM,
                 0
             )
         }
-        constraintSet.applyTo(inAppMessageDialogRoot)
+        constraintSet.applyTo(viewBinding.inAppMessageDialogRoot)
     }
 
     private fun setupImage() {
-        imageViewImage.isOnTop = payload.textPosition == TextPosition.BOTTOM
-        imageViewImage.textOverImage = payload.isTextOverImage == true
+        viewBinding.imageViewImage.isOnTop = payload.textPosition == TextPosition.BOTTOM
+        viewBinding.imageViewImage.textOverImage = payload.isTextOverImage == true
         imageCache.showImage(
             payload.imageUrl,
-            imageViewImage,
+            viewBinding.imageViewImage,
             onImageNotLoaded = {
                 onError("Image '${payload.imageUrl}' not loaded successfully")
                 onDismiss = null // clear the dismiss listener, we called the button listener
@@ -180,29 +180,29 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
 
     private fun setupTitleText() {
         if (payload.title.isNullOrEmpty()) {
-            textViewTitle.visibility = View.GONE
+            viewBinding.textViewTitle.visibility = View.GONE
             return
         }
-        textViewTitle.text = payload.title
-        textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
-        textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
+        viewBinding.textViewTitle.text = payload.title
+        viewBinding.textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
+        viewBinding.textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
     }
 
     private fun setupBodyText() {
         if (payload.bodyText.isNullOrEmpty()) {
-            textViewBody.visibility = View.GONE
+            viewBinding.textViewBody.visibility = View.GONE
             return
         }
-        textViewBody.text = payload.bodyText
-        textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
-        textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
+        viewBinding.textViewBody.text = payload.bodyText
+        viewBinding.textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
+        viewBinding.textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
     }
 
     private fun setupCloseButton() {
-        buttonClose.setOnClickListener {
+        viewBinding.buttonClose.setOnClickListener {
             dismissMessageWithClosingInteraction(null)
         }
-        buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))
+        viewBinding.buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))
     }
 
     private fun dismissMessageWithClosingInteraction(buttonPayload: InAppMessagePayloadButton?) {
@@ -216,13 +216,13 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         val buttonsCount = if (payload.buttons != null) payload.buttons.count() else 0
         val button1Payload = if (payload.buttons != null && payload.buttons.isNotEmpty()) payload.buttons[0] else null
         val button2Payload = if (payload.buttons != null && payload.buttons.count() > 1) payload.buttons[1] else null
-        setupButton(buttonAction1, button1Payload, buttonsCount)
-        setupButton(buttonAction2, button2Payload, buttonsCount)
+        setupButton(viewBinding.buttonAction1, button1Payload, buttonsCount)
+        setupButton(viewBinding.buttonAction2, button2Payload, buttonsCount)
     }
 
     private fun setupButton(buttonAction: Button, buttonPayload: InAppMessagePayloadButton?, buttonsCount: Int) {
         if (buttonPayload == null) {
-            buttonSpace.visibility = View.GONE
+            viewBinding.buttonSpace.visibility = View.GONE
             buttonAction.visibility = View.GONE
             return
         }
@@ -256,12 +256,12 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     private fun setupWindow() {
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         if (payload.isTextOverImage == true) {
-            linearLayoutBackground.setBackgroundColor(Color.TRANSPARENT)
+            viewBinding.linearLayoutBackground.setBackgroundColor(Color.TRANSPARENT)
         } else {
             val backgroundDrawable = if (payload.textPosition == TextPosition.BOTTOM)
                 R.drawable.in_app_message_dialog_background_bottom
                 else R.drawable.in_app_message_dialog_background_top
-            linearLayoutBackground.setBackgroundColor(
+            viewBinding.linearLayoutBackground.setBackgroundColor(
                 backgroundDrawable,
                 parseColor(payload.backgroundColor, Color.WHITE)
             )

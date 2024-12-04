@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.R
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.CampaignRepositoryImpl
@@ -42,7 +41,7 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
         assertFalse(Exponea.isInitialized)
         val preferences = ExponeaPreferencesImpl(applicationContext)
         val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
-        val eventRepository = EventRepositoryImpl(applicationContext, preferences)
+        val eventRepository = EventRepositoryImpl(applicationContext)
         idleThreads()
         val campaignEvent = campaignRepository.get()
         assertNotNull(campaignEvent)
@@ -73,7 +72,7 @@ internal class CampaignSessionTests_007 : CampaignSessionTests_Base() {
     class TestActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            setTheme(R.style.Theme_AppCompat_Light)
+            setTheme(androidx.appcompat.R.style.Theme_AppCompat)
             Exponea.handleCampaignIntent(intent, applicationContext)
         }
 

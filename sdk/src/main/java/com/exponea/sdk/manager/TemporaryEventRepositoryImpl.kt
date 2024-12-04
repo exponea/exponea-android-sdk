@@ -2,16 +2,14 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import com.exponea.sdk.models.ExportedEvent
-import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.EventRepositoryImpl
 
 /**
  * Writes changes into DB, but method 'all' returns only events stored from time of creation of this instance.
  */
 internal class TemporaryEventRepositoryImpl(
-    context: Context,
-    preferences: ExponeaPreferencesImpl
-) : EventRepositoryImpl(context, preferences) {
+    context: Context
+) : EventRepositoryImpl(context) {
 
     private val runtimeDatabase = mutableMapOf<String, ExportedEvent>()
 

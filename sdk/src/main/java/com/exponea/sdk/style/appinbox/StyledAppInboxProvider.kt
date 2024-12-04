@@ -6,6 +6,7 @@ import android.view.ViewGroup.OnHierarchyChangeListener
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView.OnChildAttachStateChangeListener
+import com.exponea.sdk.databinding.MessageInboxListItemBinding
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.services.DefaultAppInboxProvider
 import com.exponea.sdk.util.MessageItemViewHolder
@@ -60,7 +61,7 @@ class StyledAppInboxProvider(private val appInboxStyle: AppInboxStyle) : Default
             // (performance) register listener only if item style is set
             view.listView.addOnChildAttachStateChangeListener(object : OnChildAttachStateChangeListener {
                 override fun onChildViewAttachedToWindow(view: View) {
-                    itemStyle.applyTo(MessageItemViewHolder(view))
+                    itemStyle.applyTo(MessageItemViewHolder(MessageInboxListItemBinding.bind(view)))
                 }
 
                 override fun onChildViewDetachedFromWindow(view: View) {

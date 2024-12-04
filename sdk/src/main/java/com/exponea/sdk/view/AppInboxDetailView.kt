@@ -8,14 +8,7 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import com.exponea.sdk.R
-import kotlinx.android.synthetic.main.message_inbox_detail.view.message_detail_html_mode
-import kotlinx.android.synthetic.main.message_inbox_detail.view.message_detail_push_mode
-import kotlinx.android.synthetic.main.message_inbox_detail_html.view.message_detail_webview
-import kotlinx.android.synthetic.main.message_inbox_detail_push.view.message_detail_actions_container
-import kotlinx.android.synthetic.main.message_inbox_detail_push.view.message_detail_content
-import kotlinx.android.synthetic.main.message_inbox_detail_push.view.message_detail_image
-import kotlinx.android.synthetic.main.message_inbox_detail_push.view.message_detail_received_time
-import kotlinx.android.synthetic.main.message_inbox_detail_push.view.message_detail_title
+import com.exponea.sdk.databinding.MessageInboxDetailBinding
 
 class AppInboxDetailView@JvmOverloads constructor(
     context: Context,
@@ -38,17 +31,17 @@ class AppInboxDetailView@JvmOverloads constructor(
     }
 
     private fun init() {
-        View.inflate(context, R.layout.message_inbox_detail, this)
+        val viewBinding = MessageInboxDetailBinding.bind(View.inflate(context, R.layout.message_inbox_detail, this))
         // from message_inbox_detail_push.xml
-        this.pushContainer = this.message_detail_push_mode as RelativeLayout
-        this.imageView = this.message_detail_image
-        this.receivedTimeView = this.message_detail_received_time
-        this.titleView = this.message_detail_title
-        this.contentView = this.message_detail_content
-        this.actionsContainerView = this.message_detail_actions_container
+        this.pushContainer = viewBinding.messageDetailPushMode.root
+        this.imageView = viewBinding.messageDetailPushMode.messageDetailImage
+        this.receivedTimeView = viewBinding.messageDetailPushMode.messageDetailReceivedTime
+        this.titleView = viewBinding.messageDetailPushMode.messageDetailTitle
+        this.contentView = viewBinding.messageDetailPushMode.messageDetailContent
+        this.actionsContainerView = viewBinding.messageDetailPushMode.messageDetailActionsContainer
         // from message_inbox_detail_html.xml
-        this.htmlContainer = this.message_detail_html_mode as RelativeLayout
-        this.webView = this.message_detail_webview
+        this.htmlContainer = viewBinding.messageDetailHtmlMode.root
+        this.webView = viewBinding.messageDetailHtmlMode.messageDetailWebview
         // all modes has to be hidden before usage
         this.pushContainer.visibility = GONE
         this.htmlContainer.visibility = GONE

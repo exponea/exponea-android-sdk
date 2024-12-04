@@ -1,7 +1,9 @@
 package com.exponea.sdk.testutil
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ProviderInfo
+import android.os.Binder
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FetchManagerImpl
@@ -23,6 +25,9 @@ import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadow.api.Shadow
+import org.robolectric.shadows.ShadowApplication
 
 internal open class ExponeaSDKTest {
     companion object {
@@ -30,6 +35,14 @@ internal open class ExponeaSDKTest {
             DeviceInitiatedRepositoryImpl(ExponeaPreferencesImpl(
                 ApplicationProvider.getApplicationContext()
             )).set(true)
+        }
+    }
+
+    @Before
+    fun prepareServiceBinderForRoom() {
+        Shadow.extract<ShadowApplication>(RuntimeEnvironment.getApplication()).let { appShadow ->
+            appShadow.setComponentNameAndServiceForBindService(ComponentName("", ""), Binder())
+            appShadow.setBindServiceCallsOnServiceConnectedDirectly(false)
         }
     }
 

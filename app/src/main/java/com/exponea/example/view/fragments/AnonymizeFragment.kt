@@ -6,20 +6,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import com.exponea.example.R
+import com.exponea.example.databinding.FragmentAnonymizeBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
-import kotlinx.android.synthetic.main.fragment_anonymize.btnAnonymize
 
 class AnonymizeFragment : BaseFragment() {
+
+    private lateinit var viewBinding: FragmentAnonymizeBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_anonymize, container, false)
+        viewBinding = FragmentAnonymizeBinding.inflate(inflater, container, false)
+        return viewBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -29,7 +31,7 @@ class AnonymizeFragment : BaseFragment() {
         trackPage(Constants.ScreenNames.anonymizeScreen)
 
         (activity as AppCompatActivity).supportActionBar?.subtitle = "anonymize"
-        btnAnonymize.setOnClickListener {
+        viewBinding.btnAnonymize.setOnClickListener {
             Exponea.anonymize()
             AlertDialog.Builder(context)
                 .setTitle("Customer anonymized")

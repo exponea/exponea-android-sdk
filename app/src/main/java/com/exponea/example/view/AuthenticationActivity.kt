@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
-import com.exponea.example.R
+import com.exponea.example.databinding.ActivityAuthenticationBinding
 import com.exponea.example.managers.CustomerTokenStorage
 import com.exponea.example.utils.isVaildUrl
 import com.exponea.example.utils.isValid
@@ -15,13 +15,6 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
 import com.exponea.sdk.models.FlushMode
-import kotlinx.android.synthetic.main.activity_authentication.button
-import kotlinx.android.synthetic.main.activity_authentication.editTextAdvancedPublicKey
-import kotlinx.android.synthetic.main.activity_authentication.editTextApiUrl
-import kotlinx.android.synthetic.main.activity_authentication.editTextAuthCode
-import kotlinx.android.synthetic.main.activity_authentication.editTextProjectToken
-import kotlinx.android.synthetic.main.activity_authentication.editTextRegisteredIds
-import kotlinx.android.synthetic.main.activity_authentication.toolbar
 
 class AuthenticationActivity : AppCompatActivity() {
 
@@ -31,25 +24,30 @@ class AuthenticationActivity : AppCompatActivity() {
     var advancedPublicKey = ""
     var registeredIds = ""
 
+    private lateinit var viewBinding: ActivityAuthenticationBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_authentication)
-        setSupportActionBar(toolbar)
+        viewBinding = ActivityAuthenticationBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+        setSupportActionBar(viewBinding.toolbar)
 
-        editTextAuthCode.setText(authorizationToken)
-        editTextAdvancedPublicKey.setText(advancedPublicKey)
-        editTextRegisteredIds.setText(registeredIds)
-        editTextProjectToken.setText(projectToken)
-        editTextApiUrl.setText(apiUrl)
+        viewBinding.editTextAuthCode.setText(authorizationToken)
+        viewBinding.editTextAdvancedPublicKey.setText(advancedPublicKey)
+        viewBinding.editTextRegisteredIds.setText(registeredIds)
+        viewBinding.editTextProjectToken.setText(projectToken)
+        viewBinding.editTextApiUrl.setText(apiUrl)
 
-        editTextAuthCode.onTextChanged { authorizationToken = it }
-        editTextAdvancedPublicKey.onTextChanged { advancedPublicKey = it }
-        editTextRegisteredIds.onTextChanged { registeredIds = it }
-        editTextProjectToken.onTextChanged { projectToken = it }
-        editTextApiUrl.onTextChanged { apiUrl = it }
+        viewBinding.editTextAuthCode.onTextChanged { authorizationToken = it }
+        viewBinding.editTextAdvancedPublicKey.onTextChanged { advancedPublicKey = it }
+        viewBinding.editTextRegisteredIds.onTextChanged { registeredIds = it }
+        viewBinding.editTextProjectToken.onTextChanged { projectToken = it }
+        viewBinding.editTextApiUrl.onTextChanged { apiUrl = it }
 
-        button.setOnClickListener {
-            if (!editTextProjectToken.isValid() || !editTextAuthCode.isValid() || !editTextApiUrl.isVaildUrl()) {
+        viewBinding.button.setOnClickListener {
+            if (!viewBinding.editTextProjectToken.isValid() ||
+                !viewBinding.editTextAuthCode.isValid() ||
+                !viewBinding.editTextApiUrl.isVaildUrl()) {
                 Toast.makeText(this, "Empty field", Toast.LENGTH_SHORT).show()
             } else {
                 initSdk()
@@ -81,7 +79,7 @@ class AuthenticationActivity : AppCompatActivity() {
         )
 
         // Set our customer registration id
-        if (editTextRegisteredIds.isValid()) {
+        if (viewBinding.editTextRegisteredIds.isValid()) {
             App.instance.registeredIdManager.registeredID = registeredIds
             CustomerTokenStorage.INSTANCE.configure(
                 customerIds = hashMapOf(

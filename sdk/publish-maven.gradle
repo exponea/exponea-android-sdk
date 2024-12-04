@@ -9,7 +9,7 @@ ext["ossrhUsername"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_USERNAME')
 ext["ossrhPassword"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_PASSWORD')
 
 task androidSourcesJar(type: Jar) {
-    classifier 'sources'
+    archiveClassifier = 'sources'
     from android.sourceSets.main.java.source
 }
 

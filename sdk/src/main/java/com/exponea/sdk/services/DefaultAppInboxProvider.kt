@@ -37,6 +37,7 @@ import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.AppInboxDetailFragment
 import com.exponea.sdk.view.AppInboxDetailView
 import com.exponea.sdk.view.AppInboxListActivity
@@ -54,7 +55,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
     )
 
     override fun getAppInboxButton(context: Context): Button {
-        var button = LayoutInflater.from(context).inflate(R.layout.message_inbox_button, null, false) as Button
+        val button = LayoutInflater.from(context).inflate(R.layout.message_inbox_button, null, false) as Button
         button.setOnClickListener {
             val openAppInboxListIntent = Intent(context, AppInboxListActivity::class.java)
             if (context == context.applicationContext) {
@@ -72,13 +73,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             message.read = true
             listView.listView.adapter?.notifyItemChanged(position)
             Exponea.markAppInboxAsRead(message, null)
-            onItemClicked.invoke(message, position)
+            runCatching {
+                onItemClicked.invoke(message, position)
+            }.logOnException()
         }
-        val bitmapCache = Exponea.getComponent()?.inAppMessagesBitmapCache
-        if (bitmapCache == null) {
-            throw Exception("Exponea SDK was not initialized properly!")
-        }
-        val appInboxAdapter = AppInboxAdapter(drawableCache = bitmapCache, onItemClicked = onItemClickedProxy)
+        val appInboxAdapter = AppInboxAdapter(onItemClicked = onItemClickedProxy)
         listView.listView.adapter = appInboxAdapter
         showLoading(listView)
         Exponea.fetchAppInbox { data ->

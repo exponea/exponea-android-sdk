@@ -36,14 +36,6 @@ button?.let {
 
 The App Inbox button registers a click action to show an activity `AppInboxListActivity`.
 
-> ❗️
->
-> The SDK must be initialized before you can retrieve the App Inbox button.
-
-> ❗️
->
-> Always check the retrieved App Inbox button for null value.
-
 That's all that's required to integrate the App Inbox. Optionally, you can [customize](#customize-app-inbox) it to your needs.
 
 > 📘

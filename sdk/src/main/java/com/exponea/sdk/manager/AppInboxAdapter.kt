@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.databinding.MessageInboxListItemBinding
 import com.exponea.sdk.models.MessageItem
-import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.MessageItemViewHolder
+import com.exponea.sdk.util.ensureOnMainThread
+import com.exponea.sdk.util.logOnException
 
 internal class AppInboxAdapter(
-    private val items: MutableList<MessageItem> = mutableListOf<MessageItem>(),
-    private val drawableCache: DrawableCache,
+    private val items: MutableList<MessageItem> = mutableListOf(),
     private val onItemClicked: (MessageItem, Int) -> Unit
 ) : Adapter<MessageItemViewHolder>() {
 
@@ -35,17 +35,31 @@ internal class AppInboxAdapter(
         )
         target.title.text = contentSource?.title ?: ""
         target.content.text = contentSource?.message ?: ""
-        drawableCache.showImage(
-            contentSource?.imageUrl,
-            target.image,
-            onImageNotLoaded = {
-                it.visibility = View.GONE
-            }
-        )
-        target.itemContainer.setOnClickListener(View.OnClickListener {
+        Exponea.initGate.waitForInitialize {
+            runCatching {
+                val sdkComponent = Exponea.getComponent()
+                if (sdkComponent == null) {
+                    Logger.e(this, "AppInbox: SDK is not initialized properly")
+                    ensureOnMainThread {
+                        target.image.visibility = View.GONE
+                    }
+                    return@runCatching
+                }
+                sdkComponent.appInboxMessagesBitmapCache.showImage(
+                    contentSource?.imageUrl,
+                    target.image,
+                    onImageNotLoaded = {
+                        ensureOnMainThread {
+                            target.image.visibility = View.GONE
+                        }
+                    }
+                )
+            }.logOnException()
+        }
+        target.itemContainer.setOnClickListener {
             trackItemClicked(source)
             onItemClicked.invoke(source, position)
-        })
+        }
     }
 
     private fun trackItemClicked(item: MessageItem) {

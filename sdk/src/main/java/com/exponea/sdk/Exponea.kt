@@ -1229,50 +1229,30 @@ object Exponea {
         }
     }.logOnException()
 
-    fun getAppInboxButton(context: Context): Button? = runCatching<Button?> {
-        requireInitialized<Button>(
-            initializedBlock = {
-                Exponea.appInboxProvider.getAppInboxButton(context)
-            }
-        )
-    }.logOnExceptionWithResult().getOrNull()
+    fun getAppInboxButton(context: Context): Button = runCatching<Button> {
+        return appInboxProvider.getAppInboxButton(context)
+    }.logOnExceptionWithResult().returnOnException { Button(context) }
 
     fun getAppInboxListView(
         context: Context,
         onItemClicked: (MessageItem, Int) -> Unit
-    ): View? = runCatching<View?> {
-        requireInitialized<View>(
-            initializedBlock = {
-                Exponea.appInboxProvider.getAppInboxListView(context, onItemClicked = onItemClicked)
-            }
-        )
-    }.logOnExceptionWithResult().getOrNull()
+    ): View = runCatching<View> {
+        return appInboxProvider.getAppInboxListView(context, onItemClicked = onItemClicked)
+    }.logOnExceptionWithResult().returnOnException { View(context) }
 
-    fun getAppInboxListFragment(context: Context): Fragment? = runCatching<Fragment?> {
-        requireInitialized<Fragment>(
-            initializedBlock = {
-                Exponea.appInboxProvider.getAppInboxListFragment(context)
-            }
-        )
-    }.logOnExceptionWithResult().getOrNull()
+    fun getAppInboxListFragment(context: Context): Fragment = runCatching<Fragment> {
+        return appInboxProvider.getAppInboxListFragment(context)
+    }.logOnExceptionWithResult().returnOnException { Fragment() }
 
-    fun getAppInboxDetailFragment(context: Context, messageId: String): Fragment? = runCatching<Fragment?> {
-        requireInitialized<Fragment>(
-            initializedBlock = {
-                Exponea.appInboxProvider.getAppInboxDetailFragment(context, messageId)
-            }
-        )
-    }.logOnExceptionWithResult().getOrNull()
+    fun getAppInboxDetailFragment(context: Context, messageId: String): Fragment = runCatching<Fragment> {
+        return appInboxProvider.getAppInboxDetailFragment(context, messageId)
+    }.logOnExceptionWithResult().returnOnException { Fragment() }
 
-    fun getAppInboxDetailView(context: Context, messageId: String): View? = runCatching<View?> {
-        requireInitialized<View>(
-            initializedBlock = {
-                Exponea.appInboxProvider.getAppInboxDetailView(context, messageId)
-            }
-        )
-    }.logOnExceptionWithResult().getOrNull()
+    fun getAppInboxDetailView(context: Context, messageId: String): View = runCatching<View> {
+        return appInboxProvider.getAppInboxDetailView(context, messageId)
+    }.logOnExceptionWithResult().returnOnException { View(context) }
 
-    public fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
+    fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
         initGate.waitForInitialize {
             component.appInboxManager.fetchAppInbox(callback)
             telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.TRACK_INBOX_FETCH)

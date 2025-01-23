@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Build
+import android.os.Looper
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +27,7 @@ import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.InAppMessageType.SLIDE_IN
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
+import com.exponea.sdk.shadows.BadTokenShadowPopupWindow
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.mocks.MockApplication
 import com.exponea.sdk.testutil.waitForIt
@@ -34,6 +37,7 @@ import com.google.android.material.behavior.SwipeDismissBehavior
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.spyk
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -90,7 +94,7 @@ internal class InAppMessagePresenterTest(
     }
 
     @Test
-    fun `should not show dialog without resumed activity`() {
+    fun `should not show in-app without resumed activity`() {
         buildActivity(AppCompatActivity::class.java).setup()
         val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
@@ -98,11 +102,13 @@ internal class InAppMessagePresenterTest(
                 bitmapCache
         )
         preloadMessageImages(bitmapCache)
-        assertNull(presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(
+            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+        )
     }
 
     @Test
-    fun `should show dialog once and activity is resumed`() {
+    fun `should show in-app only once and activity is resumed`() {
         val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
                 ApplicationProvider.getApplicationContext(),
@@ -116,7 +122,101 @@ internal class InAppMessagePresenterTest(
     }
 
     @Test
-    fun `should show dialog when initialized with resumed activity`() {
+    @Config(shadows = [BadTokenShadowPopupWindow::class])
+    fun `should not show in-app if activity is destroyed`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val presenter = InAppMessagePresenter(context, bitmapCache)
+        preloadMessageImages(bitmapCache)
+        var catchedError: String? = null
+        val activity = buildActivity(BadTokenActivity::class.java).setup().get()
+        val view = presenter.getView(
+            activity,
+            inAppMessageType,
+            payload,
+            payloadHtml,
+            null,
+            mockk(),
+            mockk(),
+            { catchedError = it }
+        )
+        assertNotNull(view)
+        activity.badTokenActive = true
+        view.show()
+        assertNotNull(catchedError)
+    }
+
+    @Test
+    @Config(shadows = [BadTokenShadowPopupWindow::class])
+    fun `should not crash while dismiss in-app if activity is destroyed`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val presenter = InAppMessagePresenter(context, bitmapCache)
+        preloadMessageImages(bitmapCache)
+        val activity = buildActivity(BadTokenActivity::class.java).setup().get()
+        val view = presenter.getView(
+            activity,
+            inAppMessageType,
+            payload,
+            payloadHtml,
+            null,
+            { },
+            { _, _ ->
+                if (inAppMessageType == FREEFORM) {
+                    // HTML WebView has no decorView in Robolectric, we have to simulate it
+                    throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                }
+                if (inAppMessageType == SLIDE_IN) {
+                    // SlideIn has no decorView in Robolectric, we have to simulate it
+                    throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                }
+            },
+            { }
+        )
+        assertNotNull(view)
+        view.show()
+        assertTrue(view.isPresented)
+        activity.badTokenActive = true
+        view.dismiss()
+        if (inAppMessageType == SLIDE_IN) {
+            // wait for SlideIn animation end
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+        // no error tracked, no exception thrown
+    }
+
+    class BadTokenActivity : Activity() {
+        var badTokenActive: Boolean = false
+        companion object {
+            val robolectricActivity = buildActivity(AppCompatActivity::class.java).setup().get()
+        }
+        override fun getSystemService(name: String): Any? {
+            return when (name) {
+                Context.WINDOW_SERVICE -> {
+                    val windowManager = spyk(robolectricActivity.getSystemService(name)) as WindowManager
+                    every { windowManager.addView(any(), any()) } answers {
+                        if (badTokenActive) {
+                            throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                        } else {
+                            callOriginal()
+                        }
+                    }
+                    every { windowManager.removeViewImmediate(any()) } answers {
+                        if (badTokenActive) {
+                            throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                        } else {
+                            callOriginal()
+                        }
+                    }
+                    windowManager
+                }
+                else -> robolectricActivity.getSystemService(name)
+            }
+        }
+    }
+
+    @Test
+    fun `should show in-app when initialized with resumed activity`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
         val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
@@ -130,7 +230,7 @@ internal class InAppMessagePresenterTest(
     }
 
     @Test
-    fun `should not show dialog after activity is paused`() {
+    fun `should not show in-app after activity is paused`() {
         val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
                 ApplicationProvider.getApplicationContext(),
@@ -147,7 +247,7 @@ internal class InAppMessagePresenterTest(
     }
 
     @Test
-    fun `should only show one dialog at a time`() {
+    fun `should only show one in-app at a time`() {
         val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
                 ApplicationProvider.getApplicationContext(),
@@ -169,8 +269,8 @@ internal class InAppMessagePresenterTest(
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should dismiss the dialog after timeout has passed`() {
-        if (inAppMessageType == InAppMessageType.SLIDE_IN) {
+    fun `should dismiss the in-app after timeout has passed`() {
+        if (inAppMessageType == SLIDE_IN) {
             // we'll skip this for slide-in that requires rendering of the dialog itself
             return
         }
@@ -197,13 +297,60 @@ internal class InAppMessagePresenterTest(
         every { Exponea.inAppMessagePresenter } returns presenter
         val intent = shadowOf(activity.get()).peekNextStartedActivity()
         buildActivity(InAppMessageActivity::class.java, intent).create().resume()
-
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         assertNull(dismissActivity)
         assertNull(dismissInteraction)
         assertNull(dismissButton)
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
         assertEquals(activity.get(), dismissActivity)
+        assertEquals(false, dismissInteraction)
+        assertNull(dismissButton)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should dismiss the in-app silently after timeout has passed and activity is already destroyed`() {
+        if (inAppMessageType == SLIDE_IN) {
+            // we'll skip this for slide-in that requires rendering of the dialog itself
+            return
+        }
+        val triggerActivity = buildActivity(AppCompatActivity::class.java).setup().resume()
+        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
+        val presenter = InAppMessagePresenter(
+                triggerActivity.get(),
+                bitmapCache
+        )
+        preloadMessageImages(bitmapCache)
+        var dismissActivity: Activity? = null
+        var dismissInteraction: Boolean? = null
+        var dismissButton: InAppMessagePayloadButton? = null
+        val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
+        val presented =
+            presenter.show(inAppMessageType, payload, payloadHtml, 1234, emptyAction, { a, b, c ->
+                dismissActivity = a
+                dismissInteraction = b
+                dismissButton = c
+            }, {})
+        mockkObject(Exponea)
+        every { Exponea.presentedInAppMessage } returns presented
+        every { Exponea.inAppMessagePresenter } returns presenter
+        val intent = shadowOf(triggerActivity.get()).peekNextStartedActivity()
+        val inAppActivity = buildActivity(InAppMessageActivity::class.java, intent).create().resume()
+        Robolectric.getForegroundThreadScheduler().advanceBy(233, TimeUnit.MILLISECONDS)
+        assertNull(dismissActivity)
+        assertNull(dismissInteraction)
+        assertNull(dismissButton)
+        // simulate activity being destroyed without dismissing in-app
+        inAppActivity.get().presentedMessageView = null
+        inAppActivity.pause().stop().destroy()
+        triggerActivity.pause().stop().destroy()
+        Robolectric.getForegroundThreadScheduler().advanceBy(1000, TimeUnit.MILLISECONDS)
+        assertNull(dismissActivity)
+        assertNull(dismissInteraction)
+        assertNull(dismissButton)
+        Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
+        assertEquals(triggerActivity.get(), dismissActivity)
         assertEquals(false, dismissInteraction)
         assertNull(dismissButton)
     }

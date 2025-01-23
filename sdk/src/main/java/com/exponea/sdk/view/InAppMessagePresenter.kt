@@ -85,7 +85,8 @@ internal class InAppMessagePresenter(
                 activity,
                 payload!!,
                 actionCallback,
-                dismissedCallback
+                dismissedCallback,
+                errorCallback
             )
             InAppMessageType.SLIDE_IN -> {
                 // slide-in message has 4 second auto-dismiss default

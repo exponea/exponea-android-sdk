@@ -5,7 +5,7 @@ import com.exponea.sdk.Exponea
 
 internal class InAppMessageActivity : AppCompatActivity() {
 
-    private var presentedMessageView: InAppMessageView? = null
+    internal var presentedMessageView: InAppMessageView? = null
 
     override fun onResume() {
         super.onResume()

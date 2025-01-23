@@ -95,11 +95,24 @@ internal class InAppMessageWebview(
 
     override fun show() {
         Logger.i(this, "Showing webview")
-        showAtLocation(
-                activity.window.decorView.rootView,
-                Gravity.CENTER,
-                0,
-                0
-        )
+        try {
+            showAtLocation(
+                    activity.window.decorView.rootView,
+                    Gravity.CENTER,
+                    0,
+                    0
+            )
+        } catch (e: Exception) {
+            Logger.e(this, "[InApp] Unable to show HTML in-app message", e)
+            onError?.invoke("Invalid app foreground state")
+        }
+    }
+
+    override fun dismiss() {
+        try {
+            super.dismiss()
+        } catch (e: Exception) {
+            Logger.e(this, "[InApp] Dismissing HTML in-app message failed", e)
+        }
     }
 }

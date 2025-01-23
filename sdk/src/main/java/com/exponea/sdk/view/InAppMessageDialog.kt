@@ -21,6 +21,7 @@ import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.TextPosition
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.setBackgroundColor
 
 internal class InAppMessageDialog : InAppMessageView, Dialog {
@@ -270,5 +271,24 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
         window?.attributes?.height = WindowManager.LayoutParams.MATCH_PARENT
         window?.setDimAmount(0.5f)
+    }
+
+    override fun show() {
+        try {
+            super.show()
+        } catch (e: Exception) {
+            val messageMode = if (fullScreen) "Fullscreen" else "Modal"
+            Logger.e(this, "[InApp] Unable to show $messageMode in-app message", e)
+            onError.invoke("Invalid app foreground state")
+        }
+    }
+
+    override fun dismiss() {
+        try {
+            super.dismiss()
+        } catch (e: Exception) {
+            val messageMode = if (fullScreen) "Fullscreen" else "Modal"
+            Logger.e(this, "[InApp] Dismissing $messageMode in-app message failed", e)
+        }
     }
 }

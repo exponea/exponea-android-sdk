@@ -75,22 +75,28 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
     }
 
     override fun show() {
-        contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-        contentView.translationY =
-            (if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1) * contentView.measuredHeight.toFloat()
-        contentView
-            .animate()
-            .setDuration(ANIMATION_DURATION)
-            .translationY(0f)
-            .start()
+        try {
+            contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+            contentView.translationY = (
+                if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1
+            ) * contentView.measuredHeight.toFloat()
+            contentView
+                .animate()
+                .setDuration(ANIMATION_DURATION)
+                .translationY(0f)
+                .start()
 
-        showAtLocation(
-            activity.window.decorView.rootView,
-            if (payload.messagePosition == MessagePosition.BOTTOM) Gravity.BOTTOM else Gravity.TOP,
-            0,
-            0
-        )
-        setupSwipeToDismiss()
+            showAtLocation(
+                activity.window.decorView.rootView,
+                if (payload.messagePosition == MessagePosition.BOTTOM) Gravity.BOTTOM else Gravity.TOP,
+                0,
+                0
+            )
+            setupSwipeToDismiss()
+        } catch (e: Exception) {
+            Logger.e(this, "[InApp] Unable to show SlideIn in-app message", e)
+            onError.invoke("Invalid app foreground state")
+        }
     }
 
     override fun dismiss() {
@@ -98,7 +104,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
             try {
                 super.dismiss()
             } catch (e: Exception) {
-                Logger.e(this, "InAppMessageSlideIn dismiss failed")
+                Logger.e(this, "[InApp] Dismissing SlideIn in-app message failed", e)
             }
         }
         contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)

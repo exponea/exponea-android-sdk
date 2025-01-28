@@ -28,8 +28,6 @@ project.afterEvaluate {
                 artifactId 'sdk'
                 version android.defaultConfig.buildConfigFields['EXPONEA_VERSION_NAME'].value.replace('"', '')
 
-                artifact androidSourcesJar
-
                 pom {
                     name = 'Exponea Sdk Library'
                     packaging 'aar'
@@ -74,4 +72,8 @@ project.afterEvaluate {
 
 signing {
     sign publishing.publications
+}
+
+afterEvaluate {
+    generateMetadataFileForSdkPublication.dependsOn androidSourcesJar
 }

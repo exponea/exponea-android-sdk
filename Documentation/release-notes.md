@@ -11,6 +11,22 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.1.0
+#### January 27, 2025
+* Added:
+  * Adds support for Android API level 35.
+  * Implements an inner browser for in-app content blocks as a fallback in case CustomTab is not working as expected.
+  * Adds in-app content block carousel view updates required by wrappers SDKs.
+  * Adds an in-app content block carousel screen to the example app.
+  * Enables App Inbox view creations before SDK initialization.
+  * Improves the documentation about manual tracking of push notifications.
+* Fixed:
+  * Fixes an issue that triggered a webView for an in-app message to be displayed for a non-active application, causing an error.
+  * Fixes an issue that caused init() to be invoked twice for an in-app content block carousel view created dynamically using getInAppContentBlocksCarousel().
+  * Fixes incorrect handling of multiple close buttons for HTML messages.
+  * Fixes broken links in README.
+
+
 ## Release Notes for 4.0.1
 #### October 11, 2024
 * Added:

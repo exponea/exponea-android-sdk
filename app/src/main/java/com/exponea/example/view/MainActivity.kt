@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToItem(item: NavigationItem) {
-        getNavController().navigate(item.navigationId)
+        viewBinding.navigation.selectedItemId = item.navigationId
     }
 
     private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
@@ -266,6 +266,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal fun openCarousel() {
-        navigateToItem(NavigationItem.InAppCarousel)
+        getNavController().navigate(NavigationItem.InAppCarousel.navigationId)
     }
 }

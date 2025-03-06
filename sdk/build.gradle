@@ -76,7 +76,7 @@ dependencies {
     // To use Kotlin symbol processing tool (ksp)
     ksp("androidx.room:room-compiler:$room_version")
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     // Deserialization
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.danilopianini:gson-extras:0.2.2'

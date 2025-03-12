@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/inAppMessageDialogWindow"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:background="@android:color/darker_gray"
+    android:gravity="center">
+
+    <com.exponea.sdk.view.layout.RelativeLayoutWithMaxWidth
+        android:id="@+id/inAppMessageDialogWidthLimiter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxWidth="@dimen/exponea_sdk_in_app_message_dialog_max_width"
+        tools:layout_marginLeft="20dp"
+        tools:layout_marginRight="20dp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/inAppMessageDialogContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:elevation="0dp"
+            app:cardElevation="0dp"
+            app:cardMaxElevation="0dp"
+            tools:cardCornerRadius="15dp">
+
+            <com.exponea.sdk.view.layout.FrameLayoutWithoutOverflow
+                android:id="@+id/inAppMessageDialogBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:background="#0000FF">
+
+                <com.exponea.sdk.view.component.InAppImageView
+                    android:id="@+id/inAppMessageDialogBackgroundImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    tools:adjustViewBounds="true"
+                    tools:scaleType="centerCrop"
+                    tools:src="@android:drawable/btn_minus"
+                    tools:visibility="visible" />
+
+            </com.exponea.sdk.view.layout.FrameLayoutWithoutOverflow>
+
+            <LinearLayout
+                android:id="@+id/inAppMessageDialogBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:padding="0dp">
+
+                <ScrollView
+                    android:id="@+id/inAppMessageDialogContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:overScrollMode="never"
+                    android:fillViewport="false"
+                    tools:fillViewport="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <com.exponea.sdk.view.component.InAppImageView
+                            android:id="@+id/inAppMessageDialogTopImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:src="@android:drawable/btn_minus"
+                            tools:visibility="visible" />
+
+                        <com.exponea.sdk.view.component.InAppLabelView
+                            android:id="@+id/textViewTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="Title"
+                            android:gravity="center"
+                            android:layout_gravity="center_horizontal"
+                            tools:textStyle="bold"
+                            tools:layout_marginTop="20dp" />
+
+                        <com.exponea.sdk.view.component.InAppLabelView
+                            android:id="@+id/textViewBody"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="body"
+                            android:gravity="center"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="20dp" />
+
+                        <View
+                            android:id="@+id/inAppMessageDialogSpacer"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"/>
+
+                        <com.exponea.sdk.view.component.InAppImageView
+                            android:id="@+id/inAppMessageDialogBottomImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:src="@android:drawable/btn_minus"
+                            tools:visibility="visible" />
+
+                    </LinearLayout>
+
+                </ScrollView>
+
+                <com.exponea.sdk.view.layout.RowFlexLayout
+                    android:id="@+id/buttonsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:layout_height="50dp"
+                    tools:background="#DDDDDD"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <com.exponea.sdk.view.component.InAppCloseButtonView
+            android:id="@+id/buttonClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            tools:src="@drawable/in_app_message_close_button" />
+
+    </com.exponea.sdk.view.layout.RelativeLayoutWithMaxWidth>
+
+</RelativeLayout>

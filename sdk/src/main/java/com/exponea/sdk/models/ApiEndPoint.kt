@@ -19,7 +19,7 @@ internal data class ApiEndPoint(
         TRACK_CAMPAIGN("/track/v2/projects/$TOKEN_PATH_PARAM/campaigns/clicks"),
         CUSTOMERS_ATTRIBUTES("/data/v2/projects/$TOKEN_PATH_PARAM/customers/attributes"),
         CONSENTS("/data/v2/projects/$TOKEN_PATH_PARAM/consent/categories"),
-        IN_APP_MESSAGES("/webxp/s/$TOKEN_PATH_PARAM/inappmessages?v=1"),
+        IN_APP_MESSAGES("/webxp/s/$TOKEN_PATH_PARAM/inappmessages?compatibility=3"),
         PUSH_SELF_CHECK("/campaigns/send-self-check-notification?project_id=$TOKEN_PATH_PARAM"),
         MESSAGE_INBOX("/webxp/projects/$TOKEN_PATH_PARAM/appinbox/fetch"),
         MESSAGE_INBOX_READ("/webxp/projects/$TOKEN_PATH_PARAM/appinbox/markasread"),

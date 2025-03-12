@@ -22,20 +22,19 @@ import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
-import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
-import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
-import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppMessagePresenter
 import java.util.Date
 
@@ -52,7 +51,7 @@ internal class InAppMessageManagerImpl(
     private val fetchManager: FetchManager,
     private val displayStateRepository: InAppMessageDisplayStateRepository,
     private val drawableCache: DrawableCache,
-    private val fontCache: SimpleFileCache,
+    private val fontCache: FontCache,
     private val presenter: InAppMessagePresenter,
     private val eventManager: TrackingConsentManager,
     private val projectFactory: ExponeaProjectFactory
@@ -74,6 +73,7 @@ internal class InAppMessageManagerImpl(
                 .sortedBy { it.eventTimestamp }
                 .associateBy { it.eventType }
         }
+    private val inAppUiPayloadBuilder = InAppRichstylePayloadBuilder(drawableCache, fontCache)
 
     private var sessionStartDate = Date()
 
@@ -109,8 +109,10 @@ internal class InAppMessageManagerImpl(
             onSuccess = { result ->
                 if (areCustomerIdsActual(customerIds)) {
                     inAppMessagesCache.set(result.results)
-                    drawableCache.clearExcept(loadImageUrls(result.results))
                     Logger.d(this, "[InApp] In-app messages preloaded successfully")
+                    preloadOnlineResourcesAsync(
+                        messages = result.results
+                    )
                     preloadFinished()
                     callback?.invoke(Result.success(Unit))
                 } else {
@@ -217,16 +219,43 @@ internal class InAppMessageManagerImpl(
         return messages
             .flatMap { loadImageUrls(it) }
             .distinct()
+            .filter { it.isNotBlank() }
+    }
+
+    private fun loadFontUrls(messages: List<InAppMessage>): List<String> {
+        return messages
+            .flatMap { loadFontUrls(it) }
+            .distinct()
+            .filter { it.isNotBlank() }
     }
 
     private fun loadImageUrls(message: InAppMessage): List<String> {
         val imageURLs = ArrayList<String>()
-        if (message.messageType == InAppMessageType.FREEFORM) {
-            imageURLs.addAll(HtmlNormalizer(drawableCache, fontCache, message.payloadHtml!!).collectImages())
-        } else if (!message.payload?.imageUrl.isNullOrEmpty()) {
-            imageURLs.add(message.payload!!.imageUrl!!)
+        message.payloadHtml?.let { html ->
+            imageURLs.addAll(HtmlNormalizer(drawableCache, fontCache, html).collectImages())
         }
-        return imageURLs
+        message.payload?.let { payload ->
+            if (!payload.imageUrl.isNullOrEmpty()) {
+                imageURLs.add(payload.imageUrl)
+            }
+            if (!payload.closeButtonIconUrl.isNullOrEmpty()) {
+                imageURLs.add(payload.closeButtonIconUrl)
+            }
+        }
+        return imageURLs.filter { it.isNotBlank() }.distinct()
+    }
+
+    private fun loadFontUrls(message: InAppMessage): List<String> {
+        val fontURLs = ArrayList<String>()
+        message.payloadHtml?.let { html ->
+            fontURLs.addAll(HtmlNormalizer(drawableCache, fontCache, html).collectFonts())
+        }
+        message.payload?.let { payload ->
+            payload.titleFontUrl?.let { fontURLs.add(it) }
+            payload.bodyFontUrl?.let { fontURLs.add(it) }
+            fontURLs.addAll(payload.buttons?.mapNotNull { it.fontUrl } ?: emptyList())
+        }
+        return fontURLs.filter { it.isNotBlank() }.distinct()
     }
 
     internal fun pickPendingMessage(): Pair<InAppMessageShowRequest, InAppMessage>? {
@@ -343,82 +372,91 @@ internal class InAppMessageManagerImpl(
             Logger.e(this, "[InApp] Not showing message with empty payload '${message.name}'")
             return
         }
-        Logger.i(this, "[InApp] Attempting to show in-app message '${message.name}'")
-        val htmlPayload: HtmlNormalizer.NormalizedResult?
-        if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
-            htmlPayload = HtmlNormalizer(drawableCache, fontCache, message.payloadHtml).normalize()
-        } else {
-            htmlPayload = null
-        }
-        Logger.i(this, "[InApp] Posting show to main thread with delay ${message.delay ?: 0}ms.")
-        runOnMainThread(message.delay ?: 0) {
-            runCatching {
-                val presented = presenter.show(
-                    messageType = message.messageType,
-                    payload = message.payload,
-                    payloadHtml = htmlPayload,
-                    timeout = message.timeout,
-                    actionCallback = { activity, button ->
-                        Logger.i(this, "In-app message button clicked!")
-                        displayStateRepository.setInteracted(message, Date())
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageClick(
-                                message,
-                                button.buttonText,
-                                button.buttonLink,
-                                CONSIDER_CONSENT
-                            )
-                        }
-                        val buttonInfo = InAppMessageButton(button.buttonText, button.buttonLink)
-                        runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageClickAction(
-                                message,
-                                buttonInfo,
-                                activity
-                            )
-                        }
-                        if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+        Logger.i(
+            this,
+            "[InApp] Attempting to show in-app message '${message.name}' with delay ${message.delay ?: 0}ms."
+        )
+        runOnBackgroundThread(message.delay ?: 0) {
+            val htmlPayload: HtmlNormalizer.NormalizedResult?
+            if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
+                htmlPayload = HtmlNormalizer(drawableCache, fontCache, message.payloadHtml).normalize()
+            } else {
+                htmlPayload = null
+            }
+            val uiPayload = message.payload?.let {
+                if (message.isRichStyled) {
+                    inAppUiPayloadBuilder.build(it)
+                } else {
+                    null
+                }
+            }
+            val presented = presenter.show(
+                messageType = message.messageType,
+                payload = message.payload,
+                uiPayload = uiPayload,
+                payloadHtml = htmlPayload,
+                timeout = message.timeout,
+                actionCallback = { activity, button ->
+                    Logger.i(this, "In-app message button clicked!")
+                    displayStateRepository.setInteracted(message, Date())
+                    if (Exponea.inAppMessageActionCallback.trackActions) {
+                        eventManager.trackInAppMessageClick(
+                            message,
+                            button.text,
+                            button.link,
+                            CONSIDER_CONSENT
+                        )
+                    }
+                    val buttonInfo = InAppMessageButton(button.text, button.link)
+                    ensureOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageClickAction(
+                            message,
+                            buttonInfo,
+                            activity
+                        )
+                    }
+                    if (!Exponea.inAppMessageActionCallback.overrideDefaultBehavior) {
+                        ensureOnMainThread {
                             processInAppMessageAction(activity, button)
                         }
-                    },
-                    dismissedCallback = { activity, userInteraction, cancelButton ->
-                        if (Exponea.inAppMessageActionCallback.trackActions) {
-                            eventManager.trackInAppMessageClose(
-                                message,
-                                cancelButton?.buttonText,
-                                userInteraction,
-                                CONSIDER_CONSENT
-                            )
-                        }
-                        val buttonInfo = cancelButton?.let {
-                            InAppMessageButton(it.buttonText, it.buttonLink)
-                        }
-                        runOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageCloseAction(
-                                message,
-                                buttonInfo,
-                                userInteraction,
-                                activity
-                            )
-                        }
-                    },
-                    failedCallback = { error ->
-                        trackError(message, error)
-                        ensureOnMainThread {
-                            Exponea.inAppMessageActionCallback.inAppMessageError(message, error, presenter.context)
-                        }
                     }
-                )
-                presented?.let {
-                    ensureOnBackgroundThread {
-                        trackShowEvent(message)
+                },
+                dismissedCallback = { activity, userInteraction, cancelButton ->
+                    if (Exponea.inAppMessageActionCallback.trackActions) {
+                        eventManager.trackInAppMessageClose(
+                            message,
+                            cancelButton?.text,
+                            userInteraction,
+                            CONSIDER_CONSENT
+                        )
+                    }
+                    val buttonInfo = cancelButton?.let {
+                        InAppMessageButton(it.text, it.link)
                     }
                     ensureOnMainThread {
-                        Exponea.inAppMessageActionCallback.inAppMessageShown(message, presenter.context)
+                        Exponea.inAppMessageActionCallback.inAppMessageCloseAction(
+                            message,
+                            buttonInfo,
+                            userInteraction,
+                            activity
+                        )
+                    }
+                },
+                failedCallback = { error ->
+                    trackError(message, error)
+                    ensureOnMainThread {
+                        Exponea.inAppMessageActionCallback.inAppMessageError(message, error, presenter.context)
                     }
                 }
-                return@runCatching
-            }.logOnException()
+            )
+            presented?.let {
+                ensureOnBackgroundThread {
+                    trackShowEvent(message)
+                }
+                ensureOnMainThread {
+                    Exponea.inAppMessageActionCallback.inAppMessageShown(message, presenter.context)
+                }
+            }
         }
     }
 
@@ -437,7 +475,7 @@ internal class InAppMessageManagerImpl(
                 activity.startActivity(
                     Intent(Intent.ACTION_VIEW).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        data = Uri.parse(button.buttonLink)
+                        data = Uri.parse(button.link)
                     }
                 )
             } catch (e: ActivityNotFoundException) {
@@ -542,38 +580,67 @@ internal class InAppMessageManagerImpl(
     internal fun pickAndShowMessage() {
         val message = pickPendingMessage()
         message?.let { preloadAndShow(message.second, message.first) }
-        runOnBackgroundThread {
-            val otherImageUrls = loadImageUrls(
-                inAppMessagesCache.get().filter { it.id != message?.second?.id }
-            )
-            drawableCache.preload(otherImageUrls, callback = {
-                Logger.d(this, "[InApp] Rest of images has been cached: $it")
-            })
+        preloadOnlineResourcesAsync(
+            messages = inAppMessagesCache.get().filter { it.id != message?.second?.id }
+        ) {
+            Logger.d(this, "[InApp] Rest of online resources has been cached: $it")
         }
     }
 
     internal fun preloadAndShow(message: InAppMessage, origin: InAppMessageShowRequest) {
-        val imageUrls = loadImageUrls(message)
-        drawableCache.preload(imageUrls, callback = { imagesLoaded ->
+        preloadOnlineResourcesAsync(messages = listOf(message)) { resourcesLoaded ->
             val customerIdsAfterLoad = customerIdsRepository.get().toHashMap()
             if (customerIdsAfterLoad != origin.customerIds) {
-                "Another customer login while image load".let {
+                "Another customer login while resource load".let {
                     trackError(message, it)
                     ensureOnMainThread {
                         Exponea.inAppMessageActionCallback.inAppMessageError(message, it, presenter.context)
                     }
                 }
-            } else if (imagesLoaded) {
+            } else if (resourcesLoaded) {
                 show(message)
             } else {
-                "Images has not been preloaded".let {
+                "Resources has not been preloaded".let {
                     trackError(message, it)
                     ensureOnMainThread {
                         Exponea.inAppMessageActionCallback.inAppMessageError(message, it, presenter.context)
                     }
                 }
             }
-        })
+        }
+    }
+
+    private fun preloadOnlineResourcesAsync(
+        withTimeoutSeconds: Long? = null,
+        messages: List<InAppMessage>,
+        callback: ((Boolean) -> Unit)? = null
+    ) {
+        var callbackProxy = callback
+        val singleInvokeCallback = { success: Boolean ->
+            callbackProxy?.invoke(success)
+            callbackProxy = null
+        }
+        runOnBackgroundThread(
+            delayMillis = 0,
+            timeoutMillis = withTimeoutSeconds?.let { it * 1000 },
+            block = {
+                var imagesLoaded: Boolean? = null
+                var fontsLoaded: Boolean? = null
+                val imageUrls = loadImageUrls(messages)
+                drawableCache.preload(imageUrls) { loaded ->
+                    imagesLoaded = loaded
+                    fontsLoaded?.let { singleInvokeCallback.invoke(loaded && it) }
+                }
+                val fontUrls = loadFontUrls(messages)
+                fontCache.preload(fontUrls) { loaded ->
+                    fontsLoaded = loaded
+                    imagesLoaded?.let { singleInvokeCallback.invoke(loaded && it) }
+                }
+            },
+            onTimeout = {
+                singleInvokeCallback.invoke(false)
+            }
+        )
     }
 
     internal fun trackError(message: InAppMessage, error: String) {

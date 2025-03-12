@@ -14,8 +14,8 @@ import com.exponea.sdk.models.InAppContentBlockType.NATIVE
 import com.exponea.sdk.models.InAppContentBlockType.NOT_DEFINED
 import com.exponea.sdk.models.InAppContentBlockType.UNKNOWN
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
-import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
@@ -28,7 +28,7 @@ internal open class InAppContentBlockViewController(
     internal val placeholderId: String,
     private val config: InAppContentBlockPlaceholderConfiguration,
     private val imageCache: DrawableCache,
-    private val fontCache: SimpleFileCache,
+    private val fontCache: FontCache,
     private val htmlCache: HtmlNormalizedCache,
     private val actionDispatcher: InAppContentBlockActionDispatcher,
     private val dataLoader: InAppContentBlockDataLoader,

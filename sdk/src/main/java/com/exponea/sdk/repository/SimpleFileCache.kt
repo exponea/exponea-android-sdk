@@ -2,6 +2,10 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithDone
+import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithResult
+import com.exponea.sdk.util.logOnExceptionWithResult
+import com.exponea.sdk.util.runOnBackgroundThread
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
@@ -16,7 +20,7 @@ import okhttp3.Response
 
 internal open class SimpleFileCache(context: Context, directoryPath: String) {
     companion object {
-        private const val DOWNLOAD_TIMEOUT_SECONDS = 10L
+        internal const val DOWNLOAD_TIMEOUT_SECONDS = 10L
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -36,8 +40,7 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
             .fold("") { str, it -> str + "%02x".format(it) }
     }
 
-    fun clearExcept(urls: List<String>) {
-        val keepFileNames = HashSet(urls.map { getFileName(it) })
+    fun clear() {
         val files = try {
             directory.listFiles()
         } catch (e: Exception) {
@@ -45,52 +48,54 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
             null
         }
         files?.forEach { file ->
-            if (!keepFileNames.contains(file.name)) {
-                file.delete()
+            file.delete()
+        }
+    }
+
+    fun preload(url: String, callback: ((Boolean) -> Unit)?) = waitForAccessWithDone(url) { releaseLock ->
+        if (isFileDownloaded(url)) {
+            releaseLock()
+            callback?.invoke(true)
+        } else {
+            downloadFile(url) { downloaded ->
+                releaseLock()
+                callback?.invoke(downloaded)
             }
         }
     }
 
+    private fun isFileDownloaded(url: String): Boolean {
+        return retrieveFileDirectly(url).exists()
+    }
+
     fun preload(urls: List<String>, callback: ((Boolean) -> Unit)?) {
+        val distinctUrls = urls.distinct()
         if (urls.isEmpty()) {
             callback?.invoke(true)
             return
         }
-        val counter = AtomicInteger(urls.size)
-        val downloadQueue = mutableListOf<Call>()
-        val perFileCallback: ((Boolean) -> Unit) = { downloaded ->
-            if (downloaded && counter.decrementAndGet() <= 0) {
-                // this and ALL files are downloaded
-                callback?.invoke(true)
-            } else if (!downloaded) {
-                // this file has not been downloaded -> global failure
-                callback?.invoke(false)
-                // stop downloading of others, there is no point to finish it
-                downloadQueue.forEach { downloadRequest ->
-                    try {
-                        downloadRequest.cancel()
-                    } catch (e: Exception) {
-                        // silent close
+        val counter = AtomicInteger(distinctUrls.size)
+        var allDownloaded = true
+        for (each in distinctUrls) {
+            runOnBackgroundThread {
+                preload(each) {
+                    allDownloaded = allDownloaded && it
+                    if (counter.decrementAndGet() <= 0) {
+                        // all files are processed
+                        runCatching {
+                            callback?.invoke(allDownloaded)
+                        }.logOnExceptionWithResult()
                     }
-                }
-            }
-        }
-        for (fileUrl in urls) {
-            if (has(fileUrl)) {
-                perFileCallback.invoke(true)
-            } else {
-                downloadFile(fileUrl, perFileCallback)?.let {
-                    downloadQueue.add(it)
                 }
             }
         }
     }
 
-    fun downloadFile(url: String, callback: ((Boolean) -> Unit)?): Call? {
+    internal fun downloadFile(url: String, callback: ((Boolean) -> Unit)?) {
         val validUrl = url.toHttpUrlOrNull()
         if (validUrl == null) {
             callback?.invoke(false)
-            return null
+            return
         }
         val request = Request.Builder().url(validUrl).build()
         val downloadRequest = httpClient.newCall(request)
@@ -102,7 +107,7 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
                         response.body?.byteStream()?.copyTo(this)
                         this.close()
                     }
-                    file.renameTo(File(directory, getFileName(url)))
+                    file.renameTo(retrieveFileDirectly(url))
                     callback?.invoke(true)
                 } else {
                     Logger.w(
@@ -119,16 +124,15 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
                 callback?.invoke(false)
             }
         })
-        return downloadRequest
     }
 
-    fun has(url: String): Boolean {
-        return File(directory, getFileName(url)).exists()
-    }
+    fun has(url: String): Boolean = waitForAccessWithResult(url) {
+        isFileDownloaded(url)
+    }.getOrDefault(false)
 
-    fun getFile(url: String): File? {
-        return retrieveFileDirectly(url).takeIf { it.exists() }
-    }
+    fun getFile(url: String): File? = waitForAccessWithResult(url) {
+        retrieveFileDirectly(url).takeIf { it.exists() }
+    }.getOrNull()
 
     internal fun retrieveFileDirectly(url: String) = File(directory, getFileName(url))
 }

@@ -79,9 +79,19 @@ internal class InAppMessageWebview(
 
     private fun toPayloadButton(action: HtmlNormalizer.ActionInfo): InAppMessagePayloadButton {
         return InAppMessagePayloadButton(
-                buttonLink = action.actionUrl,
-                buttonText = action.buttonText,
-                rawButtonType = detectActionType(action.actionType).value
+            rawType = detectActionType(action.actionType).value,
+            text = action.buttonText,
+            link = action.actionUrl,
+            fontUrl = "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+            sizing = "hug",
+            radius = "12dp",
+            margin = "20px 10px 15px 10px",
+            textSize = "24px",
+            lineHeight = "32px",
+            padding = "20px 10px 15px 10px",
+            textStyle = listOf("bold"),
+            borderWeight = "0px",
+            borderColor = "#00000000"
         )
     }
 

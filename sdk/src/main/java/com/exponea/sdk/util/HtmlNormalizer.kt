@@ -5,9 +5,9 @@ import android.util.Base64
 import androidx.annotation.WorkerThread
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
-import com.exponea.sdk.repository.SimpleFileCache
 import java.io.File
 import java.util.Collections
 import java.util.UUID
@@ -32,13 +32,13 @@ import org.jsoup.nodes.Element
 public class HtmlNormalizer {
 
     private val imageCache: DrawableCache
-    private val fontCache: SimpleFileCache
+    private val fontCache: FontCache
     private val originalHtml: String
     private val document: Document?
 
     internal constructor(
         imageCache: DrawableCache,
-        fontCache: SimpleFileCache,
+        fontCache: FontCache,
         originalHtml: String
     ) {
         this.imageCache = imageCache
@@ -554,16 +554,14 @@ public class HtmlNormalizer {
     }
 
     private fun getFileFromUrl(url: String): File? {
-        var fileData = fontCache.getFile(url)
+        var fileData = fontCache.getFontFile(url)
         if (fileData == null) {
             val semaphore = CountDownLatch(1)
-            fontCache.preload(listOf(url)) { loaded ->
-                if (loaded) {
-                    fileData = fontCache.getFile(url)
-                }
+            fontCache.preload(listOf(url)) {
                 semaphore.countDown()
             }
             semaphore.await(10, SECONDS)
+            fileData = fontCache.getFontFile(url)
         }
         if (fileData == null) {
             Logger.e(this, "Unable to load file $url for HTML")
@@ -576,19 +574,17 @@ public class HtmlNormalizer {
         var fileData = imageCache.getFile(url)
         if (fileData == null) {
             val semaphore = CountDownLatch(1)
-            imageCache.preload(listOf(url)) { loaded ->
-                if (loaded) {
-                    fileData = imageCache.getFile(url)
-                }
+            imageCache.preload(listOf(url)) {
                 semaphore.countDown()
             }
             semaphore.await(10, SECONDS)
+            fileData = imageCache.getFile(url)
         }
         if (fileData == null) {
             Logger.e(this, "Unable to load image $url for HTML")
             throw IllegalStateException("Image is not preloaded")
         }
-        return fileData!!
+        return fileData
     }
 
     /**
@@ -608,7 +604,7 @@ public class HtmlNormalizer {
         val images = document.select("img")
         for (imgEl in images) {
             val imageUrl = imgEl.attr("src")
-            if (!imageUrl.isNullOrEmpty() && !isBase64Uri(imageUrl)) {
+            if (imageUrl.isNotBlank() && !isBase64Uri(imageUrl)) {
                 onlineUrls.add(imageUrl)
             }
         }
@@ -618,7 +614,7 @@ public class HtmlNormalizer {
             val styleSource = styleTag.data()
             val onlineSources = collectOnlineUrlStatements(styleSource)
             val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
-            onlineUrls.addAll(imageOnlineSources.map { it.url })
+            onlineUrls.addAll(imageOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // style attributes
         val styledEls = document.select("[style]")
@@ -629,7 +625,35 @@ public class HtmlNormalizer {
             }
             val onlineSources = collectOnlineUrlStatements(styleAttrSource)
             val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
-            onlineUrls.addAll(imageOnlineSources.map { it.url })
+            onlineUrls.addAll(imageOnlineSources.map { it.url }.filter { it.isNotBlank() })
+        }
+        // end
+        return onlineUrls
+    }
+
+    fun collectFonts(): Collection<String> {
+        if (document == null) {
+            return Collections.emptyList()
+        }
+        val onlineUrls = ArrayList<String>()
+        // style tags
+        val styleTags = document.select("style")
+        for (styleTag in styleTags) {
+            val styleSource = styleTag.data()
+            val onlineSources = collectOnlineUrlStatements(styleSource)
+            val fontOnlineSources = onlineSources.filter { it.mimeType == FONT_MIMETYPE }
+            onlineUrls.addAll(fontOnlineSources.map { it.url }.filter { it.isNotBlank() })
+        }
+        // style attributes
+        val styledEls = document.select("[style]")
+        for (styledEl in styledEls) {
+            val styleAttrSource = styledEl.attr("style")
+            if (styleAttrSource.isNullOrBlank()) {
+                continue
+            }
+            val onlineSources = collectOnlineUrlStatements(styleAttrSource)
+            val fontOnlineSources = onlineSources.filter { it.mimeType == FONT_MIMETYPE }
+            onlineUrls.addAll(fontOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // end
         return onlineUrls

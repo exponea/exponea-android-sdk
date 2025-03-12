@@ -9,7 +9,9 @@ import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.services.ExponeaContextProvider
+import com.exponea.sdk.util.ExponeaGson
 import io.mockk.clearMocks
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 internal fun Exponea.shutdown() {
@@ -102,6 +104,51 @@ internal fun assertEqualsIgnoreOrder(
     if (expectedCopy != actualCopy) {
         fail(messagePrefix(message) + "Expected <$expected>, actual <$actual>.")
     }
+}
+
+/**
+ * Asserts if JSONs are equals ignoring of order of items.
+ */
+internal fun assertEqualsJsons(
+    expected: String?,
+    actual: String?,
+    message: String? = null
+) {
+    if (expected == null && actual == null) {
+        return
+    }
+    if (expected == null || actual == null) {
+        fail(messagePrefix(message) + "Expected <$expected>, actual <$actual>.")
+    }
+    // as String comparison is tricky, we compare with HashMap and ArrayList
+    // as these are comparable regardless from items order
+    val expectedJson = parseJsonNode(ExponeaGson.instance.fromJson(expected, Object::class.java))
+    val actualJson = parseJsonNode(ExponeaGson.instance.fromJson(actual, Object::class.java))
+    assertEquals(expectedJson, actualJson, message)
+}
+
+private fun parseJsonNode(jsonNode: Any?): Any? {
+    return when {
+        jsonNode is Map<*, *> -> parseJsonObject(jsonNode)
+        jsonNode is List<*> -> parseJsonArray(jsonNode)
+        else -> jsonNode
+    }
+}
+
+private fun parseJsonObject(jsonObject: Map<*, *>): HashMap<*, *> {
+    val map = HashMap<String?, Any?>()
+    jsonObject.forEach {
+        map[it.key?.toString()] = parseJsonNode(it.value)
+    }
+    return map
+}
+
+private fun parseJsonArray(jsonArray: List<*>): ArrayList<*> {
+    val array = ArrayList<Any?>()
+    jsonArray.forEach {
+        array.add(parseJsonNode(it))
+    }
+    return array
 }
 
 internal fun messagePrefix(message: String?) = if (message == null) "" else "$message. "

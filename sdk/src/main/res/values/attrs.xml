@@ -8,4 +8,8 @@
         <!-- Scrolls automatically to the next content block after 'scrollDelay' seconds. Value 0 means no scrolling.  -->
         <attr name="scrollDelay" format="reference|integer"/>
     </declare-styleable>
+    <declare-styleable name="RelativeLayoutWithMaxWidth">
+        <!-- Limits width of the view to the given width. -->
+        <attr name="android:maxWidth" format="reference|dimension"/>
+    </declare-styleable>
 </resources>

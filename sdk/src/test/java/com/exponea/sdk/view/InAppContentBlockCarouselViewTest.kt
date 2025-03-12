@@ -20,10 +20,13 @@ import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselAdapter
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.EventType
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.runInSingleThread
@@ -34,6 +37,7 @@ import io.mockk.just
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -61,6 +65,28 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
         }
         mockkConstructorFix(InAppContentBlockManagerImpl::class)
+        // mock image and font resources
+        mockkConstructorFix(InAppContentBlockBitmapCacheImpl::class) {
+            every { anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any()) }
+        }
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any())
+        } returns true
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            arg<(Result<Boolean>) -> Unit>(1).invoke(Result(true, true))
+        }
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().getFile(any())
+        } returns MockFile()
+        mockkConstructorFix(FontCacheImpl::class) {
+            every { anyConstructed<FontCacheImpl>().has(any()) }
+        }
+        every { anyConstructed<FontCacheImpl>().getFile(any()) } returns File(
+            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+        )
+        every { anyConstructed<FontCacheImpl>().has(any()) } returns true
     }
 
     @Test

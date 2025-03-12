@@ -20,7 +20,7 @@ internal class HtmlCacheImplTest {
 
     private lateinit var cache: HtmlNormalizedCache
     private lateinit var imageCache: DrawableCache
-    private lateinit var fontCache: SimpleFileCache
+    private lateinit var fontCache: FontCache
 
     @Before
     fun before() {

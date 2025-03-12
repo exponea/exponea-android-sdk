@@ -20,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 internal class InAppMessageDisplayStateRepositoryImplTest {
     private lateinit var repo: InAppMessageDisplayStateRepository
     private lateinit var prefs: ExponeaPreferences
-    private val message = InAppMessageTest.buildInAppMessage()
+    private val message = InAppMessageTest.buildInAppMessageWithRichstyle()
 
     @Before
     fun before() {
@@ -30,7 +30,7 @@ internal class InAppMessageDisplayStateRepositoryImplTest {
 
     @Test
     fun `should return empty data`() {
-        assertEquals(InAppMessageDisplayState(null, null), repo.get(InAppMessageTest.buildInAppMessage()))
+        assertEquals(InAppMessageDisplayState(null, null), repo.get(InAppMessageTest.buildInAppMessageWithRichstyle()))
     }
 
     @Test
@@ -64,9 +64,9 @@ internal class InAppMessageDisplayStateRepositoryImplTest {
         assertEquals(
             SimpleDateFormat(InAppMessageDisplayStateRepositoryImpl.LEGACY_DATE_FORMAT)
                 .parse("Jul 22, 2020 12:21:56 PM"),
-            repo.get(InAppMessageTest.buildInAppMessage("mock-id")).displayed
+            repo.get(InAppMessageTest.buildInAppMessageWithRichstyle("mock-id")).displayed
         )
-        assertEquals(null, repo.get(InAppMessageTest.buildInAppMessage("mock-id")).interacted)
+        assertEquals(null, repo.get(InAppMessageTest.buildInAppMessageWithRichstyle("mock-id")).interacted)
     }
 
     @Test
@@ -81,9 +81,9 @@ internal class InAppMessageDisplayStateRepositoryImplTest {
         assertEquals(
             SimpleDateFormat(InAppMessageDisplayStateRepositoryImpl.LEGACY_DATE_FORMAT)
                 .parse("Jul 22, 2020 12:21:56 PM"),
-            repo.get(InAppMessageTest.buildInAppMessage("mock-id")).displayed
+            repo.get(InAppMessageTest.buildInAppMessageWithRichstyle("mock-id")).displayed
         )
-        assertEquals(Date(0), repo.get(InAppMessageTest.buildInAppMessage("mock-id2")).displayed)
+        assertEquals(Date(0), repo.get(InAppMessageTest.buildInAppMessageWithRichstyle("mock-id2")).displayed)
     }
 
     @Test

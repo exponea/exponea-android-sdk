@@ -26,13 +26,13 @@ internal class InAppMessageAlert(
         if (payload.buttons != null) {
             for (button in payload.buttons) {
                 if (button.buttonType == InAppMessageButtonType.CANCEL) {
-                    builder.setNegativeButton(button.buttonText) { _, _ ->
+                    builder.setNegativeButton(button.text) { _, _ ->
                         userInteraction = true
                         onDismiss(true, button)
                         dismiss()
                     }
                 } else {
-                    builder.setPositiveButton(button.buttonText) { _, _ ->
+                    builder.setPositiveButton(button.text) { _, _ ->
                         userInteraction = true
                         onButtonClick(button)
                     }

@@ -159,24 +159,24 @@ internal object PublicApiTestCases {
         Pair(
             Exponea::trackInAppMessageClick
         ) { Exponea.trackInAppMessageClick(
-            InAppMessageTest.buildInAppMessage(),
+            InAppMessageTest.buildInAppMessageWithRichstyle(),
             "mock-button-text",
             "mock-button-link") },
         Pair(
             Exponea::trackInAppMessageClickWithoutTrackingConsent
         ) { Exponea.trackInAppMessageClickWithoutTrackingConsent(
-            InAppMessageTest.buildInAppMessage(),
+            InAppMessageTest.buildInAppMessageWithRichstyle(),
             "mock-button-text",
             "mock-button-link") },
         Pair(
             Exponea::trackInAppMessageClose
-        ) { Exponea.trackInAppMessageClose(InAppMessageTest.buildInAppMessage())
+        ) { Exponea.trackInAppMessageClose(InAppMessageTest.buildInAppMessageWithRichstyle())
         },
         Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
-            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessage())
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessageWithRichstyle())
         },
         Pair(Exponea::trackInAppMessageCloseWithoutTrackingConsent) {
-            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessage())
+            Exponea.trackInAppMessageCloseWithoutTrackingConsent(InAppMessageTest.buildInAppMessageWithRichstyle())
         },
         Pair(Exponea::getAppInboxButton) {
             Exponea.getAppInboxButton(ApplicationProvider.getApplicationContext())

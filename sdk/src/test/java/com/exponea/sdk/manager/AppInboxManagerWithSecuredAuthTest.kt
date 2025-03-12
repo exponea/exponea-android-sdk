@@ -52,7 +52,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         drawableCache = mockk()
         every { drawableCache.has(any()) } returns false
         every { drawableCache.preload(any(), any()) } just Runs
-        every { drawableCache.clearExcept(any()) } just Runs
+        every { drawableCache.clear() } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         appInboxCache = AppInboxCacheImpl(

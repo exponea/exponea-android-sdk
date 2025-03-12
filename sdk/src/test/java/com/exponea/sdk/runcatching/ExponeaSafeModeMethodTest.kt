@@ -62,7 +62,8 @@ internal class ExponeaSafeModeMethodTest(
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
         if (method == Exponea::isExponeaPushNotification ||
-            method == Exponea::unregisterSegmentationDataCallback) {
+            method == Exponea::unregisterSegmentationDataCallback
+        ) {
             // Note: cannot throw TestPurposeException because it is not accessing SDK in any way
             // we kept invocation of method in this test for check of any other exception/error possibility
             // but TestPurposeException has to be simulated for test pass

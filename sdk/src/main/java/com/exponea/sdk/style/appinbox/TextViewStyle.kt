@@ -2,8 +2,8 @@ package com.exponea.style
 
 import android.view.View
 import android.widget.TextView
+import com.exponea.sdk.style.PlatformSize
 import com.exponea.sdk.util.ConversionUtils
-import com.exponea.sdk.util.ConversionUtils.Companion.PlatformSize
 
 data class TextViewStyle(
     var visible: Boolean? = null,

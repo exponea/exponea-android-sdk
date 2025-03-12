@@ -4,9 +4,12 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
 import android.util.TypedValue
+import com.exponea.sdk.style.LayoutSpacing
+import com.exponea.sdk.style.PlatformSize
+import kotlin.math.max
 import kotlin.text.RegexOption.IGNORE_CASE
 
-class ConversionUtils {
+internal class ConversionUtils {
     companion object {
 
         private val HEX_VALUE = Regex("[0-9A-F]", IGNORE_CASE)
@@ -264,22 +267,7 @@ class ConversionUtils {
             }
         }
 
-        data class PlatformSize(val unit: Int, val size: Float) {
-            companion object {
-                fun parse(from: String?): PlatformSize? {
-                    if (from.isNullOrBlank()) return null
-                    return PlatformSize(
-                        sizeType(from),
-                        sizeValue(from)
-                    )
-                }
-            }
-            fun asString(): String {
-                return "$size${sizeTypeString(unit)}"
-            }
-        }
-
-        private fun sizeType(source: String): Int {
+        internal fun sizeType(source: String): Int {
             return when {
                 source.endsWith("px", true) -> TypedValue.COMPLEX_UNIT_PX
                 source.endsWith("in", true) -> TypedValue.COMPLEX_UNIT_IN
@@ -292,15 +280,20 @@ class ConversionUtils {
             }
         }
 
-        private fun sizeValue(source: String): Float {
+        internal fun sizeValue(source: String): Float {
             val parsed = source.filter { it.isDigit() || it == '.' }.toFloatOrNull()
             if (parsed == null) {
                 Logger.e(source, "Unable to read float value from $source")
             }
-            return parsed ?: 0F
+            val multiplier = if (source.trim().startsWith("-")) {
+                -1F
+            } else {
+                1F
+            }
+            return (parsed ?: 0F) * multiplier
         }
 
-        private fun sizeTypeString(unit: Int): String {
+        internal fun sizeTypeString(unit: Int): String {
             return when (unit) {
                 TypedValue.COMPLEX_UNIT_PX -> "px"
                 TypedValue.COMPLEX_UNIT_IN -> "in"
@@ -331,6 +324,65 @@ class ConversionUtils {
 
         fun dpToPx(source: Int): Int {
             return (source * Resources.getSystem().displayMetrics.density).toInt()
+        }
+
+        fun toPx(source: PlatformSize): Float {
+            return TypedValue.applyDimension(
+                source.unit,
+                source.size,
+                Resources.getSystem().displayMetrics
+            )
+        }
+
+        fun parseNumber(source: Any?): Number? {
+            if (source == null) {
+                return null
+            }
+            return when (source) {
+                is Number -> source
+                is String -> source.toFloatOrNull()
+                else -> {
+                    Logger.w(this, "Unable to parse number from $source")
+                    null
+                }
+            }
+        }
+
+        /**
+         * Recalculates padding to simulate CSS behaviour of padding for text UI component.
+         * Explanation:
+         * Android adds top and bottom padding to the "edge" of the text. Edge of text is mathematically determined by max
+         * of lineHeight or textSize.
+         * HTML/CSS adds top and bottom padding to the "edge" of the lineHeight and textSize is ignored. In normal case,
+         * lineHeight is calculated as multiplier (1.2) of textSize. In case of custom lineHeight this correlation is lost.
+         * Therefore we need to calculate the correct top/bottom padding to simulate this CSS behaviour.
+         */
+        fun simulateCssPaddingForText(
+            source: LayoutSpacing,
+            textSize: PlatformSize,
+            lineHeight: PlatformSize
+        ): LayoutSpacing {
+            // android "edge" behaviour is == MAX(textSize,lineHeight)/2 + padding
+            // css "edge" behaviour is == MAX(lineHeight/2 + padding, textSize/2)
+            // we need to calculate the correct top/bottom padding to simulate CSS behaviour
+            val cssEdgeDistanceTop = max(
+                lineHeight.toPrecisePx() / 2 + source.top.toPrecisePx(),
+                textSize.toPrecisePx() / 2
+            )
+            val cssEdgeDistanceBottom = max(
+                lineHeight.toPrecisePx() / 2 + source.bottom.toPrecisePx(),
+                textSize.toPrecisePx() / 2
+            )
+            val androidHalfSize = max(textSize.toPrecisePx(), lineHeight.toPrecisePx()) / 2
+            val simulatedPaddingTop = max(cssEdgeDistanceTop - androidHalfSize, 0.0f)
+            val simulatedPaddingBottom = max(cssEdgeDistanceBottom - androidHalfSize, 0.0f)
+            val cssTextPadding = LayoutSpacing(
+                left = source.left,
+                right = source.right,
+                top = PlatformSize(TypedValue.COMPLEX_UNIT_PX, simulatedPaddingTop),
+                bottom = PlatformSize(TypedValue.COMPLEX_UNIT_PX, simulatedPaddingBottom)
+            )
+            return cssTextPadding
         }
     }
 }

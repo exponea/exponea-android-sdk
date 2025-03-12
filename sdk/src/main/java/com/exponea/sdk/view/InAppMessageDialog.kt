@@ -16,12 +16,12 @@ import com.exponea.sdk.R
 import com.exponea.sdk.databinding.InAppMessageDialogBinding
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
-import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
-import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
-import com.exponea.sdk.models.TextPosition
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.style.ImagePosition
+import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.UiUtils
 import com.exponea.sdk.util.setBackgroundColor
 
 internal class InAppMessageDialog : InAppMessageView, Dialog {
@@ -98,7 +98,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         constraintSet.clone(viewBinding.inAppMessageDialogRoot)
         constraintSet.removeFromVerticalChain(viewBinding.linearLayoutBackground.id)
         constraintSet.removeFromVerticalChain(viewBinding.imageViewImage.id)
-
+        val imagePosition = ImagePosition.parse(payload)
         if (payload.isTextOverImage == true) { // image is from top to bottom, text is either top or bottom
             constraintSet.connect(
                 viewBinding.imageViewImage.id,
@@ -116,15 +116,15 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             )
             constraintSet.connect(
                 viewBinding.linearLayoutBackground.id,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 ConstraintSet.PARENT_ID,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 0
             )
         } else {
             // which element is at top
             constraintSet.connect(
-                if (payload.textPosition == TextPosition.BOTTOM) {
+                if (imagePosition == ImagePosition.PRIMARY) {
                     viewBinding.imageViewImage.id
                 } else {
                     viewBinding.linearLayoutBackground.id
@@ -137,21 +137,21 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             // 2-way connection between bottom and top of elements
             constraintSet.connect(
                 viewBinding.imageViewImage.id,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 viewBinding.linearLayoutBackground.id,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.BOTTOM else ConstraintSet.TOP,
                 0
             )
             constraintSet.connect(
                 viewBinding.linearLayoutBackground.id,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.BOTTOM else ConstraintSet.TOP,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.BOTTOM else ConstraintSet.TOP,
                 viewBinding.imageViewImage.id,
-                if (payload.textPosition == TextPosition.TOP) ConstraintSet.TOP else ConstraintSet.BOTTOM,
+                if (imagePosition == ImagePosition.SECONDARY) ConstraintSet.TOP else ConstraintSet.BOTTOM,
                 0
             )
             // which element is at bottom
             constraintSet.connect(
-                if (payload.textPosition == TextPosition.BOTTOM) {
+                if (imagePosition == ImagePosition.PRIMARY) {
                     viewBinding.linearLayoutBackground.id
                 } else {
                     viewBinding.imageViewImage.id
@@ -166,7 +166,8 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
     }
 
     private fun setupImage() {
-        viewBinding.imageViewImage.isOnTop = payload.textPosition == TextPosition.BOTTOM
+        val imagePosition = ImagePosition.parse(payload)
+        viewBinding.imageViewImage.isOnTop = imagePosition == ImagePosition.PRIMARY
         viewBinding.imageViewImage.textOverImage = payload.isTextOverImage == true
         imageCache.showImage(
             payload.imageUrl,
@@ -185,8 +186,11 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             return
         }
         viewBinding.textViewTitle.text = payload.title
-        viewBinding.textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
-        viewBinding.textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
+        viewBinding.textViewTitle.setTextColor(ConversionUtils.parseColor(payload.titleTextColor) ?: Color.BLACK)
+        viewBinding.textViewTitle.setTextSize(
+            TypedValue.COMPLEX_UNIT_DIP,
+            UiUtils.parseFontSize(payload.titleTextSize, 22f)
+        )
     }
 
     private fun setupBodyText() {
@@ -195,15 +199,18 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             return
         }
         viewBinding.textViewBody.text = payload.bodyText
-        viewBinding.textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
-        viewBinding.textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
+        viewBinding.textViewBody.setTextColor(ConversionUtils.parseColor(payload.bodyTextColor) ?: Color.BLACK)
+        viewBinding.textViewBody.setTextSize(
+            TypedValue.COMPLEX_UNIT_DIP,
+            UiUtils.parseFontSize(payload.bodyTextSize, 14f)
+        )
     }
 
     private fun setupCloseButton() {
         viewBinding.buttonClose.setOnClickListener {
             dismissMessageWithClosingInteraction(null)
         }
-        viewBinding.buttonClose.setTextColor(parseColor(payload.closeButtonColor, Color.WHITE))
+        viewBinding.buttonClose.setTextColor(ConversionUtils.parseColor(payload.closeButtonIconColor) ?: Color.WHITE)
     }
 
     private fun dismissMessageWithClosingInteraction(buttonPayload: InAppMessagePayloadButton?) {
@@ -235,11 +242,11 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
             buttonAction.maxWidth = context.resources
                     .getDimensionPixelSize(R.dimen.exponea_sdk_in_app_message_max_button_width)
         }
-        buttonAction.text = buttonPayload.buttonText
-        buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))
+        buttonAction.text = buttonPayload.text
+        buttonAction.setTextColor(ConversionUtils.parseColor(buttonPayload.textColor) ?: Color.BLACK)
         buttonAction.setBackgroundColor(
             R.drawable.in_app_message_dialog_button,
-            parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
+            ConversionUtils.parseColor(buttonPayload.backgroundColor) ?: Color.LTGRAY
         )
         if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
             buttonAction.setOnClickListener {
@@ -259,12 +266,13 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         if (payload.isTextOverImage == true) {
             viewBinding.linearLayoutBackground.setBackgroundColor(Color.TRANSPARENT)
         } else {
-            val backgroundDrawable = if (payload.textPosition == TextPosition.BOTTOM)
+            val imagePosition = ImagePosition.parse(payload)
+            val backgroundDrawable = if (imagePosition == ImagePosition.PRIMARY)
                 R.drawable.in_app_message_dialog_background_bottom
                 else R.drawable.in_app_message_dialog_background_top
             viewBinding.linearLayoutBackground.setBackgroundColor(
                 backgroundDrawable,
-                parseColor(payload.backgroundColor, Color.WHITE)
+                ConversionUtils.parseColor(payload.backgroundColor) ?: Color.WHITE
             )
         }
 

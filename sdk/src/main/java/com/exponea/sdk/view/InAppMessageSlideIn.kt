@@ -18,12 +18,12 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
-import com.exponea.sdk.models.InAppMessagePayload.Companion.parseColor
-import com.exponea.sdk.models.InAppMessagePayload.Companion.parseFontSize
 import com.exponea.sdk.models.InAppMessagePayloadButton
-import com.exponea.sdk.models.MessagePosition
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.style.MessagePosition
+import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.UiUtils
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
 
@@ -76,10 +76,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
     override fun show() {
         try {
+            val messagePosition = MessagePosition.parse(payload.messagePosition) ?: MessagePosition.BOTTOM
             contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
-            contentView.translationY = (
-                if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1
-            ) * contentView.measuredHeight.toFloat()
+            contentView.translationY =
+                (if (messagePosition == MessagePosition.BOTTOM) 1 else -1) * contentView.measuredHeight.toFloat()
             contentView
                 .animate()
                 .setDuration(ANIMATION_DURATION)
@@ -88,7 +88,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
 
             showAtLocation(
                 activity.window.decorView.rootView,
-                if (payload.messagePosition == MessagePosition.BOTTOM) Gravity.BOTTOM else Gravity.TOP,
+                if (messagePosition == MessagePosition.BOTTOM) Gravity.BOTTOM else Gravity.TOP,
                 0,
                 0
             )
@@ -107,12 +107,13 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
                 Logger.e(this, "[InApp] Dismissing SlideIn in-app message failed", e)
             }
         }
+        val messagePosition = MessagePosition.parse(payload.messagePosition) ?: MessagePosition.BOTTOM
         contentView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         contentView
             .animate()
             .setDuration(ANIMATION_DURATION)
             .translationY(
-                (if (payload.messagePosition == MessagePosition.BOTTOM) 1 else -1) *
+                (if (messagePosition == MessagePosition.BOTTOM) 1 else -1) *
                     contentView.measuredHeight.toFloat()
             )
             .setListener(object : Animator.AnimatorListener {
@@ -141,7 +142,7 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         val inAppMessageSlideInContainer = contentView.findViewById<View>(R.id.inAppMessageSlideInContainer)
         inAppMessageSlideInContainer.setBackgroundColor(
             R.drawable.in_app_message_slide_in_background,
-            parseColor(payload.backgroundColor, Color.WHITE)
+            ConversionUtils.parseColor(payload.backgroundColor) ?: Color.WHITE
         )
     }
 
@@ -165,8 +166,8 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
             return
         }
         textViewTitle.text = payload.title
-        textViewTitle.setTextColor(parseColor(payload.titleTextColor, Color.BLACK))
-        textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.titleTextSize, 22f))
+        textViewTitle.setTextColor(ConversionUtils.parseColor(payload.titleTextColor) ?: Color.BLACK)
+        textViewTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, UiUtils.parseFontSize(payload.titleTextSize, 22f))
     }
 
     private fun setupBodyText() {
@@ -176,8 +177,8 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
             return
         }
         textViewBody.text = payload.bodyText
-        textViewBody.setTextColor(parseColor(payload.bodyTextColor, Color.BLACK))
-        textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, parseFontSize(payload.bodyTextSize, 14f))
+        textViewBody.setTextColor(ConversionUtils.parseColor(payload.bodyTextColor) ?: Color.BLACK)
+        textViewBody.setTextSize(TypedValue.COMPLEX_UNIT_DIP, UiUtils.parseFontSize(payload.bodyTextSize, 14f))
     }
 
     private fun setupButtons() {
@@ -203,11 +204,11 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         }
         buttonAction.maxLines = 1
         buttonAction.ellipsize = TextUtils.TruncateAt.END
-        buttonAction.text = buttonPayload.buttonText
-        buttonAction.setTextColor(parseColor(buttonPayload.buttonTextColor, Color.BLACK))
+        buttonAction.text = buttonPayload.text
+        buttonAction.setTextColor(ConversionUtils.parseColor(buttonPayload.textColor) ?: Color.BLACK)
         buttonAction.setBackgroundColor(
             R.drawable.in_app_message_slide_in_button,
-            parseColor(buttonPayload.buttonBackgroundColor, Color.LTGRAY)
+            ConversionUtils.parseColor(buttonPayload.backgroundColor) ?: Color.LTGRAY
         )
         if (buttonPayload.buttonType == InAppMessageButtonType.CANCEL) {
             buttonAction.setOnClickListener {

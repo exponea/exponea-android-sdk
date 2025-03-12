@@ -8,26 +8,44 @@ import android.os.Bundle
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
+import com.exponea.sdk.models.InAppMessageUiPayload
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessagePresenter(
     internal val context: Context,
-    private var drawableCache: DrawableCache
+    internal val drawableCache: DrawableCache
 ) {
     class PresentedMessage(
         val messageType: InAppMessageType,
         val payload: InAppMessagePayload?,
+        val payloadUi: InAppMessageUiPayload?,
         val payloadHtml: HtmlNormalizer.NormalizedResult?,
         val timeout: Long?,
         val actionCallback: ((InAppMessagePayloadButton) -> Unit),
         val dismissedCallback: ((Boolean, InAppMessagePayloadButton?) -> Unit),
         val failedCallback: ((String) -> Unit)
     )
+
+    enum class InAppMessageViewType {
+        MODAL,
+        FULLSCREEN,
+        ALERT,
+        SLIDE_IN,
+        FREEFORM,
+        RICHSTYLE_MODAL,
+        RICHSTYLE_FULLSCREEN,
+        RICHSTYLE_SLIDE_IN
+    }
+
+    companion object {
+        const val SLIDE_IN_DEFAULT_TIMEOUT = 4000L
+    }
 
     var presentedMessage: PresentedMessage? = null
         private set
@@ -63,45 +81,75 @@ internal class InAppMessagePresenter(
     fun getView(
         activity: Activity,
         messageType: InAppMessageType,
-        payload: InAppMessagePayload?,
+        dataPayload: InAppMessagePayload?,
+        uiPayload: InAppMessageUiPayload?,
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (InAppMessagePayloadButton) -> Unit,
         dismissedCallback: (Boolean, InAppMessagePayloadButton?) -> Unit,
         errorCallback: (String) -> Unit
     ): InAppMessageView {
-        var messageTimeout = timeout
-        val view = when (messageType) {
-            InAppMessageType.MODAL, InAppMessageType.FULLSCREEN -> InAppMessageDialog(
-                activity,
-                messageType == InAppMessageType.FULLSCREEN,
-                payload!!,
-                drawableCache,
-                actionCallback,
-                dismissedCallback,
-                errorCallback
-            )
-            InAppMessageType.ALERT -> InAppMessageAlert(
-                activity,
-                payload!!,
-                actionCallback,
-                dismissedCallback,
-                errorCallback
-            )
-            InAppMessageType.SLIDE_IN -> {
-                // slide-in message has 4 second auto-dismiss default
-                if (timeout == null) messageTimeout = 4000
-                InAppMessageSlideIn(
+        val messageTimeout = if (messageType == InAppMessageType.SLIDE_IN && timeout == null) {
+            // slide-in message has 4 second auto-dismiss default
+            SLIDE_IN_DEFAULT_TIMEOUT
+        } else {
+            timeout
+        }
+        val viewType = chooseViewType(messageType, uiPayload != null)
+        val view = when (viewType) {
+            InAppMessageViewType.RICHSTYLE_MODAL, InAppMessageViewType.RICHSTYLE_FULLSCREEN -> {
+                InAppMessageRichstyleDialog(
                     activity,
-                    payload!!,
+                    messageType == InAppMessageType.FULLSCREEN,
+                    uiPayload!!,
+                    actionCallback,
+                    dismissedCallback,
+                    errorCallback
+                )
+            }
+            InAppMessageViewType.MODAL, InAppMessageViewType.FULLSCREEN -> {
+                InAppMessageDialog(
+                    activity,
+                    messageType == InAppMessageType.FULLSCREEN,
+                    dataPayload!!,
                     drawableCache,
                     actionCallback,
                     dismissedCallback,
                     errorCallback
                 )
             }
-            InAppMessageType.FREEFORM -> InAppMessageWebview(
-                    activity, payloadHtml!!, actionCallback, dismissedCallback, errorCallback
+            InAppMessageViewType.ALERT -> InAppMessageAlert(
+                activity,
+                dataPayload!!,
+                actionCallback,
+                dismissedCallback,
+                errorCallback
+            )
+            InAppMessageViewType.RICHSTYLE_SLIDE_IN -> {
+                InAppMessageRichstyleSlideIn(
+                    activity,
+                    uiPayload!!,
+                    actionCallback,
+                    dismissedCallback,
+                    errorCallback
+                )
+            }
+            InAppMessageViewType.SLIDE_IN -> {
+                InAppMessageSlideIn(
+                    activity,
+                    dataPayload!!,
+                    drawableCache,
+                    actionCallback,
+                    dismissedCallback,
+                    errorCallback
+                )
+            }
+            InAppMessageViewType.FREEFORM -> InAppMessageWebview(
+                activity,
+                payloadHtml!!,
+                actionCallback,
+                dismissedCallback,
+                errorCallback
             )
         }
         if (messageTimeout != null) {
@@ -121,9 +169,25 @@ internal class InAppMessagePresenter(
         return view
     }
 
+    private fun chooseViewType(messageType: InAppMessageType, richStyled: Boolean): InAppMessageViewType {
+        return when (messageType) {
+            InAppMessageType.MODAL ->
+                if (richStyled) InAppMessageViewType.RICHSTYLE_MODAL else InAppMessageViewType.MODAL
+            InAppMessageType.ALERT ->
+                InAppMessageViewType.ALERT
+            InAppMessageType.FULLSCREEN ->
+                if (richStyled) InAppMessageViewType.RICHSTYLE_FULLSCREEN else InAppMessageViewType.FULLSCREEN
+            InAppMessageType.SLIDE_IN ->
+                if (richStyled) InAppMessageViewType.RICHSTYLE_SLIDE_IN else InAppMessageViewType.SLIDE_IN
+            InAppMessageType.FREEFORM ->
+                InAppMessageViewType.FREEFORM
+        }
+    }
+
     fun show(
         messageType: InAppMessageType,
         payload: InAppMessagePayload?,
+        uiPayload: InAppMessageUiPayload?,
         payloadHtml: HtmlNormalizer.NormalizedResult?,
         timeout: Long?,
         actionCallback: (Activity, InAppMessagePayloadButton) -> Unit,
@@ -133,15 +197,22 @@ internal class InAppMessagePresenter(
         Logger.i(this, "Attempting to present in-app message.")
         if (isPresenting()) {
             Logger.i(this, "Already presenting another in-app message.")
+            // error track is not expected for this case
             return null
+        }
+        val presenterFailedCallback = { error: String ->
+            Logger.i(this, "InApp got error $error")
+            presentedMessage = null
+            failedCallback(error)
         }
         val activity = currentActivity
         if (activity == null) {
             Logger.w(this, "No activity available to present in-app message.")
+            presenterFailedCallback("No active activity")
             return null
         }
         val presenterActionCallback = { button: InAppMessagePayloadButton ->
-            Logger.i(this, "InApp action clicked ${button.buttonLink}")
+            Logger.i(this, "InApp action clicked ${button.link}")
             presentedMessage = null
             actionCallback(activity, button)
         }
@@ -150,38 +221,41 @@ internal class InAppMessagePresenter(
             presentedMessage = null
             dismissedCallback(activity, userInteraction, cancelButton)
         }
-        val presenterFailedCallback = { error: String ->
-            Logger.i(this, "InApp got error $error")
-            presentedMessage = null
-            failedCallback(error)
-        }
         presentedMessage =
             PresentedMessage(
                 messageType,
                 payload,
+                uiPayload,
                 payloadHtml,
                 timeout,
                 presenterActionCallback,
                 presenterDismissedCallback,
                 presenterFailedCallback
             )
-
-        when (messageType) {
-            InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {
-                val intent = Intent(activity, InAppMessageActivity::class.java)
-                activity.startActivity(intent)
-            }
-            InAppMessageType.SLIDE_IN, InAppMessageType.FREEFORM -> {
-                getView(
-                    activity,
-                    messageType,
-                    payload,
-                    payloadHtml,
-                    timeout,
-                    presenterActionCallback,
-                    presenterDismissedCallback,
-                    presenterFailedCallback
-                )?.show()
+        ensureOnMainThread {
+            runCatching {
+                when (messageType) {
+                    InAppMessageType.MODAL, InAppMessageType.FULLSCREEN, InAppMessageType.ALERT -> {
+                        val intent = Intent(activity, InAppMessageActivity::class.java)
+                        activity.startActivity(intent)
+                    }
+                    InAppMessageType.SLIDE_IN, InAppMessageType.FREEFORM -> {
+                        getView(
+                            activity,
+                            messageType,
+                            payload,
+                            uiPayload,
+                            payloadHtml,
+                            timeout,
+                            presenterActionCallback,
+                            presenterDismissedCallback,
+                            presenterFailedCallback
+                        ).show()
+                    }
+                }
+            }.returnOnException {
+                Logger.w(this, "Showing of in-app message failed. $it")
+                presentedMessage = null
             }
         }
         Logger.i(this, "In-app message presented.")

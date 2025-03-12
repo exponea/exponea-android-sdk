@@ -21,9 +21,9 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
-import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.telemetry.TelemetryManager
@@ -286,7 +286,7 @@ internal class InAppContentBlockManagerImplTest {
     private lateinit var displayStateRepository: InAppContentBlockDisplayStateRepository
     private lateinit var projectFactory: ExponeaProjectFactory
     private lateinit var htmlCache: HtmlNormalizedCache
-    private lateinit var fontCache: SimpleFileCache
+    private lateinit var fontCache: FontCache
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
 
     @Before
@@ -312,11 +312,10 @@ internal class InAppContentBlockManagerImplTest {
         drawableCache = mockk()
         every { drawableCache.has(any()) } returns false
         every { drawableCache.preload(any(), any()) } just Runs
-        every { drawableCache.clearExcept(any()) } just Runs
+        every { drawableCache.clear() } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
-        every { fontCache.clearExcept(any()) } just Runs
         val configuration = ExponeaConfiguration(
             projectToken = "token",
             authorization = "Token auth",

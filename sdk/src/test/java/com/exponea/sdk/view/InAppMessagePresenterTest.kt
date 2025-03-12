@@ -3,12 +3,13 @@ package com.exponea.sdk.view
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Looper
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatDrawableManager
+import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
@@ -25,16 +26,21 @@ import com.exponea.sdk.models.InAppMessageType.FREEFORM
 import com.exponea.sdk.models.InAppMessageType.FULLSCREEN
 import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.InAppMessageType.SLIDE_IN
-import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.shadows.BadTokenShadowPopupWindow
+import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.ExponeaMockServer
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.MockApplication
-import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
+import com.exponea.sdk.view.layout.RowFlexLayout
 import com.google.android.material.behavior.SwipeDismissBehavior
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
@@ -45,7 +51,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Before
 import org.junit.Test
@@ -77,15 +82,49 @@ internal class InAppMessagePresenterTest(
     var payload: InAppMessagePayload? = null
     private var payloadHtml: NormalizedResult? = null
     private lateinit var inAppMessage: InAppMessage
+    private lateinit var bitmapCache: DrawableCache
+    private lateinit var fontCache: FontCache
+
+    @Before
+    fun mockCaches() {
+        bitmapCache = mockk()
+        every { bitmapCache.preload(any(), any()) } answers {
+            arg<(Boolean) -> Unit>(1).invoke(true)
+        }
+        every { bitmapCache.clear() } just Runs
+        every { bitmapCache.has(any()) } returns true
+        every { bitmapCache.getFile(any()) } returns MockFile()
+        every { bitmapCache.getDrawable(any<Int>()) } returns AppCompatDrawableManager.get().getDrawable(
+            ApplicationProvider.getApplicationContext(),
+            R.drawable.in_app_message_close_button
+        )
+        every {
+            bitmapCache.getDrawable(any<String>())
+        } returns AppCompatDrawableManager.get().getDrawable(
+            ApplicationProvider.getApplicationContext(),
+            R.drawable.in_app_message_close_button
+        )
+        every { bitmapCache.showImage(any(), any(), any()) } just Runs
+        fontCache = mockk()
+        every { fontCache.has(any()) } returns true
+        every { fontCache.clear() } just Runs
+        every { fontCache.getFontFile(any()) } returns File(
+            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+        )
+        every { fontCache.getTypeface(any()) } returns Typeface.createFromFile(
+            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+        )
+        every { fontCache.preload(any(), any()) } answers {
+            arg<(Boolean) -> Unit>(1).invoke(true)
+        }
+    }
 
     @Before
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
-        val fontCache = FontCacheImpl(context)
-        inAppMessage = InAppMessageTest.buildInAppMessage(
+        inAppMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             environment = server,
             type = inAppMessageType
         )
@@ -96,28 +135,22 @@ internal class InAppMessagePresenterTest(
     @Test
     fun `should not show in-app without resumed activity`() {
         buildActivity(AppCompatActivity::class.java).setup()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
-                ApplicationProvider.getApplicationContext(),
-                bitmapCache
+            ApplicationProvider.getApplicationContext(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
-        assertNull(
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
-        )
+        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
     }
 
     @Test
-    fun `should show in-app only once and activity is resumed`() {
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
+    fun `should show dialog once and activity is resumed`() {
         val presenter = InAppMessagePresenter(
-                ApplicationProvider.getApplicationContext(),
-                bitmapCache
+            ApplicationProvider.getApplicationContext(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         buildActivity(AppCompatActivity::class.java).setup().resume()
         assertNotNull(
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
         )
     }
 
@@ -125,15 +158,15 @@ internal class InAppMessagePresenterTest(
     @Config(shadows = [BadTokenShadowPopupWindow::class])
     fun `should not show in-app if activity is destroyed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
         val presenter = InAppMessagePresenter(context, bitmapCache)
-        preloadMessageImages(bitmapCache)
         var catchedError: String? = null
         val activity = buildActivity(BadTokenActivity::class.java).setup().get()
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity,
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             null,
             mockk(),
@@ -150,14 +183,14 @@ internal class InAppMessagePresenterTest(
     @Config(shadows = [BadTokenShadowPopupWindow::class])
     fun `should not crash while dismiss in-app if activity is destroyed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
         val presenter = InAppMessagePresenter(context, bitmapCache)
-        preloadMessageImages(bitmapCache)
         val activity = buildActivity(BadTokenActivity::class.java).setup().get()
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity,
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             null,
             { },
@@ -218,51 +251,45 @@ internal class InAppMessagePresenterTest(
     @Test
     fun `should show in-app when initialized with resumed activity`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
-                activity.get(),
-                bitmapCache
+            activity.get(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         assertNotNull(
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
         )
     }
 
     @Test
     fun `should not show in-app after activity is paused`() {
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
-                ApplicationProvider.getApplicationContext(),
-                bitmapCache
+            ApplicationProvider.getApplicationContext(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
         assertNotNull(presented)
         presented.dismissedCallback(false, null)
         buildActivity(AppCompatActivity::class.java).setup().resume().pause()
-        assertNull(presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
     }
 
     @Test
     fun `should only show one in-app at a time`() {
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
-                ApplicationProvider.getApplicationContext(),
-                bitmapCache
+            ApplicationProvider.getApplicationContext(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
         assertNotNull(presented)
-        assertNull(presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
         presented.dismissedCallback(false, null)
         Robolectric.flushForegroundThreadScheduler() // skip animations
         assertNotNull(
-            presenter.show(inAppMessageType, payload, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
         )
     }
 
@@ -275,28 +302,33 @@ internal class InAppMessagePresenterTest(
             return
         }
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
-                activity.get(),
-                bitmapCache
+            activity.get(),
+            bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var dismissActivity: Activity? = null
         var dismissInteraction: Boolean? = null
         var dismissButton: InAppMessagePayloadButton? = null
         val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
         val presented =
-            presenter.show(inAppMessageType, payload, payloadHtml, 1234, emptyAction, { a, b, c ->
+            presenter.show(inAppMessageType, payload, null, payloadHtml, 1234, emptyAction, { a, b, c ->
                 dismissActivity = a
                 dismissInteraction = b
                 dismissButton = c
             }, {})
-
         mockkObject(Exponea)
         every { Exponea.presentedInAppMessage } returns presented
         every { Exponea.inAppMessagePresenter } returns presenter
         val intent = shadowOf(activity.get()).peekNextStartedActivity()
-        buildActivity(InAppMessageActivity::class.java, intent).create().resume()
+        val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
+        controller.start()
+        controller.postCreate(null)
+        try {
+            controller.resume()
+        } catch (e: Exception) {
+            // Robolectric is shadowing ViewGroup but removeView doesn't work
+            // As Buttons are moving to new parents, removeView is required to work
+        }
         Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
         assertNull(dismissActivity)
         assertNull(dismissInteraction)
@@ -316,22 +348,29 @@ internal class InAppMessagePresenterTest(
             return
         }
         val triggerActivity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
                 triggerActivity.get(),
                 bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var dismissActivity: Activity? = null
         var dismissInteraction: Boolean? = null
         var dismissButton: InAppMessagePayloadButton? = null
         val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val presented =
-            presenter.show(inAppMessageType, payload, payloadHtml, 1234, emptyAction, { a, b, c ->
-                dismissActivity = a
-                dismissInteraction = b
-                dismissButton = c
-            }, {})
+            presenter.show(
+                inAppMessageType,
+                payload,
+                null,
+                payloadHtml,
+                1234,
+                emptyAction,
+                { a, b, c ->
+                    dismissActivity = a
+                    dismissInteraction = b
+                    dismissButton = c
+                },
+                {})
         mockkObject(Exponea)
         every { Exponea.presentedInAppMessage } returns presented
         every { Exponea.inAppMessagePresenter } returns presenter
@@ -355,32 +394,25 @@ internal class InAppMessagePresenterTest(
         assertNull(dismissButton)
     }
 
-    private fun preloadMessageImages(bitmapCache: InAppMessageBitmapCacheImpl) {
-        payload?.imageUrl?.let { imageUrl ->
-            server.enqueue(MockResponse().setBody("mock-response"))
-            waitForIt { bitmapCache.preload(listOf(imageUrl)) { it() } }
-        }
-    }
-
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should call actionCallback for real click`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
             activity.get(),
             bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
         var catchedCancelButton: InAppMessagePayloadButton? = null
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             inAppMessage.timeout,
             { actionButton ->
@@ -405,16 +437,17 @@ internal class InAppMessagePresenterTest(
         // simulate action click
         when (inAppMessageType) {
             MODAL, FULLSCREEN -> {
-                val realView = view as InAppMessageDialog
-                realView.findViewById<Button>(R.id.buttonAction1).performClick()
+                val realView = view as InAppMessageRichstyleDialog
+                realView.findViewById<RowFlexLayout>(R.id.buttonsContainer).realChildren.first().performClick()
             }
             ALERT -> {
                 val realView = view as InAppMessageAlert
                 realView.dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
             }
             SLIDE_IN -> {
-                val realView = view as InAppMessageSlideIn
-                realView.contentView.findViewById<Button>(R.id.buttonAction1).performClick()
+                val realView = view as InAppMessageRichstyleSlideIn
+                realView.contentView.findViewById<RowFlexLayout>(R.id.buttonsContainer)
+                    .realChildren.first().performClick()
             }
             FREEFORM -> {
                 val realView = view as InAppMessageWebview
@@ -433,20 +466,20 @@ internal class InAppMessagePresenterTest(
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should call dismissedCallback for close from user`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
             activity.get(),
             bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
         var catchedCancelButton: InAppMessagePayloadButton? = null
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             inAppMessage.timeout,
             { actionButton ->
@@ -471,16 +504,18 @@ internal class InAppMessagePresenterTest(
         // simulate action click
         when (inAppMessageType) {
             MODAL, FULLSCREEN -> {
-                val realView = view as InAppMessageDialog
-                realView.findViewById<Button>(R.id.buttonClose).performClick()
+                val realView = view as InAppMessageRichstyleDialog
+                // find second button - is cancel
+                realView.findViewById<RowFlexLayout>(R.id.buttonsContainer).realChildren[1].performClick()
             }
             ALERT -> {
                 val realView = view as InAppMessageAlert
                 realView.dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick()
             }
             SLIDE_IN -> {
-                val realView = view as InAppMessageSlideIn
-                realView.contentView.findViewById<Button>(R.id.buttonAction2).performClick()
+                val realView = view as InAppMessageRichstyleSlideIn
+                // find second button - is cancel
+                realView.contentView.findViewById<RowFlexLayout>(R.id.buttonsContainer).realChildren[1].performClick()
             }
             FREEFORM -> {
                 val realView = view as InAppMessageWebview
@@ -494,22 +529,18 @@ internal class InAppMessagePresenterTest(
         assertNotNull(catchedClosedByUser)
         assertTrue(catchedClosedByUser!!)
         when (inAppMessageType) {
-            MODAL, FULLSCREEN -> {
-                // X button doesn't deliver button info
-                assertNull(catchedCancelButton)
-            }
             FREEFORM -> {
                 assertNotNull(catchedCancelButton)
                 assertEquals(
                     payloadHtml?.actions?.find { it.actionType == HtmlActionType.CLOSE }?.buttonText,
-                    catchedCancelButton!!.buttonText
+                    catchedCancelButton!!.text
                 )
             }
-            ALERT, SLIDE_IN -> {
+            ALERT, SLIDE_IN, MODAL, FULLSCREEN -> {
                 assertNotNull(catchedCancelButton)
                 assertEquals(
-                    payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.buttonText,
-                    catchedCancelButton!!.buttonText
+                    payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.text,
+                    catchedCancelButton!!.text
                 )
             }
         }
@@ -524,20 +555,20 @@ internal class InAppMessagePresenterTest(
             return
         }
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
             activity.get(),
             bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
         var catchedCancelButton: InAppMessagePayloadButton? = null
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             inAppMessage.timeout,
             { actionButton ->
@@ -560,8 +591,8 @@ internal class InAppMessagePresenterTest(
         assertNotNull(view)
         view.show()
         // simulate swipe-right close
-        val realView = view as InAppMessageSlideIn
-        val containerView = realView.contentView.findViewById<LinearLayout>(R.id.inAppMessageSlideInContainer)
+        val realView = view as InAppMessageRichstyleSlideIn
+        val containerView = realView.contentView.findViewById<CardView>(R.id.inAppMessageSlideInContainer)
         val behavior = (containerView.layoutParams as CoordinatorLayout.LayoutParams).behavior as SwipeDismissBehavior
         behavior.listener!!.onDismiss(realView.contentView)
         // validate callbacks
@@ -577,20 +608,20 @@ internal class InAppMessagePresenterTest(
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `should call dismissedCallback for close for timeout`() {
         val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
         val presenter = InAppMessagePresenter(
             activity.get(),
             bitmapCache
         )
-        preloadMessageImages(bitmapCache)
         var catchedActionButton: InAppMessagePayloadButton? = null
         var catchedClosedByUser: Boolean? = null
         var catchedError: String? = null
         var catchedCancelButton: InAppMessagePayloadButton? = null
+        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
             inAppMessageType,
             payload,
+            payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             5000,
             { actionButton ->

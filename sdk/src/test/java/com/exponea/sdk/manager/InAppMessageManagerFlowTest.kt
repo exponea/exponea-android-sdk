@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.ApiEndPoint
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
@@ -22,6 +23,7 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.services.ExponeaContextProvider
@@ -30,8 +32,6 @@ import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
 import com.exponea.sdk.util.runOnBackgroundThread
 import io.mockk.Runs
 import io.mockk.every
@@ -43,24 +43,25 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.mock.HttpCode
 import okhttp3.mock.MockInterceptor
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Before
     fun disableFetchData() {
+        mockkConstructorFix(FetchManagerImpl::class) {
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+        }
         every { anyConstructed<FetchManagerImpl>().fetchConsents(any(), any(), any()) } answers {
             secondArg<(Result<ArrayList<Consent>>) -> Unit>().invoke(
                 Result(true, arrayListOf())
@@ -133,12 +134,15 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any<String>(), any()) } answers {
             okHttpClient.newCall(Request.Builder().url(mockUrl).get().build())
         }
+        every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any<ApiEndPoint.EndPointName>(), any()) } answers {
+            okHttpClient.newCall(Request.Builder().url(mockUrl).get().build())
+        }
     }
 
     @Before
     fun prepareInAppMocks() {
         mockkConstructorFix(InAppMessageBitmapCacheImpl::class) {
-            every { anyConstructed<InAppMessageBitmapCacheImpl>().preload(any(), any()) }
+            every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) }
         }
         mockkConstructorFix(InAppMessagesCacheImpl::class)
     }
@@ -157,6 +161,22 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<InAppContentBlockManagerImpl>().onEventCreated(any(), any()) } just Runs
     }
 
+    @Before
+    fun disableDatabaseTracking() {
+        val events = mutableListOf<ExportedEvent>()
+        mockkConstructorFix(EventRepositoryImpl::class)
+        every {
+            anyConstructed<EventRepositoryImpl>().add(any())
+        } answers {
+            events.add(firstArg<ExportedEvent>())
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().all()
+        } answers {
+            events.toList()
+        }
+    }
+
     @Test
     fun `should preload and show for session_start for IMMEDIATE flush with delay`() {
         ExponeaContextProvider.applicationIsForeground = true
@@ -171,7 +191,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.buildInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -209,6 +229,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         Exponea.trackSessionStart()
         assertTrue(sessionStartProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
         assertTrue(identifyCustomerProcessed.await(threadAwaitSeconds, TimeUnit.SECONDS))
+        Thread.sleep(2000)
+        ShadowLooper.idleMainLooper()
         verify(exactly = 1) {
             anyConstructed<InAppMessageManagerImpl>().show(pendingMessage)
         }
@@ -216,10 +238,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should preload and show for each session_start`() {
+    fun `should preload and show for each session_start`() = runInSingleThread { idleThreads ->
         ExponeaContextProvider.applicationIsForeground = true
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
         every {
@@ -229,7 +249,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.buildInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -243,12 +263,6 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         verify(exactly = 3) {
             anyConstructed<InAppMessageManagerImpl>().show(any())
         }
-    }
-
-    @After
-    fun resetThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test
@@ -266,7 +280,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         initSdk()
 
         // login customerA, message pendingMessageA has to be loaded
-        val pendingMessageA = InAppMessageTest.buildInAppMessage(
+        val pendingMessageA = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -276,7 +290,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         prepareMessagesMocks(arrayListOf(pendingMessageA))
         identifyCustomerForTest(hashMapOf("registered" to "customerA"))
         // login customerB, message pendingMessageB has to be loaded
-        val pendingMessageB = InAppMessageTest.buildInAppMessage(
+        val pendingMessageB = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -307,7 +321,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.buildInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -317,8 +331,10 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         disableBitmapCache()
         initSdk()
         simulateCustomerUsage(hashMapOf("registered" to "test001"))
+        Thread.sleep(2000)
+        ShadowLooper.idleMainLooper()
         verify(exactly = 1) {
-            anyConstructed<InAppMessageManagerImpl>().trackError(pendingMessage, "Images has not been preloaded")
+            anyConstructed<InAppMessageManagerImpl>().trackError(any(), "Resources has not been preloaded")
         }
         verify(exactly = 0) {
             anyConstructed<InAppMessageManagerImpl>().show(any())
@@ -339,7 +355,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
         // disabled real In-app fetch
-        val pendingMessage = InAppMessageTest.buildInAppMessage(
+        val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
@@ -394,13 +410,11 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             callOriginal()
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
-        val controlGroupMessage = InAppMessageTest.getInAppMessage(
+        val controlGroupMessage = InAppMessageTest.getInAppMessageForControlGroup(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             id = "12345",
             variantId = -1,
-            variantName = "Control Group",
-            payloadHtml = null,
-            payload = null
+            variantName = "Control Group"
         )
         prepareMessagesMocks(arrayListOf(controlGroupMessage))
         initSdk()
@@ -425,7 +439,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     private fun disableBitmapCache() {
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any(), any())
+            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(false)
+        }
+        every {
+            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<String>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(false)
         }
@@ -440,7 +459,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             )
         }
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any(), any())
+            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
+        every {
+            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<String>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }

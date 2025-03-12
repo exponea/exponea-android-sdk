@@ -2,17 +2,22 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.View
 import android.widget.ImageView
+import androidx.appcompat.content.res.AppCompatResources
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.runOnMainThread
 import freeze.coil.ImageLoader
 import freeze.coil.decode.GifDecoder
 import freeze.coil.decode.ImageDecoderDecoder
 import freeze.coil.request.CachePolicy
 import freeze.coil.request.ImageRequest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
 
@@ -62,11 +67,13 @@ internal open class SimpleDrawableCache(
             }
         }
         if (url.isNullOrBlank()) {
-            onImageNotLoadedFallback("Image url is null")
+            ensureOnMainThread {
+                target.visibility = View.GONE
+            }
             return
         }
         ensureOnBackgroundThread {
-            preload(listOf(url)) { loaded ->
+            preload(url) { loaded ->
                 if (loaded) {
                     ensureOnBackgroundThread {
                         val imageToShow = getFile(url)
@@ -95,5 +102,39 @@ internal open class SimpleDrawableCache(
                 }
             }
         }
+    }
+
+    override fun getDrawable(url: String?): Drawable? {
+        if (url.isNullOrBlank()) {
+            return null
+        }
+        var result: Drawable? = null
+        val semaphore = CountDownLatch(1)
+        preload(listOf(url)) {
+            val imageFile = getFile(url)
+            if (imageFile == null) {
+                semaphore.countDown()
+                return@preload
+            }
+            imageLoader.enqueue(ImageRequest.Builder(context)
+                .data(imageFile)
+                .target(
+                    onSuccess = { loadedDrawable ->
+                        result = loadedDrawable
+                        semaphore.countDown()
+                    },
+                    onError = { loadedDrawable ->
+                        result = loadedDrawable
+                        semaphore.countDown()
+                    }
+                )
+                .build())
+        }
+        semaphore.await(10, TimeUnit.SECONDS)
+        return result
+    }
+
+    override fun getDrawable(resourceId: Int): Drawable? {
+        return AppCompatResources.getDrawable(context, resourceId)
     }
 }

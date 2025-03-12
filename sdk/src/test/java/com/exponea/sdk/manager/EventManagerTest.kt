@@ -17,9 +17,9 @@ import com.exponea.sdk.models.Route
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.EventRepository
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
-import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -55,7 +55,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var inAppMessageDisplayStateRepository: InAppMessageDisplayStateRepository
     lateinit var messagesCache: InAppMessagesCache
     lateinit var drawableCache: DrawableCache
-    lateinit var fontCache: SimpleFileCache
+    lateinit var fontCache: FontCache
     lateinit var presenter: InAppMessagePresenter
     lateinit var trackingConsentManager: TrackingConsentManager
     lateinit var manager: EventManagerImpl
@@ -80,7 +80,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         fetchManager = mockk()
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
-                Result(true, arrayListOf(InAppMessageTest.buildInAppMessage()))
+                Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
         }
         messagesCache = mockk()
@@ -90,11 +90,10 @@ internal class EventManagerTest : ExponeaSDKTest() {
         drawableCache = mockk()
         every { drawableCache.has(any()) } returns false
         every { drawableCache.preload(any(), any()) } just Runs
-        every { drawableCache.clearExcept(any()) } just Runs
+        every { drawableCache.clear() } just Runs
         fontCache = mockk()
         every { fontCache.has(any()) } returns false
         every { fontCache.preload(any(), any()) } just Runs
-        every { fontCache.clearExcept(any()) } just Runs
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         inAppMessageDisplayStateRepository = mockk()
@@ -102,7 +101,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { inAppMessageDisplayStateRepository.setDisplayed(any(), any()) } just Runs
         every { inAppMessageDisplayStateRepository.setInteracted(any(), any()) } just Runs
         presenter = mockk()
-        every { presenter.show(any(), any(), any(), any(), any(), any(), any()) } returns mockk()
+        every { presenter.show(any(), any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         every { presenter.isPresenting() } returns false
         trackingConsentManager = mockk()
         every { trackingConsentManager.trackInAppMessageError(any(), any(), any()) } just Runs

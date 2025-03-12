@@ -12,9 +12,9 @@ import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.InAppContentBlockType.NOT_DEFINED
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
-import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.DefaultInAppContentCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
@@ -37,7 +37,7 @@ internal class InAppContentBlockManagerImpl(
     private val customerIdsRepository: CustomerIdsRepository,
     private val imageCache: DrawableCache,
     private val htmlCache: HtmlNormalizedCache,
-    private val fontCache: SimpleFileCache
+    private val fontCache: FontCache
 ) : InAppContentBlockManager, InAppContentBlockActionDispatcher, InAppContentBlockDataLoader {
 
     companion object {
@@ -161,36 +161,42 @@ internal class InAppContentBlockManagerImpl(
      */
     override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) {
         dataAccess.waitForAccessWithDone { done ->
-            val blockIdsToCheck = contentBlocks.map { it.id }
-            val blockIdsToUpdate = contentBlocksData
-                .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
-                .map { it.id }
-            if (blockIdsToUpdate.isEmpty()) {
-                Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
+            loadContentIfNeededAsync(contentBlocks) {
                 done()
-                return@waitForAccessWithDone
             }
-            Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToUpdate.joinToString()}")
-            prefetchContentForBlocks(
-                blockIdsToUpdate,
-                onSuccess = { contentData ->
-                    val dataMap = contentData.groupBy { it.blockId }
-                    // update personalized data for requested 'contentBlocks'
-                    contentBlocks.forEach { contentBlock ->
-                        dataMap[contentBlock.id]?.firstOrNull()?.let {
-                            contentBlock.personalizedData = it
-                        }
-                    }
-                    // update personalized data for local 'contentBlocksData'
-                    updateContentForLocalContentBlocks(contentBlocks)
-                    done()
-                },
-                onFailure = {
-                    // dont do anything, showing will fail
-                    done()
-                }
-            )
         }
+    }
+
+    private fun loadContentIfNeededAsync(contentBlocks: List<InAppContentBlock>, done: () -> Unit) {
+        val blockIdsToCheck = contentBlocks.map { it.id }
+        val blockIdsToUpdate = contentBlocksData
+            .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
+            .map { it.id }
+        if (blockIdsToUpdate.isEmpty()) {
+            Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
+            done()
+            return
+        }
+        Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToUpdate.joinToString()}")
+        prefetchContentForBlocks(
+            blockIdsToUpdate,
+            onSuccess = { contentData ->
+                val dataMap = contentData.groupBy { it.blockId }
+                // update personalized data for requested 'contentBlocks'
+                contentBlocks.forEach { contentBlock ->
+                    dataMap[contentBlock.id]?.firstOrNull()?.let {
+                        contentBlock.personalizedData = it
+                    }
+                }
+                // update personalized data for local 'contentBlocksData'
+                updateContentForLocalContentBlocks(contentBlocks)
+                done()
+            },
+            onFailure = {
+                // dont do anything, showing will fail
+                done()
+            }
+        )
     }
 
     private fun prefetchContentForBlocks(
@@ -332,9 +338,10 @@ internal class InAppContentBlockManagerImpl(
                         forceContentByPlaceholders(
                             supportedContentBlocks,
                             exponeaProject.inAppContentBlockPlaceholdersAutoLoad
-                        )
-                        Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
-                        done()
+                        ) {
+                            Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
+                            done()
+                        }
                     },
                     onFailure = {
                         Logger.e(
@@ -348,7 +355,11 @@ internal class InAppContentBlockManagerImpl(
         }
     }
 
-    private fun forceContentByPlaceholders(target: List<InAppContentBlock>, autoLoadPlaceholders: List<String>) {
+    private fun forceContentByPlaceholders(
+        target: List<InAppContentBlock>,
+        autoLoadPlaceholders: List<String>,
+        done: () -> Unit
+    ) {
         Logger.i(
             this,
             "InAppCB: InApp Content Blocks prefetch starts for placeholders: $autoLoadPlaceholders"
@@ -358,9 +369,12 @@ internal class InAppContentBlockManagerImpl(
         }
         if (contentBlocksToLoad.isEmpty()) {
             Logger.i(this, "InAppCB: No InApp Content Block going to be prefetched")
+            done()
             return
         }
-        loadContentIfNeededSync(contentBlocksToLoad)
+        loadContentIfNeededAsync(contentBlocksToLoad) {
+            done()
+        }
     }
 
     override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {

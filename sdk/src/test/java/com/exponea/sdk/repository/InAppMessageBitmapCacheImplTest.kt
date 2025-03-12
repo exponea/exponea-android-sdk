@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
 import io.mockk.spyk
 import io.mockk.verify
 import java.io.File
@@ -13,12 +11,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import okhttp3.Call
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,18 +27,6 @@ internal class InAppMessageBitmapCacheImplTest {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
-    }
-
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
-    @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
     }
 
     @Test
@@ -123,9 +105,9 @@ internal class InAppMessageBitmapCacheImplTest {
         assertTrue(repo.has(image2Url))
         assertTrue(repo.has(image3Url))
 
-        repo.clearExcept(arrayListOf(image2Url))
+        repo.clear()
         assertFalse(repo.has(image1Url))
-        assertTrue(repo.has(image2Url))
+        assertFalse(repo.has(image2Url))
         assertFalse(repo.has(image3Url))
     }
 
@@ -165,14 +147,12 @@ internal class InAppMessageBitmapCacheImplTest {
         val imageUrl = "noscheme://example.com/image.jpg"
         val repo = InAppMessageBitmapCacheImpl(context)
         var downloaded = true
-        var downloadCall: Call? = null
         waitForIt { done ->
-            downloadCall = repo.downloadFile(imageUrl) { downloadStatus ->
+            repo.downloadFile(imageUrl) { downloadStatus ->
                 downloaded = downloadStatus
                 done()
             }
         }
         assertFalse(downloaded)
-        assertNull(downloadCall)
     }
 }

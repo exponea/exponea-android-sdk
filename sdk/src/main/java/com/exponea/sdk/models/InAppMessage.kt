@@ -36,6 +36,8 @@ data class InAppMessage(
     val payloadHtml: String?,
     @SerializedName("is_html")
     val isHtml: Boolean?,
+    @SerializedName("is_rich_text")
+    val isRichText: Boolean?,
     @SerializedName("has_tracking_consent")
     val rawHasTrackingConsent: Boolean?,
     @SerializedName("consent_category_tracking")
@@ -135,6 +137,8 @@ data class InAppMessage(
     fun hasPayload(): Boolean {
         return payload != null || !TextUtils.isEmpty(payloadHtml)
     }
+
+    val isRichStyled: Boolean get() = isRichText ?: false
 }
 
 enum class InAppMessageFrequency(val value: String) {

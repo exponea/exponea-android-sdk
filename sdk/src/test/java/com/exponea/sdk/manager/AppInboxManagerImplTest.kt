@@ -257,7 +257,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         every { drawableCache.preload(any(), any()) } answers {
             arg<(Boolean) -> Unit>(1).invoke(true)
         }
-        every { drawableCache.clearExcept(any()) } just Runs
+        every { drawableCache.clear() } just Runs
         every { drawableCache.showImage(any(), any(), any()) } just Runs
         every { drawableCache.getFile(any()) } returns MockFile()
         customerIdsRepository = mockk()

@@ -56,7 +56,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:ems="10"
-        android:text="property_name"
+        android:text="property"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/propsContainer" />
 
@@ -70,7 +70,7 @@
         android:inputType="text"
         android:imeOptions="actionNext"
         android:maxLines="1"
-        android:text="value"
+        android:text="rich_full"
         app:layout_constraintBottom_toBottomOf="@+id/editTextPropName"
         app:layout_constraintEnd_toStartOf="@+id/buttonAddProperty"
         app:layout_constraintStart_toEndOf="@+id/editTextPropName"

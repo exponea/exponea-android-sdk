@@ -1087,23 +1087,24 @@ object Exponea {
     internal fun getPresentedInAppMessageView(activity: Activity): InAppMessageView? {
         val presenting = presentedInAppMessage ?: return null
         val inappMessageView = inAppMessagePresenter?.getView(
-                activity,
-                presenting.messageType,
-                presenting.payload,
-                presenting.payloadHtml,
-                presenting.timeout,
-                { button ->
-                    presenting.actionCallback(button)
-                    activity.finish()
-                },
-                { userInteraction, cancelButton ->
-                    presenting.dismissedCallback(userInteraction, cancelButton)
-                    activity.finish()
-                },
-                { error: String ->
-                    presenting.failedCallback(error)
-                    activity.finish()
-                }
+            activity,
+            presenting.messageType,
+            presenting.payload,
+            presenting.payloadUi,
+            presenting.payloadHtml,
+            presenting.timeout,
+            { button ->
+                presenting.actionCallback(button)
+                activity.finish()
+            },
+            { userInteraction, cancelButton ->
+                presenting.dismissedCallback(userInteraction, cancelButton)
+                activity.finish()
+            },
+            { error: String ->
+                presenting.failedCallback(error)
+                activity.finish()
+            }
         )
         if (inappMessageView == null) {
             presenting.failedCallback("Unable to present message")

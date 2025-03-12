@@ -18,10 +18,11 @@ import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
+import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
+import com.exponea.sdk.testutil.runInSingleThread
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -30,9 +31,6 @@ import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,6 +48,20 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
         }
         mockkConstructorFix(CustomerIdsRepositoryImpl::class)
+        mockkConstructorFix(InAppContentBlockBitmapCacheImpl::class) {
+            every { anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any()) }
+        }
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any())
+        } returns true
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            arg<(Result<Boolean>) -> Unit>(1).invoke(Result(true, true))
+        }
+        every {
+            anyConstructed<InAppContentBlockBitmapCacheImpl>().getFile(any())
+        } returns MockFile()
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
@@ -61,21 +73,9 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         Exponea.init(context, configuration)
     }
 
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
-    @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
-    }
-
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should track action message for original InAppContentBlock`() {
+    fun `should track action message for original InAppContentBlock`() = runInSingleThread { idleThreads ->
         val eventSlot = slot<Event>()
         val eventTypeSlot = slot<EventType>()
         every {
@@ -150,7 +150,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should NOT track action message for FALSE tracking consent`() {
+    fun `should NOT track action message for FALSE tracking consent`() = runInSingleThread { idleThreads ->
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         } just Runs
@@ -210,7 +210,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should track action message for TRUE tracking consent`() {
+    fun `should track action message for TRUE tracking consent`() = runInSingleThread { idleThreads ->
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         } just Runs
@@ -275,7 +275,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should DO track action message for FALSE tracking consent but forced action`() {
+    fun `should DO track action message for FALSE consent but forced action`() = runInSingleThread { idleThreads ->
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         } just Runs
@@ -293,6 +293,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                     dateFilter = null
                 )
             )))
+            idleThreads()
         }
         every {
             anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
@@ -309,14 +310,18 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                         )
                     )
             )))
+            idleThreads()
         }
         // turn init-load on
         every {
             anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders()
         } answers {
+            idleThreads()
             callOriginal()
+            idleThreads()
         }
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
         assertTrue(
             (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
@@ -324,14 +329,17 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         )
         // get view and simulate action click
         val view = Exponea.getInAppContentBlocksPlaceholder(placeholderId, ApplicationProvider.getApplicationContext())
+        idleThreads()
         assertNotNull(view)
         val controller = view.controller
         assertNotNull(controller)
+        idleThreads()
         // validate show without tracking
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), false)
         }
         controller.onUrlClick("https://exponea.com?xnpe_force_track=true")
+        idleThreads()
         // validate click with forced tracking
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), true)

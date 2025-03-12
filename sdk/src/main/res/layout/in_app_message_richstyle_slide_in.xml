@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/inAppMessageSlideInContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        app:cardElevation="0dp"
+        app:cardMaxElevation="0dp"
+        tools:cardCornerRadius="15dp"
+        tools:layout_margin="10dp">
+
+        <com.exponea.sdk.view.layout.FrameLayoutWithoutOverflow
+            android:id="@+id/inAppMessageSlideInBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:background="#0000FF">
+
+            <com.exponea.sdk.view.component.InAppImageView
+                android:id="@+id/inAppMessageSlideInBackgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:adjustViewBounds="true"
+                tools:scaleType="centerCrop"
+                tools:src="@android:drawable/btn_minus"
+                tools:visibility="visible" />
+
+        </com.exponea.sdk.view.layout.FrameLayoutWithoutOverflow>
+
+        <LinearLayout
+            android:id="@+id/inAppMessageSlideInBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            tools:padding="10dp">
+
+            <com.exponea.sdk.view.component.InAppImageView
+                android:id="@+id/inAppMessageSlideInLeftImage"
+                android:layout_width="75dp"
+                android:layout_height="wrap_content"
+                tools:layout_marginRight="10dp"
+                tools:adjustViewBounds="true"
+                tools:scaleType="centerCrop"
+                tools:src="@android:drawable/btn_minus"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:overScrollMode="never">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <com.exponea.sdk.view.component.InAppLabelView
+                            android:id="@+id/textViewTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:gravity="start"
+                            tools:text="Title"
+                            tools:textStyle="bold" />
+
+                        <com.exponea.sdk.view.component.InAppLabelView
+                            android:id="@+id/textViewBody"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:gravity="start"
+                            tools:layout_marginTop="5dp"
+                            tools:text="Lorem ipsum dolor sit amet" />
+
+                    </LinearLayout>
+
+                </ScrollView>
+
+                <com.exponea.sdk.view.layout.RowFlexLayout
+                    android:id="@+id/buttonsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:layout_height="40dp"
+                    tools:background="#DDDDDD"/>
+
+            </LinearLayout>
+
+            <com.exponea.sdk.view.component.InAppImageView
+                android:id="@+id/inAppMessageSlideInRightImage"
+                android:layout_width="75dp"
+                android:layout_height="wrap_content"
+                tools:layout_marginLeft="10dp"
+                tools:adjustViewBounds="true"
+                tools:scaleType="centerCrop"
+                tools:src="@android:drawable/btn_minus"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <com.exponea.sdk.view.component.InAppCloseButtonView
+            android:id="@+id/buttonClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|top"
+            tools:src="@drawable/in_app_message_close_button"
+            tools:layout_margin="10dp"/>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

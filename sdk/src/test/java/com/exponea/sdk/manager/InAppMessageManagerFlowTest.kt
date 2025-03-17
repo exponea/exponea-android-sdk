@@ -23,8 +23,8 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.EventRepositoryImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -141,8 +141,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     @Before
     fun prepareInAppMocks() {
-        mockkConstructorFix(InAppMessageBitmapCacheImpl::class) {
-            every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) }
+        mockkConstructorFix(DrawableCacheImpl::class) {
+            every { anyConstructed<DrawableCacheImpl>().has(any()) }
         }
         mockkConstructorFix(InAppMessagesCacheImpl::class)
     }
@@ -439,17 +439,12 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     private fun disableBitmapCache() {
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<List<String>>(), any())
+            anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(false)
         }
-        every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<String>(), any())
-        } answers {
-            secondArg<((Boolean) -> Unit)?>()?.invoke(false)
-        }
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().getFile(any()) } returns null
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) } returns false
+        every { anyConstructed<DrawableCacheImpl>().getFile(any()) } returns null
+        every { anyConstructed<DrawableCacheImpl>().has(any()) } returns false
     }
 
     private fun prepareMessagesMocks(pendingMessages: ArrayList<InAppMessage>) {
@@ -459,20 +454,15 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             )
         }
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<List<String>>(), any())
+            anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<String>(), any())
-        } answers {
-            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
-        }
-        every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().getFile(any())
+            anyConstructed<DrawableCacheImpl>().getFile(any())
         } returns MockFile()
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().has(any())
+            anyConstructed<DrawableCacheImpl>().has(any())
         } answers {
             firstArg<String>() == "pending_image_url"
         }

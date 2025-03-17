@@ -5,9 +5,10 @@ import android.util.Base64
 import androidx.annotation.WorkerThread
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
-import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
+import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import java.io.File
 import java.util.Collections
 import java.util.UUID
@@ -56,7 +57,7 @@ public class HtmlNormalizer {
         context: Context,
         originalHtml: String
     ) : this(
-        InAppContentBlockBitmapCacheImpl(context),
+        DrawableCacheImpl(context),
         FontCacheImpl(context),
         originalHtml
     )
@@ -560,7 +561,7 @@ public class HtmlNormalizer {
             fontCache.preload(listOf(url)) {
                 semaphore.countDown()
             }
-            semaphore.await(10, SECONDS)
+            semaphore.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
             fileData = fontCache.getFontFile(url)
         }
         if (fileData == null) {
@@ -577,7 +578,7 @@ public class HtmlNormalizer {
             imageCache.preload(listOf(url)) {
                 semaphore.countDown()
             }
-            semaphore.await(10, SECONDS)
+            semaphore.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
             fileData = imageCache.getFile(url)
         }
         if (fileData == null) {

@@ -1,5 +1,6 @@
 package com.exponea.sdk.util
 
+import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
@@ -87,7 +88,7 @@ internal class ThreadSafeAccess {
                 action.invoke {
                     timeout.countDown()
                 }
-                if (!timeout.await(10, SECONDS)) {
+                if (!timeout.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)) {
                     Logger.e(this, "ThreadAccess freed prematurely")
                 }
             }

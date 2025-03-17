@@ -168,7 +168,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
 
     private fun showHtmlMessageDetail(source: MessageItem, target: AppInboxDetailView) {
         val dataSource = source.content?.html ?: ""
-        val bitmapCache = Exponea.getComponent()?.appInboxMessagesBitmapCache
+        val bitmapCache = Exponea.getComponent()?.drawableCache
         val fontCache = Exponea.getComponent()?.fontCache
         if (bitmapCache == null || fontCache == null) {
             throw Exception("Exponea SDK was not initialized properly!")
@@ -239,12 +239,12 @@ open class DefaultAppInboxProvider : AppInboxProvider {
     }
 
     private fun findActionByUrl(url: String?, htmlContent: NormalizedResult): HtmlNormalizer.ActionInfo? {
-        return htmlContent.actions?.find { URLUtils.areEqualAsURLs(it.actionUrl, url) }
+        return htmlContent.actions.find { URLUtils.areEqualAsURLs(it.actionUrl, url) }
     }
 
     private fun showPushMessageDetail(source: MessageItem, target: AppInboxDetailView) {
         val dataSource = source.content
-        val bitmapCache = Exponea.getComponent()?.inAppMessagesBitmapCache
+        val bitmapCache = Exponea.getComponent()?.drawableCache
             ?: throw Exception("Exponea SDK was not initialized properly!")
         target.pushContainer.visibility = VISIBLE
         bitmapCache.showImage(
@@ -282,7 +282,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
     }
 
     private fun readActions(source: MessageItemContent?, context: Context): List<MessageItemAction> {
-        var target = mutableListOf<MessageItemAction>()
+        val target = mutableListOf<MessageItemAction>()
         source?.action?.let { mainAction ->
             if (SUPPORTED_MESSAGE_ACTION_TYPES.contains(mainAction.type)) {
                 target.add(MessageItemAction().apply {

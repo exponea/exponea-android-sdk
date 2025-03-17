@@ -7,8 +7,9 @@ import android.util.TypedValue
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.InAppMessagePayload
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
+import com.exponea.sdk.repository.SimpleFileCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import io.mockk.every
 import java.io.File
@@ -32,19 +33,19 @@ internal class InAppLabelStyleTest {
                 authority = "${ApplicationProvider.getApplicationContext<Context>().packageName}.sdk.contextprovider"
                 grantUriPermissions = true
             }).get()
-        mockkConstructorFix(FontCacheImpl::class) {
-            every { anyConstructed<FontCacheImpl>().has(any()) }
+        mockkConstructorFix(SimpleFileCache::class) {
+            every { anyConstructed<SimpleFileCache>().has(any()) }
         }
-        every { anyConstructed<FontCacheImpl>().getFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+        every { anyConstructed<SimpleFileCache>().getFile(any()) } returns File(
+            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
-        every { anyConstructed<FontCacheImpl>().has(any()) } returns true
+        every { anyConstructed<SimpleFileCache>().has(any()) } returns true
     }
 
     @Test
     fun `should parse complete style`() {
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(
-            drawableCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext()),
+            drawableCache = DrawableCacheImpl(ApplicationProvider.getApplicationContext()),
             fontCache = FontCacheImpl(ApplicationProvider.getApplicationContext())
         )
         val uiPayload = uiPayloadBuilder.build(InAppMessagePayload(

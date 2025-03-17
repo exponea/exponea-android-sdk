@@ -127,7 +127,7 @@ internal open class InAppContentBlockViewController(
         }
         Logger.d(this, "InAppCB: Normalizing HTML content of message ${message.id}")
         var normalizedHtml = htmlCache.get(message.id, htmlContent)
-        if (normalizedHtml == null) {
+        if (normalizedHtml == null || !normalizedHtml.valid) {
             Logger.d(this, "InAppCB: No html cache for message ${message.id}, creating new")
             val normalizer = HtmlNormalizer(
                 imageCache = imageCache,

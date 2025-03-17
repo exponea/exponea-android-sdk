@@ -27,8 +27,8 @@ import com.exponea.sdk.models.InAppMessageType.FULLSCREEN
 import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.InAppMessageType.SLIDE_IN
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCache
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.shadows.BadTokenShadowPopupWindow
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -109,10 +109,10 @@ internal class InAppMessagePresenterTest(
         every { fontCache.has(any()) } returns true
         every { fontCache.clear() } just Runs
         every { fontCache.getFontFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
         every { fontCache.getTypeface(any()) } returns Typeface.createFromFile(
-            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
         every { fontCache.preload(any(), any()) } answers {
             arg<(Boolean) -> Unit>(1).invoke(true)
@@ -123,7 +123,7 @@ internal class InAppMessagePresenterTest(
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
         inAppMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             environment = server,
             type = inAppMessageType

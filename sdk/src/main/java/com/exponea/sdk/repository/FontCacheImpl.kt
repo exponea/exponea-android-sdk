@@ -8,7 +8,14 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-internal class FontCacheImpl(context: Context) : SimpleFileCache(context, DIRECTORY), FontCache {
+internal class FontCacheImpl(private val context: Context) : FontCache {
+
+    companion object {
+        const val DIRECTORY = "exponeasdk_fonts_storage"
+    }
+
+    private val fileCache = SimpleFileCache(context, DIRECTORY)
+
     @WorkerThread
     override fun getTypeface(url: String): Typeface? {
         var fontFile = getFontFile(url)
@@ -17,7 +24,7 @@ internal class FontCacheImpl(context: Context) : SimpleFileCache(context, DIRECT
             preload(listOf(url)) {
                 downloadAwait.countDown()
             }
-            downloadAwait.await(DOWNLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            downloadAwait.await(SimpleFileCache.DOWNLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             fontFile = getFontFile(url)
         }
         if (fontFile == null) {
@@ -33,10 +40,12 @@ internal class FontCacheImpl(context: Context) : SimpleFileCache(context, DIRECT
     }
 
     override fun getFontFile(url: String): File? {
-        return super.getFile(url)
+        return fileCache.getFile(url)
     }
 
-    companion object {
-        const val DIRECTORY = "exponeasdk_fonts_storage"
-    }
+    override fun clear() = fileCache.clear()
+
+    override fun has(url: String): Boolean = fileCache.has(url)
+
+    override fun preload(urls: List<String>, callback: ((Boolean) -> Unit)?) = fileCache.preload(urls, callback)
 }

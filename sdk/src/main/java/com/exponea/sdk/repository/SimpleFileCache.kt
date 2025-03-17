@@ -4,29 +4,35 @@ import android.content.Context
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithDone
 import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithResult
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.logOnExceptionWithResult
-import com.exponea.sdk.util.runOnBackgroundThread
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
-import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.Dispatcher
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
 internal open class SimpleFileCache(context: Context, directoryPath: String) {
+
     companion object {
         internal const val DOWNLOAD_TIMEOUT_SECONDS = 10L
     }
 
     private val httpClient = OkHttpClient.Builder()
-            .callTimeout(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
-            .build()
+        .dispatcher(Dispatcher().apply {
+            maxRequestsPerHost = 100
+            maxRequests = 100
+        })
+        .build()
+
     private val directory: File = File(context.cacheDir, directoryPath)
+
     init {
         if (!directory.exists()) {
             directory.mkdir()
@@ -74,10 +80,10 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
             callback?.invoke(true)
             return
         }
-        val counter = AtomicInteger(distinctUrls.size)
-        var allDownloaded = true
-        for (each in distinctUrls) {
-            runOnBackgroundThread {
+        ensureOnBackgroundThread {
+            val counter = AtomicInteger(distinctUrls.size)
+            var allDownloaded = true
+            for (each in distinctUrls) {
                 preload(each) {
                     allDownloaded = allDownloaded && it
                     if (counter.decrementAndGet() <= 0) {
@@ -116,7 +122,11 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
                     )
                     callback?.invoke(false)
                 }
-                response.close()
+                try {
+                    response.close()
+                } catch (e: Exception) {
+                    Logger.e(this, "Error while closing http response", e)
+                }
             }
 
             override fun onFailure(call: Call, e: IOException) {

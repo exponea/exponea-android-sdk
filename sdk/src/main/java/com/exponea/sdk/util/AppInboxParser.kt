@@ -29,7 +29,7 @@ internal class AppInboxParser {
             val actions: MutableList<MessageItemAction> = mutableListOf()
             val htmlOrigin = normalized["message"]
             if (htmlOrigin != null) {
-                val imageCache = Exponea.getComponent()?.appInboxMessagesBitmapCache
+                val imageCache = Exponea.getComponent()?.drawableCache
                 val fontCache = Exponea.getComponent()?.fontCache
                 if (imageCache == null || fontCache == null) {
                     throw Exception("Exponea SDK was not initialized properly!")
@@ -42,7 +42,7 @@ internal class AppInboxParser {
                     makeResourcesOffline = false,
                     ensureCloseButton = false
                 ))
-                htmlContent.actions?.forEach { htmlAction ->
+                htmlContent.actions.forEach { htmlAction ->
                     actions.add(toAppInboxAction(htmlAction))
                 }
             }
@@ -79,7 +79,7 @@ internal class AppInboxParser {
                 actions = notificationPayload.buttons?.map {
                     notifAction -> toAppInboxAction(notifAction)
                 } ?: emptyList(),
-                action = notificationPayload.notificationAction.let { toAppInboxAction(it) }
+                action = toAppInboxAction(notificationPayload.notificationAction)
             )
         }
 

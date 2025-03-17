@@ -45,7 +45,7 @@ internal class AppInboxAdapter(
                     }
                     return@runCatching
                 }
-                sdkComponent.appInboxMessagesBitmapCache.showImage(
+                sdkComponent.drawableCache.showImage(
                     contentSource?.imageUrl,
                     target.image,
                     onImageNotLoaded = {

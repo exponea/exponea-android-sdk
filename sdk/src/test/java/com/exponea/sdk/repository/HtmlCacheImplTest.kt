@@ -25,7 +25,7 @@ internal class HtmlCacheImplTest {
     @Before
     fun before() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        imageCache = InAppMessageBitmapCacheImpl(context)
+        imageCache = DrawableCacheImpl(context)
         cache = HtmlNormalizedCacheImpl(context, ExponeaPreferencesImpl(context))
         fontCache = FontCacheImpl(context)
     }

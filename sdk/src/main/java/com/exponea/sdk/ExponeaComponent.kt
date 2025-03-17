@@ -44,22 +44,20 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
-import com.exponea.sdk.repository.AppInboxMessageBitmapCacheImpl
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepository
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
-import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepositoryImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
@@ -141,8 +139,9 @@ internal class ExponeaComponent(
 
     internal val fontCache: FontCache = FontCacheImpl(context)
 
-    internal val inAppMessagesBitmapCache = InAppMessageBitmapCacheImpl(context)
-    internal val inAppMessagePresenter = InAppMessagePresenter(context, inAppMessagesBitmapCache)
+    internal val drawableCache = DrawableCacheImpl(context)
+
+    internal val inAppMessagePresenter = InAppMessagePresenter(context, drawableCache)
 
     internal val segmentsCache = SegmentsCacheImpl(context, ExponeaGson.instance)
 
@@ -217,11 +216,9 @@ internal class ExponeaComponent(
             projectFactory
         )
 
-    internal val appInboxMessagesBitmapCache = AppInboxMessageBitmapCacheImpl(context)
-
     internal val appInboxManager: AppInboxManager = AppInboxManagerImpl(
         fetchManager = fetchManager,
-        drawableCache = appInboxMessagesBitmapCache,
+        drawableCache = drawableCache,
         projectFactory = projectFactory,
         customerIdsRepository = customerIdsRepository,
         appInboxCache = appInboxCache
@@ -232,7 +229,7 @@ internal class ExponeaComponent(
         inAppMessagesCache,
         fetchManager,
         inAppMessageDisplayStateRepository,
-        inAppMessagesBitmapCache,
+        drawableCache,
         fontCache,
         inAppMessagePresenter,
         trackingConsentManager,
@@ -248,14 +245,12 @@ internal class ExponeaComponent(
         preferences
     )
 
-    internal val inAppContentBlocksBitmapCache = InAppContentBlockBitmapCacheImpl(context)
-
     internal val inAppContentBlockManager: InAppContentBlockManager = InAppContentBlockManagerImpl(
         inAppContentBlockDisplayStateRepository,
         fetchManager,
         projectFactory,
         customerIdsRepository,
-        inAppContentBlocksBitmapCache,
+        drawableCache,
         htmlNormalizedCache,
         fontCache
     )
@@ -283,7 +278,7 @@ internal class ExponeaComponent(
         segmentsManager.clearAll()
         pushNotificationRepository.clearAll()
         fontCache.clear()
-        inAppMessagesBitmapCache.clear()
+        drawableCache.clear()
 
         exponeaConfiguration.baseURL = exponeaProject.baseUrl
         exponeaConfiguration.projectToken = exponeaProject.projectToken

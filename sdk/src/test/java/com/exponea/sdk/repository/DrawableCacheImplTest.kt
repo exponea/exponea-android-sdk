@@ -19,19 +19,19 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class InAppMessageBitmapCacheImplTest {
+internal class DrawableCacheImplTest {
     lateinit var context: Context
     lateinit var server: MockWebServer
     @Before
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @Test
     fun `should get nil on cold start`() {
-        val repo = InAppMessageBitmapCacheImpl(context)
+        val repo = DrawableCacheImpl(context)
         assertNull(repo.getFile("http://domain.com/image.jpg"))
         assertFalse(repo.has("http://domain.com/image.jpg"))
     }
@@ -41,7 +41,7 @@ internal class InAppMessageBitmapCacheImplTest {
         server.enqueue(MockResponse().setBody("mock-response"))
         val imageUrl = server.url("image.jpg").toString()
 
-        val repo = InAppMessageBitmapCacheImpl(context)
+        val repo = DrawableCacheImpl(context)
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         assertNotNull(repo.getFile(imageUrl))
     }
@@ -56,7 +56,8 @@ internal class InAppMessageBitmapCacheImplTest {
                     "fda24b2c-5ccf-11ec-9e7d-224548c7f76e"
         ).toString()
 
-        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        val cache = DrawableCacheImpl(context)
+        val repo = spyk(cache.fileCache)
         verify(exactly = 0) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         verify(exactly = 1) { repo.downloadFile(any(), any()) }
@@ -80,7 +81,8 @@ internal class InAppMessageBitmapCacheImplTest {
                     "a20fdf92-5cd2-11ec-819f-a64145d9ff9e"
         ).toString()
 
-        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        val cache = DrawableCacheImpl(context)
+        val repo = spyk(cache.fileCache)
         verify(exactly = 0) { repo.downloadFile(any(), any()) }
         waitForIt { repo.preload(listOf(imageUrl1)) { it() } }
         verify(exactly = 1) { repo.downloadFile(any(), any()) }
@@ -97,7 +99,7 @@ internal class InAppMessageBitmapCacheImplTest {
         val image2Url = server.url("image2.jpg").toString()
         val image3Url = server.url("image3.jpg").toString()
 
-        val repo = InAppMessageBitmapCacheImpl(context)
+        val repo = DrawableCacheImpl(context)
         waitForIt { repo.preload(listOf(image1Url)) { it() } }
         waitForIt { repo.preload(listOf(image2Url)) { it() } }
         waitForIt { repo.preload(listOf(image3Url)) { it() } }
@@ -113,7 +115,8 @@ internal class InAppMessageBitmapCacheImplTest {
 
     @Test
     fun `should download and store image with URL length up to 2000 characters`() {
-        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        val cache = DrawableCacheImpl(context)
+        val repo = spyk(cache.fileCache)
         val alphabet: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
         for (nameLength in 1..2000) {
             server.enqueue(MockResponse().setBody("mock-response"))
@@ -133,7 +136,8 @@ internal class InAppMessageBitmapCacheImplTest {
             /img/media/eadded8b1adc2e808cb7ddaf2c09dcb0f5b3126b/0_1720_2333_1399/master/2333.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=b0988ec9b039a42a1c70f7b3b9956d49
             """.trimIndent()
         ).toString()
-        val repo = spyk(InAppMessageBitmapCacheImpl(context))
+        val cache = DrawableCacheImpl(context)
+        val repo = spyk(cache.fileCache)
         repo.getFileName(imageUrl).length
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         verify(exactly = 1) { repo.downloadFile(any(), any()) }
@@ -145,7 +149,8 @@ internal class InAppMessageBitmapCacheImplTest {
         server.enqueue(MockResponse().setBody("mock-response"))
         // real image
         val imageUrl = "noscheme://example.com/image.jpg"
-        val repo = InAppMessageBitmapCacheImpl(context)
+        val cache = DrawableCacheImpl(context)
+        val repo = spyk(cache.fileCache)
         var downloaded = true
         waitForIt { done ->
             repo.downloadFile(imageUrl) { downloadStatus ->
@@ -154,5 +159,32 @@ internal class InAppMessageBitmapCacheImplTest {
             }
         }
         assertFalse(downloaded)
+    }
+
+    @Test
+    fun `should download multiple images`() {
+        val imageUrls = mutableListOf<String>()
+        val imagesStressCount = 200
+        for (i in 1..imagesStressCount) {
+            server.enqueue(MockResponse().setBody("mock-response"))
+            imageUrls.add(server.url(
+                """
+            /img/media/eadded8b1adc2e808cb7ddaf2c09dcb0f5b3126b/0_1720_2333_1399/master/$i.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=b0988ec9b039a42a1c70f7b3b9956d49
+            """.trimIndent()
+            ).toString())
+        }
+        val cache = DrawableCacheImpl(context)
+        var downloadedStatus = false
+        waitForIt(SimpleFileCache.DOWNLOAD_TIMEOUT_SECONDS * 1000L) { done ->
+            cache.preload(imageUrls) { allDownloaded ->
+                downloadedStatus = allDownloaded
+                done()
+            }
+        }
+        // response is mocked, it would be quite problem if it would fail
+        assertTrue(downloadedStatus)
+        imageUrls.forEach { url ->
+            assertTrue(cache.has(url))
+        }
     }
 }

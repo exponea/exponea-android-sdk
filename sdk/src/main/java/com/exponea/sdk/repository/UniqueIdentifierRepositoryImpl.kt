@@ -3,8 +3,9 @@ package com.exponea.sdk.repository
 import com.exponea.sdk.preferences.ExponeaPreferences
 import java.util.UUID
 
-internal class UniqueIdentifierRepositoryImpl(private val preferences: ExponeaPreferences) :
-        UniqueIdentifierRepository {
+internal class UniqueIdentifierRepositoryImpl(
+    private val preferences: ExponeaPreferences
+) : UniqueIdentifierRepository {
     private val key = "ExponeaUniqueIdentifierToken"
 
     override fun get(): String {

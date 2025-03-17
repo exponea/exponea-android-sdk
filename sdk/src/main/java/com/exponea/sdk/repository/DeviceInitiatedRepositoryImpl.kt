@@ -2,8 +2,9 @@ package com.exponea.sdk.repository
 
 import com.exponea.sdk.preferences.ExponeaPreferences
 
-internal class DeviceInitiatedRepositoryImpl(private val preferences: ExponeaPreferences) :
-        DeviceInitiatedRepository {
+internal class DeviceInitiatedRepositoryImpl(
+    private val preferences: ExponeaPreferences
+) : DeviceInitiatedRepository {
     private val KEY = "ExponeaDeviceInitiated"
 
     override fun get(): Boolean {

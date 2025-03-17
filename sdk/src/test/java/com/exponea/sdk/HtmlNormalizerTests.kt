@@ -3,8 +3,8 @@ package com.exponea.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.HtmlActionType
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
@@ -34,7 +34,7 @@ internal class HtmlNormalizerTests {
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, InAppMessageBitmapCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @Test
@@ -324,7 +324,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
@@ -341,7 +341,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertFalse(result.valid)
     }
@@ -353,7 +353,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'><span>Action 1</span></div>" +
             "<div data-link='https://example.com/2'><span><h1>Action</h1></span><span> 2</span></div>" +
             "</body></html>"
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(3, result.actions.size)
@@ -386,7 +386,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
@@ -408,7 +408,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
@@ -430,7 +430,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
@@ -452,7 +452,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
@@ -477,7 +477,7 @@ internal class HtmlNormalizerTests {
             "url(\"$gullImageUrl\")  ",
             "   url(\"$gullImageUrl\")  "
         )
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         for (each in variations) {
             val quote = if (each.contains("'")) {
@@ -510,7 +510,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertFalse { result.valid }
     }
@@ -529,7 +529,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
@@ -550,7 +550,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
@@ -605,7 +605,7 @@ internal class HtmlNormalizerTests {
                 "Css property ${each.first} is not listed in HtmlNormalizer css props"
             )
         }
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         for (each in usageOptions) {
@@ -670,7 +670,7 @@ internal class HtmlNormalizerTests {
             Pair("src", "url('$fontUrl')"),
             Pair("src", "url('$fontUrl') format('woff'), url('$fontUrl') format('opentype')")
         )
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
         val singleLined = usageOptions
@@ -716,7 +716,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
         assertTrue { result.valid }
@@ -744,7 +744,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
         assertTrue { result.valid }
@@ -772,7 +772,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val bitmapCache = InAppMessageBitmapCacheImpl(context)
+        val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
         assertTrue { result.valid }

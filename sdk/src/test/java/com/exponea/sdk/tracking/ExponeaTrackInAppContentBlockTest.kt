@@ -18,7 +18,7 @@ import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
-import com.exponea.sdk.repository.InAppContentBlockBitmapCacheImpl
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
@@ -48,19 +48,19 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
         }
         mockkConstructorFix(CustomerIdsRepositoryImpl::class)
-        mockkConstructorFix(InAppContentBlockBitmapCacheImpl::class) {
-            every { anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any()) }
+        mockkConstructorFix(DrawableCacheImpl::class) {
+            every { anyConstructed<DrawableCacheImpl>().has(any()) }
         }
         every {
-            anyConstructed<InAppContentBlockBitmapCacheImpl>().has(any())
+            anyConstructed<DrawableCacheImpl>().has(any())
         } returns true
         every {
-            anyConstructed<InAppContentBlockBitmapCacheImpl>().preload(any<List<String>>(), any())
+            anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
             arg<(Result<Boolean>) -> Unit>(1).invoke(Result(true, true))
         }
         every {
-            anyConstructed<InAppContentBlockBitmapCacheImpl>().getFile(any())
+            anyConstructed<DrawableCacheImpl>().getFile(any())
         } returns MockFile()
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()

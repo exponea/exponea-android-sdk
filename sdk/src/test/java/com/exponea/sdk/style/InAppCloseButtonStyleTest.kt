@@ -4,8 +4,8 @@ import android.graphics.Color
 import android.util.TypedValue
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -18,7 +18,7 @@ internal class InAppCloseButtonStyleTest {
     @Test
     fun `should parse complete style`() {
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(
-            drawableCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext()),
+            drawableCache = DrawableCacheImpl(ApplicationProvider.getApplicationContext()),
             fontCache = FontCacheImpl(ApplicationProvider.getApplicationContext())
         )
         val uiPayload = uiPayloadBuilder.build(InAppMessageTest.buildInAppMessageWithRichstyle().payload!!)

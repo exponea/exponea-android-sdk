@@ -15,8 +15,8 @@ import com.exponea.sdk.R
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
-import com.exponea.sdk.repository.InAppMessageBitmapCacheImpl
 import com.exponea.sdk.style.ImageSizing
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.MockFile
@@ -37,45 +37,35 @@ internal class InAppMessageRichstyleDialogTest {
 
     @Before
     fun setUp() {
-        mockkConstructorFix(InAppMessageBitmapCacheImpl::class) {
-            every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) }
+        mockkConstructorFix(DrawableCacheImpl::class) {
+            every { anyConstructed<DrawableCacheImpl>().has(any()) }
         }
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().showImage(any(), any(), any()) } just Runs
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().has(any()) } returns true
-        every { anyConstructed<InAppMessageBitmapCacheImpl>().getFile(any()) } returns MockFile()
+        every { anyConstructed<DrawableCacheImpl>().showImage(any(), any(), any()) } just Runs
+        every { anyConstructed<DrawableCacheImpl>().has(any()) } returns true
+        every { anyConstructed<DrawableCacheImpl>().getFile(any()) } returns MockFile()
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().getDrawable(any<String>())
+            anyConstructed<DrawableCacheImpl>().getDrawable(any<String>())
         } returns AppCompatDrawableManager.get().getDrawable(
             ApplicationProvider.getApplicationContext(),
             R.drawable.in_app_message_close_button
         )
         every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<List<String>>(), any())
-        } answers {
-            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
-        }
-        every {
-            anyConstructed<InAppMessageBitmapCacheImpl>().preload(any<String>(), any())
+            anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
         mockkConstructorFix(FontCacheImpl::class) {
             every { anyConstructed<FontCacheImpl>().has(any()) }
         }
-        every { anyConstructed<FontCacheImpl>().getFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+        every { anyConstructed<FontCacheImpl>().getFontFile(any()) } returns File(
+            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
         every { anyConstructed<FontCacheImpl>().getTypeface(any()) } returns Typeface.createFromFile(
-            this.javaClass.classLoader!!.getResource("style/xtrusion.ttf")!!.file
+            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
         every { anyConstructed<FontCacheImpl>().has(any()) } returns true
         every {
             anyConstructed<FontCacheImpl>().preload(any<List<String>>(), any())
-        } answers {
-            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
-        }
-        every {
-            anyConstructed<FontCacheImpl>().preload(any<String>(), any())
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
@@ -85,7 +75,7 @@ internal class InAppMessageRichstyleDialogTest {
         payload: InAppMessagePayload,
         fullscreen: Boolean = true
     ): InAppMessageRichstyleDialog {
-        val bitmapCache = InAppMessageBitmapCacheImpl(ApplicationProvider.getApplicationContext())
+        val bitmapCache = DrawableCacheImpl(ApplicationProvider.getApplicationContext())
         val fontCache = FontCacheImpl(ApplicationProvider.getApplicationContext())
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(
             drawableCache = bitmapCache,

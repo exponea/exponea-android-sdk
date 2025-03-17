@@ -11,6 +11,17 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.2.0
+#### March 17, 2025
+* Added:
+  * Adds rich styling support for native in-app messages.
+  * Removes ConstraintLayout from the SDK, including for App Inbox.
+  * Improves how in-app personalizations are processed.
+  * Updates okhttps library to 4.12.0 version which includes security improvements.
+* Fixed:
+  * Replaces removed addFirst method of LinkedList, fixing a possible runtime crash.
+
+
 ## Release Notes for 4.1.0
 #### January 27, 2025
 * Added:

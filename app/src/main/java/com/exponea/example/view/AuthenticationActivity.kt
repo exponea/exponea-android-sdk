@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.databinding.ActivityAuthenticationBinding
 import com.exponea.example.managers.CustomerTokenStorage
+import com.exponea.example.test.TestWorkerUtil
 import com.exponea.example.utils.isVaildUrl
 import com.exponea.example.utils.isValid
 import com.exponea.example.utils.onTextChanged
@@ -15,7 +16,10 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
 import com.exponea.sdk.models.FlushMode
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AuthenticationActivity : AppCompatActivity() {
 
     var projectToken = ""
@@ -25,6 +29,9 @@ class AuthenticationActivity : AppCompatActivity() {
     var registeredIds = ""
 
     private lateinit var viewBinding: ActivityAuthenticationBinding
+
+    @Inject
+    lateinit var testWorkerUtil: TestWorkerUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +54,11 @@ class AuthenticationActivity : AppCompatActivity() {
         viewBinding.button.setOnClickListener {
             if (!viewBinding.editTextProjectToken.isValid() ||
                 !viewBinding.editTextAuthCode.isValid() ||
-                !viewBinding.editTextApiUrl.isVaildUrl()) {
+                !viewBinding.editTextApiUrl.isVaildUrl()
+            ) {
                 Toast.makeText(this, "Empty field", Toast.LENGTH_SHORT).show()
             } else {
+                testWorkerUtil.startWork()
                 initSdk()
             }
         }

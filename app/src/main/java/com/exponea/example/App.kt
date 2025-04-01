@@ -1,9 +1,17 @@
 package com.exponea.example
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.exponea.example.managers.RegisteredIdManager
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
-class App : Application() {
+@HiltAndroidApp
+class App : Application(), Configuration.Provider {
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
     companion object {
         lateinit var instance: App
     }
@@ -19,4 +27,9 @@ class App : Application() {
         // Create our RegisteredIDManager to get the registered ID.
         registeredIdManager = RegisteredIdManager(this)
     }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 }

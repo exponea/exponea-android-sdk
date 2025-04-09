@@ -11,6 +11,13 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.3.0
+#### April 09, 2025
+* Added:
+  * Adds a new stopIntegration method for improved SDK integration management and clears all locally stored data. 
+  * Minor documentation improvements about using identifyCustomer with soft ID.
+
+
 ## Release Notes for 4.2.0
 #### March 17, 2025
 * Added:

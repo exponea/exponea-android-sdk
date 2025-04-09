@@ -242,4 +242,43 @@ internal class SessionManagerTest : ExponeaSDKTest() {
             eventManager.track("session_end", any(), any(), EventType.SESSION_END)
         }
     }
+
+    @Test
+    fun `should not track session start if SDK is stopped`() {
+        every { Exponea.isStopped } returns true
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
+        val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
+        sm.startSessionListener()
+        controller.resume()
+        controller.pause()
+        verify(exactly = 0) {
+            eventManager.track("session_start", any(), any(), any())
+        }
+        confirmVerified(eventManager)
+    }
+
+    @Test
+    fun `should not track session start nor session end if SDK is stopped`() {
+        every { Exponea.isStopped } returns true
+        val sm = buildSessionManager(ApplicationProvider.getApplicationContext())
+        val controller = Robolectric.buildActivity(Activity::class.java).create()
+        controller.start()
+        controller.postCreate(null)
+        sm.startSessionListener()
+        controller.resume()
+        every { anyConstructed<Date>().time } returns 100 * 1000 // app paused after 90 sec
+        controller.pause()
+        controller.stop()
+        every { anyConstructed<Date>().time } returns 120 * 1000 // app resumed after being backgrounded for 20 sec
+        controller.start()
+        controller.postCreate(null)
+        controller.resume()
+        verify(exactly = 0) {
+            eventManager.track("session_start", any(), any(), any())
+            eventManager.track("session_end", any(), any(), any())
+        }
+        confirmVerified(eventManager)
+    }
 }

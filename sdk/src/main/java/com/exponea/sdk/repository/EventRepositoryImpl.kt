@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.util.Logger
 
 internal open class EventRepositoryImpl(
     context: Context
@@ -65,5 +66,24 @@ internal open class EventRepositoryImpl(
 
     override fun clear() {
         database.clear()
+    }
+
+    override fun onIntegrationStopped() {
+        if (!database.isOpen) {
+            // after init, first query is required to open connection
+            try {
+                database.count()
+            } catch (e: IllegalStateException) {
+                Logger.e(this, "Unable to re-open database, clearing may be incomplete", e)
+            }
+        }
+        if (database.isOpen) {
+            try {
+                database.clear()
+            } catch (e: IllegalStateException) {
+                Logger.e(this, "Unable to clear already cleared and closed database")
+            }
+            database.close()
+        }
     }
 }

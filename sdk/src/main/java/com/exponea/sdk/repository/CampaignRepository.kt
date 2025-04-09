@@ -1,11 +1,12 @@
 package com.exponea.sdk.repository
 
 import com.exponea.sdk.models.CampaignData
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 
 /**
  * Repository for storing a single CampaignData.
  */
-internal interface CampaignRepository {
+internal interface CampaignRepository : OnIntegrationStoppedCallback {
     /**
      * Returns CampaignData if exists and lives shorter than Exponea.campaignTTL
      */
@@ -20,4 +21,5 @@ internal interface CampaignRepository {
      * Remove CampaignData from repository if exists. Returns TRUE on success, FALSE on any error.
      */
     fun clear(): Boolean
+    override fun onIntegrationStopped()
 }

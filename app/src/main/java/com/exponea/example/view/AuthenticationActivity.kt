@@ -44,7 +44,7 @@ class AuthenticationActivity : AppCompatActivity() {
         viewBinding.editTextProjectToken.onTextChanged { projectToken = it }
         viewBinding.editTextApiUrl.onTextChanged { apiUrl = it }
 
-        viewBinding.button.setOnClickListener {
+        viewBinding.authenticateButton.setOnClickListener {
             if (!viewBinding.editTextProjectToken.isValid() ||
                 !viewBinding.editTextAuthCode.isValid() ||
                 !viewBinding.editTextApiUrl.isVaildUrl()) {
@@ -52,6 +52,10 @@ class AuthenticationActivity : AppCompatActivity() {
             } else {
                 initSdk()
             }
+        }
+
+        viewBinding.clearLocalDataButton.setOnClickListener {
+            Exponea.clearLocalCustomerData()
         }
     }
 
@@ -88,6 +92,10 @@ class AuthenticationActivity : AppCompatActivity() {
             )
         }
 
+        // Set up our flushing
+        Exponea.flushMode = FlushMode.IMMEDIATE
+        Exponea.checkPushSetup = true
+
         // Start our SDK
         // Exponea.initFromFile(App.instance)
         try {
@@ -102,8 +110,6 @@ class AuthenticationActivity : AppCompatActivity() {
             return
         }
 
-        // Set up our flushing
-        Exponea.flushMode = FlushMode.IMMEDIATE
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

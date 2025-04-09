@@ -57,6 +57,10 @@ internal open class FcmManagerImpl(
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Push token track failed, SDK is stopping")
+            return
+        }
         val permissionGranted = NotificationsPermissionReceiver.isPermissionGranted(application)
         val permissionRequired = configuration.requirePushAuthorization
         val permissionMismatched = permissionRequired && !permissionGranted

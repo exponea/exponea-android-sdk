@@ -19,9 +19,11 @@ import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_MAX_MESSAGES_COUNT
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
@@ -30,7 +32,7 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewHolder
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
 
-public class ContentBlockCarouselView : RelativeLayout {
+public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
 
     public var behaviourCallback: ContentBlockCarouselCallback?
         get() = viewController.behaviourCallback
@@ -198,12 +200,16 @@ public class ContentBlockCarouselView : RelativeLayout {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         Logger.v(this, "InAppCbCarousel: View is attached to window")
+        Exponea.deintegration.registerForIntegrationStopped(this)
+        Exponea.deintegration.registerForIntegrationStopped(viewController)
         viewController.onViewAttachedToWindow()
     }
 
     override fun onDetachedFromWindow() {
         Logger.v(this, "InAppCbCarousel: View is detached from window")
         viewController.onViewDetachedFromWindow()
+        Exponea.deintegration.unregisterForIntegrationStopped(this)
+        Exponea.deintegration.unregisterForIntegrationStopped(viewController)
         super.onDetachedFromWindow()
     }
 
@@ -329,5 +335,9 @@ public class ContentBlockCarouselView : RelativeLayout {
             Logger.e(this, "InAppCbCarousel: Unable to open instant browser", e)
             UrlOpener.openUrl(context, url)
         }
+    }
+
+    override fun onIntegrationStopped() {
+        visibility = GONE
     }
 }

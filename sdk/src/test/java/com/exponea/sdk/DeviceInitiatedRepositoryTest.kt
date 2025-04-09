@@ -28,4 +28,12 @@ internal class DeviceInitiatedRepositoryTest : ExponeaSDKTest() {
         repo.set(value)
         assertEquals(true, repo.get())
     }
+
+    @Test
+    fun `should not set flag if SDK is stopped`() {
+        val value = true
+        Exponea.isStopped = true
+        repo.set(value)
+        assertEquals(false, repo.get())
+    }
 }

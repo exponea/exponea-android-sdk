@@ -87,6 +87,10 @@ internal class SegmentsManagerImpl(
 
     private fun triggerSegmentsChangeCheck() {
         cancelSegmentsFetchJob()
+        if (Exponea.isStopped) {
+            Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+            return
+        }
         val customerIdsForFetch = customerIdsRepository.get()
         checkSegmentsJob = runOnBackgroundThread(CHECK_DEBOUNCE_MILLIS) {
             if (checkSegmentsJob == null || areCallbacksInactive()) {
@@ -118,6 +122,11 @@ internal class SegmentsManagerImpl(
             )
             return
         }
+        if (Exponea.isStopped) {
+            Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+            checkSegmentsJob = null
+            return
+        }
         if (customerIdsMergeIsRequired(triggeringCustomerIds)) {
             Logger.i(this, "Segments: Current customer IDs require to be linked")
             val mergeResult = fetchManager.linkCustomerIdsSync(
@@ -129,6 +138,12 @@ internal class SegmentsManagerImpl(
                     this,
                     "Segments: Customer IDs $triggeringCustomerIds merge failed, unable to fetch segments"
                 )
+                checkSegmentsJob = null
+                return
+            }
+            if (Exponea.isStopped) {
+                Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                checkSegmentsJob = null
                 return
             }
         }
@@ -137,6 +152,10 @@ internal class SegmentsManagerImpl(
             customerIds = triggeringCustomerIds,
             onSuccess = {
                 checkSegmentsJob = null
+                if (Exponea.isStopped) {
+                    Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                    return@fetchSegments
+                }
                 val data = it.results
                 Logger.i(
                     this,
@@ -153,6 +172,10 @@ internal class SegmentsManagerImpl(
             },
             onFailure = {
                 checkSegmentsJob = null
+                if (Exponea.isStopped) {
+                    Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                    return@fetchSegments
+                }
                 val errorMessage = it.results.message
                 Logger.e(
                     this,
@@ -319,6 +342,11 @@ internal class SegmentsManagerImpl(
         forceFetch: Boolean,
         callback: (List<Segment>) -> Unit
     ) {
+        if (Exponea.isStopped) {
+            Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+            callback.invoke(emptyList())
+            return
+        }
         val customerIdsForFetch = customerIdsRepository.get()
         val requireFetch = forceFetch || !segmentsCache.isAssignedTo(customerIdsForFetch) || !segmentsCache.isFresh()
         if (requireFetch) {
@@ -326,6 +354,11 @@ internal class SegmentsManagerImpl(
                 override val exposingCategory = category
                 override val includeFirstLoad = true
                 override fun onNewData(segments: List<Segment>) {
+                    if (Exponea.isStopped) {
+                        Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                        callback.invoke(emptyList())
+                        return
+                    }
                     callback.invoke(segments)
                 }
             })
@@ -350,6 +383,11 @@ internal class SegmentsManagerImpl(
             runManualSegmentsFetch(customerIdsRepository.get())
             return
         }
+        if (Exponea.isStopped) {
+            Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+            notifyManualCallbacks(null)
+            return
+        }
         if (customerIdsMergeIsRequired(triggeringCustomerIds)) {
             Logger.i(this, "Segments: Current customer IDs require to be linked")
             val mergeResult = fetchManager.linkCustomerIdsSync(
@@ -365,11 +403,22 @@ internal class SegmentsManagerImpl(
                 notifyManualCallbacks(null)
                 return
             }
+            if (Exponea.isStopped) {
+                Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                notifyManualCallbacks(null)
+                return
+            }
         }
         fetchManager.fetchSegments(
             exponeaProject = projectFactory.mainExponeaProject,
             customerIds = triggeringCustomerIds,
             onSuccess = {
+                if (Exponea.isStopped) {
+                    Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                    isManualFetchActive.set(false)
+                    notifyManualCallbacks(null)
+                    return@fetchSegments
+                }
                 val data = it.results
                 Logger.i(
                     this,
@@ -394,6 +443,12 @@ internal class SegmentsManagerImpl(
                 }
             },
             onFailure = {
+                if (Exponea.isStopped) {
+                    Logger.v(this, "Segments: Segments fetch failed, SDK is stopping")
+                    isManualFetchActive.set(false)
+                    notifyManualCallbacks(null)
+                    return@fetchSegments
+                }
                 val errorMessage = it.results.message
                 Logger.e(
                     this,
@@ -403,5 +458,9 @@ internal class SegmentsManagerImpl(
                 notifyManualCallbacks(null)
             }
         )
+    }
+
+    override fun onIntegrationStopped() {
+        clearAll()
     }
 }

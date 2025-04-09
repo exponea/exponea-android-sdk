@@ -10,10 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
 
-internal class AppInboxDetailActivity : AppCompatActivity() {
+internal class AppInboxDetailActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
     companion object {
         public val MESSAGE_ID = "MessageID"
         fun buildIntent(context: Context, item: MessageItem): Intent {
@@ -57,6 +58,7 @@ internal class AppInboxDetailActivity : AppCompatActivity() {
             .beginTransaction()
             .replace(R.id.container, detailFragment)
             .commit()
+        Exponea.deintegration.registerForIntegrationStopped(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -65,5 +67,14 @@ internal class AppInboxDetailActivity : AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onIntegrationStopped() {
+        finish()
+    }
+
+    override fun onDestroy() {
+        Exponea.deintegration.unregisterForIntegrationStopped(this)
+        super.onDestroy()
     }
 }

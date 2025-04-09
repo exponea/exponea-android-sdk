@@ -1,15 +1,21 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 
 internal object ExponeaConfigRepository {
 
-    private const val PREF_CONFIG = "ExponeaConfigurationPref"
+    internal const val PREF_CONFIG = "ExponeaConfigurationPref"
 
     fun set(context: Context, configuration: ExponeaConfiguration) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Last known SDK configuration store failed, SDK is stopping")
+            return
+        }
         val prefs = ExponeaPreferencesImpl(context)
         val gson = Gson()
         val jsonConfiguration = gson.toJson(configuration)
@@ -17,6 +23,10 @@ internal object ExponeaConfigRepository {
     }
 
     fun get(context: Context): ExponeaConfiguration? {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Last known SDK configuration load failed, SDK is stopping")
+            return null
+        }
         val prefs = ExponeaPreferencesImpl(context)
         val gson = Gson()
         val jsonConfig = prefs.getString(PREF_CONFIG, "")
@@ -24,9 +34,13 @@ internal object ExponeaConfigRepository {
             return null
 
         return try {
-            gson.fromJson<ExponeaConfiguration>(jsonConfig, ExponeaConfiguration::class.java)
+            gson.fromJson(jsonConfig, ExponeaConfiguration::class.java)
         } catch (e: Exception) {
             null
         }
+    }
+
+    fun clear(context: Context) {
+        ExponeaPreferencesImpl(context).remove(PREF_CONFIG)
     }
 }

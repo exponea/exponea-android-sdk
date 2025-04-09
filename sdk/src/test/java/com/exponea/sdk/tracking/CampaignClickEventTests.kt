@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -38,6 +39,21 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
     companion object {
 
+        private val UTM_SOURCE = "testSource"
+        private val UTM_CAMPAIGN = "campaign001"
+        private val UTM_CONTENT = "campaignTestContent"
+        private val UTM_MEDIUM = "medium_98765rfghjmnb"
+        private val UTM_TERM = "term_098765rtyuk"
+        private val XNPE_CMP = "3456476768iu-ilkujyfgcvbi7gukgvbnp-oilgvjkjyhgdxcvbiu"
+        val CAMPAIGN_UNIVERSAL_LINK_URL = "http://example.com/route/to/campaing" +
+            "?utm_source=" + UTM_SOURCE +
+            "&utm_campaign=" + UTM_CAMPAIGN +
+            "&utm_content=" + UTM_CONTENT +
+            "&utm_medium=" + UTM_MEDIUM +
+            "&utm_term=" + UTM_TERM +
+            "&xnpe_cmp=" + XNPE_CMP
+        private val CAMPAIGN_DEEPLINK_LINK_URL = CAMPAIGN_UNIVERSAL_LINK_URL.replaceFirst("http", "example")
+
         val configuration = ExponeaConfiguration()
         lateinit var server: MockWebServer
 
@@ -60,21 +76,6 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
     }
 
     private var context = InstrumentationRegistry.getInstrumentation().context
-    private val UTM_SOURCE = "testSource"
-    private val UTM_CAMPAIGN = "campaign001"
-    private val UTM_CONTENT = "campaignTestContent"
-    private val UTM_MEDIUM = "medium_98765rfghjmnb"
-    private val UTM_TERM = "term_098765rtyuk"
-    private val XNPE_CMP = "3456476768iu-ilkujyfgcvbi7gukgvbnp-oilgvjkjyhgdxcvbiu"
-    private val CAMPAIGN_UNIVERSAL_LINK_URL = "http://example.com/route/to/campaing" +
-        "?utm_source=" + UTM_SOURCE +
-        "&utm_campaign=" + UTM_CAMPAIGN +
-        "&utm_content=" + UTM_CONTENT +
-        "&utm_medium=" + UTM_MEDIUM +
-        "&utm_term=" + UTM_TERM +
-        "&xnpe_cmp=" + XNPE_CMP
-    private val CAMPAIGN_DEEPLINK_LINK_URL = CAMPAIGN_UNIVERSAL_LINK_URL.replaceFirst("http", "example")
-
     private lateinit var eventRepository: EventRepository
     private lateinit var campaignRepository: CampaignRepository
 
@@ -282,6 +283,24 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         assertNotNull(parsedRequest["properties"])
         assertEquals("Android", (parsedRequest["properties"] as Map<*, *>)["platform"])
         assertEquals(CAMPAIGN_UNIVERSAL_LINK_URL, parsedRequest["url"])
+    }
+
+    @Test
+    fun `should not track campaign click if SDK is stopping`() = runInSingleThread { idleThreads ->
+        Exponea.isStopped = true
+        val universalLinkIntent = createUniversalLinkIntent()
+        Exponea.handleCampaignIntent(universalLinkIntent, context)
+        idleThreads()
+        assertNull(eventRepository.all().firstOrNull())
+        assertNull(campaignRepository.get())
+    }
+
+    @Test
+    fun `should not store campaign click if SDK is stopping`() = runInSingleThread { idleThreads ->
+        campaignRepository.set(CampaignData(data = Uri.parse(CAMPAIGN_UNIVERSAL_LINK_URL)))
+        // stops after set
+        Exponea.isStopped = true
+        assertNull(campaignRepository.get())
     }
 
     private fun flushAndWaitForRequest(): RecordedRequest? {

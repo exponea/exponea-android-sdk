@@ -11,6 +11,7 @@ import android.text.format.DateUtils
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -56,6 +57,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
 
     override fun getAppInboxButton(context: Context): Button {
         val button = LayoutInflater.from(context).inflate(R.layout.message_inbox_button, null, false) as Button
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox UI is unavailable, SDK is stopping")
+            button.visibility = GONE
+            return button
+        }
         button.setOnClickListener {
             val openAppInboxListIntent = Intent(context, AppInboxListActivity::class.java)
             if (context == context.applicationContext) {
@@ -63,6 +69,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             }
             context.startActivity(openAppInboxListIntent)
         }
+        Exponea.deintegration.registerForIntegrationStopped(object : OnIntegrationStoppedCallback {
+            override fun onIntegrationStopped() {
+                button.visibility = GONE
+            }
+        })
         return button
     }
 
@@ -79,6 +90,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         }
         val appInboxAdapter = AppInboxAdapter(onItemClicked = onItemClickedProxy)
         listView.listView.adapter = appInboxAdapter
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox UI is unavailable, SDK is stopping")
+            showError(listView)
+            return listView
+        }
         showLoading(listView)
         Exponea.fetchAppInbox { data ->
             if (data == null) {
@@ -95,6 +111,11 @@ open class DefaultAppInboxProvider : AppInboxProvider {
             showMessageInbox(listView)
             appInboxAdapter.replaceData(data)
         }
+        Exponea.deintegration.registerForIntegrationStopped(object : OnIntegrationStoppedCallback {
+            override fun onIntegrationStopped() {
+                showError(listView)
+            }
+        })
         return listView
     }
 
@@ -108,6 +129,10 @@ open class DefaultAppInboxProvider : AppInboxProvider {
 
     override fun getAppInboxDetailView(context: Context, messageId: String): View {
         val detailView = AppInboxDetailView(context)
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox UI is unavailable, SDK is stopping")
+            return detailView
+        }
         Exponea.fetchAppInboxItem(messageId, { message ->
             message?.let {
                 showMessageDetail(it, detailView)

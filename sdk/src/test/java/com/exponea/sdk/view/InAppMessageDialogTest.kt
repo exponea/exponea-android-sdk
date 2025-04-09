@@ -31,6 +31,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.Robolectric.buildActivity
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -93,7 +94,7 @@ internal class InAppMessageDialogTest {
         every { imageCache.has(any()) } returns true
         every { imageCache.getFile(any()) } returns MockFile()
         val dialog = InAppMessageDialog(
-            ApplicationProvider.getApplicationContext(),
+            buildActivity(InAppMessageActivity::class.java).get(),
             true,
             payload!!,
             imageCache,
@@ -112,7 +113,7 @@ internal class InAppMessageDialogTest {
         val payload = InAppMessageTest.buildInAppMessageWithRichstyle().payload!!
         val uiPayload = uiPayloadBuilder.build(payload)
         val dialog = InAppMessageRichstyleDialog(
-            ApplicationProvider.getApplicationContext(),
+            buildActivity(InAppMessageActivity::class.java).get(),
             true,
             uiPayload!!,
             {},

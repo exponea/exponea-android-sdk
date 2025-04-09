@@ -2,9 +2,10 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.TokenType
 
-internal interface PushTokenRepository {
+internal interface PushTokenRepository : OnIntegrationStoppedCallback {
     fun get(): String?
     fun getLastTrackDateInMilliseconds(): Long?
     fun setTrackedToken(
@@ -17,6 +18,7 @@ internal interface PushTokenRepository {
     fun clear(): Boolean
     fun getLastTokenType(): TokenType
     fun getLastPermissionFlag(): Boolean
+    override fun onIntegrationStopped()
 }
 
 internal object PushTokenRepositoryProvider {

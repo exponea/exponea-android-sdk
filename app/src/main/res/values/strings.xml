@@ -39,4 +39,5 @@
     <string name="content_blocks_default_carousel_title">Default Carousel: example_carousel</string>
     <string name="content_blocks_custom_carousel_title">Customized Carousel: example_carousel</string>
     <string name="content_blocks_android_carousel_title">Android Carousel: example_carousel_and</string>
+    <string name="clear_local_data_button">Clear local data</string>
 </resources>

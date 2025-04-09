@@ -98,6 +98,11 @@ internal class InAppMessageManagerImpl(
             callback?.invoke(Result.failure(Exception("Preloading in-app messages stopped for background state.")))
             return
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app fetch failed, SDK is stopping")
+            callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
+            return
+        }
         preloadStarted()
         val customerIdsForFetch = CustomerIds(HashMap(customerIds)).apply {
             // CustomerIds constructor removes cookie, add it back:
@@ -107,6 +112,12 @@ internal class InAppMessageManagerImpl(
             exponeaProject = projectFactory.mainExponeaProject,
             customerIds = customerIdsForFetch,
             onSuccess = { result ->
+                if (Exponea.isStopped) {
+                    Logger.e(this, "In-app fetch failed, SDK is stopping")
+                    preloadFinished()
+                    callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
+                    return@fetchInAppMessages
+                }
                 if (areCustomerIdsActual(customerIds)) {
                     inAppMessagesCache.set(result.results)
                     Logger.d(this, "[InApp] In-app messages preloaded successfully")
@@ -121,6 +132,12 @@ internal class InAppMessageManagerImpl(
                 }
             },
             onFailure = {
+                if (Exponea.isStopped) {
+                    Logger.e(this, "In-app fetch failed, SDK is stopping")
+                    preloadFinished()
+                    callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
+                    return@fetchInAppMessages
+                }
                 if (retryCount < MAX_RETRY_COUNT) {
                     Logger.w(this, "[InApp] Preloading in-app messages failed, going to retry")
                     reload(customerIds, callback, retryCount + 1)
@@ -164,6 +181,10 @@ internal class InAppMessageManagerImpl(
                 this,
                 "[InApp] Skipping messages fetch for type $eventType because app is not in foreground state"
             )
+            return ReloadMode.STOP
+        }
+        if (Exponea.isStopped) {
+            Logger.d(this, "[InApp] Skipping messages fetch for type $eventType because SDK is stopping")
             return ReloadMode.STOP
         }
         if (eventType == EventType.PUSH_DELIVERED ||
@@ -360,6 +381,10 @@ internal class InAppMessageManagerImpl(
     }
 
     internal fun show(message: InAppMessage) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app UI is unavailable, SDK is stopping")
+            return
+        }
         if (message.variantId == -1 && !message.hasPayload()) {
             Logger.i(this, "[InApp] Only logging in-app message for control group '${message.name}'")
             trackShowEvent(message)
@@ -377,6 +402,10 @@ internal class InAppMessageManagerImpl(
             "[InApp] Attempting to show in-app message '${message.name}' with delay ${message.delay ?: 0}ms."
         )
         runOnBackgroundThread(message.delay ?: 0) {
+            if (Exponea.isStopped) {
+                Logger.e(this, "In-app UI is unavailable, SDK is stopping")
+                return@runOnBackgroundThread
+            }
             val htmlPayload: HtmlNormalizer.NormalizedResult?
             if (message.messageType == InAppMessageType.FREEFORM && !message.payloadHtml.isNullOrEmpty()) {
                 htmlPayload = HtmlNormalizer(drawableCache, fontCache, message.payloadHtml).normalize()
@@ -535,6 +564,10 @@ internal class InAppMessageManagerImpl(
         customerIds: HashMap<String, String?>
     ) {
         ensureOnBackgroundThread {
+            if (Exponea.isStopped) {
+                Logger.e(this, "In-app UI is unavailable, SDK is stopping")
+                return@ensureOnBackgroundThread
+            }
             Logger.i(
                 this,
                 "[InApp] Event $type:$eventType occurred, going to trigger In-app show process"
@@ -620,10 +653,20 @@ internal class InAppMessageManagerImpl(
             callbackProxy?.invoke(success)
             callbackProxy = null
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "Online resources fetch was stopped, SDK is stopping")
+            singleInvokeCallback(false)
+            return
+        }
         runOnBackgroundThread(
             delayMillis = 0,
             timeoutMillis = withTimeoutSeconds?.let { it * 1000 },
             block = {
+                if (Exponea.isStopped) {
+                    Logger.e(this, "Online resources fetch was stopped, SDK is stopping")
+                    singleInvokeCallback(false)
+                    return@runOnBackgroundThread
+                }
                 var imagesLoaded: Boolean? = null
                 var fontsLoaded: Boolean? = null
                 val imageUrls = loadImageUrls(messages)
@@ -675,6 +718,12 @@ internal class InAppMessageManagerImpl(
         inAppMessagesCache.clear()
         displayStateRepository.clear()
         clearPendingShowRequests()
+    }
+
+    override fun onIntegrationStopped() {
+        clear()
+        fontCache.clear()
+        drawableCache.clear()
     }
 }
 

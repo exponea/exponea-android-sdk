@@ -39,6 +39,10 @@ internal class ExponeaInitManager {
     fun waitForInitialize(
         afterInitBlock: () -> Unit
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Method has not been invoked, SDK is stopping")
+            return
+        }
         Exponea.requireInitialized(notInitializedBlock = {
             afterInitCallbacks.add(afterInitBlock)
         }, initializedBlock = {

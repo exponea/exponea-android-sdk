@@ -52,6 +52,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -130,6 +131,11 @@ internal class InAppMessagePresenterTest(
         )
         payload = inAppMessage.payload
         payloadHtml = inAppMessage.payloadHtml?.let { HtmlNormalizer(bitmapCache, fontCache, it).normalize() }
+    }
+
+    @After
+    fun reset() {
+        Exponea.isStopped = false
     }
 
     @Test
@@ -261,6 +267,19 @@ internal class InAppMessagePresenterTest(
     }
 
     @Test
+    fun `should not show in-app with resumed activity but SDK is stopping`() {
+        val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
+        val presenter = InAppMessagePresenter(
+            activity.get(),
+            bitmapCache
+        )
+        Exponea.isStopped = true
+        assertNull(
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+        )
+    }
+
+    @Test
     fun `should not show in-app after activity is paused`() {
         val presenter = InAppMessagePresenter(
             ApplicationProvider.getApplicationContext(),
@@ -336,6 +355,50 @@ internal class InAppMessagePresenterTest(
         Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
         assertEquals(activity.get(), dismissActivity)
         assertEquals(false, dismissInteraction)
+        assertNull(dismissButton)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should dismiss the in-app if SDK is stopping`() {
+        if (inAppMessageType == SLIDE_IN) {
+            // we'll skip this for slide-in that requires rendering of the dialog itself
+            return
+        }
+        val activity = buildActivity(AppCompatActivity::class.java).setup().resume()
+        val presenter = InAppMessagePresenter(
+            activity.get(),
+            bitmapCache
+        )
+        var dismissActivity: Activity? = null
+        var dismissInteraction: Boolean? = null
+        var dismissButton: InAppMessagePayloadButton? = null
+        val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
+        val presented =
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, emptyAction, { a, b, c ->
+                dismissActivity = a
+                dismissInteraction = b
+                dismissButton = c
+            }, {})
+        assertNotNull(presented)
+        mockkObject(Exponea)
+        every { Exponea.presentedInAppMessage } returns presented
+        every { Exponea.inAppMessagePresenter } returns presenter
+        val intent = shadowOf(activity.get()).peekNextStartedActivity()
+        val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
+        controller.start()
+        controller.postCreate(null)
+        try {
+            controller.resume()
+        } catch (e: Exception) {
+            // Robolectric is shadowing ViewGroup but removeView doesn't work
+            // As Buttons are moving to new parents, removeView is required to work
+        }
+        Exponea.isStopped = true
+        Exponea.deintegration.notifyDeintegration()
+        assertNull(dismissActivity)
+        assertNull(dismissInteraction)
         assertNull(dismissButton)
     }
 

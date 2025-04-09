@@ -99,4 +99,8 @@ internal class HtmlNormalizedCacheImpl(
         preferences.remove(asHashKey(key))
         preferences.remove(asFileNameKey(key))
     }
+
+    override fun clearAll() {
+        fileCache.clear()
+    }
 }

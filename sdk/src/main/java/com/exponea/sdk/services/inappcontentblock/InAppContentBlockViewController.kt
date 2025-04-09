@@ -1,5 +1,6 @@
 package com.exponea.sdk.services.inappcontentblock
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
@@ -98,6 +99,10 @@ internal open class InAppContentBlockViewController(
     }
 
     fun loadContent(requiresAttachedView: Boolean) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
             assignedMessage = dataLoader.loadContent(placeholderId)
@@ -237,6 +242,10 @@ internal open class InAppContentBlockViewController(
 
     fun onViewAttachedToWindow() {
         isViewAttachedToWindow = true
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
         if (contentLoaded) {
             Logger.d(
                 this,

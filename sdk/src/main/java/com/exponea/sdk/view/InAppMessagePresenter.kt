@@ -5,11 +5,13 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.models.InAppMessageType
 import com.exponea.sdk.models.InAppMessageUiPayload
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnMainThread
@@ -20,7 +22,7 @@ import com.exponea.sdk.util.runOnMainThread
 internal class InAppMessagePresenter(
     internal val context: Context,
     internal val drawableCache: DrawableCache
-) {
+) : OnIntegrationStoppedCallback {
     class PresentedMessage(
         val messageType: InAppMessageType,
         val payload: InAppMessagePayload?,
@@ -200,6 +202,10 @@ internal class InAppMessagePresenter(
             // error track is not expected for this case
             return null
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app UI is unavailable, SDK is stopping")
+            return null
+        }
         val presenterFailedCallback = { error: String ->
             Logger.i(this, "InApp got error $error")
             presentedMessage = null
@@ -268,5 +274,9 @@ internal class InAppMessagePresenter(
 
     fun isPresenting(): Boolean {
         return presentedMessage != null
+    }
+
+    override fun onIntegrationStopped() {
+        presentedMessage = null
     }
 }

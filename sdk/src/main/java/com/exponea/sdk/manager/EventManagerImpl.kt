@@ -81,6 +81,13 @@ internal open class EventManagerImpl(
         trackingAllowed: Boolean,
         customerIds: Map<String, String?>?
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(
+                this,
+                "Event ${type.name}${eventType?.let { "($it)" } ?: ""} has not been tracked, SDK is stopping"
+            )
+            return
+        }
         val trackedProperties: HashMap<String, Any> = hashMapOf()
         if (canUseDefaultProperties(type)) {
             trackedProperties.putAll(configuration.defaultProperties)

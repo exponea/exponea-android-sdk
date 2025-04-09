@@ -88,6 +88,11 @@ internal class SegmentsManagerImplTest {
         Exponea.segmentationDataCallbacks.clear()
     }
 
+    @After
+    fun resetSdkStoppedState() {
+        Exponea.isStopped = false
+    }
+
     @Test
     fun `should not store segments on error`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
@@ -1178,6 +1183,40 @@ internal class SegmentsManagerImplTest {
         assertEquals("mock-val-for-mock-registered", caughtSegments1?.get(0)?.get("prop"))
         assertEquals("mock-val-for-mock-registered", caughtSegments2?.get(0)?.get("prop"))
         verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should not reload segments for stopped SDK`() {
+        Exponea.isStopped = true
+        segmentsManager.onEventUploaded(buildExportedEvent())
+        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should not fetch segments manually for stopped SDK, even if forced`() {
+        Exponea.isStopped = true
+        segmentsCache.set(SegmentTest.getSegmentsData(
+            customerIds = customerIdsRepository.get().toHashMap(),
+            data = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+        ))
+        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
+                Result(
+                    true,
+                    SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
+                ))
+        }
+        var caughtSegments: List<Segment>? = null
+        waitForIt { done ->
+            segmentsManager.fetchSegmentsManually("discovery", true) {
+                caughtSegments = it
+                done()
+            }
+        }
+        assertNotNull(caughtSegments)
+        assertEquals(0, caughtSegments!!.size)
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
     }
 
     private fun buildExportedEvent(): ExportedEvent {

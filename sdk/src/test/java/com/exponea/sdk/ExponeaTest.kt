@@ -226,6 +226,14 @@ internal class ExponeaTest : ExponeaSDKTest() {
         }
     }
 
+    @Test
+    fun `should reset stopped flag after initialization`() {
+        Exponea.isStopped = true
+        initSdk()
+        assertFalse(Exponea.isStopped)
+        assertTrue(Exponea.isInitialized)
+    }
+
     private fun initSdk() {
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))

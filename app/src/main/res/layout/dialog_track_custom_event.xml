@@ -70,7 +70,7 @@
         android:inputType="text"
         android:imeOptions="actionNext"
         android:maxLines="1"
-        android:text="rich_full"
+        android:text="value"
         app:layout_constraintBottom_toBottomOf="@+id/editTextPropName"
         app:layout_constraintEnd_toStartOf="@+id/buttonAddProperty"
         app:layout_constraintStart_toEndOf="@+id/editTextPropName"

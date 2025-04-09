@@ -6,7 +6,10 @@ import java.util.UUID
 internal class UniqueIdentifierRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : UniqueIdentifierRepository {
-    private val key = "ExponeaUniqueIdentifierToken"
+
+    companion object {
+        internal const val key = "ExponeaUniqueIdentifierToken"
+    }
 
     override fun get(): String {
         var token = preferences.getString(key, "")

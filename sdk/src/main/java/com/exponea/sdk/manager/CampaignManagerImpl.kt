@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Constants
@@ -63,6 +64,10 @@ internal class CampaignManagerImpl(
     }
 
     override fun trackCampaignClick(campaignData: CampaignData): Boolean {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Campaign event not tracked, SDK is stopping")
+            return false
+        }
         // store campaign data to be used by session_start event
         campaignRepository.set(campaignData)
         // but stop tracking campaign click if is not valid

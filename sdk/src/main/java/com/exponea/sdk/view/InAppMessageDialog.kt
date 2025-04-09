@@ -1,7 +1,7 @@
 package com.exponea.sdk.view
 
+import android.app.Activity
 import android.app.Dialog
-import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.databinding.InAppMessageDialogBinding
 import com.exponea.sdk.models.InAppMessageButtonType
@@ -22,9 +23,11 @@ import com.exponea.sdk.style.ImagePosition
 import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UiUtils
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.setBackgroundColor
 
 internal class InAppMessageDialog : InAppMessageView, Dialog {
+    private val parentActivity: Activity
     private var viewBinding: InAppMessageDialogBinding
     private val fullScreen: Boolean
     private val payload: InAppMessagePayload
@@ -37,14 +40,15 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         get() = isShowing
 
     constructor(
-        context: Context,
+        activity: Activity,
         fullScreen: Boolean,
         payload: InAppMessagePayload,
         image: DrawableCache,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
         onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
         onError: (String) -> Unit
-    ) : super(context) {
+    ) : super(activity) {
+        this.parentActivity = activity
         this.fullScreen = fullScreen
         this.payload = payload
         this.imageCache = image
@@ -53,6 +57,7 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         this.onError = onError
         this.viewBinding = InAppMessageDialogBinding.inflate(LayoutInflater.from(context), null, false)
         setContentView(viewBinding.root)
+        Exponea.deintegration.registerForIntegrationStopped(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +71,11 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         setupWindow()
 
         setOnDismissListener {
-            this.onDismiss?.invoke(false, null)
+            Exponea.deintegration.unregisterForIntegrationStopped(this)
+            if (!Exponea.isStopped) {
+                this.onDismiss?.invoke(false, null)
+            }
+            parentActivity.finish()
         }
     }
 
@@ -297,6 +306,12 @@ internal class InAppMessageDialog : InAppMessageView, Dialog {
         } catch (e: Exception) {
             val messageMode = if (fullScreen) "Fullscreen" else "Modal"
             Logger.e(this, "[InApp] Dismissing $messageMode in-app message failed", e)
+        }
+    }
+
+    override fun onIntegrationStopped() {
+        ensureOnMainThread {
+            dismiss()
         }
     }
 }

@@ -309,6 +309,12 @@ internal object PublicApiTestCases {
                 ApplicationProvider.getApplicationContext(),
                 "placeholder1"
             )
+        },
+        Pair(Exponea::stopIntegration) {
+            Exponea.stopIntegration()
+        },
+        Pair(Exponea::clearLocalCustomerData) {
+            Exponea.clearLocalCustomerData()
         }
     )
 

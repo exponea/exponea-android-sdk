@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import androidx.annotation.WorkerThread
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -41,6 +42,10 @@ internal open class FlushManagerImpl(
     }
 
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
+        if (Exponea.isStopped) {
+            onFlushDenialForStoppedSdk(onFlushFinished)
+            return
+        }
         if (tryStartFlushProcess()) {
             flushDataInternal(onFlushFinished)
         } else {
@@ -49,6 +54,10 @@ internal open class FlushManagerImpl(
     }
 
     private fun flushDataInternal(onFlushFinished: FlushFinishedCallback?) {
+        if (Exponea.isStopped) {
+            onFlushDenialForStoppedSdk(onFlushFinished)
+            return
+        }
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flush")
             endsFlushProcess()
@@ -58,7 +67,6 @@ internal open class FlushManagerImpl(
             }.logOnException()
             return
         }
-
         ensureOnBackgroundThread {
             val allEvents = eventRepository.all().sortedBy { it.timestamp }
             Logger.d(this, "flushEvents: Count ${allEvents.size}")
@@ -87,6 +95,15 @@ internal open class FlushManagerImpl(
                 }.logOnException()
             }
         }
+    }
+
+    private fun onFlushDenialForStoppedSdk(onFlushFinished: ((Result<Unit>) -> Unit)?) {
+        endsFlushProcess()
+        Logger.e(this, "Flushing has been denied, SDK is stopping")
+        runCatching {
+            onFlushFinished?.invoke(Result.failure(Exception("Flushing denied, SDK is stopping")))
+            return@runCatching
+        }.logOnException()
     }
 
     private fun trySendingEvent(
@@ -130,15 +147,19 @@ internal open class FlushManagerImpl(
         onFlushFinished: FlushFinishedCallback?
     ): (Call, IOException) -> Unit {
         return { _, ioException ->
-            ensureOnBackgroundThread {
-                Logger.e(
-                    this@FlushManagerImpl,
-                    "Sending Event Failed ${exportedEvent.id}",
-                    ioException
-                )
-                onEventSentFailed(exportedEvent)
-                // Once done continue and try to flush the rest of events
-                flushDataInternal(onFlushFinished)
+            if (Exponea.isStopped) {
+                onFlushDenialForStoppedSdk(onFlushFinished)
+            } else {
+                ensureOnBackgroundThread {
+                    Logger.e(
+                        this@FlushManagerImpl,
+                        "Sending Event Failed ${exportedEvent.id}",
+                        ioException
+                    )
+                    onEventSentFailed(exportedEvent)
+                    // Once done continue and try to flush the rest of events
+                    flushDataInternal(onFlushFinished)
+                }
             }
         }
     }
@@ -148,20 +169,25 @@ internal open class FlushManagerImpl(
         onFlushFinished: FlushFinishedCallback?
     ): (Call, Response) -> Unit {
         return { _, response ->
-            ensureOnBackgroundThread {
-                val responseCode = response.code
-                Logger.d(this, "Response Code: $responseCode")
-                when (response.code) {
-                    in 200..299 -> onEventSentSuccess(exportedEvent)
-                    in 500..599 -> {
-                        exportedEvent.shouldBeSkipped = true
-                        eventRepository.update(exportedEvent)
-                    }
-                    else -> onEventSentFailed(exportedEvent)
-                }
+            if (Exponea.isStopped) {
+                onFlushDenialForStoppedSdk(onFlushFinished)
                 response.close()
-                // Once done continue and try to flush the rest of events
-                flushDataInternal(onFlushFinished)
+            } else {
+                ensureOnBackgroundThread {
+                    val responseCode = response.code
+                    Logger.d(this, "Response Code: $responseCode")
+                    when (response.code) {
+                        in 200..299 -> onEventSentSuccess(exportedEvent)
+                        in 500..599 -> {
+                            exportedEvent.shouldBeSkipped = true
+                            eventRepository.update(exportedEvent)
+                        }
+                        else -> onEventSentFailed(exportedEvent)
+                    }
+                    response.close()
+                    // Once done continue and try to flush the rest of events
+                    flushDataInternal(onFlushFinished)
+                }
             }
         }
     }

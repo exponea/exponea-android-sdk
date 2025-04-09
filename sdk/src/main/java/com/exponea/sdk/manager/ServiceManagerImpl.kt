@@ -7,6 +7,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.exponea.sdk.models.FlushPeriod
+import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaPeriodicFlushWorker
 
 internal class ServiceManagerImpl : ServiceManager {
@@ -31,5 +32,9 @@ internal class ServiceManagerImpl : ServiceManager {
 
     override fun stopPeriodicFlush(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(ExponeaPeriodicFlushWorker.WORK_NAME)
+    }
+
+    override fun onIntegrationStopped() {
+        ExponeaContextProvider.applicationContext?.let { stopPeriodicFlush(it) }
     }
 }

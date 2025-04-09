@@ -1,8 +1,10 @@
 package com.exponea.example.view
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
@@ -25,12 +27,17 @@ import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
 import com.exponea.sdk.models.InAppMessageCallback
+import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PushNotificationDelegate
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.isViewUrlIntent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
 
@@ -118,8 +125,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        Uncomment this section, if you want to test in-app callback
-//        Exponea.inAppMessageActionCallback = getInAppMessageCallback()
+        Exponea.inAppMessageActionCallback = getInAppMessageCallback()
         Exponea.appInboxProvider = ExampleAppInboxProvider()
 
         if (!Exponea.isInitialized) {
@@ -129,18 +135,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupNavigation()
+        Exponea.registerSegmentationDataCallback(discoverySegmentsCallback)
+        Exponea.registerSegmentationDataCallback(contentSegmentsCallback)
+        Exponea.registerSegmentationDataCallback(merchandisingSegmentsCallback)
 
         val deeplinkDestination = resolveDeeplinkDestination(intent)
-
         if (deeplinkDestination != null) {
             handleDeeplinkDestination(deeplinkDestination)
         } else if (savedInstanceState == null) {
             navigateToItem(NavigationItem.Fetch)
         }
-
-        Exponea.registerSegmentationDataCallback(discoverySegmentsCallback)
-        Exponea.registerSegmentationDataCallback(contentSegmentsCallback)
-        Exponea.registerSegmentationDataCallback(merchandisingSegmentsCallback)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -163,13 +167,15 @@ class MainActivity : AppCompatActivity() {
         viewBinding.navigation.selectedItemId = item.navigationId
     }
 
-    private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkDestination? {
+    private fun resolveDeeplinkDestination(intent: Intent?): DeeplinkFlow? {
         fun String.toDeeplinkDestination() = when {
-            this.contains("track") -> DeeplinkDestination.Track
-            this.contains("flush") -> DeeplinkDestination.Manual
-            this.contains("fetch") -> DeeplinkDestination.Fetch
-            this.contains("inappcb") -> DeeplinkDestination.InAppCb
-            this.contains("anonymize") -> DeeplinkDestination.Anonymize
+            this.contains("track") -> DeeplinkFlow.Track
+            this.contains("flush") -> DeeplinkFlow.Manual
+            this.contains("fetch") -> DeeplinkFlow.Fetch
+            this.contains("inappcb") -> DeeplinkFlow.InAppCb
+            this.contains("anonymize") -> DeeplinkFlow.Anonymize
+            this.contains("stopAndContinue") -> DeeplinkFlow.StopAndContinue
+            this.contains("stopAndRestart") -> DeeplinkFlow.StopAndRestart
             else -> null
         }
         return if (intent.isViewUrlIntent("http")) {
@@ -181,13 +187,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleDeeplinkDestination(deeplinkDestination: DeeplinkDestination) {
+    private fun handleDeeplinkDestination(deeplinkDestination: DeeplinkFlow) {
         when (deeplinkDestination) {
-            DeeplinkDestination.Anonymize -> navigateToItem(Anonymize)
-            DeeplinkDestination.Fetch -> navigateToItem(Fetch)
-            DeeplinkDestination.Manual -> navigateToItem(Manual)
-            DeeplinkDestination.Track -> navigateToItem(Track)
-            DeeplinkDestination.InAppCb -> navigateToItem(InAppContentBlock)
+            DeeplinkFlow.Anonymize -> navigateToItem(Anonymize)
+            DeeplinkFlow.Fetch -> navigateToItem(Fetch)
+            DeeplinkFlow.Manual -> navigateToItem(Manual)
+            DeeplinkFlow.Track -> navigateToItem(Track)
+            DeeplinkFlow.InAppCb -> navigateToItem(InAppContentBlock)
+            DeeplinkFlow.StopAndContinue -> {
+                Exponea.stopIntegration()
+                if (viewBinding.navigation.selectedItemId == 0) {
+                    navigateToItem(Fetch)
+                }
+            }
+            DeeplinkFlow.StopAndRestart -> {
+                Exponea.stopIntegration()
+                startActivity(Intent(this, AuthenticationActivity::class.java))
+                finish()
+            }
         }
     }
 
@@ -228,10 +245,18 @@ class MainActivity : AppCompatActivity() {
     private fun getInAppMessageCallback(): InAppMessageCallback {
         return object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
-            override var trackActions = false
+            override var trackActions = true
 
             override fun inAppMessageShown(message: InAppMessage, context: Context) {
                 Logger.i(this, "In app message ${message.name} has been shown")
+                if (message.name.contains("StopSDK")) {
+                    Logger.i(this, "In app message ${message.name} will stop SDK")
+                    CoroutineScope(Dispatchers.Default).async {
+                        delay(4000)
+                        Logger.i(this, "Stopping SDK")
+                        Exponea.stopIntegration()
+                    }
+                }
             }
 
             override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
@@ -239,13 +264,49 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
-                AlertDialog.Builder(context)
-                    .setTitle("In app action clicked")
-                    .setMessage(" Message id: ${message.id} \n " +
-                        "Interaction: \n ${button.text} \n ${button.url}")
-                    .setPositiveButton("OK") { _, _ -> }
-                    .create()
-                    .show()
+                Logger.i(this, "In app message ${message.name} has been clicked: ${button.url}")
+                if (messageIsForGdpr(message)) {
+                    handleGdprUserResponse(button)
+                } else if (button.url != null) {
+                    openUrl(button)
+                }
+            }
+
+            private fun handleGdprUserResponse(button: InAppMessageButton) {
+                when (button.url) {
+                    "https://bloomreach.com/tracking/allow" -> {
+                        Exponea.trackEvent(
+                            eventType = "gdpr",
+                            properties = PropertiesList(hashMapOf(
+                                "status" to "allowed"
+                            ))
+                        )
+                    }
+                    "https://bloomreach.com/tracking/deny" -> {
+                        Logger.i(this, "Stopping SDK")
+                        Exponea.stopIntegration()
+                    }
+                }
+            }
+
+            private fun messageIsForGdpr(message: InAppMessage): Boolean {
+                // apply your detection for GDPR related In-app
+                // our example app is triggering GDPR In-app by custom event tracking so we used it for detection
+                // you may implement detection against message title, ID, payload, etc.
+                return message.applyEventFilter("event_name", mapOf("property" to "gdpr"), null)
+            }
+
+            private fun openUrl(button: InAppMessageButton) {
+                try {
+                    startActivity(
+                        Intent(Intent.ACTION_VIEW).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            data = Uri.parse(button.url)
+                        }
+                    )
+                } catch (e: ActivityNotFoundException) {
+                    Logger.e(this, "Unable to open URL", e)
+                }
             }
 
             override fun inAppMessageCloseAction(
@@ -254,13 +315,12 @@ class MainActivity : AppCompatActivity() {
                 interaction: Boolean,
                 context: Context
             ) {
-                AlertDialog.Builder(context)
-                    .setTitle("In app closed")
-                    .setMessage(" Message id: ${message.id} \n " +
-                        "Interaction: $interaction \n ${button?.text} \n ${button?.url}")
-                    .setPositiveButton("OK") { _, _ -> }
-                    .create()
-                    .show()
+                Logger.i(this, "In app message ${message.name} has been closed: ${button?.url}")
+                if (messageIsForGdpr(message) && interaction) {
+                    // regardless from `button` nullability, parameter `interaction` tells that user closed message
+                    Logger.i(this, "Stopping SDK")
+                    Exponea.stopIntegration()
+                }
             }
         }
     }

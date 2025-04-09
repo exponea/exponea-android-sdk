@@ -1,7 +1,9 @@
 package com.exponea.sdk.telemetry.storage
 
 import android.app.Application
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.telemetry.model.CrashLog
+import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 import java.io.File
 
@@ -25,6 +27,10 @@ internal class FileTelemetryStorage(private val application: Application) : Tele
     internal fun getFileName(log: CrashLog): String = CRASHLOG_FILE_PREFIX + log.id + ".json"
 
     override fun saveCrashLog(log: CrashLog) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Crash log was not saved, SDK is stopping")
+            return
+        }
         try {
             File(getLogsDirectory() ?: return, getFileName(log)).writeText(Gson().toJson(log))
         } catch (e: Exception) {
@@ -41,6 +47,10 @@ internal class FileTelemetryStorage(private val application: Application) : Tele
     }
 
     override fun getAllCrashLogs(): List<CrashLog> {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Crash logs not accessible, SDK is stopping")
+            return arrayListOf()
+        }
         try {
             val directory = getLogsDirectory() ?: return arrayListOf()
             val files = directory.listFiles { _: File, name: String ->
@@ -58,5 +68,9 @@ internal class FileTelemetryStorage(private val application: Application) : Tele
         } catch (e: Exception) {
             return arrayListOf()
         }
+    }
+
+    override fun clear() {
+        getLogsDirectory()?.deleteRecursively()
     }
 }

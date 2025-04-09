@@ -157,4 +157,18 @@ internal class WaitForInitApiCoveredTest : ExponeaSDKTest() {
         Exponea.safeModeEnabled = safeModeOrig
         assertEquals(2, runsCount)
     }
+
+    @Test
+    fun `AfterInit API methods should be dropped for stopped SDK`() {
+        PublicApiTestCases.methods
+            .filter { PublicApiTestCases.awaitInitMethods.contains(it.first) }
+            .forEach {
+                Exponea.isStopped = true
+                // invoke method
+                it.second.invoke()
+                assertEquals(0, Exponea.initGate.afterInitCallbacks.size,
+                    "Method 'Exponea.${it.first.name}' was not dropped"
+                )
+            }
+    }
 }

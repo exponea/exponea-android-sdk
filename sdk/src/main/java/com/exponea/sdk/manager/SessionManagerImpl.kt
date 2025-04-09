@@ -52,6 +52,10 @@ internal class SessionManagerImpl(
      * Starts a session If application is already in foreground state
      */
     override fun startSessionListener() {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Session listener not started, SDK is stopping")
+            return
+        }
         isAutomaticSessionMode = true
         if (!isListenerActive) {
             if (ExponeaContextProvider.applicationIsForeground) {
@@ -122,6 +126,10 @@ internal class SessionManagerImpl(
      * Tracking Session Start
      */
     override fun trackSessionStart(timestamp: Double) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Session start not tracked, SDK is stopping")
+            return
+        }
         Logger.d(this, "Tracking session start at: ${timestamp.toDate()}")
         // Check if other session is active
         if (!isAutomaticSessionMode && manualSessionAutoClose && isSessionActive()) {
@@ -153,6 +161,10 @@ internal class SessionManagerImpl(
      * Tracking Session End
      */
     override fun trackSessionEnd(timestamp: Double) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Session end not tracked, SDK is stopping")
+            return
+        }
         Logger.d(this, "Tracking session end at: ${timestamp.toDate()}")
 
         // Save session end time if session tracking is manual
@@ -195,5 +207,13 @@ internal class SessionManagerImpl(
 
     override fun reset() {
         clear()
+    }
+
+    override fun onIntegrationStopped() {
+        clear()
+        backgroundTimerManager.stopTimer()
+        ExponeaContextProvider.removeForegroundStateListener(this)
+        isAutomaticSessionMode = false
+        isListenerActive = false
     }
 }

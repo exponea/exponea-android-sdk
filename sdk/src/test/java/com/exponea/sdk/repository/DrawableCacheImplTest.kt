@@ -2,6 +2,7 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import io.mockk.spyk
@@ -13,6 +14,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +29,11 @@ internal class DrawableCacheImplTest {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+    }
+
+    @After
+    fun resetSdk() {
+        Exponea.isStopped = false
     }
 
     @Test
@@ -154,6 +161,23 @@ internal class DrawableCacheImplTest {
         var downloaded = true
         waitForIt { done ->
             repo.downloadFile(imageUrl) { downloadStatus ->
+                downloaded = downloadStatus
+                done()
+            }
+        }
+        assertFalse(downloaded)
+    }
+
+    @Test
+    fun `should not download image if SDK is stopped`() {
+        val imageUrl = """
+            https://birdaware.org/solent/wp-content/uploads/sites/2/2021/09/Great-black-backed-gull-HERO.png
+        """.trim()
+        val cache = DrawableCacheImpl(context)
+        var downloaded = false
+        Exponea.isStopped = true
+        waitForIt { done ->
+            cache.preload(listOf(imageUrl)) { downloadStatus ->
                 downloaded = downloadStatus
                 done()
             }

@@ -34,6 +34,7 @@ internal fun Exponea.shutdown() {
 internal fun Exponea.reset() {
     val wasInitialized = isInitialized
     isInitialized = false
+    isStopped = false
     resetField(Exponea, "application")
     resetField(Exponea, "configuration")
     safeModeOverride = null
@@ -48,7 +49,7 @@ internal fun Exponea.reset() {
     componentForTesting.customerIdsRepository.clear()
     componentForTesting.deviceInitiatedRepository.set(false)
     componentForTesting.eventRepository.clear()
-    (componentForTesting.eventRepository as EventRepositoryImpl).close()
+    componentForTesting.eventRepository.clear()
     componentForTesting.pushTokenRepository.clear()
     componentForTesting.inAppContentBlockManager.clearAll()
     componentForTesting.segmentsManager.clearAll()

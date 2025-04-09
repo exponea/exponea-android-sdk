@@ -70,6 +70,7 @@ import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.ExponeaContextProvider
+import com.exponea.sdk.services.ExponeaDeintegrateManager
 import com.exponea.sdk.services.ExponeaInitManager
 import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_MAX_MESSAGES_COUNT
@@ -103,6 +104,8 @@ object Exponea {
     private lateinit var component: ExponeaComponent
     internal var telemetry: TelemetryManager? = null
     internal val initGate = ExponeaInitManager()
+    internal val deintegration = ExponeaDeintegrateManager()
+    internal var isStopped = false
 
     /**
      * Cookie of the current customer. Null before the SDK is initialized
@@ -397,12 +400,14 @@ object Exponea {
     /**
      * This is the main init method that should be called to initialize Exponea SDK
      */
-    @Synchronized fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
+    @Synchronized
+    fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
         this.application = context.applicationContext as Application
         if (isInitialized) {
             Logger.e(this, "Exponea SDK is already initialized!")
             return
         }
+        isStopped = false
 
         configuration.validate()
 
@@ -411,7 +416,9 @@ object Exponea {
         if (Looper.myLooper() == null)
             Looper.prepare()
 
-        telemetry = TelemetryManager(context.applicationContext as Application)
+        telemetry = TelemetryManager(context.applicationContext as Application).apply {
+            deintegration.registerForIntegrationStopped(this)
+        }
         telemetry?.start()
         telemetry?.reportInitEvent(configuration)
 
@@ -841,6 +848,19 @@ object Exponea {
 
     private fun initializeSdk(context: Context) {
         this.component = ExponeaComponent(this.configuration, context)
+        deintegration.registerForIntegrationStopped(component.serviceManager)
+        deintegration.registerForIntegrationStopped(component.eventRepository)
+        deintegration.registerForIntegrationStopped(component.serviceManager)
+        deintegration.registerForIntegrationStopped(component.eventRepository)
+        deintegration.registerForIntegrationStopped(component.appInboxManager)
+        deintegration.registerForIntegrationStopped(component.segmentsManager)
+        deintegration.registerForIntegrationStopped(component.sessionManager)
+        deintegration.registerForIntegrationStopped(component.pushTokenRepository)
+        deintegration.registerForIntegrationStopped(component.campaignRepository)
+        deintegration.registerForIntegrationStopped(component.deviceInitiatedRepository)
+        deintegration.registerForIntegrationStopped(component.inAppContentBlockManager)
+        deintegration.registerForIntegrationStopped(component.inAppMessageManager)
+        deintegration.registerForIntegrationStopped(component.inAppMessagePresenter)
 
         ensureOnBackgroundThread {
             telemetry?.reportEvent(
@@ -984,7 +1004,10 @@ object Exponea {
         campaignId: String? = null,
         link: String? = null
     ) {
-
+        if (isStopped) {
+            Logger.e(this, "Install event not tracked, SDK is stopping")
+            return
+        }
         if (component.deviceInitiatedRepository.get()) {
             return
         }
@@ -1095,15 +1118,12 @@ object Exponea {
             presenting.timeout,
             { button ->
                 presenting.actionCallback(button)
-                activity.finish()
             },
             { userInteraction, cancelButton ->
                 presenting.dismissedCallback(userInteraction, cancelButton)
-                activity.finish()
             },
             { error: String ->
                 presenting.failedCallback(error)
-                activity.finish()
             }
         )
         if (inappMessageView == null) {
@@ -1496,6 +1516,40 @@ object Exponea {
                 }.logOnException()
             }
         }
+    }.logOnException()
+
+    fun clearLocalCustomerData() = runCatching {
+        if (isInitialized) {
+            Logger.e(this, "The functionality is unavailable due to running Integration.")
+            return@runCatching
+        }
+        val context = ExponeaContextProvider.applicationContext
+        if (context == null) {
+            Logger.e(this, "Unable to clear SDK data because application context is null.")
+            return@runCatching
+        }
+        if (ExponeaConfigRepository.get(context) == null) {
+            Logger.e(this, "The functionality is unavailable due no previous SDK integration.")
+            return@runCatching
+        }
+        deintegration.clearLocalCustomerData()
+    }.logOnException()
+
+    fun stopIntegration() = runCatching {
+        requireInitialized(
+            notInitializedBlock = {
+                Logger.e(this, "This functionality is unavailable without initialization of SDK")
+            },
+            initializedBlock = {
+                Logger.i(this, "Stopping of SDK integration starts")
+                isStopped = true
+                deintegration.notifyDeintegration()
+                deintegration.clearLocalCustomerData()
+                initGate.clear()
+                isInitialized = false
+                Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")
+            }
+        )
     }.logOnException()
 
     internal fun processPushNotificationClickInternally(openedPushDataIntent: Intent) {

@@ -20,6 +20,18 @@ Additionally, you can track any custom event relevant to your business.
 >
 > Also see [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at Bloomreach Support Help Center.
 
+> ❗️ Protect the privacy of your customers
+> 
+> Make sure you have obtained and stored tracking consent from your customer before initializing Exponea Android SDK.
+> 
+> To ensure you're not tracking events without the customer's consent, you can use `Exponea.clearLocalCustomerData()` when a customer opts out from tracking (this applies to new users or returning customers who have previously opted out). This will bring the SDK to a state as if it was never initialized. This option also prevents reusing existing cookies for returning customers.
+> 
+> Refer to [Clear local customer data](#clear-local-customer-data) for details.
+> 
+> If customer denied tracking consent after Exponea Android SDK is initialized, you can use `Exponea.stopIntegration()` to stop SDK integration and remove all locally stored data.
+>
+> Refer to [Stop SDK integration](#stop-sdk-integration) for details.
+
 ## Events
 
 ### Track event
@@ -109,6 +121,15 @@ Use the `identifyCustomer()` method to identify a customer using their unique [h
 The default hard ID is `registered` and its value is typically the customer's email address. However, your Engagement project may define a different hard ID.
 
 Optionally, you can track additional customer properties such as first and last names, age, etc.
+
+> ❗️
+>
+> Although it's possible to use `identifyCustomer` with a [soft ID](https://documentation.bloomreach.com/engagement/docs/customer-identification#section-soft-id), developers should use caution when doing this. In some cases (for example, after using `anonymize`) this can unintentionally associate the current user with an incorrect customer profile.
+
+> ❗️
+>
+> The SDK stores data, including customer hard ID, in a local cache on the device. Removing the hard ID from the local cache requires calling [anonymize](#anonymize) in the app.
+> If the customer profile is anonymized or deleted in the Bloomreach Engagement webapp, subsequent initialization of the SDK in the app can cause the customer profile to be reidentified or recreated from the locally cached data.
 
 #### Arguments
 
@@ -373,6 +394,192 @@ Exponea.trackClickedPush(
         timestamp = currentTimeSeconds()
 )
 ```
+
+## Clear local customer data
+
+Your application should always ask customers for consent to track their app usage. If the customer consents to tracking events at the application level but not at the personal data level, using the `anonymize()` method is usually sufficient.
+
+If the customer doesn't consent to any tracking, it's recommended not to initialize the SDK at all.
+
+If the customer asks to delete personalized data, use the `clearLocalCustomerData()` method to delete all information stored locally before SDK is initialized.
+
+The customer may also revoke all tracking consent after the SDK is fully initialized and tracking is enabled. In this case, you can stop SDK integration and remove all locally stored data using the [stopIntegration](#stop-sdk-integration) method.
+
+Invoking this method will cause the SDK to:
+
+* Remove the push notification token for the current customer from local device storage.
+* Clear local repositories and caches, including all previously tracked events that haven't been flushed yet.
+* Clear all session start and end information.
+* Remove the customer record stored locally.
+* Clear any previously loaded in-app messages, in-app content blocks, and app inbox messages.
+* Clear the SDK configuration from the last invoked initialization.
+* Stop handling of received push notifications.
+* Stop tracking of deep links and universal links (your app's handling of them isn't affected).
+
+## Stop SDK integration
+
+Your application should always ask the customer for consent to track their app usage. If the customer consents to tracking of events at the application level but not at the personal data level, using the `anonymize()` method is normally sufficient.
+
+If the customer doesn't consent to any tracking before the SDK is initialized, it's recommended that the SDK isn't initialized at all. For the case of deleting personalized data before SDK initialization, see more info in the usage of the [clearLocalCustomerData](#clear-local-customer-data) method.
+
+The customer may also revoke all tracking consent later, after the SDK is fully initialized and tracking is enabled. In this case, you can stop SDK integration and remove all locally stored data by using the `Exponea.stopIntegration()` method.
+
+Use the `stopIntegration()` method to delete all information stored locally and stop the SDK if it is already running.
+
+Invoking this method will cause the SDK to:
+
+* Remove the push notification token for the current customer from local device storage.
+* Clear local repositories and caches, including all previously tracked events that were not flushed yet.
+* Clear all session start and end information.
+* Remove the customer record stored locally.
+* Clear any In-app messages, In-app content blocks, and App inbox messages previously loaded.
+* Clear the SDK configuration from the last invoked initialization.
+* Stop handling of received push notifications.
+* Stop tracking of Deep links and Universal links (your app's handling of them is not affected).
+
+If the SDK is already running, invoking of this method also:
+
+* Stops and disables session start and session end tracking even if your application tries later on.
+* Stops and disables any tracking of events even if your application tries later on.
+* Stops and disables any flushing of tracked events even if your application tries later on.
+* Stops displaying of In-app messages, In-app content blocks, and App inbox messages.
+  * Already displayed messages are dismissed.
+  * Please validate dismiss behaviour if you [customized](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox#customize-app-inbox) the App Inbox UI layout. 
+
+After invoking the `stopIntegration()` method, the SDK will drop any API method invocation until you [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize_the_sdk) again. 
+
+### Use cases
+
+Correct usage of `stopIntegration()` method depends on the use case so please consider all scenarios.
+
+#### Ask the customer for consent
+
+Developers should always respect user privacy, not just to comply with GDPR, but to build trust and create better, more ethical digital experiences.
+
+Permission requests in mobile apps should be clear, transparent, and contextually relevant. Explain why the permission is needed and request it only when necessary, ensuring users can make an informed choice.
+
+You may use system dialog or In-app messages for that purpose.
+
+![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/gdpr-dialog-example.png)
+
+In the case of the in-app message dialog, you can customize [In-app message action callback](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages#customize-in-app-message-actions) to handle the user's decision about allowing or denying tracking permission.
+
+```kotlin
+Exponea.inAppMessageActionCallback = object : InAppMessageCallback {  
+    // set overrideDefaultBehavior to true to handle URL opening manually
+    override var overrideDefaultBehavior = true
+    // set trackActions to true to keep tracking of click and close actions
+    override var trackActions = true
+  
+    override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
+        if (messageIsForGdpr(message)) {
+            handleGdprUserResponse(button)
+        } else if (button.url != null) {
+            openUrl(button)
+        }
+    }
+
+    override fun inAppMessageCloseAction(
+        message: InAppMessage,
+        button: InAppMessageButton?,
+        interaction: Boolean,
+        context: Context
+    ) {
+        if (messageIsForGdpr(message) && interaction) {
+            // regardless from `button` nullability, parameter `interaction` with true tells that user closed message
+            Logger.i(this, "Stopping SDK")
+            Exponea.stopIntegration()
+        }
+    }
+
+    override fun inAppMessageShown(message: InAppMessage, context: Context) {
+        // Here goes your code
+    }
+
+    override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
+        // Here goes your code
+    }
+
+    private fun messageIsForGdpr(message: InAppMessage): Boolean {
+        // apply your detection for GDPR related In-app
+        // our example app is triggering GDPR In-app by custom event tracking so we used it for detection
+        // you may implement detection against message title, ID, payload, etc.
+        return message.applyEventFilter("event_name", mapOf("property" to "gdpr"), null)
+    }
+
+    private fun openUrl(button: InAppMessageButton) {
+        try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    data = Uri.parse(button.url)
+                }
+            )
+        } catch (e: ActivityNotFoundException) {
+            Logger.e(this, "Unable to open URL", e)
+        }
+    }
+}
+```
+
+#### Stop the SDK but upload tracked data
+
+The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to Bloomreach Engagement. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
+
+Invoking the `stopIntegration()` method will remove all these locally stored data that may not be uploaded yet. To avoid loss of these data please request to flush them before stopping the SDK:
+
+```kotlin
+// Flushing requires that SDK is initialized
+Exponea.configure(...)
+// Invoke flush force-fully
+Exponea.flushMode = FlushMode.MANUAL
+val flushIsDone = Semaphore(0, true)
+Exponea.flushData {
+    flushIsDone.release()
+}
+// Flushing process is asynchronous, we should wait until it is done
+messageShownInvoked.tryAcquire(20, TimeUnit.SECONDS)
+// All data are uploaded, we may stop SDK
+Exponea.stopIntegration()
+```
+
+#### Stop the SDK and wipe all tracked data
+
+The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to the Bloomreach Engagement app. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
+
+You may face the use case where the customer gets removed from the Bloomreach Enagagement platform and subsequently you want to remove them from local storage too.
+
+Please do not initialize the SDK in this case as, depending on your configuration, the SDK may upload the stored tracked events. This may lead to customer's profile being recreated in Bloomreach Enagagement. This is because stored events may have been tracked for this customer and uploading them will result in the recreation of the customer profile based on the assigned customer IDs.
+
+To prevent this from happening, invoke `stopIntegration()` immediately without initializing the SDK:
+
+```kotlin
+Exponea.stopIntegration()
+```
+
+This results in all previously stored data being removed from the device. The next SDK initialization will be considered a fresh new start.
+
+#### Stop the already running SDK
+
+The method `stopIntegration()` can be invoked anytime on a configured and running SDK.
+
+This can be used in case the customer previously consented to tracking but revoked their consent later. You may freely invoke `stopIntegration()` with immediate effect.
+
+```kotlin
+// User gave you permission to track
+Exponea.configure(...)
+
+// Later, user decides to stop tracking
+Exponea.stopIntegration()
+```
+
+This results in the SDK stopping all internal processes (such as session tracking and push notifications handling) and removing all locally stored data.
+
+Please be aware that `stopIntegration()` stops any further tracking and flushing of data so if you require to upload tracked data to Bloomreach Engagement, then [flush them synchronously](#stop-the-sdk-but-upload-tracked-data) before stopping the SDK.
+
+#### Customer denies tracking consent
+
+It is recommended to ask the customer for tracking consent as soon as possible in your application. If the customer denies consent, please do not initialize the SDK at all.
 
 ## Payments
 

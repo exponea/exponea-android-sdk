@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Build
 import android.util.Base64
 import com.exponea.sdk.BuildConfig
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorData
@@ -122,6 +123,11 @@ internal class VSAppCenterTelemetryUpload(
     }
 
     fun upload(data: VSAppCenterAPIRequestData, callback: (Result<Unit>) -> Unit) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Telemetry events has not been uploaded, SDK is stopping")
+            callback(Result.failure(Exception("Telemetry events has not been uploaded, SDK is stopping")))
+            return
+        }
         val requestData = Gson().toJson(data)
         val requestBuilder = Request.Builder()
             .url(uploadUrl)

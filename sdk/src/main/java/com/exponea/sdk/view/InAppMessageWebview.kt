@@ -6,6 +6,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.PopupWindow
 import android.widget.RelativeLayout
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppMessageButtonType
@@ -15,6 +16,7 @@ import com.exponea.sdk.models.InAppMessageButtonType.DEEPLINK
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.runOnMainThread
 
 internal class InAppMessageWebview(
@@ -43,7 +45,12 @@ internal class InAppMessageWebview(
         webView.setOnUrlCallback { url ->
             handleActionClick(url)
         }
+        Exponea.deintegration.registerForIntegrationStopped(this)
         setOnDismissListener {
+            Exponea.deintegration.unregisterForIntegrationStopped(this)
+            if (Exponea.isStopped) {
+                return@setOnDismissListener
+            }
             if (!userInteraction) {
                 this.onDismiss?.invoke(false, null)
             }
@@ -123,6 +130,12 @@ internal class InAppMessageWebview(
             super.dismiss()
         } catch (e: Exception) {
             Logger.e(this, "[InApp] Dismissing HTML in-app message failed", e)
+        }
+    }
+
+    override fun onIntegrationStopped() {
+        ensureOnMainThread {
+            dismiss()
         }
     }
 }

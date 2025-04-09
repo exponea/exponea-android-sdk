@@ -13,7 +13,6 @@ import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
-import com.exponea.sdk.testutil.close
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.Logger
@@ -30,7 +29,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -233,10 +231,5 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         }
         assertNull(eventSlot.captured.age)
         assertNotNull(eventSlot.captured.timestamp)
-    }
-
-    @After
-    fun closeDB() {
-        (repo as EventRepositoryImpl).close()
     }
 }

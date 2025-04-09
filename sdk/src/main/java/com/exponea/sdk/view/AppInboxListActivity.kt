@@ -5,8 +5,9 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 
-class AppInboxListActivity : AppCompatActivity() {
+class AppInboxListActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.message_inbox_list_activity)
@@ -22,6 +23,7 @@ class AppInboxListActivity : AppCompatActivity() {
             .beginTransaction()
             .replace(R.id.container, listFragment)
             .commit()
+        Exponea.deintegration.registerForIntegrationStopped(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -30,5 +32,14 @@ class AppInboxListActivity : AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onIntegrationStopped() {
+        finish()
+    }
+
+    override fun onDestroy() {
+        Exponea.deintegration.unregisterForIntegrationStopped(this)
+        super.onDestroy()
     }
 }

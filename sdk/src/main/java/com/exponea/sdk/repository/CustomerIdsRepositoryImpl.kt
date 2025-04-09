@@ -13,7 +13,7 @@ internal class CustomerIdsRepositoryImpl(
 ) : CustomerIdsRepository {
 
     companion object {
-        private const val PREFS_CUSTOMERIDS = "ExponeaCustomerIds"
+        internal const val PREFS_CUSTOMERIDS = "ExponeaCustomerIds"
     }
 
     override fun get(): CustomerIds {

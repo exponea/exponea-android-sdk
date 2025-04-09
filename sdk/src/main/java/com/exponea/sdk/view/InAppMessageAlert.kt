@@ -1,14 +1,16 @@
 package com.exponea.sdk.view
 
+import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
 import com.exponea.sdk.models.InAppMessagePayloadButton
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnMainThread
 
 internal class InAppMessageAlert(
-    context: Context,
+    private val activity: Activity,
     payload: InAppMessagePayload,
     onButtonClick: (InAppMessagePayloadButton) -> Unit,
     onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
@@ -20,7 +22,7 @@ internal class InAppMessageAlert(
         get() = dialog.isShowing
 
     init {
-        val builder = AlertDialog.Builder(context)
+        val builder = AlertDialog.Builder(activity)
         builder.setTitle(payload.title)
         builder.setMessage(payload.bodyText)
         if (payload.buttons != null) {
@@ -40,10 +42,13 @@ internal class InAppMessageAlert(
             }
         }
         builder.setOnDismissListener {
-            if (!userInteraction) {
+            Exponea.deintegration.unregisterForIntegrationStopped(this)
+            if (!Exponea.isStopped && !userInteraction) {
                 onDismiss(false, null)
             }
+            activity.finish()
         }
+        Exponea.deintegration.registerForIntegrationStopped(this)
         dialog = builder.create()
     }
 
@@ -61,6 +66,12 @@ internal class InAppMessageAlert(
             dialog.dismiss()
         } catch (e: Exception) {
             Logger.e(this, "[InApp] Dismissing Alert in-app message failed", e)
+        }
+    }
+
+    override fun onIntegrationStopped() {
+        ensureOnMainThread {
+            dismiss()
         }
     }
 }

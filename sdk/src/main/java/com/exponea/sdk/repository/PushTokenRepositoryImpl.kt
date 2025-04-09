@@ -1,6 +1,8 @@
 package com.exponea.sdk.repository
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 
 internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferences) : PushTokenRepository {
@@ -30,6 +32,10 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
         tokenType: TokenType,
         permissionGranted: Boolean
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Push token not stored, SDK is stopping")
+            return
+        }
         preferences.setString(key, token)
         if (lastTrackDateInMilliseconds == null) {
             preferences.remove(keyDate)
@@ -64,5 +70,9 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
 
     override fun getLastPermissionFlag(): Boolean {
         return preferences.getBoolean(keyPermFlag, false)
+    }
+
+    override fun onIntegrationStopped() {
+        clear()
     }
 }

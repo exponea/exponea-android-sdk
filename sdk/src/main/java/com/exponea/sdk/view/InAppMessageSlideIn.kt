@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.models.InAppMessageButtonType
 import com.exponea.sdk.models.InAppMessagePayload
@@ -24,6 +25,7 @@ import com.exponea.sdk.style.MessagePosition
 import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UiUtils
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.setBackgroundColor
 import com.google.android.material.behavior.SwipeDismissBehavior
 
@@ -61,6 +63,8 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         val inflater = LayoutInflater.from(activity)
         contentView = inflater.inflate(R.layout.in_app_message_slide_in, null, false)
 
+        Exponea.deintegration.registerForIntegrationStopped(this)
+
         setupBackground()
         setupImage()
         setupTitleText()
@@ -68,6 +72,10 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
         setupButtons()
 
         setOnDismissListener {
+            Exponea.deintegration.unregisterForIntegrationStopped(this)
+            if (Exponea.isStopped) {
+                return@setOnDismissListener
+            }
             if (!userInteraction) {
                 this.onDismiss?.invoke(false, null)
             }
@@ -123,6 +131,12 @@ internal class InAppMessageSlideIn : PopupWindow, InAppMessageView {
                 override fun onAnimationRepeat(animation: Animator) {}
             })
             .start()
+    }
+
+    override fun onIntegrationStopped() {
+        ensureOnMainThread {
+            dismiss()
+        }
     }
 
     private fun setupSwipeToDismiss() {

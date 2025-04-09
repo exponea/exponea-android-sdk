@@ -64,4 +64,21 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
     }
+
+    @Test
+    fun `should not track install event if SDK is stopping`() {
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        } just Runs
+        Exponea.init(context, configuration)
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        Exponea.isStopped = true
+        Exponea.trackInstallEvent()
+        verify(exactly = 1) {
+            // still 1 call count means no other invokes
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+    }
 }

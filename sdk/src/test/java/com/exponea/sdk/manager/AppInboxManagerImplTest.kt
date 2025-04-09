@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -722,5 +723,30 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             this.externalIds = ids
         }
         appInboxManager.onEventCreated(mockkClass(Event::class), EventType.TRACK_CUSTOMER)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not allow markAsRead action if SDK is stopping`() = runInSingleThread {
+        Exponea.isStopped = true
+        val testMessage = buildMessage("id1", type = "push")
+        waitForIt { done ->
+            appInboxManager.markMessageAsRead(testMessage) { marked ->
+                assertFalse(marked)
+                done()
+            }
+        }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not allow fetch if SDK is stopping`() = runInSingleThread {
+        Exponea.isStopped = true
+        waitForIt { done ->
+            appInboxManager.fetchAppInbox { data ->
+                assertNull(data)
+                done()
+            }
+        }
     }
 }

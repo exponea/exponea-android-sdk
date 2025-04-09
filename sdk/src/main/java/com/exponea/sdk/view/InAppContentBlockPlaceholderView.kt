@@ -6,9 +6,11 @@ import android.graphics.Color
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.cardview.widget.CardView
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.databinding.InappContentBlockPlaceholderBinding
 import com.exponea.sdk.models.InAppContentBlockCallback
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
@@ -20,7 +22,7 @@ import kotlinx.coroutines.Job
 class InAppContentBlockPlaceholderView internal constructor(
     context: Context,
     internal val controller: InAppContentBlockViewController
-) : RelativeLayout(context, null, 0) {
+) : RelativeLayout(context, null, 0), OnIntegrationStoppedCallback {
 
     private companion object {
         private const val CONTENT_READY_TIMEOUT = 200L
@@ -152,6 +154,7 @@ class InAppContentBlockPlaceholderView internal constructor(
             "InAppCB: $placeholderId: View has been attached to window"
         )
         super.onAttachedToWindow()
+        Exponea.deintegration.registerForIntegrationStopped(this)
         controller.onViewAttachedToWindow()
     }
 
@@ -161,6 +164,7 @@ class InAppContentBlockPlaceholderView internal constructor(
             "InAppCB: $placeholderId: View has been detached from window"
         )
         controller.onViewDetachedFromWindow()
+        Exponea.deintegration.unregisterForIntegrationStopped(this)
         super.onDetachedFromWindow()
     }
 
@@ -189,5 +193,9 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     private enum class PlaceholderVisibilityMode {
         INIT, EMPTY, CONTENT
+    }
+
+    override fun onIntegrationStopped() {
+        visibility = GONE
     }
 }

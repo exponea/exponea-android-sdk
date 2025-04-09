@@ -559,6 +559,46 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         assertEquals("id1", notifiedContentBlock?.id)
     }
 
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should notify no message if SDK is stopped`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var changeCount: Int? = null
+        var changeMsgs: List<InAppContentBlock>? = null
+        var noMsgPlaceholderId: String? = null
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+                changeCount = count
+                changeMsgs = messages
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                noMsgPlaceholderId = placeholderId
+            }
+        }
+        Exponea.isStopped = true
+        carousel.viewController.onIntegrationStopped()
+        idleThreads()
+        assertEquals(0, changeCount)
+        assertEquals(0, changeMsgs?.size)
+        assertEquals("placeholder_1", noMsgPlaceholderId)
+    }
+
     private fun prepareContentBlockMessages(messages: ArrayList<InAppContentBlock>) {
         every {
             anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())

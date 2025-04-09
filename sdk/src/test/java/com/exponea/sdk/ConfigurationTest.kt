@@ -10,6 +10,7 @@ import com.exponea.sdk.models.ExponeaConfiguration.HttpLoggingLevel.BASIC
 import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
@@ -389,5 +390,32 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         assertTrue(storedConfigAfterUpdate.automaticPushNotification)
         assertNull(storedConfigAfterUpdate.defaultProperties["defTestProp"])
         assertEquals("defTestValUpdate", storedConfigAfterUpdate.defaultProperties["defTestPropUpdate"])
+    }
+
+    @Test
+    fun `should not load config if SDK is stopped`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com"
+        )
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        Exponea.isStopped = true
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertNull(storedConfig)
+    }
+
+    @Test
+    fun `should not store config if SDK is stopped`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration(
+            projectToken = "project-token",
+            authorization = "Token mock-auth",
+            baseURL = "https://api.exponea.com"
+        )
+        Exponea.isStopped = true
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        assertEquals("none", ExponeaPreferencesImpl(context).getString(ExponeaConfigRepository.PREF_CONFIG, "none"))
     }
 }

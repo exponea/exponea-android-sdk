@@ -46,6 +46,18 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
 
 Now that you have installed the SDK in your project, you must import, configure, and initialize the SDK in your application code.
 
+> ❗️ Protect the privacy of your customers
+>
+> Make sure you have obtained and stored tracking consent from your customer before initializing Exponea Android SDK.
+>
+> To ensure you're not tracking events without the customer's consent, you can use `Exponea.clearLocalCustomerData()` when a customer opts out from tracking (this applies to new users or returning customers who have previously opted out). This will bring the SDK to a state as if it was never initialized. This option also prevents reusing existing cookies for returning customers.
+>
+> Refer to [Clear local customer data](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#clear-local-customer-data) for details.
+>
+> If the customer denies tracking consent after Exponea Android SDK is initialized, you can use `Exponea.stopIntegration()` to stop SDK integration and remove all locally stored data.
+>
+> Refer to [Stop SDK integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#stop-sdk-integration) for details.
+
 The required configuration parameters are `projectToken`, `authorization`, and `baseURL`. You can find these in the Bloomreach Engagement webapp under `Project settings` > `Access management` > `API`.
 
 > 📘

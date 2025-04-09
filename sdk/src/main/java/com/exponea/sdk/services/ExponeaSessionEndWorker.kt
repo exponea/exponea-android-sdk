@@ -15,6 +15,10 @@ internal class ExponeaSessionEndWorker(
 ) : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Session end not tracked, SDK is stopping")
+            return Result.failure()
+        }
         Logger.d(this, "doWork -> Starting...")
         return Exponea.runCatching {
             Exponea.requireInitialized {
@@ -27,6 +31,10 @@ internal class ExponeaSessionEndWorker(
                 }
                 try {
                     var successFinish = countDownLatch.await(20, SECONDS)
+                    if (Exponea.isStopped) {
+                        Logger.e(this, "Session end not tracked, SDK is stopping")
+                        return@requireInitialized Result.failure()
+                    }
                     if (!successFinish) {
                         Logger.e(this, "doWork -> Timeout!")
                         return@requireInitialized Result.failure()

@@ -1,7 +1,10 @@
 package com.exponea.sdk.view
 
-internal interface InAppMessageView {
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
+
+internal interface InAppMessageView : OnIntegrationStoppedCallback {
     val isPresented: Boolean
     fun show()
     fun dismiss()
+    override fun onIntegrationStopped()
 }

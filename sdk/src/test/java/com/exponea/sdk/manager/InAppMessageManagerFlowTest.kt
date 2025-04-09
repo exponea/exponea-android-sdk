@@ -304,7 +304,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<InAppMessageManagerImpl>().show(capture(messageSlot)) } just Runs
         Exponea.trackSessionStart()
         Thread.sleep(2000)
-        assert(messageSlot.isCaptured)
+        assertTrue(messageSlot.isCaptured)
         assertNotNull(messageSlot.captured)
         assertEquals(pendingMessageB.id, messageSlot.captured.id)
     }

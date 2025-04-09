@@ -155,6 +155,7 @@ internal class InAppMessageManagerImplTest {
     @After
     fun after() {
         Exponea.telemetry = null
+        Exponea.isStopped = false
     }
 
     @Test
@@ -186,6 +187,50 @@ internal class InAppMessageManagerImplTest {
             manager.reload { result ->
                 it.assertTrue(result.isSuccess)
                 verify(exactly = 1) {
+                    messagesCache.set(arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
+                }
+                it()
+            }
+        }
+    }
+
+    @Test
+    fun `should not preload messages if SDK is stopped`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
+            )
+        }
+        every { drawableCache.preload(any(), any()) } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
+        waitForIt {
+            Exponea.isStopped = true
+            manager.reload { result ->
+                it.assertFalse(result.isSuccess)
+                verify(exactly = 0) {
+                    messagesCache.set(arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
+                }
+                it()
+            }
+        }
+    }
+
+    @Test
+    fun `should ignore preloaded messages if SDK is stopped`() {
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            Exponea.isStopped = true
+            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+                Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
+            )
+        }
+        every { drawableCache.preload(any(), any()) } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
+        waitForIt {
+            manager.reload { result ->
+                it.assertFalse(result.isSuccess)
+                verify(exactly = 0) {
                     messagesCache.set(arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
                 }
                 it()

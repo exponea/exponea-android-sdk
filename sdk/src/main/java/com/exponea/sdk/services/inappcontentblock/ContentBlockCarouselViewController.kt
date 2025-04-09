@@ -9,10 +9,12 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.ExponeaContextProvider
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.RepeatableJob
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.runForInitializedSDK
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.ContentBlockCarouselView
@@ -24,7 +26,7 @@ internal class ContentBlockCarouselViewController(
     private val placeholderId: String = EMPTY_PLACEHOLDER_ID,
     private val maxMessagesCount: Int = DEFAULT_MAX_MESSAGES_COUNT,
     private val scrollDelay: Int = DEFAULT_SCROLL_DELAY
-) : OnForegroundStateListener {
+) : OnForegroundStateListener, OnIntegrationStoppedCallback {
 
     companion object {
         internal const val EMPTY_PLACEHOLDER_ID = ""
@@ -100,6 +102,10 @@ internal class ContentBlockCarouselViewController(
             Logger.e(this, "InAppCbCarousel: Placeholder ID is required, skipping data reload")
             return
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
         stopAutoScroll()
         runForInitializedSDK(RELOAD_PROCESS_ID) {
             ensureOnBackgroundThread {
@@ -144,6 +150,10 @@ internal class ContentBlockCarouselViewController(
     }
 
     fun onViewAttachedToWindow() {
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
         ExponeaContextProvider.registerForegroundStateListener(this)
         reload()
     }
@@ -171,6 +181,10 @@ internal class ContentBlockCarouselViewController(
 
     override fun onStateChanged(isForeground: Boolean) {
         Logger.v(this, "InAppCbCarousel: State changed to $isForeground")
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
         if (isForeground) {
             Logger.d(this, "InAppCbCarousel: Resuming auto scroll because foreground state established")
             resumeAutoScroll()
@@ -361,5 +375,15 @@ internal class ContentBlockCarouselViewController(
 
     fun onHeightChanged(newHeight: Int) {
         behaviourCallback?.onHeightUpdate(placeholderId, newHeight)
+    }
+
+    override fun onIntegrationStopped() {
+        stopAutoScroll()
+        showTrackedContentBlockIds.clear()
+        ensureOnMainThread {
+            contentBlockCarouselAdapter.updateData(emptyList())
+        }
+        behaviourCallback?.onMessagesChanged(0, emptyList())
+        behaviourCallback?.onNoMessageFound(placeholderId)
     }
 }

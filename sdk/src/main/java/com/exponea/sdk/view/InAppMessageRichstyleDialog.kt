@@ -1,7 +1,7 @@
 package com.exponea.sdk.view
 
+import android.app.Activity
 import android.app.Dialog
-import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.databinding.InAppMessageRichstyleDialogBinding
 import com.exponea.sdk.models.ButtonUiPayload
@@ -19,10 +20,12 @@ import com.exponea.sdk.models.InAppMessageUiPayload
 import com.exponea.sdk.style.ImagePosition
 import com.exponea.sdk.style.ImageSizing
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.view.component.InAppButtonView
 import com.exponea.sdk.view.component.InAppImageView
 
 internal class InAppMessageRichstyleDialog : InAppMessageView, Dialog {
+    private val parentActivity: Activity
     private var viewBinding: InAppMessageRichstyleDialogBinding
     private val fullScreen: Boolean
     private val payload: InAppMessageUiPayload
@@ -36,13 +39,14 @@ internal class InAppMessageRichstyleDialog : InAppMessageView, Dialog {
     private var targetImageViews: List<InAppImageView>
 
     constructor(
-        context: Context,
+        activity: Activity,
         fullScreen: Boolean,
         payload: InAppMessageUiPayload,
         onButtonClick: (InAppMessagePayloadButton) -> Unit,
         onDismiss: (Boolean, InAppMessagePayloadButton?) -> Unit,
         onError: (String) -> Unit
-    ) : super(context) {
+    ) : super(activity) {
+        this.parentActivity = activity
         this.fullScreen = fullScreen
         this.payload = payload
         this.onButtonClick = onButtonClick
@@ -55,6 +59,7 @@ internal class InAppMessageRichstyleDialog : InAppMessageView, Dialog {
             viewBinding.inAppMessageDialogBottomImage,
             viewBinding.inAppMessageDialogBackgroundImage
         )
+        Exponea.deintegration.registerForIntegrationStopped(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +71,11 @@ internal class InAppMessageRichstyleDialog : InAppMessageView, Dialog {
         setupButtons()
 
         setOnDismissListener {
-            this.onDismiss?.invoke(false, null)
+            Exponea.deintegration.unregisterForIntegrationStopped(this)
+            if (!Exponea.isStopped) {
+                this.onDismiss?.invoke(false, null)
+            }
+            parentActivity.finish()
         }
     }
 
@@ -232,6 +241,12 @@ internal class InAppMessageRichstyleDialog : InAppMessageView, Dialog {
         } catch (e: Exception) {
             val messageMode = if (fullScreen) "Fullscreen" else "Modal"
             Logger.e(this, "[InApp] Dismissing $messageMode in-app message failed", e)
+        }
+    }
+
+    override fun onIntegrationStopped() {
+        ensureOnMainThread {
+            dismiss()
         }
     }
 }

@@ -1,8 +1,9 @@
 package com.exponea.sdk.repository
 
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 
-internal interface EventRepository {
+internal interface EventRepository : OnIntegrationStoppedCallback {
     fun all(): List<ExportedEvent>
     fun count(): Int
     fun add(item: ExportedEvent)
@@ -10,4 +11,5 @@ internal interface EventRepository {
     fun get(id: String): ExportedEvent?
     fun remove(id: String)
     fun clear()
+    override fun onIntegrationStopped()
 }

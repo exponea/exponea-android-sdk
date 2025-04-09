@@ -342,6 +342,7 @@ internal class InAppContentBlockManagerImplTest {
     @After
     fun after() {
         Exponea.telemetry = null
+        Exponea.isStopped = false
     }
 
     @Test
@@ -356,6 +357,36 @@ internal class InAppContentBlockManagerImplTest {
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertEquals(1, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not load messages if SDK is stopped`() = runInSingleThread { idleThreads ->
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage("id1", type = "native"),
+                buildMessage("id2", type = "html"),
+                buildMessage("id3", type = "whatSoEver")
+            )))
+        }
+        Exponea.isStopped = true
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        assertEquals(0, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not load messages if SDK is stopped while fetching`() = runInSingleThread { idleThreads ->
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            Exponea.isStopped = true
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage("id1", type = "native"),
+                buildMessage("id2", type = "html"),
+                buildMessage("id3", type = "whatSoEver")
+            )))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        assertEquals(0, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
     }
 
     @Test
@@ -421,6 +452,52 @@ internal class InAppContentBlockManagerImplTest {
         assertEquals(messageId, personalizedForm.personalizedData!!.blockId)
         assertEquals(InAppContentBlockType.HTML, personalizedForm.contentType)
         assertNotNull(personalizedForm.htmlContent)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not load Personalized InAppContentBlock if SDK is stopped`() = runInSingleThread {
+        val placeholderId = "ph1"
+        val messageId = "id1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    messageId,
+                    placeholders = listOf(placeholderId),
+                    dateFilter = null
+                ) // static has not contentType nor data
+            )))
+        }
+        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), listOf(messageId), any(), any()) } answers {
+            Exponea.isStopped = true
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+                // htmlContent
+                buildMessageData(
+                    messageId,
+                    type = "html",
+                    hasTrackingConsent = false,
+                    data = mapOf(
+                        "html" to buildHtmlMessageContent()
+                    )
+                )
+            )))
+        }
+        val inAppContentBlockManagerImpl = inAppContentBlockManager as InAppContentBlockManagerImpl
+        // static fetch is successful
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        val staticForm = inAppContentBlockManagerImpl.contentBlocksData.firstOrNull()
+        assertNotNull(staticForm)
+        assertEquals(messageId, staticForm.id)
+        assertEquals(InAppContentBlockType.NOT_DEFINED, staticForm.contentType)
+        assertNull(staticForm.htmlContent)
+        // but personalized fetch will fail due to stopped SDK
+        inAppContentBlockManagerImpl.loadContent(placeholderId)
+        val personalizedForm = inAppContentBlockManagerImpl.contentBlocksData.firstOrNull()
+        assertNotNull(personalizedForm)
+        assertNull(personalizedForm.personalizedData)
+        assertEquals(messageId, personalizedForm.id)
+        assertEquals(InAppContentBlockType.NOT_DEFINED, personalizedForm.contentType)
+        assertNull(personalizedForm.htmlContent)
     }
 
     @Test

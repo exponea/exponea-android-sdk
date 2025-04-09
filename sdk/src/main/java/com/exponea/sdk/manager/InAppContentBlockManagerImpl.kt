@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.FetchError
@@ -61,6 +62,10 @@ internal class InAppContentBlockManagerImpl(
                 sessionStartDate = Date(eventTimestampInMillis.toLong())
             }
             EventType.TRACK_CUSTOMER -> {
+                if (Exponea.isStopped) {
+                    Logger.e(this, "InAppCB: In-app content blocks fetch stopped, SDK is stopping")
+                    return
+                }
                 ensureOnBackgroundThread {
                     Logger.i(this, "InAppCB: CustomerIDs are updated, clearing personalized content")
                     clearPersonalizationAssignments()
@@ -160,6 +165,10 @@ internal class InAppContentBlockManagerImpl(
      * Loads missing or obsolete content for block.
      */
     override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+            return
+        }
         dataAccess.waitForAccessWithDone { done ->
             loadContentIfNeededAsync(contentBlocks) {
                 done()
@@ -177,10 +186,20 @@ internal class InAppContentBlockManagerImpl(
             done()
             return
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+            done()
+            return
+        }
         Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToUpdate.joinToString()}")
         prefetchContentForBlocks(
             blockIdsToUpdate,
             onSuccess = { contentData ->
+                if (Exponea.isStopped) {
+                    Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                    done()
+                    return@prefetchContentForBlocks
+                }
                 val dataMap = contentData.groupBy { it.blockId }
                 // update personalized data for requested 'contentBlocks'
                 contentBlocks.forEach { contentBlock ->
@@ -204,6 +223,11 @@ internal class InAppContentBlockManagerImpl(
         onSuccess: (List<InAppContentBlockPersonalizedData>) -> Unit,
         onFailure: (FetchError) -> Unit
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+            onFailure(FetchError(null, "SDK is stopping"))
+            return
+        }
         val customerIds = customerIdsRepository.get()
         Logger.i(this, "InAppCB: Prefetching personalized content for current customer")
         val contentBlockIdsAsString = contentBlockIds.joinToString()
@@ -212,6 +236,11 @@ internal class InAppContentBlockManagerImpl(
             customerIds = customerIds,
             contentBlockIds = contentBlockIds,
             onSuccess = { result ->
+                if (Exponea.isStopped) {
+                    Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                    onFailure(FetchError(null, "SDK is stopping"))
+                    return@fetchPersonalizedContentBlocks
+                }
                 Logger.i(
                     this,
                     "InAppCB: Personalized content for blocks $contentBlockIdsAsString loaded"
@@ -289,6 +318,14 @@ internal class InAppContentBlockManagerImpl(
         return dateFilterPass
     }
 
+    override fun onIntegrationStopped() {
+        clearAll()
+        imageCache.clear()
+        htmlCache.clearAll()
+        fontCache.clear()
+        displayStateRepository.clear()
+    }
+
     override fun passesFrequencyFilter(contentBlock: InAppContentBlock): Boolean {
         val passessByFrequency = contentBlock.applyFrequencyFilter(
             displayStateRepository.get(contentBlock),
@@ -318,15 +355,29 @@ internal class InAppContentBlockManagerImpl(
     } ?: listOf()
 
     override fun loadInAppContentBlockPlaceholders() {
+        if (Exponea.isStopped) {
+            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+            return
+        }
         Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders requested")
         ensureOnBackgroundThread {
             dataAccess.waitForAccessWithDone { done ->
+                if (Exponea.isStopped) {
+                    Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                    done()
+                    return@waitForAccessWithDone
+                }
                 Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders starts")
                 val customerIds = customerIdsRepository.get()
                 val exponeaProject = projectFactory.mutualExponeaProject
                 fetchManager.fetchStaticInAppContentBlocks(
                     exponeaProject = exponeaProject,
                     onSuccess = { result ->
+                        if (Exponea.isStopped) {
+                            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                            done()
+                            return@fetchStaticInAppContentBlocks
+                        }
                         val inAppContentBlocks = result.results ?: emptyList()
                         val supportedContentBlocks = inAppContentBlocks.filter {
                             isContentSupportedToDownload(it)

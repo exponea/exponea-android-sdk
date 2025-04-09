@@ -4,9 +4,10 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import java.util.Date
 
-internal interface InAppMessageManager {
+internal interface InAppMessageManager : OnIntegrationStoppedCallback {
     fun reload(
         callback: ((Result<Unit>) -> Unit)? = null
     )
@@ -21,6 +22,7 @@ internal interface InAppMessageManager {
     fun onEventCreated(event: Event, type: EventType)
     fun onEventUploaded(event: ExportedEvent)
     fun clear()
+    override fun onIntegrationStopped()
 }
 
 internal interface InAppMessageTrackingDelegate {

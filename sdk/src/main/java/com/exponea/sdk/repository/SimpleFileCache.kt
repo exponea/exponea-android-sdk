@@ -1,6 +1,7 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithDone
 import com.exponea.sdk.util.ThreadSafeAccess.Companion.waitForAccessWithResult
@@ -103,11 +104,19 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
             callback?.invoke(false)
             return
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "File $url now downloaded, SDK is stopping")
+            callback?.invoke(false)
+            return
+        }
         val request = Request.Builder().url(validUrl).build()
         val downloadRequest = httpClient.newCall(request)
         downloadRequest.enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
+                if (Exponea.isStopped) {
+                    Logger.e(this, "File $url now downloaded, SDK is stopping")
+                    callback?.invoke(false)
+                } else if (response.isSuccessful) {
                     val file = createTempFile()
                     with(file.outputStream()) {
                         response.body?.byteStream()?.copyTo(this)

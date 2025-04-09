@@ -1,10 +1,12 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.AppInboxMessateType.UNKNOWN
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.AppInboxCache
@@ -37,6 +39,13 @@ internal class AppInboxManagerImpl(
             }
             return
         }
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox message ${message.id} not read, SDK is stopping")
+            runOnMainThread {
+                callback?.invoke(false)
+            }
+            return
+        }
         message.read = true
         // ensure to message change is stored
         markCachedMessageAsRead(message.id)
@@ -46,6 +55,13 @@ internal class AppInboxManagerImpl(
                 runOnMainThread {
                     callback?.invoke(false)
                 }
+            }
+            if (Exponea.isStopped) {
+
+                runOnMainThread {
+                    callback?.invoke(false)
+                }
+                return@requireMutualExponeaProject
             }
             val customerIds = CustomerIds(HashMap(message.customerIds)).apply {
                 message.customerIds.get(CustomerIds.COOKIE)?.let {
@@ -58,18 +74,44 @@ internal class AppInboxManagerImpl(
                 syncToken = message.syncToken!!,
                 messageIds = listOf(message.id),
                 onSuccess = {
-                    Logger.i(this, "AppInbox marked as read")
-                    runOnMainThread {
-                        callback?.invoke(true)
-                    }
+                    handleSuccessMarkAsReadResponse(message.id, callback)
                 },
                 onFailure = {
-                    Logger.e(this, "AppInbox marking as read failed. ${it.results.message}")
-                    runOnMainThread {
-                        callback?.invoke(false)
-                    }
+                    handleFailedMarkAsReadResponse(it, message.id, callback)
                 }
             )
+        }
+    }
+
+    private fun handleFailedMarkAsReadResponse(
+        result: Result<FetchError>,
+        messageId: String,
+        callback: ((Boolean) -> Unit)?
+    ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox message $messageId not read, SDK is stopping")
+            runOnMainThread {
+                callback?.invoke(false)
+            }
+            return
+        }
+        Logger.e(this, "AppInbox marking as read failed. ${result.results.message}")
+        runOnMainThread {
+            callback?.invoke(false)
+        }
+    }
+
+    private fun handleSuccessMarkAsReadResponse(messageId: String, callback: ((Boolean) -> Unit)?) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox message $messageId not read, SDK is stopping")
+            runOnMainThread {
+                callback?.invoke(false)
+            }
+            return
+        }
+        Logger.i(this, "AppInbox marked as read")
+        runOnMainThread {
+            callback?.invoke(true)
         }
     }
 
@@ -102,6 +144,12 @@ internal class AppInboxManagerImpl(
                 isFetching.set(false)
                 return@requireMutualExponeaProject
             }
+            if (Exponea.isStopped) {
+                Logger.e(this, "App inbox fetch failed, SDK is stopping")
+                notifyFetchCallbacks(null)
+                isFetching.set(false)
+                return@requireMutualExponeaProject
+            }
             fetchManager.fetchAppInbox(
                 exponeaProject = expoProject,
                 customerIds = customerIds,
@@ -122,6 +170,12 @@ internal class AppInboxManagerImpl(
         result: Result<ArrayList<MessageItem>?>?,
         processCustomerIds: CustomerIds
     ) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "App inbox fetch failed, SDK is stopping")
+            notifyFetchCallbacks(null)
+            isFetching.set(false)
+            return
+        }
         val fetchProcessIsValid: Boolean
         val lastCustomerIdsForFetchLocal = lastCustomerIdsForFetch
         if (lastCustomerIdsForFetchLocal == null) {
@@ -227,5 +281,10 @@ internal class AppInboxManagerImpl(
             Logger.i(this, "CustomerIDs are updated, clearing AppInbox messages")
             fetchAppInbox { Logger.d(this, "AppInbox loaded") }
         }
+    }
+
+    override fun onIntegrationStopped() {
+        appInboxCache.clear()
+        drawableCache.clear()
     }
 }

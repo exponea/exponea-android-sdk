@@ -258,4 +258,60 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
     }
+
+    @Test
+    fun `should not track fcm token when Exponea was initialized but stopped`() {
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.isStopped = true
+        Exponea.handleNewToken(context, "mock token")
+        verify(exactly = 0) {
+            Exponea.componentForTesting.eventManager.track(
+                "campaign",
+                any(),
+                any(),
+                EventType.PUSH_TOKEN
+            )
+        }
+        val tokenRepository = PushTokenRepositoryProvider.get(context)
+        assertNull(tokenRepository.get())
+        assertNull(tokenRepository.getLastTrackDateInMilliseconds())
+    }
+
+    @Test
+    fun `should not track fcm token when Exponea Config is available but stopped`() {
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.isStopped = true
+        Exponea.handleNewToken(context, "mock token")
+        verify(exactly = 0) {
+            anyConstructed<EventManagerImpl>().track(
+                "campaign",
+                any(),
+                any(),
+                EventType.PUSH_TOKEN
+            )
+        }
+        val tokenRepository = PushTokenRepositoryProvider.get(context)
+        assertNull(tokenRepository.get())
+        assertNull(tokenRepository.getLastTrackDateInMilliseconds())
+    }
+
+    @Test
+    fun `should not store fcm token when Exponea Config is NOT available but stopped`() {
+        val tokenRepository = PushTokenRepositoryProvider.get(context)
+        val pushToken = "mock token"
+        Exponea.isStopped = true
+        Exponea.handleNewToken(context, pushToken)
+        // verify that token is not stored
+        assertNull(tokenRepository.get())
+        assertNull(tokenRepository.getLastTrackDateInMilliseconds())
+        // but verify that tracking was not called
+        verify(exactly = 0) {
+            anyConstructed<EventManagerImpl>().track(
+                "campaign",
+                any(),
+                any(),
+                EventType.PUSH_TOKEN
+            )
+        }
+    }
 }

@@ -1,10 +1,11 @@
 package com.exponea.sdk.manager
 
+import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 
-internal abstract class SessionManager : OnForegroundStateListener {
+internal abstract class SessionManager : OnForegroundStateListener, OnIntegrationStoppedCallback {
 
     abstract fun onSessionStart()
 
@@ -29,4 +30,6 @@ internal abstract class SessionManager : OnForegroundStateListener {
             }
         }.logOnException()
     }
+
+    abstract override fun onIntegrationStopped()
 }

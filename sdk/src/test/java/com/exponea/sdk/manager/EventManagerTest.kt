@@ -24,8 +24,7 @@ import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.runInSingleThread
-import com.exponea.sdk.util.backgroundThreadDispatcher
-import com.exponea.sdk.util.mainThreadDispatcher
+import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -36,10 +35,8 @@ import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.verify
 import kotlin.test.assertEquals
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import org.junit.After
-import org.junit.Before
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -134,20 +131,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
     }
 
-    @Before
-    fun overrideThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Main)
-    }
-
-    @After
-    fun restoreThreadBehaviour() {
-        mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-        backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
-    }
-
     @Test
-    fun `should track event`() {
+    fun `should track event`() = runInSingleThread { idleThreads ->
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
@@ -156,6 +141,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())
@@ -190,7 +176,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track event for all projects`() {
+    fun `should track event for all projects`() = runInSingleThread { idleThreads ->
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
@@ -205,6 +191,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.INSTALL)
         Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
         verify {
             eventRepo.add(any())
             inAppMessageManager.onEventCreated(any(), any())
@@ -234,7 +221,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should start flush in immediate flush mode`() {
+    fun `should start flush in immediate flush mode`() = runInSingleThread { idleThreads ->
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
@@ -243,6 +230,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
         Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
         verify {
             eventRepo.add(any())
             flushManager.flushData(any())
@@ -532,5 +520,31 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 ), firstAddedEvent
             )
         }
+    }
+
+    @Test
+    fun `should invoke flush only after event is stored for immediate flush`() {
+        ExponeaContextProvider.applicationIsForeground = true
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            FlushMode.IMMEDIATE
+        )
+        var eventAddedAt = 0L
+        var flushedAt = 0L
+        waitForIt(3000) { done ->
+            every { eventRepo.add(any()) } answers {
+                Thread.sleep(2000)
+                eventAddedAt = System.currentTimeMillis()
+            }
+            every { flushManager.flushData(any()) } answers {
+                flushedAt = System.currentTimeMillis()
+                done()
+            }
+            manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        }
+        assertNotEquals(0, eventAddedAt)
+        assertNotEquals(0, flushedAt)
+        assertTrue(eventAddedAt <= flushedAt)
     }
 }

@@ -13,7 +13,11 @@ internal class HtmlNormalizedCacheImpl(
     private val preferences: ExponeaPreferences
 ) : HtmlNormalizedCache {
 
-    private val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+    companion object {
+        const val DIRECTORY = "exponeasdk_html_storage"
+    }
+
+    private val fileCache = SimpleFileCache(context, DIRECTORY)
 
     override fun get(key: String, htmlOrigin: String): NormalizedResult? {
         val hashKey = asHashKey(key)

@@ -25,7 +25,7 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
         internal const val DOWNLOAD_TIMEOUT_SECONDS = 10L
     }
 
-    private val httpClient = OkHttpClient.Builder()
+    internal val httpClient = OkHttpClient.Builder()
         .dispatcher(Dispatcher().apply {
             maxRequestsPerHost = 100
             maxRequests = 100

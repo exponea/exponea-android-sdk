@@ -40,6 +40,8 @@ internal class DrawableCacheImpl(
             }
             add(SvgDecoder(context))
         }
+        .launchInterceptorChainOnMainThread(false)
+        .okHttpClient(fileCache.httpClient)
         .memoryCachePolicy(CachePolicy.DISABLED)
         .diskCachePolicy(CachePolicy.DISABLED)
         .networkCachePolicy(CachePolicy.DISABLED)

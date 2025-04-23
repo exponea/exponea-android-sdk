@@ -5,12 +5,15 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
+import com.exponea.sdk.util.runOnBackgroundThread
 import io.mockk.mockk
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -20,6 +23,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,6 +39,13 @@ internal class HtmlNormalizerTests {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
         File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.cacheDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
+    }
+
+    @After
+    fun removeCaches() {
+        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.cacheDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @Test
@@ -861,5 +872,43 @@ internal class HtmlNormalizerTests {
         assertEquals(true, elementToCheck.`is`("a"))
         assertEquals(actionType.value, elementToCheck.attr("data-actiontype"))
         assertEquals(elementToCheck.attr("data-link"), elementToCheck.attr("href"))
+    }
+
+    @Test
+    fun `should parse image to base64 - stress test`() {
+        val gullImageUrl = """
+            https://brxcdn.com/c7s-app-storage/b556af1a-bf4e-11ed-ac28-de4945357d1a/media/original/229bdac8-2f06-11ef-b469-e67ce79d3eca
+        """.trimIndent()
+        val stressTestCount = 1000
+        val normalizationDoneCount = AtomicInteger(0)
+        val bitmapCache = DrawableCacheImpl(context)
+        waitForIt { done ->
+            for (i in 1..stressTestCount) {
+                runOnBackgroundThread {
+                    val rawHtml = """
+                    <html>
+                        <head>
+                            <style>
+                                .bg-image {
+                                    background-image: url('$gullImageUrl')
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="bg-image">$i</div>
+                        </body>
+                    </html>
+                    """.trimIndent()
+                    val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+                    assertTrue { result.valid }
+                    assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+                    assertTrue(result.html!!.contains("data:image/png;base64"))
+                    if (normalizationDoneCount.incrementAndGet() == stressTestCount) {
+                        done()
+                    }
+                }
+            }
+        }
+        assertTrue(bitmapCache.has(gullImageUrl))
     }
 }

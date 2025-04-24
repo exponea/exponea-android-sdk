@@ -16,7 +16,6 @@ buildscript {
     }
 
     dependencies {
-        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.12.0"
         classpath "org.jacoco:org.jacoco.core:$jacoco_version"
         classpath 'com.android.tools.build:gradle:8.6.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -32,8 +31,9 @@ buildscript {
 plugins {
     // version must match used kotlin, find full version: https://github.com/google/ksp/releases
     id 'com.google.devtools.ksp' version "$kotlin_version-1.0.13" apply false
+    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
 }
-apply plugin: 'io.codearte.nexus-staging'
+apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 allprojects {
     repositories {

@@ -128,6 +128,7 @@ class InAppContentBlocksFragment : BaseFragment() {
 
     private fun prepareExampleTopCbPlaceholder() {
         viewBinding.contentBlocksLayout.addView(TextView(requireContext()).apply { text = "Placeholder: example_top" })
+        val examplePlaceholderHeightInfoView = TextView(requireContext()).apply { text = "Height: 0px" }
         Exponea.getInAppContentBlocksPlaceholder(
             "example_top",
             requireContext(),
@@ -135,6 +136,10 @@ class InAppContentBlocksFragment : BaseFragment() {
         )?.let {
             it.setOnContentReadyListener { contentLoaded ->
                 Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+            }
+            it.setOnHeightUpdateListener { height ->
+                Logger.i(this, "InApp CB has height ${height}px")
+                examplePlaceholderHeightInfoView.text = "Height: ${height}px"
             }
             val origBehaviour = it.behaviourCallback
             it.behaviourCallback = object : InAppContentBlockCallback {
@@ -191,6 +196,7 @@ class InAppContentBlocksFragment : BaseFragment() {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))
         }
+        viewBinding.contentBlocksLayout.addView(examplePlaceholderHeightInfoView)
     }
 }
 

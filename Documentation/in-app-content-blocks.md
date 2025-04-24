@@ -156,7 +156,19 @@ override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
 You may want to render your app's UI differently depending on whether an in-app content block is available. For example, your layout may depend on the exact dimensions of the in-app content block, which are only known once it has been loaded.
 
-In such use cases you can use the `setOnContentReadyListener` callback on the placeholder view to get notified when an in-app content block has been successfully loaded or no content was found.
+In such use cases you can use the `setOnHeightUpdateListener` callback on the placeholder view to get notified when an in-app content block changed its height.
+
+```kotlin
+val placeholderView = Exponea.getInAppContentBlocksPlaceholder("placeholder_1", activityContext)
+placeholderView?.let {
+    it.setOnHeightUpdateListener { height ->
+        Logger.i(this, "InApp CB has height ${height}px")
+        // update your layout according to `height` in pixels
+    }
+}
+```
+
+For more complex cases you can use the `setOnContentReadyListener` callback on the placeholder view to get notified when an in-app content block has been successfully loaded or no content was found.
 
 ```kotlin
 val placeholderView = Exponea.getInAppContentBlocksPlaceholder("placeholder_1", activityContext)

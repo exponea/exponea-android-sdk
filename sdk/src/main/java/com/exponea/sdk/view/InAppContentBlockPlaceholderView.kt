@@ -31,6 +31,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     internal lateinit var htmlContainer: ExponeaWebView
     internal lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
+    private var onHeightUpdate: ((Int) -> Unit)? = null
     private val contentLoadedFlag = AtomicReference<Boolean?>(null)
     private var contentLoadedForceUpdate: Job? = null
     private val jobAccess = ThreadSafeAccess()
@@ -65,7 +66,7 @@ class InAppContentBlockPlaceholderView internal constructor(
             Logger.v(this, "InAppCB: $placeholderId: HTML content has been fully loaded")
             startNotifyContentReadyProcess(true)
         }
-        this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { viewInstance, _, _, _, _, _, _, _, _ ->
             Logger.v(this, "InAppCB: $placeholderId: View layout changed")
             // layout change should notify only if content was loaded
             contentLoadedFlag.getAndSet(null)?.let { contentLoaded ->
@@ -76,6 +77,7 @@ class InAppContentBlockPlaceholderView internal constructor(
                 Logger.v(this, "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change")
                 notifyContentReadyListener(contentLoaded)
             }
+            onHeightUpdate?.invoke(viewInstance.height)
         }
     }
 
@@ -181,6 +183,10 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     fun setOnContentReadyListener(listener: (Boolean) -> Unit) {
         onContentReady = listener
+    }
+
+    fun setOnHeightUpdateListener(listener: (Int) -> Unit) {
+        onHeightUpdate = listener
     }
 
     fun invokeActionClick(actionUrl: String) {

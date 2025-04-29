@@ -1,6 +1,7 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
+import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
@@ -12,6 +13,11 @@ internal class HtmlNormalizedCacheImpl(
     context: Context,
     private val preferences: ExponeaPreferences
 ) : HtmlNormalizedCache {
+
+    internal data class VersionedNormalizedResult(
+        val version: String,
+        val result: NormalizedResult
+    )
 
     companion object {
         const val DIRECTORY = "exponeasdk_html_storage"
@@ -44,8 +50,27 @@ internal class HtmlNormalizedCacheImpl(
             return null
         }
         try {
-            val cachedHtmlResult = cachedHtmlFile.readText(Charsets.UTF_8)
-            return ExponeaGson.instance.fromJson(cachedHtmlResult, NormalizedResult::class.java)
+            val cachedHtmlResultContent = cachedHtmlFile.readText(Charsets.UTF_8)
+            val cachedHtmlWithVersion: VersionedNormalizedResult? = ExponeaGson.instance.fromJson(
+                cachedHtmlResultContent,
+                VersionedNormalizedResult::class.java
+            )
+            if (cachedHtmlWithVersion == null) {
+                Logger.w(this, "HTML cache file is corrupted, removing it")
+                remove(key)
+                return null
+            }
+            if (cachedHtmlWithVersion.version != getCurrentCacheVersion()) {
+                Logger.w(this, "HTML cache file is obsolete, removing it")
+                remove(key)
+                return null
+            }
+            if (!cachedHtmlWithVersion.result.valid) {
+                Logger.w(this, "HTML cache content is invalid, removing it")
+                remove(key)
+                return null
+            }
+            return cachedHtmlWithVersion.result
         } catch (e: Exception) {
             Logger.e(this, "HTML cache cannot be used, removing it", e)
             remove(key)
@@ -69,10 +94,15 @@ internal class HtmlNormalizedCacheImpl(
     }
 
     override fun set(key: String, htmlOrigin: String, normalizedResult: NormalizedResult) {
+        if (!normalizedResult.valid) {
+            Logger.w(this, "Normalized HTML content is not stored, as it is invalid")
+            return
+        }
         // content storaging
         val fileName = "InAppContentBlock_cached_$key.json"
         try {
-            val cachedResult = ExponeaGson.instance.toJson(normalizedResult)
+            val versionedResult = VersionedNormalizedResult(getCurrentCacheVersion(), normalizedResult)
+            val cachedResult = ExponeaGson.instance.toJson(versionedResult)
             val file = createTempFile()
             file.writeText(cachedResult)
             file.renameTo(fileCache.retrieveFileDirectly(fileName))
@@ -88,6 +118,8 @@ internal class HtmlNormalizedCacheImpl(
         preferences.setString(fileNameKey, fileName)
     }
 
+    private fun getCurrentCacheVersion() = BuildConfig.EXPONEA_VERSION_NAME
+
     override fun remove(key: String) {
         // content removing
         val fileKey = asFileNameKey(key)
@@ -101,7 +133,7 @@ internal class HtmlNormalizedCacheImpl(
         }
         // metadata removing
         preferences.remove(asHashKey(key))
-        preferences.remove(asFileNameKey(key))
+        preferences.remove(fileKey)
     }
 
     override fun clearAll() {

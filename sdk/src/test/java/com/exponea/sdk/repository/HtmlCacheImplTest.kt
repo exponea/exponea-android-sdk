@@ -2,13 +2,17 @@ package com.exponea.sdk.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -87,6 +91,107 @@ internal class HtmlCacheImplTest {
         fileCache.retrieveFileDirectly("InAppContentBlock_cached_$key.json").writeText("{{{")
         // verify
         assertNull(cache.get(key, originalHtml))
+        assertFalse(fileCache.retrieveFileDirectly("InAppContentBlock_cached_$key.json").exists())
+    }
+
+    @Test
+    fun `should skip html store for invalid normalisation`() {
+        val originalHtml = "<body><div>Hello</div></body>"
+        val normalizedHtml = normalizeHtml(originalHtml)
+        normalizedHtml.valid = false
+        val key = "key"
+        cache.set(key, originalHtml, normalizedHtml)
+        // verify
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+        assertFalse(fileCache.retrieveFileDirectly("InAppContentBlock_cached_$key.json").exists())
+        assertNull(cache.get(key, originalHtml))
+    }
+
+    @Test
+    fun `should remove file with missing version`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+        val key = "key"
+        val fileName = "InAppContentBlock_cached_$key.json"
+        // previously stored html result cache without version schema
+        val originalHtml = "<body><div>Hello</div></body>"
+        val normalizedHtml = normalizeHtml(originalHtml)
+        val normalizedJson = ExponeaGson.instance.toJson(normalizedHtml)
+        // stores all metadata
+        cache.set(key, originalHtml, normalizedHtml)
+        // rewrites content to simulate old version
+        fileCache.retrieveFileDirectly(fileName).writeText(normalizedJson)
+        // try to get html result
+        assertTrue(fileCache.retrieveFileDirectly(fileName).exists())
+        assertNull(cache.get(key, originalHtml))
+        assertFalse(fileCache.retrieveFileDirectly(fileName).exists())
+    }
+
+    @Test
+    fun `should remove file with older version`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+        val key = "key"
+        val fileName = "InAppContentBlock_cached_$key.json"
+        // stored html result cache with older version
+        val originalHtml = "<body><div>Hello</div></body>"
+        val normalizedHtml = normalizeHtml(originalHtml)
+        val versionedResult = HtmlNormalizedCacheImpl.VersionedNormalizedResult("4.0.0", normalizedHtml)
+        val versionedResultJson = ExponeaGson.instance.toJson(versionedResult)
+        // stores all metadata
+        cache.set(key, originalHtml, normalizedHtml)
+        // rewrites to simulate old version
+        fileCache.retrieveFileDirectly(fileName).writeText(versionedResultJson)
+        // try to get html result
+        assertTrue(fileCache.retrieveFileDirectly(fileName).exists())
+        assertNull(cache.get(key, originalHtml))
+        assertFalse(fileCache.retrieveFileDirectly(fileName).exists())
+    }
+
+    @Test
+    fun `should remove file with newer version`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+        val key = "key"
+        val fileName = "InAppContentBlock_cached_$key.json"
+        // stored html result cache with older version
+        val originalHtml = "<body><div>Hello</div></body>"
+        val normalizedHtml = normalizeHtml(originalHtml)
+        val versionedResult = HtmlNormalizedCacheImpl.VersionedNormalizedResult("999.0.0", normalizedHtml)
+        val versionedResultJson = ExponeaGson.instance.toJson(versionedResult)
+        // stores all metadata
+        cache.set(key, originalHtml, normalizedHtml)
+        // rewrites to simulate newer version
+        fileCache.retrieveFileDirectly(fileName).writeText(versionedResultJson)
+        // try to get html result
+        assertTrue(fileCache.retrieveFileDirectly(fileName).exists())
+        assertNull(cache.get(key, originalHtml))
+        assertFalse(fileCache.retrieveFileDirectly(fileName).exists())
+    }
+
+    @Test
+    fun `should get file with same version`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fileCache = SimpleFileCache(context, "exponeasdk_html_storage")
+        val key = "key"
+        val fileName = "InAppContentBlock_cached_$key.json"
+        // stored html result cache with older version
+        val originalHtml = "<body><div>Hello</div></body>"
+        val normalizedHtml = normalizeHtml(originalHtml)
+        val versionedResult = HtmlNormalizedCacheImpl.VersionedNormalizedResult(
+            BuildConfig.EXPONEA_VERSION_NAME,
+            normalizedHtml
+        )
+        val versionedResultJson = ExponeaGson.instance.toJson(versionedResult)
+        // stores all metadata
+        cache.set(key, originalHtml, normalizedHtml)
+        // rewrites to mitigate
+        fileCache.retrieveFileDirectly(fileName).writeText(versionedResultJson)
+        // try to get html result
+        assertTrue(fileCache.retrieveFileDirectly(fileName).exists())
+        assertNotNull(cache.get(key, originalHtml))
+        assertTrue(fileCache.retrieveFileDirectly(fileName).exists())
     }
 
     private fun normalizeHtml(originalHtml: String): NormalizedResult {

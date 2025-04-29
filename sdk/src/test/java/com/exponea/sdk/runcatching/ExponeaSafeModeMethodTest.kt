@@ -51,7 +51,7 @@ internal class ExponeaSafeModeMethodTest(
         lambda()
     }
 
-    @Test(expected = ExponeaExceptionThrowing.TestPurposeException::class)
+    @Test(expected = TestPurposeException::class)
     @Config(sdk = [Build.VERSION_CODES.P])
     @LooperMode(LooperMode.Mode.LEGACY)
     fun callAfterInitWithSafeModeDisabled() {

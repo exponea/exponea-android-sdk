@@ -1,9 +1,6 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
-import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.util.Logger
@@ -11,33 +8,9 @@ import com.exponea.sdk.util.Logger
 internal open class EventRepositoryImpl(
     context: Context
 ) : EventRepository {
-    val database: ExponeaDatabase
 
-    init {
-        val databaseBuilder = Room.databaseBuilder(
-            context,
-            ExponeaDatabase::class.java,
-            "ExponeaEventDatabase"
-        )
-        databaseBuilder.enableMultiInstanceInvalidation()
-        databaseBuilder.allowMainThreadQueries()
-        databaseMigrations().forEach { migration ->
-            databaseBuilder.addMigrations(migration)
-        }
-        database = databaseBuilder.build()
-    }
-
-    private fun databaseMigrations(): List<Migration> {
-        val migration1to2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE exported_event ADD COLUMN sdk_event_type TEXT")
-            }
-        }
-        return listOf(migration1to2)
-    }
-
-    companion object {
-        internal const val KEY = "ExponeaPaperDbMigrationStatus"
+    val database: ExponeaDatabase by lazy {
+        ExponeaDatabase.getInstance(context)
     }
 
     override fun count(): Int {

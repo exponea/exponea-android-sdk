@@ -57,7 +57,6 @@ internal class AppInboxManagerImpl(
                 }
             }
             if (Exponea.isStopped) {
-
                 runOnMainThread {
                     callback?.invoke(false)
                 }

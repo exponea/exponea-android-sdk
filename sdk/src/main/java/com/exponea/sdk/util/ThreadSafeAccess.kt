@@ -60,6 +60,9 @@ internal class ThreadSafeAccess {
     private val awaitingCount = AtomicInteger(0)
 
     fun waitForAccess(action: () -> Unit) {
+        if (isRunningOnUiThread()) {
+            Logger.e(this, "Waiting on main thread is forbidden!!!")
+        }
         awaitingCount.incrementAndGet()
         runCatching {
             synchronized(this@ThreadSafeAccess) {
@@ -70,6 +73,9 @@ internal class ThreadSafeAccess {
     }
 
     fun <T> waitForAccessWithResult(action: () -> T): Result<T> {
+        if (isRunningOnUiThread()) {
+            Logger.e(this, "Waiting on main thread is forbidden!!!")
+        }
         awaitingCount.incrementAndGet()
         return runCatching {
             synchronized(this@ThreadSafeAccess) {
@@ -81,6 +87,9 @@ internal class ThreadSafeAccess {
     }
 
     fun waitForAccessWithDone(action: (done: () -> Unit) -> Unit) {
+        if (isRunningOnUiThread()) {
+            Logger.e(this, "Waiting on main thread is forbidden!!!")
+        }
         awaitingCount.incrementAndGet()
         runCatching {
             synchronized(this@ThreadSafeAccess) {

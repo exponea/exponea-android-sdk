@@ -290,8 +290,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     }
 
     @Test
-    @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should load only supported messages`() = runInSingleThread {
+    fun `should load only supported messages`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push"),
@@ -299,17 +298,16 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 buildMessage("id3", type = "whatSoEver")
             )))
         }
-        waitForIt { done ->
-            appInboxManager.fetchAppInbox { data ->
-                assertEquals(2, data?.size)
-                done()
-            }
+        var fetchedData: List<MessageItem>? = null
+        appInboxManager.fetchAppInbox { data ->
+            fetchedData = data
         }
+        idleThreads()
+        assertEquals(2, fetchedData?.size)
     }
 
     @Test
-    @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse PUSH message`() = runInSingleThread {
+    fun `should parse PUSH message`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push", data = mapOf(
@@ -322,29 +320,29 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 ))
             )))
         }
-        waitForIt { done ->
-            appInboxManager.fetchAppInbox { data ->
-                assertEquals(1, data?.size)
-                val pushMessage = data?.get(0)?.content
-                assertNotNull(pushMessage)
-                assertEquals("Title", pushMessage.title)
-                assertEquals("Message", pushMessage.message)
-                assertEquals(2, pushMessage.actions.size)
-                val webAction = pushMessage.actions.find {
-                    act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
-                }
-                assertNotNull(webAction)
-                assertEquals("https://google.com", webAction.url)
-                assertEquals("Web", webAction.title)
-                val deeplinkAction = pushMessage.actions.find {
-                    act -> act.type.value == ExponeaNotificationActionType.DEEPLINK.value
-                }
-                assertNotNull(deeplinkAction)
-                assertEquals("mail:something", deeplinkAction.url)
-                assertEquals("Deeplink", deeplinkAction.title)
-                done()
-            }
+        var fetchedData: List<MessageItem>? = null
+        appInboxManager.fetchAppInbox { data ->
+            fetchedData = data
         }
+        idleThreads()
+        assertEquals(1, fetchedData?.size)
+        val pushMessage = fetchedData?.get(0)?.content
+        assertNotNull(pushMessage)
+        assertEquals("Title", pushMessage.title)
+        assertEquals("Message", pushMessage.message)
+        assertEquals(2, pushMessage.actions.size)
+        val webAction = pushMessage.actions.find {
+                act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
+        }
+        assertNotNull(webAction)
+        assertEquals("https://google.com", webAction.url)
+        assertEquals("Web", webAction.title)
+        val deeplinkAction = pushMessage.actions.find {
+                act -> act.type.value == ExponeaNotificationActionType.DEEPLINK.value
+        }
+        assertNotNull(deeplinkAction)
+        assertEquals("mail:something", deeplinkAction.url)
+        assertEquals("Deeplink", deeplinkAction.title)
     }
 
     private fun buildActionAsMap(
@@ -358,8 +356,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     )
 
     @Test
-    @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse HTML message`() = runInSingleThread {
+    fun `should parse HTML message`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "html", data = mapOf(
@@ -369,54 +366,56 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 ))
             )))
         }
+        var fetchedData: List<MessageItem>? = null
         appInboxManager.fetchAppInbox { data ->
-            assertEquals(1, data?.size)
-            val pushMessage = data?.get(0)?.content
-            assertNotNull(pushMessage)
-            assertEquals("Title", pushMessage.title)
-            assertEquals("Message", pushMessage.message)
-            assertEquals(3, pushMessage.actions.size)
-            val webAction = pushMessage.actions.find {
+            fetchedData = data
+        }
+        idleThreads()
+        assertEquals(1, fetchedData?.size)
+        var pushMessage = fetchedData?.get(0)?.content
+        assertNotNull(pushMessage)
+        assertEquals("Title", pushMessage.title)
+        assertEquals("Message", pushMessage.message)
+        assertEquals(3, pushMessage.actions.size)
+        var webAction = pushMessage.actions.find {
                 act -> act.type.value == ExponeaNotificationActionType.BROWSER.value
-            }
-            assertNotNull(webAction)
-            assertEquals("https://exponea.com", webAction.url)
-            assertEquals("Web", webAction.title)
-            val deeplinkAction = pushMessage.actions.find {
+        }
+        assertNotNull(webAction)
+        assertEquals("https://exponea.com", webAction.url)
+        assertEquals("Web", webAction.title)
+        var deeplinkAction = pushMessage.actions.find {
                 act -> act.type.value == ExponeaNotificationActionType.DEEPLINK.value
-            }
-            assertNotNull(deeplinkAction)
-            assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
-            assertEquals("Deeplink", deeplinkAction.title)
         }
-        waitForIt { done ->
-            appInboxManager.fetchAppInbox { data ->
-                assertEquals(1, data?.size)
-                val pushMessage = data?.get(0)?.content
-                assertNotNull(pushMessage)
-                assertEquals("Title", pushMessage.title)
-                assertEquals("Message", pushMessage.message)
-                assertEquals(3, pushMessage.actions.size)
-                val webAction = pushMessage.actions.find { act ->
-                    act.type.value == MessageItemAction.Type.BROWSER.value
-                }
-                assertNotNull(webAction)
-                assertEquals("https://exponea.com", webAction.url)
-                assertEquals("Web", webAction.title)
-                val deeplinkAction = pushMessage.actions.find { act ->
-                    act.type.value == MessageItemAction.Type.DEEPLINK.value
-                }
-                assertNotNull(deeplinkAction)
-                assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
-                assertEquals("Deeplink", deeplinkAction.title)
-                done()
-            }
+        assertNotNull(deeplinkAction)
+        assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
+        assertEquals("Deeplink", deeplinkAction.title)
+        appInboxManager.fetchAppInbox { data ->
+            fetchedData = data
         }
+        idleThreads()
+        assertEquals(1, fetchedData?.size)
+        pushMessage = fetchedData?.get(0)?.content
+        assertNotNull(pushMessage)
+        assertEquals("Title", pushMessage.title)
+        assertEquals("Message", pushMessage.message)
+        assertEquals(3, pushMessage.actions.size)
+        webAction = pushMessage.actions.find { act ->
+            act.type.value == MessageItemAction.Type.BROWSER.value
+        }
+        assertNotNull(webAction)
+        assertEquals("https://exponea.com", webAction.url)
+        assertEquals("Web", webAction.title)
+        deeplinkAction = pushMessage.actions.find { act ->
+            act.type.value == MessageItemAction.Type.DEEPLINK.value
+        }
+        assertNotNull(deeplinkAction)
+        assertEquals("message:%3C3358921718340173851@unknownmsgid%3E", deeplinkAction.url)
+        assertEquals("Deeplink", deeplinkAction.title)
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should deny markAsRead action for empty AppInbox`() = runInSingleThread {
+    fun `should deny markAsRead action for empty AppInbox`() {
         // fetchManager should not be called but keep it
         val testMessage = buildMessage("id1", type = "push")
         every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
@@ -442,7 +441,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should allow markAsRead action after fetched AppInbox`() = runInSingleThread {
+    fun `should allow markAsRead action after fetched AppInbox`() = runInSingleThread { idleThreads ->
         skipInstallEvent()
         identifyCustomer(cookie = "hash-cookie")
         val testMessage = buildMessage("id1", type = "push")
@@ -464,29 +463,27 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             arg<(Result<FetchError>) -> Unit>(5)
                 .invoke(Result(false, FetchError(null, "Should not be called")))
         }
-        waitForIt { done ->
-            appInboxManager.markMessageAsRead(testMessage) { marked ->
-                assertFalse(marked)
-                done()
-            }
+        appInboxManager.markMessageAsRead(testMessage) { marked ->
+            assertFalse(marked)
         }
-        waitForIt { done ->
-            appInboxManager.fetchAppInbox { data ->
-                assertEquals(2, data?.size)
-                done()
-            }
+        idleThreads()
+        var fetchedData: List<MessageItem>? = null
+        appInboxManager.fetchAppInbox { data ->
+            fetchedData = data
         }
+        idleThreads()
+        assertEquals(2, fetchedData?.size)
         // fetchManager should be asked for marking so valid answer is expected
         every { fetchManager.markAppInboxAsRead(any(), any(), any(), any(), any(), any()) } answers {
             arg<(Result<Any?>) -> Unit>(4)
                 .invoke(Result(true, null))
         }
-        waitForIt { done ->
-            appInboxManager.markMessageAsRead(testMessage) { marked ->
-                assertTrue(marked)
-                done()
-            }
+        var markedResult: Boolean = false
+        appInboxManager.markMessageAsRead(testMessage) { marked ->
+            markedResult = marked
         }
+        idleThreads()
+        assertTrue(markedResult)
     }
 
     @Test
@@ -727,7 +724,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should not allow markAsRead action if SDK is stopping`() = runInSingleThread {
+    fun `should not allow markAsRead action if SDK is stopping`() {
         Exponea.isStopped = true
         val testMessage = buildMessage("id1", type = "push")
         waitForIt { done ->
@@ -739,14 +736,13 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     }
 
     @Test
-    @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should not allow fetch if SDK is stopping`() = runInSingleThread {
+    fun `should not allow fetch if SDK is stopping`() = runInSingleThread { idleThreads ->
         Exponea.isStopped = true
-        waitForIt { done ->
-            appInboxManager.fetchAppInbox { data ->
-                assertNull(data)
-                done()
-            }
+        var fetchedData: List<MessageItem>? = listOf()
+        appInboxManager.fetchAppInbox { data ->
+            fetchedData = data
         }
+        idleThreads()
+        assertNull(fetchedData)
     }
 }

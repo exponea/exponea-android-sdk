@@ -124,7 +124,7 @@ internal class InAppMessagePresenterTest(
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
         inAppMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             environment = server,
             type = inAppMessageType

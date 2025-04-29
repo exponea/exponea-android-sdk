@@ -28,7 +28,7 @@ internal class DrawableCacheImplTest {
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @After

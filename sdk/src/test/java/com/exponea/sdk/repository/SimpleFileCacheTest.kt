@@ -23,13 +23,13 @@ class SimpleFileCacheTest {
     @Before
     fun before() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @After
     fun cleanDownloads() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @Test

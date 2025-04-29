@@ -72,7 +72,7 @@ internal class SegmentsCacheImplTest {
     @Test
     fun `should get no segments when file is corrupted`() {
         File(
-            ApplicationProvider.getApplicationContext<Context>().cacheDir,
+            ApplicationProvider.getApplicationContext<Context>().filesDir,
             SegmentsCacheImpl.SEGMENTS_FILENAME
         ).writeText("{{{")
         assertEquals(null, cache.get())

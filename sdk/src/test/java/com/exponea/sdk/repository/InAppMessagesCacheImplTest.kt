@@ -65,7 +65,7 @@ internal class InAppMessagesCacheImplTest {
     @Test
     fun `should get no messages when file is corrupted`() {
         File(
-            ApplicationProvider.getApplicationContext<Context>().cacheDir,
+            ApplicationProvider.getApplicationContext<Context>().filesDir,
             InAppMessagesCacheImpl.IN_APP_MESSAGES_FILENAME
         ).writeText("{{{")
         assertEquals(arrayListOf(), cache.get())

@@ -12,7 +12,7 @@ open class SimpleDataCache<T>(
     private val gson: Gson,
     private val storageFileName: String
 ) {
-    private val storageFile = File(context.cacheDir, storageFileName)
+    private val storageFile = File(context.filesDir, storageFileName)
     private var data: T? = null
 
     private val DATA_TYPE_TOKEN = getTypeToken()

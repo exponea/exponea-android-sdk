@@ -38,14 +38,14 @@ internal class HtmlNormalizerTests {
     fun before() {
         context = ApplicationProvider.getApplicationContext()
         server = ExponeaMockServer.createServer()
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
-        File(context.cacheDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @After
     fun removeCaches() {
-        File(context.cacheDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
-        File(context.cacheDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+        File(context.filesDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @Test

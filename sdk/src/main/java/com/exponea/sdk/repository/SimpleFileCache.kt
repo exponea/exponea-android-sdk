@@ -32,7 +32,7 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
         })
         .build()
 
-    private val directory: File = File(context.cacheDir, directoryPath)
+    private val directory: File = File(context.filesDir, directoryPath)
 
     init {
         if (!directory.exists()) {

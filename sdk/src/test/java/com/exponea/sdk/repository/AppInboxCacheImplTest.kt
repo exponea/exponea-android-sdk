@@ -189,7 +189,7 @@ internal class AppInboxCacheImplTest {
     @Test
     fun `should get no messages when file is corrupted`() {
         File(
-            ApplicationProvider.getApplicationContext<Context>().cacheDir,
+            ApplicationProvider.getApplicationContext<Context>().filesDir,
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
         assertEqualsIgnoreOrder(arrayListOf(), cache.getMessages())
@@ -198,7 +198,7 @@ internal class AppInboxCacheImplTest {
     @Test
     fun `should get no token when file is corrupted`() {
         File(
-            ApplicationProvider.getApplicationContext<Context>().cacheDir,
+            ApplicationProvider.getApplicationContext<Context>().filesDir,
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
         assertNull(cache.getSyncToken())

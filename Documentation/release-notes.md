@@ -11,6 +11,17 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.4.0
+#### May 01, 2025
+* Added:
+  * Adds setOnHeightUpdateListener API for In-app content block placeholder view.
+* Fixed:
+  * Uses permanent local storage for resources and data caching to avoid unexpected cache clearance.
+  * Automatically refreshes HTML cache for SDK update.
+  * Builds event database as singleton to run migration only once.
+  * Allows multiple parallel http requests for online images download.
+
+
 ## Release Notes for 4.3.0
 #### April 09, 2025
 * Added:

@@ -1,6 +1,4 @@
-import java.time.Duration
-
-apply plugin: 'maven-publish'
+apply plugin: 'com.vanniktech.maven.publish'
 apply plugin: 'signing'
 
 ext["signing.keyId"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_KEY_ID')
@@ -8,64 +6,46 @@ ext["signing.password"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_PASSWORD')
 ext["signing.secretKeyRingFile"] = System.getenv('EXPONEA_ANDROID_SDK_SIGNING_SECRET_KEY_RING_FILE')
 ext["nexusUsername"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_USERNAME')
 ext["nexusPassword"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_PASSWORD')
+ext["mavenCentralUsername"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_USERNAME')
+ext["mavenCentralPassword"] = System.getenv('EXPONEA_ANDROID_SDK_NEXUS_PASSWORD')
 
 task androidSourcesJar(type: Jar) {
     archiveClassifier = 'sources'
     from android.sourceSets.main.java.source
 }
 
-nexusPublishing {
-    packageGroup = "com.exponea"
-    repositories {
-        sonatype {
-            username = nexusUsername
-            password = nexusPassword
-        }
-    }
-    clientTimeout = Duration.ofSeconds(300)
-    connectTimeout = Duration.ofSeconds(60)
-    transitionCheckOptions {
-        maxRetries = 100
-        delayBetween = Duration.ofSeconds(5)
-    }
-}
-
 project.afterEvaluate {
-    publishing {
-        publications {
-            sdk(MavenPublication) {
-                from components.release
-                groupId 'com.exponea.sdk'
-                artifactId 'sdk'
-                version android.defaultConfig.buildConfigFields['EXPONEA_VERSION_NAME'].value.replace('"', '')
+    mavenPublishing {
+        publishToMavenCentral("CENTRAL_PORTAL", true)
+        signAllPublications()
 
-                pom {
-                    name = 'Exponea Sdk Library'
-                    packaging 'aar'
-                    description = 'Exponea Sdk Library'
-                    url = 'https://github.com/exponea/exponea-android-sdk'
-                    licenses {
-                        license {
-                            name = 'MIT'
-                            url = 'https://opensource.org/license/mit'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = 'exponea'
-                            name = 'Exponea'
-                            email = 'contact@exponea.com'
-                        }
-                    }
-                    scm {
-                        url = 'https://github.com/exponea/exponea-android-sdk/tree/master'
-                        connection = 'scm:https://github.com/exponea/exponea-android-sdk.git'
-                    }
-                    issueManagement {
-                        system = 'GitHub issues'
-                        url = 'https://github.com/exponea/exponea-android-sdk/issues'
-                    }
+        coordinates("com.exponea.sdk", "sdk", android.defaultConfig.buildConfigFields['EXPONEA_VERSION_NAME'].value.replace('"', ''))
+
+        pom {
+            name = 'Exponea Sdk Library'
+            packaging 'aar'
+            description = 'Exponea Sdk Library'
+            url = 'https://github.com/exponea/exponea-android-sdk'
+            licenses {
+                license {
+                    name = 'MIT'
+                    url = 'https://opensource.org/license/mit'
                 }
+            }
+            developers {
+                developer {
+                    id = 'exponea'
+                    name = 'Exponea'
+                    email = 'contact@exponea.com'
+                }
+            }
+            scm {
+                url = 'https://github.com/exponea/exponea-android-sdk/tree/master'
+                connection = 'scm:https://github.com/exponea/exponea-android-sdk.git'
+            }
+            issueManagement {
+                system = 'GitHub issues'
+                url = 'https://github.com/exponea/exponea-android-sdk/issues'
             }
         }
     }
@@ -73,8 +53,4 @@ project.afterEvaluate {
 
 signing {
     sign publishing.publications
-}
-
-afterEvaluate {
-    generateMetadataFileForSdkPublication.dependsOn androidSourcesJar
 }

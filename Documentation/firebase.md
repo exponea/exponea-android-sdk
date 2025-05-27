@@ -6,7 +6,7 @@ categorySlug: integrations
 parentDocSlug: android-sdk-push-notifications
 ---
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.
 
 > 👍
 >

@@ -33,7 +33,7 @@ You must have the following software installed to be able to build and run the e
 
 > 📘
 >
-> To enable push notifications in the example app, you must also configure the [Firebase integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-firebase) or [Huawei integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configure-huawei) in the Exponea web app.
+> To enable push notifications in the example app, you must also configure the [Firebase integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) or [Huawei integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) in the Exponea web app.
 
 ## Navigate the example app
 

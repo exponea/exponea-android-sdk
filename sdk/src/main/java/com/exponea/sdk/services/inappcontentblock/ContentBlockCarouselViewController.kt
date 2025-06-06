@@ -15,6 +15,9 @@ import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.RepeatableJob
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
+import com.exponea.sdk.util.logOnException
+import com.exponea.sdk.util.logOnExceptionWithResult
+import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.util.runForInitializedSDK
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.ContentBlockCarouselView
@@ -118,8 +121,12 @@ internal class ContentBlockCarouselViewController(
                 val allContentBlocks = manager.getAllInAppContentBlocksForPlaceholder(placeholderId)
                 manager.loadContentIfNeededSync(allContentBlocks)
                 val validContentBlocks = filterContentBlocks(allContentBlocks)
-                val filteredContentBlocks = contentBlockSelector.filterContentBlocks(validContentBlocks)
-                val sortedContentBlocks = contentBlockSelector.sortContentBlocks(filteredContentBlocks)
+                val filteredContentBlocks = runCatching {
+                    contentBlockSelector.filterContentBlocks(validContentBlocks)
+                }.logOnExceptionWithResult().returnOnException { validContentBlocks }
+                val sortedContentBlocks = runCatching {
+                    contentBlockSelector.sortContentBlocks(filteredContentBlocks)
+                }.logOnExceptionWithResult().returnOnException { filteredContentBlocks }
                 val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
                 runOnMainThread {
                     contentBlockCarouselAdapter.updateData(limitedContentBlocks)
@@ -127,9 +134,17 @@ internal class ContentBlockCarouselViewController(
                     moveToIndex(0, false)
                     updateAutoHeight(true)
                 }
-                behaviourCallback?.onMessagesChanged(limitedContentBlocks.size, limitedContentBlocks)
+                behaviourCallback?.let {
+                    runCatching {
+                        it.onMessagesChanged(limitedContentBlocks.size, limitedContentBlocks)
+                    }.logOnException()
+                }
                 if (limitedContentBlocks.isEmpty()) {
-                    behaviourCallback?.onNoMessageFound(placeholderId)
+                    behaviourCallback?.let {
+                        runCatching {
+                            it.onNoMessageFound(placeholderId)
+                        }.logOnException()
+                    }
                 }
                 restartAutoScroll()
             }
@@ -206,11 +221,15 @@ internal class ContentBlockCarouselViewController(
                 Logger.i(this, "InAppCbCarousel: InApp Content Block has no content for $placeholderId")
             }
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
-                behaviourCallback?.onError(
-                    placeholderId,
-                    contentBlock,
-                    errorMessage
-                )
+                behaviourCallback?.let {
+                    runCatching {
+                        it.onError(
+                            placeholderId,
+                            contentBlock,
+                            errorMessage
+                        )
+                    }.logOnException()
+                }
                 if (contentBlock == null) {
                     Logger.e(this, "InApp Content Block is empty!!! Nothing to track")
                     return
@@ -223,10 +242,14 @@ internal class ContentBlockCarouselViewController(
                     Logger.d(this, "InAppCbCarousel: Tracking of InApp Content Block ${contentBlock.id} close")
                     Exponea.trackInAppContentBlockClose(placeholderId, contentBlock)
                 }
-                behaviourCallback?.onCloseClicked(
-                    placeholderId,
-                    contentBlock
-                )
+                behaviourCallback?.let {
+                    runCatching {
+                        it.onCloseClicked(
+                            placeholderId,
+                            contentBlock
+                        )
+                    }.logOnException()
+                }
                 if (shouldBeRemovedAfterAction(contentBlock)) {
                     removeFromData(contentBlock)
                     restartAutoScroll()
@@ -247,11 +270,15 @@ internal class ContentBlockCarouselViewController(
                 if (behaviourCallback?.overrideDefaultBehavior != true) {
                     invokeAction(action)
                 }
-                behaviourCallback?.onActionClicked(
-                    placeholderId,
-                    contentBlock,
-                    action
-                )
+                behaviourCallback?.let {
+                    kotlin.runCatching {
+                        it.onActionClicked(
+                            placeholderId,
+                            contentBlock,
+                            action
+                        )
+                    }.logOnException()
+                }
                 if (shouldBeRemovedAfterAction(contentBlock)) {
                     removeFromData(contentBlock)
                     // will be paused BUT we need to restart delay time
@@ -286,7 +313,11 @@ internal class ContentBlockCarouselViewController(
             nextSelectedBlockIndex = 0
         }
         moveToIndex(nextSelectedBlockIndex, false)
-        behaviourCallback?.onMessagesChanged(currentData.size, currentData)
+        behaviourCallback?.let {
+            kotlin.runCatching {
+                it.onMessagesChanged(currentData.size, currentData)
+            }.logOnException()
+        }
     }
 
     private fun restartAutoScroll() {
@@ -330,12 +361,16 @@ internal class ContentBlockCarouselViewController(
         } else {
             Logger.v(this, "InAppCbCarousel: Content block with ID ${shownContentBlock.id} already tracked as shown")
         }
-        behaviourCallback?.onMessageShown(
-            placeholderId,
-            shownContentBlock,
-            getShownIndex(),
-            getShownCount()
-        )
+        behaviourCallback?.let {
+            runCatching {
+                it.onMessageShown(
+                    placeholderId,
+                    shownContentBlock,
+                    getShownIndex(),
+                    getShownCount()
+                )
+            }.logOnException()
+        }
     }
 
     private fun scrollToNext() {
@@ -374,7 +409,11 @@ internal class ContentBlockCarouselViewController(
     }
 
     fun onHeightChanged(newHeight: Int) {
-        behaviourCallback?.onHeightUpdate(placeholderId, newHeight)
+        behaviourCallback?.let {
+            runCatching {
+                it.onHeightUpdate(placeholderId, newHeight)
+            }.logOnException()
+        }
     }
 
     override fun onIntegrationStopped() {
@@ -383,7 +422,15 @@ internal class ContentBlockCarouselViewController(
         ensureOnMainThread {
             contentBlockCarouselAdapter.updateData(emptyList())
         }
-        behaviourCallback?.onMessagesChanged(0, emptyList())
-        behaviourCallback?.onNoMessageFound(placeholderId)
+        behaviourCallback?.let {
+            runCatching {
+                it.onMessagesChanged(0, emptyList())
+            }.logOnException()
+        }
+        behaviourCallback?.let {
+            runCatching {
+                it.onNoMessageFound(placeholderId)
+            }.logOnException()
+        }
     }
 }

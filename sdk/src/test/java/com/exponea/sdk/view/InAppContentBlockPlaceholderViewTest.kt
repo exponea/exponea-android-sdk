@@ -3,6 +3,7 @@ package com.exponea.sdk.view
 import android.content.Context
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
@@ -257,6 +258,106 @@ internal class InAppContentBlockPlaceholderViewTest {
         assertNotNull(displayState.displayedLast)
         assertEquals(1, displayState.interactedCount)
         assertNotNull(displayState.interactedLast)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should invoke callbacks safely`() = runInSingleThread { idleThreads ->
+        Exponea.safeModeEnabled = true
+        val placeholderId = "ph1"
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent()),
+                    placeholders = listOf(placeholderId),
+                    rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
+                    dateFilter = null
+                )
+            )))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        val manualActionUrl = "https://exponea.com"
+        var onMessageShownCalled = false
+        var onNoMessageFoundCalled = false
+        var onErrorCalled = false
+        var onCloseClickedCalled = false
+        var onActionClickedCalled = false
+        var onHeightUpdateCalled = false
+        var onContentReadyCalled = false
+        placeholder.setOnContentReadyListener {
+            onContentReadyCalled = true
+            throw RuntimeException("Test error")
+        }
+        placeholder.setOnHeightUpdateListener {
+            onHeightUpdateCalled = true
+            throw RuntimeException("Test error")
+        }
+        placeholder.behaviourCallback = object : InAppContentBlockCallback {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                onMessageShownCalled = true
+                throw RuntimeException("Test error")
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                onNoMessageFoundCalled = true
+                throw RuntimeException("Test error")
+            }
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                onErrorCalled = true
+                throw RuntimeException("Test error")
+            }
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                onCloseClickedCalled = true
+                throw RuntimeException("Test error")
+            }
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                onActionClickedCalled = true
+                throw RuntimeException("Test error")
+            }
+        }
+        // Simulate WebView on page loaded event, then layout change
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.layout(0, 0, 10, 10)
+        idleThreads()
+        // simulates action click
+        placeholder.refreshContent()
+        idleThreads()
+        placeholder.invokeActionClick(manualActionUrl)
+        // simulates closing
+        placeholder.refreshContent()
+        idleThreads()
+        val manualCloseUrl = placeholder.controller.assignedHtmlContent?.actions?.find {
+            it.actionType == HtmlActionType.CLOSE
+        }
+        placeholder.invokeActionClick(manualCloseUrl?.actionUrl!!)
+        // simulates onError - action not found
+        placeholder.refreshContent()
+        idleThreads()
+        placeholder.invokeActionClick("non-existing")
+        // simulates no message found
+        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf()))
+        }
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        placeholder.refreshContent()
+        idleThreads()
+        assertTrue(onMessageShownCalled)
+        assertTrue(onNoMessageFoundCalled)
+        assertTrue(onErrorCalled)
+        assertTrue(onCloseClickedCalled)
+        assertTrue(onActionClickedCalled)
+        assertTrue(onHeightUpdateCalled)
+        assertTrue(onContentReadyCalled)
     }
 
     @Test

@@ -561,6 +561,137 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should invoke callbacks safely`() = runInSingleThread { idleThreads ->
+        Exponea.safeModeEnabled = true
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                )
+            )
+        )
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var filterMessagesOutMode = false
+        var onMessageShownCalled = false
+        var onMessagesChangedCalled = false
+        var onNoMessageFoundCalled = false
+        var onErrorCalled = false
+        var onCloseClickedCalled = false
+        var onActionClickedCalled = false
+        var onHeightUpdateCalled = false
+        var filterContentBlocksCalled = false
+        var sortContentBlocksCalled = false
+        carousel.contentBlockSelector = object : ContentBlockSelector() {
+            override fun filterContentBlocks(source: List<InAppContentBlock>): List<InAppContentBlock> {
+                if (filterMessagesOutMode) return emptyList()
+                filterContentBlocksCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun sortContentBlocks(source: List<InAppContentBlock>): List<InAppContentBlock> {
+                sortContentBlocksCalled = true
+                throw RuntimeException("Test error")
+            }
+        }
+        carousel.behaviourCallback = object : ContentBlockCarouselCallback {
+            override val overrideDefaultBehavior = false
+            override val trackActions = true
+            override fun onMessageShown(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                index: Int,
+                count: Int
+            ) {
+                onMessageShownCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+                onMessagesChangedCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onNoMessageFound(placeholderId: String) {
+                onNoMessageFoundCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
+                onErrorCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
+                onCloseClickedCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onActionClicked(
+                placeholderId: String,
+                contentBlock: InAppContentBlock,
+                action: InAppContentBlockAction
+            ) {
+                onActionClickedCalled = true
+                throw RuntimeException("Test error")
+            }
+
+            override fun onHeightUpdate(placeholderId: String, height: Int) {
+                onHeightUpdateCalled = true
+                throw RuntimeException("Test error")
+            }
+        }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        val cbViewHolder = carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        cbViewHolder.updateContent(carousel.getShownContentBlock())
+        assertNotNull(createdCbView)
+        createdCbView?.controller?.loadContent(false)
+        val manualCloseUrl = createdCbView?.controller?.assignedHtmlContent?.actions?.find {
+            it.actionType == HtmlActionType.CLOSE
+        }
+        // simulates closing
+        createdCbView?.controller?.onUrlClick(manualCloseUrl?.actionUrl!!)
+        // simulates action click
+        createdCbView?.controller?.onUrlClick("https://exponea.com?xnpe_force_track=true")
+        // simulates onError - action not found
+        createdCbView?.controller?.onUrlClick("non-existing")
+        // reloads no messages
+        filterMessagesOutMode = true
+        carousel.reload()
+        idleThreads()
+        // not simulation but invokes callback for height update directly
+        carousel.viewController.onHeightChanged(100)
+        assertTrue(onMessageShownCalled)
+        assertTrue(onMessagesChangedCalled)
+        assertTrue(onNoMessageFoundCalled)
+        assertTrue(onErrorCalled)
+        assertTrue(onCloseClickedCalled)
+        assertTrue(onActionClickedCalled)
+        assertTrue(onHeightUpdateCalled)
+        assertTrue(filterContentBlocksCalled)
+        assertTrue(sortContentBlocksCalled)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
     fun `should notify no message if SDK is stopped`() = runInSingleThread { idleThreads ->
         prepareContentBlockMessages(
             arrayListOf(

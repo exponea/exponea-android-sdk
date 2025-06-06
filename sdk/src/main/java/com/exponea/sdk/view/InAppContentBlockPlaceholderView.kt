@@ -14,6 +14,7 @@ import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Job
@@ -77,13 +78,21 @@ class InAppContentBlockPlaceholderView internal constructor(
                 Logger.v(this, "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change")
                 notifyContentReadyListener(contentLoaded)
             }
-            onHeightUpdate?.invoke(viewInstance.height)
+            onHeightUpdate?.let {
+                kotlin.runCatching {
+                    it.invoke(viewInstance.height)
+                }.logOnException()
+            }
         }
     }
 
     private fun notifyContentReadyListener(contentLoaded: Boolean) {
         Logger.i(this, "InAppCB: $placeholderId: Page loaded, notifying content ready with $contentLoaded")
-        onContentReady?.invoke(contentLoaded)
+        onContentReady?.let {
+            kotlin.runCatching {
+                it.invoke(contentLoaded)
+            }.logOnException()
+        }
     }
 
     private fun inflateLayout() {

@@ -21,6 +21,7 @@ import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
@@ -53,20 +54,26 @@ internal open class InAppContentBlockViewController(
             )
             val errorMessage = "Invalid action definition"
             actionDispatcher.onError(placeholderId, message, errorMessage)
-            behaviourCallback.onError(placeholderId, message, errorMessage)
+            kotlin.runCatching {
+                behaviourCallback.onError(placeholderId, message, errorMessage)
+            }.logOnException()
             return
         }
         if (action.type == CLOSE) {
             Logger.i(this, "InAppCB: Placeholder $placeholderId is closed by user")
             actionDispatcher.onClose(placeholderId, message)
-            behaviourCallback.onCloseClicked(placeholderId, message)
+            kotlin.runCatching {
+                behaviourCallback.onCloseClicked(placeholderId, message)
+            }.logOnException()
         } else {
             Logger.i(
                 this,
                 "InAppCB: Placeholder $placeholderId action detected with type ${action.type}"
             )
             actionDispatcher.onAction(placeholderId, message, action)
-            behaviourCallback.onActionClicked(placeholderId, message, action)
+            kotlin.runCatching {
+                behaviourCallback.onActionClicked(placeholderId, message, action)
+            }.logOnException()
         }
         reloadContent()
     }
@@ -160,7 +167,9 @@ internal open class InAppContentBlockViewController(
             runOnMainThread {
                 view.showNoContent()
             }
-            behaviourCallback.onNoMessageFound(placeholderId)
+            kotlin.runCatching {
+                behaviourCallback.onNoMessageFound(placeholderId)
+            }.logOnException()
             return
         }
         Logger.i(this, "InAppCB: Message ${message.id} going to be shown for placeholder $placeholderId")
@@ -187,11 +196,15 @@ internal open class InAppContentBlockViewController(
         val message = assignedMessage
         if (message == null) {
             Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
-            behaviourCallback.onNoMessageFound(placeholderId)
+            runCatching {
+                behaviourCallback.onNoMessageFound(placeholderId)
+            }.logOnException()
         } else {
             // possibility of AB testing
             Logger.i(this, "InAppCB: Message with empty content found for placeholder $placeholderId")
-            behaviourCallback.onMessageShown(placeholderId, message)
+            runCatching {
+                behaviourCallback.onMessageShown(placeholderId, message)
+            }.logOnException()
         }
     }
 
@@ -217,7 +230,9 @@ internal open class InAppContentBlockViewController(
                 view.showHtmlContent(normalizedHtml)
             }
             actionDispatcher.onShown(placeholderId, message)
-            behaviourCallback.onMessageShown(placeholderId, message)
+            runCatching {
+                behaviourCallback.onMessageShown(placeholderId, message)
+            }.logOnException()
         }
     }
 
@@ -230,7 +245,9 @@ internal open class InAppContentBlockViewController(
             view.showNoContent()
         }
         actionDispatcher.onError(placeholderId, message, errorMessage)
-        behaviourCallback.onError(placeholderId, message, errorMessage)
+        runCatching {
+            behaviourCallback.onError(placeholderId, message, errorMessage)
+        }.logOnException()
     }
 
     private fun cleanUp() {

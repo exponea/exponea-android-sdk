@@ -59,7 +59,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
         every { upload.uploadCrashLog(any(), any()) } answers {
             secondArg<(Result<Unit>) -> Unit>().invoke(Result.success(Unit))
         }
-        crashManager.handleException(Exception("Boom!"), false)
+        crashManager.handleException(Exception("Boom!"), false, Thread.currentThread())
         verify(exactly = 1) { upload.uploadCrashLog(any(), any()) }
         verify(exactly = 0) { storage.saveCrashLog(any()) }
     }
@@ -69,7 +69,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
         every { upload.uploadCrashLog(any(), any()) } answers {
             secondArg<(Result<Unit>) -> Unit>().invoke(Result.failure(Exception("Upload failed")))
         }
-        crashManager.handleException(Exception("Boom!"), false)
+        crashManager.handleException(Exception("Boom!"), false, Thread.currentThread())
         verify(exactly = 1) {
             upload.uploadCrashLog(any(), any())
             storage.saveCrashLog(any())
@@ -104,9 +104,33 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should upload crash logs`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception 1"), true, Date(), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 2"), true, Date(), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 3"), true, Date(), Date(), "mock-run-id")
+            CrashLog(
+                Exception("mock exception 1"),
+                true,
+                Date(),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 2"),
+                true,
+                Date(),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 3"),
+                true,
+                Date(),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            )
         )
         crashManager.start()
         verify(exactly = 3) { upload.uploadCrashLog(any(), any()) }
@@ -115,7 +139,15 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should delete crash log once uploaded`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception"), true, Date(), Date(), "mock-run-id")
+            CrashLog(
+                Exception("mock exception"),
+                true,
+                Date(),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            )
         )
         val callbackSlot = slot<(Result<Unit>) -> Unit>()
         every { upload.uploadCrashLog(any(), capture(callbackSlot)) } just Runs
@@ -129,7 +161,15 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     @Test
     fun `should not delete crash log when upload fails`() {
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception"), true, Date(), Date(), "mock-run-id")
+            CrashLog(
+                Exception("mock exception"),
+                true,
+                Date(),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            )
         )
         val callbackSlot = slot<(Result<Unit>) -> Unit>()
         every { upload.uploadCrashLog(any(), capture(callbackSlot)) } just Runs
@@ -149,11 +189,51 @@ internal class CrashManagerTest : ExponeaSDKTest() {
             }
         }
         every { storage.getAllCrashLogs() } returns arrayListOf(
-            CrashLog(Exception("mock exception 1"), true, dateDaysAgo(10), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 2"), true, dateDaysAgo(0), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 3"), true, dateDaysAgo(20), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 4"), true, dateDaysAgo(14), Date(), "mock-run-id"),
-            CrashLog(Exception("mock exception 5"), true, dateDaysAgo(16), Date(), "mock-run-id")
+            CrashLog(
+                Exception("mock exception 1"),
+                true,
+                dateDaysAgo(10),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 2"),
+                true,
+                dateDaysAgo(0),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 3"),
+                true,
+                dateDaysAgo(20),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 4"),
+                true,
+                dateDaysAgo(14),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            ),
+            CrashLog(
+                Exception("mock exception 5"),
+                true,
+                dateDaysAgo(16),
+                Date(),
+                "mock-run-id",
+                emptyList(),
+                Thread.currentThread()
+            )
         )
         crashManager.start()
         verifySequence {
@@ -187,7 +267,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
         val crashLogSlot = slot<CrashLog>()
         every { upload.uploadCrashLog(capture(crashLogSlot), any()) } just Runs
         crashManager.saveLogMessage(this, "message", timestamp)
-        crashManager.handleException(Exception("message"), false)
+        crashManager.handleException(Exception("message"), false, Thread.currentThread())
         assertEquals(1, crashLogSlot.captured.logs?.size)
         assertEquals("${Date(timestamp)} CrashManagerTest: message", crashLogSlot.captured.logs?.get(0))
     }
@@ -213,7 +293,7 @@ internal class CrashManagerTest : ExponeaSDKTest() {
         val crashLogSlot = slot<CrashLog>()
         every { upload.uploadCrashLog(capture(crashLogSlot), any()) } just Runs
         for (i in 1..1000) crashManager.saveLogMessage(this, "message $i", timestamp)
-        crashManager.handleException(Exception("message"), false)
+        crashManager.handleException(Exception("message"), false, Thread.currentThread())
         assertEquals(100, crashLogSlot.captured.logs?.size)
         for (i in 0..99) {
             assertEquals("${Date(timestamp)} CrashManagerTest: message ${1000 - i}", crashLogSlot.captured.logs?.get(i))

@@ -17,6 +17,8 @@ import com.exponea.sdk.models.InAppContentBlockType.UNKNOWN
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
@@ -173,6 +175,11 @@ internal open class InAppContentBlockViewController(
             return
         }
         Logger.i(this, "InAppCB: Message ${message.id} going to be shown for placeholder $placeholderId")
+        Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_SHOWN, hashMapOf(
+            "type" to "static",
+            "messageId" to message.id,
+            "placeholders" to ExponeaGson.instance.toJson(message.placeholders)
+        ))
         when (message.contentType) {
             HTML -> showHtmlContent(message)
             NATIVE -> showNativeContent()

@@ -39,7 +39,7 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.telemetry.TelemetryManager
-import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.waitForIt
@@ -89,10 +89,12 @@ internal class InAppMessageManagerImplTest {
 
     @Before
     fun disableTelemetry() {
-        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
-            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        mockkConstructorFix(SentryTelemetryUpload::class) {
+            every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) }
         }
-        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
+        every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) } answers {
+            secondArg<(kotlin.Result<Unit>) -> Unit>().invoke(kotlin.Result.success(Unit))
+        }
     }
 
     @Before
@@ -1735,11 +1737,11 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should track telemetry on message shown`() {
         mockkConstructorFix(TelemetryManager::class)
-        val telemetryEventTypeSlot = slot<com.exponea.sdk.telemetry.model.EventType>()
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
         val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
         every {
             anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryEventTypeSlot),
+                capture(telemetryTelemetryEventSlot),
                 capture(telemetryPropertiesSlot)
             )
         } just Runs
@@ -1778,13 +1780,64 @@ internal class InAppMessageManagerImplTest {
         verify(exactly = 1) {
             trackingConsentManager.trackInAppMessageShown(inAppMessage, CONSIDER_CONSENT)
         }
-        assertTrue(telemetryEventTypeSlot.isCaptured)
-        val capturedEventType = telemetryEventTypeSlot.captured
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
         assertNotNull(capturedEventType)
-        assertEquals(com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE, capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.IN_APP_MESSAGE_SHOWN, capturedEventType)
         assertTrue(telemetryPropertiesSlot.isCaptured)
         val capturedProps = telemetryPropertiesSlot.captured
         assertNotNull(capturedProps)
-        assertEquals("modal", capturedProps["messageType"])
+        assertEquals("modal", capturedProps["type"])
+    }
+
+    @Test
+    fun `should track telemetry on messages fetch`() {
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryTelemetryEventSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        val inAppMessage = InAppMessageTest.buildInAppMessageWithRichstyle()
+        every { messagesCache.get() } returns arrayListOf(inAppMessage)
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.getFile(any()) } returns MockFile()
+        every { drawableCache.getDrawable(any<String>()) } returns AppCompatDrawableManager.get().getDrawable(
+            ApplicationProvider.getApplicationContext(),
+            R.drawable.in_app_message_close_button
+        )
+        every { drawableCache.getDrawable(any<Int>()) } returns AppCompatDrawableManager.get().getDrawable(
+            ApplicationProvider.getApplicationContext(),
+            R.drawable.in_app_message_close_button
+        )
+        every { fontCache.has(any()) } returns true
+        every { fontCache.getFontFile(any()) } returns MockFile()
+        every { fontCache.getTypeface(any()) } returns null
+        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+                .invoke(Result(true, arrayListOf(inAppMessage)))
+        }
+        val presentCalled = CountDownLatch(1)
+        val spykManager = spyk(manager)
+        every {
+            presenter.show(any(), any(), any(), any(), any(), any(), any(), any())
+        } answers {
+            presentCalled.countDown()
+            mockk()
+        }
+        waitForIt { spykManager.reload { it() } }
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.IN_APP_MESSAGE_FETCH, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertEquals("1", capturedProps["count"])
+        assertTrue(capturedProps["data"]!!.isNotEmpty())
     }
 }

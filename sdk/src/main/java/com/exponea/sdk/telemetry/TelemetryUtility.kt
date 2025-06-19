@@ -1,9 +1,11 @@
 package com.exponea.sdk.telemetry
 
 import android.content.Context
+import android.os.Looper
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
+import com.exponea.sdk.telemetry.model.ThreadInfo
 import kotlin.math.min
 import kotlin.reflect.KProperty1
 
@@ -28,17 +30,21 @@ object TelemetryUtility {
                 cause = getErrorDataInternal(throwableCause, visitedThrowables)
             }
         }
-        val stackTrace = e.stackTrace.slice(0 until min(MAX_STACK_TRACE_LENGTH, e.stackTrace.size)).map {
-            ErrorStackTraceElement(it.className, it.methodName, it.fileName, it.lineNumber)
-        }
+        val stackTrace = parseStackTrace(e.stackTrace)
 
         return ErrorData(
             type = e.javaClass.name,
             message = e.message ?: "",
             stackTrace = stackTrace,
-            cause = cause
+            cause = cause,
+            suppressed = e.suppressed?.map { getErrorDataInternal(it, visitedThrowables) }
         )
     }
+
+    internal fun parseStackTrace(source: Array<StackTraceElement>) =
+        source.slice(0 until min(MAX_STACK_TRACE_LENGTH, source.size)).map {
+            ErrorStackTraceElement(it.className, it.methodName, it.fileName, it.lineNumber)
+        }
 
     internal fun isSDKRelated(e: Throwable): Boolean {
         var t: Throwable? = e
@@ -62,6 +68,8 @@ object TelemetryUtility {
         return hashMapOf(
             "projectRouteMap"
                 to if (configuration.projectRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
+            "authorization"
+                to if (configuration.authorization.isNullOrEmpty()) "[]" else "[REDACTED]",
             "baseURL"
                 to formatConfigurationProperty(ExponeaConfiguration::baseURL),
             "httpLoggingLevel"
@@ -78,6 +86,8 @@ object TelemetryUtility {
                 to formatConfigurationProperty(ExponeaConfiguration::automaticPushNotification),
             "pushIcon"
                 to formatConfigurationProperty(ExponeaConfiguration::pushIcon),
+            "pushAccentColor"
+                to formatConfigurationProperty(ExponeaConfiguration::pushAccentColor),
             "pushChannelName"
                 to formatConfigurationProperty(ExponeaConfiguration::pushChannelName),
             "pushChannelDescription"
@@ -89,31 +99,55 @@ object TelemetryUtility {
             "defaultProperties"
                 to if (configuration.defaultProperties.isNotEmpty()) "[REDACTED]" else "[]",
             "tokenTrackFrequency"
-                to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency)
-            // TODO: this should be uploaded as well, but AppCenter has limitation to 20 properties
-            // "allowDefaultCustomerProperties"
-            //      to formatConfigurationProperty(ExponeaConfiguration::allowDefaultCustomerProperties)
+                to formatConfigurationProperty(ExponeaConfiguration::tokenTrackFrequency),
+            "allowDefaultCustomerProperties"
+                to formatConfigurationProperty(ExponeaConfiguration::allowDefaultCustomerProperties),
+            "advancedAuthEnabled"
+                to formatConfigurationProperty(ExponeaConfiguration::advancedAuthEnabled),
+            "inAppContentBlockPlaceholdersAutoLoad"
+                to formatConfigurationProperty(ExponeaConfiguration::inAppContentBlockPlaceholdersAutoLoad),
+            "appInboxDetailImageInset"
+                to formatConfigurationProperty(ExponeaConfiguration::appInboxDetailImageInset),
+            "allowWebViewCookies"
+                to formatConfigurationProperty(ExponeaConfiguration::allowWebViewCookies),
+            "manualSessionAutoClose"
+                to formatConfigurationProperty(ExponeaConfiguration::manualSessionAutoClose)
         )
     }
 
     internal data class AppInfo(
         val packageName: String,
         val versionName: String,
-        val versionCode: String
+        val versionCode: String,
+        val appName: String
     )
 
     internal fun getAppInfo(context: Context): AppInfo {
         try {
             val packageManager = context.packageManager
             val packageInfo = packageManager.getPackageInfo(context.packageName, 0)
+            val applicationInfo = context.applicationInfo
             @Suppress("DEPRECATION")
             return AppInfo(
                 packageInfo.packageName,
                 packageInfo.versionName ?: "unknown version",
-                packageInfo.versionCode.toString()
+                packageInfo.versionCode.toString(),
+                applicationInfo.loadLabel(packageManager).toString()
             )
         } catch (e: Exception) {
-            return AppInfo("unknown package", "unknown version", "unknown version code")
+            return AppInfo("unknown package", "unknown version", "unknown version code", "unknown app name")
         }
+    }
+
+    internal fun getThreadInfo(source: Thread, stackTraceOverride: Array<StackTraceElement>?): ThreadInfo {
+        return ThreadInfo(
+            id = source.id,
+            name = source.name,
+            state = source.state.name,
+            isDaemon = source.isDaemon,
+            isCurrent = source.id == Thread.currentThread().id,
+            isMain = source.id == Looper.getMainLooper().thread.id,
+            stackTrace = parseStackTrace(stackTraceOverride ?: source.stackTrace)
+        )
     }
 }

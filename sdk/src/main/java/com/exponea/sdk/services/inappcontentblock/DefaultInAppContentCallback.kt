@@ -9,16 +9,19 @@ import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockCallback
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 
 open class DefaultInAppContentCallback(private val context: Context) : InAppContentBlockCallback {
     override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
         Logger.d(this, "Tracking of InApp Content Block ${contentBlock.id} show")
         Exponea.trackInAppContentBlockShown(placeholderId, contentBlock)
-        Exponea.telemetry?.reportEvent(
-            com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-            hashMapOf("messageType" to "content_block")
-        )
+        Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_SHOWN, hashMapOf(
+            "type" to "static",
+            "messageId" to contentBlock.id,
+            "placeholders" to ExponeaGson.instance.toJson(contentBlock.placeholders)
+        ))
     }
 
     override fun onNoMessageFound(placeholderId: String) {

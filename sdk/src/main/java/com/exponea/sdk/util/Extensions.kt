@@ -222,10 +222,6 @@ fun Context.isReactNativeSDK(): Boolean {
     return isOtherSDK("ExponeaReactNativeSDK")
 }
 
-fun Context.isCapacitorSDK(): Boolean {
-    return isOtherSDK("ExponeaCapacitorSDK")
-}
-
 fun Context.isFlutterSDK(): Boolean {
     return isOtherSDK("ExponeaFlutterSDK")
 }
@@ -240,10 +236,6 @@ fun Context.isMauiSDK(): Boolean {
 
 fun Context.getReactNativeSDKVersion(): String? {
     return getSDKVersion("ExponeaReactNativeSDKVersion")
-}
-
-fun Context.getCapacitorSDKVersion(): String? {
-    return getSDKVersion("ExponeaCapacitorSDKVersion")
 }
 
 fun Context.getFlutterSDKVersion(): String? {

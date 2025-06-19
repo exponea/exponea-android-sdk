@@ -7,16 +7,18 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.telemetry.model.EventLog
-import com.exponea.sdk.telemetry.model.EventType
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.telemetry.storage.FileTelemetryStorage
 import com.exponea.sdk.telemetry.storage.TelemetryStorage
+import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.telemetry.upload.TelemetryUpload
-import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
 import com.exponea.sdk.util.Logger
 import java.util.Date
 import java.util.UUID
 
-internal class TelemetryManager(application: Application, userId: String? = null) : OnIntegrationStoppedCallback {
+internal class TelemetryManager(
+    application: Application
+) : OnIntegrationStoppedCallback {
     companion object {
         const val TELEMETRY_PREFS_KEY = "EXPONEA_TELEMETRY"
         const val INSTALL_ID_KEY = "INSTALL_ID"
@@ -47,11 +49,8 @@ internal class TelemetryManager(application: Application, userId: String? = null
     }
 
     private val telemetryStorage: TelemetryStorage = FileTelemetryStorage(application)
-    private val telemetryUpload: TelemetryUpload = VSAppCenterTelemetryUpload(
-        application,
-        installId,
-        BuildConfig.EXPONEA_VERSION_NAME,
-        userId ?: installId
+    private val telemetryUpload: TelemetryUpload = SentryTelemetryUpload(
+        application, installId
     )
 
     internal val crashManager: CrashManager = CrashManager(telemetryStorage, telemetryUpload, Date(), runId)
@@ -67,7 +66,7 @@ internal class TelemetryManager(application: Application, userId: String? = null
         }
     }
 
-    fun reportEvent(eventType: EventType, properties: MutableMap<String, String> = hashMapOf()) {
+    fun reportEvent(telemetryEvent: TelemetryEvent, properties: MutableMap<String, String> = hashMapOf()) {
         if (Exponea.isStopped) {
             Logger.e(this, "Telemetry event has not been tracked, SDK is stopping")
             return
@@ -81,13 +80,13 @@ internal class TelemetryManager(application: Application, userId: String? = null
             "appNameVersionSdkVersion"
                 to "${appInfo.packageName} - ${appInfo.versionName} - SDK ${BuildConfig.EXPONEA_VERSION_NAME}"
         ))
-        telemetryUpload.uploadEventLog(EventLog(eventType.value, mutableProperties, runId)) {
+        telemetryUpload.uploadEventLog(EventLog(telemetryEvent.value, mutableProperties, runId)) {
             Logger.i(this, "Event upload ${if (it.isSuccess) "succeeded" else "failed" }")
         }
     }
 
     fun reportInitEvent(configuration: ExponeaConfiguration) {
-        reportEvent(EventType.INIT, TelemetryUtility.formatConfigurationForTracking(configuration))
+        reportEvent(TelemetryEvent.SDK_CONFIGURE, TelemetryUtility.formatConfigurationForTracking(configuration))
     }
 
     fun reportCaughtException(e: Throwable) {
@@ -95,7 +94,7 @@ internal class TelemetryManager(application: Application, userId: String? = null
             Logger.e(this, "CrashLog has not been tracked, SDK is stopping")
             return
         }
-        crashManager.handleException(e, false)
+        crashManager.handleException(e, false, Thread.currentThread())
     }
 
     fun reportLog(parent: Any, message: String, timestamp: Long? = null) {

@@ -109,6 +109,15 @@ internal class UrlParseTests {
         assertTrue(areUrlEquals)
     }
 
+    @Test
+    fun `should parse DSN`() {
+        val dsnString = "https://abcd69ea7c48f1106a0b8be233443f@12348953780027392.ingest.de.sentry.io/1234953969229904"
+        val dnsUri = Uri.parse(dsnString)
+        assertEquals("abcd69ea7c48f1106a0b8be233443f", dnsUri.userInfo)
+        assertEquals("12348953780027392.ingest.de.sentry.io", dnsUri.host)
+        assertEquals("1234953969229904", dnsUri.lastPathSegment)
+    }
+
     private fun validateUrl(
         urlToCheck: Uri,
         scheme: String? = null,

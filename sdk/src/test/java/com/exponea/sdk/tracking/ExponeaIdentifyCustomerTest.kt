@@ -19,6 +19,8 @@ import io.mockk.just
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -305,5 +307,39 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
+    }
+
+    @Test
+    fun `should track identify telemetry`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, configuration)
+
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryTelemetryEventSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        } just Runs
+        Exponea.identifyCustomer(
+            CustomerIds().withId("registered", "john@doe.com"),
+            PropertiesList(hashMapOf("first_name" to "NewName"))
+        )
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.IDENTIFY_CUSTOMER, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertTrue(capturedProps.isEmpty())
     }
 }

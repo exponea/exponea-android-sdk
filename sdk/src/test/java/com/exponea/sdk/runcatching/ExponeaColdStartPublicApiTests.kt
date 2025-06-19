@@ -7,6 +7,7 @@ import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
@@ -40,6 +41,13 @@ internal class ExponeaColdStartPublicApiTests(
     fun disallowSafeMode() {
         // Throws exception while invoking any public API
         Exponea.safeModeEnabled = false
+    }
+
+    @Before
+    fun createTelemetryInstance() {
+        mockkConstructorFix(TelemetryManager::class)
+        every { anyConstructed<TelemetryManager>().reportEvent(any(), any()) } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
     }
 
     @Test

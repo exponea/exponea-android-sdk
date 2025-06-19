@@ -10,6 +10,8 @@ import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.RepeatableJob
@@ -354,10 +356,11 @@ internal class ContentBlockCarouselViewController(
             // will track 'shown' event and manages DisplayStatus
             Logger.d(this, "InAppCbCarousel: Tracking of InApp Content Block ${shownContentBlock.id} show")
             Exponea.trackInAppContentBlockShown(placeholderId, shownContentBlock)
-            Exponea.telemetry?.reportEvent(
-                com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-                hashMapOf("messageType" to "content_block_carousel")
-            )
+            Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_SHOWN, hashMapOf(
+                "type" to "static",
+                "messageId" to shownContentBlock.id,
+                "placeholders" to ExponeaGson.instance.toJson(shownContentBlock.placeholders)
+            ))
         } else {
             Logger.v(this, "InAppCbCarousel: Content block with ID ${shownContentBlock.id} already tracked as shown")
         }

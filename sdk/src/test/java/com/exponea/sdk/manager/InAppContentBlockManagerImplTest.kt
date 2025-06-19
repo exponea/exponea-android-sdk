@@ -27,7 +27,7 @@ import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.telemetry.TelemetryManager
-import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
 import io.mockk.Runs
@@ -291,10 +291,12 @@ internal class InAppContentBlockManagerImplTest {
 
     @Before
     fun disableTelemetry() {
-        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
-            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        mockkConstructorFix(SentryTelemetryUpload::class) {
+            every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) }
         }
-        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
+        every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) } answers {
+            secondArg<(kotlin.Result<Unit>) -> Unit>().invoke(kotlin.Result.success(Unit))
+        }
     }
 
     @Before
@@ -762,11 +764,11 @@ internal class InAppContentBlockManagerImplTest {
             )))
         }
         mockkConstructorFix(TelemetryManager::class)
-        val telemetryEventTypeSlot = slot<com.exponea.sdk.telemetry.model.EventType>()
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
         val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
         every {
             anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryEventTypeSlot),
+                capture(telemetryTelemetryEventSlot),
                 capture(telemetryPropertiesSlot)
             )
         } just Runs
@@ -782,14 +784,14 @@ internal class InAppContentBlockManagerImplTest {
             InAppContentBlockPlaceholderConfiguration(defferedLoad = false)
         )
         idleThreads()
-        assertTrue(telemetryEventTypeSlot.isCaptured)
-        val capturedEventType = telemetryEventTypeSlot.captured
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
         assertNotNull(capturedEventType)
-        assertEquals(com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE, capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.CONTENT_BLOCK_SHOWN, capturedEventType)
         assertTrue(telemetryPropertiesSlot.isCaptured)
         val capturedProps = telemetryPropertiesSlot.captured
         assertNotNull(capturedProps)
-        assertEquals("content_block", capturedProps["messageType"])
+        assertEquals("static", capturedProps["type"])
     }
 
     @Test

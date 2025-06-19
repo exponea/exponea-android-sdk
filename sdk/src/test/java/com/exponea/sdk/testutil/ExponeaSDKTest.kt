@@ -17,7 +17,8 @@ import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.services.ExponeaContextProvider
-import com.exponea.sdk.telemetry.upload.VSAppCenterTelemetryUpload
+import com.exponea.sdk.telemetry.TelemetryManager
+import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -48,10 +49,14 @@ internal open class ExponeaSDKTest {
 
     @Before
     fun disableTelemetry() {
-        mockkConstructorFix(VSAppCenterTelemetryUpload::class) {
-            every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) }
+        mockkConstructorFix(SentryTelemetryUpload::class) {
+            every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) }
         }
-        every { anyConstructed<VSAppCenterTelemetryUpload>().upload(any(), any()) } just Runs
+        every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) } answers {
+            secondArg<(kotlin.Result<Unit>) -> Unit>().invoke(kotlin.Result.success(Unit))
+        }
+        mockkConstructorFix(TelemetryManager::class)
+        every { anyConstructed<TelemetryManager>().reportEvent(any(), any()) } just Runs
     }
 
     @Before

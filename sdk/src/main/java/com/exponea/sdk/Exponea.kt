@@ -76,6 +76,8 @@ import com.exponea.sdk.services.MessagingUtils
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_MAX_MESSAGES_COUNT
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.telemetry.TelemetryManager
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.TokenType
@@ -347,6 +349,7 @@ object Exponea {
     fun registerSegmentationDataCallback(callback: SegmentationDataCallback) = runCatching {
         segmentationDataCallbacks.add(callback)
         getComponent()?.segmentsManager?.onCallbackAdded(callback)
+        reportSegmentationCallbackAdded(callback)
         return@runCatching
     }.logOnException()
 
@@ -416,14 +419,18 @@ object Exponea {
         if (Looper.myLooper() == null)
             Looper.prepare()
 
-        telemetry = TelemetryManager(context.applicationContext as Application).apply {
+        this.configuration = configuration
+        ExponeaConfigRepository.set(context, configuration)
+
+        telemetry = TelemetryManager(
+            context.applicationContext as Application
+        ).apply {
             deintegration.registerForIntegrationStopped(this)
         }
         telemetry?.start()
         telemetry?.reportInitEvent(configuration)
+        segmentationDataCallbacks.forEach { reportSegmentationCallbackAdded(it) }
 
-        this.configuration = configuration
-        ExponeaConfigRepository.set(context, configuration)
         initializeSdk(context)
         isInitialized = true
         initGate.notifyInitializedState()
@@ -466,6 +473,7 @@ object Exponea {
                 properties = properties.properties,
                 type = EventType.TRACK_CUSTOMER
             )
+            telemetry?.reportEvent(TelemetryEvent.IDENTIFY_CUSTOMER)
         }
     }.logOnException()
 
@@ -515,7 +523,7 @@ object Exponea {
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_CONSENTS)
+            telemetry?.reportEvent(TelemetryEvent.CONSENTS_FETCHED)
         }
     }.logOnException()
 
@@ -538,10 +546,21 @@ object Exponea {
                     customerIds = customer.toHashMap().filter { e -> e.value != null },
                     options = recommendationOptions
                 ),
-                onSuccess = onSuccess,
+                onSuccess = {
+                    onSuccess(it)
+                    val data = it.results
+                    telemetry?.reportEvent(TelemetryEvent.RECOMMENDATIONS_FETCHED, hashMapOf(
+                        "count" to data.size.toString(),
+                        "data" to ExponeaGson.instance.toJson(data.map { item ->
+                            mapOf(
+                                "engineName" to item.engineName,
+                                "recommendationId" to item.recommendationId
+                            )
+                        })
+                    ))
+                },
                 onFailure = onFailure
             )
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.FETCH_RECOMMENDATION)
         }
     }.logOnException()
 
@@ -864,7 +883,7 @@ object Exponea {
 
         ensureOnBackgroundThread {
             telemetry?.reportEvent(
-                com.exponea.sdk.telemetry.model.EventType.EVENT_COUNT,
+                TelemetryEvent.EVENT_COUNT,
                 hashMapOf("count" to component.eventRepository.count().toString())
             )
         }
@@ -1041,11 +1060,13 @@ object Exponea {
                 },
                 initializedBlock = {
                     initGate.clear()
-                    component.anonymize(
-                            exponeaProject ?: component.projectFactory.mainExponeaProject,
-                            projectRouteMap ?: configuration.projectRouteMap
-                    )
-                    telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.ANONYMIZE)
+                    val projectToUse = exponeaProject ?: component.projectFactory.mainExponeaProject
+                    component.anonymize(projectToUse, projectRouteMap ?: configuration.projectRouteMap)
+                    telemetry?.reportEvent(TelemetryEvent.ANONYMIZE, hashMapOf(
+                        "baseUrl" to projectToUse.baseUrl,
+                        "projectToken" to projectToUse.projectToken,
+                        "authorization" to (projectToUse.authorization ?: "")
+                    ))
                 }
         )
     }.logOnException()
@@ -1276,7 +1297,6 @@ object Exponea {
     fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) = runCatching {
         initGate.waitForInitialize {
             component.appInboxManager.fetchAppInbox(callback)
-            telemetry?.reportEvent(com.exponea.sdk.telemetry.model.EventType.TRACK_INBOX_FETCH)
         }
     }.logOnException()
 
@@ -1503,6 +1523,10 @@ object Exponea {
         successCallback: ((List<Segment>) -> Unit)
     ) = runCatching {
         initGate.waitForInitialize {
+            telemetry?.reportEvent(TelemetryEvent.RTS_GET_SEGMENTS, hashMapOf(
+                "exposingCategory" to exposingCategory,
+                "forceFetch" to force.toString()
+            ))
             component.segmentsManager.fetchSegmentsManually(
                 category = exposingCategory,
                 forceFetch = force
@@ -1532,6 +1556,9 @@ object Exponea {
             Logger.e(this, "The functionality is unavailable due no previous SDK integration.")
             return@runCatching
         }
+        TelemetryManager(context.applicationContext as Application).reportEvent(
+            TelemetryEvent.LOCAL_CUSTOMER_DATA_CLEARED
+        )
         deintegration.clearLocalCustomerData()
     }.logOnException()
 
@@ -1542,6 +1569,7 @@ object Exponea {
             },
             initializedBlock = {
                 Logger.i(this, "Stopping of SDK integration starts")
+                telemetry?.reportEvent(TelemetryEvent.INTEGRATION_STOPPED)
                 isStopped = true
                 deintegration.notifyDeintegration()
                 deintegration.clearLocalCustomerData()
@@ -1648,5 +1676,11 @@ object Exponea {
         } else {
             pushNotificationsDelegateLocal.handleClickedPushUpdate(pushOpenedData)
         }
+    }
+
+    private fun reportSegmentationCallbackAdded(callback: SegmentationDataCallback) {
+        telemetry?.reportEvent(TelemetryEvent.RTS_CALLBACK_REGISTERED, hashMapOf(
+            "exposingCategory" to callback.exposingCategory
+        ))
     }
 }

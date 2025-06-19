@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -20,6 +21,7 @@ import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
+import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
@@ -304,6 +306,38 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         }
         idleThreads()
         assertEquals(2, fetchedData?.size)
+    }
+
+    @Test
+    fun `should track telemetry on fetch`() = runInSingleThread { idleThreads ->
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryTelemetryEventSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+                buildMessage("id1", type = "push"),
+                buildMessage("id2", type = "html"),
+                buildMessage("id3", type = "whatSoEver")
+            )))
+        }
+        appInboxManager.fetchAppInbox {}
+        idleThreads()
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.APP_INBOX_INIT_FETCH, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertEquals("3", capturedProps["count"])
+        assertTrue(capturedProps["data"]!!.isNotEmpty())
     }
 
     @Test

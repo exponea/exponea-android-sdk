@@ -18,7 +18,8 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class FileTelemetryStorageTest : ExponeaSDKTest() {
-    fun getMockCrashLog(): CrashLog = CrashLog(Exception("Boom!"), true, Date(), Date(), "mock-run-id")
+    fun getMockCrashLog(): CrashLog =
+        CrashLog(Exception("Boom!"), true, Date(), Date(), "mock-run-id", emptyList(), Thread.currentThread())
 
     @Test
     fun `should return empty result without stored crash logs`() {

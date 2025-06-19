@@ -117,7 +117,7 @@ internal class SegmentsManagerImplTest {
     fun `should store empty segments on success`() {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
         segmentsCache.resetVerifyMockkCount()
-        waitForIt(50000) { done ->
+        waitForIt(5000) { done ->
             every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                     Result(true, SegmentationCategories())

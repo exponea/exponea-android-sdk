@@ -27,6 +27,7 @@ import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaPushTrackingActivity
 import com.exponea.sdk.services.MessagingUtils
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
@@ -160,6 +161,11 @@ internal open class FcmManagerImpl(
                 notificationChannelImportance
             )
             showNotification(manager, payload)
+            Exponea.telemetry?.reportEvent(TelemetryEvent.PUSH_NOTIFICATION_SHOWN, hashMapOf(
+                "notificationId" to payload.notificationId.toString(),
+                "actionId" to (payload.notificationData.getTrackingData()["action_id"]?.toString() ?: ""),
+                "campaignId" to (payload.notificationData.getTrackingData()["campaign_id"]?.toString() ?: "")
+            ))
         } else {
             trackDeliveredPush(
                 payload,
@@ -222,6 +228,11 @@ internal open class FcmManagerImpl(
             Logger.i(this, "Event for delivered notification is not tracked because consent is not given")
         }
         Exponea.notifyCallbacksForNotificationDelivery(payload)
+        Exponea.telemetry?.reportEvent(TelemetryEvent.PUSH_NOTIFICATION_DELIVERED, hashMapOf(
+            "notificationId" to payload.notificationId.toString(),
+            "actionId" to (payload.notificationData.getTrackingData()["action_id"]?.toString() ?: ""),
+            "campaignId" to (payload.notificationData.getTrackingData()["campaign_id"]?.toString() ?: "")
+        ))
     }
 
     override fun showNotification(manager: NotificationManager, payload: NotificationPayload) {

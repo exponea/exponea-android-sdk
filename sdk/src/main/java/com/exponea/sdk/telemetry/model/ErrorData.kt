@@ -4,5 +4,6 @@ internal data class ErrorData(
     val type: String,
     val message: String,
     val stackTrace: List<ErrorStackTraceElement>,
-    val cause: ErrorData?
+    val cause: ErrorData?,
+    val suppressed: List<ErrorData>?
 )

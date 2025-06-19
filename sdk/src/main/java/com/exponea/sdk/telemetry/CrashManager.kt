@@ -38,12 +38,12 @@ internal class CrashManager(
             Logger.e(this, "Crash has not been handled, SDK is stopping")
         } else {
             Logger.i(this, "Handling uncaught exception(app crash)")
-            handleException(e, true)
+            handleException(e, true, t)
         }
         oldHandler?.uncaughtException(t, e)
     }
 
-    fun handleException(e: Throwable, fatal: Boolean) {
+    fun handleException(e: Throwable, fatal: Boolean, t: Thread) {
         try {
             val crashLog = CrashLog(
                 e,
@@ -51,7 +51,8 @@ internal class CrashManager(
                 Date(),
                 launchDate,
                 runId,
-                latestLogMessages.toMutableList()
+                latestLogMessages.toMutableList(),
+                t
             )
             if (fatal) { // app is crashing, save exception, process it later
                 if (TelemetryUtility.isSDKRelated(e)) {

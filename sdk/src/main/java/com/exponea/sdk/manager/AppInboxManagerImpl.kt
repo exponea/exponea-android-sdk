@@ -13,6 +13,8 @@ import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
@@ -175,6 +177,7 @@ internal class AppInboxManagerImpl(
             isFetching.set(false)
             return
         }
+        trackTelemetry(result)
         val fetchProcessIsValid: Boolean
         val lastCustomerIdsForFetchLocal = lastCustomerIdsForFetch
         if (lastCustomerIdsForFetchLocal == null) {
@@ -198,6 +201,24 @@ internal class AppInboxManagerImpl(
             Logger.i(this, "AppInbox fetch is going to repeat for ${customerIdsToRepeat.toHashMap()}")
             invokeFetchAppInbox(customerIdsToRepeat)
         }
+    }
+
+    private fun trackTelemetry(result: Result<java.util.ArrayList<MessageItem>?>?) {
+        val isInitFetch = appInboxCache.getSyncToken().isNullOrEmpty()
+        val messages = result?.results ?: emptyList()
+        Exponea.telemetry?.reportEvent(
+            if (isInitFetch) TelemetryEvent.APP_INBOX_INIT_FETCH else TelemetryEvent.APP_INBOX_SYNC_FETCH,
+            hashMapOf(
+                "count" to (result?.results?.size ?: 0).toString(),
+                "data" to ExponeaGson.instance.toJson(messages.map {
+                    mapOf(
+                        "type" to it.type.name.lowercase(),
+                        "messageId" to it.id,
+                        "campaignId" to (it.content?.trackingData?.get("campaign_id") ?: "")
+                    )
+                })
+            )
+        )
     }
 
     private fun notifyFetchCallbacks(data: List<MessageItem>?) {

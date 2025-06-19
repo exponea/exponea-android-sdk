@@ -24,7 +24,7 @@ import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselAdapter
 import com.exponea.sdk.telemetry.TelemetryManager
-import com.exponea.sdk.telemetry.model.EventType
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
@@ -105,11 +105,11 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         idleThreads()
         mockkConstructorFix(TelemetryManager::class)
-        val telemetryEventTypeSlot = slot<EventType>()
+        val telemetryTelemetryEventSlot = slot<TelemetryEvent>()
         val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
         every {
             anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryEventTypeSlot),
+                capture(telemetryTelemetryEventSlot),
                 capture(telemetryPropertiesSlot)
             )
         } just Runs
@@ -121,14 +121,14 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         assertNotNull(carousel)
         carousel.reload()
         idleThreads()
-        assertTrue(telemetryEventTypeSlot.isCaptured)
-        val capturedEventType = telemetryEventTypeSlot.captured
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
         assertNotNull(capturedEventType)
-        assertEquals(EventType.SHOW_IN_APP_MESSAGE, capturedEventType)
+        assertEquals(TelemetryEvent.CONTENT_BLOCK_SHOWN, capturedEventType)
         assertTrue(telemetryPropertiesSlot.isCaptured)
         val capturedProps = telemetryPropertiesSlot.captured
         assertNotNull(capturedProps)
-        assertEquals("content_block_carousel", capturedProps["messageType"])
+        assertEquals("static", capturedProps["type"])
     }
 
     @Test

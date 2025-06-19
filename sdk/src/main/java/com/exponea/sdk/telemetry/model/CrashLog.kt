@@ -11,7 +11,8 @@ internal data class CrashLog(
     val timestampMS: Long,
     val launchTimestampMS: Long,
     val runId: String,
-    val logs: List<String>? = null
+    val logs: List<String>? = null,
+    val thread: ThreadInfo
 ) {
     constructor(
         e: Throwable,
@@ -19,7 +20,8 @@ internal data class CrashLog(
         date: Date,
         launchDate: Date,
         runId: String,
-        logs: List<String>? = null
+        logs: List<String>? = null,
+        thread: Thread
     ) : this(
         id = UUID.randomUUID().toString(),
         errorData = TelemetryUtility.getErrorData(e),
@@ -27,6 +29,7 @@ internal data class CrashLog(
         timestampMS = date.time,
         launchTimestampMS = launchDate.time,
         runId = runId,
-        logs = logs
+        logs = logs,
+        thread = TelemetryUtility.getThreadInfo(thread, e.stackTrace)
     )
 }

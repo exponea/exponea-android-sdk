@@ -11,7 +11,7 @@ import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.services.ExponeaProjectFactory
-import com.exponea.sdk.telemetry.model.EventType
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
@@ -80,7 +80,7 @@ internal class PushNotificationSelfCheckManagerImpl(
     }
 
     suspend fun startInternal() {
-        Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "0"))
+        Exponea.telemetry?.reportEvent(TelemetryEvent.SELF_CHECK, hashMapOf("step" to "0"))
         Logger.i(this, "Waiting for push token.")
         val pushToken = waitForPushToken()
         if (pushToken == null) {
@@ -92,7 +92,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             )
             return
         }
-        Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "1"))
+        Exponea.telemetry?.reportEvent(TelemetryEvent.SELF_CHECK, hashMapOf("step" to "1"))
         Logger.i(this, "Requesting self-check push notification.")
         if (!requestSelfCheckPush(pushToken, tokenRepository.getLastTokenType())) {
             showResult(
@@ -102,7 +102,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             )
             return
         }
-        Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "2"))
+        Exponea.telemetry?.reportEvent(TelemetryEvent.SELF_CHECK, hashMapOf("step" to "2"))
         Logger.i(this, "Waiting for self-check push notification.")
         if (!waitForSelfCheckPushReceived()) {
             showResult(
@@ -114,7 +114,7 @@ internal class PushNotificationSelfCheckManagerImpl(
             )
             return
         }
-        Exponea.telemetry?.reportEvent(EventType.SELF_CHECK, hashMapOf("step" to "3"))
+        Exponea.telemetry?.reportEvent(TelemetryEvent.SELF_CHECK, hashMapOf("step" to "3"))
         showResult(3, "You are now ready to receive push notifications from Exponea.")
     }
 

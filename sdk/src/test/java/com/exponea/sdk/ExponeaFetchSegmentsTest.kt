@@ -10,10 +10,16 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
+import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
+import io.mockk.slot
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,6 +82,41 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
                 done()
             }
         }
+    }
+
+    @Test
+    fun `should track telemetry for segmentations fetch`() {
+        mockkConstructorFix(TelemetryManager::class)
+        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
+        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+        every {
+            anyConstructed<TelemetryManager>().reportEvent(
+                capture(telemetryTelemetryEventSlot),
+                capture(telemetryPropertiesSlot)
+            )
+        } just Runs
+        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+            arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
+                true,
+                SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
+            ))
+        }
+        waitForIt(timeoutMS = SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + ACCEPTED_INIT_DURATION_MILLIS) { done ->
+            Exponea.getSegments("content") { segments ->
+                assertEquals(0, segments.size)
+                done()
+            }
+        }
+        assertTrue(telemetryTelemetryEventSlot.isCaptured)
+        val capturedEventType = telemetryTelemetryEventSlot.captured
+        assertNotNull(capturedEventType)
+        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.RTS_GET_SEGMENTS, capturedEventType)
+        assertTrue(telemetryPropertiesSlot.isCaptured)
+        val capturedProps = telemetryPropertiesSlot.captured
+        assertNotNull(capturedProps)
+        assertEquals("content", capturedProps["exposingCategory"])
+        assertEquals("false", capturedProps["forceFetch"])
     }
 
     @Test

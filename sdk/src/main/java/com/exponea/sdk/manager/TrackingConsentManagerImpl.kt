@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.TrackingConsentManager.MODE
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
@@ -26,6 +27,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.Logger
@@ -206,6 +208,11 @@ internal class TrackingConsentManagerImpl(
             trackingAllowed = trackingAllowed,
             customerIds = customerIds
         )
+        Exponea.telemetry?.reportEvent(TelemetryEvent.APP_INBOX_MESSAGE_SHOWN, hashMapOf(
+            "type" to item.type.name.lowercase(),
+            "messageId" to item.id,
+            "campaignId" to (item.content?.trackingData?.get("campaign_id")?.toString() ?: "")
+        ))
     }
 
     override fun trackAppInboxClicked(message: MessageItem, buttonText: String?, buttonLink: String?, mode: MODE) {

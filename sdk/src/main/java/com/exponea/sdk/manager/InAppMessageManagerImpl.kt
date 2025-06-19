@@ -28,6 +28,8 @@ import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
+import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
@@ -118,6 +120,7 @@ internal class InAppMessageManagerImpl(
                     callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
                     return@fetchInAppMessages
                 }
+                trackTelemetry(result)
                 if (areCustomerIdsActual(customerIds)) {
                     inAppMessagesCache.set(result.results)
                     Logger.d(this, "[InApp] In-app messages preloaded successfully")
@@ -151,6 +154,19 @@ internal class InAppMessageManagerImpl(
                 }
             }
         )
+    }
+
+    private fun trackTelemetry(result: com.exponea.sdk.models.Result<ArrayList<InAppMessage>>) {
+        Exponea.telemetry?.reportEvent(TelemetryEvent.IN_APP_MESSAGE_FETCH, hashMapOf(
+            "count" to result.results.size.toString(),
+            "data" to ExponeaGson.instance.toJson(result.results.map {
+                mapOf(
+                    "type" to it.messageType.value,
+                    "isRichStyle" to it.isRichStyled,
+                    "messageId" to it.id
+                )
+            })
+        ))
     }
 
     private fun notifyAboutObsoleteFetch(callback: ((Result<Unit>) -> Unit)?) {
@@ -493,8 +509,12 @@ internal class InAppMessageManagerImpl(
         displayStateRepository.setDisplayed(message, Date())
         eventManager.trackInAppMessageShown(message, CONSIDER_CONSENT)
         Exponea.telemetry?.reportEvent(
-            com.exponea.sdk.telemetry.model.EventType.SHOW_IN_APP_MESSAGE,
-            hashMapOf("messageType" to (message.rawMessageType ?: "null"))
+            TelemetryEvent.IN_APP_MESSAGE_SHOWN,
+            hashMapOf(
+                "type" to message.messageType.value,
+                "isRichStyle" to message.isRichStyled.toString(),
+                "messageId" to message.id
+            )
         )
     }
 

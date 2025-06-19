@@ -22,6 +22,7 @@ import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatc
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockComparator
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
@@ -202,13 +203,25 @@ internal class InAppContentBlockManagerImpl(
                 }
                 val dataMap = contentData.groupBy { it.blockId }
                 // update personalized data for requested 'contentBlocks'
+                val updateContentBlocks = mutableListOf<InAppContentBlock>()
                 contentBlocks.forEach { contentBlock ->
                     dataMap[contentBlock.id]?.firstOrNull()?.let {
                         contentBlock.personalizedData = it
+                        updateContentBlocks.add(contentBlock)
                     }
                 }
                 // update personalized data for local 'contentBlocksData'
                 updateContentForLocalContentBlocks(contentBlocks)
+                Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_PERSONALISED_FETCH, hashMapOf(
+                    "count" to contentData.size.toString(),
+                    "data" to ExponeaGson.instance.toJson(updateContentBlocks.map {
+                        mapOf(
+                            "messageId" to it.id,
+                            "placeholders" to it.placeholders,
+                            "type" to if (it.isContentPersonalized()) "personal" else "static"
+                        )
+                    })
+                ))
                 done()
             },
             onFailure = {
@@ -379,6 +392,16 @@ internal class InAppContentBlockManagerImpl(
                             return@fetchStaticInAppContentBlocks
                         }
                         val inAppContentBlocks = result.results ?: emptyList()
+                        Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_INIT_FETCH, hashMapOf(
+                            "count" to inAppContentBlocks.size.toString(),
+                            "data" to ExponeaGson.instance.toJson(inAppContentBlocks.map {
+                                mapOf(
+                                    "messageId" to it.id,
+                                    "placeholders" to it.placeholders,
+                                    "type" to if (it.isContentPersonalized()) "personal" else "static"
+                                )
+                            })
+                        ))
                         val supportedContentBlocks = inAppContentBlocks.filter {
                             isContentSupportedToDownload(it)
                         }

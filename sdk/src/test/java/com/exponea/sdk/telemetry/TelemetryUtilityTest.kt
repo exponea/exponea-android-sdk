@@ -41,7 +41,8 @@ internal class TelemetryUtilityTest {
                         "java.lang.Exception",
                         "",
                         arrayListOf(),
-                        null
+                        null,
+                        emptyList()
                     ),
                     false
                 ),
@@ -56,7 +57,8 @@ internal class TelemetryUtilityTest {
                         "java.lang.Exception",
                         "Exception happened",
                         arrayListOf(),
-                        null
+                        null,
+                        emptyList()
                     ),
                     false
                 ),
@@ -73,11 +75,13 @@ internal class TelemetryUtilityTest {
                         "Exception happened",
                         arrayListOf(),
                         ErrorData(
-                            "java.lang.Exception",
-                            "Cause exception",
-                            arrayListOf(),
-                            null
-                        )
+                            type = "java.lang.Exception",
+                            message = "Cause exception",
+                            stackTrace = arrayListOf(),
+                            cause = null,
+                            suppressed = emptyList()
+                        ),
+                        suppressed = emptyList()
                     ),
                     false
                 ),
@@ -100,8 +104,10 @@ internal class TelemetryUtilityTest {
                             "java.lang.Exception",
                             "Cause exception",
                             arrayListOf(),
-                            null
-                        )
+                            null,
+                            emptyList()
+                        ),
+                        suppressed = emptyList()
                     ),
                     false
                 ),
@@ -132,8 +138,10 @@ internal class TelemetryUtilityTest {
                                 ErrorStackTraceElement("org.android.MockClass", "mockMethod", "mockFile", 2),
                                 ErrorStackTraceElement("com.exponea.MockClass", "mockMethod", "mockFile", 3)
                             ),
-                            null
-                        )
+                            null,
+                            emptyList()
+                        ),
+                        suppressed = emptyList()
                     ),
                     true
                 )
@@ -193,7 +201,15 @@ internal class TelemetryUtilityTest {
                     "pushChannelName" to "Exponea [default]",
                     "automaticPushNotification" to "false",
                     "pushNotificationImportance" to "3 [default]",
-                    "sessionTimeout" to "60.0 [default]"
+                    "sessionTimeout" to "60.0 [default]",
+                    "inAppContentBlockPlaceholdersAutoLoad" to "[] [default]",
+                    "allowDefaultCustomerProperties" to "true [default]",
+                    "appInboxDetailImageInset" to "null [default]",
+                    "manualSessionAutoClose" to "true [default]",
+                    "authorization" to "[]",
+                    "advancedAuthEnabled" to "false [default]",
+                    "allowWebViewCookies" to "false [default]",
+                    "pushAccentColor" to "null [default]"
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
                     projectToken = "mock_project_token",

@@ -63,6 +63,7 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
             )
             databaseBuilder.enableMultiInstanceInvalidation()
             databaseBuilder.allowMainThreadQueries()
+            databaseBuilder.fallbackToDestructiveMigrationOnDowngrade()
             databaseMigrations().forEach { migration ->
                 databaseBuilder.addMigrations(migration)
             }
@@ -78,7 +79,15 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
         private fun databaseMigrations(): List<Migration> {
             val migration1to2 = object : Migration(1, 2) {
                 override fun migrate(db: SupportSQLiteDatabase) {
-                    db.execSQL("ALTER TABLE exported_event ADD COLUMN sdk_event_type TEXT")
+                    try {
+                        db.execSQL("ALTER TABLE exported_event ADD COLUMN sdk_event_type TEXT")
+                    } catch (e: Exception) {
+                        if (e.message?.contains("duplicate column name") == true) {
+                            Logger.d(this, "Column `sdk_event_type` already exists, skipping migration")
+                        } else {
+                            throw e
+                        }
+                    }
                 }
             }
             return listOf(migration1to2)

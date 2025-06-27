@@ -11,6 +11,18 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.5.0
+#### June 27, 2025
+* Added:
+  * Adds Google Play index verification file
+  * Replaces AppCenter with Sentry for internal telemetry usage
+* Fixed:
+  * Fixes broken links in documentation
+  * Safely invokes in-app content block callbacks to catch errors originating in the developer’s code
+  * Hides AppUpdateReceiver from public access by third-party applications
+  * Ensures that the local database is properly dropped during SDK downgrade scenarios
+
+
 ## Release Notes for 4.4.0
 #### May 01, 2025
 * Added:

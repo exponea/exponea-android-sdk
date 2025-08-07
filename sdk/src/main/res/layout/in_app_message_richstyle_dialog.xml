@@ -12,9 +12,7 @@
         android:id="@+id/inAppMessageDialogWidthLimiter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxWidth="@dimen/exponea_sdk_in_app_message_dialog_max_width"
-        tools:layout_marginLeft="20dp"
-        tools:layout_marginRight="20dp">
+        android:maxWidth="@dimen/exponea_sdk_in_app_message_dialog_max_width">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/inAppMessageDialogContainer"
@@ -80,8 +78,7 @@
                             tools:text="Title"
                             android:gravity="center"
                             android:layout_gravity="center_horizontal"
-                            tools:textStyle="bold"
-                            tools:layout_marginTop="20dp" />
+                            tools:textStyle="bold" />
 
                         <com.exponea.sdk.view.component.InAppLabelView
                             android:id="@+id/textViewBody"
@@ -89,8 +86,7 @@
                             android:layout_height="wrap_content"
                             tools:text="body"
                             android:gravity="center"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="20dp" />
+                            android:layout_gravity="center_horizontal" />
 
                         <View
                             android:id="@+id/inAppMessageDialogSpacer"

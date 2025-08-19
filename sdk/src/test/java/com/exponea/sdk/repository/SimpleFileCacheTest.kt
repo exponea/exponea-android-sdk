@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.junit.After
@@ -20,6 +21,52 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SimpleFileCacheTest {
 
+    private val sameHostImageUrls = listOf(
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/abrahamlincoln/image1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/arab-americans/arab-americans-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/african-american-women-changemakers/10.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/aircraft/aircraft-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/american-revolution/revolution-founding-1.jpg", // ktlint-disable max-line-length
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/architecture-and-design/12845v.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/artists-and-photographers/artists-photographers-1.jpg", // ktlint-disable max-line-length
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/art-of-the-book/art-of-the-book-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/asian-american-pacific-islander-heritage/AAPI-38.jpg", // ktlint-disable max-line-length
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/athletes/athletes-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/autumn-and-halloween/autumn-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/birthdays/birthdays-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/cars/1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/baseball-cards/2_1407fv.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/birds/birds-4.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/bicycles/03-3d01840v.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/bridges/1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/colors-tell-the-story/color-1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/classic-childrens-books/1.jpg",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/cats/33.jpg"
+    )
+
+    private val uniqueImageUrls = listOf(
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Wikipedia-logo.png/800px-Wikipedia-logo.png",
+        "https://www.w3.org/Icons/w3c_home",
+        "https://www.python.org/static/community_logos/python-logo.png",
+        "https://nodejs.org/static/images/logo.svg",
+        "https://www.rust-lang.org/logos/rust-logo-512x512.png",
+        "https://cdn.alza.cz/images/web-static/eshop-logos/alza_sk.svg",
+        "https://www.apache.org/img/asf_logo.png",
+        "https://www.mozilla.org/media/img/logos/m24/lockup-black.f2ddba3f0724.svg",
+        "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo32.png",
+        "https://www.debian.org/logos/openlogo-nd-50.png",
+        "https://www.kernel.org/theme/images/logos/tux.png",
+        "https://www.freebsd.org/images/banner-red.png",
+        "https://www.loc.gov/static/portals/free-to-use/public-domain/abrahamlincoln/image1.jpg",
+        "https://www.r-project.org/Rlogo.png",
+        "https://go.dev/images/gophers/ladder.svg",
+        "https://www.postgresql.org/media/img/about/press/elephant.png",
+        "https://www.sqlite.org/images/sqlite370_banner.gif",
+        "https://nginx.org/nginx.png",
+        "https://curl.se/logo/curl-logo.svg",
+        "https://archive.org/images/glogo.png"
+    )
+
     @Before
     fun before() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -30,6 +77,21 @@ class SimpleFileCacheTest {
     fun cleanDownloads() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
+    }
+
+    @Test
+    fun `should download single image`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val cache = SimpleFileCache(context, DrawableCacheImpl.DIRECTORY)
+        val downloadCount = CountDownLatch(sameHostImageUrls.size + uniqueImageUrls.size)
+        (sameHostImageUrls + uniqueImageUrls).forEach { cache.preload(it) { status ->
+            assertTrue(status, "Image `$it` failed to download")
+            downloadCount.countDown()
+        } }
+        assertTrue(
+            downloadCount.await(10, TimeUnit.SECONDS),
+            "Few (${downloadCount.count + 1}) images has not been downloaded yet"
+        )
     }
 
     @Test
@@ -127,32 +189,28 @@ class SimpleFileCacheTest {
     }
 
     @Test
+    fun `should continue with images downloading if one is corrupted`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val invalidImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/non-existing-image.jpg"
+        val imagesToDownload = uniqueImageUrls.toMutableList().apply {
+            add(2, invalidImageUrl)
+        }
+        val cache = SimpleFileCache(context, DrawableCacheImpl.DIRECTORY)
+        waitForIt(SimpleFileCache.DOWNLOAD_TIMEOUT_SECONDS * 1000L) { done ->
+            cache.preload(imagesToDownload) { status ->
+                // failure is OK here
+                assertFalse(status)
+                done()
+            }
+        }
+    }
+
+    @Test
     fun `should download multiple real images by background thread`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val cache = SimpleFileCache(context, DrawableCacheImpl.DIRECTORY)
         cache.clear()
-        val imageUrls = listOf(
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/European_herring_gull_%28Larus_argentatus%29._Saint-Malo%2C_France.jpg/1200px-European_herring_gull_%28Larus_argentatus%29._Saint-Malo%2C_France.jpg", // ktlint-disable max-line-length
-            "https://c02.purpledshub.com/uploads/sites/47/2024/06/GettyImages-157195802-scaled.jpg",
-            "https://jspcs-birdspikesonline-gob2b.b-cdn.net/imagecache/cbc76987-999f-4f36-9a9b-aedd00b311da/seagull-profile_500x500.jpg", // ktlint-disable max-line-length
-            "https://as1.ftcdn.net/v2/jpg/05/73/63/78/1000_F_573637859_X1thrFZVpV6S4DDcj0SMZnIiQdIgs6TH.jpg",
-            "https://scx2.b-cdn.net/gfx/news/hires/2024/seagulls.jpg",
-            "https://birdaware.org/solent/wp-content/uploads/sites/2/2021/09/Great-black-backed-gull-HERO.png",
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLH4vE8uByIqIC3RbyTR4a07Ri4gASexCfuQ&s",
-            "https://static.wixstatic.com/media/135d23_dd53ee7c93e54bdc895707bbd8121492~mv2.png/v1/fill/w_560,h_444,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/135d23_dd53ee7c93e54bdc895707bbd8121492~mv2.png", // ktlint-disable max-line-length
-            "https://cdn11.bigcommerce.com/s-xj69ljw63/product_images/uploaded_images/seagull.jpeg",
-            "https://falcones.co.uk/wp-content/uploads/2019/07/angry-2730_1280-e1577789500639-768x512.jpg",
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsZVt8Ds4PKpdkkYMWhTEhtRJZVBL4WovVZg&s",
-            "https://images.squarespace-cdn.com/content/v1/5ab3de834eddec92938aef0a/1581961744889-AYNURHQY269SV3UOEXEK/seagull-4349143_960_720.jpg", // ktlint-disable max-line-length
-            "https://www.abellpestcontrol.com/-/media/Abell/Pest/Pest-Images/Seagull/Pest-Images/900x906_Oct2019_Seagull3.jpg?rev=88b97bd538e84c6aa33c9445ed9c6152", // ktlint-disable max-line-length
-            "https://images.squarespace-cdn.com/content/v1/5ab3de834eddec92938aef0a/1581961514040-HXCCNRXERJBZTXUDY6BS/IMG_8508.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Gull_ca_usa.jpg/640px-Gull_ca_usa.jpg",
-            "https://theconversationproject.org/wp-content/uploads/2023/11/Seagull-swooping-image2.jpg",
-            "https://m.media-amazon.com/images/I/61yknJ33qhL._AC_UF1000,1000_QL80_.jpg",
-            "https://www.trvst.world/wp-content/uploads/2023/07/seagull-during-daytime.jpg",
-            "https://www.shamanism.one/wp-content/uploads/2024/02/Spirit-Animal-Seagull.webp",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Larus_occidentalis_%28Western_Gull%29%2C_Point_Lobos%2C_CA%2C_US_-_May_2013.jpg/1200px-Larus_occidentalis_%28Western_Gull%29%2C_Point_Lobos%2C_CA%2C_US_-_May_2013.jpg" // ktlint-disable max-line-length
-        )
+        val imageUrls = uniqueImageUrls
         assertEquals(20, imageUrls.distinct().size)
         var downloaded = false
         waitForIt(SimpleFileCache.DOWNLOAD_TIMEOUT_SECONDS * 1000L) {
@@ -172,28 +230,7 @@ class SimpleFileCacheTest {
     fun `should download multiple real images from on same hostname by background thread`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val cache = SimpleFileCache(context, DrawableCacheImpl.DIRECTORY)
-        val imageUrls = listOf(
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/European_herring_gull_%28Larus_argentatus%29._Saint-Malo%2C_France.jpg/440px-European_herring_gull_%28Larus_argentatus%29._Saint-Malo%2C_France.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Armenian_Gull_Juvenile_in_flight%2C_Sevan_lake.jpg/500px-Armenian_Gull_Juvenile_in_flight%2C_Sevan_lake.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Larus_pacificus_Bruny_Island.jpg/500px-Larus_pacificus_Bruny_Island.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Swallow-tailed-gull.jpg/440px-Swallow-tailed-gull.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Haugesund_komm.svg/260px-Haugesund_komm.svg.png", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Seagull_eating_starfish.jpg/360px-Seagull_eating_starfish.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Gull_attacking_coot.jpg/360px-Gull_attacking_coot.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Huntington_beach_pier_seagull_2023.jpg/360px-Huntington_beach_pier_seagull_2023.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Lesser_Black-backed_Gulls.jpg/360px-Lesser_Black-backed_Gulls.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Sea_Gull_at_Point_Lobos_State_Natural_Reserve%2C_CA.jpg/500px-Sea_Gull_at_Point_Lobos_State_Natural_Reserve%2C_CA.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Seagull_taking_off_the_Sandy_Hook_shore.jpg/240px-Seagull_taking_off_the_Sandy_Hook_shore.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Birdsniper.jpg/270px-Birdsniper.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Kittiwakes.jpg/440px-Kittiwakes.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Larus_marinus_eggs.jpg/440px-Larus_marinus_eggs.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Newborn_seagull_03.jpg/440px-Newborn_seagull_03.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Seagull_chicks.jpg/440px-Seagull_chicks.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Glaucous-winged_Gull_RWD1.jpg/350px-Glaucous-winged_Gull_RWD1.jpg", // ktlint-disable max-line-length
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Relict_Gull.jpg/350px-Relict_Gull.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Laughing-gull.jpg/350px-Laughing-gull.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Chroicocephalus_ridibundus_%28summer%29.jpg/350px-Chroicocephalus_ridibundus_%28summer%29.jpg" // ktlint-disable max-line-length
-        )
+        val imageUrls = sameHostImageUrls
         assertEquals(20, imageUrls.distinct().size)
         var downloaded = false
         waitForIt(SimpleFileCache.DOWNLOAD_TIMEOUT_SECONDS * 1000L) {

@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -192,7 +191,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should post age when tracking events`() {
+    fun `should post timestamp when tracking events`() {
         setup(connected = true, serviceSuccess = true)
         createTestEvent(true)
         waitForIt {
@@ -208,8 +207,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 capture(eventSlot)
             )
         }
-        assertNotNull(eventSlot.captured.age)
-        assertNull(eventSlot.captured.timestamp)
+        assertNotNull(eventSlot.captured.timestamp)
     }
 
     @Test
@@ -229,7 +227,6 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 capture(eventSlot)
             )
         }
-        assertNull(eventSlot.captured.age)
         assertNotNull(eventSlot.captured.timestamp)
     }
 }

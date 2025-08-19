@@ -1229,7 +1229,6 @@ internal class SegmentsManagerImplTest {
             exponeaProject = null,
             type = null,
             timestamp = currentTimeSeconds(),
-            age = 10.0,
             customerIds = customerIdsRepository.get().toHashMap(),
             properties = hashMapOf(),
             sdkEventType = EventType.TRACK_CUSTOMER.name

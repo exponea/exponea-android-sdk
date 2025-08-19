@@ -1,0 +1,94 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "71113faba174924ffc48a625380a0caa",
+    "entities": [
+      {
+        "tableName": "exported_event",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `tries` INTEGER NOT NULL, `project_id` TEXT NOT NULL, `route` TEXT, `should_be_skipped` INTEGER NOT NULL, `exponea_project` TEXT, `event_type` TEXT, `timestamp` REAL, `customer_ids` TEXT, `properties` TEXT, `sdk_event_type` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tries",
+            "columnName": "tries",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "projectId",
+            "columnName": "project_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "route",
+            "columnName": "route",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "shouldBeSkipped",
+            "columnName": "should_be_skipped",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exponeaProject",
+            "columnName": "exponea_project",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "event_type",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "customerIds",
+            "columnName": "customer_ids",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "properties",
+            "columnName": "properties",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "sdkEventType",
+            "columnName": "sdk_event_type",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '71113faba174924ffc48a625380a0caa')"
+    ]
+  }
+}

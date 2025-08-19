@@ -39,7 +39,6 @@ internal open class EventManagerImpl(
                 val exportedEvent = ExportedEvent(
                     type = event.type,
                     timestamp = event.timestamp,
-                    age = event.age,
                     customerIds = event.customerIds,
                     properties = event.properties,
                     projectId = project.projectToken,

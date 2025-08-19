@@ -43,11 +43,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
-            testCoverageEnabled  true
+            enableAndroidTestCoverage = false
+            enableUnitTestCoverage = true
         }
         unitTesting {
             initWith debug
-            defaultConfig.minSdkVersion 19
+            defaultConfig.minSdkVersion 21
         }
     }
 
@@ -64,6 +65,10 @@ android {
         unitTests.all {
             jvmArgs '-Xmx2g'
         }
+    }
+
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 }
 
@@ -117,6 +122,14 @@ dependencies {
     testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // WorkManager testing
     testImplementation 'androidx.work:work-testing:2.4.0'
+
+    // Instrumented tests
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test:core:1.7.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test:rules:1.7.0'
+    // Room testing
+    androidTestImplementation "androidx.room:room-testing:$room_version"
 }
 
 shadowAar {

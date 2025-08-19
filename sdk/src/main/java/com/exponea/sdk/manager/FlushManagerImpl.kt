@@ -2,7 +2,6 @@ package com.exponea.sdk.manager
 
 import androidx.annotation.WorkerThread
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
@@ -11,7 +10,6 @@ import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.enqueue
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.logOnException
@@ -110,36 +108,10 @@ internal open class FlushManagerImpl(
         exportedEvent: ExportedEvent,
         onFlushFinished: FlushFinishedCallback?
     ) {
-        updateBeforeSend(exportedEvent)
         routeSendingEvent(exportedEvent)?.enqueue(
             handleResponse(exportedEvent, onFlushFinished),
             handleFailure(exportedEvent, onFlushFinished)
         )
-    }
-
-    private fun updateBeforeSend(exportedEvent: ExportedEvent) {
-        when (exportedEvent.route) {
-            Route.TRACK_CAMPAIGN -> {
-                // campaign event needs to recalculate 'age' property from 'timestamp' before posting
-                exportedEvent.properties?.let { properties ->
-                    if (properties.containsKey("timestamp")) {
-                        properties["age"] = currentTimeSeconds() - (properties["timestamp"] as Double)
-                        properties.remove("timestamp")
-                    }
-                }
-            }
-            Route.TRACK_EVENTS -> {
-                if (exportedEvent.type != Constants.EventTypes.push) {
-                    // do not use age for push notifications
-                    // timestamp can be modified to preserve sent->delivered->clicked order
-                    exportedEvent.timestamp?.let { timestamp ->
-                        exportedEvent.age = currentTimeSeconds().minus(timestamp)
-                        exportedEvent.timestamp = null
-                    }
-                }
-            }
-            else -> { /* do nothing */ }
-        }
     }
 
     private fun handleFailure(
@@ -204,7 +176,6 @@ internal open class FlushManagerImpl(
         val simpleEvent = Event(
                 type = exportedEvent.type,
                 timestamp = exportedEvent.timestamp,
-                age = exportedEvent.age,
                 customerIds = exportedEvent.customerIds,
                 properties = exportedEvent.properties
         )

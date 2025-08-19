@@ -1,16 +1,29 @@
 package com.exponea.sdk.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.util.Logger
 
-@Database(entities = [ExportedEvent::class], version = 2)
+@Database(
+    entities = [ExportedEvent::class],
+    version = 3,
+    autoMigrations = [
+        AutoMigration(
+            from = 2,
+            to = 3,
+            spec = ExponeaDatabase.Migration2to3::class
+        )
+    ]
+)
 @TypeConverters(Converters::class)
 internal abstract class ExponeaDatabase : RoomDatabase() {
 
@@ -19,9 +32,11 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
     fun all(): List<ExportedEvent> {
         return exportedEventDao().all()
     }
+
     fun count(): Int {
         return exportedEventDao().count()
     }
+
     fun add(item: ExportedEvent) {
         exportedEventDao().add(item)
     }
@@ -33,16 +48,33 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
     fun get(id: String): ExportedEvent? {
         return exportedEventDao().get(id)
     }
+
     fun remove(id: String) {
         exportedEventDao().delete(id)
     }
+
     fun clear() {
         exportedEventDao().clear()
     }
 
     companion object {
+
         @Volatile
         private var INSTANCE: ExponeaDatabase? = null
+
+        val migration1to2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                try {
+                    db.execSQL("ALTER TABLE exported_event ADD COLUMN sdk_event_type TEXT")
+                } catch (e: Exception) {
+                    if (e.message?.contains("duplicate column name") == true) {
+                        Logger.d(this, "Column `sdk_event_type` already exists, skipping migration")
+                    } else {
+                        throw e
+                    }
+                }
+            }
+        }
 
         fun getInstance(context: Context): ExponeaDatabase {
             if (INSTANCE == null || !INSTANCE!!.isOpen) {
@@ -56,18 +88,16 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
         }
 
         private fun buildDatabase(context: Context): ExponeaDatabase {
-            val databaseBuilder = Room.databaseBuilder(
+            val database = Room.databaseBuilder(
                 context,
                 ExponeaDatabase::class.java,
                 "ExponeaEventDatabase"
-            )
-            databaseBuilder.enableMultiInstanceInvalidation()
-            databaseBuilder.allowMainThreadQueries()
-            databaseBuilder.fallbackToDestructiveMigrationOnDowngrade()
-            databaseMigrations().forEach { migration ->
-                databaseBuilder.addMigrations(migration)
-            }
-            val database = databaseBuilder.build()
+            ).apply {
+                enableMultiInstanceInvalidation()
+                allowMainThreadQueries()
+                fallbackToDestructiveMigrationOnDowngrade()
+                addMigrations(*databaseMigrations())
+            }.build()
             try {
                 database.count()
             } catch (e: Exception) {
@@ -76,21 +106,9 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
             return database
         }
 
-        private fun databaseMigrations(): List<Migration> {
-            val migration1to2 = object : Migration(1, 2) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    try {
-                        db.execSQL("ALTER TABLE exported_event ADD COLUMN sdk_event_type TEXT")
-                    } catch (e: Exception) {
-                        if (e.message?.contains("duplicate column name") == true) {
-                            Logger.d(this, "Column `sdk_event_type` already exists, skipping migration")
-                        } else {
-                            throw e
-                        }
-                    }
-                }
-            }
-            return listOf(migration1to2)
-        }
+        private fun databaseMigrations(): Array<Migration> = arrayOf(migration1to2)
     }
+
+    @DeleteColumn(tableName = "exported_event", columnName = "age")
+    class Migration2to3 : AutoMigrationSpec
 }

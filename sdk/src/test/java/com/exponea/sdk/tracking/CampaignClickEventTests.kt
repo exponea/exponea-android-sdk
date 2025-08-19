@@ -279,7 +279,7 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
 
         assertEquals("/track/v2/projects/TestToken/campaigns/clicks", request!!.path)
         val parsedRequest = Gson().fromJson(request.body.readUtf8(), Map::class.java)
-        assertNotNull(parsedRequest["age"])
+        assertNotNull(parsedRequest["timestamp"])
         assertNotNull(parsedRequest["properties"])
         assertEquals("Android", (parsedRequest["properties"] as Map<*, *>)["platform"])
         assertEquals(CAMPAIGN_UNIVERSAL_LINK_URL, parsedRequest["url"])

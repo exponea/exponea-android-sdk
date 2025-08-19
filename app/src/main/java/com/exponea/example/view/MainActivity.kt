@@ -150,6 +150,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        Exponea.handleCampaignIntent(intent, applicationContext)
         val deeplinkDestination = resolveDeeplinkDestination(intent)
         if (deeplinkDestination != null) {
             handleDeeplinkDestination(deeplinkDestination)

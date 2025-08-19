@@ -26,7 +26,6 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     private lateinit var db: ExponeaDatabase
     private val mockData = ExportedEvent(
         properties = hashMapOf(Pair("key", "value")),
-        age = 1.234,
         projectId = "mock_project_id",
         route = Route.TRACK_EVENTS,
         exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
@@ -59,10 +58,10 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     @Test
     fun `should update item`() {
         db.add(mockData)
-        mockData.age = 2.345
+        mockData.projectId = "12345Update"
         db.update(item = mockData)
         db.get(mockData.id)?.let {
-            assertEquals(2.345, it.age)
+            assertEquals("12345Update", it.projectId)
         }
     }
 

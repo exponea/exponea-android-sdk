@@ -5,10 +5,7 @@ import java.util.Date
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 internal class InAppContentBlockTest {
     @Test
     fun `should have fresh content for Static-InAppContentBlock`() {

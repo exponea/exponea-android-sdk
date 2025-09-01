@@ -4,14 +4,11 @@ import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import kotlin.test.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 internal class RoomConvertersTest {
 
     private val converters = Converters()
-    private val mockAnyMap = hashMapOf(
+    private val mockAnyMap = hashMapOf<String, Any>(
         "campaign_name" to "Wassil's push",
         "event_type" to "campaign",
         "action_id" to 2.0,
@@ -79,7 +76,7 @@ internal class RoomConvertersTest {
 
     @Test
     fun `should convert any map correctly`() {
-        val mapString = converters.fromAnyMap(mockAnyMap as HashMap<String, Any>)
+        val mapString = converters.fromAnyMap(mockAnyMap)
         assertEquals(mockAnyMap, converters.toAnyMap(mapString))
     }
 }

@@ -3,14 +3,15 @@ package com.exponea.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.HtmlActionType
+import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.DrawableCacheImpl
+import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.runOnBackgroundThread
-import io.mockk.mockk
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -28,6 +29,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -78,13 +80,19 @@ internal class HtmlNormalizerTests {
         File(context.filesDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
 
+    private fun getHtmlNormalizer(
+        originalHtml: String,
+        imageCache: DrawableCache = mock(),
+        fontCache: FontCache = mock()
+    ) = HtmlNormalizer(imageCache, fontCache, originalHtml)
+
     @Test
     fun test_closeButtonSingleAction() {
         val rawHtml = "<html><body>" +
                 "<div data-actiontype='close'>Close</div>" +
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(2, result.actions.size)
     }
@@ -96,7 +104,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(3, result.actions.size)
     }
@@ -107,7 +115,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'>Action 1</div>" +
             "<a href='https://example.com/1'>Action 2</a>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
+        val result = getHtmlNormalizer(rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
         assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
@@ -120,7 +128,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'>Action 1</div>" +
             "<a href='https://example.com/2'>Action 2</a>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
+        val result = getHtmlNormalizer(rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
         assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
@@ -132,7 +140,7 @@ internal class HtmlNormalizerTests {
         val rawHtml = "<html><body>" +
             "<a href='https://example.com/1' target='_self'>Action 2</a>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize(config = HtmlNormalizerConfig(
+        val result = getHtmlNormalizer(rawHtml).normalize(config = HtmlNormalizerConfig(
             makeResourcesOffline = false, ensureCloseButton = false
         ))
         assertNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
@@ -145,7 +153,7 @@ internal class HtmlNormalizerTests {
         val rawHtml = "<html><body>" +
             "<div data-actiontype='close'>Close</div>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(1, result.actions.size)
     }
@@ -155,7 +163,7 @@ internal class HtmlNormalizerTests {
         val rawHtml = "<html><body>" +
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
         assertEquals(2, result.actions.size)
     }
@@ -166,7 +174,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
         assertEquals(3, result.actions.size)
     }
@@ -176,7 +184,7 @@ internal class HtmlNormalizerTests {
         val rawHtml = "<html><body>" +
                 "<div>Hello world</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE }) // default close
         assertEquals(1, result.actions.size)
     }
@@ -189,7 +197,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "<script>alert('hello')</script>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertFalse(result.html!!.contains("script"))
     }
 
@@ -204,7 +212,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertFalse(result.html!!.contains("<link"))
         assertFalse(result.html!!.contains("styles.css"))
     }
@@ -220,7 +228,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertFalse(result.html!!.contains("onclick"))
     }
 
@@ -233,7 +241,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertFalse(result.html!!.contains("title"))
         assertFalse(result.html!!.contains("Should be removed"))
     }
@@ -250,7 +258,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertFalse(result.html!!.contains("meta"))
         assertFalse(result.html!!.contains("HTML, CSS, JavaScript"))
         assertFalse(result.html!!.contains("John Doe"))
@@ -269,7 +277,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertTrue(result.html!!.contains("meta"))
         assertTrue(result.html!!.contains("viewport"))
         assertFalse(result.html!!.contains("keywords"))
@@ -297,7 +305,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'>Action 1</div>" +
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(4, result.actions.size)
     }
@@ -321,7 +329,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'>Action 1</div>" +
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(4, result.actions.size)
     }
@@ -345,7 +353,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/1'>Action 1</div>" +
             "<div data-link='https://example.com/2'>Action 2</div>" +
             "</body></html>"
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(4, result.actions.size)
         assertTrue { result.actions.any { it.actionUrl == "https://example.com/anchor2" } }
@@ -364,7 +372,7 @@ internal class HtmlNormalizerTests {
                 "</body></html>"
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(imageUrl)) { it() } }
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
@@ -380,7 +388,7 @@ internal class HtmlNormalizerTests {
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
         val bitmapCache = DrawableCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertFalse(result.valid)
     }
 
@@ -392,7 +400,7 @@ internal class HtmlNormalizerTests {
             "<div data-link='https://example.com/2'><span><h1>Action</h1></span><span> 2</span></div>" +
             "</body></html>"
         val bitmapCache = DrawableCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertNotNull(result.actions.find { it.actionType == HtmlActionType.CLOSE })
         assertEquals(3, result.actions.size)
         val action1 = result.actions.firstOrNull { it.actionUrl == "https://example.com/1" }
@@ -423,7 +431,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(imageUrl)) { it() } }
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
@@ -442,7 +450,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
@@ -461,7 +469,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
@@ -480,7 +488,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
@@ -516,7 +524,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-            val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+            val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
             assertTrue(result.valid, "Invalid for usage '$each'")
             assertFalse(result.html!!.contains("test_image"), "Invalid for usage '$each'")
             assertTrue(result.html!!.contains("data:image/png;base64"), "Invalid for usage '$each'")
@@ -534,7 +542,7 @@ internal class HtmlNormalizerTests {
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertFalse { result.valid }
     }
 
@@ -550,7 +558,7 @@ internal class HtmlNormalizerTests {
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
         assertTrue(result.html!!.contains("test_image"))
@@ -568,7 +576,7 @@ internal class HtmlNormalizerTests {
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
         assertTrue(result.html!!.contains("test_image"))
@@ -630,7 +638,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-            val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
+            val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
             assertTrue(result.valid, "Invalid for usage '${each.first}: ${each.second}'")
             assertFalse(
                 result.html!!.contains("test_image"),
@@ -693,7 +701,7 @@ internal class HtmlNormalizerTests {
                 </body>
             </html>
             """.trimIndent()
-        val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
         assertTrue(result.valid)
         assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64"))
@@ -723,7 +731,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
@@ -748,7 +756,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
@@ -773,7 +781,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
@@ -792,7 +800,7 @@ internal class HtmlNormalizerTests {
         <a data-link='https://example.com/3' class='test-class-6'>Action 3</a>
         </body></html>
         """.trimIndent()
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize().html
+        val result = getHtmlNormalizer(rawHtml).normalize().html
         assertNotNull(result)
         assertTrue(result.contains("class=\"test-class-1\""))
         assertTrue(result.contains("class=\"test-class-2\""))
@@ -817,7 +825,7 @@ internal class HtmlNormalizerTests {
         <a id="9" data-link='https://example.com/4' href='https://example.com/invalid'>Action 5</a>
         </body></html>
         """.trimIndent()
-        val result = HtmlNormalizer(mockk(), mockk(), rawHtml).normalize()
+        val result = getHtmlNormalizer(rawHtml).normalize()
         assertTrue(result.valid)
         assertEquals(9, result.actions.size)
         assertEquals(4, result.actions.filter { it.actionType == HtmlActionType.CLOSE }.size)
@@ -885,7 +893,7 @@ internal class HtmlNormalizerTests {
                         </body>
                     </html>
                     """.trimIndent()
-                    val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
+                    val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
                     assertTrue { result.valid }
                     assertFalse(result.html!!.contains("test_image"))
                     assertTrue(result.html!!.contains("data:image/png;base64"))

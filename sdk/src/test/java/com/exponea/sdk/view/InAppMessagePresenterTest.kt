@@ -6,7 +6,10 @@ import android.content.DialogInterface
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Looper
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.WindowManager.BadTokenException
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatDrawableManager
 import androidx.cardview.widget.CardView
@@ -36,14 +39,9 @@ import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.MockApplication
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
+import com.exponea.sdk.view.InAppMessagePresenter.PresentedMessage
 import com.exponea.sdk.view.layout.RowFlexLayout
 import com.google.android.material.behavior.SwipeDismissBehavior
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.spyk
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -56,6 +54,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mockStatic
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.Robolectric
 import org.robolectric.Robolectric.buildActivity
@@ -72,7 +78,7 @@ internal class InAppMessagePresenterTest(
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun data(): List<Array<out Any?>> {
-            return InAppMessageType.values()
+            return InAppMessageType.entries
                     .map { arrayOf(it) }
         }
     }
@@ -88,35 +94,26 @@ internal class InAppMessagePresenterTest(
 
     @Before
     fun mockCaches() {
-        bitmapCache = mockk()
-        every { bitmapCache.preload(any(), any()) } answers {
-            arg<(Boolean) -> Unit>(1).invoke(true)
+        bitmapCache = mock {
+            on { getFile(any()) } doReturn MockFile()
+            doNothing().on { showImage(any(), any(), any()) }
+            on { getDrawable(any<Int>()) } doReturn AppCompatDrawableManager.get().getDrawable(
+                ApplicationProvider.getApplicationContext(),
+                R.drawable.in_app_message_close_button
+            )
+            on { getDrawable(any<String>()) } doReturn AppCompatDrawableManager.get().getDrawable(
+                ApplicationProvider.getApplicationContext(),
+                R.drawable.in_app_message_close_button
+            )
         }
-        every { bitmapCache.clear() } just Runs
-        every { bitmapCache.has(any()) } returns true
-        every { bitmapCache.getFile(any()) } returns MockFile()
-        every { bitmapCache.getDrawable(any<Int>()) } returns AppCompatDrawableManager.get().getDrawable(
-            ApplicationProvider.getApplicationContext(),
-            R.drawable.in_app_message_close_button
-        )
-        every {
-            bitmapCache.getDrawable(any<String>())
-        } returns AppCompatDrawableManager.get().getDrawable(
-            ApplicationProvider.getApplicationContext(),
-            R.drawable.in_app_message_close_button
-        )
-        every { bitmapCache.showImage(any(), any(), any()) } just Runs
-        fontCache = mockk()
-        every { fontCache.has(any()) } returns true
-        every { fontCache.clear() } just Runs
-        every { fontCache.getFontFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
-        every { fontCache.getTypeface(any()) } returns Typeface.createFromFile(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
-        every { fontCache.preload(any(), any()) } answers {
-            arg<(Boolean) -> Unit>(1).invoke(true)
+
+        fontCache = mock {
+            on { getFontFile(any()) } doReturn File(
+                this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
+            )
+            on { getTypeface(any()) } doReturn Typeface.createFromFile(
+                this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
+            )
         }
     }
 
@@ -145,7 +142,7 @@ internal class InAppMessagePresenterTest(
             ApplicationProvider.getApplicationContext(),
             bitmapCache
         )
-        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {})
     }
 
     @Test
@@ -156,7 +153,7 @@ internal class InAppMessagePresenterTest(
         )
         buildActivity(AppCompatActivity::class.java).setup().resume()
         assertNotNull(
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         )
     }
 
@@ -165,7 +162,7 @@ internal class InAppMessagePresenterTest(
     fun `should not show in-app if activity is destroyed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val presenter = InAppMessagePresenter(context, bitmapCache)
-        var catchedError: String? = null
+        var caughtError: String? = null
         val activity = buildActivity(BadTokenActivity::class.java).setup().get()
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
@@ -175,14 +172,13 @@ internal class InAppMessagePresenterTest(
             payload?.let { uiPayloadBuilder.build(it) },
             payloadHtml,
             null,
-            mockk(),
-            mockk(),
-            { catchedError = it }
-        )
+            mock(),
+            mock()
+        ) { caughtError = it }
         assertNotNull(view)
         activity.badTokenActive = true
         view.show()
-        assertNotNull(catchedError)
+        assertNotNull(caughtError)
     }
 
     @Test
@@ -203,11 +199,11 @@ internal class InAppMessagePresenterTest(
             { _, _ ->
                 if (inAppMessageType == FREEFORM) {
                     // HTML WebView has no decorView in Robolectric, we have to simulate it
-                    throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                    throw BadTokenException("Activity is closed and has no active window token")
                 }
                 if (inAppMessageType == SLIDE_IN) {
                     // SlideIn has no decorView in Robolectric, we have to simulate it
-                    throw WindowManager.BadTokenException("Activity is closed and has no active window token")
+                    throw BadTokenException("Activity is closed and has no active window token")
                 }
             },
             { }
@@ -227,27 +223,26 @@ internal class InAppMessagePresenterTest(
     class BadTokenActivity : Activity() {
         var badTokenActive: Boolean = false
         companion object {
-            val robolectricActivity = buildActivity(AppCompatActivity::class.java).setup().get()
+            val robolectricActivity: AppCompatActivity =
+                buildActivity(AppCompatActivity::class.java).setup().get()
         }
         override fun getSystemService(name: String): Any? {
             return when (name) {
-                Context.WINDOW_SERVICE -> {
-                    val windowManager = spyk(robolectricActivity.getSystemService(name)) as WindowManager
-                    every { windowManager.addView(any(), any()) } answers {
-                        if (badTokenActive) {
-                            throw WindowManager.BadTokenException("Activity is closed and has no active window token")
-                        } else {
-                            callOriginal()
-                        }
+                WINDOW_SERVICE -> {
+                    spy(robolectricActivity.getSystemService(name) as WindowManager).apply {
+
+                        doAnswer {
+                            if (badTokenActive) {
+                                throw BadTokenException("Activity is closed and has no active window token")
+                            }
+                        }.whenever(this).addView(any<View>(), any<ViewGroup.LayoutParams>())
+
+                        doAnswer {
+                            if (badTokenActive) {
+                                throw BadTokenException("Activity is closed and has no active window token")
+                            }
+                        }.whenever(this).removeViewImmediate(any<View>())
                     }
-                    every { windowManager.removeViewImmediate(any()) } answers {
-                        if (badTokenActive) {
-                            throw WindowManager.BadTokenException("Activity is closed and has no active window token")
-                        } else {
-                            callOriginal()
-                        }
-                    }
-                    windowManager
                 }
                 else -> robolectricActivity.getSystemService(name)
             }
@@ -262,7 +257,7 @@ internal class InAppMessagePresenterTest(
             bitmapCache
         )
         assertNotNull(
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         )
     }
 
@@ -275,7 +270,7 @@ internal class InAppMessagePresenterTest(
         )
         Exponea.isStopped = true
         assertNull(
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         )
     }
 
@@ -287,11 +282,11 @@ internal class InAppMessagePresenterTest(
         )
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         assertNotNull(presented)
         presented.dismissedCallback(false, null)
         buildActivity(AppCompatActivity::class.java).setup().resume().pause()
-        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {})
     }
 
     @Test
@@ -302,13 +297,15 @@ internal class InAppMessagePresenterTest(
         )
         buildActivity(AppCompatActivity::class.java).setup().resume()
         val presented =
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         assertNotNull(presented)
-        assertNull(presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {}))
+        assertNull(
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
+        )
         presented.dismissedCallback(false, null)
         Robolectric.flushForegroundThreadScheduler() // skip animations
         assertNotNull(
-            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mockk(), emptyDismiss, {})
+            presenter.show(inAppMessageType, payload, null, payloadHtml, null, mock(), emptyDismiss) {}
         )
     }
 
@@ -335,27 +332,29 @@ internal class InAppMessagePresenterTest(
                 dismissInteraction = b
                 dismissButton = c
             }, {})
-        mockkObject(Exponea)
-        every { Exponea.presentedInAppMessage } returns presented
-        every { Exponea.inAppMessagePresenter } returns presenter
-        val intent = shadowOf(activity.get()).peekNextStartedActivity()
-        val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
-        controller.start()
-        controller.postCreate(null)
-        try {
-            controller.resume()
-        } catch (e: Exception) {
-            // Robolectric is shadowing ViewGroup but removeView doesn't work
-            // As Buttons are moving to new parents, removeView is required to work
+        mockStatic(Exponea::class.java).use { mockedExponea ->
+            mockedExponea.`when`<PresentedMessage> { Exponea.presentedInAppMessage }.thenReturn(presented)
+            mockedExponea.`when`<InAppMessagePresenter> { Exponea.inAppMessagePresenter }.thenReturn(presenter)
+
+            val intent = shadowOf(activity.get()).peekNextStartedActivity()
+            val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
+            controller.start()
+            controller.postCreate(null)
+            try {
+                controller.resume()
+            } catch (_: Exception) {
+                // Robolectric is shadowing ViewGroup but removeView doesn't work
+                // As Buttons are moving to new parents, removeView is required to work
+            }
+            Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
+            assertNull(dismissActivity)
+            assertNull(dismissInteraction)
+            assertNull(dismissButton)
+            Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
+            assertEquals(activity.get(), dismissActivity)
+            assertEquals(false, dismissInteraction)
+            assertNull(dismissButton)
         }
-        Robolectric.getForegroundThreadScheduler().advanceBy(1233, TimeUnit.MILLISECONDS)
-        assertNull(dismissActivity)
-        assertNull(dismissInteraction)
-        assertNull(dismissButton)
-        Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
-        assertEquals(activity.get(), dismissActivity)
-        assertEquals(false, dismissInteraction)
-        assertNull(dismissButton)
     }
 
     @Test
@@ -382,24 +381,26 @@ internal class InAppMessagePresenterTest(
                 dismissButton = c
             }, {})
         assertNotNull(presented)
-        mockkObject(Exponea)
-        every { Exponea.presentedInAppMessage } returns presented
-        every { Exponea.inAppMessagePresenter } returns presenter
-        val intent = shadowOf(activity.get()).peekNextStartedActivity()
-        val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
-        controller.start()
-        controller.postCreate(null)
-        try {
-            controller.resume()
-        } catch (e: Exception) {
-            // Robolectric is shadowing ViewGroup but removeView doesn't work
-            // As Buttons are moving to new parents, removeView is required to work
+        mockStatic(Exponea::class.java).use { mockedExponea ->
+            mockedExponea.`when`<PresentedMessage> { Exponea.presentedInAppMessage }.thenReturn(presented)
+            mockedExponea.`when`<InAppMessagePresenter> { Exponea.inAppMessagePresenter }.thenReturn(presenter)
+
+            val intent = shadowOf(activity.get()).peekNextStartedActivity()
+            val controller = buildActivity(InAppMessageActivity::class.java, intent).create()
+            controller.start()
+            controller.postCreate(null)
+            try {
+                controller.resume()
+            } catch (_: Exception) {
+                // Robolectric is shadowing ViewGroup but removeView doesn't work
+                // As Buttons are moving to new parents, removeView is required to work
+            }
+            Exponea.isStopped = true
+            Exponea.deintegration.notifyDeintegration()
+            assertNull(dismissActivity)
+            assertNull(dismissInteraction)
+            assertNull(dismissButton)
         }
-        Exponea.isStopped = true
-        Exponea.deintegration.notifyDeintegration()
-        assertNull(dismissActivity)
-        assertNull(dismissInteraction)
-        assertNull(dismissButton)
     }
 
     @Test
@@ -419,42 +420,43 @@ internal class InAppMessagePresenterTest(
         var dismissInteraction: Boolean? = null
         var dismissButton: InAppMessagePayloadButton? = null
         val emptyAction: (Activity, InAppMessagePayloadButton) -> Unit = { _, _ -> }
-        val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
-        val presented =
-            presenter.show(
-                inAppMessageType,
-                payload,
-                null,
-                payloadHtml,
-                1234,
-                emptyAction,
-                { a, b, c ->
-                    dismissActivity = a
-                    dismissInteraction = b
-                    dismissButton = c
-                },
-                {})
-        mockkObject(Exponea)
-        every { Exponea.presentedInAppMessage } returns presented
-        every { Exponea.inAppMessagePresenter } returns presenter
-        val intent = shadowOf(triggerActivity.get()).peekNextStartedActivity()
-        val inAppActivity = buildActivity(InAppMessageActivity::class.java, intent).create().resume()
-        Robolectric.getForegroundThreadScheduler().advanceBy(233, TimeUnit.MILLISECONDS)
-        assertNull(dismissActivity)
-        assertNull(dismissInteraction)
-        assertNull(dismissButton)
-        // simulate activity being destroyed without dismissing in-app
-        inAppActivity.get().presentedMessageView = null
-        inAppActivity.pause().stop().destroy()
-        triggerActivity.pause().stop().destroy()
-        Robolectric.getForegroundThreadScheduler().advanceBy(1000, TimeUnit.MILLISECONDS)
-        assertNull(dismissActivity)
-        assertNull(dismissInteraction)
-        assertNull(dismissButton)
-        Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
-        assertEquals(triggerActivity.get(), dismissActivity)
-        assertEquals(false, dismissInteraction)
-        assertNull(dismissButton)
+        val presented = presenter.show(
+            inAppMessageType,
+            payload,
+            null,
+            payloadHtml,
+            1234,
+            emptyAction,
+            { a, b, c ->
+                dismissActivity = a
+                dismissInteraction = b
+                dismissButton = c
+            },
+            {}
+        )
+        mockStatic(Exponea::class.java).use { mockedExponea ->
+            mockedExponea.`when`<PresentedMessage> { Exponea.presentedInAppMessage }.thenReturn(presented)
+            mockedExponea.`when`<InAppMessagePresenter> { Exponea.inAppMessagePresenter }.thenReturn(presenter)
+
+            val intent = shadowOf(triggerActivity.get()).peekNextStartedActivity()
+            val inAppActivity = buildActivity(InAppMessageActivity::class.java, intent).create().resume()
+            Robolectric.getForegroundThreadScheduler().advanceBy(233, TimeUnit.MILLISECONDS)
+            assertNull(dismissActivity)
+            assertNull(dismissInteraction)
+            assertNull(dismissButton)
+            // simulate activity being destroyed without dismissing in-app
+            inAppActivity.get().presentedMessageView = null
+            inAppActivity.pause().stop().destroy()
+            triggerActivity.pause().stop().destroy()
+            Robolectric.getForegroundThreadScheduler().advanceBy(1000, TimeUnit.MILLISECONDS)
+            assertNull(dismissActivity)
+            assertNull(dismissInteraction)
+            assertNull(dismissButton)
+            Robolectric.getForegroundThreadScheduler().advanceBy(1, TimeUnit.HOURS)
+            assertEquals(triggerActivity.get(), dismissActivity)
+            assertEquals(false, dismissInteraction)
+            assertNull(dismissButton)
+        }
     }
 
     @Test
@@ -466,10 +468,10 @@ internal class InAppMessagePresenterTest(
             activity.get(),
             bitmapCache
         )
-        var catchedActionButton: InAppMessagePayloadButton? = null
-        var catchedClosedByUser: Boolean? = null
-        var catchedError: String? = null
-        var catchedCancelButton: InAppMessagePayloadButton? = null
+        var caughtActionButton: InAppMessagePayloadButton? = null
+        var caughtClosedByUser: Boolean? = null
+        var caughtError: String? = null
+        var caughtCancelButton: InAppMessagePayloadButton? = null
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
@@ -480,19 +482,19 @@ internal class InAppMessagePresenterTest(
             inAppMessage.timeout,
             { actionButton ->
                 // should be called only once
-                assertNull(catchedActionButton)
-                catchedActionButton = actionButton
+                assertNull(caughtActionButton)
+                caughtActionButton = actionButton
             },
             { closedByUser, cancelButton ->
                 // should be called only once
-                assertNull(catchedClosedByUser)
-                catchedClosedByUser = closedByUser
-                catchedCancelButton = cancelButton
+                assertNull(caughtClosedByUser)
+                caughtClosedByUser = closedByUser
+                caughtCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
-                assertNull(catchedError)
-                catchedError = errorMessage
+                assertNull(caughtError)
+                caughtError = errorMessage
             }
         )
         assertNotNull(view)
@@ -518,10 +520,10 @@ internal class InAppMessagePresenterTest(
             }
         }
         // validate callbacks
-        assertNotNull(catchedActionButton)
-        assertNull(catchedClosedByUser)
-        assertNull(catchedCancelButton)
-        assertNull(catchedError)
+        assertNotNull(caughtActionButton)
+        assertNull(caughtClosedByUser)
+        assertNull(caughtCancelButton)
+        assertNull(caughtError)
     }
 
     @Test
@@ -533,10 +535,10 @@ internal class InAppMessagePresenterTest(
             activity.get(),
             bitmapCache
         )
-        var catchedActionButton: InAppMessagePayloadButton? = null
-        var catchedClosedByUser: Boolean? = null
-        var catchedError: String? = null
-        var catchedCancelButton: InAppMessagePayloadButton? = null
+        var caughtActionButton: InAppMessagePayloadButton? = null
+        var caughtClosedByUser: Boolean? = null
+        var caughtError: String? = null
+        var caughtCancelButton: InAppMessagePayloadButton? = null
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
@@ -547,19 +549,19 @@ internal class InAppMessagePresenterTest(
             inAppMessage.timeout,
             { actionButton ->
                 // should be called only once
-                assertNull(catchedActionButton)
-                catchedActionButton = actionButton
+                assertNull(caughtActionButton)
+                caughtActionButton = actionButton
             },
             { closedByUser, cancelButton ->
                 // should be called only once
-                assertNull(catchedClosedByUser)
-                catchedClosedByUser = closedByUser
-                catchedCancelButton = cancelButton
+                assertNull(caughtClosedByUser)
+                caughtClosedByUser = closedByUser
+                caughtCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
-                assertNull(catchedError)
-                catchedError = errorMessage
+                assertNull(caughtError)
+                caughtError = errorMessage
             }
         )
         assertNotNull(view)
@@ -588,26 +590,26 @@ internal class InAppMessagePresenterTest(
             }
         }
         // validate callbacks
-        assertNull(catchedActionButton)
-        assertNotNull(catchedClosedByUser)
-        assertTrue(catchedClosedByUser!!)
+        assertNull(caughtActionButton)
+        assertNotNull(caughtClosedByUser)
+        assertTrue(caughtClosedByUser!!)
         when (inAppMessageType) {
             FREEFORM -> {
-                assertNotNull(catchedCancelButton)
+                assertNotNull(caughtCancelButton)
                 assertEquals(
                     payloadHtml?.actions?.find { it.actionType == HtmlActionType.CLOSE }?.buttonText,
-                    catchedCancelButton!!.text
+                    caughtCancelButton!!.text
                 )
             }
             ALERT, SLIDE_IN, MODAL, FULLSCREEN -> {
-                assertNotNull(catchedCancelButton)
+                assertNotNull(caughtCancelButton)
                 assertEquals(
                     payload?.buttons?.first { it.buttonType == InAppMessageButtonType.CANCEL }?.text,
-                    catchedCancelButton!!.text
+                    caughtCancelButton!!.text
                 )
             }
         }
-        assertNull(catchedError)
+        assertNull(caughtError)
     }
 
     @Test
@@ -622,10 +624,10 @@ internal class InAppMessagePresenterTest(
             activity.get(),
             bitmapCache
         )
-        var catchedActionButton: InAppMessagePayloadButton? = null
-        var catchedClosedByUser: Boolean? = null
-        var catchedError: String? = null
-        var catchedCancelButton: InAppMessagePayloadButton? = null
+        var caughtActionButton: InAppMessagePayloadButton? = null
+        var caughtClosedByUser: Boolean? = null
+        var caughtError: String? = null
+        var caughtCancelButton: InAppMessagePayloadButton? = null
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
@@ -636,19 +638,19 @@ internal class InAppMessagePresenterTest(
             inAppMessage.timeout,
             { actionButton ->
                 // should be called only once
-                assertNull(catchedActionButton)
-                catchedActionButton = actionButton
+                assertNull(caughtActionButton)
+                caughtActionButton = actionButton
             },
             { closedByUser, cancelButton ->
                 // should be called only once
-                assertNull(catchedClosedByUser)
-                catchedClosedByUser = closedByUser
-                catchedCancelButton = cancelButton
+                assertNull(caughtClosedByUser)
+                caughtClosedByUser = closedByUser
+                caughtCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
-                assertNull(catchedError)
-                catchedError = errorMessage
+                assertNull(caughtError)
+                caughtError = errorMessage
             }
         )
         assertNotNull(view)
@@ -659,11 +661,11 @@ internal class InAppMessagePresenterTest(
         val behavior = (containerView.layoutParams as CoordinatorLayout.LayoutParams).behavior as SwipeDismissBehavior
         behavior.listener!!.onDismiss(realView.contentView)
         // validate callbacks
-        assertNull(catchedActionButton)
-        assertNotNull(catchedClosedByUser)
-        assertTrue(catchedClosedByUser!!)
-        assertNull(catchedCancelButton)
-        assertNull(catchedError)
+        assertNull(caughtActionButton)
+        assertNotNull(caughtClosedByUser)
+        assertTrue(caughtClosedByUser!!)
+        assertNull(caughtCancelButton)
+        assertNull(caughtError)
     }
 
     @Test
@@ -675,10 +677,10 @@ internal class InAppMessagePresenterTest(
             activity.get(),
             bitmapCache
         )
-        var catchedActionButton: InAppMessagePayloadButton? = null
-        var catchedClosedByUser: Boolean? = null
-        var catchedError: String? = null
-        var catchedCancelButton: InAppMessagePayloadButton? = null
+        var caughtActionButton: InAppMessagePayloadButton? = null
+        var caughtClosedByUser: Boolean? = null
+        var caughtError: String? = null
+        var caughtCancelButton: InAppMessagePayloadButton? = null
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(bitmapCache, fontCache)
         val view = presenter.getView(
             activity.get(),
@@ -689,19 +691,19 @@ internal class InAppMessagePresenterTest(
             5000,
             { actionButton ->
                 // should be called only once
-                assertNull(catchedActionButton)
-                catchedActionButton = actionButton
+                assertNull(caughtActionButton)
+                caughtActionButton = actionButton
             },
             { closedByUser, cancelButton ->
                 // should be called only once
-                assertNull(catchedClosedByUser)
-                catchedClosedByUser = closedByUser
-                catchedCancelButton = cancelButton
+                assertNull(caughtClosedByUser)
+                caughtClosedByUser = closedByUser
+                caughtCancelButton = cancelButton
             },
             { errorMessage ->
                 // should be called only once
-                assertNull(catchedError)
-                catchedError = errorMessage
+                assertNull(caughtError)
+                caughtError = errorMessage
             }
         )
         assertNotNull(view)
@@ -710,10 +712,10 @@ internal class InAppMessagePresenterTest(
         Robolectric.getForegroundThreadScheduler().advanceBy(5100, TimeUnit.MILLISECONDS)
         Robolectric.flushForegroundThreadScheduler()
         // validate callbacks
-        assertNull(catchedActionButton)
-        assertNotNull(catchedClosedByUser)
-        assertFalse(catchedClosedByUser!!)
-        assertNull(catchedCancelButton)
-        assertNull(catchedError)
+        assertNull(caughtActionButton)
+        assertNotNull(caughtClosedByUser)
+        assertFalse(caughtClosedByUser!!)
+        assertNull(caughtCancelButton)
+        assertNull(caughtError)
     }
 }

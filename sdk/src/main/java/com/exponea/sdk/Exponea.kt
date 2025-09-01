@@ -1115,11 +1115,13 @@ object Exponea {
     }
 
     // used by InAppMessageActivity to get currently displayed message
+    @JvmStatic
     internal val presentedInAppMessage: InAppMessagePresenter.PresentedMessage?
         get() {
             return inAppMessagePresenter?.presentedMessage
         }
 
+    @JvmStatic
     internal val inAppMessagePresenter: InAppMessagePresenter?
         get() {
             if (!isInitialized) return null

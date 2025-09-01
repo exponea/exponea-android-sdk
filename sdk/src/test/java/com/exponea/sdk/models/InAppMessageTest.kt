@@ -9,10 +9,7 @@ import com.google.gson.Gson
 import kotlin.test.assertEquals
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 internal class InAppMessageTest {
     companion object {
         val nonRichStyleJson = """
@@ -62,7 +59,7 @@ internal class InAppMessageTest {
         }
         """.trimIndent()
 
-        val richStyleJson = """
+        const val RICH_STYLE_JSON = """
         {
           "id": "5dd86f44511946ea55132f29",
           "name": "Test serving in-app message",
@@ -526,7 +523,7 @@ internal class InAppMessageTest {
                 rawFrequency = frequency ?: "unknown",
                 variantId = 0,
                 variantName = "Variant A",
-                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
+                trigger = trigger ?: EventFilter("session_start", emptyList()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 priority = priority,
                 delay = delay,
@@ -663,7 +660,7 @@ internal class InAppMessageTest {
                 rawFrequency = frequency ?: "unknown",
                 variantId = 0,
                 variantName = "Variant A",
-                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
+                trigger = trigger ?: EventFilter("session_start", emptyList()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 priority = priority,
                 delay = delay,
@@ -702,7 +699,7 @@ internal class InAppMessageTest {
                 rawFrequency = frequency ?: "unknown",
                 variantId = variantId,
                 variantName = variantName,
-                trigger = trigger ?: EventFilter("session_start", arrayListOf()),
+                trigger = trigger ?: EventFilter("session_start", emptyList()),
                 dateFilter = dateFilter ?: DateFilter(false, null, null),
                 priority = priority,
                 delay = delay,
@@ -721,7 +718,7 @@ internal class InAppMessageTest {
     fun `should parse in-app message from rich-styled json`() {
         assertEquals(
             buildInAppMessageWithRichstyle(timeout = 1000, delay = 2000),
-            Gson().fromJson(richStyleJson, InAppMessage::class.java)
+            Gson().fromJson(RICH_STYLE_JSON, InAppMessage::class.java)
         )
     }
 
@@ -735,9 +732,9 @@ internal class InAppMessageTest {
 
     @Test
     fun `should serialize and deserialize basic richstyled json`() {
-        val deserialized = ExponeaGson.instance.fromJson(richStyleJson, InAppMessage::class.java)
+        val deserialized = ExponeaGson.instance.fromJson(RICH_STYLE_JSON, InAppMessage::class.java)
         val serialized = ExponeaGson.instance.toJson(deserialized)
-        assertEqualsJsons(richStyleJson, serialized)
+        assertEqualsJsons(RICH_STYLE_JSON, serialized)
     }
 
     @Test

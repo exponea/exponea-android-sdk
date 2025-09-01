@@ -31,10 +31,6 @@ import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -47,6 +43,11 @@ import kotlin.test.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
 
@@ -66,27 +67,30 @@ internal class InAppContentBlockPlaceholderViewTest {
     @Before
     fun before() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        fetchManager = mockk()
-        customerIdsRepository = mockk()
+        fetchManager = mock()
+        customerIdsRepository = mock()
         displayStateRepository = InAppContentBlockDisplayStateMock()
-        drawableCache = mockk()
-        every { drawableCache.has(any()) } returns false
-        every { drawableCache.preload(any(), any()) } just Runs
-        every { drawableCache.clear() } just Runs
-        every { drawableCache.getFile(any()) } returns MockFile()
-        fontCache = mockk()
-        every { fontCache.has(any()) } returns false
-        every { fontCache.preload(any(), any()) } just Runs
+        drawableCache = mock {
+            on { has(any()) } doReturn false
+            doNothing().on { preload(any(), any()) }
+            doNothing().on { clear() }
+            on { getFile(any()) } doReturn MockFile()
+        }
+        fontCache = mock {
+            on { has(any()) } doReturn false
+            doNothing().on { preload(any(), any()) }
+        }
         val configuration = ExponeaConfiguration(
             projectToken = "token",
             authorization = "Token auth",
             baseURL = "https://test.com"
         )
         projectFactory = ExponeaProjectFactory(context, configuration)
-        htmlCache = mockk()
-        every { htmlCache.remove(any()) } just Runs
-        every { htmlCache.get(any(), any()) } returns null
-        every { htmlCache.set(any(), any(), any()) } just Runs
+        htmlCache = mock {
+            doNothing().on { remove(any()) }
+            on { get(any(), any()) } doReturn null
+            doNothing().on { set(any(), any(), any()) }
+        }
         apiService = ExponeaMockService(true)
         inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
@@ -103,29 +107,37 @@ internal class InAppContentBlockPlaceholderViewTest {
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should load message assigned to placeholder ID`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-            )))
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+                    )
+                )
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
-                "placeholder_1",
-                ApplicationProvider.getApplicationContext(),
-                InAppContentBlockPlaceholderConfiguration(true)
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
         )
         placeholder.behaviourCallback = object : InAppContentBlockCallback {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
                 assertEquals("id1", contentBlock.id)
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 fail("Has to load message")
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
                 fail("Should not throw error")
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -145,21 +157,27 @@ internal class InAppContentBlockPlaceholderViewTest {
             ApplicationProvider.getApplicationContext(),
             InAppContentBlockPlaceholderConfiguration(true)
         )
-        preloadInAppContentBlocks(arrayListOf(
-            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-        ))
+        preloadInAppContentBlocks(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
         var messageFound = false
         placeholder.behaviourCallback = object : InAppContentBlockCallback {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
                 messageFound = true
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 messageFound = false
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -178,9 +196,11 @@ internal class InAppContentBlockPlaceholderViewTest {
         assertFalse(messageFound)
         assertEquals(View.GONE, placeholder.htmlContainer.visibility)
         assertEquals(View.VISIBLE, placeholder.placeholder.visibility)
-        preloadInAppContentBlocks(arrayListOf(
-            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-        ))
+        preloadInAppContentBlocks(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
         placeholder.refreshContent()
         idleThreads()
         assertTrue(messageFound)
@@ -192,17 +212,21 @@ internal class InAppContentBlockPlaceholderViewTest {
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `should store interaction flags by invoking manual action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1",
-                    type = "html",
-                    data = mapOf("html" to buildHtmlMessageContent()),
-                    placeholders = listOf(placeholderId),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
-                    dateFilter = null
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1",
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent()),
+                            placeholders = listOf(placeholderId),
+                            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                            dateFilter = null
+                        )
+                    )
                 )
-            )))
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
@@ -222,15 +246,19 @@ internal class InAppContentBlockPlaceholderViewTest {
                 messageShown = ++stepIndex
                 shownMessage = contentBlock
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 noMessageFound = ++stepIndex
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
                 fail("Should not throw error")
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
                 fail("Should not invoke close click")
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -265,17 +293,21 @@ internal class InAppContentBlockPlaceholderViewTest {
     fun `should invoke callbacks safely`() = runInSingleThread { idleThreads ->
         Exponea.safeModeEnabled = true
         val placeholderId = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1",
-                    type = "html",
-                    data = mapOf("html" to buildHtmlMessageContent()),
-                    placeholders = listOf(placeholderId),
-                    rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
-                    dateFilter = null
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1",
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent()),
+                            placeholders = listOf(placeholderId),
+                            rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase(),
+                            dateFilter = null
+                        )
+                    )
                 )
-            )))
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
@@ -304,18 +336,22 @@ internal class InAppContentBlockPlaceholderViewTest {
                 onMessageShownCalled = true
                 throw RuntimeException("Test error")
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 onNoMessageFoundCalled = true
                 throw RuntimeException("Test error")
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
                 onErrorCalled = true
                 throw RuntimeException("Test error")
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
                 onCloseClickedCalled = true
                 throw RuntimeException("Test error")
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -345,8 +381,8 @@ internal class InAppContentBlockPlaceholderViewTest {
         idleThreads()
         placeholder.invokeActionClick("non-existing")
         // simulates no message found
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf()))
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf()))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         placeholder.refreshContent()
@@ -364,17 +400,21 @@ internal class InAppContentBlockPlaceholderViewTest {
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `should store interaction flags by invoking close action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1",
-                    type = "html",
-                    data = mapOf("html" to buildHtmlMessageContent()),
-                    placeholders = listOf(placeholderId),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
-                    dateFilter = null
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1",
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent()),
+                            placeholders = listOf(placeholderId),
+                            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                            dateFilter = null
+                        )
+                    )
                 )
-            )))
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
@@ -393,16 +433,20 @@ internal class InAppContentBlockPlaceholderViewTest {
                 messageShown = ++stepIndex
                 shownMessage = contentBlock
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 noMessageFound = ++stepIndex
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
                 fail("Should not throw error")
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
                 assertEquals("id1", contentBlock.id)
                 actionClosed = ++stepIndex
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -437,17 +481,21 @@ internal class InAppContentBlockPlaceholderViewTest {
     @LooperMode(LooperMode.Mode.PAUSED)
     fun `should store interaction flags by invoking invalid action`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1",
-                    type = "html",
-                    data = mapOf("html" to buildHtmlMessageContent()),
-                    placeholders = listOf(placeholderId),
-                    rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
-                    dateFilter = null
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1",
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent()),
+                            placeholders = listOf(placeholderId),
+                            rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase(),
+                            dateFilter = null
+                        )
+                    )
                 )
-            )))
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val placeholder = inAppContentBlockManager.getPlaceholderView(
@@ -466,15 +514,19 @@ internal class InAppContentBlockPlaceholderViewTest {
                 messageShown = ++stepIndex
                 shownMessage = contentBlock
             }
+
             override fun onNoMessageFound(placeholderId: String) {
                 fail("Should not invoke no message step")
             }
+
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
                 onErrorFound = ++stepIndex
             }
+
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
                 fail("Should not invoke close click")
             }
+
             override fun onActionClicked(
                 placeholderId: String,
                 contentBlock: InAppContentBlock,
@@ -507,9 +559,11 @@ internal class InAppContentBlockPlaceholderViewTest {
             ApplicationProvider.getApplicationContext(),
             InAppContentBlockPlaceholderConfiguration(true)
         )
-        preloadInAppContentBlocks(arrayListOf(
-            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-        ))
+        preloadInAppContentBlocks(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
         val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
         placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
@@ -535,9 +589,11 @@ internal class InAppContentBlockPlaceholderViewTest {
             ApplicationProvider.getApplicationContext(),
             InAppContentBlockPlaceholderConfiguration(true)
         )
-        preloadInAppContentBlocks(arrayListOf(
-            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-        ))
+        preloadInAppContentBlocks(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
         val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
         placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
@@ -562,9 +618,11 @@ internal class InAppContentBlockPlaceholderViewTest {
             ApplicationProvider.getApplicationContext(),
             InAppContentBlockPlaceholderConfiguration(true)
         )
-        preloadInAppContentBlocks(arrayListOf(
-            buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
-        ))
+        preloadInAppContentBlocks(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
         val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
         placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
@@ -591,17 +649,19 @@ internal class InAppContentBlockPlaceholderViewTest {
     }
 
     private fun preloadInAppContentBlocks(messages: ArrayList<InAppContentBlock>) {
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, messages))
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, messages))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
     }
 
     private fun identifyCustomer(cookie: String? = null, ids: HashMap<String, String?> = hashMapOf()) {
-        every { customerIdsRepository.get() } returns CustomerIds().apply {
-            this.cookie = cookie
-            this.externalIds = ids
-        }
+        whenever(customerIdsRepository.get()).thenReturn(
+            CustomerIds().apply {
+                this.cookie = cookie
+                this.externalIds = ids
+            }
+        )
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
     }
 }
@@ -615,7 +675,8 @@ open class EmptyInAppContentBlockCallback : InAppContentBlockCallback {
         placeholderId: String,
         contentBlock: InAppContentBlock,
         action: InAppContentBlockAction
-    ) {}
+    ) {
+    }
 }
 
 class InAppContentBlockDisplayStateMock : InAppContentBlockDisplayStateRepository {

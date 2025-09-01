@@ -5,19 +5,16 @@ import com.google.gson.reflect.TypeToken
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 internal class SegmentTest {
     companion object {
-        const val segmentJson = """
+        const val SEGMENT_JSON = """
             {"prop1":"val1", "prop2":"2", "prop3":"true"}
         """
-        const val segmentationsJson = """
+        const val SEGMENTATIONS_JSON = """
         {
           "discovery": [
-            $segmentJson,
+            $SEGMENT_JSON,
             {"prop1":"valA", "prop2":"two", "prop3":"false"}
           ],
           "content": [
@@ -237,13 +234,13 @@ internal class SegmentTest {
 
     @Test
     fun `should parse segment from json`() {
-        val parsedSegment = Gson().fromJson(segmentJson, object : TypeToken<Segment>() {})
+        val parsedSegment = Gson().fromJson(SEGMENT_JSON, object : TypeToken<Segment>() {})
         assertEquals(getSegment(), parsedSegment)
     }
 
     @Test
     fun `should parse segmentations from json`() {
-        val parsedSegmentations = Gson().fromJson(segmentationsJson, object : TypeToken<SegmentationCategories>() {})
+        val parsedSegmentations = Gson().fromJson(SEGMENTATIONS_JSON, object : TypeToken<SegmentationCategories>() {})
         assertEquals(getSegmentations(), parsedSegmentations)
     }
 

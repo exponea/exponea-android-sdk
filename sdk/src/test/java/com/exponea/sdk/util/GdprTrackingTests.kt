@@ -1,6 +1,5 @@
 package com.exponea.sdk.util
 
-import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -8,7 +7,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class GdprTrackingTests : ExponeaSDKTest() {
+internal class GdprTrackingTests {
 
     @Test
     fun `should tracked force for valid param`() {

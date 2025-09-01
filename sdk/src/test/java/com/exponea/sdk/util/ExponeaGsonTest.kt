@@ -1,6 +1,5 @@
 package com.exponea.sdk.util
 
-import com.exponea.sdk.testutil.ExponeaSDKTest
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -9,7 +8,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExponeaGsonTest : ExponeaSDKTest() {
+internal class ExponeaGsonTest {
+
     @Test
     fun `should serialize obscure number values`() {
         assertEquals(

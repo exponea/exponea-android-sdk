@@ -2,7 +2,6 @@ package com.exponea.sdk.manager
 
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.DateFilter
 import com.exponea.sdk.models.Event
@@ -18,7 +17,6 @@ import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockStatus
 import com.exponea.sdk.models.InAppContentBlockType
 import com.exponea.sdk.models.Result
-import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
@@ -26,15 +24,7 @@ import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
-import com.exponea.sdk.telemetry.TelemetryManager
-import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
-import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.slot
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -45,6 +35,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
 
@@ -75,6 +73,7 @@ internal class InAppContentBlockManagerImplTest {
                 placeholders = placeholders
             )
         }
+
         fun buildMessageData(
             id: String,
             status: String? = InAppContentBlockStatus.OK.value,
@@ -96,10 +95,11 @@ internal class InAppContentBlockManagerImplTest {
                 content = data
             )
         }
+
         /**
          * Copied directly from APP editor, contains 2 actions (deeplink + browser), 1 image, title and message
          */
-        public fun buildHtmlMessageContent(): String {
+        fun buildHtmlMessageContent(): String {
             return """
             <html>
             <head>
@@ -266,15 +266,16 @@ internal class InAppContentBlockManagerImplTest {
             </html>
         """.trimIndent()
         }
+
         fun buildAction(
             type: InAppContentBlockActionType = InAppContentBlockActionType.BROWSER,
             actionName: String = "InApp action",
             actionUrl: String = "www.example.com"
         ): InAppContentBlockAction {
             return InAppContentBlockAction(
-                    type = type,
-                    name = actionName,
-                    url = actionUrl
+                type = type,
+                name = actionName,
+                url = actionUrl
             )
         }
     }
@@ -282,7 +283,6 @@ internal class InAppContentBlockManagerImplTest {
     private lateinit var customerIdsRepository: CustomerIdsRepository
     private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
-    private lateinit var apiService: ExponeaService
     private lateinit var displayStateRepository: InAppContentBlockDisplayStateRepository
     private lateinit var projectFactory: ExponeaProjectFactory
     private lateinit var htmlCache: HtmlNormalizedCache
@@ -290,45 +290,38 @@ internal class InAppContentBlockManagerImplTest {
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
 
     @Before
-    fun disableTelemetry() {
-        mockkConstructorFix(SentryTelemetryUpload::class) {
-            every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) }
-        }
-        every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) } answers {
-            secondArg<(kotlin.Result<Unit>) -> Unit>().invoke(kotlin.Result.success(Unit))
-        }
-    }
-
-    @Before
     fun before() {
         Exponea.telemetry = null
-        fetchManager = mockk()
-        customerIdsRepository = mockk()
-        displayStateRepository = mockk()
-        every { displayStateRepository.get(any()) } returns InAppContentBlockDisplayState(
-            null, 0, null, 0
-        )
-        every { displayStateRepository.setDisplayed(any(), any()) } just Runs
-        every { displayStateRepository.setInteracted(any(), any()) } just Runs
-        every { displayStateRepository.clear() } just Runs
-        drawableCache = mockk()
-        every { drawableCache.has(any()) } returns false
-        every { drawableCache.preload(any(), any()) } just Runs
-        every { drawableCache.clear() } just Runs
-        fontCache = mockk()
-        every { fontCache.has(any()) } returns false
-        every { fontCache.preload(any(), any()) } just Runs
+        fetchManager = mock()
+        customerIdsRepository = mock()
+        displayStateRepository = mock {
+            on { get(any()) } doReturn InAppContentBlockDisplayState(
+                null, 0, null, 0
+            )
+            doNothing().on { setDisplayed(any(), any()) }
+            doNothing().on { setInteracted(any(), any()) }
+            doNothing().on { clear() }
+        }
+        drawableCache = mock {
+            on { has(any()) } doReturn false
+            doNothing().on { preload(any(), any()) }
+            doNothing().on { clear() }
+        }
+        fontCache = mock {
+            on { has(any()) } doReturn false
+            doNothing().on { preload(any(), any()) }
+        }
         val configuration = ExponeaConfiguration(
             projectToken = "token",
             authorization = "Token auth",
             baseURL = "https://test.com"
         )
         projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
-        htmlCache = mockk()
-        every { htmlCache.remove(any()) } just Runs
-        every { htmlCache.get(any(), any()) } returns null
-        every { htmlCache.set(any(), any(), any()) } just Runs
-        apiService = ExponeaMockService(true)
+        htmlCache = mock {
+            doNothing().on { remove(any()) }
+            on { get(any(), any()) } doReturn null
+            doNothing().on { set(any(), any(), any()) }
+        }
         inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
@@ -349,13 +342,17 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should load only supported messages`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "native"),
-                buildMessage("id2", type = "html"),
-                buildMessage("id3", type = "whatSoEver")
-            )))
+    fun `should load only supported messages`() = runInSingleThread {
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage("id1", type = "native"),
+                        buildMessage("id2", type = "html"),
+                        buildMessage("id3", type = "whatSoEver")
+                    )
+                )
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertEquals(1, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
@@ -363,13 +360,17 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should not load messages if SDK is stopped`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "native"),
-                buildMessage("id2", type = "html"),
-                buildMessage("id3", type = "whatSoEver")
-            )))
+    fun `should not load messages if SDK is stopped`() = runInSingleThread {
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage("id1", type = "native"),
+                        buildMessage("id2", type = "html"),
+                        buildMessage("id3", type = "whatSoEver")
+                    )
+                )
+            )
         }
         Exponea.isStopped = true
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
@@ -378,14 +379,18 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should not load messages if SDK is stopped while fetching`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+    fun `should not load messages if SDK is stopped while fetching`() = runInSingleThread {
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
             Exponea.isStopped = true
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage("id1", type = "native"),
-                buildMessage("id2", type = "html"),
-                buildMessage("id3", type = "whatSoEver")
-            )))
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage("id1", type = "native"),
+                        buildMessage("id2", type = "html"),
+                        buildMessage("id3", type = "whatSoEver")
+                    )
+                )
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         assertEquals(0, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
@@ -393,15 +398,19 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should parse HTML message in Static-InAppContentBlock`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1", type = "html", data = mapOf(
-                        "html" to buildHtmlMessageContent()
+    fun `should parse HTML message in Static-InAppContentBlock`() = runInSingleThread {
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1", type = "html", data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
                     )
                 )
-            )))
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.firstOrNull()
@@ -416,27 +425,43 @@ internal class InAppContentBlockManagerImplTest {
     fun `should update non-loaded Personalized InAppContentBlock with fresh content`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    messageId,
-                    placeholders = listOf(placeholderId),
-                    dateFilter = null
-                ) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), listOf(messageId), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    messageId,
-                    type = "html",
-                    hasTrackingConsent = false,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            messageId,
+                            placeholders = listOf(placeholderId),
+                            dateFilter = null
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(
+            fetchManager.fetchPersonalizedContentBlocks(
+                any(),
+                any(),
+                argThat<List<String>> { list -> list.size == 1 && list[0] == messageId },
+                any(),
+                any()
+            )
+        ).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            messageId,
+                            type = "html",
+                            hasTrackingConsent = false,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
@@ -461,28 +486,44 @@ internal class InAppContentBlockManagerImplTest {
     fun `should not load Personalized InAppContentBlock if SDK is stopped`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    messageId,
-                    placeholders = listOf(placeholderId),
-                    dateFilter = null
-                ) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), listOf(messageId), any(), any()) } answers {
-            Exponea.isStopped = true
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    messageId,
-                    type = "html",
-                    hasTrackingConsent = false,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            messageId,
+                            placeholders = listOf(placeholderId),
+                            dateFilter = null
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(
+            fetchManager.fetchPersonalizedContentBlocks(
+                any(),
+                any(),
+                argThat<List<String>> { list -> list.size == 1 && list[0] == messageId },
+                any(),
+                any()
+            )
+        ).thenAnswer {
+            Exponea.isStopped = true
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            messageId,
+                            type = "html",
+                            hasTrackingConsent = false,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
         }
         val inAppContentBlockManagerImpl = inAppContentBlockManager as InAppContentBlockManagerImpl
         // static fetch is successful
@@ -504,35 +545,43 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should refresh message only after expiration of ttl`() = runInSingleThread { idleThreads ->
+    fun `should refresh message only after expiration of ttl`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
-        var personalizedLoadCount: Int = 0
+        var personalizedLoadCount = 0
         val ttlSeconds = 5
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    messageId,
-                    placeholders = listOf(placeholderId),
-                    dateFilter = null
-                ) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    messageId,
-                    ttl = ttlSeconds,
-                    type = "html",
-                    hasTrackingConsent = false,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent(),
-                        // out of data, but used to verify
-                        "loadCount" to ++personalizedLoadCount
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            messageId,
+                            placeholders = listOf(placeholderId),
+                            dateFilter = null
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            messageId,
+                            ttl = ttlSeconds,
+                            type = "html",
+                            hasTrackingConsent = false,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent(),
+                                // out of data, but used to verify
+                                "loadCount" to ++personalizedLoadCount
+                            )
+                        )
+                    )
+                )
+            )
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
@@ -546,39 +595,47 @@ internal class InAppContentBlockManagerImplTest {
         assertNotNull(message)
         assertNotNull(message.personalizedData)
         assertNotNull(message.personalizedData!!.content)
-        assertEquals(2, (message.personalizedData!!.content!!.get("loadCount") as Number).toInt())
+        assertEquals(2, (message.personalizedData!!.content!!["loadCount"] as Number).toInt())
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should auto-load messages content by configuration`() = runInSingleThread { idleThreads ->
+    fun `should auto-load messages content by configuration`() = runInSingleThread {
         val placeholderToAutoLoad = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    "id1",
-                    placeholders = listOf(placeholderToAutoLoad, "ph2"),
-                    dateFilter = null
-                ), // static has not contentType nor data
-                buildMessage(
-                    "id2",
-                    placeholders = listOf("ph3"),
-                    dateFilter = null
-                ) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    arg<List<String>>(2).first(),
-                    type = "html",
-                    hasTrackingConsent = false,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            "id1",
+                            placeholders = listOf(placeholderToAutoLoad, "ph2"),
+                            dateFilter = null
+                        ), // static has not contentType nor data
+                        buildMessage(
+                            "id2",
+                            placeholders = listOf("ph3"),
+                            dateFilter = null
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            it.getArgument<List<String>>(2).first(),
+                            type = "html",
+                            hasTrackingConsent = false,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
         }
         // flag is read from ExponeaProject, need to be re-created
         val configuration = ExponeaConfiguration(
@@ -610,66 +667,88 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should track event with original customer`() = runInSingleThread { idleThreads ->
+    fun `should track event with original customer`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(messageId, placeholders = listOf(placeholderId)) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    messageId,
-                    type = "html",
-                    hasTrackingConsent = true,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            messageId,
+                            placeholders = listOf(placeholderId)
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            messageId,
+                            type = "html",
+                            hasTrackingConsent = true,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message)
-        assertEquals("brownie1", message.customerIds.get("cookie"))
-        assertEquals("test", message.customerIds.get("login"))
+        assertEquals("brownie1", message.customerIds["cookie"])
+        assertEquals("test", message.customerIds["login"])
         identifyCustomer(cookie = "brownie2", ids = hashMapOf("login" to "another"))
         assertNotNull(message)
-        assertEquals("brownie1", message.customerIds.get("cookie"))
-        assertEquals("test", message.customerIds.get("login"))
+        assertEquals("brownie1", message.customerIds["cookie"])
+        assertEquals("test", message.customerIds["login"])
         val message2 = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message2)
         assertEquals(message.id, message2.id)
-        assertEquals("brownie2", message2.customerIds.get("cookie"))
-        assertEquals("another", message2.customerIds.get("login"))
+        assertEquals("brownie2", message2.customerIds["cookie"])
+        assertEquals("another", message2.customerIds["login"])
     }
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should remove personal data after customer login`() = runInSingleThread { idleThreads ->
+    fun `should remove personal data after customer login`() = runInSingleThread {
         val placeholderId = "ph1"
         val messageId = "id1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(messageId, placeholders = listOf(placeholderId)) // static has not contentType nor data
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
-                // htmlContent
-                buildMessageData(
-                    messageId,
-                    type = "html",
-                    hasTrackingConsent = true,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            messageId,
+                            placeholders = listOf(placeholderId)
+                        ) // static has not contentType nor data
                     )
                 )
-            )))
+            )
+        }
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+                Result(
+                    true, arrayListOf(
+                        // htmlContent
+                        buildMessageData(
+                            messageId,
+                            type = "html",
+                            hasTrackingConsent = true,
+                            data = mapOf(
+                                "html" to buildHtmlMessageContent()
+                            )
+                        )
+                    )
+                )
+            )
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
@@ -688,7 +767,7 @@ internal class InAppContentBlockManagerImplTest {
     }
 
     private fun identifyCustomer(cookie: String? = null, ids: HashMap<String, String?> = hashMapOf()) {
-        every { customerIdsRepository.get() } returns CustomerIds().apply {
+        whenever(customerIdsRepository.get()) doReturn CustomerIds().apply {
             this.cookie = cookie
             this.externalIds = ids
         }
@@ -697,54 +776,59 @@ internal class InAppContentBlockManagerImplTest {
 
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
-    fun `should prioritize message by priority value`() = runInSingleThread { idleThreads ->
+    fun `should prioritize message by priority value`() = runInSingleThread {
         val placeholderId = "ph1"
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                    buildMessage(
-                        id = "1",
-                        placeholders = listOf(placeholderId),
-                        priority = null,
-                        dateFilter = null
-                    ),
-                    buildMessage(
-                        id = "2",
-                        placeholders = listOf(placeholderId),
-                        priority = 0,
-                        dateFilter = null
-                    ),
-                    buildMessage(
-                        id = "3",
-                        placeholders = listOf(placeholderId),
-                        priority = 1000,
-                        dateFilter = null
-                    ),
-                    buildMessage(
-                        id = "4",
-                        placeholders = listOf(placeholderId),
-                        priority = 10,
-                        dateFilter = null
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            id = "1",
+                            placeholders = listOf(placeholderId),
+                            priority = null,
+                            dateFilter = null
+                        ),
+                        buildMessage(
+                            id = "2",
+                            placeholders = listOf(placeholderId),
+                            priority = 0,
+                            dateFilter = null
+                        ),
+                        buildMessage(
+                            id = "3",
+                            placeholders = listOf(placeholderId),
+                            priority = 1000,
+                            dateFilter = null
+                        ),
+                        buildMessage(
+                            id = "4",
+                            placeholders = listOf(placeholderId),
+                            priority = 10,
+                            dateFilter = null
+                        )
                     )
-            )))
+                )
+            )
         }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
             val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
-            arg<List<String>>(2).forEach { messageId ->
-                msgData.add(buildMessageData(
+            it.getArgument<List<String>>(2).forEach { messageId ->
+                msgData.add(
+                    buildMessageData(
                         messageId,
                         type = "html",
                         hasTrackingConsent = false,
-                        data = mapOf(
-                                "html" to buildHtmlMessageContent()
-                        )
-                ))
+                        data = mapOf("html" to buildHtmlMessageContent())
+                    )
+                )
             }
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, msgData))
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+                .invoke(Result(true, msgData))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
-        for (i in 0..1000) {
+        repeat((0..1000).count()) {
             val chosenContentBlock = (inAppContentBlockManager as InAppContentBlockManagerImpl)
-                    .loadContent(placeholderId)
+                .loadContent(placeholderId)
             assertNotNull(chosenContentBlock)
             assertNotNull(chosenContentBlock.personalizedData)
             assertEquals("3", chosenContentBlock.id)
@@ -758,21 +842,26 @@ internal class InAppContentBlockManagerImplTest {
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should track show message into telemetry`() = runInSingleThread { idleThreads ->
         val contentBlock = buildMessage("id2", type = "html")
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                contentBlock
-            )))
-        }
-        mockkConstructorFix(TelemetryManager::class)
-        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
-        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
-        every {
-            anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryTelemetryEventSlot),
-                capture(telemetryPropertiesSlot)
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        contentBlock
+                    )
+                )
             )
-        } just Runs
-        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        }
+        val telemetryTelemetryEventCaptor = argumentCaptor<com.exponea.sdk.telemetry.model.TelemetryEvent>()
+        val telemetryPropertiesCaptor = argumentCaptor<MutableMap<String, String>>()
+
+        Exponea.telemetry = mock {
+            doNothing().on {
+                reportEvent(
+                    telemetryTelemetryEventCaptor.capture(),
+                    telemetryPropertiesCaptor.capture()
+                )
+            }
+        }
         inAppContentBlockManager.getPlaceholderView(
             "placeholder_1",
             object : InAppContentBlockDataLoader {
@@ -784,12 +873,12 @@ internal class InAppContentBlockManagerImplTest {
             InAppContentBlockPlaceholderConfiguration(defferedLoad = false)
         )
         idleThreads()
-        assertTrue(telemetryTelemetryEventSlot.isCaptured)
-        val capturedEventType = telemetryTelemetryEventSlot.captured
+
+        val capturedEventType = telemetryTelemetryEventCaptor.lastValue
         assertNotNull(capturedEventType)
         assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.CONTENT_BLOCK_SHOWN, capturedEventType)
-        assertTrue(telemetryPropertiesSlot.isCaptured)
-        val capturedProps = telemetryPropertiesSlot.captured
+
+        val capturedProps = telemetryPropertiesCaptor.lastValue
         assertNotNull(capturedProps)
         assertEquals("static", capturedProps["type"])
     }
@@ -826,22 +915,26 @@ internal class InAppContentBlockManagerImplTest {
     @Test
     fun `should pass for disabled date filter`() {
         val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
-        val contentBlock = buildMessage("id1", type = "html", dateFilter = DateFilter(
-            enabled = false,
-            fromDate = nowSeconds + 10,
-            toDate = nowSeconds + 20
-        ))
+        val contentBlock = buildMessage(
+            "id1", type = "html", dateFilter = DateFilter(
+                enabled = false,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            )
+        )
         assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
     }
 
     @Test
     fun `should not pass for date filter with missed time`() {
         val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
-        val contentBlock = buildMessage("id1", type = "html", dateFilter = DateFilter(
-            enabled = true,
-            fromDate = nowSeconds + 10,
-            toDate = nowSeconds + 20
-        ))
+        val contentBlock = buildMessage(
+            "id1", type = "html", dateFilter = DateFilter(
+                enabled = true,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            )
+        )
         assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
     }
 
@@ -852,11 +945,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -867,11 +957,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -882,11 +969,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, Date(), 1
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -897,11 +981,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -912,11 +993,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -927,11 +1005,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, Date(), 1
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -942,11 +1017,9 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
+
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -957,11 +1030,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -972,11 +1042,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -987,11 +1054,8 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            null, 0, Date(), 1
-        )
+        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
+            .whenever(displayStateRepository).get(contentBlock)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1044,11 +1108,8 @@ internal class InAppContentBlockManagerImplTest {
             ),
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
         assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
@@ -1067,11 +1128,8 @@ internal class InAppContentBlockManagerImplTest {
             ),
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        every {
-            displayStateRepository.get(contentBlock)
-        } returns InAppContentBlockDisplayState(
-            Date(), 1, null, 0
-        )
+        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
+            .whenever(displayStateRepository).get(contentBlock)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
@@ -1081,10 +1139,8 @@ internal class InAppContentBlockManagerImplTest {
     fun `should return all content blocks but only for placeholder`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
-        every {
-            displayStateRepository.get(any())
-        } answers {
-            if (firstArg<InAppContentBlock>().id == "invalidByFrequency") {
+        doAnswer {
+            if (it.getArgument<InAppContentBlock>(1).id == "invalidByFrequency") {
                 InAppContentBlockDisplayState(
                     Date(), 1, null, 0
                 )
@@ -1093,49 +1149,56 @@ internal class InAppContentBlockManagerImplTest {
                     null, 0, null, 0
                 )
             }
-        }
-        every { fetchManager.fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
-            arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
-                buildMessage(
-                    id = "invalidByDate",
-                    placeholders = listOf(placeholderId),
-                    dateFilter = DateFilter(
-                        enabled = true,
-                        fromDate = nowSeconds + 10,
-                        toDate = nowSeconds + 20
-                    ),
-                    rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
-                ),
-                buildMessage(
-                    id = "invalidByFrequency",
-                    placeholders = listOf(placeholderId),
-                    rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
-                ),
-                buildMessage(
-                    id = "valid",
-                    placeholders = listOf(placeholderId),
-                    priority = 1000
-                ),
-                buildMessage(
-                    id = "invalidByPlaceholder",
-                    placeholders = listOf("ph2"),
-                    priority = 10
-                )
-            )))
-        }
-        every { fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any()) } answers {
-            val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
-            arg<List<String>>(2).forEach { messageId ->
-                msgData.add(buildMessageData(
-                    messageId,
-                    type = "html",
-                    hasTrackingConsent = false,
-                    data = mapOf(
-                        "html" to buildHtmlMessageContent()
+        }.whenever(displayStateRepository).get(any())
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(
+                    true, arrayListOf(
+                        buildMessage(
+                            id = "invalidByDate",
+                            placeholders = listOf(placeholderId),
+                            dateFilter = DateFilter(
+                                enabled = true,
+                                fromDate = nowSeconds + 10,
+                                toDate = nowSeconds + 20
+                            ),
+                            rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
+                        ),
+                        buildMessage(
+                            id = "invalidByFrequency",
+                            placeholders = listOf(placeholderId),
+                            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+                        ),
+                        buildMessage(
+                            id = "valid",
+                            placeholders = listOf(placeholderId),
+                            priority = 1000
+                        ),
+                        buildMessage(
+                            id = "invalidByPlaceholder",
+                            placeholders = listOf("ph2"),
+                            priority = 10
+                        )
                     )
-                ))
+                )
+            )
+        }
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+            val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
+            it.getArgument<List<String>>(2).forEach { messageId ->
+                msgData.add(
+                    buildMessageData(
+                        messageId,
+                        type = "html",
+                        hasTrackingConsent = false,
+                        data = mapOf(
+                            "html" to buildHtmlMessageContent()
+                        )
+                    )
+                )
             }
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, msgData))
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+                .invoke(Result(true, msgData))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()
         idleThreads()

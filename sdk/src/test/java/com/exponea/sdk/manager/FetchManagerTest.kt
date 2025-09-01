@@ -1023,7 +1023,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onSuccess when server returns some data for Segments`() {
         var parsedSegmentations = SegmentationCategories()
         waitForIt {
-            val emptyResponseInstance = ExponeaMockService(true, getResponse(SegmentTest.segmentationsJson))
+            val emptyResponseInstance = ExponeaMockService(true, getResponse(SegmentTest.SEGMENTATIONS_JSON))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),

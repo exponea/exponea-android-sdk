@@ -3,7 +3,6 @@ package com.exponea.sdk
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
-import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -11,7 +10,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class ExponeaPreferencesTest : ExponeaSDKTest() {
+internal class ExponeaPreferencesTest {
 
     companion object {
         const val VAL_BOOL = "booleanValue"
@@ -42,9 +41,12 @@ internal class ExponeaPreferencesTest : ExponeaSDKTest() {
     @Test
     fun remove_ShouldPass() {
         val value = "someOtherString"
+        val default = "deleted"
+
         prefs.setString(VAL_STRING, value)
-        assertEquals(value, prefs.getString(VAL_STRING, "deleted"))
+
+        assertEquals(value, prefs.getString(VAL_STRING, default))
         assertEquals(true, prefs.remove(VAL_STRING))
-        assertEquals("deleted", prefs.getString(VAL_STRING, "deleted"))
+        assertEquals(default, prefs.getString(VAL_STRING, default))
     }
 }

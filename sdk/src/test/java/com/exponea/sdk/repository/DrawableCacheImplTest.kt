@@ -5,8 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
-import io.mockk.spyk
-import io.mockk.verify
 import java.io.File
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -18,12 +16,19 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class DrawableCacheImplTest {
+
     lateinit var context: Context
     lateinit var server: MockWebServer
+
     @Before
     fun before() {
         context = ApplicationProvider.getApplicationContext()
@@ -49,6 +54,7 @@ internal class DrawableCacheImplTest {
         val imageUrl = server.url("image.jpg").toString()
 
         val repo = DrawableCacheImpl(context)
+
         waitForIt { repo.preload(listOf(imageUrl)) { it() } }
         assertNotNull(repo.getFile(imageUrl))
     }
@@ -63,13 +69,14 @@ internal class DrawableCacheImplTest {
                     "fda24b2c-5ccf-11ec-9e7d-224548c7f76e"
         ).toString()
 
-        val cache = DrawableCacheImpl(context)
-        val repo = spyk(cache.fileCache)
-        verify(exactly = 0) { repo.downloadFile(any(), any()) }
-        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-        verify(exactly = 1) { repo.downloadFile(any(), any()) }
-        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-        verify(exactly = 1) { repo.downloadFile(any(), any()) }
+        val simpleFileCache = spy(DrawableCacheImpl(context).fileCache)
+        verify(simpleFileCache, never()).downloadFile(any(), any())
+
+        waitForIt { simpleFileCache.preload(listOf(imageUrl)) { it() } }
+        verify(simpleFileCache, times(1)).downloadFile(any(), any())
+
+        waitForIt { simpleFileCache.preload(listOf(imageUrl)) { it() } }
+        verify(simpleFileCache, times(1)).downloadFile(any(), any())
     }
 
     @Test
@@ -88,13 +95,14 @@ internal class DrawableCacheImplTest {
                     "a20fdf92-5cd2-11ec-819f-a64145d9ff9e"
         ).toString()
 
-        val cache = DrawableCacheImpl(context)
-        val repo = spyk(cache.fileCache)
-        verify(exactly = 0) { repo.downloadFile(any(), any()) }
-        waitForIt { repo.preload(listOf(imageUrl1)) { it() } }
-        verify(exactly = 1) { repo.downloadFile(any(), any()) }
-        waitForIt { repo.preload(listOf(imageUrl2)) { it() } }
-        verify(exactly = 2) { repo.downloadFile(any(), any()) }
+        val simpleFileCache = spy(DrawableCacheImpl(context).fileCache)
+        verify(simpleFileCache, never()).downloadFile(any(), any())
+
+        waitForIt { simpleFileCache.preload(listOf(imageUrl1)) { it() } }
+        verify(simpleFileCache, times(1)).downloadFile(any(), any())
+
+        waitForIt { simpleFileCache.preload(listOf(imageUrl2)) { it() } }
+        verify(simpleFileCache, times(2)).downloadFile(any(), any())
     }
 
     @Test
@@ -123,7 +131,7 @@ internal class DrawableCacheImplTest {
     @Test
     fun `should download and store image with URL length up to 2000 characters`() {
         val cache = DrawableCacheImpl(context)
-        val repo = spyk(cache.fileCache)
+        val repo = spy(cache.fileCache)
         val alphabet: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
         for (nameLength in 1..2000) {
             server.enqueue(MockResponse().setBody("mock-response"))
@@ -143,12 +151,13 @@ internal class DrawableCacheImplTest {
             /img/media/eadded8b1adc2e808cb7ddaf2c09dcb0f5b3126b/0_1720_2333_1399/master/2333.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=b0988ec9b039a42a1c70f7b3b9956d49
             """.trimIndent()
         ).toString()
-        val cache = DrawableCacheImpl(context)
-        val repo = spyk(cache.fileCache)
-        repo.getFileName(imageUrl).length
-        waitForIt { repo.preload(listOf(imageUrl)) { it() } }
-        verify(exactly = 1) { repo.downloadFile(any(), any()) }
-        assertTrue(repo.has(imageUrl))
+
+        val simpleFileCache = spy(DrawableCacheImpl(context).fileCache)
+        simpleFileCache.getFileName(imageUrl).length
+        waitForIt { simpleFileCache.preload(listOf(imageUrl)) { it() } }
+
+        verify(simpleFileCache, times(1)).downloadFile(any(), any())
+        assertTrue(simpleFileCache.has(imageUrl))
     }
 
     @Test
@@ -156,8 +165,7 @@ internal class DrawableCacheImplTest {
         server.enqueue(MockResponse().setBody("mock-response"))
         // real image
         val imageUrl = "noscheme://example.com/image.jpg"
-        val cache = DrawableCacheImpl(context)
-        val repo = spyk(cache.fileCache)
+        val repo = DrawableCacheImpl(context).fileCache
         var downloaded = true
         waitForIt { done ->
             repo.downloadFile(imageUrl) { downloadStatus ->

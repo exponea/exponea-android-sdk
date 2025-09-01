@@ -10,9 +10,12 @@ internal class PushNotificationRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : PushNotificationRepository {
 
-    private val KEY_EXTRA_DATA = "ExponeaPushNotificationExtraData"
-    private val KEY_DELIVERED_DATA = "ExponeaDeliveredPushNotificationData"
-    private val KEY_CLICKED_DATA = "ExponeaClickedPushNotificationData"
+    companion object {
+        const val MAX_STORED_NOTIFICATIONS = 100
+        const val KEY_EXTRA_DATA = "ExponeaPushNotificationExtraData"
+        const val KEY_DELIVERED_DATA = "ExponeaDeliveredPushNotificationData"
+        const val KEY_CLICKED_DATA = "ExponeaClickedPushNotificationData"
+    }
 
     override fun getExtraData(): Map<String, Any>? {
         val dataString = preferences.getString(KEY_EXTRA_DATA, "")
@@ -28,7 +31,13 @@ internal class PushNotificationRepositoryImpl(
     }
 
     override fun appendDeliveredNotification(data: Map<String, String>) {
-        val storedDeliveredNotifications = getDeliveredNotifications()
+        val storedDeliveredNotifications = getDeliveredNotifications().let {
+            if (it.size >= MAX_STORED_NOTIFICATIONS) {
+                it.takeLast(MAX_STORED_NOTIFICATIONS - 1)
+            } else {
+                it
+            }
+        }
         val newDeliveredNotifications = storedDeliveredNotifications + data
         val dataString = Gson().toJson(newDeliveredNotifications)
         preferences.setString(KEY_DELIVERED_DATA, dataString)

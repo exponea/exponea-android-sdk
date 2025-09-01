@@ -152,7 +152,7 @@ Exponea.pushNotificationsDelegate = object : PushNotificationDelegate {
 }
 ```
 
-Note that if the SDK previously received any additional data while no listener was attached to the callback, it will dispatch all received and clicked push notification data as soon as a listener is attached.
+Note that if the SDK previously received any additional data while no listener was attached to the callback, it will dispatch up to 100 most recently received and clicked push notification data as soon as a listener is attached.
 
 > ❗️
 >

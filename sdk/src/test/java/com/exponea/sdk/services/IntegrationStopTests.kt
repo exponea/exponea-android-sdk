@@ -49,7 +49,12 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -57,9 +62,44 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class IntegrationStopTests : ExponeaSDKTest() {
 
+    private val pathToImage = "/path/to/image.png"
+    private val pathToFont = "/path/to/font.ttf"
+
+    private lateinit var server: MockWebServer
+
+    @Before
+    fun setUp() {
+        server = MockWebServer().apply {
+            dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    return when (request.requestUrl?.encodedPath) {
+                        pathToImage -> {
+                            MockResponse()
+                                .setResponseCode(200)
+                                .setHeader("Content-Type", "image/png")
+                                .setBody("mock-image-response")
+                        }
+                        pathToFont -> {
+                            MockResponse()
+                                .setResponseCode(200)
+                                .setHeader("Content-Type", "font/ttf")
+                                .setBody("mock-font-response")
+                        }
+                        else -> {
+                            MockResponse()
+                                .setResponseCode(404)
+                        }
+                    }
+                }
+            }
+        }
+        server.start()
+    }
+
     @After
-    fun resetSdkState() {
+    fun tearDown() {
         Exponea.isStopped = false
+        server.shutdown()
     }
 
     @Test
@@ -103,6 +143,8 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
 
     private fun createSdkData() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        val imageUrl = server.url(pathToImage).toString()
+        val fontUrl = server.url(pathToFont).toString()
         EventRepositoryImpl(context).add(
             ExportedEvent(
                 id = UUID.randomUUID().toString(),
@@ -118,7 +160,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         }
         waitForIt {
             DrawableCacheImpl(context).preload(
-                urls = listOf("https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png"),
+                urls = listOf(imageUrl),
                 callback = { _ ->
                     it()
                 }
@@ -156,7 +198,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         }
         waitForIt {
             FontCacheImpl(context).preload(
-                urls = listOf("http://themes.googleusercontent.com/static/fonts/abeezee/v1/JYPhMn-3Xw-JGuyB-fEdNA.ttf"),
+                urls = listOf(fontUrl),
                 callback = { _ ->
                     it()
                 }
@@ -181,9 +223,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance)
         assertEquals(0, appInboxCache.getMessages().size)
         assertNull(appInboxCache.getSyncToken())
-        assertFalse(
-            DrawableCacheImpl(context).has("https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png")
-        )
+        assertFalse(DrawableCacheImpl(context).has(server.url(pathToImage).toString()))
         assertNull(SegmentsCacheImpl(context, ExponeaGson.instance).get())
         assertEquals(0, Exponea.segmentationDataCallbacks.size)
         val exponeaPrefs = ExponeaPreferencesImpl(context)
@@ -203,9 +243,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         val htmlCache = HtmlNormalizedCacheImpl(context, exponeaPrefs)
         assertNull(htmlCache.get("12345", "<html></html>"))
         val fontCache = FontCacheImpl(context)
-        assertFalse(
-            fontCache.has("http://themes.googleusercontent.com/static/fonts/abeezee/v1/JYPhMn-3Xw-JGuyB-fEdNA.ttf")
-        )
+        assertFalse(fontCache.has(server.url(pathToFont).toString()))
         val inAppCache = InAppMessagesCacheImpl(context, ExponeaGson.instance)
         assertEquals(0, inAppCache.get().size)
         val iaDisplayStateRepo = InAppMessageDisplayStateRepositoryImpl(exponeaPrefs, ExponeaGson.instance)
@@ -228,9 +266,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance)
         assertNotEquals(0, appInboxCache.getMessages().size)
         assertNotNull(appInboxCache.getSyncToken())
-        assertTrue(
-            DrawableCacheImpl(context).has("https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png")
-        )
+        assertTrue(DrawableCacheImpl(context).has(server.url(pathToImage).toString()))
         assertNotNull(SegmentsCacheImpl(context, ExponeaGson.instance).get())
         assertNotEquals(0, Exponea.segmentationDataCallbacks.size)
         val exponeaPrefs = ExponeaPreferencesImpl(context)
@@ -250,9 +286,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         val htmlCache = HtmlNormalizedCacheImpl(context, exponeaPrefs)
         assertNotNull(htmlCache.get("12345", "<html></html>"))
         val fontCache = FontCacheImpl(context)
-        assertTrue(
-            fontCache.has("http://themes.googleusercontent.com/static/fonts/abeezee/v1/JYPhMn-3Xw-JGuyB-fEdNA.ttf")
-        )
+        assertTrue(fontCache.has(server.url(pathToFont).toString()))
         val inAppCache = InAppMessagesCacheImpl(context, ExponeaGson.instance)
         assertNotEquals(0, inAppCache.get().size)
         val iaDisplayStateRepo = InAppMessageDisplayStateRepositoryImpl(exponeaPrefs, ExponeaGson.instance)

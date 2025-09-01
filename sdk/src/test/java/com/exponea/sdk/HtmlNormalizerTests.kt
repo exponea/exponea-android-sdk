@@ -6,7 +6,6 @@ import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
-import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
@@ -19,8 +18,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.junit.After
@@ -32,18 +33,47 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class HtmlNormalizerTests {
 
-    lateinit var context: Context
-    lateinit var server: MockWebServer
+    private lateinit var context: Context
+    private lateinit var server: MockWebServer
+
+    private val pathToImage = "/path/to/test_image.png"
+    private val pathToFont = "/path/to/test_font.ttf"
+
     @Before
     fun before() {
         context = ApplicationProvider.getApplicationContext()
-        server = ExponeaMockServer.createServer()
+        server = MockWebServer().apply {
+            dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    return when (request.requestUrl?.encodedPath) {
+                        pathToImage -> {
+                            MockResponse()
+                                .setResponseCode(200)
+                                .setHeader("Content-Type", "image/png")
+                                .setBody("mock-image-response")
+                        }
+                        pathToFont -> {
+                            MockResponse()
+                                .setResponseCode(200)
+                                .setHeader("Content-Type", "font/ttf")
+                                .setBody("mock-font-response")
+                        }
+                        else -> {
+                            MockResponse()
+                                .setResponseCode(404)
+                        }
+                    }
+                }
+            }
+        }
+        server.start()
         File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
         File(context.filesDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
 
     @After
-    fun removeCaches() {
+    fun tearDown() {
+        server.shutdown()
         File(context.filesDir, DrawableCacheImpl.DIRECTORY).deleteRecursively()
         File(context.filesDir, HtmlNormalizedCacheImpl.DIRECTORY).deleteRecursively()
     }
@@ -324,22 +354,19 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineImage() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val imageUrl = server.url(pathToImage).toString()
         val rawHtml = "<html>" +
                 "<body>" +
-                "<img src='$gullImageUrl'>" +
+                "<img src='$imageUrl'>" +
                 "<div data-actiontype='close' onclick='alert('hello')'>Close</div>" +
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
                 "</body></html>"
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(imageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
@@ -378,17 +405,14 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineImageInCss() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val imageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <head>
                     <style>
                         .bg-image {
-                            background-image: url('$gullImageUrl')
+                            background-image: url('$imageUrl')
                         }
                     </style>
                 </head>
@@ -398,98 +422,86 @@ internal class HtmlNormalizerTests {
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(imageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
     @Test
     fun test_OfflineImageInStyleAttr_apostrophes() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <body>
-                    <div style="background-image: url('$gullImageUrl')"></div>
+                    <div style="background-image: url('$testImageUrl')"></div>
                 </body>
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
     @Test
     fun test_OfflineImageInStyleAttr_quotes() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <body>
-                    <div style='background-image: url("$gullImageUrl")'></div>
+                    <div style='background-image: url("$testImageUrl")'></div>
                 </body>
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
     @Test
     fun test_OfflineImageInStyleAttr_non_quotes() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <body>
-                    <div style="background-image: url($gullImageUrl)"></div>
+                    <div style="background-image: url($testImageUrl)"></div>
                 </body>
             </html>
             """.trimIndent()
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
     @Test
     fun test_OfflineImageInStyleAttr_regexpStressTest() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val variations = listOf(
-            "url($gullImageUrl)",
-            "url($gullImageUrl)  ",
-            "   url($gullImageUrl)  ",
-            "url('$gullImageUrl')",
-            "url('$gullImageUrl')  ",
-            "   url('$gullImageUrl')  ",
-            "url(\"$gullImageUrl\")",
-            "url(\"$gullImageUrl\")  ",
-            "   url(\"$gullImageUrl\")  "
+            "url($testImageUrl)",
+            "url($testImageUrl)  ",
+            "   url($testImageUrl)  ",
+            "url('$testImageUrl')",
+            "url('$testImageUrl')  ",
+            "   url('$testImageUrl')  ",
+            "url(\"$testImageUrl\")",
+            "url(\"$testImageUrl\")  ",
+            "   url(\"$testImageUrl\")  "
         )
         val bitmapCache = DrawableCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         for (each in variations) {
             val quote = if (each.contains("'")) {
                 "\""
@@ -506,7 +518,7 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
             val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
             assertTrue(result.valid, "Invalid for usage '$each'")
-            assertFalse(result.html!!.contains("Gull_portrait_ca_usa"), "Invalid for usage '$each'")
+            assertFalse(result.html!!.contains("test_image"), "Invalid for usage '$each'")
             assertTrue(result.html!!.contains("data:image/png;base64"), "Invalid for usage '$each'")
         }
     }
@@ -517,7 +529,7 @@ internal class HtmlNormalizerTests {
             """
             <html>
                 <body>
-                    <div style="background-image: url('/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg')"></div>
+                    <div style="background-image: url('$pathToImage')"></div>
                 </body>
             </html>
             """.trimIndent()
@@ -528,15 +540,12 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineImageInStyleAttr_Invalid() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <body>
-                    <div style="background-image: '$gullImageUrl'"></div>
+                    <div style="background-image: '$testImageUrl'"></div>
                 </body>
             </html>
             """.trimIndent()
@@ -544,20 +553,17 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
-        assertTrue(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertTrue(result.html!!.contains("test_image"))
     }
 
     @Test
     fun test_OfflineImageInStyleAttr_InvalidName() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
         val rawHtml =
             """
             <html>
                 <body>
-                    <div style="background-img: url('$gullImageUrl')"></div>
+                    <div style="background-img: url('$testImageUrl')"></div>
                 </body>
             </html>
             """.trimIndent()
@@ -565,7 +571,7 @@ internal class HtmlNormalizerTests {
         val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
         assertTrue { result.valid }
         // invalid links should stay intact
-        assertTrue(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertTrue(result.html!!.contains("test_image"))
     }
 
     @Test
@@ -581,33 +587,29 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineImageInStyleAttr_allPossibilities() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
-        // list from https://developer.mozilla.org/en-US/docs/Web/CSS/url
+        val testImageUrl = server.url(pathToImage).toString()
         val usageOptions = listOf(
-            Pair("background", "url('$gullImageUrl') bottom right repeat-x blue"),
-            Pair("background-image", "url('$gullImageUrl')"),
-            Pair("background-image", "cross-fade(20% url('$gullImageUrl'), url('$gullImageUrl'))"),
-            Pair("border-image", "url('$gullImageUrl') 30 fill / 30px / 30px space"),
-            Pair("border-image-source", "url('$gullImageUrl')"),
-            Pair("content", "url('$gullImageUrl')"),
-            Pair("content", "url('$gullImageUrl') url('$gullImageUrl') url('$gullImageUrl')"),
-            Pair("cursor", "url('$gullImageUrl')"),
-            Pair("cursor", "url('$gullImageUrl'), pointer"),
-            Pair("filter", "url('$gullImageUrl')"),
-            Pair("list-style", "url('$gullImageUrl')"),
-            Pair("list-style", "lower-roman url('$gullImageUrl') outside"),
-            Pair("list-style-image", "url('$gullImageUrl')"),
-            Pair("mask", "url('$gullImageUrl')"),
-            Pair("mask", "url('$gullImageUrl') 40px 20px"),
-            Pair("mask-image", "url('$gullImageUrl')"),
+            Pair("background", "url('$testImageUrl') bottom right repeat-x blue"),
+            Pair("background-image", "url('$testImageUrl')"),
+            Pair("background-image", "cross-fade(20% url('$testImageUrl'), url('$testImageUrl'))"),
+            Pair("border-image", "url('$testImageUrl') 30 fill / 30px / 30px space"),
+            Pair("border-image-source", "url('$testImageUrl')"),
+            Pair("content", "url('$testImageUrl')"),
+            Pair("content", "url('$testImageUrl') url('$testImageUrl') url('$testImageUrl')"),
+            Pair("cursor", "url('$testImageUrl')"),
+            Pair("cursor", "url('$testImageUrl'), pointer"),
+            Pair("filter", "url('$testImageUrl')"),
+            Pair("list-style", "url('$testImageUrl')"),
+            Pair("list-style", "lower-roman url('$testImageUrl') outside"),
+            Pair("list-style-image", "url('$testImageUrl')"),
+            Pair("mask", "url('$testImageUrl')"),
+            Pair("mask", "url('$testImageUrl') 40px 20px"),
+            Pair("mask-image", "url('$testImageUrl')"),
             Pair("mask-image",
-                "image(url('$gullImageUrl'), skyblue, linear-gradient(rgba(0, 0, 0, 1.0), transparent))"),
-            Pair("offset-path", "url('$gullImageUrl')"),
-            Pair("src", "url('$gullImageUrl')"),
-            Pair("src", "url('$gullImageUrl') format('woff'), url('$gullImageUrl') format('opentype')")
+                "image(url('$testImageUrl'), skyblue, linear-gradient(rgba(0, 0, 0, 1.0), transparent))"),
+            Pair("offset-path", "url('$testImageUrl')"),
+            Pair("src", "url('$testImageUrl')"),
+            Pair("src", "url('$testImageUrl') format('woff'), url('$testImageUrl') format('opentype')")
         )
         // self-test
         for (each in usageOptions) {
@@ -618,7 +620,7 @@ internal class HtmlNormalizerTests {
         }
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         for (each in usageOptions) {
             val rawHtml =
                 """
@@ -631,7 +633,7 @@ internal class HtmlNormalizerTests {
             val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
             assertTrue(result.valid, "Invalid for usage '${each.first}: ${each.second}'")
             assertFalse(
-                result.html!!.contains("Gull_portrait_ca_usa"),
+                result.html!!.contains("test_image"),
                 "Invalid for usage '${each.first}: ${each.second}'"
             )
             if (each.first == "src") {
@@ -650,40 +652,35 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineImageInStyleAttr_allPossibilities_in_single_line() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val gullImageUrl = server.url(
-            "https://upload.wikimedia.org/wikipedia/commons/9/9a/Gull_portrait_ca_usa.jpg"
-        ).toString()
-        val fontUrl = server.url(
-            "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap"
-        ).toString()
+        val testImageUrl = server.url(pathToImage).toString()
+        val fontUrl = server.url(pathToFont).toString()
         // list from https://developer.mozilla.org/en-US/docs/Web/CSS/url
         val usageOptions = listOf(
-            Pair("background", "url('$gullImageUrl') bottom right repeat-x blue"),
-            Pair("background-image", "url('$gullImageUrl')"),
-            Pair("background-image", "cross-fade(20% url('$gullImageUrl'), url('$gullImageUrl'))"),
-            Pair("border-image", "url('$gullImageUrl') 30 fill / 30px / 30px space"),
-            Pair("border-image-source", "url('$gullImageUrl')"),
-            Pair("content", "url('$gullImageUrl')"),
-            Pair("content", "url('$gullImageUrl') url('$gullImageUrl') url('$gullImageUrl')"),
-            Pair("cursor", "url('$gullImageUrl')"),
-            Pair("cursor", "url('$gullImageUrl'), pointer"),
-            Pair("filter", "url('$gullImageUrl')"),
-            Pair("list-style", "url('$gullImageUrl')"),
-            Pair("list-style", "lower-roman url('$gullImageUrl') outside"),
-            Pair("list-style-image", "url('$gullImageUrl')"),
-            Pair("mask", "url('$gullImageUrl')"),
-            Pair("mask", "url('$gullImageUrl') 40px 20px"),
-            Pair("mask-image", "url('$gullImageUrl')"),
+            Pair("background", "url('$testImageUrl') bottom right repeat-x blue"),
+            Pair("background-image", "url('$testImageUrl')"),
+            Pair("background-image", "cross-fade(20% url('$testImageUrl'), url('$testImageUrl'))"),
+            Pair("border-image", "url('$testImageUrl') 30 fill / 30px / 30px space"),
+            Pair("border-image-source", "url('$testImageUrl')"),
+            Pair("content", "url('$testImageUrl')"),
+            Pair("content", "url('$testImageUrl') url('$testImageUrl') url('$testImageUrl')"),
+            Pair("cursor", "url('$testImageUrl')"),
+            Pair("cursor", "url('$testImageUrl'), pointer"),
+            Pair("filter", "url('$testImageUrl')"),
+            Pair("list-style", "url('$testImageUrl')"),
+            Pair("list-style", "lower-roman url('$testImageUrl') outside"),
+            Pair("list-style-image", "url('$testImageUrl')"),
+            Pair("mask", "url('$testImageUrl')"),
+            Pair("mask", "url('$testImageUrl') 40px 20px"),
+            Pair("mask-image", "url('$testImageUrl')"),
             Pair("mask-image",
-                "image(url('$gullImageUrl'), skyblue, linear-gradient(rgba(0, 0, 0, 1.0), transparent))"),
-            Pair("offset-path", "url('$gullImageUrl')"),
+                "image(url('$testImageUrl'), skyblue, linear-gradient(rgba(0, 0, 0, 1.0), transparent))"),
+            Pair("offset-path", "url('$testImageUrl')"),
             Pair("src", "url('$fontUrl')"),
             Pair("src", "url('$fontUrl') format('woff'), url('$fontUrl') format('opentype')")
         )
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
-        waitForIt { bitmapCache.preload(listOf(gullImageUrl)) { it() } }
+        waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
         val singleLined = usageOptions
             .joinToString("; ") {
                 each -> "${each.first}: ${each.second}"
@@ -698,17 +695,14 @@ internal class HtmlNormalizerTests {
             """.trimIndent()
         val result = HtmlNormalizer(bitmapCache, fontCache, rawHtml).normalize()
         assertTrue(result.valid)
-        assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+        assertFalse(result.html!!.contains("test_image"))
         assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64"))
         assertTrue(result.html!!.contains("data:image/png;base64"))
     }
 
     @Test
     fun test_OfflineFontInCss() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val fontUrl = server.url(
-            "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap"
-        ).toString()
+        val fontUrl = server.url(pathToFont).toString()
         val rawHtml =
             """
             <html>
@@ -738,10 +732,7 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineFontInCss_single_lined() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val fontUrl = server.url(
-            "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap"
-        ).toString()
+        val fontUrl = server.url(pathToFont).toString()
         val rawHtml =
             """
             <html>
@@ -766,10 +757,7 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_OfflineFontInCss_Import() {
-        server.enqueue(MockResponse().setBody("mock-response"))
-        val fontUrl = server.url(
-            "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap"
-        ).toString()
+        val fontUrl = server.url(pathToFont).toString()
         val rawHtml =
             """
             <html>
@@ -876,21 +864,19 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun `should parse image to base64 - stress test`() {
-        val gullImageUrl = """
-            https://brxcdn.com/c7s-app-storage/b556af1a-bf4e-11ed-ac28-de4945357d1a/media/original/229bdac8-2f06-11ef-b469-e67ce79d3eca
-        """.trimIndent()
+        val testImageUrl = server.url(pathToFont).toString()
         val stressTestCount = 1000
         val normalizationDoneCount = AtomicInteger(0)
         val bitmapCache = DrawableCacheImpl(context)
         waitForIt { done ->
-            for (i in 1..stressTestCount) {
+            repeat(stressTestCount) { i ->
                 runOnBackgroundThread {
                     val rawHtml = """
                     <html>
                         <head>
                             <style>
                                 .bg-image {
-                                    background-image: url('$gullImageUrl')
+                                    background-image: url('$testImageUrl')
                                 }
                             </style>
                         </head>
@@ -901,7 +887,7 @@ internal class HtmlNormalizerTests {
                     """.trimIndent()
                     val result = HtmlNormalizer(bitmapCache, mockk(), rawHtml).normalize()
                     assertTrue { result.valid }
-                    assertFalse(result.html!!.contains("Gull_portrait_ca_usa"))
+                    assertFalse(result.html!!.contains("test_image"))
                     assertTrue(result.html!!.contains("data:image/png;base64"))
                     if (normalizationDoneCount.incrementAndGet() == stressTestCount) {
                         done()
@@ -909,6 +895,6 @@ internal class HtmlNormalizerTests {
                 }
             }
         }
-        assertTrue(bitmapCache.has(gullImageUrl))
+        assertTrue(bitmapCache.has(testImageUrl))
     }
 }

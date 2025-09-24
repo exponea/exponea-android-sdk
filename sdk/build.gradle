@@ -144,3 +144,7 @@ shadowAar {
 tasks.withType(Test) {
     systemProperty "robolectric.logging", "stdout"
 }
+
+configurations.all {
+    exclude group: "org.jetbrains.kotlin", module: "kotlin-android-extensions-runtime"
+}

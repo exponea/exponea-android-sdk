@@ -209,7 +209,8 @@ internal class TelemetryUtilityTest {
                     "authorization" to "[]",
                     "advancedAuthEnabled" to "false [default]",
                     "allowWebViewCookies" to "false [default]",
-                    "pushAccentColor" to "null [default]"
+                    "pushAccentColor" to "null [default]",
+                    "applicationId" to "default-application [default]"
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
                     projectToken = "mock_project_token",

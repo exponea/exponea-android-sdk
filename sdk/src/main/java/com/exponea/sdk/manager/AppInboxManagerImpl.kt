@@ -26,7 +26,8 @@ internal class AppInboxManagerImpl(
     private val drawableCache: DrawableCache,
     private val customerIdsRepository: CustomerIdsRepository,
     private val appInboxCache: AppInboxCache,
-    private val projectFactory: ExponeaProjectFactory
+    private val projectFactory: ExponeaProjectFactory,
+    private val applicationId: String
 ) : AppInboxManager {
 
     internal var lastCustomerIdsForFetch: CustomerIds? = null
@@ -155,6 +156,7 @@ internal class AppInboxManagerImpl(
                 exponeaProject = expoProject,
                 customerIds = customerIds,
                 syncToken = appInboxCache.getSyncToken(),
+                applicationId = applicationId,
                 onSuccess = { result ->
                     Logger.d(this, "AppInbox fetch is done for customerIds ${customerIds.toHashMap()}")
                     handleDataFetchResult(result, customerIds)
@@ -292,7 +294,8 @@ internal class AppInboxManagerImpl(
     }
 
     override fun reload() {
-        appInboxCache.clear()
+        // clear cache but keep application ID
+        appInboxCache.clearAndSetApplicationId()
         fetchAppInbox { Logger.d(this, "AppInbox loaded") }
     }
 

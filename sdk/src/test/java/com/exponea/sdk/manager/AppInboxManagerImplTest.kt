@@ -5,6 +5,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -252,8 +253,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     @Before
     fun before() {
         fetchManager = mockk()
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf()))
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(Result(true, arrayListOf()))
         }
         drawableCache = mockk()
         every { drawableCache.has(any()) } returns true
@@ -270,31 +271,35 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         }
         apiService = ExponeaMockService(true)
         appInboxCache = AppInboxCacheImpl(
-            ApplicationProvider.getApplicationContext(), Gson()
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
         )
         // Need to be initialized to use bitmapCache for HTML parser
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         Exponea.flushMode = FlushMode.MANUAL
         skipInstallEvent()
-        Exponea.init(context, ExponeaConfiguration(
+        val configuration = ExponeaConfiguration(
             baseURL = initialProject.baseUrl,
             projectToken = initialProject.projectToken,
-            authorization = initialProject.authorization)
+            authorization = initialProject.authorization
         )
+        Exponea.init(context, configuration)
         appInboxManager = AppInboxManagerImpl(
             fetchManager = fetchManager,
             drawableCache = drawableCache,
             projectFactory = Exponea.componentForTesting.projectFactory,
             customerIdsRepository = customerIdsRepository,
-            appInboxCache = appInboxCache
+            appInboxCache = appInboxCache,
+            applicationId = Constants.ApplicationId.APP_ID_DEFAULT_VALUE
         )
     }
 
     @Test
     fun `should load only supported messages`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push"),
                 buildMessage("id2", type = "html"),
                 buildMessage("id3", type = "whatSoEver")
@@ -320,8 +325,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
             )
         } just Runs
         Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push"),
                 buildMessage("id2", type = "html"),
                 buildMessage("id3", type = "whatSoEver")
@@ -342,8 +347,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     fun `should parse PUSH message`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "push", data = mapOf(
                     "title" to "Title",
                     "message" to "Message",
@@ -391,8 +396,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
 
     @Test
     fun `should parse HTML message`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(Result(true, arrayListOf(
                 buildMessage("id1", type = "html", data = mapOf(
                     "title" to "Title",
                     "pre_header" to "Message",
@@ -452,8 +457,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     fun `should deny markAsRead action for empty AppInbox`() {
         // fetchManager should not be called but keep it
         val testMessage = buildMessage("id1", type = "push")
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -479,8 +484,8 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         skipInstallEvent()
         identifyCustomer(cookie = "hash-cookie")
         val testMessage = buildMessage("id1", type = "push")
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -609,11 +614,11 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         val untilCustomerChanged = CountDownLatch(1)
         val untilFirstFetchStarted = CountDownLatch(1)
         val untilFetchProcessIsDone = CountDownLatch(1)
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
             val customerIdsUsedForFetch = arg<CustomerIds>(1).toHashMap()["registered"]
             untilFirstFetchStarted.countDown()
             assertTrue(untilCustomerChanged.await(awaitSeconds, TimeUnit.SECONDS))
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
                 Result(
                     true, arrayListOf(
                         buildMessage(
@@ -663,11 +668,11 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         val untilFetchProcessIsDone1 = CountDownLatch(1)
         val untilFetchProcessIsDone2 = CountDownLatch(1)
         val untilFetchProcessIsDone3 = CountDownLatch(1)
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
             val customerIdsUsedForFetch = arg<CustomerIds>(1).toHashMap()["registered"] ?: "not-registered"
             untilFirstFetchStarted.countDown()
             assertTrue(releaseFetchProces.await(awaitSeconds, TimeUnit.SECONDS))
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
                 Result(
                     true, arrayListOf(
                         buildMessage(
@@ -715,9 +720,9 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     ) {
         val testMessage = buildMessage("id1", type = "push")
         every {
-            fetchManager.fetchAppInbox(any(), capture(customerIdsWhileFetch), any(), any(), any())
+            fetchManager.fetchAppInbox(any(), capture(customerIdsWhileFetch), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,

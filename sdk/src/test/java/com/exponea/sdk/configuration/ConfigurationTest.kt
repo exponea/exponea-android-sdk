@@ -1,9 +1,12 @@
-package com.exponea.sdk
+package com.exponea.sdk.configuration
 
 import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.Exponea
 import com.exponea.sdk.exceptions.InvalidConfigurationException
+import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.Constants.ApplicationId.APP_ID_MAX_LENGTH
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaConfiguration.HttpLoggingLevel.BASIC
@@ -31,11 +34,13 @@ internal class ConfigurationTest : ExponeaSDKTest() {
     private fun setupExponea(
         authorization: String,
         projectToken: String = "projectToken",
-        projectMapping: Map<EventType, List<ExponeaProject>>? = null
+        projectMapping: Map<EventType, List<ExponeaProject>>? = null,
+        applicationId: String = Constants.ApplicationId.APP_ID_DEFAULT_VALUE
     ) {
         val configuration = ExponeaConfiguration(
             projectToken = projectToken,
-            authorization = authorization
+            authorization = authorization,
+            applicationId = applicationId
         )
         projectMapping?.let {
             configuration.projectRouteMap = it
@@ -44,7 +49,8 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         Exponea.init(ApplicationProvider.getApplicationContext(), configuration)
     }
 
-    @Rule @JvmField
+    @Rule
+    @JvmField
     val expectedException = ExpectedException.none()
 
     @Test
@@ -417,5 +423,73 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         Exponea.isStopped = true
         ExponeaConfigRepository.set(context, runTimeConfig)
         assertEquals("none", ExponeaPreferencesImpl(context).getString(ExponeaConfigRepository.PREF_CONFIG, "none"))
+    }
+
+    @Test
+    fun `should deserialize config with custom applicationId`() {
+        val customAppId = "custom-app-id"
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val runTimeConfig = ExponeaConfiguration(applicationId = customAppId)
+        ExponeaConfigRepository.set(context, runTimeConfig)
+        val storedConfig = ExponeaConfigRepository.get(context)
+        assertEquals(customAppId, storedConfig?.applicationId)
+    }
+
+    @Test
+    fun `should initialize with all valid applicationIds`() {
+        val validIds = listOf(
+            "default-application",
+            "default.application",
+            "0.default.application",
+            "0-default-application",
+            "aplicationaplication",
+            "187264817649187649",
+            "aaaaaaaaa",
+            "000000000",
+            "01234567890123456789012345678901234567890123456789" // 50 characters
+
+        )
+
+        validIds.forEach { appId ->
+            setupExponea(authorization = "Token asdf", applicationId = appId)
+            assertEquals(Exponea.isInitialized, true)
+            resetExponea()
+        }
+    }
+
+    @Test
+    fun `should fail to initialize with invalid applicationIds`() {
+        val invalidIds = listOf(
+            ".example-app.demo.sdk",
+            "0.default.application.",
+            "-com.example-app.demo.sdk",
+            "Default-application",
+            "Default.application",
+            "default-Application",
+            "com.example-app.demo.sdk!",
+            "0..default-application",
+            "0--default-application",
+            "!@@#!@$$%#%$$%*$%*"
+        )
+
+        invalidIds.forEach { appId ->
+            expectedException.expect(InvalidConfigurationException::class.java)
+            expectedException.expectMessage("The provided applicationId is not in the correct format.")
+            setupExponea(authorization = "Token asdf", applicationId = appId)
+            assertEquals(Exponea.isInitialized, false)
+            resetExponea()
+        }
+    }
+
+    @Test
+    fun `check invalid extra long applicationId format`() {
+        expectedException.expect(InvalidConfigurationException::class.java)
+        expectedException.expectMessage(
+            "The provided applicationId exceeds the maximum length of $APP_ID_MAX_LENGTH characters."
+        )
+        setupExponea(
+            authorization = "Token asdf",
+            applicationId = "012345678901234567890123456789012345678901234567890") // more than 50 characters
+        assertEquals(Exponea.isInitialized, false)
     }
 }

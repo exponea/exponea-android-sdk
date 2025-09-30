@@ -2,6 +2,7 @@ package com.exponea.sdk
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.SegmentsManagerImpl
 import com.exponea.sdk.models.Constants
@@ -29,10 +30,29 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class AnonymizeTest : ExponeaSDKTest() {
-    companion object {
-        private const val PUSH_KEY = "google_push_notification_id"
-        private const val HUAWEI_PUSH_KEY = "huawei_push_notification_id"
-    }
+
+    private fun expectedPushTokenProperties(
+        pushToken: String = "push_token",
+        platform: String = "android",
+        applicationId: String = "default-application",
+        valid: Boolean,
+        description: String,
+        deviceId: String
+    ): HashMap<String, Any> =
+        hashMapOf(
+            "push_notification_token" to pushToken,
+            "platform" to platform,
+            "application_id" to applicationId,
+            "valid" to valid,
+            "description" to description,
+            "device_id" to deviceId
+        )
+
+    private fun expectedTestEventProperties(): HashMap<String, Any> =
+        hashMapOf(
+            "name" to "test",
+            "application_id" to "default-application"
+        )
 
     private fun checkEvent(
         event: ExportedEvent,
@@ -77,27 +97,31 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         idleThreads()
         val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
         val events = Exponea.componentForTesting.eventRepository.all()
+        val deviceId = DeviceIdManager.getDeviceId(context)
         events.sortedBy { it.timestamp }
-        assertEquals(10, events.size)
+        assertEquals(9, events.size)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-        checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
-        checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-            PUSH_KEY to "push_token"
+        checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
+        checkEvent(events[2], Constants.EventTypes.pushTokenTrack, initialProject, userId, expectedPushTokenProperties(
+            valid = true,
+            description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
+            deviceId = deviceId
         ))
         checkEvent(events[3], Constants.EventTypes.sessionEnd, initialProject, userId, null)
         // anonymize is called. We clear push token in old user and track initial events for new user
-        checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-            PUSH_KEY to " "
+        checkEvent(events[4], Constants.EventTypes.pushTokenTrack, initialProject, userId, expectedPushTokenProperties(
+            valid = false,
+            description = Constants.PushPermissionStatus.INVALIDATED_TOKEN,
+            deviceId = deviceId
         ))
-        checkEvent(events[5], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-            HUAWEI_PUSH_KEY to " "
+        checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
+        checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+        checkEvent(events[7], Constants.EventTypes.pushTokenTrack, newProject, newUserId, expectedPushTokenProperties(
+            valid = true,
+            description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
+            deviceId = deviceId
         ))
-        checkEvent(events[6], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[7], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-        checkEvent(events[8], Constants.EventTypes.push, newProject, newUserId, hashMapOf(
-            PUSH_KEY to "push_token"
-        ))
-        checkEvent(events[9], "test", newProject, newUserId, hashMapOf("name" to "test"))
+        checkEvent(events[8], "test", newProject, newUserId, expectedTestEventProperties())
     }
 
     @Test
@@ -129,17 +153,11 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             idleThreads()
             val events = Exponea.componentForTesting.eventRepository.all()
             events.sortedBy { it.timestamp }
-            assertEquals(events.size, 6)
+            assertEquals(expected = 4, actual = events.size)
             checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
-            checkEvent(events[2], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-                PUSH_KEY to " "
-            ))
-            checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-                HUAWEI_PUSH_KEY to " "
-            ))
-            checkEvent(events[4], Constants.EventTypes.installation, newProject, newUserId!!, null)
-            checkEvent(events[5], "test", newProject, newUserId, hashMapOf("name" to "test"))
+            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
+            checkEvent(events[2], Constants.EventTypes.installation, newProject, newUserId!!, null)
+            checkEvent(events[3], "test", newProject, newUserId, expectedTestEventProperties())
         }
     }
 
@@ -172,19 +190,13 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             idleThreads()
             val events = Exponea.componentForTesting.eventRepository.all()
             events.sortedBy { it.timestamp }
-            assertEquals(events.size, 8)
+            assertEquals(expected = 6, actual = events.size)
             checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, hashMapOf("name" to "test"))
+            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
             checkEvent(events[2], Constants.EventTypes.sessionEnd, initialProject, userId, null)
-            checkEvent(events[3], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-                PUSH_KEY to " "
-            ))
-            checkEvent(events[4], Constants.EventTypes.push, initialProject, userId, hashMapOf(
-                HUAWEI_PUSH_KEY to " "
-            ))
-            checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
-            checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-            checkEvent(events[7], "test", newProject, newUserId, hashMapOf("name" to "test"))
+            checkEvent(events[3], Constants.EventTypes.installation, newProject, newUserId!!, null)
+            checkEvent(events[4], Constants.EventTypes.sessionStart, newProject, newUserId, null)
+            checkEvent(events[5], "test", newProject, newUserId, expectedTestEventProperties())
         }
     }
 

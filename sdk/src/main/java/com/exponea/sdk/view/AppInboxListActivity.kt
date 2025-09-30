@@ -8,6 +8,7 @@ import com.exponea.sdk.R
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
 
 class AppInboxListActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.message_inbox_list_activity)

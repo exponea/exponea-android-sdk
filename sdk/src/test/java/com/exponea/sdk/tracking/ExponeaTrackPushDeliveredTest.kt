@@ -54,7 +54,8 @@ internal class ExponeaTrackPushDeliveredTest(
                     "status" to "delivered",
                     "platform" to "android",
                     "state" to "shown",
-                    "notification_importance" to "importance_default"
+                    "notification_importance" to "importance_default",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_DELIVERED
             ),
@@ -66,7 +67,8 @@ internal class ExponeaTrackPushDeliveredTest(
                     "status" to "delivered",
                     "platform" to "android",
                     "state" to "shown",
-                    "notification_importance" to "importance_default"
+                    "notification_importance" to "importance_default",
+                    "application_id" to "default-application"
                 ),
                 EventType.TRACK_EVENT
             ),
@@ -78,7 +80,8 @@ internal class ExponeaTrackPushDeliveredTest(
                     "status" to "delivered",
                     "platform" to "custom platform",
                     "state" to "shown",
-                    "notification_importance" to "importance_default"
+                    "notification_importance" to "importance_default",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_DELIVERED
             ),
@@ -90,7 +93,8 @@ internal class ExponeaTrackPushDeliveredTest(
                     "status" to "delivered",
                     "platform" to "android",
                     "state" to "shown",
-                    "notification_importance" to "importance_default"
+                    "notification_importance" to "importance_default",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_DELIVERED
             ),
@@ -124,7 +128,8 @@ internal class ExponeaTrackPushDeliveredTest(
                     "recipient" to "mock recipient",
                     "subject" to "mock title",
                     "state" to "shown",
-                    "notification_importance" to "importance_default"
+                    "notification_importance" to "importance_default",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_DELIVERED
             ),
@@ -208,7 +213,8 @@ internal class ExponeaTrackPushDeliveredTest(
                             )
                         ),
                         "message" to "We have a great deal for you today, don't miss it!"
-                    )
+                    ),
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_DELIVERED
             ),

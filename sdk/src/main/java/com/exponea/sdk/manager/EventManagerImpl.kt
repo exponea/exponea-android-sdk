@@ -19,7 +19,8 @@ internal open class EventManagerImpl(
     private val customerIdsRepository: CustomerIdsRepository,
     private val flushManager: FlushManager,
     private val projectFactory: ExponeaProjectFactory,
-    private val onEventCreated: (Event, EventType) -> Unit
+    private val onEventCreated: (Event, EventType) -> Unit,
+    private val deviceId: String
 ) : EventManager {
 
     fun addEventToQueue(event: Event, eventType: EventType, trackingAllowed: Boolean) {
@@ -27,7 +28,6 @@ internal open class EventManagerImpl(
 
         val route = when (eventType) {
             EventType.TRACK_CUSTOMER -> Route.TRACK_CUSTOMERS
-            EventType.PUSH_TOKEN -> Route.TRACK_CUSTOMERS
             EventType.CAMPAIGN_CLICK -> Route.TRACK_CAMPAIGN
             else -> Route.TRACK_EVENTS
         }
@@ -92,6 +92,12 @@ internal open class EventManagerImpl(
             trackedProperties.putAll(configuration.defaultProperties)
         }
         trackedProperties.putAll(properties)
+        trackedProperties["application_id"] = configuration.applicationId
+
+        if (type == EventType.PUSH_TOKEN) {
+            trackedProperties["device_id"] = deviceId
+        }
+
         val customerIdsMap: HashMap<String, String?> = hashMapOf()
         if (customerIds.isNullOrEmpty()) {
             customerIdsMap.putAll(customerIdsRepository.get().toHashMap())
@@ -114,7 +120,8 @@ internal open class EventManagerImpl(
 
     private fun canUseDefaultProperties(type: EventType): Boolean {
         return when (type) {
-            EventType.TRACK_CUSTOMER, EventType.PUSH_TOKEN -> configuration.allowDefaultCustomerProperties
+            EventType.TRACK_CUSTOMER -> configuration.allowDefaultCustomerProperties
+            EventType.PUSH_TOKEN -> false
             else -> true
         }
     }

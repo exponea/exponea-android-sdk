@@ -77,9 +77,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val currentCustomerIds = CustomerIds().withId("registered", "test")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns currentCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -114,9 +114,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val firstCustomerIds = CustomerIds().withId("registered", "test1")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns firstCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -145,9 +145,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val secondCustomerIds = CustomerIds().withId("registered", "test2")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns secondCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -190,9 +190,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val firstCustomerIds = CustomerIds().withId("registered", "test1")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns firstCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -221,9 +221,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val secondCustomerIds = CustomerIds().withId("registered", "test2")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns secondCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -271,9 +271,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,
@@ -317,9 +317,9 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
         } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3)
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
                     Result(
                         true,

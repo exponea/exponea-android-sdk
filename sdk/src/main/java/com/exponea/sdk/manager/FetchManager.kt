@@ -38,6 +38,7 @@ internal interface FetchManager {
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         syncToken: String?,
+        applicationId: String,
         onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )

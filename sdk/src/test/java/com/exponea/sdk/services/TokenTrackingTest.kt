@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -26,6 +27,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class TokenTrackingTest() : ExponeaSDKTest() {
     lateinit var context: Context
+    private val pushToken = "push-token"
 
     @Before
     fun setUp() {
@@ -39,20 +41,23 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should track fcm token when Exponea is initialized`() {
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewToken(context, "mock token")
+        Exponea.handleNewToken(context, pushToken)
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "google_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
         val tokenRepository = PushTokenRepositoryProvider.get(context)
         assertNotNull(tokenRepository.get())
-        assertEquals("mock token", tokenRepository.get())
+        assertEquals(pushToken, tokenRepository.get())
         assertEquals(TokenType.FCM, tokenRepository.getLastTokenType())
         assertNotNull(tokenRepository.getLastTrackDateInMilliseconds())
     }
@@ -60,20 +65,23 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should track fcm token when Exponea Config is available`() {
         ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewToken(context, "mock token")
+        Exponea.handleNewToken(context, pushToken)
         verify {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "google_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
         val tokenRepository = PushTokenRepositoryProvider.get(context)
         assertNotNull(tokenRepository.get())
-        assertEquals("mock token", tokenRepository.get())
+        assertEquals(pushToken, tokenRepository.get())
         assertEquals(TokenType.FCM, tokenRepository.getLastTokenType())
         assertNotNull(tokenRepository.getLastTrackDateInMilliseconds())
     }
@@ -81,7 +89,6 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should store fcm token when Exponea Config is NOT available`() {
         val tokenRepository = PushTokenRepositoryProvider.get(context)
-        val pushToken = "mock token"
         Exponea.handleNewToken(context, pushToken)
         // verify that token is stored
         assertNotNull(tokenRepository.get())
@@ -91,7 +98,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // but verify that tracking was not called
         verify(exactly = 0) {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 any(),
                 EventType.PUSH_TOKEN
@@ -102,7 +109,6 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should store HMS token when Exponea Config is NOT available`() {
         val tokenRepository = PushTokenRepositoryProvider.get(context)
-        val pushToken = "mock token"
         Exponea.handleNewHmsToken(context, pushToken)
         // verify that token is stored
         assertNotNull(tokenRepository.get())
@@ -111,7 +117,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // but verify that tracking was not called
         verify(exactly = 0) {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 any(),
                 EventType.PUSH_TOKEN
@@ -122,20 +128,23 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should track fcm token after Exponea is initialized`() {
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewToken(context, "mock token")
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        Exponea.handleNewToken(context, pushToken)
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "google_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
     }
 
@@ -150,21 +159,24 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should post-track fcm token on first Exponea init`() {
         // this is required for RN and Flutter wrappers or native SDK delayed init (not Application::onCreate)
         // Firebase sends a new token, but no SDK config is stored
-        Exponea.handleNewToken(context, "mock token")
+        Exponea.handleNewToken(context, pushToken)
         // And SDK is initialized later
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         // should re-track a stored token
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "google_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
     }
 
@@ -179,41 +191,47 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should post-track HMS token on first Exponea init`() {
         // this is required for RN and Flutter wrappers or native SDK delayed init (not Application::onCreate)
         // HMS sends a new token, but no SDK config is stored
-        Exponea.handleNewHmsToken(context, "mock token")
+        Exponea.handleNewHmsToken(context, pushToken)
         // And SDK is initialized later
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         // should re-track a stored token
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "huawei_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
     }
 
     @Test
     fun `should track hms token when Exponea is initialized`() {
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewHmsToken(context, "mock token")
+        Exponea.handleNewHmsToken(context, pushToken)
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "huawei_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
         val tokenRepository = PushTokenRepositoryProvider.get(context)
         assertNotNull(tokenRepository.get())
-        assertEquals("mock token", tokenRepository.get())
+        assertEquals(pushToken, tokenRepository.get())
         assertEquals(TokenType.HMS, tokenRepository.getLastTokenType())
         assertNotNull(tokenRepository.getLastTrackDateInMilliseconds())
     }
@@ -221,20 +239,23 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should track hms token when Exponea Config is available`() {
         ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewHmsToken(context, "mock token")
+        Exponea.handleNewHmsToken(context, pushToken)
         verify {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "huawei_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
         val tokenRepository = PushTokenRepositoryProvider.get(context)
         assertNotNull(tokenRepository.get())
-        assertEquals("mock token", tokenRepository.get())
+        assertEquals(pushToken, tokenRepository.get())
         assertEquals(TokenType.HMS, tokenRepository.getLastTokenType())
         assertNotNull(tokenRepository.getLastTrackDateInMilliseconds())
     }
@@ -242,20 +263,23 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should track hms token after Exponea is initialized`() {
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.handleNewHmsToken(context, "mock token")
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        Exponea.handleNewHmsToken(context, pushToken)
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
         verify {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 hashMapOf(
-                    "huawei_push_notification_id" to "mock token"
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
         }
-        assertEquals("mock token", PushTokenRepositoryProvider.get(context).get())
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
     }
 
@@ -263,10 +287,10 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should not track fcm token when Exponea was initialized but stopped`() {
         Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.isStopped = true
-        Exponea.handleNewToken(context, "mock token")
+        Exponea.handleNewToken(context, pushToken)
         verify(exactly = 0) {
             Exponea.componentForTesting.eventManager.track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 any(),
                 EventType.PUSH_TOKEN
@@ -281,10 +305,10 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     fun `should not track fcm token when Exponea Config is available but stopped`() {
         ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
         Exponea.isStopped = true
-        Exponea.handleNewToken(context, "mock token")
+        Exponea.handleNewToken(context, pushToken)
         verify(exactly = 0) {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 any(),
                 EventType.PUSH_TOKEN
@@ -298,7 +322,6 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `should not store fcm token when Exponea Config is NOT available but stopped`() {
         val tokenRepository = PushTokenRepositoryProvider.get(context)
-        val pushToken = "mock token"
         Exponea.isStopped = true
         Exponea.handleNewToken(context, pushToken)
         // verify that token is not stored
@@ -307,11 +330,169 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // but verify that tracking was not called
         verify(exactly = 0) {
             anyConstructed<EventManagerImpl>().track(
-                "campaign",
+                Constants.EventTypes.pushTokenTrack,
                 any(),
                 any(),
                 EventType.PUSH_TOKEN
             )
         }
+    }
+
+    @Test
+    fun `track old token as invalid when new token is received - FCM`() {
+        val firstPushToken = "push-token-1"
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        // 1. Track the first token
+        Exponea.handleNewToken(context, firstPushToken)
+
+        assertEquals(firstPushToken, PushTokenRepositoryProvider.get(context).get())
+        assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to firstPushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(firstPushToken, PushTokenRepositoryProvider.get(context).get())
+
+        val secondPushToken = "push-token-2"
+        // 2. Second token has arrived, so track first token as invalid and second as valid
+        Exponea.handleNewToken(context, secondPushToken)
+        assertEquals(secondPushToken, PushTokenRepositoryProvider.get(context).get())
+
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to firstPushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to false,
+                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to secondPushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(secondPushToken, PushTokenRepositoryProvider.get(context).get())
+    }
+
+    @Test
+    fun `track old token as invalid when new token is received - HMS`() {
+        val firstPushToken = "push-token-1"
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        // 1. Track the first token
+        Exponea.handleNewHmsToken(context, firstPushToken)
+
+        assertEquals(firstPushToken, PushTokenRepositoryProvider.get(context).get())
+        assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to firstPushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(firstPushToken, PushTokenRepositoryProvider.get(context).get())
+
+        val secondPushToken = "push-token-2"
+        // 2. Second token has arrived, so track first token as invalid and second as valid
+        Exponea.handleNewHmsToken(context, secondPushToken)
+        assertEquals(secondPushToken, PushTokenRepositoryProvider.get(context).get())
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to firstPushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to false,
+                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to secondPushToken,
+                    "platform" to TokenType.HMS.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(secondPushToken, PushTokenRepositoryProvider.get(context).get())
+    }
+
+    @Test
+    fun `do nothing when same token has arrived`() {
+        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        // 1. Track the first token
+        Exponea.handleNewToken(context, pushToken)
+
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
+        assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
+        verify {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to true,
+                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
+
+        // 2. Same token has arrived, but do not track it again
+        Exponea.handleNewToken(context, pushToken)
+
+        verify(exactly = 0) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                hashMapOf(
+                    "push_notification_token" to pushToken,
+                    "platform" to TokenType.FCM.selfCheckProperty,
+                    "valid" to false,
+                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
+        assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
     }
 }

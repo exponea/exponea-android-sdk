@@ -88,6 +88,21 @@ configuration.baseURL = "https://api.exponea.com"
 Exponea.init(this, configuration)
 ```
 
+
+#### Configure application ID
+
+**Multiple mobile apps:** If your Engagement project supports multiple mobile apps, specify the `applicationId` in your configuration. This helps distinguish between different apps in your project.
+
+
+```kotlin
+configuration.applicationId = "<Your application id>" 
+```
+
+Make sure your `applicationId` value matches exactly what you've defined in your Engagement project settings.
+
+**Single mobile app:** If your Engagement project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".
+
+
 ### Using a configuration file
 
 Create a file `exponea_configuration.json` inside the `assets` folder of your application with at least the following configuration properties:

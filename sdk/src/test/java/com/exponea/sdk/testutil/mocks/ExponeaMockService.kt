@@ -106,7 +106,8 @@ internal class ExponeaMockService(
     override fun postFetchAppInbox(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
-        syncToken: String?
+        syncToken: String?,
+        applicationId: String
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }

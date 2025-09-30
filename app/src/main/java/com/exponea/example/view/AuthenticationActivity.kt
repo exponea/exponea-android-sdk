@@ -23,6 +23,7 @@ class AuthenticationActivity : AppCompatActivity() {
     var authorizationToken = ""
     var advancedPublicKey = ""
     var registeredIds = ""
+    var applicationId = ""
 
     private lateinit var viewBinding: ActivityAuthenticationBinding
 
@@ -37,12 +38,14 @@ class AuthenticationActivity : AppCompatActivity() {
         viewBinding.editTextRegisteredIds.setText(registeredIds)
         viewBinding.editTextProjectToken.setText(projectToken)
         viewBinding.editTextApiUrl.setText(apiUrl)
+        viewBinding.editTextApplicationId.setText(applicationId)
 
         viewBinding.editTextAuthCode.onTextChanged { authorizationToken = it }
         viewBinding.editTextAdvancedPublicKey.onTextChanged { advancedPublicKey = it }
         viewBinding.editTextRegisteredIds.onTextChanged { registeredIds = it }
         viewBinding.editTextProjectToken.onTextChanged { projectToken = it }
         viewBinding.editTextApiUrl.onTextChanged { apiUrl = it }
+        viewBinding.editTextApplicationId.onTextChanged { applicationId = it }
 
         viewBinding.authenticateButton.setOnClickListener {
             if (!viewBinding.editTextProjectToken.isValid() ||
@@ -72,6 +75,10 @@ class AuthenticationActivity : AppCompatActivity() {
         configuration.automaticPushNotification = true
         configuration.tokenTrackFrequency = EVERY_LAUNCH
         configuration.pushChannelId = "123"
+
+        if (applicationId.isNotEmpty()) {
+            configuration.applicationId = applicationId
+        }
 
         // Prepare Example Advanced Auth
         CustomerTokenStorage.INSTANCE.configure(

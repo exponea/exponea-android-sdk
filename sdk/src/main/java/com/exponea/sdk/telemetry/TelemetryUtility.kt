@@ -111,7 +111,9 @@ object TelemetryUtility {
             "allowWebViewCookies"
                 to formatConfigurationProperty(ExponeaConfiguration::allowWebViewCookies),
             "manualSessionAutoClose"
-                to formatConfigurationProperty(ExponeaConfiguration::manualSessionAutoClose)
+                to formatConfigurationProperty(ExponeaConfiguration::manualSessionAutoClose),
+            "applicationId"
+                to formatConfigurationProperty(ExponeaConfiguration::applicationId)
         )
     }
 

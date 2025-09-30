@@ -8,10 +8,24 @@ import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
 
 internal interface FcmManager {
-    fun trackToken(
+
+    fun removeToken(
         token: String? = null,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?
+    ) {
+        trackToken(
+            token = token,
+            tokenTrackFrequency = tokenTrackFrequency,
+            tokenType = tokenType,
+            isTokenCanceled = true
+        )
+    }
+    fun trackToken(
+        token: String? = null,
+        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
+        tokenType: TokenType?,
+        isTokenCanceled: Boolean = false
     )
     fun handleRemoteMessage(
         messageData: Map<String, String>?,

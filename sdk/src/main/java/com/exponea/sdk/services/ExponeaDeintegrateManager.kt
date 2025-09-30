@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.SessionManagerImpl
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCacheImpl
 import com.exponea.sdk.repository.CampaignRepositoryImpl
@@ -152,7 +153,12 @@ class ExponeaDeintegrateManager {
     }
 
     private fun clearAppInbox(context: Context) {
-        AppInboxCacheImpl(context, ExponeaGson.instance).clear()
+        AppInboxCacheImpl(
+            context = context,
+            gson = ExponeaGson.instance,
+            applicationId = ExponeaConfigRepository.get(context)?.applicationId
+                ?: Constants.ApplicationId.APP_ID_DEFAULT_VALUE
+        ).clear()
     }
 
     private fun clearTrackedEvents(context: Context) {

@@ -154,7 +154,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
                 shouldBeSkipped = false
             )
         )
-        AppInboxCacheImpl(context, ExponeaGson.instance).apply {
+        AppInboxCacheImpl(context, ExponeaGson.instance, "default-application").apply {
             setSyncToken("test token")
             addMessages(listOf(AppInboxCacheImplTest.buildMessage("id1")))
         }
@@ -220,7 +220,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
     private fun validateEmptySdkData() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertEquals(0, EventRepositoryImpl(context).count())
-        val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance)
+        val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance, "default-application")
         assertEquals(0, appInboxCache.getMessages().size)
         assertNull(appInboxCache.getSyncToken())
         assertFalse(DrawableCacheImpl(context).has(server.url(pathToImage).toString()))
@@ -263,7 +263,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
     private fun validateNonEmptySdkData() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertNotEquals(0, EventRepositoryImpl(context).count())
-        val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance)
+        val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance, "default-application")
         assertNotEquals(0, appInboxCache.getMessages().size)
         assertNotNull(appInboxCache.getSyncToken())
         assertTrue(DrawableCacheImpl(context).has(server.url(pathToImage).toString()))

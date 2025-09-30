@@ -343,7 +343,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
             )
@@ -362,7 +363,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
             )
@@ -379,7 +381,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -396,7 +399,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -413,7 +417,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -430,7 +435,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -447,7 +453,8 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             fetchManagerImpl.fetchAppInbox(
                 ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
-                "mock-sync-token",
+                syncToken = "mock-sync-token",
+                applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )

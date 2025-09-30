@@ -39,7 +39,12 @@ You must have the following software installed to be able to build and run the e
 
 ![Example app screens: configuration, fetch, track, track event](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/android-example-app-1.png)
 
-When you run the app in the simulator, you'll see the **Authentication** view. Enter your [project token, API token, and API base URL](mobile-sdks-api-access-management). Optionally, enter an email address hard ID in the `Registered` field to identify the customer. Then click `Authenticate` to [initialize the SDK](ios-sdk-setup#initialize-the-sdk).
+When you run the app in the simulator, you'll see the **Authentication** view. Here's how to set it up:
+1. Enter your [project token, API token, and API base URL](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management).
+2. **Optional:** Enter an email address hard ID in the `Registered` field to identify the customer.
+3. **Optional:** Enter `Application ID` if your Engagement project supports multiple mobile apps. If you leave this blank, the SDK uses the default value "default-application". [Learn more about configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+4. Click **Authenticate** to [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk).
+
 > [`AuthenticationActivity.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/AuthenticationActivity.kt)
 
 > 👍

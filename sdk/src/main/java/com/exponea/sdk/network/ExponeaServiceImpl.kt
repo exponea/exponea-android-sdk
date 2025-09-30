@@ -49,9 +49,15 @@ internal class ExponeaServiceImpl(
         )
     }
 
-    override fun postFetchAppInbox(exponeaProject: ExponeaProject, customerIds: CustomerIds, syncToken: String?): Call {
+    override fun postFetchAppInbox(
+        exponeaProject: ExponeaProject,
+        customerIds: CustomerIds,
+        syncToken: String?,
+        applicationId: String
+    ): Call {
         val reqBody = hashMapOf<String, Any>(
-            "customer_ids" to customerIds.toHashMap()
+            "customer_ids" to customerIds.toHashMap(),
+            "application_id" to applicationId
         )
         if (syncToken != null) {
             reqBody.put("sync_token", syncToken)

@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/content_margin"
                 android:layout_marginStart="@dimen/content_margin"
-                android:layout_marginTop="64dp"
+                android:layout_marginTop="30dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imageView">
@@ -103,6 +103,7 @@
                     android:layout_height="wrap_content"
                     android:maxLines="3"
                     android:hint="@string/hint_public_key" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -124,9 +125,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/hint_api_url" />
 
-
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/editTextRegisteredIdsLayout"
@@ -139,7 +138,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/editTextApiUrlLayout">
 
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editTextRegisteredIds"
                     android:maxLines="1"
@@ -148,6 +146,26 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/hint_registered" />
 
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editTextApplicationIdLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/content_margin"
+                android:layout_marginStart="@dimen/content_margin"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editTextRegisteredIdsLayout">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextApplicationId"
+                    android:maxLines="1"
+                    android:inputType="text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_application_id" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -162,21 +180,20 @@
                 android:theme="@style/AppButton"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/editTextRegisteredIdsLayout" />
+                app:layout_constraintTop_toBottomOf="@+id/editTextApplicationIdLayout" />
 
             <Button
                 android:id="@+id/clearLocalDataButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="24dp"
+                android:layout_margin="16dp"
                 android:text="@string/clear_local_data_button"
                 android:theme="@style/AppButtonRed"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/authenticate_button"
+                app:layout_constraintVertical_bias="1.0" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

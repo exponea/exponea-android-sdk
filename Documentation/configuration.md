@@ -130,3 +130,17 @@ This page provides an overview of all configuration parameters for the SDK. You 
 * `manualSessionAutoClose`
     * Determines whether the SDK automatically tracks `session_end` for sessions that remain open when `Exponea.trackSessionStart()` is called multiple times in manual session tracking mode.
     * Default value: `true`
+
+* `applicationId`
+    * This `applicationId` defines a unique identifier for the mobile app within the Engagement project. Change this value only if your Engagement project contains and supports multiple mobile apps.
+    * This identifier distinguishes between different apps in the same project.
+    * Your `applicationId` value must be the same as the one defined in your Engagement project settings.
+    * If your Engagement project supports only one app, skip the `applicationId` configuration. The SDK will use the default value automatically.
+    * Must be in a specific format, see rules:
+      * Starts with one or more lowercase letters or digits
+      * Additional words are separated by single hyphens or dots
+      * No leading or trailing hyphens or dots
+      * No consecutive hyphens or dots
+      * Maximum length is 50 characters
+      * E.g. `com.example.myapp`, `com-example-myapp`, `my-application1`
+    * Default value: `default-application`

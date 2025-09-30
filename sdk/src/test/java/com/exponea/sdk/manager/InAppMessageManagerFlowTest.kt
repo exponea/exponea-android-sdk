@@ -72,8 +72,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 Result(true, arrayListOf())
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any()) } answers {
-            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(3).invoke(
+        every { anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
                 Result(true, arrayListOf())
             )
         }

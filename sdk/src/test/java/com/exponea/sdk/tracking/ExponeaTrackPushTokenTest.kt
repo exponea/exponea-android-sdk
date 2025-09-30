@@ -3,8 +3,10 @@ package com.exponea.sdk.tracking
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -53,15 +55,22 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackPushToken(token = "test-google-push-token")
+
+        val pushToken = "test-google-push-token"
+        Exponea.trackPushToken(token = pushToken)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
-        assertEquals("campaign", eventSlot.captured.type)
+        assertEquals(Constants.EventTypes.pushTokenTrack, eventSlot.captured.type)
         assertEquals(
             hashMapOf<String, Any>(
-                "google_push_notification_id" to "test-google-push-token"
+                "push_notification_token" to pushToken,
+                "platform" to TokenType.FCM.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
             ),
             eventSlot.captured.properties
         )
@@ -85,15 +94,22 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackHmsPushToken(token = "test-google-push-token")
+
+        val token = "test-google-push-token"
+        Exponea.trackHmsPushToken(token = token)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
-        assertEquals("campaign", eventSlot.captured.type)
+        assertEquals(Constants.EventTypes.pushTokenTrack, eventSlot.captured.type)
         assertEquals(
             hashMapOf<String, Any>(
-                "huawei_push_notification_id" to "test-google-push-token"
+                "push_notification_token" to token,
+                "platform" to TokenType.HMS.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
             ),
             eventSlot.captured.properties
         )

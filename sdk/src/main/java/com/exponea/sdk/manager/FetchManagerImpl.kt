@@ -210,10 +210,11 @@ internal class FetchManagerImpl(
         exponeaProject: ExponeaProject,
         customerIds: CustomerIds,
         syncToken: String?,
+        applicationId: String,
         onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchAppInbox(exponeaProject, customerIds, syncToken).enqueue(
+        api.postFetchAppInbox(exponeaProject, customerIds, syncToken, applicationId).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<MessageItem>?>>() {},
                 onSuccess,

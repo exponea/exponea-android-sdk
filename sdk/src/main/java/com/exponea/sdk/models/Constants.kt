@@ -25,6 +25,7 @@ internal object Constants {
         val payment: String = "payment"
         val push: String = "campaign"
         val banner: String = "banner"
+        val pushTokenTrack: String = "notification_state"
     }
 
     // Default session values
@@ -109,5 +110,18 @@ internal object Constants {
     enum class PushNotifShownStatus(val value: String) {
         NOT_SHOWN("not_shown"),
         SHOWN("shown")
+    }
+
+    // Default values for applicationId
+    object ApplicationId {
+        const val APP_ID_DEFAULT_VALUE: String = "default-application"
+        const val APP_ID_VALIDATION_REGEX: String = "^[a-z0-9]+(?:[-.][a-z0-9]+)*$"
+        const val APP_ID_MAX_LENGTH: Int = 50
+    }
+
+    object PushPermissionStatus {
+        const val PERMISSION_GRANTED = "Permission granted"
+        const val PERMISSION_DENIED = "Permission denied"
+        const val INVALIDATED_TOKEN = "Invalidated"
     }
 }

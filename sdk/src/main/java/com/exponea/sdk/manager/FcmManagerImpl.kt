@@ -56,7 +56,8 @@ internal open class FcmManagerImpl(
     override fun trackToken(
         token: String?,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
-        tokenType: TokenType?
+        tokenType: TokenType?,
+        isTokenCanceled: Boolean
     ) {
         if (Exponea.isStopped) {
             Logger.e(this, "Push token track failed, SDK is stopping")
@@ -67,7 +68,10 @@ internal open class FcmManagerImpl(
         val permissionMismatched = permissionRequired && !permissionGranted
         val shouldUpdateToken = run {
             val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
-            if (lastTrackDateInMilliseconds == null) {
+
+            if (isTokenCanceled) {
+                true
+            } else if (lastTrackDateInMilliseconds == null) {
                 // if the token wasn't ever tracked, track it
                 true
             } else if (permissionMismatched) {
@@ -76,9 +80,10 @@ internal open class FcmManagerImpl(
             } else {
                 // decide by the frequency
                 when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
-                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE ->
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> {
                         token != pushTokenRepository.get() ||
-                            permissionGranted != pushTokenRepository.getLastPermissionFlag()
+                                permissionGranted != pushTokenRepository.getLastPermissionFlag()
+                    }
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
                 }
@@ -91,12 +96,25 @@ internal open class FcmManagerImpl(
                 tokenType,
                 permissionGranted
             )
-            val tokenToTrack = if (permissionMismatched) { "" } else { token }
+
+            val validityResult = when {
+                isTokenCanceled -> false
+                else -> !permissionMismatched
+            }
+            val validityMessage = when {
+                isTokenCanceled -> Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                permissionMismatched -> Constants.PushPermissionStatus.PERMISSION_DENIED
+                else -> Constants.PushPermissionStatus.PERMISSION_GRANTED
+            }
             val properties = PropertiesList(hashMapOf(
-                tokenType.apiProperty to tokenToTrack
+                "push_notification_token" to token,
+                "platform" to tokenType.selfCheckProperty,
+                "valid" to validityResult,
+                "description" to validityMessage
             ))
+
             eventManager.track(
-                eventType = Constants.EventTypes.push,
+                eventType = Constants.EventTypes.pushTokenTrack,
                 properties = properties.properties,
                 type = EventType.PUSH_TOKEN
             )

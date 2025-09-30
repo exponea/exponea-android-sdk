@@ -41,7 +41,11 @@ internal class AppInboxCacheImplTest {
 
     @Before
     fun before() {
-        cache = AppInboxCacheImpl(ApplicationProvider.getApplicationContext(), Gson())
+        cache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
+        )
     }
 
     @After
@@ -202,5 +206,65 @@ internal class AppInboxCacheImplTest {
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
         assertNull(cache.getSyncToken())
+    }
+
+    @Test
+    fun `compare two caches with same application id`() {
+        val syncToken = "token"
+        val messages = listOf(buildMessage("id1"), buildMessage("id2"))
+
+        cache.apply {
+            addMessages(messages)
+            setSyncToken(syncToken)
+        }
+        val newCache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
+        )
+        assertEquals(messages.size, newCache.getMessages().size)
+        assertEquals(syncToken, newCache.getSyncToken())
+    }
+
+    @Test
+    fun `clear cache when SDK has changed application id`() {
+        val syncToken = "token"
+        val messages = listOf(buildMessage("id1"), buildMessage("id2"))
+
+        cache.apply {
+            addMessages(messages)
+            setSyncToken(syncToken)
+        }
+        val newCache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "custom-application"
+        )
+        assertEquals(0, newCache.getMessages().size)
+        assertEquals(null, newCache.getSyncToken())
+    }
+
+    @Test
+    fun `clear cache but keep application id - anonymize() case`() {
+        val applicationId = "custom-application"
+        val syncToken = "token"
+        val messages = listOf(buildMessage("id1"), buildMessage("id2"))
+
+        val cache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = applicationId
+        )
+
+        cache.apply {
+            addMessages(messages)
+            setSyncToken(syncToken)
+        }
+
+        cache.clearAndSetApplicationId()
+
+        assertEquals(0, cache.getMessages().size)
+        assertEquals(null, cache.getSyncToken())
+        assertEquals(applicationId, cache.getApplicationId())
     }
 }

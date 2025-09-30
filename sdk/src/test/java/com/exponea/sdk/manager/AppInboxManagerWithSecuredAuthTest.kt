@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaProject
@@ -48,7 +49,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
     @Before
     fun before() {
         fetchManager = mockk()
-        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any()) } just Runs
+        every { fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any()) } just Runs
         drawableCache = mockk()
         every { drawableCache.has(any()) } returns false
         every { drawableCache.preload(any(), any()) } just Runs
@@ -56,7 +57,9 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns CustomerIds()
         appInboxCache = AppInboxCacheImpl(
-            ApplicationProvider.getApplicationContext(), Gson()
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
         )
     }
 
@@ -79,7 +82,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         prepareAuth(basic = "mock-auth-basic")
         appInboxManager.fetchAppInbox { }
         verify(exactly = 1) {
-            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any())
+            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any(), any())
         }
         assertEquals("Token mock-auth-basic", projectWithAuth.captured.authorization)
     }
@@ -92,7 +95,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         prepareAuth(provider = TestSecureAuthProvider::class)
         appInboxManager.fetchAppInbox { }
         verify(exactly = 1) {
-            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any())
+            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any(), any())
         }
         assertEquals("Bearer mock-auth-secured-by-provider", projectWithAuth.captured.authorization)
     }
@@ -108,7 +111,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
         )
         appInboxManager.fetchAppInbox { }
         verify(exactly = 1) {
-            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any())
+            fetchManager.fetchAppInbox(capture(projectWithAuth), any(), any(), any(), any(), any())
         }
         assertEquals("Bearer mock-auth-secured-by-provider", projectWithAuth.captured.authorization)
     }
@@ -127,7 +130,7 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
             }
         }
         verify(exactly = 0) {
-            fetchManager.fetchAppInbox(any(), any(), any(), any(), any())
+            fetchManager.fetchAppInbox(any(), any(), any(), any(), any(), any())
         }
     }
 
@@ -153,7 +156,8 @@ internal class AppInboxManagerWithSecuredAuthTest : ExponeaSDKTest() {
             drawableCache = drawableCache,
             customerIdsRepository = customerIdsRepository,
             appInboxCache = appInboxCache,
-            projectFactory = projectFactory
+            projectFactory = projectFactory,
+            applicationId = Constants.ApplicationId.APP_ID_DEFAULT_VALUE
         )
     }
 }

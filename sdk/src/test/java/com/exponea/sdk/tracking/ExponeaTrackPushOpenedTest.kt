@@ -57,7 +57,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "android",
                     "cta" to "notification",
-                    "url" to "app"
+                    "url" to "app",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -71,7 +72,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "android",
                     "cta" to "notification",
-                    "url" to "app"
+                    "url" to "app",
+                    "application_id" to "default-application"
                 ),
                 EventType.TRACK_EVENT
             ),
@@ -85,7 +87,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "android",
                     "cta" to "notification",
-                    "url" to "app"
+                    "url" to "app",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -99,7 +102,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "android",
                     "cta" to "my action name",
-                    "url" to "app"
+                    "url" to "app",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -113,7 +117,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "android",
                     "cta" to "notification",
-                    "url" to "my action url"
+                    "url" to "my action url",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -127,7 +132,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "status" to "clicked",
                     "platform" to "custom platform",
                     "cta" to "notification",
-                    "url" to "app"
+                    "url" to "app",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -161,7 +167,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "platform" to "mock platform",
                     "language" to "mock language",
                     "recipient" to "mock recipient",
-                    "subject" to "mock title"
+                    "subject" to "mock title",
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             ),
@@ -245,7 +252,8 @@ internal class ExponeaTrackPushOpenedTest(
                                         )
                                 ),
                                 "message" to "We have a great deal for you today, don't miss it!"
-                        )
+                        ),
+                        "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
         ),
@@ -269,7 +277,8 @@ internal class ExponeaTrackPushOpenedTest(
                     "platform" to "android",
                     "cta" to "Action",
                     "url" to "https://exponea.com/action?xnpe_force_track=true",
-                    "tracking_forced" to true
+                    "tracking_forced" to true,
+                    "application_id" to "default-application"
                 ),
                 EventType.PUSH_OPENED
             )

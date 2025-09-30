@@ -19,6 +19,7 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.CampaignManager
 import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConfigurationFileManager
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.TimeLimitedFcmManagerImpl
 import com.exponea.sdk.manager.TrackingConsentManager
@@ -67,6 +68,7 @@ import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushNotificationRepository
 import com.exponea.sdk.repository.PushNotificationRepositoryImpl
+import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.services.AppInboxProvider
 import com.exponea.sdk.services.ExponeaContextProvider
@@ -1192,19 +1194,50 @@ object Exponea {
         runCatching {
             Logger.d(this, "Received push notification token")
             val fcmManagerInstance = getFcmManager(context)
+            val pushTokenRepository = PushTokenRepositoryProvider.get(context)
+
             if (fcmManagerInstance == null) {
                 Logger.d(this, "Token not refreshed: SDK is not initialized nor configured previously")
-                val pushTokenRepository = PushTokenRepositoryProvider.get(context)
                 pushTokenRepository.setUntrackedToken(
                     token,
                     tokenType,
                     NotificationsPermissionReceiver.isPermissionGranted(context)
                 )
             } else {
-                Logger.d(this, "Token refresh")
-                fcmManagerInstance.trackToken(token, tokenFrequency, tokenType)
+                unTrackOldAndTrackNewToken(
+                    newToken = token,
+                    newTokenFrequency = tokenFrequency,
+                    newTokenType = tokenType,
+                    fcmManager = fcmManagerInstance,
+                    tokenRepository = pushTokenRepository
+                )
             }
         }.logOnException()
+    }
+
+    private fun unTrackOldAndTrackNewToken(
+        newToken: String,
+        newTokenFrequency: TokenFrequency?,
+        newTokenType: TokenType,
+        fcmManager: FcmManager,
+        tokenRepository: PushTokenRepository
+    ) {
+        val oldToken = tokenRepository.get()
+
+        if (!oldToken.isNullOrBlank() && oldToken != newToken) {
+            Logger.d(this, "Track old token as invalid")
+            fcmManager.removeToken(
+                token = oldToken,
+                tokenTrackFrequency = TokenFrequency.EVERY_LAUNCH,
+                tokenType = tokenRepository.getLastTokenType()
+            )
+        }
+        Logger.d(this, "Token refresh")
+        fcmManager.trackToken(
+            token = newToken,
+            tokenTrackFrequency = newTokenFrequency,
+            tokenType = newTokenType
+        )
     }
 
     /**
@@ -1576,6 +1609,9 @@ object Exponea {
                 deintegration.notifyDeintegration()
                 deintegration.clearLocalCustomerData()
                 initGate.clear()
+                ExponeaContextProvider.applicationContext?.let {
+                    DeviceIdManager.clear(context = it)
+                }
                 isInitialized = false
                 Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")
             }

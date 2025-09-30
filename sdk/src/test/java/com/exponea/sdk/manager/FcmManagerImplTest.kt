@@ -197,7 +197,7 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    fun `should track empty token in ON_TOKEN_CHANGE if permission denied but required (forcibly)`() {
+    fun `should track token in ON_TOKEN_CHANGE if permission denied but required (forcibly)`() {
         val pushToken = "mock-push-token"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
@@ -211,17 +211,19 @@ internal class FcmManagerImplTest {
         // has to store exactly-same token again
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals("", pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(false, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
-    fun `should track empty token in DAILY if permission denied but required (forcibly)`() {
+    fun `should track token in DAILY if permission denied but required (forcibly)`() {
         val pushToken = "mock-push-token"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
@@ -235,17 +237,19 @@ internal class FcmManagerImplTest {
         // has to store exactly-same token again
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals("", pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(false, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
-    fun `should track empty token in EVERY_LAUNCH if permission denied but required (forcibly)`() {
+    fun `should track token in EVERY_LAUNCH if permission denied but required (forcibly)`() {
         val pushToken = "mock-push-token"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
@@ -259,13 +263,15 @@ internal class FcmManagerImplTest {
         // has to store exactly-same token again
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals("", pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(false, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
@@ -283,13 +289,15 @@ internal class FcmManagerImplTest {
         // has to store exactly-same token again
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals(pushToken, pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
@@ -330,13 +338,15 @@ internal class FcmManagerImplTest {
         // has to store new token
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken2, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals(pushToken2, pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken2, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
@@ -379,13 +389,15 @@ internal class FcmManagerImplTest {
         // has to store exactly-same token again
         verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
         verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.push,
+            Constants.EventTypes.pushTokenTrack,
             any(),
             capture(pushTokenPropsSlot),
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals(pushToken, pushTokenPropsSlot.captured[TokenType.FCM.apiProperty])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test

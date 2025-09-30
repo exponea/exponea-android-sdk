@@ -83,7 +83,8 @@ internal class TimeLimitedFcmManagerImpl(
                 configuration, eventRepository, customerIdsRepository, flushManager, projectFactory,
                 onEventCreated = { event, type ->
                     // no action for any event - SDK is not initialized
-                }
+                },
+                deviceId = DeviceIdManager.getDeviceId(context = context)
             )
             val pushTokenRepository = PushTokenRepositoryProvider.get(context)
             val pushNotificationRepository = PushNotificationRepositoryImpl(preferences)

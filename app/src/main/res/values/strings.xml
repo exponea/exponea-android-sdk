@@ -16,6 +16,7 @@
     <string name="hint_project_token">Project Token</string>
     <string name="hint_registered">Registered</string>
     <string name="hint_api_url">API Url</string>
+    <string name="hint_application_id">Application ID</string>
     <string name="action_authenticate">Authenticate</string>
     <string name="action_fill_fields">Fill fields</string>
     <string name="action_manual_flush">Manual Flush</string>

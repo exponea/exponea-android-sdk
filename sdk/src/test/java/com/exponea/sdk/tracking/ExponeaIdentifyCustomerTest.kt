@@ -3,8 +3,10 @@ package com.exponea.sdk.tracking
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -13,6 +15,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -58,7 +61,10 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         }
 
         assertEquals(
-            hashMapOf<String, Any>("first_name" to "NewName"),
+            hashMapOf<String, Any>(
+                "first_name" to "NewName",
+                "application_id" to "default-application"
+            ),
             eventSlot.captured.properties
         )
         assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))
@@ -94,7 +100,8 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         assertEquals(
             hashMapOf<String, Any>(
                 "first_name" to "NewName",
-                "def_key" to "def_value"
+                "def_key" to "def_value",
+                "application_id" to "default-application"
             ),
             eventSlot.captured.properties
         )
@@ -132,7 +139,8 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         assertEquals(
             hashMapOf<String, Any>(
                 "first_name" to "NewName",
-                "def_key" to "def_value"
+                "def_key" to "def_value",
+                "application_id" to "default-application"
             ),
             eventSlot.captured.properties
         )
@@ -141,7 +149,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should add default properties to trackPushToken() if allowed`() {
+    fun `should NOT add default properties to trackPushToken() if allowed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
             projectToken = "mock-token",
@@ -159,14 +167,20 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackPushToken("abcd")
+
+        val pushToken = "abcd"
+        Exponea.trackPushToken(pushToken)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
         assertEquals(
             hashMapOf<String, Any>(
-                "google_push_notification_id" to "abcd",
-                "def_key" to "def_value"
+                "push_notification_token" to pushToken,
+                "platform" to TokenType.FCM.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(context)
             ),
             eventSlot.captured.properties
         )
@@ -174,7 +188,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should add default properties to trackHmsPushToken() if allowed`() {
+    fun `should NOT add default properties to trackHmsPushToken() if allowed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
             projectToken = "mock-token",
@@ -192,14 +206,20 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackHmsPushToken("abcd")
+
+        val pushToken = "abcd"
+        Exponea.trackHmsPushToken(pushToken)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
         assertEquals(
             hashMapOf<String, Any>(
-                "huawei_push_notification_id" to "abcd",
-                "def_key" to "def_value"
+                "push_notification_token" to pushToken,
+                "platform" to TokenType.HMS.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(context)
             ),
             eventSlot.captured.properties
         )
@@ -235,7 +255,8 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
 
         assertEquals(
             hashMapOf<String, Any>(
-                "first_name" to "NewName"
+                "first_name" to "NewName",
+                "application_id" to "default-application"
             ),
             eventSlot.captured.properties
         )
@@ -262,14 +283,21 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackPushToken("abcd")
+
+        val pushToken = "abcd"
+        Exponea.trackPushToken(pushToken)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals(
             hashMapOf<String, Any>(
-                "google_push_notification_id" to "abcd"
+                "push_notification_token" to pushToken,
+                "platform" to TokenType.FCM.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(context)
             ),
             eventSlot.captured.properties
         )
@@ -295,14 +323,21 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         every {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
-        Exponea.trackHmsPushToken("abcd")
+
+        val pushToken = "abcd"
+        Exponea.trackHmsPushToken(pushToken)
         verify(exactly = 1) {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
         assertEquals(
             hashMapOf<String, Any>(
-                "huawei_push_notification_id" to "abcd"
+                "push_notification_token" to pushToken,
+                "platform" to TokenType.HMS.selfCheckProperty,
+                "application_id" to "default-application",
+                "valid" to true,
+                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                "device_id" to DeviceIdManager.getDeviceId(context)
             ),
             eventSlot.captured.properties
         )

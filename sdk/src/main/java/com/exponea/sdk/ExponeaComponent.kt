@@ -9,6 +9,7 @@ import com.exponea.sdk.manager.CampaignManager
 import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConnectionManager
 import com.exponea.sdk.manager.ConnectionManagerImpl
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.EventManagerInAppMessageTrackingDelegate
@@ -71,7 +72,6 @@ import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
 import com.exponea.sdk.services.ExponeaProjectFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
-import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -115,7 +115,11 @@ internal class ExponeaComponent(
 
     internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, ExponeaGson.instance)
 
-    internal val appInboxCache: AppInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance)
+    internal val appInboxCache: AppInboxCache = AppInboxCacheImpl(
+        context = context,
+        gson = ExponeaGson.instance,
+        applicationId = exponeaConfiguration.applicationId
+    )
 
     internal val inAppMessageDisplayStateRepository =
         InAppMessageDisplayStateRepositoryImpl(preferences, ExponeaGson.instance)
@@ -169,7 +173,8 @@ internal class ExponeaComponent(
             inAppMessageManager.onEventCreated(event, type)
             appInboxManager.onEventCreated(event, type)
             inAppContentBlockManager.onEventCreated(event, type)
-        }
+        },
+        deviceId = DeviceIdManager.getDeviceId(context)
     )
 
     internal val campaignManager: CampaignManager = CampaignManagerImpl(
@@ -221,7 +226,8 @@ internal class ExponeaComponent(
         drawableCache = drawableCache,
         projectFactory = projectFactory,
         customerIdsRepository = customerIdsRepository,
-        appInboxCache = appInboxCache
+        appInboxCache = appInboxCache,
+        applicationId = exponeaConfiguration.applicationId
     )
 
     internal val inAppMessageManager: InAppMessageManager = InAppMessageManagerImpl(
@@ -266,8 +272,11 @@ internal class ExponeaComponent(
         val token = pushTokenRepository.get()
         val tokenType = pushTokenRepository.getLastTokenType()
         // Do not use TokenFrequency from the configuration, clear tokens immediately during anonymize
-        fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
-        fcmManager.trackToken(" ", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.HMS)
+        fcmManager.removeToken(
+            token = token,
+            tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH,
+            tokenType = tokenType
+        )
         deviceInitiatedRepository.set(false)
         campaignRepository.clear()
         inAppMessageManager.clear()
@@ -300,7 +309,11 @@ internal class ExponeaComponent(
             sessionManager.trackSessionStart(currentTimeSeconds())
         }
         // Do not use TokenFrequency from the configuration, setup token from new customer immediately during anonymize
-        fcmManager.trackToken(token, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, tokenType)
+        fcmManager.trackToken(
+            token = token,
+            tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH,
+            tokenType = tokenType
+        )
         inAppMessageManager.reload()
         appInboxManager.reload()
         inAppContentBlockManager.loadInAppContentBlockPlaceholders()

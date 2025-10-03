@@ -11,6 +11,20 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.6.0
+#### October 03, 2025
+* Added:
+  * Adds Multiple Mobile applications feature
+  * Replaces age with timestamp for tracked Engagement events
+  * Improves database migration
+* Fixed:
+  * Fixes issue where storing delivered notification data exceeds limits
+  * Fixes rich-styled modal containing invalid margin for paragraph
+  * Upgrades Bouncy Castle due to security vulnerability
+* Removed:
+  * Removes old kotlin-extensions library
+
+
 ## Release Notes for 4.5.0
 #### June 27, 2025
 * Added:

@@ -180,9 +180,9 @@ class MainActivity : AppCompatActivity() {
             else -> null
         }
         return if (intent.isViewUrlIntent("http")) {
-            intent?.data?.path.orEmpty().toDeeplinkDestination()
+            intent?.data?.path?.toDeeplinkDestination()
         } else if (intent.isViewUrlIntent("exponea")) {
-            intent?.data?.path.orEmpty().toDeeplinkDestination()
+            intent?.data?.path?.toDeeplinkDestination() ?: intent?.data?.host?.toDeeplinkDestination()
         } else {
             null
         }

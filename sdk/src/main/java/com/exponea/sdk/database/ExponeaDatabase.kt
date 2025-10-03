@@ -77,34 +77,34 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
         }
 
         fun getInstance(context: Context): ExponeaDatabase {
-            if (INSTANCE == null || !INSTANCE!!.isOpen) {
-                synchronized(this) {
-                    if (INSTANCE == null || !INSTANCE!!.isOpen) {
-                        INSTANCE = buildDatabase(context)
-                    }
-                }
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }
-            return INSTANCE!!
         }
 
-        private fun buildDatabase(context: Context): ExponeaDatabase {
-            val database = Room.databaseBuilder(
-                context,
-                ExponeaDatabase::class.java,
-                "ExponeaEventDatabase"
-            ).apply {
-                enableMultiInstanceInvalidation()
-                allowMainThreadQueries()
-                fallbackToDestructiveMigrationOnDowngrade()
-                addMigrations(*databaseMigrations())
-            }.build()
-            try {
-                database.count()
-            } catch (e: Exception) {
-                Logger.e(this, "Error occurred while init-opening database", e)
+        fun closeDatabase() {
+            synchronized(this) {
+                INSTANCE?.close()
+                INSTANCE = null
             }
-            return database
         }
+
+        fun <T> safeDatabaseOperation(context: Context, operation: (ExponeaDatabase) -> T): T {
+            synchronized(this) {
+                return operation(getInstance(context))
+            }
+        }
+
+        private fun buildDatabase(context: Context) = Room.databaseBuilder(
+            context,
+            ExponeaDatabase::class.java,
+            "ExponeaEventDatabase"
+        ).apply {
+            enableMultiInstanceInvalidation()
+            allowMainThreadQueries()
+            fallbackToDestructiveMigrationOnDowngrade()
+            addMigrations(*databaseMigrations())
+        }.build()
 
         private fun databaseMigrations(): Array<Migration> = arrayOf(migration1to2)
     }

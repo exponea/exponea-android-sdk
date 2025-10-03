@@ -871,8 +871,6 @@ object Exponea {
         this.component = ExponeaComponent(this.configuration, context)
         deintegration.registerForIntegrationStopped(component.serviceManager)
         deintegration.registerForIntegrationStopped(component.eventRepository)
-        deintegration.registerForIntegrationStopped(component.serviceManager)
-        deintegration.registerForIntegrationStopped(component.eventRepository)
         deintegration.registerForIntegrationStopped(component.appInboxManager)
         deintegration.registerForIntegrationStopped(component.segmentsManager)
         deintegration.registerForIntegrationStopped(component.sessionManager)

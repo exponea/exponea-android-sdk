@@ -23,17 +23,17 @@ internal class TemporaryEventRepositoryImpl(
     }
 
     override fun update(item: ExportedEvent) {
-        database.update(item)
+        super.update(item)
         runtimeDatabase.put(item.id, item)
     }
 
     override fun remove(id: String) {
-        database.remove(id)
+        super.remove(id)
         runtimeDatabase.remove(id)
     }
 
     override fun clear() {
-        database.clear()
+        super.clear()
         runtimeDatabase.clear()
     }
 }

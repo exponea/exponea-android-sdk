@@ -5,9 +5,9 @@ import android.webkit.CookieManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
+import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
-import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.util.ExponeaGson
 import io.mockk.clearMocks
@@ -22,7 +22,7 @@ internal fun Exponea.shutdown() {
     initGate.clear()
     ExponeaContextProvider.reset()
     if (!wasInitialized) return
-    (componentForTesting.eventRepository as EventRepositoryImpl).close()
+    ExponeaDatabase.closeDatabase()
     componentForTesting.sessionManager.stopSessionListener()
     componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
     componentForTesting.backgroundTimerManager.stopTimer()
@@ -69,10 +69,6 @@ fun resetField(target: Any, fieldName: String) {
         isAccessible = true
         set(target, null)
     }
-}
-
-internal fun EventRepositoryImpl.close() {
-    database.openHelper.close()
 }
 
 internal val Exponea.componentForTesting: ExponeaComponent

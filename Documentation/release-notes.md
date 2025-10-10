@@ -11,6 +11,12 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.6.1
+#### October 10, 2025
+* Fixed:
+  * Fixes database access and management for improved safety and clarity
+
+
 ## Release Notes for 4.6.0
 #### October 03, 2025
 * Added:

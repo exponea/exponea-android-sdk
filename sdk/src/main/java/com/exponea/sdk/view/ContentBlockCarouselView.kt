@@ -1,22 +1,14 @@
 package com.exponea.sdk.view
 
 import android.content.ActivityNotFoundException
-import android.content.ComponentName
 import android.content.Context
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.util.AttributeSet
-import android.view.View
-import android.view.ViewGroup
 import android.widget.RelativeLayout
 import androidx.annotation.RequiresApi
-import androidx.browser.customtabs.CustomTabsCallback
-import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.browser.customtabs.CustomTabsServiceConnection
-import androidx.browser.customtabs.CustomTabsSession
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.exponea.sdk.Exponea
@@ -29,18 +21,20 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewContro
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.EMPTY_PLACEHOLDER_ID
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewHolder
+import com.exponea.sdk.services.inappcontentblock.CustomTabsCarouselViewCallback
+import com.exponea.sdk.services.inappcontentblock.CustomTabsCarouselViewHelper
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
 
-public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
+class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
 
-    public var behaviourCallback: ContentBlockCarouselCallback?
+    var behaviourCallback: ContentBlockCarouselCallback?
         get() = viewController.behaviourCallback
         set(value) {
             viewController.behaviourCallback = value
         }
 
-    public var contentBlockSelector: ContentBlockSelector
+    var contentBlockSelector: ContentBlockSelector
         get() = viewController.contentBlockSelector
         set(value) {
             viewController.contentBlockSelector = value
@@ -49,34 +43,7 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
     private lateinit var viewPager: ViewPager2
     internal lateinit var viewController: ContentBlockCarouselViewController
 
-    private var tabsClient: CustomTabsClient? = null
-    private var tabsSession: CustomTabsSession? = null
-    private val tabsCallback = object : CustomTabsCallback() {
-        override fun onNavigationEvent(navigationEvent: Int, extras: Bundle?) {
-            when (navigationEvent) {
-                NAVIGATION_FAILED,
-                TAB_HIDDEN -> {
-                    Logger.i(this, "InAppCbCarousel: User returns to app")
-                    viewController.onViewBecomeForeground()
-                }
-                else -> {
-                    Logger.v(this, "InAppCbCarousel: Web Navigation event: $navigationEvent")
-                }
-            }
-        }
-    }
-    private val tabsConnection = object : CustomTabsServiceConnection() {
-        override fun onServiceDisconnected(name: ComponentName?) {
-            tabsClient = null
-            tabsSession = null
-        }
-
-        override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
-            tabsClient = client
-            tabsClient?.warmup(0)
-            tabsSession = tabsClient?.newSession(tabsCallback)
-        }
-    }
+    internal lateinit var customTabsHelper: CustomTabsCarouselViewHelper
 
     // Xml UI constructors
     constructor(context: Context) : this(context, null)
@@ -171,7 +138,11 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
             maxMessagesCount,
             scrollDelay
         )
-        View.inflate(context, R.layout.inapp_content_block_carousel, this)
+        this.customTabsHelper = CustomTabsCarouselViewHelper(
+            context,
+            CustomTabsCarouselViewCallback(viewController)
+        )
+        inflate(context, R.layout.inapp_content_block_carousel, this)
         this.viewPager = findViewById(R.id.content_block_carousel_pager)
         this.viewPager.adapter = viewController.contentBlockCarouselAdapter
         this.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -184,14 +155,7 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
             }
         })
         try {
-            val customTabsPackage = CustomTabsClient.getPackageName(context, null)
-            if (customTabsPackage.isNullOrBlank()) {
-                Logger.w(this, "InAppCbCarousel: App that supports Custom Tabs has not been found")
-                // Still, try invoke `bindCustomTabsService` for old Android
-            }
-            CustomTabsClient.bindCustomTabsService(
-                context, customTabsPackage, tabsConnection
-            )
+            customTabsHelper.bindCustomTabsService()
         } catch (e: Exception) {
             Logger.e(this, "InAppCbCarousel: Custom Tabs usage is turned off", e)
         }
@@ -210,6 +174,7 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
         viewController.onViewDetachedFromWindow()
         Exponea.deintegration.unregisterForIntegrationStopped(this)
         Exponea.deintegration.unregisterForIntegrationStopped(viewController)
+        customTabsHelper.unbindCustomTabsService()
         super.onDetachedFromWindow()
     }
 
@@ -237,13 +202,13 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
         } else {
             Logger.v(this, "InAppCbCarousel: Recalculating height for current view and views around it")
         }
-        if (layoutParams == null || layoutParams.height != ViewGroup.LayoutParams.WRAP_CONTENT) {
+        if (layoutParams == null || layoutParams.height != LayoutParams.WRAP_CONTENT) {
             Logger.v(this, "InAppCbCarousel: Auto-height is not set, skipping")
             return
         }
         val viewHolderScope = collectActivePlaceholderViews(onlyCurrentView)
         val planned = post {
-            val highestValue = viewHolderScope.map {
+            val highestValue = viewHolderScope.maxOfOrNull {
                 it.measure(
                     MeasureSpec.makeMeasureSpec(it.width, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -253,7 +218,7 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
                     "InAppCbCarousel: Auto-height feature detects height: ${it.measuredHeight}"
                 )
                 it.measuredHeight
-            }.maxOrNull()
+            }
             Logger.v(this, "InAppCbCarousel: Max height of content block is: $highestValue")
             highestValue?.let {
                 if (viewPager.layoutParams.height != it) {
@@ -315,6 +280,7 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
             Logger.e(this, "InAppCbCarousel: Unable to open browser, url is null")
             return
         }
+        val tabsSession = customTabsHelper.getSession()
         if (tabsSession == null) {
             Logger.w(this, "InAppCbCarousel: Inner web browser lost session, app session may be closed")
         }
@@ -327,8 +293,8 @@ public class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCall
                     CustomTabsIntent.ACTIVITY_HEIGHT_ADJUSTABLE
                 )
                 .build()
-                .launchUrl(context, Uri.parse(url))
-        } catch (e: ActivityNotFoundException) {
+                .launchUrl(context, url.toUri())
+        } catch (_: ActivityNotFoundException) {
             Logger.v(this, "InAppCbCarousel: Unable to open instant browser for $url")
             UrlOpener.openUrl(context, url)
         } catch (e: Exception) {

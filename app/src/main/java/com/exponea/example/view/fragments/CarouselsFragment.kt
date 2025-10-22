@@ -43,8 +43,9 @@ class CarouselsFragment : BaseFragment() {
     }
 
     private fun prepareExampleAndroidCarouselCbPlaceholder() {
-        val androidCarousel = Exponea.getInAppContentBlocksCarousel(requireContext(), "example_carousel_and")
-        viewBinding.contentBlocksLayout.addView(androidCarousel)
+        Exponea.getInAppContentBlocksCarousel(requireContext(), "example_carousel_and")?.let {
+            viewBinding.contentBlocksLayout.addView(it)
+        }
     }
 
     private fun prepareExampleDefaultCarouselCbPlaceholder() {

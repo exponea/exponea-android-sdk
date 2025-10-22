@@ -1,9 +1,11 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
+import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaMockServer
+import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.waitForIt
 import java.io.File
 import kotlin.test.assertFalse
@@ -12,6 +14,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -218,5 +222,25 @@ internal class DrawableCacheImplTest {
         imageUrls.forEach { url ->
             assertTrue(cache.has(url))
         }
+    }
+
+    @Test
+    fun `should call onImageNotLoadedFallback when provided url is null`() = runInSingleThread { idleThreads ->
+        var onImageNotLoadedCalled = false
+        DrawableCacheImpl(context).showImage(null, ImageView(context), onImageNotLoaded = {
+            onImageNotLoadedCalled = true
+        })
+        idleThreads()
+        assertThat(onImageNotLoadedCalled, equalTo(true))
+    }
+
+    @Test
+    fun `should call onImageNotLoadedFallback when provided url is blank`() = runInSingleThread { idleThreads ->
+        var onImageNotLoadedCalled = false
+        DrawableCacheImpl(context).showImage("", ImageView(context), onImageNotLoaded = {
+            onImageNotLoadedCalled = true
+        })
+        idleThreads()
+        assertThat(onImageNotLoadedCalled, equalTo(true))
     }
 }

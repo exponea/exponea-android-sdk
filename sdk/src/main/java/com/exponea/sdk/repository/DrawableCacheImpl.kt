@@ -9,7 +9,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
-import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.runOnMainThread
 import freeze.coil.ImageLoader
 import freeze.coil.decode.GifDecoder
@@ -49,16 +48,13 @@ internal class DrawableCacheImpl(
 
     override fun showImage(url: String?, target: ImageView, onImageNotLoaded: ((ImageView) -> Unit)?) {
         fun onImageNotLoadedFallback(reason: String) {
-            Logger.d(this, reason)
             onImageNotLoaded?.let {
                 Logger.d(this, "$reason, fallback to onImageNotLoaded")
                 runOnMainThread { it.invoke(target) }
-            }
+            } ?: Logger.d(this, reason)
         }
         if (url.isNullOrBlank()) {
-            ensureOnMainThread {
-                target.visibility = View.GONE
-            }
+            onImageNotLoadedFallback("Image url is null")
             return
         }
         ensureOnBackgroundThread {

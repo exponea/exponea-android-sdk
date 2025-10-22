@@ -31,8 +31,12 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
+
+    private lateinit var deviceId: String
+
     @Before
     fun before() {
+        deviceId = DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
@@ -62,8 +66,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
 
         assertEquals(
             hashMapOf<String, Any>(
-                "first_name" to "NewName",
-                "application_id" to "default-application"
+                "first_name" to "NewName"
             ),
             eventSlot.captured.properties
         )
@@ -100,8 +103,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         assertEquals(
             hashMapOf<String, Any>(
                 "first_name" to "NewName",
-                "def_key" to "def_value",
-                "application_id" to "default-application"
+                "def_key" to "def_value"
             ),
             eventSlot.captured.properties
         )
@@ -139,8 +141,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         assertEquals(
             hashMapOf<String, Any>(
                 "first_name" to "NewName",
-                "def_key" to "def_value",
-                "application_id" to "default-application"
+                "def_key" to "def_value"
             ),
             eventSlot.captured.properties
         )
@@ -180,7 +181,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
                 "application_id" to "default-application",
                 "valid" to true,
                 "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(context)
+                "device_id" to deviceId
             ),
             eventSlot.captured.properties
         )
@@ -219,7 +220,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
                 "application_id" to "default-application",
                 "valid" to true,
                 "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(context)
+                "device_id" to deviceId
             ),
             eventSlot.captured.properties
         )
@@ -255,8 +256,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
 
         assertEquals(
             hashMapOf<String, Any>(
-                "first_name" to "NewName",
-                "application_id" to "default-application"
+                "first_name" to "NewName"
             ),
             eventSlot.captured.properties
         )
@@ -297,7 +297,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
                 "application_id" to "default-application",
                 "valid" to true,
                 "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(context)
+                "device_id" to deviceId
             ),
             eventSlot.captured.properties
         )
@@ -337,7 +337,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
                 "application_id" to "default-application",
                 "valid" to true,
                 "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(context)
+                "device_id" to deviceId
             ),
             eventSlot.captured.properties
         )

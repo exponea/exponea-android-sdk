@@ -3,6 +3,7 @@ package com.exponea.sdk.tracking
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
@@ -36,6 +37,7 @@ internal class ExponeaTrackPushOpenedTest(
     private val eventType: EventType
 ) : ExponeaSDKTest() {
     companion object {
+
         data class TestCase(
             val name: String,
             val expectEvent: Boolean,
@@ -302,6 +304,9 @@ internal class ExponeaTrackPushOpenedTest(
     }
     @Before
     fun before() {
+        val deviceId = DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
+        testCases.forEach { it.eventProperties.put("device_id", deviceId) }
+
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }

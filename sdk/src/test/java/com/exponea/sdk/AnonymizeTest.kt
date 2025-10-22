@@ -48,10 +48,11 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             "device_id" to deviceId
         )
 
-    private fun expectedTestEventProperties(): HashMap<String, Any> =
+    private fun expectedTestEventProperties(deviceId: String): HashMap<String, Any> =
         hashMapOf(
             "name" to "test",
-            "application_id" to "default-application"
+            "application_id" to "default-application",
+            "device_id" to deviceId
         )
 
     private fun checkEvent(
@@ -101,7 +102,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         events.sortedBy { it.timestamp }
         assertEquals(9, events.size)
         checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-        checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
+        checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
         checkEvent(events[2], Constants.EventTypes.pushTokenTrack, initialProject, userId, expectedPushTokenProperties(
             valid = true,
             description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
@@ -121,7 +122,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
             deviceId = deviceId
         ))
-        checkEvent(events[8], "test", newProject, newUserId, expectedTestEventProperties())
+        checkEvent(events[8], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
     }
 
     @Test
@@ -129,6 +130,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         runInSingleThread { idleThreads ->
             val context = ApplicationProvider.getApplicationContext<Context>()
             val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            val deviceId = DeviceIdManager.getDeviceId(context)
             Exponea.flushMode = FlushMode.MANUAL
             Exponea.init(context, ExponeaConfiguration(
                 baseURL = initialProject.baseUrl,
@@ -155,9 +157,9 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             events.sortedBy { it.timestamp }
             assertEquals(expected = 4, actual = events.size)
             checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
+            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
             checkEvent(events[2], Constants.EventTypes.installation, newProject, newUserId!!, null)
-            checkEvent(events[3], "test", newProject, newUserId, expectedTestEventProperties())
+            checkEvent(events[3], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
         }
     }
 
@@ -166,6 +168,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         runInSingleThread { idleThreads ->
             val context = ApplicationProvider.getApplicationContext<Context>()
             val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            val deviceId = DeviceIdManager.getDeviceId(context)
             Exponea.flushMode = FlushMode.MANUAL
             Exponea.init(context, ExponeaConfiguration(
                 baseURL = initialProject.baseUrl,
@@ -192,11 +195,11 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             events.sortedBy { it.timestamp }
             assertEquals(expected = 6, actual = events.size)
             checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties())
+            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
             checkEvent(events[2], Constants.EventTypes.sessionEnd, initialProject, userId, null)
             checkEvent(events[3], Constants.EventTypes.installation, newProject, newUserId!!, null)
             checkEvent(events[4], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-            checkEvent(events[5], "test", newProject, newUserId, expectedTestEventProperties())
+            checkEvent(events[5], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
         }
     }
 

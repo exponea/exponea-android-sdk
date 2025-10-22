@@ -92,9 +92,9 @@ internal open class EventManagerImpl(
             trackedProperties.putAll(configuration.defaultProperties)
         }
         trackedProperties.putAll(properties)
-        trackedProperties["application_id"] = configuration.applicationId
 
-        if (type == EventType.PUSH_TOKEN) {
+        if (type != EventType.TRACK_CUSTOMER) {
+            trackedProperties["application_id"] = configuration.applicationId
             trackedProperties["device_id"] = deviceId
         }
 

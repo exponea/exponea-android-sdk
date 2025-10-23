@@ -11,6 +11,16 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.7.0
+#### October 23, 2025
+* Added:
+  * Adds device_id parameter to all tracked events
+* Fixed:
+  * Fixes memory leak in ContentBlockCarouselView
+  * Fixes Android example app crash
+  * Fixes issue where richless in-app message displays without image
+
+
 ## Release Notes for 4.6.1
 #### October 10, 2025
 * Fixed:

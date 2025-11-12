@@ -83,7 +83,15 @@ Next, you must create and register a service that extends `HmsMessageService`. T
 
 The SDK will only handle push notification messages sent from the Engagement platform. A helper method `Exponea.isExponeaPushNotification()` is also provided.
 
-If you run the app, the SDK should the track push token to the Engagement platform. If you enabled the self-check, it will you inform you of this. Alternatively, you can find the customer in the Engagement web app and check the customer property `huawei_push_notification_id`.
+After running your application, the SDK tracks the push token to the Engagement platform. If you enabled the self-check feature, it will confirm successful tracking.
+You can also verify token tracking manually by locating the customer in the Bloomreach Engagement web application:
+
+- **SDK versions below 4.6.0:** Check the customer property `huawei_push_notification_id`
+- **SDK versions 4.6.0 and higher:** Check the `notification_state` event with property `push_notification_token`
+
+> ❗️Important
+>
+> SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#token-tracking-via-notification_state-event).
 
 A push token is typically generated at the first application start, but it has its own lifecycle. Your `HmsMessageService` implementation is triggered only if a token is created or its value has changed. Please validate your expectations against the defined [token update triggers](https://developer.huawei.com/consumer/en/doc/HMSCore-Guides/android-client-dev-0000001050042041#section487774626)
 

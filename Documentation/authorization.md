@@ -173,6 +173,6 @@ class ExampleAuthProvider : AuthorizationProvider {
 ```kotlin
 configuration.applicationId = "<Your application id>" 
 ```
-Make sure your `applicationId` value matches exactly what you've defined in your Engagement project settings.
+Make sure your `applicationId` value matches exactly Application ID configured in your Bloomreach Engagement under **Project Settings > Campaigns > Channels > Push Notifications.**
 
 **Single mobile app:** If your Engagement project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".

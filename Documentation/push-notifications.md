@@ -92,6 +92,10 @@ By default, the SDK tracks push notifications automatically. In the [SDK configu
 
 If `automaticPushNotification` is enabled, the SDK will display push notifications from Engagement and track a "campaign" event for every delivered/opened push notification with the relevant properties.
 
+> ❗️Important
+>
+> SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](#token-tracking-via-notification_state-event).
+
 ### Respond to push notifications
 
 When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can choose from three different actions to be performed when tapping the notification or additional buttons displayed with the notification.
@@ -249,6 +253,10 @@ Exponea.trackPushToken(
 
 Invoking this method will track the push token immediately regardless of the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) for `tokenTrackFrequency`.
 
+> ❗️Important
+>
+> SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](#token-tracking-via-notification_state-event).
+
 #### Track delivered push notification
 
 Use the [`trackDeliveredPush`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#track-push-notification-delivery-manually) method to manually track a delivered push notification:
@@ -355,6 +363,94 @@ Notification payloads use a JSON data structure.
     "consent_category_tracking": "Tracking consent name"
 }
 ```
+
+## Token tracking via notification_state event
+
+Starting with SDK version 4.6.0, push notification tokens are tracked using `notification_state` events instead of customer
+profile properties. This change enables support for multiple mobile applications per project,
+allowing you to track multiple push tokens for the same customer across different apps and devices.
+
+### Token storage by SDK version
+
+#### SDK versions below 4.6.0:
+
+* Tokens are stored in customer profile properties: `google_push_notification_id` or `huawei_push_notification_id`
+* One token per customer profile
+* Single application per project
+
+#### SDK versions 4.6.0 and higher:
+
+* Tokens are stored as `notification_state` events
+* Multiple tokens per customer (grouped by Application ID)
+* Multiple applications per project supported
+* Backward compatibility maintained for Application ID `default-application`
+
+### When notification_state events are tracked
+
+The SDK automatically tracks `notification_state` events in the following scenarios:
+
+* SDK initialization
+* App transitions from background to foreground
+* New token received from Firebase or Huawei
+* Manual token tracking using `Exponea.trackPushToken(...)` or `Exponea.trackHmsPushToken(...)`
+* User anonymization via `Exponea.anonymize()`
+* Notification permission requested via `Exponea.requestPushAuthorization(...)`
+
+```kotlin
+Exponea.requestPushAuthorization(requireContext()) { granted ->
+    Logger.i(this, "Push notifications are allowed: $granted")
+}
+```
+
+The frequency of `notification_state` event tracking depends on the `tokenTrackFrequency` configuration property. [See SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+
+### notification_state event properties
+
+| Property                | Description                              | Example values                          |
+|-------------------------|------------------------------------------|-----------------------------------------|
+| `push_notification_token` | Current push notification token          | Token string                            |
+| `platform`                | Mobile platform                          | `android` or `huawei`                       |
+| `valid`                   | Token validity status                    | `true` or `false`                           |
+| `description`             | Token state description                  | `Permission granted`, `Permission denied`, or `Invalidated` |
+| `application_id`          | Application identifier from SDK configuration | Custom ID or `default-application` (default) |
+| `device_id`               | Unique device identifier                 | UUID string                             |
+
+> 📘 Note
+>
+> If you don't specify an `application_id` in your SDK configuration, the default value `default-application` is used. [See SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+
+### Understanding token states
+
+The combination of `valid` and `description` properties indicates the token's current state:
+
+| Valid | Description         | When this occurs                                                        |
+|-------|---------------------|------------------------------------------------------------------------|
+| `false` | `Invalidated`         | New token received \(old token becomes invalid\) or `Exponea.anonymize()` called |
+| `false` | `Permission denied`   | [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) is `true` and user denied notification permission |
+| `true`  | `Permission granted`  | Valid token tracked successfully \(all other cases\)                     |
+
+### Configuring Application ID
+
+> 📘 Note
+>
+> See this section to configure `application_id`. [Configure Application ID](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#configure-application-id).
+
+> ❗️Important
+>
+> The SDK can automatically generate `notification_state` events,
+> but your Engagement project must have event creation enabled. If your project uses custom event schemas
+> or restricts event creation, add `notification_state` to the list of allowed events. Otherwise, push token registration will fail silently.
+
+### Verifying token tracking
+
+You can verify that tokens are being tracked correctly in the Bloomreach Engagement web application:
+
+1. Navigate to Data & Assets > Customers
+2. Locate the customer profile
+3. Check for `notification_state` events in the customer's event history
+4. Verify the `push_notification_token` property contains a valid token value 
+
+For SDK versions below 4.6.0, check the customer profile properties `google_push_notification_id` or `huawei_push_notification_id` instead.
 
 ## Troubleshooting
 

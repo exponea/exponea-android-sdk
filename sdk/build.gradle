@@ -19,8 +19,8 @@ android {
         minSdkVersion 17
         targetSdkVersion 35
         compileSdk 35
-        buildConfigField "String", "EXPONEA_VERSION_NAME", '"4.7.0"'
-        buildConfigField "int", "EXPONEA_VERSION_CODE", "89"
+        buildConfigField "String", "EXPONEA_VERSION_NAME", '"4.8.0"'
+        buildConfigField "int", "EXPONEA_VERSION_CODE", "90"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-rules.pro'
         testBuildType "unitTesting"

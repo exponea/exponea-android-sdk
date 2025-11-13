@@ -11,6 +11,12 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.8.0
+#### November 13, 2025
+* Added:
+  * Documents [major push notification updates](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update#update-to-version-460-or-higher): `notification_state` event as a new token tracking method, Application ID configuration, and migration requirements for the Multiple mobile apps feature.
+ 
+
 ## Release Notes for 4.7.0
 #### October 23, 2025
 * Added:

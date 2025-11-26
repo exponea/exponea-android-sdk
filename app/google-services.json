@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "148016054957",
-    "project_id": "tmp-sftp-hub",
-    "storage_bucket": "tmp-sftp-hub.appspot.com"
+    "project_number": "678450700063",
+    "project_id": "mobile-sdk-example-apps",
+    "storage_bucket": "mobile-sdk-example-apps.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:148016054957:android:9dba84006b68ada7cdbc24",
+        "mobilesdk_app_id": "1:678450700063:android:84c1107469bb30d887da2a",
         "android_client_info": {
-          "package_name": "com.exponea.example"
+          "package_name": "com.exponea.sdk.example"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "148016054957-l4une7iiq856rka6miquuf6a8cn9r4t6.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAfN3Xy5GiUULIawlZQMKmGkRDoWWByVnM"
+          "current_key": "AIzaSyB-nVZQ7AIoqpVYMaWPTaukiuxP0Vy3L4A"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "148016054957-l4une7iiq856rka6miquuf6a8cn9r4t6.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

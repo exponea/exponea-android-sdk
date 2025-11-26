@@ -11,7 +11,7 @@ class TokenTracker {
             override fun run() {
                 try {
                     // Obtain the app ID from the agconnect-service.json file.
-                    val appId = "104661225"
+                    val appId = "115368361"
 
                     // Set tokenScope to HCM.
                     val tokenScope = "HCM"
@@ -22,7 +22,7 @@ class TokenTracker {
                         Exponea.trackHmsPushToken(token)
                     }
                 } catch (e: ApiException) {
-                    Logger.e(this, "get hms token failed, $e")
+                    Logger.e(this@TokenTracker, "get hms token failed, $e")
                 }
             }
         }.start()

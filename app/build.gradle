@@ -13,7 +13,7 @@ android {
     namespace 'com.exponea.example'
 
     defaultConfig {
-        applicationId "com.exponea.example"
+        applicationId "com.exponea.sdk.example"
         minSdkVersion 21
         targetSdkVersion 35
         compileSdk 35

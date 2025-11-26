@@ -1,95 +1,95 @@
 {
-  "agcgw":{
-    "backurl":"connect-dre.hispace.hicloud.com",
-    "url":"connect-dre.dbankcloud.cn",
-    "websocketbackurl":"connect-ws-dre.hispace.dbankcloud.com",
-    "websocketurl":"connect-ws-dre.hispace.dbankcloud.cn"
+  "agcgw": {
+    "url": "connect-dre.dbankcloud.cn",
+    "backurl": "connect-dre.hispace.hicloud.com",
+    "websocketurl": "connect-ws-dre.hispace.dbankcloud.cn",
+    "websocketbackurl": "connect-ws-dre.hispace.dbankcloud.com"
   },
-  "agcgw_all":{
-    "CN":"connect-drcn.dbankcloud.cn",
-    "CN_back":"connect-drcn.hispace.hicloud.com",
-    "DE":"connect-dre.dbankcloud.cn",
-    "DE_back":"connect-dre.hispace.hicloud.com",
-    "RU":"connect-drru.hispace.dbankcloud.ru",
-    "RU_back":"connect-drru.hispace.dbankcloud.cn",
-    "SG":"connect-dra.dbankcloud.cn",
-    "SG_back":"connect-dra.hispace.hicloud.com"
+  "agcgw_all": {
+    "SG": "connect-dra.dbankcloud.cn",
+    "SG_back": "connect-dra.hispace.hicloud.com",
+    "CN": "connect-drcn.dbankcloud.cn",
+    "CN_back": "connect-drcn.hispace.hicloud.com",
+    "RU": "connect-drru.hispace.dbankcloud.ru",
+    "RU_back": "connect-drru.hispace.dbankcloud.cn",
+    "DE": "connect-dre.dbankcloud.cn",
+    "DE_back": "connect-dre.hispace.hicloud.com"
   },
-  "websocketgw_all":{
-    "CN":"connect-ws-drcn.hispace.dbankcloud.cn",
-    "CN_back":"connect-ws-drcn.hispace.dbankcloud.com",
-    "DE":"connect-ws-dre.hispace.dbankcloud.cn",
-    "DE_back":"connect-ws-dre.hispace.dbankcloud.com",
-    "RU":"connect-ws-drru.hispace.dbankcloud.ru",
-    "RU_back":"connect-ws-drru.hispace.dbankcloud.cn",
-    "SG":"connect-ws-dra.hispace.dbankcloud.cn",
-    "SG_back":"connect-ws-dra.hispace.dbankcloud.com"
+  "websocketgw_all": {
+    "SG": "connect-ws-dra.hispace.dbankcloud.cn",
+    "SG_back": "connect-ws-dra.hispace.dbankcloud.com",
+    "CN": "connect-ws-drcn.hispace.dbankcloud.cn",
+    "CN_back": "connect-ws-drcn.hispace.dbankcloud.com",
+    "RU": "connect-ws-drru.hispace.dbankcloud.ru",
+    "RU_back": "connect-ws-drru.hispace.dbankcloud.cn",
+    "DE": "connect-ws-dre.hispace.dbankcloud.cn",
+    "DE_back": "connect-ws-dre.hispace.dbankcloud.com"
   },
-  "client":{
-    "cp_id":"5190421000024647787",
-    "product_id":"736430079245957670",
-    "client_id":"699887186287281088",
-    "client_secret":"2B8514CF138C6FE78912D20F6F23199B7C7BDEC32D98CC7ABD942CAC2A78B4B3",
-    "project_id":"736430079245957670",
-    "app_id":"104661225",
-    "api_key":"CwEAAAAA0otl+rs1I1lSYRubaxM0QS+eSC9Sr5pHt8k23l1ev3cTNPcH0tbpJ9N8lx3BJbouHxB2knDEv7bNmeZqGdyrRv+M5+E=",
-    "package_name":"com.exponea.example"
+  "client": {
+    "cp_id": "5190001000034308627",
+    "product_id": "461323198430469743",
+    "client_id": "1778521887303843776",
+    "client_secret": "8B3C96CC74AC5FFBF8C1948798AE72078B2733A03F7E422BA44CD2CD996909C5",
+    "project_id": "461323198430469743",
+    "app_id": "115368361",
+    "api_key": "DgEDADS9a0Kml7skBfTsTnO54uEX+n5zvwLOikaPIOP/kM7pGVs6NLNx5++cWBZjAYwRRRRjskkCAPiZSvvTfVB9ZbGt1T/SaZmfoQ==",
+    "package_name": "com.exponea.sdk.example"
   },
-  "oauth_client":{
-    "client_id":"104661225",
-    "client_type":1
+  "oauth_client": {
+    "client_id": "115368361",
+    "client_type": 1
   },
-  "app_info":{
-    "app_id":"104661225",
-    "package_name":"com.exponea.example"
+  "app_info": {
+    "app_id": "115368361",
+    "package_name": "com.exponea.sdk.example"
   },
-  "service":{
-    "analytics":{
-      "collector_url":"datacollector-dre.dt.hicloud.com,datacollector-dre.dt.dbankcloud.cn",
-      "collector_url_ru":"datacollector-drru.dt.dbankcloud.ru,datacollector-drru.dt.hicloud.com",
-      "collector_url_sg":"datacollector-dra.dt.hicloud.com,datacollector-dra.dt.dbankcloud.cn",
-      "collector_url_de":"datacollector-dre.dt.hicloud.com,datacollector-dre.dt.dbankcloud.cn",
-      "collector_url_cn":"datacollector-drcn.dt.hicloud.com,datacollector-drcn.dt.dbankcloud.cn",
-      "resource_id":"p1",
-      "channel_id":""
+  "service": {
+    "analytics": {
+      "collector_url": "datacollector-dre.dt.hicloud.com,datacollector-dre.dt.dbankcloud.cn",
+      "collector_url_cn": "datacollector-drcn.dt.hicloud.com,datacollector-drcn.dt.dbankcloud.cn",
+      "collector_url_de": "datacollector-dre.dt.hicloud.com,datacollector-dre.dt.dbankcloud.cn",
+      "collector_url_ru": "datacollector-drru.dt.dbankcloud.ru,datacollector-drru.dt.hicloud.com",
+      "collector_url_sg": "datacollector-dra.dt.hicloud.com,datacollector-dra.dt.dbankcloud.cn",
+      "resource_id": "p1",
+      "channel_id": ""
     },
-    "edukit":{
-      "edu_url":"edukit.cloud.huawei.com.cn",
-      "dh_url":"edukit.cloud.huawei.com.cn"
+    "ml": {
+      "mlservice_url": "ml-api-dre.ai.dbankcloud.com,ml-api-dre.ai.dbankcloud.cn"
     },
-    "search":{
-      "url":"https://search-dre.cloud.huawei.com"
+    "cloudstorage": {
+      "storage_url": "https://agc-storage-drcn.platform.dbankcloud.cn",
+      "storage_url_ru": "https://agc-storage-drru.cloud.huawei.ru",
+      "storage_url_sg": "https://ops-dra.agcstorage.link",
+      "storage_url_de": "https://ops-dre.agcstorage.link",
+      "storage_url_cn": "https://agc-storage-drcn.platform.dbankcloud.cn",
+      "storage_url_ru_back": "https://agc-storage-drru.cloud.huawei.ru",
+      "storage_url_sg_back": "https://agc-storage-dra.cloud.huawei.asia",
+      "storage_url_de_back": "https://agc-storage-dre.cloud.huawei.eu",
+      "storage_url_cn_back": "https://agc-storage-drcn.cloud.huawei.com.cn"
     },
-    "cloudstorage":{
-      "storage_url_sg_back":"https://agc-storage-dra.cloud.huawei.asia",
-      "storage_url_ru_back":"https://agc-storage-drru.cloud.huawei.ru",
-      "storage_url_ru":"https://agc-storage-drru.cloud.huawei.ru",
-      "storage_url_de_back":"https://agc-storage-dre.cloud.huawei.eu",
-      "storage_url_de":"https://ops-dre.agcstorage.link",
-      "storage_url":"https://agc-storage-drcn.platform.dbankcloud.cn",
-      "storage_url_sg":"https://ops-dra.agcstorage.link",
-      "storage_url_cn_back":"https://agc-storage-drcn.cloud.huawei.com.cn",
-      "storage_url_cn":"https://agc-storage-drcn.platform.dbankcloud.cn"
+    "search": {
+      "url": "https://search-dre.cloud.huawei.com"
     },
-    "ml":{
-      "mlservice_url":"ml-api-dre.ai.dbankcloud.com,ml-api-dre.ai.dbankcloud.cn"
+    "edukit": {
+      "edu_url": "edukit.cloud.huawei.com.cn",
+      "dh_url": "edukit.cloud.huawei.com.cn"
     }
   },
-  "region":"DE",
-  "configuration_version":"3.0",
-  "appInfos":[
+  "region": "DE",
+  "configuration_version": "3.0",
+  "appInfos": [
     {
-      "package_name":"com.exponea.example",
-      "client":{
-        "app_id":"104661225"
+      "package_name": "com.exponea.sdk.example",
+      "client": {
+        "app_id": "115368361"
       },
-      "app_info":{
-        "package_name":"com.exponea.example",
-        "app_id":"104661225"
+      "app_info": {
+        "package_name": "com.exponea.sdk.example",
+        "app_id": "115368361"
       },
-      "oauth_client":{
-        "client_type":1,
-        "client_id":"104661225"
+      "oauth_client": {
+        "client_type": 1,
+        "client_id": "115368361"
       }
     }
   ]

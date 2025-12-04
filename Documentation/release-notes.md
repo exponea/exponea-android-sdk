@@ -11,6 +11,13 @@ parentDocSlug: android-sdk
 > Refer to the [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.8.1
+#### December 04, 2025
+* Updated:
+  * Updates Example App's application ID and FCM/HMS integration configuration.
+  * Rotates PGP signing key used to verify SDK artifacts. The new key fingerprint is `01B5A1F68CA08B2739B0B959FFC874BE1DE5B6CC` (available at [keyserver.ubuntu.com](https://keyserver.ubuntu.com/)). All artifacts from version 4.8.1 onward are signed with this new key.
+
+
 ## Release Notes for 4.8.0
 #### November 13, 2025
 * Added:

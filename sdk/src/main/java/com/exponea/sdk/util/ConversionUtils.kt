@@ -182,21 +182,23 @@ internal class ConversionUtils {
 
         fun parseColor(colorString: String?): Int? {
             try {
-                if (colorString.isNullOrBlank()) {
+                val trimmedColorString = colorString?.trim()
+
+                if (trimmedColorString.isNullOrBlank()) {
                     return null
                 }
-                if (SHORT_HEX_FORMAT.matches(colorString)) {
-                    val hexFormat = HEX_VALUE.replace(colorString) {
+                if (SHORT_HEX_FORMAT.matches(trimmedColorString)) {
+                    val hexFormat = HEX_VALUE.replace(trimmedColorString) {
                         // doubles HEX value
                         it.value + it.value
                     }
                     return Color.parseColor(hexFormat)
                 }
-                if (HEX_FORMAT.matches(colorString)) {
-                    return Color.parseColor(colorString)
+                if (HEX_FORMAT.matches(trimmedColorString)) {
+                    return Color.parseColor(trimmedColorString)
                 }
-                if (SHORT_HEXA_FORMAT.matches(colorString)) {
-                    val hexaFormat = HEX_VALUE.replace(colorString) {
+                if (SHORT_HEXA_FORMAT.matches(trimmedColorString)) {
+                    val hexaFormat = HEX_VALUE.replace(trimmedColorString) {
                         // doubles HEX value
                         it.value + it.value
                     }
@@ -204,15 +206,15 @@ internal class ConversionUtils {
                     val ahexFormat = "#${hexaFormat.substring(7, 9)}${hexaFormat.substring(1, 7)}"
                     return Color.parseColor(ahexFormat)
                 }
-                if (HEXA_FORMAT.matches(colorString)) {
+                if (HEXA_FORMAT.matches(trimmedColorString)) {
                     // #RRGGBBAA (css) -> #AARRGGBB (android)
-                    val ahexFormat = "#${colorString.substring(7, 9)}${colorString.substring(1, 7)}"
+                    val ahexFormat = "#${trimmedColorString.substring(7, 9)}${trimmedColorString.substring(1, 7)}"
                     return Color.parseColor(ahexFormat)
                 }
-                if (RGBA_FORMAT.matches(colorString)) {
+                if (RGBA_FORMAT.matches(trimmedColorString)) {
                     // rgba(255, 255, 255, 1.0)
                     // rgba(255 255 255 / 1.0)
-                    val parts = RGBA_FORMAT.findAll(colorString).flatMap { it.groupValues }.toList()
+                    val parts = RGBA_FORMAT.findAll(trimmedColorString).flatMap { it.groupValues }.toList()
                     return Color.argb(
                         // parts[0] skip!
                         (parts[4].toFloat() * 255).toInt(),
@@ -221,9 +223,9 @@ internal class ConversionUtils {
                         parts[3].toInt()
                     )
                 }
-                if (ARGB_FORMAT.matches(colorString)) {
+                if (ARGB_FORMAT.matches(trimmedColorString)) {
                     // argb(1.0, 255, 0, 0)
-                    val parts = ARGB_FORMAT.findAll(colorString).flatMap { it.groupValues }.toList()
+                    val parts = ARGB_FORMAT.findAll(trimmedColorString).flatMap { it.groupValues }.toList()
                     return Color.argb(
                         // parts[0] skip!
                         (parts[1].toFloat() * 255).toInt(),
@@ -232,9 +234,9 @@ internal class ConversionUtils {
                         parts[4].toInt()
                     )
                 }
-                if (RGB_FORMAT.matches(colorString)) {
+                if (RGB_FORMAT.matches(trimmedColorString)) {
                     // rgb(255, 255, 255)
-                    val parts = RGB_FORMAT.findAll(colorString).flatMap { it.groupValues }.toList()
+                    val parts = RGB_FORMAT.findAll(trimmedColorString).flatMap { it.groupValues }.toList()
                     return Color.rgb(
                         // parts[0] skip!
                         parts[1].toInt(),
@@ -242,7 +244,7 @@ internal class ConversionUtils {
                         parts[3].toInt()
                     )
                 }
-                return NAMED_COLORS[colorString.lowercase()]
+                return NAMED_COLORS[trimmedColorString.lowercase()]
             } catch (e: IllegalArgumentException) {
                 Logger.e(this, "Unable to parse color from $colorString")
                 return null

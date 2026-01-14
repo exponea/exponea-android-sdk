@@ -94,4 +94,34 @@ internal class ColorTest {
         assertEquals(224, parsed.blue)
         assertEquals(255, parsed.alpha)
     }
+
+    @Test
+    fun `should parse HEX color with trailing whitespace`() {
+        val parsed = ConversionUtils.parseColor("#30844A ")
+        assertNotNull(parsed)
+        assertEquals(48, parsed.red)
+        assertEquals(132, parsed.green)
+        assertEquals(74, parsed.blue)
+        assertEquals(255, parsed.alpha)
+    }
+
+    @Test
+    fun `should parse HEX color with leading whitespace`() {
+        val parsed = ConversionUtils.parseColor(" #30844A")
+        assertNotNull(parsed)
+        assertEquals(48, parsed.red)
+        assertEquals(132, parsed.green)
+        assertEquals(74, parsed.blue)
+        assertEquals(255, parsed.alpha)
+    }
+
+    @Test
+    fun `should parse HEX color with surrounding whitespace`() {
+        val parsed = ConversionUtils.parseColor("  #30844A  ")
+        assertNotNull(parsed)
+        assertEquals(48, parsed.red)
+        assertEquals(132, parsed.green)
+        assertEquals(74, parsed.blue)
+        assertEquals(255, parsed.alpha)
+    }
 }

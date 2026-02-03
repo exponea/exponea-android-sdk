@@ -97,35 +97,42 @@ data class ButtonStyle(
             button.isEnabled = it
         }
         ConversionUtils.parseSize(borderRadius)?.let {
-            val currentBackground = button.background
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && currentBackground is RippleDrawable) {
-                for (i in 0 until currentBackground.numberOfLayers) {
-                    try {
-                        val drawable = currentBackground.getDrawable(i)
-                        if (drawable is InsetDrawable) {
-                            val subdrawable = drawable.drawable
-                            Logger.e(this, "SubDrawable $i is ${subdrawable?.javaClass}")
-                            if (subdrawable is GradientDrawable) {
-                                subdrawable.cornerRadius = it.size
+            when (val currentBackground = button.background) {
+                is RippleDrawable -> {
+                    for (i in 0 until currentBackground.numberOfLayers) {
+                        try {
+                            val drawable = currentBackground.getDrawable(i)
+                            if (drawable is InsetDrawable) {
+                                val subdrawable = drawable.drawable
+                                Logger.e(this, "SubDrawable $i is ${subdrawable?.javaClass}")
+                                if (subdrawable is GradientDrawable) {
+                                    subdrawable.cornerRadius = it.size
+                                }
                             }
+                            Logger.e(this, "Drawable $i is ${drawable.javaClass}")
+                        } catch (_: Exception) {
+                            Logger.e(this, "No Drawable for $i")
                         }
-                        Logger.e(this, "Drawable $i is ${drawable.javaClass}")
-                    } catch (e: Exception) {
-                        Logger.e(this, "No Drawable for $i")
                     }
+                    Logger.e(this, "Background is ${currentBackground.current.javaClass}")
+                    button.background = currentBackground
                 }
-                Logger.e(this, "Background is ${currentBackground.current.javaClass}")
-                button.background = currentBackground
-            } else if (currentBackground is GradientDrawable) {
-                currentBackground.cornerRadius = it.size
-                button.background = currentBackground
-            } else if (currentBackground is ColorDrawable) {
-                val newBackground = GradientDrawable()
-                newBackground.cornerRadius = it.size
-                newBackground.setColor(currentBackground.color)
-                button.background = newBackground
-            } else {
-                Logger.e(this, "BorderRadius for Button can be used only with colored background")
+
+                is GradientDrawable -> {
+                    currentBackground.cornerRadius = it.size
+                    button.background = currentBackground
+                }
+
+                is ColorDrawable -> {
+                    val newBackground = GradientDrawable()
+                    newBackground.cornerRadius = it.size
+                    newBackground.setColor(currentBackground.color)
+                    button.background = newBackground
+                }
+
+                else -> {
+                    Logger.e(this, "BorderRadius for Button can be used only with colored background")
+                }
             }
         }
     }

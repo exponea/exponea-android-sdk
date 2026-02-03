@@ -205,11 +205,8 @@ val JsonElement.asOptionalString: String?
 
 @Suppress("DEPRECATION")
 fun View.setBackgroundColor(@DrawableRes backgroundId: Int, color: Int) {
-    val drawable = if (Build.VERSION.SDK_INT >= 21)
-        context.resources.getDrawable(backgroundId, null)
-    else context.resources.getDrawable(backgroundId)
-    drawable.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
-    background = drawable
+    background = context.resources.getDrawable(backgroundId, null)
+        .apply { setColorFilter(color, PorterDuff.Mode.MULTIPLY) }
 }
 
 fun Context.isResumedActivity(): Boolean = runCatching {

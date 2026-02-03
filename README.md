@@ -3,7 +3,7 @@
 </p>
 
 ### Specs
-[![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://android-arsenal.com/api?level=17)
+[![API](https://img.shields.io/badge/API-21%2B-yellow.svg?style=flat)](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Exponea Android SDK
@@ -31,7 +31,7 @@ dependencies {
 
 Download via Maven:
 
-```groovy
+```xml
 <dependency>
     <groupId>com.exponea.sdk</groupId>
     <artifactId>sdk</artifactId>
@@ -81,7 +81,7 @@ Release notes can be found [here](https://documentation.bloomreach.com/engagemen
 
 ## ⚠️ Version Disclaimer
 
-This SDK supports **API 17+** and **Android 4.2+**. If you wish to interact with Bloomreach Engagement on lower API/Android versions please refer to the [old SDK located here](https://github.com/infinario/android-sdk).
+This SDK supports **API 21+** and **Android 5.0+**.
 
 ## Support
 

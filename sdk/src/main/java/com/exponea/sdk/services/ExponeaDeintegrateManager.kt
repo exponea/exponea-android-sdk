@@ -3,6 +3,7 @@ package com.exponea.sdk.services
 import android.app.Application
 import android.content.Context
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
@@ -86,6 +87,7 @@ class ExponeaDeintegrateManager {
             clearCookieRepository(it)
             clearCustomerIdsRepository(it)
             clearTelemetry(it)
+            DeviceIdManager.clear(it)
         }
     }
 

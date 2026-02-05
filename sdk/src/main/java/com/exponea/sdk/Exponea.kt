@@ -19,7 +19,6 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.manager.CampaignManager
 import com.exponea.sdk.manager.CampaignManagerImpl
 import com.exponea.sdk.manager.ConfigurationFileManager
-import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.FcmManager
 import com.exponea.sdk.manager.TimeLimitedFcmManagerImpl
 import com.exponea.sdk.manager.TrackingConsentManager
@@ -1607,9 +1606,6 @@ object Exponea {
                 deintegration.notifyDeintegration()
                 deintegration.clearLocalCustomerData()
                 initGate.clear()
-                ExponeaContextProvider.applicationContext?.let {
-                    DeviceIdManager.clear(context = it)
-                }
                 isInitialized = false
                 Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")
             }

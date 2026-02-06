@@ -720,17 +720,19 @@ internal class InAppMessageManagerImpl(
             Logger.v(this, "[InApp] Pending show request registration skipped due to no event type")
             return
         }
-        Logger.i(
-            this,
-            "[InApp] Register request for in-app message to be shown for $eventType"
-        )
-        pendingShowRequests += InAppMessageShowRequest(
-            eventType,
-            properties,
-            timestamp,
-            System.currentTimeMillis(),
-            customerIds
-        )
+        synchronized(this) {
+            Logger.i(
+                this,
+                "[InApp] Register request for in-app message to be shown for $eventType"
+            )
+            pendingShowRequests += InAppMessageShowRequest(
+                eventType,
+                properties,
+                timestamp,
+                System.currentTimeMillis(),
+                customerIds
+            )
+        }
     }
 
     override fun clear() {

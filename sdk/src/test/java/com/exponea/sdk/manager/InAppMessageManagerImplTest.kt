@@ -1793,6 +1793,95 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    fun `should handle concurrent registration and picking without losing requests`() {
+        val sessionEndEventType = Constants.EventTypes.sessionEnd
+        val sessionStartEventType = Constants.EventTypes.sessionStart
+        val customerIds = customerIdsRepository.get().toHashMap()
+
+        val sessionEndMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
+            trigger = EventFilter(sessionEndEventType, arrayListOf()),
+            imageUrl = "session_end_image_url",
+            id = "session_end_msg",
+            priority = 0
+        )
+        val sessionStartMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
+            trigger = EventFilter(sessionStartEventType, arrayListOf()),
+            imageUrl = "session_start_image_url",
+            id = "session_start_msg",
+            priority = 100
+        )
+
+        every { messagesCache.get() } returns arrayListOf(sessionEndMessage, sessionStartMessage)
+        every { drawableCache.has(any()) } returns true
+        every { drawableCache.preload(any(), any()) } answers { secondArg<((Boolean) -> Unit)?>()?.invoke(true) }
+        every { fontCache.has(any()) } returns true
+        every { presenter.isPresenting() } returns false
+
+        val iterations = 50
+        var lostRequestsCount = 0
+
+        // With proper synchronization, session_start should either:
+        // 1. Be picked by pickPendingMessage (if registered before pick reads the list)
+        // 2. Remain in pending requests (if registered after pick clears)
+        // It should NEVER be lost (registered but neither picked nor pending)
+        repeat(iterations) {
+            manager.pendingShowRequests = arrayListOf()
+
+            manager.registerPendingShowRequest(
+                sessionEndEventType,
+                hashMapOf(),
+                currentTimeSeconds(),
+                customerIds
+            )
+
+            val barrier = CountDownLatch(2)
+            val allDone = CountDownLatch(2)
+            val pickedEventType = java.util.concurrent.atomic.AtomicReference<String?>(null)
+
+            val registerThread = Thread {
+                barrier.countDown()
+                barrier.await(1, TimeUnit.SECONDS)
+                manager.registerPendingShowRequest(
+                    sessionStartEventType,
+                    hashMapOf(),
+                    currentTimeSeconds(),
+                    customerIds
+                )
+                allDone.countDown()
+            }
+
+            val pickThread = Thread {
+                barrier.countDown()
+                barrier.await(1, TimeUnit.SECONDS)
+                val picked = manager.pickPendingMessage()
+                pickedEventType.set(picked?.first?.eventType)
+                allDone.countDown()
+            }
+
+            registerThread.start()
+            pickThread.start()
+
+            allDone.await(5, TimeUnit.SECONDS)
+            registerThread.join(1000)
+            pickThread.join(1000)
+
+            val sessionStartWasPicked = pickedEventType.get() == sessionStartEventType
+            val sessionStartIsPending = manager.pendingShowRequests.any {
+                it.eventType == sessionStartEventType
+            }
+
+            if (!sessionStartWasPicked && !sessionStartIsPending) lostRequestsCount++
+        }
+
+        assertEquals(
+            0,
+            lostRequestsCount,
+            "Expected no lost requests with proper synchronization, but $lostRequestsCount " +
+                "requests were lost out of $iterations iterations."
+        )
+    }
+
+    @Test
     fun `should track telemetry on messages fetch`() {
         mockkConstructorFix(TelemetryManager::class)
         val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()

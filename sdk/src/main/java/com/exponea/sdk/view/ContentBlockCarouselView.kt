@@ -296,10 +296,10 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
                 .launchUrl(context, url.toUri())
         } catch (_: ActivityNotFoundException) {
             Logger.v(this, "InAppCbCarousel: Unable to open instant browser for $url")
-            UrlOpener.openUrl(context, url)
+            UrlOpener.openUrlExternal(context = context, url = url)
         } catch (e: Exception) {
             Logger.e(this, "InAppCbCarousel: Unable to open instant browser", e)
-            UrlOpener.openUrl(context, url)
+            UrlOpener.openUrlExternal(context = context, url = url)
         }
     }
 

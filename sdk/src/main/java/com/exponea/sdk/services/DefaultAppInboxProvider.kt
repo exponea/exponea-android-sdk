@@ -1,10 +1,7 @@
 package com.exponea.sdk.services
 
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.text.format.DateUtils
@@ -27,10 +24,8 @@ import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type
-import com.exponea.sdk.models.MessageItemAction.Type.APP
 import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
 import com.exponea.sdk.models.MessageItemAction.Type.DEEPLINK
-import com.exponea.sdk.models.MessageItemAction.Type.NO_ACTION
 import com.exponea.sdk.models.MessageItemContent
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.ActionInfo
@@ -38,13 +33,13 @@ import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
+import com.exponea.sdk.util.UrlOpener.openUrlExternal
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.AppInboxDetailFragment
 import com.exponea.sdk.view.AppInboxDetailView
 import com.exponea.sdk.view.AppInboxListActivity
 import com.exponea.sdk.view.AppInboxListFragment
 import com.exponea.sdk.view.AppInboxListView
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -327,40 +322,12 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         Logger.i(this, "Invoking AppInbox action \"${action.title}\"")
         Exponea.trackAppInboxClick(action, message)
         when (action.type) {
-            APP -> {
-                // nothing to do, app is already shown
+            BROWSER, DEEPLINK -> {
+                openUrlExternal(context = context, url = action.url)
             }
-            BROWSER -> {
-                openAction(action, context)
-            }
-            DEEPLINK -> {
-                openAction(action, context)
-            }
-            NO_ACTION -> {
-                // nothing to do, no action provided
+            else -> {
+                // Other action types...
             }
         }
     }
-
-    private fun openAction(action: MessageItemAction, context: Context) {
-        if (useOlderApi()) {
-            val intentWithUrl = Intent(Intent.ACTION_VIEW)
-            intentWithUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-            action.url?.let { url -> if (url.isNotBlank()) intentWithUrl.data = Uri.parse(url) }
-            context.startActivity(intentWithUrl)
-            return
-        }
-        // Newer Api
-        val urlIntent = Intent(Intent.ACTION_VIEW)
-        urlIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        action.url?.let { url -> if (url.isNotBlank()) urlIntent.data = Uri.parse(url) }
-        PendingIntent.getActivities(
-            context.applicationContext,
-            Random.nextInt(),
-            arrayOf(urlIntent),
-            MessagingUtils.getPendingIntentFlags()
-        ).send()
-    }
-
-    private fun useOlderApi(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.M
 }

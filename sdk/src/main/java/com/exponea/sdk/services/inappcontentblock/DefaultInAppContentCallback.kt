@@ -1,9 +1,6 @@
 package com.exponea.sdk.services.inappcontentblock
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
@@ -12,6 +9,7 @@ import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.UrlOpener
 
 open class DefaultInAppContentCallback(private val context: Context) : InAppContentBlockCallback {
     override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
@@ -63,25 +61,7 @@ open class DefaultInAppContentCallback(private val context: Context) : InAppCont
         if (action.type == InAppContentBlockActionType.CLOSE) {
             return
         }
-        val actionUrl = try {
-            Uri.parse(action.url)
-        } catch (e: Exception) {
-            Logger.e(
-                    this,
-                    "InApp Content Block action ${action.url} is invalid",
-                    e
-            )
-            return
-        }
-        try {
-            context.startActivity(
-                    Intent(Intent.ACTION_VIEW).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        data = actionUrl
-                    }
-            )
-        } catch (e: ActivityNotFoundException) {
-            Logger.e(this, "InApp Content Block action failed", e)
-        }
+
+        UrlOpener.openUrlInApp(context = context, url = action.url)
     }
 }

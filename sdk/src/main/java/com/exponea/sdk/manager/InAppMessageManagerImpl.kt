@@ -1,10 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.TrackingConsentManager.MODE.CONSIDER_CONSENT
 import com.exponea.sdk.models.Constants
@@ -33,6 +30,7 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.UrlOpener
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
@@ -519,17 +517,11 @@ internal class InAppMessageManagerImpl(
     }
 
     fun processInAppMessageAction(activity: Activity, button: InAppMessagePayloadButton) {
-        if (button.buttonType == DEEPLINK || button.buttonType == BROWSER) {
-            try {
-                activity.startActivity(
-                    Intent(Intent.ACTION_VIEW).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        data = Uri.parse(button.link)
-                    }
-                )
-            } catch (e: ActivityNotFoundException) {
-                Logger.e(this, "Unable to perform deeplink", e)
+        when (button.buttonType) {
+            DEEPLINK, BROWSER -> {
+                UrlOpener.openUrlInApp(context = activity, url = button.link)
             }
+            else -> {}
         }
     }
 

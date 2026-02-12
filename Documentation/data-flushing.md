@@ -1,5 +1,5 @@
 ---
-title: Data flushing
+title: Data flushing for Android SDK
 excerpt: Learn how the Android SDK uploads data to the Engagement API and how to customize this behavior
 slug: android-sdk-data-flushing
 categorySlug: integrations
@@ -27,7 +27,7 @@ The SDK supports the following 4 flushing modes (defined in `com.exponea.sdk.mod
 | `PERIOD`              | Flushes data in the interval specified in `Exponea.flushPeriod` and when the application is closed or goes to the background. |
 | `MANUAL`              | Disables any automatic upload. It's the responsibility of the developer to [flush data manually](#manual-flushing). |
 
-To set the flushing mode, [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup) first, then set `flushMode` directly on the `Exponea` singleton:
+To set the flushing mode, [Initial SDK setup for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup) first, then set `flushMode` directly on the `Exponea` singleton:
 
 ```swift
 Exponea.flushMode = FlushMode.MANUAL

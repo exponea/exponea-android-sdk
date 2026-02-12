@@ -1,5 +1,5 @@
 ---
-title: Android App Links
+title: Android App Links for Android SDK
 excerpt: Enable and track Android App Links in your app using the Android SDK
 slug: android-sdk-app-links
 categorySlug: integrations
@@ -87,11 +87,11 @@ Example:
 
 > 👍
 >
-> Note that `handleCampaignIntent` takes care of tracking only. You must still read the data from the intent and use it to determine the relevant app content to render. This is outside the scope of the SDK but for an example implementation you can take a look at the `resolveDeeplinkDestination` and `handleDeeplinkDestination` methods in [`MainActivity`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/MainActivity.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
+> Note that `handleCampaignIntent` takes care of tracking only. You must still read the data from the intent and use it to determine the relevant app content to render. This is outside the scope of the SDK but for an example implementation you can take a look at the `resolveDeeplinkDestination` and `handleDeeplinkDestination` methods in [`MainActivity`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/MainActivity.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 > ❗️
 >
-> If an existing session is resumed by opening an App Link, the resumed session is **NOT** attributed to the App Link click, and the App Link click parameters are not tracked in the `session_start` event. Session behavior is determined by the `automaticSessionTracking` and `sessionTimeout` parameters described in [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration). Please consider this in case of manual session handling or while testing universal link tracking during the development.
+> If an existing session is resumed by opening an App Link, the resumed session is **NOT** attributed to the App Link click, and the App Link click parameters are not tracked in the `session_start` event. Session behavior is determined by the `automaticSessionTracking` and `sessionTimeout` parameters described in [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration). Please consider this in case of manual session handling or while testing universal link tracking during the development.
 
 > ❗️
 >

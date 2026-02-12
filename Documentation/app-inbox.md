@@ -1,5 +1,5 @@
 ---
-title: App Inbox
+title: App Inbox for Android SDK
 excerpt: Add a message inbox to your app using the Android SDK
 slug: android-sdk-app-inbox
 categorySlug: integrations
@@ -45,7 +45,7 @@ That's all that's required to integrate the App Inbox. Optionally, you can [cust
 
 > 📘
 >
-> See [FetchFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/FetchFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> See [FetchFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/FetchFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 ## Default App Inbox behavior
 
@@ -75,7 +75,7 @@ The SDK fetches and displays the App Inbox automatically as follows:
 
 > ❗️
 >
-> The behavior of `trackAppInboxOpened` and `trackAppInboxClick` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Refer to [Consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+> The behavior of `trackAppInboxOpened` and `trackAppInboxClick` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Refer to [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 ## Customize App Inbox
 
@@ -185,7 +185,7 @@ Your `AppInboxProvider` instance must implement all App Inbox UI components. You
 
 > 📘
 >
-> Refer to [ExampleAppInboxProvider](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/services/ExampleAppInboxProvider.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> Refer to [ExampleAppInboxProvider](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/services/ExampleAppInboxProvider.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 #### App Inbox button
 
@@ -363,7 +363,7 @@ The SDK tracks App Inbox events automatically by default. In case of a [custom i
 
 Use the `Exponea.trackAppInboxOpened(MessageItem)` method to track the opening of App Inbox messages.
 
-The behavior of `trackAppInboxOpened` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+The behavior of `trackAppInboxOpened` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 If you want to ignore tracking consent, use `Exponea.trackAppInboxOpenedWithoutTrackingConsent` instead. This method will track the event regardless of consent.
 
@@ -371,6 +371,6 @@ If you want to ignore tracking consent, use `Exponea.trackAppInboxOpenedWithoutT
 
 Use the `Exponea.trackAppInboxClick(MessageItemAction, MessageItem)` method to track action invocations in App Inbox messages.
 
-The behavior of `trackAppInboxClick` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+The behavior of `trackAppInboxClick` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Refer to [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 If you want to ignore tracking consent, use `Exponea.trackAppInboxClickWithoutTrackingConsent` instead. This method will track the event regardless of consent.

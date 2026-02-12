@@ -1,12 +1,12 @@
 ---
-title: Firebase Cloud Messaging
+title: Firebase Cloud Messaging for Android SDK
 excerpt: Integrate Firebase Cloud Messaging in your app to support Engagement push notifications on Android devices
 slug: android-sdk-firebase
 categorySlug: integrations
 parentDocSlug: android-sdk-push-notifications
 ---
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.
+To be able to send [Push notifications for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.
 
 > 👍
 >
@@ -90,7 +90,7 @@ A push token is typically generated at the first application start, but it has i
 >
 > As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
 >
-> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
+> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
 
 > ❗️
 >

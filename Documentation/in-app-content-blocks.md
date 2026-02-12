@@ -1,12 +1,12 @@
 ---
-title: In-app content blocks
+title: In-app content blocks for Android SDK
 excerpt: Display native in-app content blocks based on definitions set up in Engagement using the Android SDK
 slug: android-sdk-in-app-content-blocks
 categorySlug: integrations
 parentDocSlug: android-sdk-in-app-personalization
 ---
 
-In-app content blocks provide a way to display campaigns within your mobile applications that seamlessly blend with the overall app design. Unlike [in-app messages](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages) that appear as overlays or pop-ups demanding immediate attention, in-app content blocks display inline with the app's existing content.
+In-app content blocks provide a way to display campaigns within your mobile applications that seamlessly blend with the overall app design. Unlike [In-app messages for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages) that appear as overlays or pop-ups demanding immediate attention, in-app content blocks display inline with the app's existing content.
 
 You can strategically position placeholders for in-app content blocks within your app. You can customize the behavior and presentation to meet your specific requirements.
 
@@ -37,7 +37,7 @@ After the SDK [initializes](https://documentation.bloomreach.com/engagement/docs
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 > 👍
 >
@@ -82,7 +82,7 @@ Or you may add the carousel view directly into your layout XML:
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) and [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) and [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 > 👍
 >
@@ -104,7 +104,7 @@ The SDK automatically tracks `banner` events for in-app content blocks with the 
 
 > ❗️
 >
-> The behavior of in-app content block tracking may be affected by the tracking consent feature, which in enabled mode requires explicit consent for tracking. Refer to the [consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) documentation for details.
+> The behavior of in-app content block tracking may be affected by the tracking consent feature, which in enabled mode requires explicit consent for tracking. Refer to the [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) documentation for details.
 
 ## Customization
 
@@ -242,7 +242,7 @@ placeholderView.behaviourCallback = object : InAppContentBlockCallback {
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
 
 ### Override button action type in HTML message
 

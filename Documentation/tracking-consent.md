@@ -1,5 +1,5 @@
 ---
-title: Tracking consent
+title: Tracking consent for Android SDK
 excerpt: Manage tracking consent using the Android SDK.
 slug: android-sdk-tracking-consent
 categorySlug: integrations

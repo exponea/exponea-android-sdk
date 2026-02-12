@@ -1,5 +1,5 @@
 ---
-title: Segmentation
+title: Segmentation for Android SDK
 excerpt: Implement Real-Time Segments using the Android SDK
 slug: android-sdk-segmentation
 categorySlug: integrations

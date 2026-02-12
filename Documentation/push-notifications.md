@@ -1,5 +1,5 @@
 ---
-title: Push notifications
+title: Push notifications for Android SDK
 excerpt: Enable push notifications in your app using the Android SDK
 slug: android-sdk-push-notifications
 categorySlug: integrations
@@ -32,7 +32,7 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 
 > 📘
 >
-> Follow the instructions in [Firebase Cloud Messaging](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase).
+> Follow the instructions in [Firebase Cloud Messaging for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase).
 
 > 👍
 >
@@ -80,7 +80,7 @@ The behavior of this callback is as follows:
 
 On Android 13 and higher, the app may not be able to send normal push notifications, even though a freshly generated token (at application start) is valid, if the user didn't grant permission to receive notifications.
 
-If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) to `true`. The SDK will track push tokens only if the user granted push notification permission, otherwise the push token will be removed. If you leave `requirePushAuthorization` to `false` (the default value), the SDK will track the push token regardless of the user's permission. These tokens can only be used to send silent push notifications.
+If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization to `true`. The SDK will track push tokens only if the user granted push notification permission, otherwise the push token will be removed. If you leave `requirePushAuthorization` to `false` (the default value), the SDK will track the push token regardless of the user's permission. These tokens can only be used to send silent push notifications.
 
 ## Customization
 
@@ -88,7 +88,7 @@ This section describes the customizations you can implement once you have integr
 
 ### Configure automatic push notification tracking
 
-By default, the SDK tracks push notifications automatically. In the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can set the desired frequency using the `tokenTrackFrequency` property (default value is `ON_TOKEN_CHANGE`). You can also disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`.
+By default, the SDK tracks push notifications automatically. In the [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can set the desired frequency using the `tokenTrackFrequency` property (default value is `ON_TOKEN_CHANGE`). You can also disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`.
 
 If `automaticPushNotification` is enabled, the SDK will display push notifications from Engagement and track a "campaign" event for every delivered/opened push notification with the relevant properties.
 
@@ -251,7 +251,7 @@ Exponea.trackPushToken(
 )
 ```
 
-Invoking this method will track the push token immediately regardless of the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) for `tokenTrackFrequency`.
+Invoking this method will track the push token immediately regardless of the [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) for `tokenTrackFrequency`.
 
 > ❗️Important
 >
@@ -285,7 +285,7 @@ Exponea.trackDeliveredPush(
 
 > ❗️
 >
-> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [tracking consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
+> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
 
 #### Track clicked push notification
 
@@ -313,7 +313,7 @@ Exponea.trackClickedPush(
 )
 ```
 
-> The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [tracking consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
+> The behaviour of `trackClickedPush` may be affected by the tracking consent feature, which, when enabled, requires explicit consent for tracking. Read more in the [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent).
 
 ### Custom push notification data processing
 
@@ -402,7 +402,7 @@ Exponea.requestPushAuthorization(requireContext()) { granted ->
 }
 ```
 
-The frequency of `notification_state` event tracking depends on the `tokenTrackFrequency` configuration property. [See SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+The frequency of `notification_state` event tracking depends on the `tokenTrackFrequency` configuration property. [See Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 
 ### notification_state event properties
 
@@ -417,7 +417,7 @@ The frequency of `notification_state` event tracking depends on the `tokenTrackF
 
 > 📘 Note
 >
-> If you don't specify an `application_id` in your SDK configuration, the default value `default-application` is used. [See SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+> If you don't specify an `application_id` in your SDK configuration, the default value `default-application` is used. [See Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 
 ### Understanding token states
 
@@ -426,7 +426,7 @@ The combination of `valid` and `description` properties indicates the token's cu
 | Valid | Description         | When this occurs                                                        |
 |-------|---------------------|------------------------------------------------------------------------|
 | `false` | `Invalidated`         | New token received \(old token becomes invalid\) or `Exponea.anonymize()` called |
-| `false` | `Permission denied`   | [requirePushAuthorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) is `true` and user denied notification permission |
+| `false` | `Permission denied`   | [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization is `true` and user denied notification permission |
 | `true`  | `Permission granted`  | Valid token tracked successfully \(all other cases\)                     |
 
 ### Configuring Application ID
@@ -478,7 +478,7 @@ Keep in mind that invoking the `anonymize` method will remove the push notificat
 
 > 📘
 >
-> Refer to [Firebase Cloud Messaging](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) and [Huawai Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) for information on how to retrieve a valid push notification token.
+> Refer to [Firebase Cloud Messaging for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) and [Huawai Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) for information on how to retrieve a valid push notification token.
 
 ### Multiple customer profiles have the same push notification token assigned
 

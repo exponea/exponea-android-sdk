@@ -1,5 +1,5 @@
 ---
-title: Initial SDK setup
+title: Initial SDK setup for Android SDK
 excerpt: Install and configure the Android SDK
 slug: android-sdk-setup
 categorySlug: integrations
@@ -132,7 +132,7 @@ The SDK will read the configuration parameters from the configuration file.
 
 > 📘
 >
-> Refer to [`exponea_configuration.json`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/assets/exponea_configuration.json) in the [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for an example configuration file.
+> Refer to [`exponea_configuration.json`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/assets/exponea_configuration.json) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for an example configuration file.
 
 ### Where to place the SDK initialization code
 
@@ -192,7 +192,7 @@ At this point, the SDK is active and should now be tracking sessions in your app
 
 ### Advanced configuration
 
-The SDK can be further configured by setting additional properties of the `ExponeaConfiguration` object or `exponea_configuration.json` file. For a complete list of available configuration parameters, refer to the [Configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) documentation.
+The SDK can be further configured by setting additional properties of the `ExponeaConfiguration` object or `exponea_configuration.json` file. For a complete list of available configuration parameters, refer to the [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) documentation.
 
 ### Log level
 
@@ -217,7 +217,7 @@ Exponea.loggerLevel = Logger.Level.VERBOSE
 
 ### Data flushing
 
-Read [Data flushing](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing) to learn more about how the SDK uploads data to the Engagement API and how to customize this behavior.
+Read [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing) to learn more about how the SDK uploads data to the Engagement API and how to customize this behavior.
 
 ## Troubleshooting
 

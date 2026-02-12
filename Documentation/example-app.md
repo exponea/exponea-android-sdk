@@ -1,5 +1,5 @@
 ---
-title: Example app
+title: Example app for Android SDK
 excerpt: Build, run, and navigate the example app included with the Android SDK
 slug: android-sdk-example-app
 categorySlug: integrations
@@ -33,7 +33,7 @@ You must have the following software installed to be able to build and run the e
 
 > 📘
 >
-> To enable push notifications in the example app, you must also configure the [Firebase integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) or [Huawei integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) in the Exponea web app.
+> To enable push notifications in the example app, you must also configure the [Firebase Cloud Messaging for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) or [Huawei integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) in the Exponea web app.
 
 ## Navigate the example app
 
@@ -42,7 +42,7 @@ You must have the following software installed to be able to build and run the e
 When you run the app in the simulator, you'll see the **Authentication** view. Here's how to set it up:
 1. Enter your [project token, API token, and API base URL](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management).
 2. **Optional:** Enter an email address hard ID in the `Registered` field to identify the customer.
-3. **Optional:** Enter `Application ID` if your Engagement project supports multiple mobile apps. If you leave this blank, the SDK uses the default value "default-application". [Learn more about configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+3. **Optional:** Enter `Application ID` if your Engagement project supports multiple mobile apps. If you leave this blank, the SDK uses the default value "default-application". [Learn more about Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 4. Click **Authenticate** to [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk).
 
 > [`AuthenticationActivity.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/AuthenticationActivity.kt)

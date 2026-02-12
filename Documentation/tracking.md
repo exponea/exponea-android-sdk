@@ -1,5 +1,5 @@
 ---
-title: Tracking
+title: Tracking for Android SDK
 excerpt: Track customers and events using the Android SDK
 slug: android-sdk-tracking
 categorySlug: integrations
@@ -274,17 +274,17 @@ Exponea.trackSessionEnd()
 
 If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks push notifications by default.
 
-In the [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`. It is then up to the developer to [manually track push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#manually-track-push-notifications).
+In the [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`. It is then up to the developer to [manually track push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#manually-track-push-notifications).
 
 > ❗️
 >
-> The behavior of push notification tracking may be affected by the tracking consent feature, which in enabled mode requires explicit consent for tracking. Refer to the [consent documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
+> The behavior of push notification tracking may be affected by the tracking consent feature, which in enabled mode requires explicit consent for tracking. Refer to the [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) for details.
 
 ### Track token manually
 
 Use either the `trackPushToken()` (Firebase) or `trackHmsPushToken` (Huawei) method to [manually track the token](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#track-push-token-fcm) for receiving push notifications. The token is assigned to the currently logged-in customer (with the `identifyCustomer` method).
 
-Invoking this method will track a push token immediately regardless of the value of the `tokenTrackFrequency` [configuration parameter](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+Invoking this method will track a push token immediately regardless of the value of the `tokenTrackFrequency` [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) parameter.
 
 Each time the app becomes active, the SDK calls `verifyPushStatusAndTrackPushToken` and tracks the token.
 
@@ -334,7 +334,7 @@ Use the `trackDeliveredPush()` method to [manually track push notification deliv
 | attributes              | HashMap<String, Any>          | Map of data attributes. |
 | campaignData            | [CampaignData](#campaigndata) | Campaign data. |
 | consentCategoryTracking | String?                       | Consent category. |
-| hasTrackingConsent      | Boolean                       | Indicates whether explicit [tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) has been obtained. |
+| hasTrackingConsent      | Boolean                       | Indicates whether explicit [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent) has been obtained. |
 | hasCustomEventType      | Boolean                       | Indicates whether the notification has a custom event type. |
 | eventType               | String?                       | Event type for the notification (default: campaign). |
 | sentTimestamp           | Double?                       | Unix timestamp (in seconds). Specify nil value to use the current time. |
@@ -655,7 +655,7 @@ Exponea.trackPaymentEvent(purchasedItem = item)
 
 ## Default properties
 
-You can [configure](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) default properties to be tracked with every event. Note that the value of a default property will be overwritten if the tracking event has a property with the same key.
+You can [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) default properties to be tracked with every event. Note that the value of a default property will be overwritten if the tracking event has a property with the same key.
 
 ```kotlin
 // Create a new ExponeaConfiguration instance

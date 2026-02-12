@@ -1,5 +1,5 @@
 ---
-title: SDK version update guide
+title: Android SDK version update guide
 excerpt: Update Exponea Android SDK in your app to a new version
 slug: android-sdk-version-update
 categorySlug: integrations
@@ -23,7 +23,7 @@ Each mobile application integrated with the SDK can now have its own unique `app
 - **Multiple mobile apps:** You must specify a unique `applicationId` for each app in the SDK configuration. The value must match the Application ID configured in Bloomreach Engagement under **Project Settings > Campaigns > Channels > Push Notifications.**
 - **Single mobile app:** If you use only one mobile application, you don't need to set `applicationId`. The SDK uses the default value `default-application` automatically.
 
-Learn more about [SDK configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) and [Configure Application ID](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#configure-application-id).
+Learn more about [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) and [Configure Application ID](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#configure-application-id).
 
 ### 2. **Push notification token tracking**
 

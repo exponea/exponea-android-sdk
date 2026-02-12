@@ -1,5 +1,5 @@
 ---
-title: Configuration
+title: Configuration for Android SDK
 excerpt: Full configuration reference for the Android SDK
 slug: android-sdk-configuration
 categorySlug: integrations
@@ -111,10 +111,10 @@ This page provides an overview of all configuration parameters for the SDK. You 
 
 * `advancedAuthEnabled`
   * If set, advanced authorization is used for communication with the Engagement APIs listed in [Customer Token Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#customer-token-authorization).
-  * Refer to the [authorization documentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization) for details.
+  * Refer to the [Authorization for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization) documentation for details.
 
 * `inAppContentBlocksPlaceholders`
-  * If set, all [In-app content blocks](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-content-blocks) will be prefetched right after the SDK is initialized.
+  * If set, all [In-app content blocks for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-content-blocks) will be prefetched right after the SDK is initialized.
 
 * `allowWebViewCookies`
   * Flag to enable or disable cookies in WebViews.

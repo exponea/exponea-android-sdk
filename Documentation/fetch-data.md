@@ -1,5 +1,5 @@
 ---
-title: Fetch data
+title: Fetch data for Android SDK
 excerpt: Fetch data from Bloomreach Engagement using the Android SDK
 slug: android-sdk-fetch-data
 categorySlug: integrations

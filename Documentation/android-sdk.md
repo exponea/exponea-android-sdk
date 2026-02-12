@@ -13,7 +13,7 @@ categorySlug: integrations
 
 The Exponea Android SDK allows you to integrate your mobile application with Bloomreach Engagement and track your customers' behavior in your app. Integrating the SDK in your app will enable you to track events and customer properties, send push notifications, and display in-app messages and content blocks.
 
-The SDK is [available as open source on GitHub](https://github.com/exponea/exponea-android-sdk) for maximum transparency and includes an [example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) you can use as a reference implementation.
+The SDK is [available as open source on GitHub](https://github.com/exponea/exponea-android-sdk) for maximum transparency and includes an [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) you can use as a reference implementation.
 
 > ❗️
 > 
@@ -37,25 +37,25 @@ This short video guide provides a step-by-step introduction to integrating the A
 
 ## Get started
 
-- [Initial SDK setup](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup)
-  - [Configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration)
-  - [Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization)
-  - [Data flushing](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing)
-- [Tracking](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking)
-  - [Tracking consent](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent)
-- [Android App Links](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-links)
-- [Push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications)
-  - [Firebase Cloud Messaging](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase)
+- [Initial SDK setup for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup)
+  - [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration)
+  - [Authorization for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization)
+  - [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing)
+- [Tracking for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking)
+  - [Tracking consent for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking-consent)
+- [Android App Links for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-links)
+- [Push notifications for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications)
+  - [Firebase Cloud Messaging for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase)
   - [Huawei Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei)
-- [Fetch data](https://documentation.bloomreach.com/engagement/docs/android-sdk-fetch-data)
-- [In-app personalization](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-personalization)
-  - [In-app messages](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages)
-  - [In-app content blocks](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-content-blocks)
-- [App Inbox](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox)
-- [Segmentation](https://documentation.bloomreach.com/engagement/docs/android-sdk-segmentation)
-- [Example app](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app)
-- [Release notes](https://documentation.bloomreach.com/engagement/docs/android-sdk-release-notes)
-   - [SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update)
+- [Fetch data for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-fetch-data)
+- [In-app personalization for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-personalization)
+  - [In-app messages for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-messages)
+  - [In-app content blocks for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-in-app-content-blocks)
+- [App Inbox for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox)
+- [Segmentation for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-segmentation)
+- [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app)
+- [Release notes for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-release-notes)
+   - [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update)
 
 ## Frequently asked questions
 

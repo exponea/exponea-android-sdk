@@ -1,5 +1,5 @@
 ---
-title: Authorization
+title: Authorization for Android SDK
 excerpt: Full authorization reference for the Android SDK
 slug: android-sdk-authorization
 categorySlug: integrations
@@ -23,7 +23,7 @@ Token authorization is used for the following API endpoints by default:
 * `POST /webxp/projects/<projectToken>/appinbox/markasread` for marking of AppInbox message as read
 * `POST /campaigns/send-self-check-notification?project_id=<projectToken>` for part of self-check push notification flow
 
-Developers must set the token using the `authorization` [configuration](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) parameter when [initializing the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk):
+Developers must set the token using the `authorization` [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) parameter when [initializing the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk):
 
 ```kotlin
 class App : Application() {

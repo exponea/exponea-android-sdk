@@ -11,6 +11,19 @@ parentDocSlug: android-sdk
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.9.0
+#### February 16, 2026
+* Added:
+  * Updates Example app to handle App Links with the new domain.
+  * Increases minimum supported Android version to 21.
+  * Clears device ID when calling `clearLocalCustomerData()`.
+  * Updates documentation page titles with "Android SDK" reference for improved searchability and navigation.
+* Fixed:
+  * Fixes color parser to trim whitespace characters.
+  * Fixes race condition while processing in-app pending show requests.
+  * Fixes error handling when opening URLs.
+
+
 ## Release Notes for 4.8.1
 #### December 04, 2025
 * Updated:

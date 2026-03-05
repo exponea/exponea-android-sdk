@@ -3,8 +3,8 @@ package com.exponea.sdk
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
-import com.exponea.sdk.telemetry.TelemetryManager
-import com.exponea.sdk.telemetry.TelemetryUtility
+import com.exponea.sdk.telemetry.model.EventLog
+import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.mocks.DebugMockApplication
 import com.exponea.sdk.testutil.mocks.ReleaseMockApplication
@@ -37,29 +37,32 @@ internal class ExponeaTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track telemetry for init`() {
-        mockkConstructorFix(TelemetryManager::class)
-        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
-        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+    fun `should not track telemetry for init`() {
+        val uploadSlot = slot<EventLog>()
         every {
-            anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryTelemetryEventSlot),
-                capture(telemetryPropertiesSlot)
+            anyConstructed<SentryTelemetryUpload>().uploadEventLog(
+                capture(uploadSlot),
+                any()
             )
         } just Runs
-        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
         initSdk()
-        assertTrue(telemetryTelemetryEventSlot.isCaptured)
-        val capturedEventType = telemetryTelemetryEventSlot.captured
-        assertNotNull(capturedEventType)
-        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.SDK_CONFIGURE, capturedEventType)
-        assertTrue(telemetryPropertiesSlot.isCaptured)
-        val capturedProps = telemetryPropertiesSlot.captured
-        assertNotNull(capturedProps)
-        assertEquals(
-            TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(projectToken = "mock-token")),
-            capturedProps
-        )
+        // Custom telemetry event tracking is disabled, so upload should not be called
+        assertFalse(uploadSlot.isCaptured)
+    }
+
+    @Test
+    fun `should not track telemetry session start when custom tracking disabled`() {
+        // Mock uploadSessionStart to verify it's NOT called when ENABLE_CUSTOM_EVENT_TRACKING is false
+        val sessionStartSlot = slot<String>()
+        every {
+            anyConstructed<SentryTelemetryUpload>().uploadSessionStart(
+                capture(sessionStartSlot),
+                any()
+            )
+        } just Runs
+        initSdk()
+        // Custom telemetry event tracking is disabled, so uploadSessionStart should not be called
+        assertFalse(sessionStartSlot.isCaptured)
     }
 
     @Test
@@ -74,29 +77,18 @@ internal class ExponeaTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should track telemetry for anonymize`() {
-        initSdk()
-        mockkConstructorFix(TelemetryManager::class)
-        val telemetryTelemetryEventSlot = slot<com.exponea.sdk.telemetry.model.TelemetryEvent>()
-        val telemetryPropertiesSlot = slot<MutableMap<String, String>>()
+    fun `should not track telemetry for anonymize`() {
+        val uploadSlot = slot<EventLog>()
         every {
-            anyConstructed<TelemetryManager>().reportEvent(
-                capture(telemetryTelemetryEventSlot),
-                capture(telemetryPropertiesSlot)
+            anyConstructed<SentryTelemetryUpload>().uploadEventLog(
+                capture(uploadSlot),
+                any()
             )
         } just Runs
-        Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
+        initSdk()
         Exponea.anonymize()
-        assertTrue(telemetryTelemetryEventSlot.isCaptured)
-        val capturedEventType = telemetryTelemetryEventSlot.captured
-        assertNotNull(capturedEventType)
-        assertEquals(com.exponea.sdk.telemetry.model.TelemetryEvent.ANONYMIZE, capturedEventType)
-        assertTrue(telemetryPropertiesSlot.isCaptured)
-        val capturedProps = telemetryPropertiesSlot.captured
-        assertNotNull(capturedProps)
-        assertTrue(capturedProps.keys.contains("baseUrl"))
-        assertTrue(capturedProps.keys.contains("projectToken"))
-        assertTrue(capturedProps.keys.contains("authorization"))
+        // Custom telemetry event tracking is disabled, so upload should not be called
+        assertFalse(uploadSlot.isCaptured)
     }
 
     @Test

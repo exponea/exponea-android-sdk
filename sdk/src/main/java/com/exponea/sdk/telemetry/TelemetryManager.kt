@@ -20,6 +20,7 @@ internal class TelemetryManager(
     application: Application
 ) : OnIntegrationStoppedCallback {
     companion object {
+        const val ENABLE_CUSTOM_EVENT_TRACKING: Boolean = false
         const val TELEMETRY_PREFS_KEY = "EXPONEA_TELEMETRY"
         const val INSTALL_ID_KEY = "INSTALL_ID"
         const val INSTALL_ID_PLACEHOLDER = "placeholder-install-id"
@@ -61,12 +62,18 @@ internal class TelemetryManager(
             return
         }
         crashManager.start()
-        telemetryUpload.uploadSessionStart(runId) {
-            Logger.i(this, "Session start upload ${if (it.isSuccess) "succeeded" else "failed" }")
+
+        if (ENABLE_CUSTOM_EVENT_TRACKING) {
+            telemetryUpload.uploadSessionStart(runId) {
+                Logger.i(this, "Session start upload ${if (it.isSuccess) "succeeded" else "failed" }")
+            }
         }
     }
 
     fun reportEvent(telemetryEvent: TelemetryEvent, properties: MutableMap<String, String> = hashMapOf()) {
+        if (!ENABLE_CUSTOM_EVENT_TRACKING) {
+            return
+        }
         if (Exponea.isStopped) {
             Logger.e(this, "Telemetry event has not been tracked, SDK is stopping")
             return
@@ -86,6 +93,9 @@ internal class TelemetryManager(
     }
 
     fun reportInitEvent(configuration: ExponeaConfiguration) {
+        if (!ENABLE_CUSTOM_EVENT_TRACKING) {
+            return
+        }
         reportEvent(TelemetryEvent.SDK_CONFIGURE, TelemetryUtility.formatConfigurationForTracking(configuration))
     }
 

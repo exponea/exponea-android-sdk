@@ -14,6 +14,7 @@ import com.exponea.sdk.util.enqueue
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.logOnException
 import java.io.IOException
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import okhttp3.Call
 import okhttp3.Response
@@ -30,6 +31,8 @@ internal open class FlushManagerImpl(
     override val isRunning: Boolean
         get() = isRunningAtomic.get()
 
+    private val pendingCallbacks = Collections.synchronizedList(mutableListOf<FlushFinishedCallback>())
+
     internal fun tryStartFlushProcess() = isRunningAtomic.compareAndSet(false, true)
 
     internal fun endsFlushProcess() {
@@ -39,15 +42,28 @@ internal open class FlushManagerImpl(
         }
     }
 
+    private fun drainPendingCallbacks(result: Result<Unit>) {
+        val callbacks = synchronized(pendingCallbacks as Any) {
+            val copy = pendingCallbacks.toList()
+            pendingCallbacks.clear()
+            copy
+        }
+        callbacks.forEach { runCatching { it(result) }.logOnException() }
+    }
+
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
         if (Exponea.isStopped) {
-            onFlushDenialForStoppedSdk(onFlushFinished)
+            Logger.e(this, "Flushing has been denied, SDK is stopping")
+            onFlushFinished?.invoke(Result.failure(Exception("Flushing denied, SDK is stopping")))
+            drainPendingCallbacks(Result.failure(Exception("Flushing denied, SDK is stopping")))
             return
         }
         if (tryStartFlushProcess()) {
             flushDataInternal(onFlushFinished)
         } else {
-            onFlushFinished?.invoke(Result.failure(Exception("Flushing already in progress")))
+            if (onFlushFinished != null) {
+                pendingCallbacks.add(onFlushFinished)
+            }
         }
     }
 
@@ -59,8 +75,10 @@ internal open class FlushManagerImpl(
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flush")
             endsFlushProcess()
+            val noInternetResult = Result.failure<Unit>(Exception("Internet connection is not available."))
             runCatching {
-                onFlushFinished?.invoke(Result.failure(Exception("Internet connection is not available.")))
+                onFlushFinished?.invoke(noInternetResult)
+                drainPendingCallbacks(noInternetResult)
                 return@runCatching
             }.logOnException()
             return
@@ -82,13 +100,13 @@ internal open class FlushManagerImpl(
                 }
                 endsFlushProcess()
                 runCatching {
-                    if (allEvents.isEmpty()) {
-                        onFlushFinished?.invoke(Result.success(Unit))
+                    val result = if (allEvents.isEmpty()) {
+                        Result.success(Unit)
                     } else {
-                        onFlushFinished?.invoke(
-                            Result.failure(Exception("Failed to upload ${allEvents.size} events."))
-                        )
+                        Result.failure(Exception("Failed to upload ${allEvents.size} events."))
                     }
+                    onFlushFinished?.invoke(result)
+                    drainPendingCallbacks(result)
                     return@runCatching
                 }.logOnException()
             }
@@ -98,8 +116,10 @@ internal open class FlushManagerImpl(
     private fun onFlushDenialForStoppedSdk(onFlushFinished: ((Result<Unit>) -> Unit)?) {
         endsFlushProcess()
         Logger.e(this, "Flushing has been denied, SDK is stopping")
+        val stoppedResult = Result.failure<Unit>(Exception("Flushing denied, SDK is stopping"))
         runCatching {
-            onFlushFinished?.invoke(Result.failure(Exception("Flushing denied, SDK is stopping")))
+            onFlushFinished?.invoke(stoppedResult)
+            drainPendingCallbacks(stoppedResult)
             return@runCatching
         }.logOnException()
     }
@@ -108,7 +128,14 @@ internal open class FlushManagerImpl(
         exportedEvent: ExportedEvent,
         onFlushFinished: FlushFinishedCallback?
     ) {
-        routeSendingEvent(exportedEvent)?.enqueue(
+        val call = routeSendingEvent(exportedEvent)
+        if (call == null) {
+            // Event has an invalid route and can never be sent — remove it and continue
+            eventRepository.remove(exportedEvent.id)
+            flushDataInternal(onFlushFinished)
+            return
+        }
+        call.enqueue(
             handleResponse(exportedEvent, onFlushFinished),
             handleFailure(exportedEvent, onFlushFinished)
         )

@@ -34,7 +34,10 @@ internal class ExponeaPeriodicFlushWorker(
                 countDownLatch.countDown()
             }
             try {
-                countDownLatch.await(20, TimeUnit.SECONDS)
+                val completed = countDownLatch.await(20, TimeUnit.SECONDS)
+                if (!completed) {
+                    Logger.e(this, "doWork -> flush timed out after 20 seconds")
+                }
             } catch (e: InterruptedException) {
                 Logger.e(this, "doWork -> flush was interrupted", e)
                 return Result.failure()

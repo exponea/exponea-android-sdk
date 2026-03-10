@@ -36,13 +36,20 @@ class AppUpdateReceiver : BroadcastReceiver() {
             obsoleteRepo.clear()
             return
         }
-        newRepo.setTrackedToken(
+        if (newRepo.setTrackedTokenForce(
             obsoleteRepo.get()!!,
-            obsoleteRepo.getLastTrackDateInMilliseconds() ?: 0,
+            /* setting time to null to force resending notification_state event after migration
+            If the time is not reset to null, the notification_state would be sent only after a token renewal which
+            might create a considerable delay in delivering notification_state event
+            */
+            null,
             obsoleteRepo.getLastTokenType(),
             obsoleteRepo.getLastPermissionFlag()
-        )
-        obsoleteRepo.clear()
-        Logger.d(this, "FCM migration has been done")
+        )) {
+            obsoleteRepo.clear()
+            Logger.d(this, "FCM migration has been done")
+        } else {
+            Logger.d(this, "FCM migration has failed")
+        }
     }
 }

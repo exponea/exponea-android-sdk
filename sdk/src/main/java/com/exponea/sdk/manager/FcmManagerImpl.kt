@@ -31,6 +31,7 @@ import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.adjustUrl
+import com.exponea.sdk.util.getAppVersion
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -59,6 +60,9 @@ internal open class FcmManagerImpl(
         tokenType: TokenType?,
         isTokenCanceled: Boolean
     ) {
+        Logger.d(this, "trackToken - token: ${token?.take(8) ?: "null"}, " +
+                "type: $tokenType, canceled: $isTokenCanceled, tokenTrackFrequency: $tokenTrackFrequency")
+
         if (Exponea.isStopped) {
             Logger.e(this, "Push token track failed, SDK is stopping")
             return
@@ -66,19 +70,27 @@ internal open class FcmManagerImpl(
         val permissionGranted = NotificationsPermissionReceiver.isPermissionGranted(application)
         val permissionRequired = configuration.requirePushAuthorization
         val permissionMismatched = permissionRequired && !permissionGranted
+        val currentAppVersion = application.getAppVersion(application)
         val shouldUpdateToken = run {
             val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
 
             if (isTokenCanceled) {
+                Logger.d(this, "trackToken - reason: token canceled")
                 true
             } else if (lastTrackDateInMilliseconds == null) {
-                // if the token wasn't ever tracked, track it
+                Logger.d(this, "trackToken - reason: token never tracked")
                 true
             } else if (permissionMismatched) {
-                // if permission expectation mismatched, track (empty token)
+                Logger.d(this, "trackToken - reason: permission mismatched")
+                true
+            } else if (currentAppVersion.isNotEmpty() &&
+                    currentAppVersion != pushTokenRepository.getLastTrackedAppVersion()) {
+                Logger.d(this, "trackToken - reason: app version changed to $currentAppVersion")
+                true
+            } else if (configuration.applicationId != pushTokenRepository.getLastTrackedApplicationId()) {
+                Logger.d(this, "trackToken - reason: applicationId changed to ${configuration.applicationId}")
                 true
             } else {
-                // decide by the frequency
                 when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
                     ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> {
                         token != pushTokenRepository.get() ||
@@ -86,42 +98,58 @@ internal open class FcmManagerImpl(
                     }
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
+                }.also { frequencyCheckPassed ->
+                    if (frequencyCheckPassed) {
+                        Logger.d(this, "trackToken - reason: token tracked by frequency $tokenTrackFrequency")
+                    }
                 }
             }
         }
-        if (token != null && tokenType != null && shouldUpdateToken) {
-            pushTokenRepository.setTrackedToken(
-                token,
-                System.currentTimeMillis(),
-                tokenType,
-                permissionGranted
-            )
 
-            val validityResult = when {
-                isTokenCanceled -> false
-                else -> !permissionMismatched
+        if (tokenType != null && shouldUpdateToken) {
+            // Always write markers to suppress appId/version re-triggers even when token is null
+            if (currentAppVersion.isNotEmpty()) {
+                pushTokenRepository.setLastTrackedAppVersion(currentAppVersion)
             }
-            val validityMessage = when {
-                isTokenCanceled -> Constants.PushPermissionStatus.INVALIDATED_TOKEN
-                permissionMismatched -> Constants.PushPermissionStatus.PERMISSION_DENIED
-                else -> Constants.PushPermissionStatus.PERMISSION_GRANTED
-            }
-            val properties = PropertiesList(hashMapOf(
-                "push_notification_token" to token,
-                "platform" to tokenType.selfCheckProperty,
-                "valid" to validityResult,
-                "description" to validityMessage
-            ))
+            pushTokenRepository.setLastTrackedApplicationId(configuration.applicationId)
 
-            eventManager.track(
-                eventType = Constants.EventTypes.pushTokenTrack,
-                properties = properties.properties,
-                type = EventType.PUSH_TOKEN
-            )
-            return
+            if (token != null) {
+                pushTokenRepository.setTrackedToken(
+                    token,
+                    System.currentTimeMillis(),
+                    tokenType,
+                    permissionGranted
+                )
+
+                val validityResult = when {
+                    isTokenCanceled -> false
+                    else -> !permissionMismatched
+                }
+                val validityMessage = when {
+                    isTokenCanceled -> Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                    permissionMismatched -> Constants.PushPermissionStatus.PERMISSION_DENIED
+                    else -> Constants.PushPermissionStatus.PERMISSION_GRANTED
+                }
+                val properties = PropertiesList(hashMapOf(
+                    "push_notification_token" to token,
+                    "platform" to tokenType.selfCheckProperty,
+                    "valid" to validityResult,
+                    "description" to validityMessage
+                ))
+
+                eventManager.track(
+                    eventType = Constants.EventTypes.pushTokenTrack,
+                    properties = properties.properties,
+                    type = EventType.PUSH_TOKEN
+                )
+                Logger.i(this, "trackToken - notification_state tracked, " +
+                        "valid: $validityResult, description: $validityMessage")
+                return
+            }
         }
 
-        Logger.d(this, "Token was not updated: shouldUpdateToken $shouldUpdateToken - token $token")
+        Logger.i(this, "trackToken - token not tracked, shouldUpdateToken: $shouldUpdateToken, " +
+                "token: ${token?.take(8) ?: "null"}, tokenRepo: ${pushTokenRepository.get()?.take(8) ?: "null"}")
     }
 
     override fun handleRemoteMessage(

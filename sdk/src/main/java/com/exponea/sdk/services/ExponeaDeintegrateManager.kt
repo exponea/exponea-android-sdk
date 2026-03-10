@@ -19,6 +19,7 @@ import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.SegmentsCacheImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
@@ -140,6 +141,8 @@ class ExponeaDeintegrateManager {
 
     private fun clearPushToken(context: Context) {
         PushTokenRepositoryProvider.get(context).clear()
+        // Clear legacy push token storage to avoid re-migration after deintegration.
+        PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)).clear()
     }
 
     private fun clearSession(context: Context) {

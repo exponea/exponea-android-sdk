@@ -23,9 +23,9 @@ import io.mockk.spyk
 import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -149,44 +149,76 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         createTestEvent(true)
 
         val testRunMaxMillis = 10000L
-        val allFlushesDone = CountDownLatch(1)
-        val firstFlushDone = CountDownLatch(1)
-        // first flush locks everything
-        waitForIt {
+        val flushInvokeTries = 10
+        // counts down once per callback: 1 for the first flush + flushInvokeTries for queued ones
+        val allCallbacksDone = CountDownLatch(1 + flushInvokeTries)
+        val firstFlushBlocking = CountDownLatch(1)
+        val unblockFirstFlush = CountDownLatch(1)
+
+        every { connectionManager.isConnectedToInternet() } answers {
+            firstFlushBlocking.countDown()
+            assertTrue(unblockFirstFlush.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+            true
+        }
+
+        // Start the first flush — it will block inside isConnectedToInternet
+        thread(start = true) {
+            manager.flushData {
+                assertTrue(it.isFailure)
+                allCallbacksDone.countDown()
+            }
+        }
+
+        // Wait until the first flush is blocking in isConnectedToInternet
+        assertTrue(firstFlushBlocking.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+
+        // Start concurrent flushes — their callbacks are queued, not fired immediately
+        for (i in 1..flushInvokeTries) {
             thread(start = true) {
-                every { connectionManager.isConnectedToInternet() } answers {
-                    it()
-                    // waits for all other flushes to finish (by rejecting)
-                    assertTrue(allFlushesDone.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
-                    true
-                }
                 manager.flushData {
-                    // ExponeaMockService returns false but test accepts FlushFinishedCallback to be called
+                    // Callback fires when the ongoing flush finishes, not with "already in progress"
                     assertTrue(it.isFailure)
-                    firstFlushDone.countDown()
+                    assertNotEquals("Flushing already in progress", it.exceptionOrNull()?.localizedMessage)
+                    allCallbacksDone.countDown()
                 }
             }
         }
-        // other flushes has to be rejected
-        waitForIt(timeoutMS = testRunMaxMillis) {
-            val done = AtomicInteger(0)
-            val flushInvokeTries = 10
-            for (i in 1..flushInvokeTries) {
-                thread(start = true) {
-                    manager.flushData {
-                        assertEquals("Flushing already in progress", it.exceptionOrNull()?.localizedMessage)
-                        if (done.incrementAndGet() == flushInvokeTries) it()
-                    }
-                }
-            }
-        }
-        // let first flush to finish
-        allFlushesDone.countDown()
-        // wait for first flush to finish
-        assertTrue(firstFlushDone.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
-        // verify that first flush tries to upload event with maxTries
+
+        // Give concurrent threads time to queue their callbacks before releasing the first flush
+        Thread.sleep(200)
+
+        // Unblock the first flush
+        unblockFirstFlush.countDown()
+
+        // Wait for all callbacks (first flush + queued) to fire
+        assertTrue(allCallbacksDone.await(testRunMaxMillis, TimeUnit.MILLISECONDS))
+
+        // Verify that only one network request was made
         verify(exactly = 1) {
             service.postEvent(any(), any())
+        }
+    }
+
+    @Test
+    fun `should not hang when event has invalid route`() {
+        setup(connected = true, serviceSuccess = true)
+        val event = ExportedEvent(
+            projectId = "pid",
+            type = "test",
+            timestamp = 0.0,
+            customerIds = hashMapOf(),
+            properties = hashMapOf(),
+            route = null,
+            exponeaProject = ExponeaProject("url", "token", "auth")
+        )
+        repo.add(event)
+        val spyManager = spyk(manager as FlushManagerImpl)
+        every { spyManager.routeSendingEvent(any()) } returns null
+        waitForIt {
+            spyManager.flushData { _ ->
+                it.assertEquals(0, repo.all().size)
+                it()
+            }
         }
     }
 

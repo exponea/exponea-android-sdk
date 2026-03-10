@@ -18,6 +18,10 @@ internal interface PushTokenRepository : OnIntegrationStoppedCallback {
     fun clear(): Boolean
     fun getLastTokenType(): TokenType
     fun getLastPermissionFlag(): Boolean
+    fun getLastTrackedAppVersion(): String?
+    fun setLastTrackedAppVersion(version: String)
+    fun getLastTrackedApplicationId(): String?
+    fun setLastTrackedApplicationId(appId: String)
     override fun onIntegrationStopped()
 }
 

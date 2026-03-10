@@ -1,12 +1,15 @@
 package com.exponea.sdk.services
 
+import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
@@ -14,13 +17,16 @@ import com.exponea.sdk.receiver.AppUpdateReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.util.TokenType
 import io.mockk.every
+import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 internal class TokenMigrationTest() : ExponeaSDKTest() {
@@ -90,6 +96,51 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
         // simulate future updates == app will use only new storage
         simulateAppUpdate()
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
+    }
+
+    @Test
+    fun `should send notification_state when app version changes`() {
+        // Simulate user already on new SDK: valid token tracked recently, version "1.0.0" stored
+        val tokenRepository = PushTokenRepositoryProvider.get(context)
+        tokenRepository.setTrackedToken("mock-token", System.currentTimeMillis(), TokenType.FCM, true)
+        tokenRepository.setLastTrackedAppVersion("1.0.0")
+
+        // Make the PackageManager report current version as "2.0.0"
+        val packageInfo = PackageInfo().apply {
+            packageName = context.packageName
+            versionName = "2.0.0"
+        }
+        shadowOf((context as Application).packageManager).installPackage(packageInfo)
+
+        initExponea()
+        Exponea.handleNewToken(context, "mock-token") // same token, DAILY default frequency
+
+        verify(atLeast = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(
+                match { it.type == Constants.EventTypes.pushTokenTrack },
+                any(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `should send notification_state when application id changes`() {
+        // Simulate prefs from a previous configuration with a different applicationId
+        val tokenRepository = PushTokenRepositoryProvider.get(context)
+        tokenRepository.setTrackedToken("mock-token", System.currentTimeMillis(), TokenType.FCM, true)
+        tokenRepository.setLastTrackedApplicationId("old-application-id")
+
+        initExponea() // configuration uses default applicationId ("default-application")
+        Exponea.handleNewToken(context, "mock-token") // same token, DAILY default frequency
+
+        verify(atLeast = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(
+                match { it.type == Constants.EventTypes.pushTokenTrack },
+                any(),
+                any()
+            )
+        }
     }
 
     private fun initExponea() {

@@ -12,6 +12,8 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
     private val keyDate = "ExponeaLastFirebaseTokenDate"
     private val keyType = "ExponeaLastTokenType"
     private val keyPermFlag = "ExponeaLastTokenPermissionGranted"
+    private val keyAppVersion = "ExponeaLastNotificationStateAppVersion"
+    private val keyApplicationId = "ExponeaLastNotificationStateApplicationId"
 
     override fun setTrackedToken(
         token: String,
@@ -26,15 +28,31 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
         storeTokenInternal(token, null, tokenType, permissionGranted)
     }
 
-    private fun storeTokenInternal(
+    internal fun setTrackedTokenForce(
         token: String,
         lastTrackDateInMilliseconds: Long?,
         tokenType: TokenType,
         permissionGranted: Boolean
-    ) {
-        if (Exponea.isStopped) {
+    ): Boolean {
+        return storeTokenInternal(
+            token,
+            lastTrackDateInMilliseconds,
+            tokenType,
+            permissionGranted,
+            ignoreStop = true
+        )
+    }
+
+    private fun storeTokenInternal(
+        token: String,
+        lastTrackDateInMilliseconds: Long?,
+        tokenType: TokenType,
+        permissionGranted: Boolean,
+        ignoreStop: Boolean = false
+    ): Boolean {
+        if (Exponea.isStopped && !ignoreStop) {
             Logger.e(this, "Push token not stored, SDK is stopping")
-            return
+            return false
         }
         preferences.setString(key, token)
         if (lastTrackDateInMilliseconds == null) {
@@ -44,13 +62,16 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
         }
         preferences.setString(keyType, tokenType.name)
         preferences.setBoolean(keyPermFlag, permissionGranted)
+        return true
     }
 
     override fun clear(): Boolean {
         return preferences.remove(key) &&
             preferences.remove(keyDate) &&
             preferences.remove(keyType) &&
-            preferences.remove(keyPermFlag)
+            preferences.remove(keyPermFlag) &&
+            preferences.remove(keyAppVersion) &&
+            preferences.remove(keyApplicationId)
     }
 
     override fun get(): String? {
@@ -70,6 +91,24 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
 
     override fun getLastPermissionFlag(): Boolean {
         return preferences.getBoolean(keyPermFlag, false)
+    }
+
+    override fun getLastTrackedAppVersion(): String? {
+        val version = preferences.getString(keyAppVersion, "")
+        return version.ifEmpty { null }
+    }
+
+    override fun setLastTrackedAppVersion(version: String) {
+        preferences.setString(keyAppVersion, version)
+    }
+
+    override fun getLastTrackedApplicationId(): String? {
+        val appId = preferences.getString(keyApplicationId, "")
+        return appId.ifEmpty { null }
+    }
+
+    override fun setLastTrackedApplicationId(appId: String) {
+        preferences.setString(keyApplicationId, appId)
     }
 
     override fun onIntegrationStopped() {

@@ -11,6 +11,13 @@ parentDocSlug: android-sdk
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 4.10.0
+#### March 11, 2026
+* Fixed:
+  * Fixed tracking of `notification_state` events when the app version or `applicationId` changes.
+  * Disabled custom event logging for telemetry.
+
+
 ## Release Notes for 4.9.0
 #### February 16, 2026
 * Added:

@@ -37,7 +37,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 
 internal class SentryTelemetryUpload(
     application: Application,
-    private val installId: String
+    private val installId: String,
+    private val sdkVersion: String = BuildConfig.EXPONEA_VERSION_NAME
 ) : TelemetryUpload {
 
     companion object {
@@ -347,7 +348,7 @@ internal class SentryTelemetryUpload(
         return mapOf(
             "uuid" to installId,
             "projectToken" to tryReadProjectToken(),
-            "sdkVersion" to BuildConfig.EXPONEA_VERSION_NAME,
+            "sdkVersion" to sdkVersion,
             "sdkName" to "ExponeaSDK.android",
             "appName" to appInfo.appName,
             "appVersion" to appInfo.versionName,
@@ -370,6 +371,6 @@ internal class SentryTelemetryUpload(
     }
 
     private fun buildSentryReleaseInfo(): String {
-        return "${appInfo.packageName}@${appInfo.versionName} - SDK ${BuildConfig.EXPONEA_VERSION_NAME}"
+        return "${appInfo.packageName}@${appInfo.versionName} - SDK $sdkVersion"
     }
 }

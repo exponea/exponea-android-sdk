@@ -174,7 +174,7 @@ internal class ExponeaComponent(
             appInboxManager.onEventCreated(event, type)
             inAppContentBlockManager.onEventCreated(event, type)
         },
-        deviceId = DeviceIdManager.getDeviceId(context)
+        deviceIdProvider = { DeviceIdManager.getDeviceId(context) }
     )
 
     internal val campaignManager: CampaignManager = CampaignManagerImpl(

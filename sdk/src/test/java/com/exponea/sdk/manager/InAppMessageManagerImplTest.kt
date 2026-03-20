@@ -309,7 +309,7 @@ internal class InAppMessageManagerImplTest {
             onEventCreated = { event, type ->
                 manager.onEventCreated(event, type)
             },
-            DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext())
+            deviceIdProvider = { DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext()) }
         )
         return eventManager
     }
@@ -358,7 +358,9 @@ internal class InAppMessageManagerImplTest {
                 onEventCreated = { event, type ->
                     manager.onEventCreated(event, type)
                 },
-                DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext())
+                deviceIdProvider = {
+                    DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext())
+                }
         )
         every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))

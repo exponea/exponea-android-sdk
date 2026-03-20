@@ -1575,10 +1575,6 @@ object Exponea {
     }.logOnException()
 
     fun clearLocalCustomerData() = runCatching {
-        if (isInitialized) {
-            Logger.e(this, "The functionality is unavailable due to running Integration.")
-            return@runCatching
-        }
         val context = ExponeaContextProvider.applicationContext
         if (context == null) {
             Logger.e(this, "Unable to clear SDK data because application context is null.")

@@ -129,8 +129,39 @@ internal class EventManagerTest : ExponeaSDKTest() {
             onEventCreated = { event, type ->
                 inAppMessageManager.onEventCreated(event, type)
             },
-            deviceId = DeviceIdManager.getDeviceId(context = context)
+            deviceIdProvider = { DeviceIdManager.getDeviceId(context = context) }
         )
+    }
+
+    @Test
+    fun `should resolve current device id for each tracked event`() = runInSingleThread { idleThreads ->
+        ExponeaContextProvider.applicationIsForeground = true
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            FlushMode.MANUAL
+        )
+        var currentDeviceId = "first-device-id"
+        manager = EventManagerImpl(
+            ExponeaConfiguration(projectToken = "mock-project-token"),
+            eventRepo,
+            customerIdsRepository,
+            flushManager,
+            projectFactory,
+            onEventCreated = { _, _ ->
+                // nothing
+            },
+            deviceIdProvider = { currentDeviceId }
+        )
+
+        manager.track("test-event-1", 123.0, hashMapOf(), EventType.TRACK_EVENT)
+        currentDeviceId = "second-device-id"
+        manager.track("test-event-2", 124.0, hashMapOf(), EventType.TRACK_EVENT)
+        Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
+
+        assertEquals("first-device-id", addedEvents[0].properties?.get("device_id"))
+        assertEquals("second-device-id", addedEvents[1].properties?.get("device_id"))
     }
 
     @Test

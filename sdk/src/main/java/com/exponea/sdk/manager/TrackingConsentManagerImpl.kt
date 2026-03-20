@@ -368,7 +368,7 @@ internal class TrackingConsentManagerImpl(
                 onEventCreated = { event, type ->
                     // no action for any event - SDK is not initialized
                 },
-                deviceId = DeviceIdManager.getDeviceId(context = context)
+                deviceIdProvider = { DeviceIdManager.getDeviceId(context = context) }
             )
             val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
             val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(

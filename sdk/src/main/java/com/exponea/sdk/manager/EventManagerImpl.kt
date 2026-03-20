@@ -20,7 +20,7 @@ internal open class EventManagerImpl(
     private val flushManager: FlushManager,
     private val projectFactory: ExponeaProjectFactory,
     private val onEventCreated: (Event, EventType) -> Unit,
-    private val deviceId: String
+    private val deviceIdProvider: () -> String
 ) : EventManager {
 
     fun addEventToQueue(event: Event, eventType: EventType, trackingAllowed: Boolean) {
@@ -95,7 +95,7 @@ internal open class EventManagerImpl(
 
         if (type != EventType.TRACK_CUSTOMER) {
             trackedProperties["application_id"] = configuration.applicationId
-            trackedProperties["device_id"] = deviceId
+            trackedProperties["device_id"] = deviceIdProvider()
         }
 
         val customerIdsMap: HashMap<String, String?> = hashMapOf()

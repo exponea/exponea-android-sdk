@@ -10,7 +10,6 @@ import kotlin.math.min
 import kotlin.reflect.KProperty1
 
 object TelemetryUtility {
-    private const val SDK_PACKAGE = "com.exponea"
     private const val MAX_STACK_TRACE_LENGTH = 100
 
     internal fun getErrorData(e: Throwable): ErrorData {
@@ -45,17 +44,6 @@ object TelemetryUtility {
         source.slice(0 until min(MAX_STACK_TRACE_LENGTH, source.size)).map {
             ErrorStackTraceElement(it.className, it.methodName, it.fileName, it.lineNumber)
         }
-
-    internal fun isSDKRelated(e: Throwable): Boolean {
-        var t: Throwable? = e
-        var visited = hashSetOf<Throwable>()
-        while (t != null && !visited.contains(t)) {
-            t.stackTrace.forEach { if (it.className.startsWith(SDK_PACKAGE)) return true }
-            visited.add(t)
-            t = t.cause
-        }
-        return false
-    }
 
     internal fun formatConfigurationForTracking(configuration: ExponeaConfiguration): HashMap<String, String> {
         val defaultConfiguration = ExponeaConfiguration()
@@ -136,7 +124,7 @@ object TelemetryUtility {
                 packageInfo.versionCode.toString(),
                 applicationInfo.loadLabel(packageManager).toString()
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return AppInfo("unknown package", "unknown version", "unknown version code", "unknown app name")
         }
     }

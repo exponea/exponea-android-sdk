@@ -16,17 +16,16 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 internal class TelemetryUtilityTest {
     @RunWith(ParameterizedRobolectricTestRunner::class)
     internal class ParametrizedTest(
+        @Suppress("UNUSED_PARAMETER")
         private val name: String,
         private val throwableConstructor: () -> Throwable,
-        private val expectedErrorData: ErrorData,
-        private val expectedSDKRelated: Boolean
+        private val expectedErrorData: ErrorData
     ) : ExponeaSDKTest() {
         companion object {
             class TestCase(
                 val name: String,
                 val throwableConstructor: () -> Throwable,
-                val expectedErrorData: ErrorData,
-                val expectedSDKRelated: Boolean
+                val expectedErrorData: ErrorData
             )
 
             private val testCases = arrayListOf(
@@ -43,8 +42,7 @@ internal class TelemetryUtilityTest {
                         arrayListOf(),
                         null,
                         emptyList()
-                    ),
-                    false
+                    )
                 ),
                 TestCase(
                     "Exception with message",
@@ -59,8 +57,7 @@ internal class TelemetryUtilityTest {
                         arrayListOf(),
                         null,
                         emptyList()
-                    ),
-                    false
+                    )
                 ),
                 TestCase(
                     "Exception with cause",
@@ -82,8 +79,7 @@ internal class TelemetryUtilityTest {
                             suppressed = emptyList()
                         ),
                         suppressed = emptyList()
-                    ),
-                    false
+                    )
                 ),
                 TestCase(
                     "Exception with cyclic cause",
@@ -108,8 +104,7 @@ internal class TelemetryUtilityTest {
                             emptyList()
                         ),
                         suppressed = emptyList()
-                    ),
-                    false
+                    )
                 ),
                 TestCase(
                     "Exception with cause related to SDK",
@@ -142,8 +137,7 @@ internal class TelemetryUtilityTest {
                             emptyList()
                         ),
                         suppressed = emptyList()
-                    ),
-                    true
+                    )
                 )
             )
 
@@ -154,8 +148,7 @@ internal class TelemetryUtilityTest {
                     arrayOf(
                         it.name,
                         it.throwableConstructor,
-                        it.expectedErrorData,
-                        it.expectedSDKRelated
+                        it.expectedErrorData
                     )
                 }
             }
@@ -166,15 +159,9 @@ internal class TelemetryUtilityTest {
             val e = throwableConstructor()
             assertEquals(expectedErrorData, TelemetryUtility.getErrorData(e))
         }
-
-        @Test
-        fun `should check if throwable is sdk related`() {
-            val e = throwableConstructor()
-            assertEquals(expectedSDKRelated, TelemetryUtility.isSDKRelated(e))
-        }
     }
 
-    internal class NonParametrizedTest() {
+    internal class NonParametrizedTest {
         @Test
         fun `should truncate error data stacktrace`() {
             val e = Exception("test")

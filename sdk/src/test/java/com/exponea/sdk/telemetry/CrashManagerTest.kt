@@ -301,6 +301,51 @@ internal class CrashManagerTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should save fatal exception when stack trace contains sdk frame outside CrashManager`() {
+        val exception = Exception("Mock exception")
+        exception.stackTrace = arrayOf(
+            StackTraceElement("com.exponea.sdk.ExponeaSdkClass", "doWork", "SourceFile", 11),
+            StackTraceElement("com.example.app.HostAppClass", "run", "SourceFile", 10)
+        )
+
+        crashManager.handleException(exception, true, Thread.currentThread())
+
+        verify(exactly = 1) { storage.saveCrashLog(any()) }
+    }
+
+    @Test
+    fun `should save fatal exception when cause contains sdk frame outside CrashManager`() {
+        val sdkCause = Exception("SDK cause")
+        sdkCause.stackTrace = arrayOf(
+            StackTraceElement("com.exponea.sdk.ExponeaSdkClass", "doWork", "SourceFile", 11)
+        )
+        val exception = Exception("Mock exception", sdkCause)
+        exception.stackTrace = arrayOf(
+            StackTraceElement("com.example.app.HostAppClass", "run", "SourceFile", 10)
+        )
+
+        crashManager.handleException(exception, true, Thread.currentThread())
+
+        verify(exactly = 1) { storage.saveCrashLog(any()) }
+    }
+
+    @Test
+    fun `should not save crash log when only CrashManager appears in SDK frames`() {
+        crashManager.start()
+
+        val exception = Exception("Mock exception")
+        exception.stackTrace = arrayOf(
+            StackTraceElement("com.other.sdk.ExceptionHandler", "uncaughtException", "SourceFile", 2),
+            StackTraceElement("com.exponea.sdk.telemetry.CrashManager", "uncaughtException", "SourceFile", 21),
+            StackTraceElement("com.another.sdk.ExceptionHandler", "uncaughtException", "SourceFile", 42)
+        )
+
+        crashManager.uncaughtException(Thread.currentThread(), exception)
+
+        verify(exactly = 0) { storage.saveCrashLog(any()) }
+    }
+
+    @Test
     fun `should save log messages from multiple threads`() {
         waitForIt {
             val threadCount = 10

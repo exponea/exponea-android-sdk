@@ -16,6 +16,7 @@ internal class CrashManager(
     private val runId: String
 ) : Thread.UncaughtExceptionHandler, OnIntegrationStoppedCallback {
     companion object {
+        private const val SDK_PACKAGE = "com.exponea"
         const val MAX_LOG_MESSAGES = 100
         const val LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 15 // 15 days
     }
@@ -55,7 +56,7 @@ internal class CrashManager(
                 t
             )
             if (fatal) { // app is crashing, save exception, process it later
-                if (TelemetryUtility.isSDKRelated(e)) {
+                if (isSDKRelated(e)) {
                     Logger.i(this, "Fatal exception is sdk related, saving for later upload.")
                     storage.saveCrashLog(crashLog)
                 }
@@ -72,6 +73,22 @@ internal class CrashManager(
         } catch (e: Exception) {
             // do nothing
         }
+    }
+
+    private fun isSDKRelated(e: Throwable): Boolean {
+        var current: Throwable? = e
+        val visited = mutableSetOf<Throwable>()
+        while (current != null && !visited.contains(current)) {
+            if (current.stackTrace.any {
+                    it.className.startsWith(SDK_PACKAGE) &&
+                            it.className != CrashManager::class.java.name
+                }) {
+                return true
+            }
+            visited.add(current)
+            current = current.cause
+        }
+        return false
     }
 
     @Synchronized fun saveLogMessage(parent: Any, message: String, timestamp: Long) {

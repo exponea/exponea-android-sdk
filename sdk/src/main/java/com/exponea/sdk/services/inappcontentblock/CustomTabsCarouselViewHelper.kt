@@ -17,6 +17,7 @@ internal class CustomTabsCarouselViewHelper(
     private var tabsClient: CustomTabsClient? = null
     private var tabsSession: CustomTabsSession? = null
     private var tabsServiceConnection: CustomTabsServiceConnection? = null
+    private var isCustomTabsServiceBound = false
 
     fun bindCustomTabsService() {
         val context = contextRef.get() ?: return
@@ -41,16 +42,41 @@ internal class CustomTabsCarouselViewHelper(
                 tabsClient = null
                 tabsSession = null
             }
-        }.also { tabsServiceConnection = it }
+        }
 
-        CustomTabsClient.bindCustomTabsService(context, customTabsPackage, connection)
+        val bound = CustomTabsClient.bindCustomTabsService(context, customTabsPackage, connection)
+        if (bound) {
+            tabsServiceConnection = connection
+            isCustomTabsServiceBound = true
+        } else {
+            Logger.w(this, "InAppCbCarousel: Custom Tabs service bind failed")
+        }
     }
 
     fun unbindCustomTabsService() {
-        tabsServiceConnection?.let {
-            contextRef.get()?.unbindService(it)
+        if (!isCustomTabsServiceBound) {
+            tabsClient = null
+            tabsSession = null
+            tabsServiceConnection = null
+            return
         }
 
+        val context = contextRef.get()
+        val connection = tabsServiceConnection
+        if (context != null && connection != null) {
+            try {
+                context.unbindService(connection)
+            } catch (e: IllegalArgumentException) {
+                Logger.w(this, "InAppCbCarousel: Custom Tabs service was not registered, unbind skipped: ${e.message}")
+            }
+        } else {
+            Logger.w(
+                this,
+                "InAppCbCarousel: Skipped Custom Tabs unbind " +
+                        "(contextLost=${context == null}, connectionMissing=${connection == null})")
+        }
+
+        isCustomTabsServiceBound = false
         tabsClient = null
         tabsSession = null
         tabsServiceConnection = null

@@ -21,6 +21,7 @@ internal class CrashManager(
         const val LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 15 // 15 days
     }
     private var oldHandler: Thread.UncaughtExceptionHandler? = null
+    private val logMessagesLock = Any()
     internal var latestLogMessages: LinkedList<String> = LinkedList()
 
     fun start() {
@@ -52,7 +53,7 @@ internal class CrashManager(
                 Date(),
                 launchDate,
                 runId,
-                latestLogMessages.toMutableList(),
+                getLatestLogMessagesSnapshot(),
                 t
             )
             if (fatal) { // app is crashing, save exception, process it later
@@ -70,7 +71,7 @@ internal class CrashManager(
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // do nothing
         }
     }
@@ -91,7 +92,11 @@ internal class CrashManager(
         return false
     }
 
-    @Synchronized fun saveLogMessage(parent: Any, message: String, timestamp: Long) {
+    private fun getLatestLogMessagesSnapshot(): List<String> = synchronized(logMessagesLock) {
+        latestLogMessages.toList()
+    }
+
+    fun saveLogMessage(parent: Any, message: String, timestamp: Long) = synchronized(logMessagesLock) {
         latestLogMessages.add(0, "${Date(timestamp)} ${parent.javaClass.simpleName}: $message")
         while (latestLogMessages.size > MAX_LOG_MESSAGES) {
             latestLogMessages.removeAt(latestLogMessages.size - 1)
@@ -100,10 +105,10 @@ internal class CrashManager(
 
     private fun uploadCrashLogs() {
         try {
-            storage.getAllCrashLogs().map { crashLog ->
+            storage.getAllCrashLogs().forEach { crashLog ->
                 if (System.currentTimeMillis() - crashLog.timestampMS > LOG_RETENTION_MS) {
                     storage.deleteCrashLog(crashLog)
-                    return@map
+                    return@forEach
                 }
                 Logger.i(this, "Uploading crash log ${crashLog.id}")
                 upload.uploadCrashLog(crashLog) { result ->
@@ -113,13 +118,15 @@ internal class CrashManager(
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // do nothing
         }
     }
 
     override fun onIntegrationStopped() {
-        latestLogMessages.clear()
+        synchronized(logMessagesLock) {
+            latestLogMessages.clear()
+        }
         val activeHandler = Thread.getDefaultUncaughtExceptionHandler()
         if (activeHandler != this) {
             // current CrashManager instance is not the active handler,

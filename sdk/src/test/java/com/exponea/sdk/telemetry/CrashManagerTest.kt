@@ -15,6 +15,9 @@ import io.mockk.verifySequence
 import java.lang.System.currentTimeMillis
 import java.util.Calendar
 import java.util.Date
+import java.util.LinkedList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -358,5 +361,52 @@ internal class CrashManagerTest : ExponeaSDKTest() {
                 }
             }
         }
+    }
+
+    @Test
+    fun `should not clear log buffer while log message is being saved`() {
+        val raceDetectingList = RaceDetectingLinkedList()
+        crashManager.latestLogMessages = raceDetectingList
+        val saveThread = thread(start = false) {
+            crashManager.saveLogMessage(this, "message", currentTimeMillis())
+        }
+        val stopThread = thread(start = false) {
+            crashManager.onIntegrationStopped()
+        }
+
+        saveThread.start()
+        assertTrue(
+            raceDetectingList.addEntered.await(1, TimeUnit.SECONDS),
+            "saveLogMessage did not reach the log buffer mutation"
+        )
+        stopThread.start()
+
+        assertFalse(
+            raceDetectingList.clearEntered.await(200, TimeUnit.MILLISECONDS),
+            "onIntegrationStopped cleared the log buffer while saveLogMessage was still mutating it"
+        )
+
+        raceDetectingList.allowAddToFinish.countDown()
+        saveThread.join(1_000)
+        stopThread.join(1_000)
+        assertFalse(saveThread.isAlive, "saveLogMessage thread did not finish")
+        assertFalse(stopThread.isAlive, "onIntegrationStopped thread did not finish")
+    }
+}
+
+private class RaceDetectingLinkedList : LinkedList<String>() {
+    val addEntered = CountDownLatch(1)
+    val allowAddToFinish = CountDownLatch(1)
+    val clearEntered = CountDownLatch(1)
+
+    override fun add(index: Int, element: String) {
+        addEntered.countDown()
+        allowAddToFinish.await(1, TimeUnit.SECONDS)
+        super.add(index, element)
+    }
+
+    override fun clear() {
+        clearEntered.countDown()
+        super.clear()
     }
 }

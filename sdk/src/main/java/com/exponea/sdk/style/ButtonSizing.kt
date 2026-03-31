@@ -3,7 +3,7 @@ package com.exponea.sdk.style
 import com.exponea.sdk.util.Logger
 
 internal enum class ButtonSizing(val value: String) {
-    HUG_TEXT("hug"),
+    HUG_TEXT("hug_text"),
     FILL("fill");
 
     companion object {

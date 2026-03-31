@@ -31,51 +31,34 @@ internal class AppInboxCacheImpl(
         var applicationId: String? = null
     }
 
-    private fun ensureData(): AppInboxData {
-        var data = getData()
-        if (data == null) {
-            synchronized(this) {
-                data = getData()
-                if (data == null) {
-                    val emptyData = AppInboxData()
-                    setData(emptyData)
-                    data = emptyData
-                }
-            }
-        }
-        return data ?: AppInboxData()
-    }
+    override fun getMessages(): List<MessageItem> = getData()?.messages ?: emptyList()
 
+    override fun getSyncToken(): String? = getData()?.token
+
+    override fun getApplicationId(): String? = getData()?.applicationId
+
+    @Synchronized
     override fun setMessages(messages: List<MessageItem>) {
-        val data = ensureData()
+        val data = getData() ?: AppInboxData()
         data.messages = ArrayList(messages).sortedByDescending { it.receivedTime }
         setData(data)
     }
 
-    override fun getMessages(): List<MessageItem> {
-        return ensureData().messages
-    }
-
-    override fun getSyncToken(): String? {
-        return ensureData().token
-    }
-
+    @Synchronized
     override fun setSyncToken(token: String?) {
-        val data = ensureData()
+        val data = getData() ?: AppInboxData()
         data.token = token
         setData(data)
     }
 
+    @Synchronized
     private fun setApplicationId(applicationId: String) {
-        val data = ensureData()
+        val data = getData() ?: AppInboxData()
         data.applicationId = applicationId
         setData(data)
     }
 
-    override fun getApplicationId(): String? {
-        return ensureData().applicationId
-    }
-
+    @Synchronized
     override fun addMessages(messages: List<MessageItem>) {
         val mapOfNew = messages.associateBy { it.id }
         val target = getMessages().associateBy { it.id }.toMutableMap()
@@ -84,6 +67,8 @@ internal class AppInboxCacheImpl(
     }
 
     override fun clear(): Boolean = clearData()
+
+    @Synchronized
     override fun clearAndSetApplicationId() {
         clear()
         setApplicationId(applicationId)

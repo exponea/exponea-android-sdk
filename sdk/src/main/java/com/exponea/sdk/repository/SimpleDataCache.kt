@@ -7,15 +7,26 @@ import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.lang.reflect.ParameterizedType
 
-open class SimpleDataCache<T>(
+abstract class SimpleDataCache<T>(
     context: Context,
     private val gson: Gson,
-    private val storageFileName: String
+    storageFileName: String
 ) {
     private val storageFile = File(context.filesDir, storageFileName)
-    private var data: T? = null
 
-    private val DATA_TYPE_TOKEN = getTypeToken()
+    private val dataTypeToken = getTypeToken()
+
+    @Volatile private var data: T? = null
+
+    init {
+        try {
+            if (storageFile.exists()) {
+                data = gson.fromJson(storageFile.readText(), dataTypeToken)
+            }
+        } catch (e: Throwable) {
+            Logger.w(this, "Error while loading '$storageFileName': $e")
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun getTypeToken(): TypeToken<T> {
@@ -40,32 +51,19 @@ open class SimpleDataCache<T>(
         }
     }
 
+    @Synchronized
+    fun getData(): T? = data
+
+    @Synchronized
     fun setData(data: T) {
-        val file = createTempFile()
-        file.writeText(gson.toJson(data))
-        clearData()
-        if (!file.renameTo(storageFile)) {
-            Logger.e(this, "Renaming data file to '$storageFileName' failed!")
-        }
+        storageFile.writeText(gson.toJson(data))
+        this.data = data
     }
 
+    @Synchronized
     fun clearData(): Boolean {
         data = null
         return storageFile.delete()
-    }
-
-    fun getData(): T? {
-        data?.let { return it }
-        try {
-            if (storageFile.exists()) {
-                val fileData = storageFile.readText()
-                val dataArray: T? = gson.fromJson(fileData, DATA_TYPE_TOKEN)
-                data = dataArray?.let { return it }
-            }
-        } catch (e: Throwable) {
-            Logger.w(this, "Error while getting stored data from '$storageFileName': $e")
-        }
-        return data
     }
 
     fun getDataLastModifiedMillis(): Long {

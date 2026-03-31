@@ -8,6 +8,8 @@ import com.google.gson.Gson
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -18,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 internal class AppInboxCacheImplTest {
 
     companion object {
-        public fun buildMessage(
+        fun buildMessage(
             id: String,
             read: Boolean = true,
             received: Double = System.currentTimeMillis().toDouble()
@@ -196,7 +198,13 @@ internal class AppInboxCacheImplTest {
             ApplicationProvider.getApplicationContext<Context>().filesDir,
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
-        assertEqualsIgnoreOrder(arrayListOf(), cache.getMessages())
+        // Construct a NEW cache that loads from the corrupted file
+        val corruptedCache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
+        )
+        assertThat(corruptedCache.getMessages().isEmpty(), equalTo(true))
     }
 
     @Test
@@ -205,7 +213,13 @@ internal class AppInboxCacheImplTest {
             ApplicationProvider.getApplicationContext<Context>().filesDir,
             AppInboxCacheImpl.FILENAME
         ).writeText("{{{")
-        assertNull(cache.getSyncToken())
+        // Construct a NEW cache that loads from the corrupted file
+        val corruptedCache = AppInboxCacheImpl(
+            context = ApplicationProvider.getApplicationContext(),
+            gson = Gson(),
+            applicationId = "default-application"
+        )
+        assertNull(corruptedCache.getSyncToken())
     }
 
     @Test

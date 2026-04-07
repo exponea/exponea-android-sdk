@@ -2,8 +2,10 @@
 title: Initial SDK setup for Android SDK
 excerpt: Install and configure the Android SDK
 slug: android-sdk-setup
-categorySlug: integrations
-parentDocSlug: android-sdk
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk
 ---
 
 ## Install the SDK

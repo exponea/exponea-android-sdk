@@ -2,8 +2,10 @@
 title: Tracking consent for Android SDK
 excerpt: Manage tracking consent using the Android SDK.
 slug: android-sdk-tracking-consent
-categorySlug: integrations
-parentDocSlug: android-sdk-tracking
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk-tracking
 ---
 
 Depending on local data access regulations, access to data on a user's device may require explicit consent. To follow such requirements, Engagement allows you to enable the standalone "tracking consent" feature. This feature activates the tracking consent option for in-app messages, in-app content blocks, and mobile push notifications.

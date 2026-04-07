@@ -2,8 +2,10 @@
 title: Firebase Cloud Messaging for Android SDK
 excerpt: Integrate Firebase Cloud Messaging in your app to support Engagement push notifications on Android devices
 slug: android-sdk-firebase
-categorySlug: integrations
-parentDocSlug: android-sdk-push-notifications
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk-push-notifications
 ---
 
 To be able to send [Push notifications for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.

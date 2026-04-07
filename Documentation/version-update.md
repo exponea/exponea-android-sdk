@@ -2,8 +2,10 @@
 title: Android SDK version update guide
 excerpt: Update Exponea Android SDK in your app to a new version
 slug: android-sdk-version-update
-categorySlug: integrations
-parentDocSlug: android-sdk-release-notes
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk-release-notes
 ---
 
 This guide will help you upgrade your Exponea SDK to the latest major version.

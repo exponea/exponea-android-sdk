@@ -2,8 +2,10 @@
 title: Configuration for Android SDK
 excerpt: Full configuration reference for the Android SDK
 slug: android-sdk-configuration
-categorySlug: integrations
-parentDocSlug: android-sdk-setup
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk-setup
 ---
 
 This page provides an overview of all configuration parameters for the SDK. You can either configure the SDK in code using an `ExponeaConfiguration` object or in a file called `exponea_configuration.json` inside the `assets` folder of your application. 

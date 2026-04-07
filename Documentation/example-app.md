@@ -2,8 +2,10 @@
 title: Example app for Android SDK
 excerpt: Build, run, and navigate the example app included with the Android SDK
 slug: android-sdk-example-app
-categorySlug: integrations
-parentDocSlug: android-sdk
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk
 ---
 
 The Exponea Android SDK includes an example application you can use as a reference implementation. You can build and run the app, test Engagement features, and compare the code and behavior of your implementation with the expected behavior and code in the example app.

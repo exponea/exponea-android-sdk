@@ -2,8 +2,10 @@
 title: Release notes for Android SDK
 excerpt: Exponea Android SDK release notes
 slug: android-sdk-release-notes
-categorySlug: integrations
-parentDocSlug: android-sdk
+category:
+  uri: /branches/2/categories/guides/Developers
+parent:
+  uri: android-sdk
 ---
 
 > 📘

@@ -19,4 +19,4 @@ jobs:
       - name: Run `docs` command 🚀
         uses: readmeio/rdme@v10
         with:
-          rdme: docs upload ./Documentation --key=${{ secrets.README_SANDBOX_API_KEY }} --branch=2
+          rdme: docs upload ./Documentation --key=${{ secrets.README_SANDBOX_API_KEY }} --branch=1.0

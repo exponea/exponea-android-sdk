@@ -24,17 +24,7 @@ The SDK is [available as open source on GitHub](https://github.com/exponea/expon
 
 This short video guide provides a step-by-step introduction to integrating the Android SDK into your app.
 
-[block:embed]
-{
-  "html": "<iframe class=\"embedly-embed\" src=\"//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fwww.youtube.com%2Fembed%2F8Iy8pbHKrTA&display_name=YouTube&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D8Iy8pbHKrTA&image=http%3A%2F%2Fi.ytimg.com%2Fvi%2F8Iy8pbHKrTA%2Fhqdefault.jpg&key=7788cb384c9f4d5dbbdbeffd9fe4b92f&type=text%2Fhtml&schema=youtube\" width=\"854\" height=\"480\" scrolling=\"no\" title=\"YouTube embed\" frameborder=\"0\" allow=\"autoplay; fullscreen; encrypted-media; picture-in-picture;\" allowfullscreen=\"true\"></iframe>",
-  "url": "https://www.youtube.com/watch?v=8Iy8pbHKrTA",
-  "favicon": "https://www.google.com/favicon.ico",
-  "image": "http://i.ytimg.com/vi/8Iy8pbHKrTA/hqdefault.jpg",
-  "provider": "youtube.com",
-  "href": "https://www.youtube.com/watch?v=8Iy8pbHKrTA",
-  "typeOfEmbed": "youtube"
-}
-[/block]
+<iframe src="//cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Fwww.youtube.com%2Fembed%2F8Iy8pbHKrTA&display_name=YouTube&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D8Iy8pbHKrTA&image=http%3A%2F%2Fi.ytimg.com%2Fvi%2F8Iy8pbHKrTA%2Fhqdefault.jpg&key=7788cb384c9f4d5dbbdbeffd9fe4b92f&type=text%2Fhtml&schema=youtube" width="854" height="480" scrolling="no" title="YouTube embed" frameBorder="0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture;" allowFullScreen={true} />
 
 ## Get started
 

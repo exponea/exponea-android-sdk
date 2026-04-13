@@ -2,6 +2,10 @@ package com.exponea.sdk.models
 
 import com.exponea.sdk.util.Logger
 
+@Deprecated(
+    message = "This will become internal. Please use CustomerIdentity instead",
+    replaceWith = ReplaceWith("CustomerIdentity(externalIds)")
+)
 data class CustomerIds(
     internal var externalIds: HashMap<String, String?> = hashMapOf()
 ) {

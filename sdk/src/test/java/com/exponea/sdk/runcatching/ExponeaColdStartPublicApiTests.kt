@@ -6,6 +6,7 @@ import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -74,9 +75,11 @@ internal class ExponeaColdStartPublicApiTests(
         ExponeaConfigRepository.set(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "project-token",
-                authorization = "Token mock-auth",
-                baseURL = "https://api.exponea.com"
+                integrationConfig = ProjectConfig(
+                    projectToken = "project-token",
+                    authorization = "Token mock-auth",
+                    baseUrl = "https://api.exponea.com"
+                )
             )
         )
         mockkConstructorFix(EventManagerImpl::class) {

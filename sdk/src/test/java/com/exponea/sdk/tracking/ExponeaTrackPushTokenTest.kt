@@ -11,6 +11,7 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode.MANUAL
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.TokenType
@@ -39,7 +40,7 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
     private fun initSdk(automaticPushNotification: Boolean = true) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             automaticPushNotification = automaticPushNotification
         )

@@ -8,6 +8,7 @@ import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.reset
@@ -43,9 +44,11 @@ internal open class CampaignSessionTests_Base : ExponeaSDKTest() {
         @BeforeClass
         @JvmStatic
         fun beforeClass() {
-            configuration.projectToken = "TestToken"
-            configuration.authorization = "Token TestTokenAuthentication"
-            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
+            configuration.integrationConfig = ProjectConfig(
+                projectToken = "TestToken",
+                authorization = "Token TestTokenAuthentication",
+                baseUrl = server.url("").toString().substringBeforeLast("/")
+            )
             configuration.maxTries = 10
             configuration.automaticSessionTracking = true
         }

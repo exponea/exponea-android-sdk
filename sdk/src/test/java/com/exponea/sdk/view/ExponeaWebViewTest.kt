@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -70,9 +71,7 @@ internal class ExponeaWebViewTest : ExponeaSDKTest() {
 
     private fun initSdk(allowCookies: Boolean?) {
         Exponea.flushMode = FlushMode.MANUAL
-        val configuration = ExponeaConfiguration(
-                projectToken = "mock-token"
-        )
+        val configuration = ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
         allowCookies?.let {
             configuration.allowWebViewCookies = it
         }

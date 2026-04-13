@@ -14,6 +14,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.EventRepositoryImpl
@@ -50,14 +51,16 @@ internal class FlushStressTest : ExponeaSDKTest() {
             automaticSessionTracking = false
         }
         val server = ExponeaMockServer.createServer()
-        const val stressCount = 500
+        const val STRESS_COUNT = 500
 
         @BeforeClass
         @JvmStatic
         fun setup() {
-            configuration.baseURL = server.url("/").toString()
-            configuration.projectToken = "projectToken"
-            configuration.authorization = "Token projectAuthorization"
+            configuration.integrationConfig = ProjectConfig(
+                server.url("/").toString(),
+                "projectToken",
+                "Token projectAuthorization"
+            )
         }
 
         @AfterClass
@@ -110,7 +113,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
         }
         repo = Exponea.componentForTesting.eventRepository
         service = ExponeaMockService(true)
-        manager = FlushManagerImpl(configuration, repo, service, connectedManager, {})
+        manager = FlushManagerImpl(configuration, repo, service, connectedManager, mockk(relaxed = true)) {}
         repo.clear()
         Dispatchers.Main.cancelChildren()
         Dispatchers.Default.cancelChildren()
@@ -120,7 +123,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
     fun testFlushingStressed() {
         val r = Random()
         var insertedCount = 0
-        for (i in 0 until stressCount) {
+        for (i in 0 until STRESS_COUNT) {
 
             ExponeaMockServer.setResponseSuccess(server, "tracking/track_event_success.json")
 
@@ -147,7 +150,7 @@ internal class FlushStressTest : ExponeaSDKTest() {
                     properties = properties
                 )
                 shadowOf(Looper.getMainLooper()).idle()
-                for (i in 0..10) {
+                repeat(10) {
                     ShadowLooper.idleMainLooper()
                 }
             }

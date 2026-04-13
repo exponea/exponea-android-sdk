@@ -6,11 +6,10 @@ import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.PushTokenRepository
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
@@ -31,12 +30,11 @@ import okhttp3.Response
 
 internal class PushNotificationSelfCheckManagerImpl(
     context: Context,
-    private val configuration: ExponeaConfiguration,
     private val customerIdsRepository: CustomerIdsRepository,
     private val tokenRepository: PushTokenRepository,
     private val flushManager: FlushManager,
     private val exponeaService: ExponeaService,
-    private val projectFactory: ExponeaProjectFactory,
+    private val integrationConfigFactory: IntegrationConfigFactory,
     private val operationsTimeout: Long = 5000
 ) : PushNotificationSelfCheckManager {
     companion object {
@@ -175,14 +173,14 @@ internal class PushNotificationSelfCheckManagerImpl(
         tokenType: TokenType
     ): Boolean = suspendCoroutine { continuation ->
         exponeaService.postPushSelfCheck(
-            projectFactory.mainExponeaProject,
+            integrationConfigFactory.integrationConfig,
             customerIdsRepository.get(),
             pushToken,
             tokenType
         ).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
-                    val parsedResponse = ExponeaGson.instance.fromJson<SelfCheckResponse>(
+                    val parsedResponse = ExponeaGson.instance.fromJson(
                         response.body?.string(),
                         SelfCheckResponse::class.java
                     )

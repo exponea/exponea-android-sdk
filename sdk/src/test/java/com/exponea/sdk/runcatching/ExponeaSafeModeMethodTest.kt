@@ -5,6 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.runcatching.ExponeaExceptionThrowing.TestPurposeException
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import kotlin.reflect.KFunction
@@ -45,7 +47,10 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeEnabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
         Exponea.safeModeEnabled = true
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()
@@ -57,7 +62,10 @@ internal class ExponeaSafeModeMethodTest(
     fun callAfterInitWithSafeModeDisabled() {
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = StreamConfig(streamId = "mock-token"))
+        )
         Exponea.safeModeEnabled = false
         ExponeaExceptionThrowing.makeExponeaThrow()
         lambda()

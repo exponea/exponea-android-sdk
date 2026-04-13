@@ -6,8 +6,10 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.repository.EventRepository
@@ -28,12 +30,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class FlushManagerTest : ExponeaSDKTest() {
+    private val testBaseUrl = "mock_base_url.com"
+    private val projectToken = "mock_project_token"
+    private val projectId = "old-project-id"
+    private val authorization = "mock_auth"
     private lateinit var manager: FlushManager
     private lateinit var repo: EventRepository
     private lateinit var connectionManager: ConnectionManager
@@ -48,7 +56,14 @@ internal class FlushManagerTest : ExponeaSDKTest() {
         service = spyk(ExponeaMockService(serviceSuccess))
         repo = EventRepositoryImpl(context)
         repo.clear()
-        manager = FlushManagerImpl(configuration, repo, service, connectionManager, {})
+        manager = FlushManagerImpl(
+            configuration,
+            repo,
+            service,
+            connectionManager,
+            mockk(relaxed = true),
+            {}
+        )
     }
 
     private fun createTestEvent(includeProject: Boolean, type: String? = "test_event"): ExportedEvent {
@@ -59,8 +74,8 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 customerIds = hashMapOf(),
                 properties = hashMapOf("property" to "value"),
                 route = Route.TRACK_EVENTS,
-                exponeaProject = if (includeProject)
-                    ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                integrationConfiguration = if (includeProject)
+                    IntegrationConfiguration(projectToken, testBaseUrl, authorization, IntegrationConfigType.PROJECT)
                 else null
         )
         repo.add(event)
@@ -70,31 +85,52 @@ internal class FlushManagerTest : ExponeaSDKTest() {
     @Test
     fun `should flush event`() {
         setup(connected = true, serviceSuccess = true)
-        createTestEvent(true)
+        val testEvent = createTestEvent(true)
         waitForIt {
             manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
         }
+        val integrationConfigSlot = slot<ProjectConfig>()
+        val eventSlot = slot<Event>()
         verify {
-            service.postEvent(ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"), any())
+            service.postEvent(
+                capture(integrationConfigSlot),
+                capture(eventSlot),
+                true
+            )
         }
+        assertThat(integrationConfigSlot.captured.baseUrl, equalTo(testBaseUrl))
+        assertThat(integrationConfigSlot.captured.authorization, equalTo(authorization))
+        assertThat(eventSlot.captured.type, equalTo(testEvent.type))
+        assertThat(eventSlot.captured.timestamp, equalTo(testEvent.timestamp))
     }
 
     @Test
     fun `should flush old event without exponea project`() {
         setup(connected = true, serviceSuccess = true)
-        createTestEvent(false)
+        val testEvent = createTestEvent(false)
         waitForIt {
             manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
         }
+        val integrationConfigSlot = slot<ProjectConfig>()
+        val eventSlot = slot<Event>()
         verify {
-            service.postEvent(ExponeaProject("https://api.exponea.com", "old-project-id", null), any())
+            service.postEvent(
+                capture(integrationConfigSlot),
+                capture(eventSlot),
+                true
+            )
         }
+        assertThat(integrationConfigSlot.captured.baseUrl, equalTo(Constants.Repository.baseURL))
+        assertThat(integrationConfigSlot.captured.projectToken, equalTo(projectId))
+        assertThat(integrationConfigSlot.captured.authorization, equalTo(null))
+        assertThat(eventSlot.captured.type, equalTo(testEvent.type))
+        assertThat(eventSlot.captured.timestamp, equalTo(testEvent.timestamp))
     }
 
     @Test
@@ -195,7 +231,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
 
         // Verify that only one network request was made
         verify(exactly = 1) {
-            service.postEvent(any(), any())
+            service.postEvent(any<ProjectConfig>(), any(), true)
         }
     }
 
@@ -209,7 +245,7 @@ internal class FlushManagerTest : ExponeaSDKTest() {
             customerIds = hashMapOf(),
             properties = hashMapOf(),
             route = null,
-            exponeaProject = ExponeaProject("url", "token", "auth")
+            integrationConfiguration = IntegrationConfiguration("token", "url", "auth", IntegrationConfigType.PROJECT)
         )
         repo.add(event)
         val spyManager = spyk(manager as FlushManagerImpl)
@@ -232,33 +268,45 @@ internal class FlushManagerTest : ExponeaSDKTest() {
                 it()
             }
         }
+        val integrationConfigSlot = slot<ProjectConfig>()
         val eventSlot = slot<Event>()
         verify {
             service.postEvent(
-                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),
-                capture(eventSlot)
+                capture(integrationConfigSlot),
+                capture(eventSlot),
+                true
             )
         }
+        assertThat(integrationConfigSlot.captured.baseUrl, equalTo(testBaseUrl))
+        assertThat(integrationConfigSlot.captured.projectToken, equalTo(projectToken))
+        assertThat(integrationConfigSlot.captured.authorization, equalTo(authorization))
         assertNotNull(eventSlot.captured.timestamp)
     }
 
     @Test
     fun `should post timestamp when tracking push notifications`() {
         setup(connected = true, serviceSuccess = true)
-        createTestEvent(true, type = Constants.EventTypes.push)
+        val testEvent = createTestEvent(true, type = Constants.EventTypes.push)
         waitForIt {
             manager.flushData { _ ->
                 it.assertEquals(0, repo.all().size)
                 it()
             }
         }
+        val integrationConfigSlot = slot<ProjectConfig>()
         val eventSlot = slot<Event>()
         verify {
             service.postEvent(
-                ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth"),
-                capture(eventSlot)
+                capture(integrationConfigSlot),
+                capture(eventSlot),
+                true
             )
         }
+        assertThat(integrationConfigSlot.captured.baseUrl, equalTo(testBaseUrl))
+        assertThat(integrationConfigSlot.captured.projectToken, equalTo(projectToken))
+        assertThat(integrationConfigSlot.captured.authorization, equalTo(authorization))
+        assertThat(eventSlot.captured.type, equalTo(testEvent.type))
         assertNotNull(eventSlot.captured.timestamp)
+        assertThat(eventSlot.captured.timestamp, equalTo(testEvent.timestamp))
     }
 }

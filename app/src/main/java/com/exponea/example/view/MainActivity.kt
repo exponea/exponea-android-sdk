@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.addCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -16,6 +15,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.exponea.example.R
 import com.exponea.example.databinding.ActivityMainBinding
+import com.exponea.example.models.SdkSetupState
 import com.exponea.example.services.ExampleAppInboxProvider
 import com.exponea.example.view.NavigationItem.Anonymize
 import com.exponea.example.view.NavigationItem.Fetch
@@ -34,6 +34,7 @@ import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.isResumedActivity
 import com.exponea.sdk.util.isViewUrlIntent
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -81,7 +82,6 @@ class MainActivity : AppCompatActivity() {
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
         setSupportActionBar(viewBinding.toolbar)
-        supportActionBar?.title = "Examples"
 
         // Set log level before first call to SDK function
         Exponea.loggerLevel = Logger.Level.VERBOSE
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                     ${notificationData.entries.joinToString { "${it.key}: ${it.value}" }}
                     """.trimIndent()
                 if (this@MainActivity.isResumedActivity()) {
-                    AlertDialog.Builder(this@MainActivity)
+                    MaterialAlertDialogBuilder(this@MainActivity)
                         .setTitle("$notifType Push notification $notifFlow")
                         .setMessage(message)
                         .setPositiveButton("OK") { _, _ -> }
@@ -196,13 +196,13 @@ class MainActivity : AppCompatActivity() {
             DeeplinkFlow.Track -> navigateToItem(Track)
             DeeplinkFlow.InAppCb -> navigateToItem(InAppContentBlock)
             DeeplinkFlow.StopAndContinue -> {
-                Exponea.stopIntegration()
+                stopIntegration()
                 if (viewBinding.navigation.selectedItemId == 0) {
                     navigateToItem(Fetch)
                 }
             }
             DeeplinkFlow.StopAndRestart -> {
-                Exponea.stopIntegration()
+                stopIntegration()
                 startActivity(Intent(this, AuthenticationActivity::class.java))
                 finish()
             }
@@ -255,7 +255,7 @@ class MainActivity : AppCompatActivity() {
                     CoroutineScope(Dispatchers.Default).async {
                         delay(4000)
                         Logger.i(this, "Stopping SDK")
-                        Exponea.stopIntegration()
+                        stopIntegration()
                     }
                 }
             }
@@ -285,7 +285,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     "https://bloomreach.com/tracking/deny" -> {
                         Logger.i(this, "Stopping SDK")
-                        Exponea.stopIntegration()
+                        stopIntegration()
                     }
                 }
             }
@@ -320,9 +320,15 @@ class MainActivity : AppCompatActivity() {
                 if (messageIsForGdpr(message) && interaction) {
                     // regardless from `button` nullability, parameter `interaction` tells that user closed message
                     Logger.i(this, "Stopping SDK")
-                    Exponea.stopIntegration()
+                    stopIntegration()
                 }
             }
+        }
+    }
+
+    private fun stopIntegration() {
+        Exponea.stopIntegration {
+            SdkSetupState.reset()
         }
     }
 

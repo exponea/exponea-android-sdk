@@ -15,6 +15,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
@@ -45,7 +46,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         }
         mockkConstructorFix(CustomerIdsRepositoryImpl::class)
         mockkConstructorFix(DrawableCacheImpl::class) {
@@ -65,9 +66,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
-            automaticSessionTracking = false,
-            authorization = "Token mock-auth"
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            automaticSessionTracking = false
         )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
@@ -86,7 +89,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         val placeholderId = "ph1"
         val messageId = "id1"
         every {
-            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any<ProjectConfig>(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 InAppContentBlockManagerImplTest.buildMessage(
@@ -97,7 +100,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             )))
         }
         every {
-            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 // htmlContent
@@ -112,10 +121,12 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             )))
         }
         // turn init-load on
-        every { anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders() } answers {
+        every {
+            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders(emptyList())
+        } answers {
             callOriginal()
         }
-        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         assertTrue(
             (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
@@ -159,7 +170,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         val placeholderId = "ph1"
         val messageId = "id1"
         every {
-            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any<ProjectConfig>(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 InAppContentBlockManagerImplTest.buildMessage(
@@ -170,7 +181,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             )))
         }
         every {
-            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
                 // htmlContent
@@ -219,7 +236,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         val placeholderId = "ph1"
         val messageId = "id1"
         every {
-            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any<ProjectConfig>(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 InAppContentBlockManagerImplTest.buildMessage(
@@ -230,7 +247,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             )))
         }
         every {
-            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, arrayListOf(
@@ -247,11 +270,11 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         }
         // turn init-load on
         every {
-            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders()
+            anyConstructed<InAppContentBlockManagerImpl>().loadInAppContentBlockPlaceholders(emptyList())
         } answers {
             callOriginal()
         }
-        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         assertTrue(
             (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .contentBlocksData
@@ -284,7 +307,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         val placeholderId = "ph1"
         val messageId = "id1"
         every {
-            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any<ProjectConfig>(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, arrayListOf(
                 InAppContentBlockManagerImplTest.buildMessage(
@@ -296,7 +319,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
             idleThreads()
         }
         every {
-            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, arrayListOf(

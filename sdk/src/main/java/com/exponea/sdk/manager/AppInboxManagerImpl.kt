@@ -5,14 +5,13 @@ import com.exponea.sdk.models.AppInboxMessateType.UNKNOWN
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
@@ -26,7 +25,7 @@ internal class AppInboxManagerImpl(
     private val drawableCache: DrawableCache,
     private val customerIdsRepository: CustomerIdsRepository,
     private val appInboxCache: AppInboxCache,
-    private val projectFactory: ExponeaProjectFactory,
+    private val integrationConfigFactory: IntegrationConfigFactory,
     private val applicationId: String
 ) : AppInboxManager {
 
@@ -34,7 +33,7 @@ internal class AppInboxManagerImpl(
     internal val isFetching = AtomicBoolean(false)
     internal val onFetchDoneCallbacks = LinkedBlockingQueue<(List<MessageItem>?) -> Unit>()
 
-    public override fun markMessageAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) {
+    override fun markMessageAsRead(message: MessageItem, callback: ((Boolean) -> Unit)?) {
         if (message.syncToken == null || message.customerIds.isEmpty()) {
             Logger.e(this, "Unable to mark message ${message.id} as read, try to fetch AppInbox")
             runOnMainThread {
@@ -52,26 +51,20 @@ internal class AppInboxManagerImpl(
         message.read = true
         // ensure to message change is stored
         markCachedMessageAsRead(message.id)
-        requireMutualExponeaProject { expoProject ->
-            if (expoProject.authorization == null) {
-                Logger.e(this, "AppInbox loading failed. Authorization token is missing")
-                runOnMainThread {
-                    callback?.invoke(false)
-                }
-            }
+        runOnBackgroundThread {
             if (Exponea.isStopped) {
                 runOnMainThread {
                     callback?.invoke(false)
                 }
-                return@requireMutualExponeaProject
+                return@runOnBackgroundThread
             }
             val customerIds = CustomerIds(HashMap(message.customerIds)).apply {
-                message.customerIds.get(CustomerIds.COOKIE)?.let {
+                message.customerIds[CustomerIds.COOKIE]?.let {
                     cookie = it
                 }
             }
             fetchManager.markAppInboxAsRead(
-                exponeaProject = expoProject,
+                integrationConfig = integrationConfigFactory.integrationConfig,
                 customerIds = customerIds,
                 syncToken = message.syncToken!!,
                 messageIds = listOf(message.id),
@@ -127,7 +120,7 @@ internal class AppInboxManagerImpl(
         appInboxCache.setMessages(messages)
     }
 
-    public override fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) {
+    override fun fetchAppInbox(callback: ((List<MessageItem>?) -> Unit)) {
         val customerIds = customerIdsRepository.get()
         onFetchDoneCallbacks.add(callback)
         if (!isFetching.compareAndSet(false, true)) {
@@ -139,21 +132,15 @@ internal class AppInboxManagerImpl(
     }
 
     private fun invokeFetchAppInbox(customerIds: CustomerIds) {
-        requireMutualExponeaProject { expoProject ->
-            if (expoProject.authorization == null) {
-                Logger.e(this, "AppInbox loading failed. Authorization token is missing")
-                notifyFetchCallbacks(null)
-                isFetching.set(false)
-                return@requireMutualExponeaProject
-            }
+        runOnBackgroundThread {
             if (Exponea.isStopped) {
                 Logger.e(this, "App inbox fetch failed, SDK is stopping")
                 notifyFetchCallbacks(null)
                 isFetching.set(false)
-                return@requireMutualExponeaProject
+                return@runOnBackgroundThread
             }
             fetchManager.fetchAppInbox(
-                exponeaProject = expoProject,
+                integrationConfig = integrationConfigFactory.integrationConfig,
                 customerIds = customerIds,
                 syncToken = appInboxCache.getSyncToken(),
                 applicationId = applicationId,
@@ -230,12 +217,6 @@ internal class AppInboxManagerImpl(
             runOnMainThread {
                 activeCallback.invoke(data)
             }
-        }
-    }
-
-    private fun requireMutualExponeaProject(onTokenCallback: (ExponeaProject) -> Unit) {
-        runOnBackgroundThread {
-            onTokenCallback.invoke(projectFactory.mutualExponeaProject)
         }
     }
 

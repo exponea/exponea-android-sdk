@@ -4,6 +4,8 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.BackgroundTimerManagerImpl
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.services.DefaultAppInboxProvider
@@ -25,7 +27,11 @@ object ExponeaExceptionThrowing {
         }
         mockkObject(NotificationsPermissionReceiver)
 
-        every { anyConstructed<ExponeaComponent>().anonymize(any(), any()) } answers {
+        every { anyConstructed<ExponeaComponent>().anonymize(any<ProjectConfig>(), any(), any(), any()) } answers {
+            if (throwException) throw TestPurposeException()
+            callOriginal()
+        }
+        every { anyConstructed<ExponeaComponent>().anonymize(any<StreamConfig>(), any(), any(), any()) } answers {
             if (throwException) throw TestPurposeException()
             callOriginal()
         }
@@ -111,6 +117,10 @@ object ExponeaExceptionThrowing {
             callOriginal()
         }
         every { anyConstructed<ExponeaComponent>().segmentsManager } answers {
+            if (throwException) throw TestPurposeException()
+            callOriginal()
+        }
+        every { anyConstructed<ExponeaComponent>().authTokenRepository } answers {
             if (throwException) throw TestPurposeException()
             callOriginal()
         }

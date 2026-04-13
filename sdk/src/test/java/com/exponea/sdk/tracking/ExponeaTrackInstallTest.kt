@@ -9,6 +9,7 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
@@ -30,8 +31,11 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
-        context = ApplicationProvider.getApplicationContext<Context>()
-        configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        context = ApplicationProvider.getApplicationContext()
+        configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
         Exponea.flushMode = FlushMode.MANUAL
     }
 

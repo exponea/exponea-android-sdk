@@ -15,6 +15,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.AppInboxCacheImplTest
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
@@ -44,15 +45,17 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         }
         mockkConstructorFix(CustomerIdsRepositoryImpl::class)
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
-            automaticSessionTracking = false,
-            authorization = "Token mock-auth"
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            automaticSessionTracking = false
         )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
@@ -77,7 +80,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val currentCustomerIds = CustomerIds().withId("registered", "test")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns currentCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -114,7 +124,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val firstCustomerIds = CustomerIds().withId("registered", "test1")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns firstCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -145,7 +162,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val secondCustomerIds = CustomerIds().withId("registered", "test2")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns secondCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -190,7 +214,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val firstCustomerIds = CustomerIds().withId("registered", "test1")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns firstCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -221,7 +252,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
         val secondCustomerIds = CustomerIds().withId("registered", "test2")
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns secondCustomerIds
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -271,7 +309,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(
@@ -317,7 +362,14 @@ internal class ExponeaTrackAppInboxTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
         } just Runs
         every {
-            anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4)
                 .invoke(

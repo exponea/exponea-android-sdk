@@ -4,17 +4,22 @@ import androidx.annotation.WorkerThread
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
+import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.CustomerRecommendationResponse
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.models.RecommendationsRequest
+import com.exponea.sdk.models.RecommendationsResponse
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentationCategories
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
@@ -119,7 +124,7 @@ internal class FetchManagerImpl(
                 FetchError(jsonBody, "Unable to parse response from the server.")
             )
         }
-        if (standardResult.success != true) {
+        if (!standardResult.success) {
             Logger.e(this, "Server returns false state")
             return Result(
                 false,
@@ -144,11 +149,11 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchConsents(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchConsents(exponeaProject).enqueue(
+        api.fetchConsents(integrationConfig).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<Consent>?>>() {},
                 { result: Result<ArrayList<Consent>?> ->
@@ -164,38 +169,84 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchRecommendation(
-        exponeaProject: ExponeaProject,
-        recommendationRequest: CustomerRecommendationRequest,
+        integrationConfig: IntegrationConfig,
+        customerIds: Map<String, Any?>,
+        options: CustomerRecommendationOptions,
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchAttributes(exponeaProject, recommendationRequest).enqueue(
-            getStandardFetchCallback(
-                object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>?>>() {},
-                { result: Result<ArrayList<CustomerRecommendationResponse>?> ->
-                    if (result.results?.isNotEmpty() ?: false) {
-                        val innerResult = result.results!![0]
-                        if (innerResult.success && innerResult.value != null) {
-                            onSuccess(Result(true, innerResult.value))
-                        } else {
-                            onFailure(Result(false, FetchError(null, innerResult.error ?: "Server returned error")))
-                        }
-                    } else {
-                        onFailure(Result(false, FetchError(null, "Server returned empty results")))
-                    }
-                },
-                onFailure
-            )
-        )
+        when (integrationConfig) {
+            is ProjectConfig ->
+                api.postFetchAttributes(
+                    integrationConfig,
+                    CustomerRecommendationRequest(customerIds, options)
+                ).enqueue(
+                    getStandardFetchCallback(
+                        object : TypeToken<Result<ArrayList<CustomerRecommendationResponse>?>>() {},
+                        { result: Result<ArrayList<CustomerRecommendationResponse>?> ->
+                            result.results?.takeIf { it.isNotEmpty() }?.let { results ->
+                                val innerResult = results[0]
+                                if (innerResult.success && innerResult.value != null) {
+                                    onSuccess(Result(true, innerResult.value))
+                                } else {
+                                    onFailure(
+                                        Result(
+                                            false,
+                                            FetchError(null, innerResult.error ?: "Server returned error")
+                                        )
+                                    )
+                                }
+                            } ?: onFailure(
+                                Result(false, FetchError(null, "Server returned empty results"))
+                            )
+                        },
+                        onFailure
+                    )
+                )
+            is StreamConfig ->
+                api.postFetchRecommendations(
+                    integrationConfig,
+                    RecommendationsRequest(
+                        customerIds = customerIds,
+                        engineId = options.id,
+                        fillWithRandom = options.fillWithRandom,
+                        size = options.size,
+                        items = options.items,
+                        noTrack = options.noTrack,
+                        catalogAttributesWhitelist = options.catalogAttributesWhitelist
+                    )
+                ).enqueue(
+                    getFetchRawCallback(
+                        object : TypeToken<RecommendationsResponse>() {},
+                        { result: Result<RecommendationsResponse> ->
+                            if (result.results.success && result.results.data != null) {
+                                onSuccess(Result(true, result.results.data))
+                            } else {
+                                onFailure(
+                                    Result(
+                                        false,
+                                        FetchError(
+                                            null,
+                                            result.results.errors.takeIf { it.isNotEmpty() }
+                                                ?: "Server returned error"
+                                        )
+                                    )
+                                )
+                            }
+                        },
+                        onFailure
+                    )
+                )
+        }
     }
 
     override fun fetchInAppMessages(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchInAppMessages(exponeaProject, customerIds).enqueue(
+        api.postFetchInAppMessages(integrationConfig, customerIds).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<InAppMessage>?>>() {},
                 { result: Result<ArrayList<InAppMessage>?> ->
@@ -207,14 +258,14 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchAppInbox(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         syncToken: String?,
         applicationId: String,
         onSuccess: (Result<ArrayList<MessageItem>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchAppInbox(exponeaProject, customerIds, syncToken, applicationId).enqueue(
+        api.postFetchAppInbox(integrationConfig, customerIds, syncToken, applicationId).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<MessageItem>?>>() {},
                 onSuccess,
@@ -224,24 +275,24 @@ internal class FetchManagerImpl(
     }
 
     override fun markAppInboxAsRead(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         syncToken: String,
         messageIds: List<String>,
         onSuccess: (Result<Any?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postReadFlagAppInbox(exponeaProject, customerIds, messageIds, syncToken).enqueue(
+        api.postReadFlagAppInbox(integrationConfig, customerIds, messageIds, syncToken).enqueue(
             getVoidCallback(onSuccess, onFailure)
         )
     }
 
     override fun fetchStaticInAppContentBlocks(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         onSuccess: (Result<ArrayList<InAppContentBlock>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.fetchStaticInAppContentBlocks(exponeaProject).enqueue(
+        api.fetchStaticInAppContentBlocks(integrationConfig).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<InAppContentBlock>?>>() {},
                 onSuccess,
@@ -251,7 +302,7 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchPersonalizedContentBlocks(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         contentBlockIds: List<String>,
         onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
@@ -261,7 +312,7 @@ internal class FetchManagerImpl(
             onSuccess(Result(true, ArrayList()))
             return
         }
-        api.fetchPersonalizedInAppContentBlocks(exponeaProject, customerIds, contentBlockIds).enqueue(
+        api.fetchPersonalizedInAppContentBlocks(integrationConfig, customerIds, contentBlockIds).enqueue(
             getStandardFetchCallback(
                 object : TypeToken<Result<ArrayList<InAppContentBlockPersonalizedData>?>>() {},
                 onSuccess,
@@ -271,7 +322,7 @@ internal class FetchManagerImpl(
     }
 
     override fun fetchSegments(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         onSuccess: (Result<SegmentationCategories>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
@@ -282,7 +333,7 @@ internal class FetchManagerImpl(
             onFailure(Result(false, FetchError(null, "No cookie ID found")))
             return
         }
-        api.fetchSegments(exponeaProject, engagementCookieId).enqueue(
+        api.fetchSegments(integrationConfig, engagementCookieId).enqueue(
             getFetchRawCallback(
                 resultType = object : TypeToken<Map<String, ArrayList<Map<String, String>>>?>() {},
                 onSuccess = { rawData ->
@@ -310,7 +361,7 @@ internal class FetchManagerImpl(
 
     @WorkerThread
     override fun linkCustomerIdsSync(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds
     ): Result<out Any?> {
         val engagementCookieId = customerIds.cookie
@@ -320,7 +371,7 @@ internal class FetchManagerImpl(
         }
         val externalIds = customerIds.externalIds
         val call = api.linkIdsToCookie(
-            exponeaProject, engagementCookieId, externalIds
+            integrationConfig, engagementCookieId, externalIds
         )
         var response: Response? = null
         try {

@@ -14,6 +14,10 @@
     <string name="hint_custids">Customer Id</string>
     <string name="hint_auth_code">Authentication Code</string>
     <string name="hint_project_token">Project Token</string>
+    <string name="hint_stream_id">Stream ID</string>
+    <string name="hint_public_key">API key ID of Private</string>
+    <string name="hint_jwt_key_id">JWT Key ID</string>
+    <string name="hint_jwt_key_secret">JWT Secret</string>
     <string name="hint_registered">Registered</string>
     <string name="hint_api_url">API Url</string>
     <string name="hint_application_id">Application ID</string>
@@ -21,10 +25,15 @@
     <string name="action_fill_fields">Fill fields</string>
     <string name="action_manual_flush">Manual Flush</string>
     <string name="action_track_customer_update">Track Customer Update</string>
+    <string name="action_stop_integration">Stop Integration</string>
     <string name="manual_flush">Manual Flush</string>
     <string name="track">Track</string>
     <string name="fetch">Fetch</string>
     <string name="anonymize">Anonymize</string>
+    <string name="add">Add</string>
+    <string name="update">Update</string>
+    <string name="identify">Identify</string>
+    <string name="identify_with_auth_token">Identify with auth token</string>
 
     <string name="exponea_inbox_button">Inbox</string>
     <string name="exponea_inbox_title">Inbox</string>
@@ -33,7 +42,6 @@
     <string name="exponea_inbox_emptyMessage">You have no messages yet.</string>
     <string name="exponea_inbox_errorTitle">Something went wrong :(</string>
     <string name="exponea_inbox_errorMessage">We could not retrieve your messages.</string>
-    <string name="hint_public_key">API key ID of Private</string>
     <string name="content_blocks_title">InAppCB</string>
     <string name="content_blocks_messages_list">Products</string>
     <string name="content_blocks_sdk_not_init">SDK has not been initialized</string>
@@ -41,4 +49,26 @@
     <string name="content_blocks_custom_carousel_title">Customized Carousel: example_carousel</string>
     <string name="content_blocks_android_carousel_title">Android Carousel: example_carousel_and</string>
     <string name="clear_local_data_button">Clear local data</string>
+    <string name="integration_config">Integration Config</string>
+    <string name="identify_customer_title">Identify customer</string>
+    <string name="action_get_recommendations">Recommended</string>
+    <string name="action_get_consents">Consents</string>
+    <string name="action_get_segments">Segments</string>
+    <string name="no_data_loaded">No data loaded</string>
+    <string name="title_payments">Payments</string>
+    <string name="action_track_fcm_token">Track FCM Token</string>
+    <string name="action_request_push_perm">Request Push perm</string>
+    <string name="action_track_delivered">Track Delivered</string>
+    <string name="action_track_clicked">Track Clicked</string>
+    <string name="title_customer">Customer</string>
+    <string name="title_auth_token">Auth Token</string>
+    <string name="action_set_auth_token">Set Auth Token</string>
+    <string name="action_clear_auth_token">Clear Auth Token</string>
+    <string name="action_identify_customer">Identify Customer</string>
+    <string name="action_create_custom_event">Custom Event</string>
+    <string name="title_fetch_recommendation">Fetch recommendation</string>
+    <string name="title_recommendation_id">Recommendation ID</string>
+    <string name="title_track_custom_event">Track Custom Event</string>
+    <string name="label_properties">Properties</string>
+    <string name="label_event_type">Event Type</string>
 </resources>

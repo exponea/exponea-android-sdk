@@ -13,6 +13,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import io.mockk.Runs
@@ -312,7 +313,10 @@ internal class ExponeaTrackPushOpenedTest(
         }
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
     }

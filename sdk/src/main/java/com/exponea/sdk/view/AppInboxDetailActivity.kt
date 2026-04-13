@@ -13,6 +13,7 @@ import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.util.ConversionUtils
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnMainThread
 
 internal class AppInboxDetailActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
     companion object {
@@ -70,7 +71,7 @@ internal class AppInboxDetailActivity : AppCompatActivity(), OnIntegrationStoppe
     }
 
     override fun onIntegrationStopped() {
-        finish()
+        ensureOnMainThread { finish() }
     }
 
     override fun onDestroy() {

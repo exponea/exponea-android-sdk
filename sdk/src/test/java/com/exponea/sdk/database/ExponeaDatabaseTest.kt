@@ -2,8 +2,9 @@ package com.exponea.sdk.database
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.waitForIt
@@ -28,7 +29,12 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
         properties = hashMapOf(Pair("key", "value")),
         projectId = "mock_project_id",
         route = Route.TRACK_EVENTS,
-        exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+        integrationConfiguration = IntegrationConfiguration(
+            "mock_base_url.com",
+            "mock_project_token",
+            "mock_auth",
+            IntegrationConfigType.PROJECT
+        )
     )
 
     @Before
@@ -58,9 +64,9 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     @Test
     fun `should update item`() {
         db.add(mockData)
-        mockData.projectId = "12345Update"
-        db.update(item = mockData)
-        db.get(mockData.id)?.let {
+        val updatedData = mockData.copy(projectId = "12345Update")
+        db.update(item = updatedData)
+        db.get(updatedData.id)?.let {
             assertEquals("12345Update", it.projectId)
         }
     }
@@ -86,7 +92,12 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
                                 customerIds = hashMapOf(Pair("first name $i $x", "second name")),
                                 projectId = "mock_project_id",
                                 route = Route.TRACK_EVENTS,
-                                exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                                integrationConfiguration = IntegrationConfiguration(
+                                    "mock_base_url.com",
+                                    "mock_project_token",
+                                    "mock_auth",
+                                    IntegrationConfigType.PROJECT
+                                )
                             )
                         )
                     }
@@ -110,12 +121,17 @@ internal class ExponeaDatabaseTest : ExponeaSDKTest() {
     fun denit() {
         for (x in 1..10) {
             db.add(
-                    ExportedEvent(
-                            customerIds = hashMapOf(Pair("first name $x", "second name")),
-                            projectId = "mock_project_id",
-                            route = Route.TRACK_EVENTS,
-                            exponeaProject = ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                ExportedEvent(
+                    customerIds = hashMapOf(Pair("first name $x", "second name")),
+                    projectId = "mock_project_id",
+                    route = Route.TRACK_EVENTS,
+                    integrationConfiguration = IntegrationConfiguration(
+                        "mock_base_url.com",
+                        "mock_project_token",
+                        "mock_auth",
+                        IntegrationConfigType.PROJECT
                     )
+                )
             )
         }
         db.clear()

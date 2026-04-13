@@ -5,14 +5,18 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.FlushFinishedCallback
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.CampaignData
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationDataCallback
@@ -41,6 +45,7 @@ import com.exponea.sdk.tracking.CampaignClickEventTests.Companion.CAMPAIGN_UNIVE
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.TokenType
+import io.mockk.every
 import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -115,8 +120,18 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
     fun `Stop SDK data after SDK init has to stop SDK and remove all data`() {
         createSdkData()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
-        Exponea.stopIntegration()
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            firstArg<FlushFinishedCallback?>()?.invoke(Result.success(Unit))
+        }
+        waitForIt {
+            Exponea.stopIntegration {
+                it()
+            }
+        }
         validateEmptySdkData()
     }
 
@@ -134,11 +149,64 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
     fun `Clearing local user data after SDK init is denied`() {
         createSdkData()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
         Exponea.clearLocalCustomerData()
         assertTrue(Exponea.isInitialized)
         assertFalse(Exponea.isStopped)
         validateNonEmptySdkData()
+    }
+
+    @Test
+    fun `Stop SDK tracks session_end and push token invalidation before flush`() {
+        createSdkData()
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val eventRepo = EventRepositoryImpl(context)
+        val eventsBeforeStop = eventRepo.all().size
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            val eventsAfterTrack = eventRepo.all()
+            val newEvents = eventsAfterTrack.drop(eventsBeforeStop)
+            val hasSessionEnd = newEvents.any { it.type == Constants.EventTypes.sessionEnd }
+            val hasPushTokenInvalidation = newEvents.any { it.type == Constants.EventTypes.pushTokenTrack }
+            assertTrue(hasSessionEnd, "session_end event should be tracked before flush")
+            assertTrue(hasPushTokenInvalidation, "push token invalidation event should be tracked before flush")
+            firstArg<FlushFinishedCallback?>()?.invoke(Result.success(Unit))
+        }
+        waitForIt {
+            Exponea.stopIntegration {
+                it()
+            }
+        }
+    }
+
+    @Test
+    fun `Stop SDK completes teardown even when flush fails`() {
+        createSdkData()
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            firstArg<FlushFinishedCallback?>()?.invoke(
+                Result.failure(Exception("No internet connection"))
+            )
+        }
+        waitForIt {
+            Exponea.stopIntegration {
+                assertTrue(Exponea.isStopped, "SDK should be stopped after failed flush")
+                assertFalse(Exponea.isInitialized, "SDK should be de-initialized after failed flush")
+                it()
+            }
+        }
+        validateEmptySdkData()
     }
 
     private fun createSdkData() {
@@ -188,7 +256,10 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
             "registered" to "StopIntegrationCustomerId"
         )))
         DeviceInitiatedRepositoryImpl(exponeaPrefs).set(true)
-        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
+        ExponeaConfigRepository.set(
+            context,
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        )
         InAppContentBlockDisplayStateRepositoryImpl(exponeaPrefs).apply {
             setDisplayed(InAppContentBlockManagerImplTest.buildMessage(), Date())
             setInteracted(InAppContentBlockManagerImplTest.buildMessage(), Date())

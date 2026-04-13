@@ -1,18 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:colorPrimary">@color/colorPrimary</item>
-        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:colorAccent">@color/colorAccent</item>
-        <item name="android:color">@color/white</item>
+    <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/colorPrimaryDark</item>
         <item name="android:colorBackground">@color/colorPrimaryDark</item>
+        <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textColorHint">@color/white</item>
         <item name="colorControlNormal">@color/colorAccent</item>
         <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="materialButtonStyle">@style/AppButton</item>
+        <item name="textInputStyle">@style/Widget.App.TextInputLayout.FilledBox</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.App.MaterialAlertDialog</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -20,12 +22,11 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="MyDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="android:colorPrimary">@color/colorPrimary</item>
-        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+    <style name="MyDialogTheme" parent="Theme.MaterialComponents.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/colorPrimary</item>
         <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:colorAccent">@color/colorAccent</item>
-        <item name="android:color">@color/white</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
+        <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/colorPrimaryDark</item>
         <item name="android:colorBackground">@color/colorPrimaryDark</item>
         <item name="android:textColor">@color/white</item>
@@ -34,20 +35,59 @@
         <item name="colorControlActivated">@color/colorAccent</item>
     </style>
 
-    <style name="AppButton" parent="Theme.AppCompat">
-        <item name="colorButtonNormal">@color/colorAccent</item>
-        <item name="colorControlHighlight">@color/colorPrimary</item>
+    <style name="AppButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/colorAccent</item>
         <item name="android:textColor">@color/colorPrimaryDark</item>
     </style>
 
-    <style name="AppButtonRed" parent="AppButton">
-        <item name="colorButtonNormal">@color/red</item>
+    <style name="AppButtonRed" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/red</item>
         <item name="android:textColor">@color/white</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Widget.App.TextInputLayout.FilledBox.ExposedDropdownMenu" parent="Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/white</item>
+        <item name="boxBackgroundColor">@color/colorPrimaryDark</item>
+        <item name="boxStrokeColor">@color/filled_stroke_color</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.TextInputLayout.FilledBox.ExposedDropdownMenu</item>
+    </style>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="ThemeOverlay.App.TextInputLayout.FilledBox.ExposedDropdownMenu" parent="">
+        <item name="colorPrimary">@color/colorAccent</item>
+        <item name="autoCompleteTextViewStyle">@style/Widget.MaterialComponents.AutoCompleteTextView.FilledBox</item>
+    </style>
+
+    <style name="Widget.App.TextInputLayout.FilledBox" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/white</item>
+        <item name="boxBackgroundColor">@color/colorPrimaryDark</item>
+        <item name="boxStrokeColor">@color/filled_stroke_color</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.TextInputLayout.FilledBox</item>
+    </style>
+
+    <style name="ThemeOverlay.App.TextInputLayout.FilledBox" parent="">
+        <item name="colorPrimary">@color/colorAccent</item>
+        <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputLayout.FilledBox</item>
+    </style>
+
+    <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.App.Button.TextButton.Dialog</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.App.Button.TextButton.Dialog</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.App.Button.TextButton.Dialog</item>
+    </style>
+
+    <style name="Widget.App.Button.TextButton.Dialog" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Dialog</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.TextButton.Dialog" parent="">
+        <item name="colorPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 
     <style name="AppInboxButton" parent="@style/Widget.AppCompat.Button">
         <item name="android:theme">@style/AppButton</item>

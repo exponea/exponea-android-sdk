@@ -8,6 +8,7 @@ import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -61,9 +62,11 @@ internal class CampaignClickEventTests : ExponeaSDKTest() {
         @JvmStatic
         fun setup() {
             server = ExponeaMockServer.createServer()
-            configuration.projectToken = "TestToken"
-            configuration.authorization = "Token TestTokenAuthentication"
-            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
+            configuration.integrationConfig = ProjectConfig(
+                projectToken = "TestToken",
+                authorization = "Token TestTokenAuthentication",
+                baseUrl = server.url("").toString().substringBeforeLast("/")
+            )
             configuration.maxTries = 10
             configuration.automaticSessionTracking = false
         }

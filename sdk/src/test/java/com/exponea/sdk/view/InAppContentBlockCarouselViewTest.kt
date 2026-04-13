@@ -14,11 +14,11 @@ import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
@@ -62,7 +62,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             CustomTabsClient.bindCustomTabsService(any(), any(), any())
         } returns true
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         }
         mockkConstructorFix(InAppContentBlockManagerImpl::class)
         // mock image and font resources
@@ -243,7 +243,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         prepareContentBlockMessages(messages)
         initSdk()
         idleThreads()
-        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         idleThreads()
         val carousel = Exponea.getInAppContentBlocksCarousel(
             ApplicationProvider.getApplicationContext(),
@@ -414,7 +414,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             ))
         initSdk()
         idleThreads()
-        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         idleThreads()
         val carousel = Exponea.getInAppContentBlocksCarousel(
             ApplicationProvider.getApplicationContext(),
@@ -703,7 +703,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             ))
         initSdk()
         idleThreads()
-        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         idleThreads()
         val carousel = Exponea.getInAppContentBlocksCarousel(
             ApplicationProvider.getApplicationContext(),
@@ -732,7 +732,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
 
     private fun prepareContentBlockMessages(messages: ArrayList<InAppContentBlock>) {
         every {
-            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any<ProjectConfig>(), any(), any())
         } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(Result(true, messages))
         }
@@ -745,13 +745,17 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
 
     private fun initSdk() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
         skipInstallEvent()
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, ExponeaConfiguration(
-            baseURL = initialProject.baseUrl,
-            projectToken = initialProject.projectToken,
-            authorization = initialProject.authorization)
+        Exponea.init(
+            context,
+            ExponeaConfiguration(
+                integrationConfig = ProjectConfig(
+                    baseUrl = "https://base-url.com",
+                    projectToken = "project-token",
+                    authorization = "Token auth"
+                )
+            )
         )
     }
 }

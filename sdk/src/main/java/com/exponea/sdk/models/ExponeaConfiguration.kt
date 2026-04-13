@@ -5,16 +5,20 @@ import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.Constants.ApplicationId.APP_ID_DEFAULT_VALUE
 import com.exponea.sdk.models.Constants.ApplicationId.APP_ID_MAX_LENGTH
 import com.exponea.sdk.models.Constants.ApplicationId.APP_ID_VALIDATION_REGEX
+import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.getId
 
 data class ExponeaConfiguration(
-    /** Default project token. */
-    var projectToken: String = "",
-    /** Map event types and projects to be send to Exponea API. */
-    var projectRouteMap: Map<EventType, List<ExponeaProject>> = mapOf(),
-    /** Authorization http header. */
-    var authorization: String? = null,
-    /** Base url for http requests to Exponea API. */
-    var baseURL: String = Constants.Repository.baseURL,
+    /**
+     * Integration configuration specifying how the SDK connects to Bloomreach platform.
+     * Can be either [ProjectConfig] for project-based integration or [StreamConfig] for stream-based integration.
+     */
+    var integrationConfig: IntegrationConfig = ProjectConfig(projectToken = ""),
+    /**
+     * Maps event types to additional project configurations for routing events to multiple projects.
+     * Only applicable when [integrationConfig] is [ProjectConfig]. Ignored for [StreamConfig].
+     */
+    var integrationRouteMap: Map<EventType, List<ProjectConfig>> = emptyMap(),
     /** Level of HTTP logging, default value is BODY. */
     var httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.BODY,
     /** Maximum retries value to flush data to api. */
@@ -29,7 +33,7 @@ data class ExponeaConfiguration(
     var automaticPushNotification: Boolean = Constants.PushNotif.defaultAutomaticListening,
     /** Flag if the SDK can check ([push notification permission status](https://developer.android.com/develop/ui/views/notifications/notification-permission)) and only tracks the push token if the user is authorized to receive push notifications. */
     var requirePushAuthorization: Boolean = Constants.PushNotif.defaultPushAuthorizationRequired,
-    /** Icon to be showed in push notifications. */
+    /** Icon to be shown in push notifications. */
     var pushIcon: Int? = null,
     /** Accent color of push notification icon and buttons.
      * A color id, not resource id is expected here, e.g. context.resources.getColor(R.color.something)
@@ -51,7 +55,10 @@ data class ExponeaConfiguration(
     /** If true, default properties are applied also for 'identifyCustomer' event. */
     var allowDefaultCustomerProperties: Boolean = true,
 
-    /** If true, Customer Token authentication is used */
+    /**
+     * Enables Customer Token authentication for secure tracking.
+     * Only applicable when [integrationConfig] is [ProjectConfig]. Ignored for [StreamConfig].
+     */
     var advancedAuthEnabled: Boolean = false,
 
     /**
@@ -98,10 +105,144 @@ data class ExponeaConfiguration(
     var applicationId: String = APP_ID_DEFAULT_VALUE
 ) {
 
+    @Deprecated("Please use projectToken in integrationConfig instead")
+    var projectToken: String = ""
+        set(value) {
+            field = value
+            integrationConfig.let {
+                if (it is ProjectConfig) {
+                    integrationConfig = ProjectConfig(
+                        it.baseUrl,
+                        value,
+                        it.authorization
+                    )
+                }
+            }
+        }
+
+    @Deprecated("Please use baseUrl in integrationConfig instead")
+    var baseURL: String = Constants.Repository.baseURL
+        set(value) {
+            field = value
+            integrationConfig.let { ic ->
+                integrationConfig = when (ic) {
+                    is ProjectConfig -> ProjectConfig(value, ic.projectToken, ic.authorization)
+                    is StreamConfig -> StreamConfig(value, ic.streamId)
+                }
+            }
+        }
+
+    @Deprecated("Please use authorization in integrationConfig instead")
+    var authorization: String? = null
+        set(value) {
+            field = value
+            integrationConfig.let { ic ->
+                integrationConfig = when (ic) {
+                    is ProjectConfig -> ProjectConfig(ic.baseUrl, ic.projectToken, value)
+                    is StreamConfig -> StreamConfig(ic.baseUrl, ic.streamId)
+                }
+            }
+        }
+
+    @Deprecated(
+        "Please use integrationRouteMap instead",
+        replaceWith = ReplaceWith("integrationRouteMap")
+    )
+    var projectRouteMap: Map<EventType, List<ExponeaProject>> = emptyMap()
+        set(value) {
+            field = value
+            integrationRouteMap = value.mapValues { entry ->
+                entry.value.map { project ->
+                    ProjectConfig(
+                        baseUrl = project.baseUrl,
+                        projectToken = project.projectToken,
+                        authorization = project.authorization
+                    )
+                }
+            }
+        }
+
+    @Deprecated(
+        message = "Please use main constructor",
+        replaceWith = ReplaceWith("ExponeaConfiguration(" +
+            "integrationConfig, integrationRouteMap, httpLoggingLevel, maxTries, " +
+            "sessionTimeout, campaignTTL, automaticSessionTracking, automaticPushNotification, " +
+            "requirePushAuthorization, pushIcon, pushAccentColor, pushChannelName, pushChannelDescription, " +
+            "pushChannelId, pushNotificationImportance, defaultProperties, tokenTrackFrequency, " +
+            "allowDefaultCustomerProperties, advancedAuthEnabled, inAppContentBlockPlaceholdersAutoLoad, " +
+            "appInboxDetailImageInset, allowWebViewCookies, manualSessionAutoClose, applicationId)"
+        )
+    )
+    constructor(
+        projectToken: String = "",
+        projectRouteMap: Map<EventType, List<ExponeaProject>> = emptyMap(),
+        authorization: String? = null,
+        baseURL: String = Constants.Repository.baseURL,
+        httpLoggingLevel: HttpLoggingLevel = HttpLoggingLevel.BODY,
+        maxTries: Int = 10,
+        sessionTimeout: Double = Constants.Session.defaultTimeout,
+        campaignTTL: Double = Constants.Campaign.defaultCampaignTTL,
+        automaticSessionTracking: Boolean = Constants.Session.defaultAutomaticTracking,
+        automaticPushNotification: Boolean = Constants.PushNotif.defaultAutomaticListening,
+        requirePushAuthorization: Boolean = Constants.PushNotif.defaultPushAuthorizationRequired,
+        pushIcon: Int? = null,
+        pushAccentColor: Int? = null,
+        pushChannelName: String = "Exponea",
+        pushChannelDescription: String = "Notifications",
+        pushChannelId: String = "0",
+        pushNotificationImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
+        defaultProperties: HashMap<String, Any> = hashMapOf(),
+        tokenTrackFrequency: TokenFrequency = TokenFrequency.ON_TOKEN_CHANGE,
+        allowDefaultCustomerProperties: Boolean = true,
+        advancedAuthEnabled: Boolean = false,
+        inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList(),
+        appInboxDetailImageInset: Int? = null,
+        allowWebViewCookies: Boolean = false,
+        manualSessionAutoClose: Boolean = true,
+        applicationId: String = APP_ID_DEFAULT_VALUE
+    ) : this(
+        integrationConfig = ProjectConfig(
+            baseUrl = baseURL,
+            projectToken = projectToken,
+            authorization = authorization
+        ),
+        integrationRouteMap = projectRouteMap.mapValues { entry ->
+            entry.value.map { project ->
+                ProjectConfig(
+                    baseUrl = project.baseUrl,
+                    projectToken = project.projectToken,
+                    authorization = project.authorization
+                )
+            }
+        },
+        httpLoggingLevel = httpLoggingLevel,
+        maxTries = maxTries,
+        sessionTimeout = sessionTimeout,
+        campaignTTL = campaignTTL,
+        automaticSessionTracking = automaticSessionTracking,
+        automaticPushNotification = automaticPushNotification,
+        requirePushAuthorization = requirePushAuthorization,
+        pushIcon = pushIcon,
+        pushAccentColor = pushAccentColor,
+        pushChannelName = pushChannelName,
+        pushChannelDescription = pushChannelDescription,
+        pushChannelId = pushChannelId,
+        pushNotificationImportance = pushNotificationImportance,
+        defaultProperties = defaultProperties,
+        tokenTrackFrequency = tokenTrackFrequency,
+        allowDefaultCustomerProperties = allowDefaultCustomerProperties,
+        advancedAuthEnabled = advancedAuthEnabled,
+        inAppContentBlockPlaceholdersAutoLoad = inAppContentBlockPlaceholdersAutoLoad,
+        appInboxDetailImageInset = appInboxDetailImageInset,
+        allowWebViewCookies = allowWebViewCookies,
+        manualSessionAutoClose = manualSessionAutoClose,
+        applicationId = applicationId
+    )
+
     companion object {
-        public val TOKEN_AUTH_PREFIX = "Token "
-        public val BASIC_AUTH_PREFIX = "Basic "
-        public val BEARER_AUTH_PREFIX = "Bearer "
+        const val TOKEN_AUTH_PREFIX = "Token "
+        const val BASIC_AUTH_PREFIX = "Basic "
+        const val BEARER_AUTH_PREFIX = "Bearer "
     }
 
     enum class HttpLoggingLevel {
@@ -120,41 +261,88 @@ data class ExponeaConfiguration(
         ON_TOKEN_CHANGE,
         /** Tracked every time the app is launched */
         EVERY_LAUNCH,
-        /** Tracked once on days where the user opens the app */
+        /** Tracked once on days when the user opens the app */
         DAILY
     }
 
     fun validate() {
-        validateProjectToken(projectToken)
-        for (each in projectRouteMap) {
-            val eventType = each.key
-            each.value.forEach { project ->
+        validateIntegrationId(integrationConfig)
+        when (val config = integrationConfig) {
+            is ProjectConfig -> {
+                validateBasicAuthValue(config.authorization)
+                validateIntegrationIdsInRouteMap(integrationRouteMap)
+            }
+            is StreamConfig -> {
+                warnIfAdvancedAuthEnabledForStream()
+                warnIfRouteMapConfiguredForStream()
+            }
+        }
+        validateApplicationId(applicationId)
+    }
+
+    private fun validateIntegrationId(integrationConfig: IntegrationConfig) {
+        if (integrationConfig.getId().isBlank()) {
+            throw InvalidConfigurationException(
+                """
+                Provided ${
+                    when (integrationConfig) {
+                        is ProjectConfig -> "project token"
+                        is StreamConfig -> "stream id"
+                    }
+                } is not valid. Cannot be empty string.
+            """.trimIndent()
+            )
+        }
+        val projectTokenAllowedCharacters = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-'
+        if (integrationConfig.getId().any { projectTokenAllowedCharacters.contains(it).not() }) {
+            throw InvalidConfigurationException(
+                """
+                Provided ${
+                    when (integrationConfig) {
+                        is ProjectConfig -> "project token"
+                        is StreamConfig -> "stream id"
+                    }
+                } is not valid. Only alphanumeric symbols and dashes are allowed.
+            """.trimIndent()
+            )
+        }
+    }
+
+    private fun validateIntegrationIdsInRouteMap(integrationRouteMap: Map<EventType, List<ProjectConfig>>) {
+        integrationRouteMap.forEach { (type, integrations) ->
+            integrations.forEach { integration ->
                 try {
-                    validateProjectToken(project.projectToken)
+                    validateIntegrationId(integration)
                 } catch (e: Exception) {
                     throw InvalidConfigurationException(
-                        """
-                        Project mapping for event type $eventType is not valid. ${e.localizedMessage}
-                    """.trimIndent()
+                        "Integration route mapping for event type $type is not valid. ${e.localizedMessage}"
                     )
                 }
             }
         }
-        validateBasicAuthValue(authorization)
-        validateApplicationId(applicationId)
     }
 
-    private fun validateProjectToken(projectToken: String) {
-        if (projectToken.isBlank()) {
-            throw InvalidConfigurationException("""
-                Project token provided is not valid. Project token cannot be empty string.
-            """.trimIndent())
+    private fun warnIfAdvancedAuthEnabledForStream() {
+        if (advancedAuthEnabled) {
+            // todo adjust log message with final documentation version
+            Logger.w(
+                this,
+                "Advanced authentication is only supported when using ProjectConfig. " +
+                "This setting will be ignored for StreamConfig. " +
+                "For more details, see "
+            )
         }
-        val projectTokenAllowedCharacters = ('a'..'z') + ('A'..'Z') + ('0'..'9') + '-'
-        if (projectToken.any { projectTokenAllowedCharacters.contains(it).not() }) {
-            throw InvalidConfigurationException("""
-                Project token provided is not valid. Only alphanumeric symbols and dashes are allowed in project token.
-            """.trimIndent())
+    }
+
+    private fun warnIfRouteMapConfiguredForStream() {
+        if (integrationRouteMap.isNotEmpty()) {
+            // todo adjust log message with final documentation version
+            Logger.w(
+                this,
+                "Integration route mapping is only supported when using ProjectConfig. " +
+                "This setting will be ignored for StreamConfig. " +
+                "For more details, see "
+            )
         }
     }
 

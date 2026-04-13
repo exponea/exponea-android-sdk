@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.DeleteColumn
+import androidx.room.RenameColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -15,12 +16,17 @@ import com.exponea.sdk.util.Logger
 
 @Database(
     entities = [ExportedEvent::class],
-    version = 3,
+    version = 4,
     autoMigrations = [
         AutoMigration(
             from = 2,
             to = 3,
             spec = ExponeaDatabase.Migration2to3::class
+        ),
+        AutoMigration(
+            from = 3,
+            to = 4,
+            spec = ExponeaDatabase.Migration3to4::class
         )
     ]
 )
@@ -111,4 +117,7 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
 
     @DeleteColumn(tableName = "exported_event", columnName = "age")
     class Migration2to3 : AutoMigrationSpec
+
+    @RenameColumn(tableName = "exported_event", fromColumnName = "exponea_project", toColumnName = "integration_config")
+    class Migration3to4 : AutoMigrationSpec
 }

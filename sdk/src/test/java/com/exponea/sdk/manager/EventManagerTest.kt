@@ -6,14 +6,17 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageDisplayState
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.EventRepository
@@ -21,7 +24,7 @@ import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.services.ExponeaContextProvider
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.waitForIt
@@ -56,7 +59,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
     lateinit var presenter: InAppMessagePresenter
     lateinit var trackingConsentManager: TrackingConsentManager
     lateinit var manager: EventManagerImpl
-    lateinit var projectFactory: ExponeaProjectFactory
+    lateinit var projectFactory: IntegrationConfigFactory
     lateinit var addedEvents: ArrayList<ExportedEvent>
     lateinit var deviceId: String
 
@@ -76,7 +79,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { flushManager.flushData(any()) } just Runs
 
         fetchManager = mockk()
-        every { fetchManager.fetchInAppMessages(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
                 Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
@@ -106,18 +109,20 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { trackingConsentManager.trackInAppMessageClose(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageClick(any(), any(), any(), any()) } just Runs
         every { trackingConsentManager.trackInAppMessageShown(any(), any()) } just Runs
-        projectFactory = ExponeaProjectFactory(context, configuration)
-        inAppMessageManager = spyk(InAppMessageManagerImpl(
-            customerIdsRepo,
-            messagesCache,
-            fetchManager,
-            inAppMessageDisplayStateRepository,
-            drawableCache,
-            fontCache,
-            presenter,
-            trackingConsentManager,
-            projectFactory
-        ))
+        projectFactory = IntegrationConfigFactory(configuration)
+        inAppMessageManager = spyk(
+            InAppMessageManagerImpl(
+                customerIdsRepo,
+                messagesCache,
+                fetchManager,
+                inAppMessageDisplayStateRepository,
+                drawableCache,
+                fontCache,
+                presenter,
+                trackingConsentManager,
+                projectFactory
+            )
+        )
         every { inAppMessageManager.sessionStarted(any()) } just Runs
 
         manager = EventManagerImpl(
@@ -138,7 +143,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(projectToken = "mock-project-token"),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-project-token")),
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
@@ -169,11 +174,12 @@ internal class EventManagerTest : ExponeaSDKTest() {
                     "application_id" to "default-application",
                     "device_id" to deviceId
                 ),
-                exponeaProject = ExponeaProject(
-                        "https://api.exponea.com",
-                        "mock-project-token",
-                        null),
-                projectId = "mock-project-token",
+                integrationConfiguration = IntegrationConfiguration(
+                    "mock-project-token",
+                    "https://api.exponea.com",
+                    null,
+                    IntegrationConfigType.PROJECT
+                ),
                 route = Route.TRACK_EVENTS,
                 sdkEventType = EventType.TRACK_EVENT.name
             ),
@@ -187,11 +193,13 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
-                projectRouteMap = hashMapOf(EventType.INSTALL to arrayListOf(
-                    ExponeaProject("mock_base_url1.com", "token1", "mock_auth"),
-                    ExponeaProject("mock_base_url2.com", "token2", "mock_auth")
-                ))
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
+                integrationRouteMap = hashMapOf(
+                    EventType.INSTALL to arrayListOf(
+                        ProjectConfig("mock_base_url1.com", "token1", "mock_auth"),
+                        ProjectConfig("mock_base_url2.com", "token2", "mock_auth")
+                    )
+                )
             ),
             FlushMode.MANUAL
         )
@@ -213,16 +221,21 @@ internal class EventManagerTest : ExponeaSDKTest() {
         confirmVerified(eventRepo, flushManager, inAppMessageManager)
         assertEquals(3, addedEvents.size)
         assertEquals(
-            ExponeaProject("https://api.exponea.com", "mock-project-token", null),
-            addedEvents[0].exponeaProject
+            IntegrationConfiguration(
+                "mock-project-token",
+                "https://api.exponea.com",
+                null,
+                IntegrationConfigType.PROJECT
+            ),
+            addedEvents[0].integrationConfiguration
         )
         assertEquals(
-            ExponeaProject("mock_base_url1.com", "token1", "mock_auth"),
-            addedEvents[1].exponeaProject
+            IntegrationConfiguration("token1", "mock_base_url1.com", "mock_auth", IntegrationConfigType.PROJECT),
+            addedEvents[1].integrationConfiguration
         )
         assertEquals(
-            ExponeaProject("mock_base_url2.com", "token2", "mock_auth"),
-            addedEvents[2].exponeaProject
+            IntegrationConfiguration("token2", "mock_base_url2.com", "mock_auth", IntegrationConfigType.PROJECT),
+            addedEvents[2].integrationConfiguration
         )
     }
 
@@ -231,7 +244,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(projectToken = "mock-project-token"),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-project-token")),
             FlushMode.IMMEDIATE
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
@@ -258,7 +271,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(projectToken = "mock-project-token"),
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-project-token")),
             FlushMode.MANUAL
         )
         manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.SESSION_START)
@@ -285,7 +298,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
             ),
             FlushMode.MANUAL
@@ -298,10 +311,12 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
-                exponeaProject = ExponeaProject(
-                        baseUrl = "https://api.exponea.com",
-                        projectToken = "mock-project-token",
-                        authorization = null),
+                integrationConfiguration = IntegrationConfiguration(
+                    baseUrl = "https://api.exponea.com",
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf(
                     "prop" to "value",
@@ -310,7 +325,6 @@ internal class EventManagerTest : ExponeaSDKTest() {
                     "application_id" to "default-application",
                     "device_id" to deviceId
                 ),
-                projectId = "mock-project-token",
                 route = Route.TRACK_EVENTS,
                 sdkEventType = EventType.TRACK_EVENT.name
             ), firstAddedEvent
@@ -322,7 +336,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
             ),
             FlushMode.MANUAL
@@ -346,36 +360,38 @@ internal class EventManagerTest : ExponeaSDKTest() {
                     "application_id" to "default-application",
                     "device_id" to deviceId
                 ),
-                projectId = "mock-project-token",
-                exponeaProject = ExponeaProject(
-                        baseUrl = "https://api.exponea.com",
-                        projectToken = "mock-project-token",
-                        authorization = null),
+                integrationConfiguration = IntegrationConfiguration(
+                    baseUrl = "https://api.exponea.com",
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
                 sdkEventType = EventType.TRACK_EVENT.name
             ),
             firstEvent
         )
         assertEquals(
-                ExportedEvent(
-                    id = secondEvent.id,
-                    type = "test-event",
-                    timestamp = 123.0,
-                    route = Route.TRACK_EVENTS,
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    properties = hashMapOf(
-                            "prop" to "value",
-                            "default-prop1" to "value1",
-                            "default-prop2" to "value2",
-                            "application_id" to "default-application",
-                            "device_id" to deviceId
-                        ),
-                    exponeaProject = ExponeaProject(
-                            baseUrl = "https://api.exponea.com",
-                            projectToken = "mock-project-token",
-                            authorization = null),
-                    projectId = "mock-project-token",
-                    sdkEventType = EventType.TRACK_EVENT.name
+            ExportedEvent(
+                id = secondEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                route = Route.TRACK_EVENTS,
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf(
+                    "prop" to "value",
+                    "default-prop1" to "value1",
+                    "default-prop2" to "value2",
+                    "application_id" to "default-application",
+                    "device_id" to deviceId
                 ),
+                integrationConfiguration = IntegrationConfiguration(
+                    baseUrl = "https://api.exponea.com",
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
+                sdkEventType = EventType.TRACK_EVENT.name
+            ),
             secondEvent
         )
     }
@@ -385,7 +401,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2")
             ),
             FlushMode.MANUAL
@@ -398,17 +414,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
-                exponeaProject = ExponeaProject(
+                integrationConfiguration = IntegrationConfiguration(
                     baseUrl = "https://api.exponea.com",
-                    projectToken = "mock-project-token",
-                    authorization = null),
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf(
                     "prop" to "value",
                     "default-prop1" to "value1",
                     "default-prop2" to "value2"
                 ),
-                projectId = "mock-project-token",
                 route = Route.TRACK_CUSTOMERS,
                 sdkEventType = EventType.TRACK_CUSTOMER.name
             ), firstAddedEvent
@@ -420,7 +437,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
                 allowDefaultCustomerProperties = true
             ),
@@ -434,17 +451,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
-                exponeaProject = ExponeaProject(
+                integrationConfiguration = IntegrationConfiguration(
                     baseUrl = "https://api.exponea.com",
-                    projectToken = "mock-project-token",
-                    authorization = null),
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf(
                     "prop" to "value",
                     "default-prop1" to "value1",
                     "default-prop2" to "value2"
                 ),
-                projectId = "mock-project-token",
                 route = Route.TRACK_CUSTOMERS,
                 sdkEventType = EventType.TRACK_CUSTOMER.name
             ), firstAddedEvent
@@ -456,7 +474,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
         setup(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                projectToken = "mock-project-token",
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                 defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
                 allowDefaultCustomerProperties = false
             ),
@@ -470,15 +488,16 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 id = firstAddedEvent.id,
                 type = "test-event",
                 timestamp = 123.0,
-                exponeaProject = ExponeaProject(
+                integrationConfiguration = IntegrationConfiguration(
                     baseUrl = "https://api.exponea.com",
-                    projectToken = "mock-project-token",
-                    authorization = null),
+                    integrationId = "mock-project-token",
+                    authorization = null,
+                    type = IntegrationConfigType.PROJECT
+                ),
                 customerIds = hashMapOf("cookie" to "mock-cookie"),
                 properties = hashMapOf(
                     "prop" to "value"
                 ),
-                projectId = "mock-project-token",
                 route = Route.TRACK_CUSTOMERS,
                 sdkEventType = EventType.TRACK_CUSTOMER.name
             ), firstAddedEvent
@@ -491,7 +510,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             setup(
                 ApplicationProvider.getApplicationContext(),
                 ExponeaConfiguration(
-                    projectToken = "mock-project-token",
+                    integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                     defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
                     allowDefaultCustomerProperties = true
                 ),
@@ -505,17 +524,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
                     id = firstAddedEvent.id,
                     type = "test-event",
                     timestamp = 123.0,
-                    exponeaProject = ExponeaProject(
+                    integrationConfiguration = IntegrationConfiguration(
                         baseUrl = "https://api.exponea.com",
-                        projectToken = "mock-project-token",
-                        authorization = null),
+                        integrationId = "mock-project-token",
+                        authorization = null,
+                        type = IntegrationConfigType.PROJECT
+                    ),
                     customerIds = hashMapOf("cookie" to "mock-cookie"),
                     properties = hashMapOf(
                         "prop" to "value",
                         "application_id" to "default-application",
                         "device_id" to deviceId
                     ),
-                    projectId = "mock-project-token",
                     route = Route.TRACK_EVENTS,
                     sdkEventType = EventType.PUSH_TOKEN.name
                 ), firstAddedEvent
@@ -529,7 +549,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             setup(
                 ApplicationProvider.getApplicationContext(),
                 ExponeaConfiguration(
-                    projectToken = "mock-project-token",
+                    integrationConfig = ProjectConfig(projectToken = "mock-project-token"),
                     defaultProperties = hashMapOf("default-prop1" to "value1", "default-prop2" to "value2"),
                     allowDefaultCustomerProperties = false
                 ),
@@ -543,17 +563,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
                     id = firstAddedEvent.id,
                     type = "test-event",
                     timestamp = 123.0,
-                    exponeaProject = ExponeaProject(
+                    integrationConfiguration = IntegrationConfiguration(
                         baseUrl = "https://api.exponea.com",
-                        projectToken = "mock-project-token",
-                        authorization = null),
+                        integrationId = "mock-project-token",
+                        authorization = null,
+                        type = IntegrationConfigType.PROJECT
+                    ),
                     customerIds = hashMapOf("cookie" to "mock-cookie"),
                     properties = hashMapOf(
                         "prop" to "value",
                         "application_id" to "default-application",
                         "device_id" to deviceId
                     ),
-                    projectId = "mock-project-token",
                     route = Route.TRACK_EVENTS,
                     sdkEventType = EventType.PUSH_TOKEN.name
                 ), firstAddedEvent
@@ -566,7 +587,9 @@ internal class EventManagerTest : ExponeaSDKTest() {
         ExponeaContextProvider.applicationIsForeground = true
         setup(
             ApplicationProvider.getApplicationContext(),
-            ExponeaConfiguration(projectToken = "mock-project-token"),
+            ExponeaConfiguration(
+                integrationConfig = ProjectConfig(projectToken = "mock-project-token")
+            ),
             FlushMode.IMMEDIATE
         )
         var eventAddedAt = 0L
@@ -585,5 +608,75 @@ internal class EventManagerTest : ExponeaSDKTest() {
         assertNotEquals(0, eventAddedAt)
         assertNotEquals(0, flushedAt)
         assertTrue(eventAddedAt <= flushedAt)
+    }
+
+    @Test
+    fun `should not apply integration route map for StreamConfig`() = runInSingleThread { idleThreads ->
+        ExponeaContextProvider.applicationIsForeground = true
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(
+                integrationConfig = StreamConfig(streamId = "mock-stream-id"),
+                integrationRouteMap = hashMapOf(
+                    EventType.INSTALL to arrayListOf(
+                        ProjectConfig("mock_base_url1.com", "token1", "mock_auth")
+                    )
+                )
+            ),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.INSTALL)
+        Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
+
+        // Should only create one event for StreamConfig, ignoring the integrationRouteMap
+        assertEquals(1, addedEvents.size)
+        assertEquals(
+            IntegrationConfiguration(
+                "mock-stream-id",
+                "https://api.exponea.com",
+                null,
+                IntegrationConfigType.STREAM
+            ),
+            addedEvents[0].integrationConfiguration
+        )
+    }
+
+    @Test
+    fun `should track event with StreamConfig`() = runInSingleThread { idleThreads ->
+        ExponeaContextProvider.applicationIsForeground = true
+        setup(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = StreamConfig(streamId = "mock-stream-id")),
+            FlushMode.MANUAL
+        )
+        manager.track("test-event", 123.0, hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
+        Robolectric.flushForegroundThreadScheduler()
+        idleThreads()
+
+        assertEquals(1, addedEvents.size)
+        val firstAddedEvent = addedEvents.first()
+        assertEquals(
+            ExportedEvent(
+                id = firstAddedEvent.id,
+                type = "test-event",
+                timestamp = 123.0,
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                properties = hashMapOf(
+                    "prop" to "value",
+                    "application_id" to "default-application",
+                    "device_id" to deviceId
+                ),
+                integrationConfiguration = IntegrationConfiguration(
+                    "mock-stream-id",
+                    "https://api.exponea.com",
+                    null,
+                    IntegrationConfigType.STREAM
+                ),
+                route = Route.TRACK_EVENTS,
+                sdkEventType = EventType.TRACK_EVENT.name
+            ),
+            firstAddedEvent
+        )
     }
 }

@@ -9,6 +9,7 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -37,14 +38,16 @@ internal class StressTest : ExponeaSDKTest() {
     companion object {
         val configuration = ExponeaConfiguration(automaticSessionTracking = false)
         val server = ExponeaMockServer.createServer()
-        const val stressCount = 1000
+        const val STRESS_COUNT = 1000
 
         @BeforeClass
         @JvmStatic
         fun setup() {
-            configuration.projectToken = "TestTokem"
-            configuration.authorization = "Token TestTokenAuthentication"
-            configuration.baseURL = server.url("").toString().substringBeforeLast("/")
+            configuration.integrationConfig = ProjectConfig(
+                server.url("").toString().substringBeforeLast("/"),
+                "TestToken",
+                "Token TestTokenAuthentication"
+            )
             configuration.maxTries = 10
         }
 
@@ -72,7 +75,7 @@ internal class StressTest : ExponeaSDKTest() {
     fun testTrackEventStressed() = runInSingleThread { idleThreads ->
 
         val eventList = mutableListOf<String>()
-        for (i in 0 until stressCount) {
+        for (i in 0 until STRESS_COUNT) {
 
             val eventType = when {
                 i % 7 == 0 -> Constants.EventTypes.sessionEnd
@@ -124,14 +127,14 @@ internal class StressTest : ExponeaSDKTest() {
     @Test
     fun testTrackCustomerStressed() = runInSingleThread { idleThreads ->
         // Track event
-        for (i in 0 until stressCount) {
+        repeat(STRESS_COUNT) {
             Exponea.identifyCustomer(
                 customerIds = CustomerIds().withId("registered", "john@doe.com"),
                 properties = PropertiesList(hashMapOf("first_name" to "NewName"))
             )
         }
         idleThreads()
-        assertEquals(stressCount, repo.all().size)
+        assertEquals(STRESS_COUNT, repo.all().size)
     }
 
     @ObsoleteCoroutinesApi
@@ -143,7 +146,7 @@ internal class StressTest : ExponeaSDKTest() {
         }
         val r = Random()
         runBlocking {
-            for (i in 0 until stressCount) {
+            for (i in 0 until STRESS_COUNT) {
                 val eventType = when {
                     i % 7 == 0 -> Constants.EventTypes.sessionEnd
                     i % 5 == 0 -> Constants.EventTypes.installation
@@ -159,7 +162,7 @@ internal class StressTest : ExponeaSDKTest() {
                 )
             }
         }
-        assertEquals(stressCount, repo.all().size)
+        assertEquals(STRESS_COUNT, repo.all().size)
     }
 
     private suspend fun addEvent(

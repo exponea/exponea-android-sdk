@@ -25,6 +25,7 @@ import com.exponea.sdk.services.inappcontentblock.CustomTabsCarouselViewCallback
 import com.exponea.sdk.services.inappcontentblock.CustomTabsCarouselViewHelper
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
+import com.exponea.sdk.util.ensureOnMainThread
 
 class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
 
@@ -304,6 +305,6 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
     }
 
     override fun onIntegrationStopped() {
-        visibility = GONE
+        ensureOnMainThread { visibility = GONE }
     }
 }

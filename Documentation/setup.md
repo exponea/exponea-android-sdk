@@ -14,7 +14,7 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
 
 > 📘
 >
-> Refer to https://github.com/exponea/exponea-android-sdk/releases for the latest Exponea Android SDK release.
+> Refer to the [release notes](https://github.com/exponea/exponea-android-sdk/releases) for the latest Exponea Android SDK release.
 
 ### Gradle (Kotlin)
 
@@ -60,11 +60,11 @@ Now that you have installed the SDK in your project, you must import, configure,
 >
 > Refer to [Stop SDK integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#stop-sdk-integration) for details.
 
-The required configuration parameters are `projectToken`, `authorization`, and `baseURL`. You can find these in the Bloomreach Engagement webapp under `Project settings` > `Access management` > `API`.
+The required configuration parameter is `integrationConfig` with `projectToken`, `authorization` and `baseUrl` when using `ProjectConfig`, or `streamId` and `baseUrl` when using `StreamConfig`. For `ProjectConfig`, you can find the credentials in the Bloomreach Engagement webapp under `Project settings` > `Access management` > `API`. For `StreamConfig`, you can find the stream ID in the Data hub app under `Event streams` > *your stream* > `Access Security`.
 
 > 📘
 >
-> Refer to [Mobile SDKs API access management](mobile-sdks-api-access-management) for details.
+> Refer to [Mobile SDKs API access management](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management) for details.
 
 You can configure the SDK in [code](#using-configuration-in-code) (preferred) or using a [JSON configuration file](#using-a-configuration-file).
 
@@ -75,21 +75,59 @@ Import the SDK:
 ```kotlin
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
-
 ```
 
-Initialize the SDK:
+Initialize the SDK with Project configuration:
 
 ```kotlin
 val configuration = ExponeaConfiguration()
 
-configuration.authorization = "Token YOUR_API_KEY"
-configuration.projectToken = "YOUR_PROJECT_TOKEN"
-configuration.baseURL = "https://api.exponea.com"
+configuration.integrationConfig = ProjectConfig(
+    baseUrl = "https://api.exponea.com",
+    projectToken = "YOUR_PROJECT_TOKEN",
+    authorization = "Token YOUR_API_KEY"
+)
+
+Exponea.init(this, configuration)
+```
+or with Stream configuration:
+
+```kotlin
+val configuration = ExponeaConfiguration()
+
+configuration.integrationConfig = StreamConfig(
+    baseUrl = "https://api.exponea.com",
+    streamId = "YOUR_STREAM_ID"
+)
 
 Exponea.init(this, configuration)
 ```
 
+> 📘  Note
+>
+> - Refer to [SDK auth token authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) for detailed JWT setup.
+> - See the Data hub documentation for an overview of how to [configure Android SDK with JWT authentication](https://documentation.bloomreach.com/data-hub/docs/configure-android-sdk-with-jwt-authentication) for event streams.
+
+#### Initialize with customer identity
+
+You can optionally provide a `CustomerIdentity` during initialization to identify the customer immediately:
+
+```kotlin
+val configuration = ExponeaConfiguration()
+configuration.integrationConfig = StreamConfig(
+    baseUrl = "https://api.exponea.com",
+    streamId = "YOUR_STREAM_ID"
+)
+
+Exponea.init(
+    this,
+    configuration,
+    customerIdentity = CustomerIdentity(
+        customerIds = mapOf("registered" to "jane.doe@example.com"),
+        sdkAuthToken = "your-jwt-token"
+    )
+)
+```
 
 #### Configure application ID
 
@@ -107,6 +145,8 @@ Make sure your `applicationId` value matches exactly Application ID configured i
 
 ### Using a configuration file
 
+> ❗This option is **deprecated** and will be removed from SDK in the next major version.
+
 Create a file `exponea_configuration.json` inside the `assets` folder of your application with at least the following configuration properties:
 
 ```json
@@ -121,7 +161,6 @@ Import the SDK in your code:
 
 ```kotlin
 import com.exponea.sdk.Exponea
-
 ```
 
 Initialize the SDK:
@@ -151,9 +190,11 @@ class MyApplication : Application() {
 
     val configuration = ExponeaConfiguration()
 
-    configuration.authorization = "Token jlk5askvxss99asmnbgayrks333"
-    configuration.projectToken = "47b5cc2c-e661-11e8-bb95-0a580a201692"
-    configuration.baseURL = "https://api.exponea.com"
+    configuration.integrationConfig = ProjectConfig(
+        baseUrl = "https://api.exponea.com",
+        projectToken = "YOUR_PROJECT_TOKEN",
+        authorization = "Token YOUR_API_KEY"
+    )
 
     // SDK initialization
     Exponea.init(this, configuration)

@@ -23,7 +23,7 @@ import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
 import com.exponea.sdk.services.ExponeaContextProvider
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
@@ -54,7 +54,7 @@ internal class InAppMessageManagerImpl(
     private val fontCache: FontCache,
     private val presenter: InAppMessagePresenter,
     private val eventManager: TrackingConsentManager,
-    private val projectFactory: ExponeaProjectFactory
+    private val integrationConfigFactory: IntegrationConfigFactory
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
@@ -109,7 +109,7 @@ internal class InAppMessageManagerImpl(
             cookie = customerIds[CustomerIds.COOKIE]
         }
         fetchManager.fetchInAppMessages(
-            exponeaProject = projectFactory.mainExponeaProject,
+            integrationConfig = integrationConfigFactory.integrationConfig,
             customerIds = customerIdsForFetch,
             onSuccess = { result ->
                 if (Exponea.isStopped) {

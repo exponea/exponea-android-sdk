@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.R
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
+import com.exponea.sdk.util.ensureOnMainThread
 
 class AppInboxListActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
 
@@ -36,7 +37,7 @@ class AppInboxListActivity : AppCompatActivity(), OnIntegrationStoppedCallback {
     }
 
     override fun onIntegrationStopped() {
-        finish()
+        ensureOnMainThread { finish() }
     }
 
     override fun onDestroy() {

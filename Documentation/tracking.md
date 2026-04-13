@@ -27,11 +27,11 @@ Additionally, you can track any custom event relevant to your business.
 > 
 > Make sure you have obtained and stored tracking consent from your customer before initializing Exponea Android SDK.
 > 
-> To ensure you're not tracking events without the customer's consent, you can use `Exponea.clearLocalCustomerData()` when a customer opts out from tracking (this applies to new users or returning customers who have previously opted out). This will bring the SDK to a state as if it was never initialized. This option also prevents reusing existing cookies for returning customers.
+> If a customer denies tracking consent and the SDK is **not currently initialized**, use `Exponea.clearLocalCustomerData()` to remove any locally stored data left from a previous SDK run. This brings the SDK to a state as if it was never initialized and prevents reusing existing cookies for returning customers. This method has no effect if there is no prior SDK configuration stored on the device (e.g. a completely fresh install).
 > 
 > Refer to [Clear local customer data](#clear-local-customer-data) for details.
 > 
-> If customer denied tracking consent after Exponea Android SDK is initialized, you can use `Exponea.stopIntegration()` to stop SDK integration and remove all locally stored data.
+> If a customer revokes tracking consent after the SDK **is already initialized and running**, use `Exponea.stopIntegration()` to flush pending data, stop SDK integration, and remove all locally stored data.
 >
 > Refer to [Stop SDK integration](#stop-sdk-integration) for details.
 
@@ -105,7 +105,7 @@ Exponea.trackEvent(
 
 > 👍
 >
-> Optionally, you can provide a custom `timestamp` if the event happened at a different time. By default the current time will be used.
+> Optionally, you can provide a custom `timestamp` if the event happened at a different time. By default, the current time will be used.
 
 ## Customers
 
@@ -136,53 +136,65 @@ Optionally, you can track additional customer properties such as first and last 
 
 #### Arguments
 
-| Name                        | Type           | Description |
-| --------------------------- | -------------- | ----------- |
-| customerIds **(required)**  | CustomerIds    | Dictionary of customer unique identifiers. Only identifiers defined in the Engagement project are accepted. |
-| properties                  | PropertiesList | Dictionary of customer properties. |
-| timestamp                   | Double         | Unix timestamp (in seconds) specifying when the customer properties were updated. Specify `nil` value to use the current time. |
+| Name                                | Type              | Description                                                           |
+|-------------------------------------|-------------------|-----------------------------------------------------------------------|
+| customerIdentity **(required)**     | CustomerIdentity  | Customer unique identifiers together with an optional SDK auth token. |
+| properties                          | Map<String, Any>? | Optional map of customer properties.                                  |
+
+`CustomerIdentity` has the following fields:
+
+| Name         | Type                  | Description                                                                                          |
+|--------------|-----------------------|------------------------------------------------------------------------------------------------------|
+| customerIds  | Map<String, String?>  | Map of customer unique identifiers. Only identifiers defined in the Engagement project are accepted. |
+| sdkAuthToken | String?               | Optional SDK authentication token. If provided, it will be set as the current SDK auth token.        |
 
 #### Examples
 
-First, create a `CustomerIds` dictionary containing at least the customer's hard ID:
+To identify a customer, create a `CustomerIdentity` object containing the customer's identifiers:
 
 ```kotlin
-val customerIds = CustomerIds().withId("registered","jane.doe@example.com")
-```
-
-Optionally, create a dictionary with additional customer properties:
-
-```kotlin
-val properties = PropertiesList(
-    hashMapOf(
-        Pair("first_name", "Jane"),
-        Pair("last_name", "Doe"),
-        Pair("age", 32)
-    )
+val customerIdentity = CustomerIdentity(
+    customerIds = mapOf("registered" to "jane.doe@example.com")
 )
 ```
 
-Pass the `customerIds` and `properties` dictionaries to `identifyCustomer()`:
+Optionally, create a map with additional customer properties:
+
+```kotlin
+val properties = mapOf(
+    "first_name" to "Jane",
+    "last_name" to "Doe",
+    "age" to 32
+)
+```
+
+Pass the `customerIdentity` and `properties` to `identifyCustomer()`:
 
 ```kotlin
 Exponea.identifyCustomer(
-    customerIds = customerIds,
+    customerIdentity = customerIdentity,
     properties = properties
 )
 ```
 
-If you only want to update the customer ID without any additional properties, you can pass a `PropertiesList` initialized with an empty `HashMap` into `properties`:
+If you only want to update the customer ID without any additional properties, you can omit the `properties` parameter:
 
-```swift
+```kotlin
 Exponea.identifyCustomer(
-    customerIds = customerIds,
-    properties = PropertiesList(hashMapOf())
+    customerIdentity = customerIdentity
 )
 ```
 
-> 👍
->
-> Optionally, you can provide a custom `timestamp` if the identification happened at a different time. By default the current time will be used.
+To identify a customer and set the SDK auth token at the same time, include the token in `CustomerIdentity`:
+
+```kotlin
+Exponea.identifyCustomer(
+    customerIdentity = CustomerIdentity(
+        customerIds = mapOf("registered" to "jane.doe@example.com"),
+        sdkAuthToken = "your-auth-token"
+    )
+)
+```
 
 ### Anonymize
 
@@ -197,6 +209,10 @@ Invoking this method will cause the SDK to:
 * Assign the previous push notification token to the new customer record.
 * Preload in-app messages, in-app content blocks, and app inbox for the new customer.
 * Track a new `installation` event for the new customer.
+
+> 📘 Note
+>
+> When the SDK is configured with `StreamConfig` and an SDK auth token is set, the SDK attempts a best-effort flush of pending events before clearing local data. If you need to be notified when the anonymization process finishes, use the callback overload described [below](#anonymize-with-completion-callback).
 
 #### How tokens are removed during anonymization
 
@@ -214,7 +230,7 @@ The SDK removes push notification tokens differently depending on the version:
 >
 > Learn more about [Token tracking via notification_state event](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#token-tracking-via-notification_state-event).
 
-You can also use the `anonymize` method to switch to a different Engagement project. The SDK will then track events to a new customer record in the new project, similar to the first app session after installation on a new device.
+You can also use the `anonymize` method to switch to a different integration configuration. The SDK will then track events to a new customer record in the new project or stream, similar to the first app session after installation on a new device.
 
 #### Examples
 
@@ -222,27 +238,66 @@ You can also use the `anonymize` method to switch to a different Engagement proj
 Exponea.anonymize()
 ```
 
-Switch to a different project:
+Switch to a different project integration:
 
 ```kotlin
 Exponea.anonymize(
-    exponeaProject = ExponeaProject(
-        baseUrl= "https://api.exponea.com",
-        projectToken= "YOUR PROJECT TOKEN",
-        authorization= "Token YOUR API KEY"
+    integrationConfig = ProjectConfig(
+        projectToken = "YOUR PROJECT TOKEN",
+        baseUrl = "https://api.exponea.com",
+        authorization = "Token YOUR API KEY"
     ),
-    projectRouteMap = mapOf(
-        EventType.TRACK_EVENT to listOf(
-            ExponeaProject(
-                baseUrl= "https://api.exponea.com",
-                projectToken= "YOUR PROJECT TOKEN",
-                authorization= "Token YOUR API KEY"
+    exponeaConfigurationOverrides = ExponeaConfigurationOverrides(
+        integrationRouteMap = mapOf(
+            EventType.TRACK_EVENT to listOf(
+                ProjectConfig(
+                    projectToken = "YOUR PROJECT TOKEN",
+                    baseUrl = "https://api.exponea.com",
+                    authorization = "Token YOUR API KEY"
+                )
             )
         )
-    ),
-    advancedAuthToken = "YOUR JWT TOKEN"
+    )
 )
 ```
+
+Switch to a different stream integration:
+
+```kotlin
+Exponea.anonymize(
+    integrationConfig = StreamConfig(
+        baseUrl = "https://api.exponea.com",
+        streamId = "YOUR_NEW_STREAM_ID"
+    )
+)
+```
+
+#### Anonymize with completion callback
+
+If you need to perform an action after the anonymization process finishes, use the `onAnonymized` callback overload:
+
+```kotlin
+Exponea.anonymize {
+    // Anonymization is complete
+}
+```
+
+With a new integration configuration:
+
+```kotlin
+Exponea.anonymize(
+    integrationConfig = StreamConfig(
+        baseUrl = "https://api.exponea.com",
+        streamId = "YOUR_NEW_STREAM_ID"
+    )
+) {
+    // Anonymization is complete, now using the new stream
+}
+```
+
+> 📘 Note
+>
+> When using `StreamConfig` with JWT, the callback is invoked after the flush attempt finishes. When no flush is needed (e.g. `ProjectConfig` or no JWT set), the callback is invoked immediately.
 
 ## Sessions
 
@@ -424,7 +479,13 @@ Your application should always ask customers for consent to track their app usag
 
 If the customer doesn't consent to any tracking, it's recommended not to initialize the SDK at all.
 
-If the customer asks to delete personalized data, use the `clearLocalCustomerData()` method to delete all information stored locally before SDK is initialized.
+If the customer asks to delete personalized data and the SDK is **not currently initialized**, use the `clearLocalCustomerData()` method to remove all locally stored data from a previous SDK run.
+
+> ❗️
+>
+> `clearLocalCustomerData()` can only be called when the SDK is **not currently initialized**. If the SDK is running, the call is ignored and an error is logged. Use [stopIntegration](#stop-sdk-integration) instead.
+>
+> `clearLocalCustomerData()` requires that the SDK was previously initialized at some point (a prior SDK configuration must exist on the device). If there is no prior configuration, the call has no effect.
 
 The customer may also revoke all tracking consent after the SDK is fully initialized and tracking is enabled. In this case, you can stop SDK integration and remove all locally stored data using the [stopIntegration](#stop-sdk-integration) method.
 
@@ -447,33 +508,42 @@ If the customer doesn't consent to any tracking before the SDK is initialized, i
 
 The customer may also revoke all tracking consent later, after the SDK is fully initialized and tracking is enabled. In this case, you can stop SDK integration and remove all locally stored data by using the `Exponea.stopIntegration()` method.
 
-Use the `stopIntegration()` method to delete all information stored locally and stop the SDK if it is already running.
+> ❗️
+>
+> `stopIntegration()` can only be called when the SDK **is initialized and running**. If the SDK is not initialized, the call is ignored and an error is logged. To clear locally stored data when the SDK is not running, use [clearLocalCustomerData](#clear-local-customer-data) instead.
+
+Use the `stopIntegration()` method to stop the SDK if it is already running. The SDK will flush all pending data to the server and then delete all information stored locally.
 
 Invoking this method will cause the SDK to:
 
+* Track a `session_end` event (if automatic session tracking is enabled).
+* Send a push notification token invalidation event to the server.
+* Flush all pending events to the server.
 * Remove the push notification token for the current customer from local device storage.
-* Clear local repositories and caches, including all previously tracked events that were not flushed yet.
+* Clear local repositories and caches, including any tracked events that failed to upload.
 * Clear all session start and end information.
 * Remove the customer record stored locally.
 * Clear any In-app messages, In-app content blocks, and App inbox messages previously loaded.
 * Clear the SDK configuration from the last invoked initialization.
 * Stop handling of received push notifications.
 * Stop tracking of Deep links and Universal links (your app's handling of them is not affected).
+* Stop and disable any further tracking — subsequent SDK method calls will be dropped until the SDK is re-initialized.
+* Stop displaying In-app messages, In-app content blocks, and App inbox messages. Already displayed messages are dismissed.
+  * Please validate dismiss behaviour if you [customized](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox#customize-app-inbox) the App Inbox UI layout.
 
-If the SDK is already running, invoking of this method also:
+After invoking the `stopIntegration()` method, the SDK will drop any API method invocation until you [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize_the_sdk) again.
 
-* Stops and disables session start and session end tracking even if your application tries later on.
-* Stops and disables any tracking of events even if your application tries later on.
-* Stops and disables any flushing of tracked events even if your application tries later on.
-* Stops displaying of In-app messages, In-app content blocks, and App inbox messages.
-  * Already displayed messages are dismissed.
-  * Please validate dismiss behaviour if you [customized](https://documentation.bloomreach.com/engagement/docs/android-sdk-app-inbox#customize-app-inbox) the App Inbox UI layout. 
+You can optionally pass an `onStopped` callback to be notified when the stop process (including flush) is complete:
 
-After invoking the `stopIntegration()` method, the SDK will drop any API method invocation until you [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize_the_sdk) again. 
+```kotlin
+Exponea.stopIntegration {
+    // SDK is now fully stopped and all data cleared
+}
+```
 
 ### Use cases
 
-Correct usage of `stopIntegration()` method depends on the use case so please consider all scenarios.
+Correct usage depends on whether the SDK is currently initialized. Consider all scenarios below.
 
 #### Ask the customer for consent
 
@@ -547,40 +617,35 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
 
 #### Stop the SDK but upload tracked data
 
-The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to Bloomreach Engagement. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
+The `stopIntegration()` method automatically flushes all cached data (such as sessions, events, and customer properties) to the server before clearing local storage. No manual flush is needed.
 
-Invoking the `stopIntegration()` method will remove all these locally stored data that may not be uploaded yet. To avoid loss of these data please request to flush them before stopping the SDK:
+If you need to wait for the flush and teardown to complete before proceeding, use the `onStopped` callback:
 
 ```kotlin
-// Flushing requires that SDK is initialized
-Exponea.configure(...)
-// Invoke flush force-fully
-Exponea.flushMode = FlushMode.MANUAL
-val flushIsDone = Semaphore(0, true)
-Exponea.flushData {
-    flushIsDone.release()
+Exponea.stopIntegration {
+    // SDK is now fully stopped and all data cleared
 }
-// Flushing process is asynchronous, we should wait until it is done
-messageShownInvoked.tryAcquire(20, TimeUnit.SECONDS)
-// All data are uploaded, we may stop SDK
-Exponea.stopIntegration()
 ```
 
-#### Stop the SDK and wipe all tracked data
+#### Wipe all locally stored data without uploading
 
 The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to the Bloomreach Engagement app. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
 
-You may face the use case where the customer gets removed from the Bloomreach Enagagement platform and subsequently you want to remove them from local storage too.
+You may face a use case where the customer gets removed from the Bloomreach Engagement platform, and you want to remove them from local storage too.
 
-Please do not initialize the SDK in this case as, depending on your configuration, the SDK may upload the stored tracked events. This may lead to customer's profile being recreated in Bloomreach Enagagement. This is because stored events may have been tracked for this customer and uploading them will result in the recreation of the customer profile based on the assigned customer IDs.
+Do not initialize the SDK in this case. Depending on your configuration, the SDK may upload the stored tracked events during initialization. This may lead to the customer's profile being recreated in Bloomreach Engagement, because stored events were tracked for that customer and uploading them will result in the recreation of the customer profile based on the assigned customer IDs.
 
-To prevent this from happening, invoke `stopIntegration()` immediately without initializing the SDK:
+To prevent this from happening, call `clearLocalCustomerData()` without initializing the SDK:
 
 ```kotlin
-Exponea.stopIntegration()
+Exponea.clearLocalCustomerData()
 ```
 
-This results in all previously stored data being removed from the device. The next SDK initialization will be considered a fresh new start.
+This removes all previously stored data from the device without uploading it. The next SDK initialization will be considered a fresh new start.
+
+> 📘
+>
+> `clearLocalCustomerData()` requires that the SDK was previously initialized at some point (a prior SDK configuration must be stored on the device). If there is no prior configuration (e.g. a completely fresh installation with no prior SDK run), this call has no effect — but there is also nothing to remove in that case.
 
 #### Stop the already running SDK
 
@@ -596,9 +661,7 @@ Exponea.configure(...)
 Exponea.stopIntegration()
 ```
 
-This results in the SDK stopping all internal processes (such as session tracking and push notifications handling) and removing all locally stored data.
-
-Please be aware that `stopIntegration()` stops any further tracking and flushing of data so if you require to upload tracked data to Bloomreach Engagement, then [flush them synchronously](#stop-the-sdk-but-upload-tracked-data) before stopping the SDK.
+This results in the SDK flushing all pending events to the server, stopping all internal processes (such as session tracking and push notifications handling), and removing all locally stored data. You can use the `onStopped` callback to confirm the process is complete.
 
 #### Customer denies tracking consent
 

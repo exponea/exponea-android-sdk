@@ -4,71 +4,38 @@ import android.content.Context
 import android.content.pm.PackageManager
 import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaConfiguration.Companion.BEARER_AUTH_PREFIX
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.util.Logger
 
-internal open class ExponeaProjectFactory(
+internal class CustomAuthProviderFactory(
     private val context: Context,
     exponeaConfiguration: ExponeaConfiguration
 ) {
-
-    private lateinit var configuration: ExponeaConfiguration
     private var customAuthProvider: AuthorizationProvider? = null
 
     init {
         reset(exponeaConfiguration)
     }
 
-    val mainExponeaProject
-        get() = ExponeaProject(
-            configuration.baseURL,
-            configuration.projectToken,
-            configuration.authorization,
-            configuration.inAppContentBlockPlaceholdersAutoLoad
-        )
-
-    /**
-     * Returns ExponeaProject that:
-     *  - contains CustomerID auth token if AuthProvider is registered
-     *  - contains Api auth token otherwise
-     *
-     *  !!! Access it in background thread due to possibility of fetching of Customer Token value
-     */
-    val mutualExponeaProject: ExponeaProject
-        get() {
-            val authProvider = customAuthProvider
-            if (authProvider == null) {
-                return mainExponeaProject
-            }
-            var authToken = authProvider.getAuthorizationToken()
-            if (authToken?.isNotBlank() == true && !authToken.startsWith(BEARER_AUTH_PREFIX)) {
-                authToken = BEARER_AUTH_PREFIX + authToken
-            }
-            return ExponeaProject(
-                configuration.baseURL,
-                configuration.projectToken,
-                authToken,
-                configuration.inAppContentBlockPlaceholdersAutoLoad
-            )
-        }
+    internal fun getAuthorizationProvider(): AuthorizationProvider? {
+        return customAuthProvider
+    }
 
     fun reset(newConfiguration: ExponeaConfiguration) {
-        configuration = newConfiguration
-        if (configuration.advancedAuthEnabled) {
+        if (newConfiguration.integrationConfig is ProjectConfig && newConfiguration.advancedAuthEnabled) {
             customAuthProvider = tryLoadAuthorizationProvider(context)
             if (customAuthProvider == null) {
                 Logger.e(this, "Advanced auth has been enabled but provider has not been found")
                 throw InvalidConfigurationException("""
                 Customer token authorization provider is enabled but cannot be found.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/authorization.md
                 """.trimIndent()
                 )
             }
         }
     }
 
-    internal fun tryLoadAuthorizationProvider(context: Context): AuthorizationProvider? {
+    private fun tryLoadAuthorizationProvider(context: Context): AuthorizationProvider? {
         val customProviderClassname = readAuthorizationProviderName(context)
         if (customProviderClassname == null) {
             // valid exit, no ExponeaAuthProvider in metadata
@@ -81,7 +48,7 @@ internal open class ExponeaProjectFactory(
             Logger.e(this, "Registered $customProviderClassname class has not been found", e)
             throw InvalidConfigurationException("""
                 Customer token authorization provider is registered but cannot be found.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/authorization.md
                 """.trimIndent()
             )
         }
@@ -90,10 +57,10 @@ internal open class ExponeaProjectFactory(
             return customProviderInstance
         }
         Logger.e(this, "Registered $customProviderClassname class has to implement" +
-            "${AuthorizationProvider::class.qualifiedName}")
+                "${AuthorizationProvider::class.qualifiedName}")
         throw InvalidConfigurationException("""
                 Customer token authorization provider is registered but mismatches implementation requirements.
-                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/AUTHORIZATION.md
+                Please check your configuration against https://github.com/exponea/exponea-android-sdk/blob/main/Documentation/authorization.md
                 """.trimIndent()
         )
     }

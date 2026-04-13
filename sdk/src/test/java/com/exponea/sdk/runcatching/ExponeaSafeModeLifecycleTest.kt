@@ -5,6 +5,7 @@ import android.os.Bundle
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import org.junit.Before
 import org.junit.Test
@@ -69,7 +70,11 @@ internal class ExponeaSafeModeLifecycleTest : ExponeaSDKTest() {
             super.onCreate(savedInstanceState)
             skipInstallEvent()
             Exponea.flushMode = FlushMode.MANUAL
-            Exponea.init(applicationContext, ExponeaConfiguration(projectToken = "mock-token"))
+            Exponea.init(
+                applicationContext,
+                ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token")
+                )
+            )
         }
     }
 }

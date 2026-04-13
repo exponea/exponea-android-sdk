@@ -34,9 +34,9 @@ import com.exponea.sdk.manager.SessionManager
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.manager.TrackingConsentManager
 import com.exponea.sdk.manager.TrackingConsentManagerImpl
-import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ExponeaConfigurationOverrides
+import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandler
@@ -45,6 +45,8 @@ import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCache
 import com.exponea.sdk.repository.AppInboxCacheImpl
+import com.exponea.sdk.repository.AuthTokenRepository
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepository
@@ -69,9 +71,11 @@ import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.SegmentsCacheImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.CustomAuthProviderFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
+import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.InAppMessagePresenter
@@ -85,10 +89,9 @@ internal class ExponeaComponent(
     // Preferences
     internal val preferences: ExponeaPreferences = ExponeaPreferencesImpl(context)
 
-    internal val projectFactory = ExponeaProjectFactory(
-        context,
-        exponeaConfiguration
-    )
+    internal val integrationConfigFactory = IntegrationConfigFactory(exponeaConfiguration)
+
+    internal val customAuthProviderFactory = CustomAuthProviderFactory(context, exponeaConfiguration)
 
     // Repositories
     internal val deviceInitiatedRepository: DeviceInitiatedRepository = DeviceInitiatedRepositoryImpl(
@@ -102,6 +105,8 @@ internal class ExponeaComponent(
     internal val customerIdsRepository: CustomerIdsRepository = CustomerIdsRepositoryImpl(
             ExponeaGson.instance, uniqueIdentifierRepository, preferences
     )
+
+    internal val authTokenRepository: AuthTokenRepository = AuthTokenRepositoryProvider.get(context)
 
     internal val pushNotificationRepository: PushNotificationRepository = PushNotificationRepositoryImpl(
             preferences
@@ -125,10 +130,17 @@ internal class ExponeaComponent(
         InAppMessageDisplayStateRepositoryImpl(preferences, ExponeaGson.instance)
 
     // Network Handler
-    internal val networkManager: NetworkHandler = NetworkHandlerImpl(exponeaConfiguration)
+    internal val networkManager: NetworkHandler =
+        NetworkHandlerImpl(
+            exponeaConfiguration,
+            authTokenRepository,
+            customerIdsRepository,
+            customAuthProviderFactory.getAuthorizationProvider()
+        ) { Exponea.sdkAuthCallback }
 
     // Api Service
-    internal val exponeaService: ExponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
+    internal val exponeaService: ExponeaService =
+        ExponeaServiceImpl(ExponeaGson.instance, networkManager)
 
     // Managers
     internal val fetchManager: FetchManager = FetchManagerImpl(exponeaService, ExponeaGson.instance)
@@ -151,7 +163,7 @@ internal class ExponeaComponent(
 
     internal val segmentsManager: SegmentsManager = SegmentsManagerImpl(
         fetchManager = fetchManager,
-        projectFactory = projectFactory,
+        integrationConfigFactory = integrationConfigFactory,
         customerIdsRepository = customerIdsRepository,
         segmentsCache = segmentsCache
     )
@@ -161,6 +173,7 @@ internal class ExponeaComponent(
         eventRepository,
         exponeaService,
         connectionManager,
+        customerIdsRepository,
         onEventUploaded = { uploadedEvent ->
             inAppMessageManager.onEventUploaded(uploadedEvent)
             segmentsManager.onEventUploaded(uploadedEvent)
@@ -168,7 +181,7 @@ internal class ExponeaComponent(
     )
 
     internal val eventManager: EventManager = EventManagerImpl(
-        exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, projectFactory,
+        exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, integrationConfigFactory,
         onEventCreated = { event, type ->
             inAppMessageManager.onEventCreated(event, type)
             appInboxManager.onEventCreated(event, type)
@@ -213,20 +226,19 @@ internal class ExponeaComponent(
     internal val pushNotificationSelfCheckManager: PushNotificationSelfCheckManager =
         PushNotificationSelfCheckManagerImpl(
             context,
-            exponeaConfiguration,
             customerIdsRepository,
             pushTokenRepository,
             flushManager,
             exponeaService,
-            projectFactory
+            integrationConfigFactory
         )
 
     internal val appInboxManager: AppInboxManager = AppInboxManagerImpl(
         fetchManager = fetchManager,
         drawableCache = drawableCache,
-        projectFactory = projectFactory,
         customerIdsRepository = customerIdsRepository,
         appInboxCache = appInboxCache,
+        integrationConfigFactory = integrationConfigFactory,
         applicationId = exponeaConfiguration.applicationId
     )
 
@@ -239,7 +251,7 @@ internal class ExponeaComponent(
         fontCache,
         inAppMessagePresenter,
         trackingConsentManager,
-        projectFactory
+        integrationConfigFactory
     )
 
     internal val inAppContentBlockDisplayStateRepository = InAppContentBlockDisplayStateRepositoryImpl(
@@ -254,7 +266,7 @@ internal class ExponeaComponent(
     internal val inAppContentBlockManager: InAppContentBlockManager = InAppContentBlockManagerImpl(
         inAppContentBlockDisplayStateRepository,
         fetchManager,
-        projectFactory,
+        integrationConfigFactory,
         customerIdsRepository,
         drawableCache,
         htmlNormalizedCache,
@@ -262,8 +274,10 @@ internal class ExponeaComponent(
     )
 
     fun anonymize(
-        exponeaProject: ExponeaProject,
-        projectRouteMap: Map<EventType, List<ExponeaProject>> = hashMapOf()
+        integrationConfig: IntegrationConfig,
+        exponeaConfigurationOverrides: ExponeaConfigurationOverrides?,
+        shouldFlush: Boolean,
+        onComplete: () -> Unit
     ) {
         if (exponeaConfiguration.automaticSessionTracking) {
             sessionManager.trackSessionEnd(currentTimeSeconds())
@@ -277,33 +291,54 @@ internal class ExponeaComponent(
             tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH,
             tokenType = tokenType
         )
+
+        val completeAnonymize = {
+            performClear()
+            applyConfiguration(integrationConfig, exponeaConfigurationOverrides)
+            reinitializeForNewCustomer(token, tokenType)
+            onComplete()
+        }
+
+        if (shouldFlush) {
+            flushManager.flushData { completeAnonymize() }
+        } else {
+            completeAnonymize()
+        }
+    }
+
+    private fun performClear() {
         deviceInitiatedRepository.set(false)
         campaignRepository.clear()
         inAppMessageManager.clear()
         uniqueIdentifierRepository.clear()
         customerIdsRepository.clear()
+        authTokenRepository.clear()
         inAppContentBlockManager.clearAll()
         sessionManager.reset()
         segmentsManager.clearAll()
         pushNotificationRepository.clearAll()
         fontCache.clear()
         drawableCache.clear()
+    }
 
-        exponeaConfiguration.baseURL = exponeaProject.baseUrl
-        exponeaConfiguration.projectToken = exponeaProject.projectToken
-        exponeaConfiguration.authorization = exponeaProject.authorization
-        exponeaConfiguration.inAppContentBlockPlaceholdersAutoLoad =
-            exponeaProject.inAppContentBlockPlaceholdersAutoLoad
-        exponeaConfiguration.projectRouteMap = projectRouteMap
+    private fun applyConfiguration(
+        integrationConfig: IntegrationConfig,
+        exponeaConfigurationOverrides: ExponeaConfigurationOverrides?
+    ) {
+        exponeaConfiguration.apply {
+            this.integrationConfig = integrationConfig
+            integrationRouteMap = exponeaConfigurationOverrides?.integrationRouteMap ?: integrationRouteMap
+            inAppContentBlockPlaceholdersAutoLoad = exponeaConfigurationOverrides?.inAppContentBlockPlaceholdersAutoLoad
+                ?: inAppContentBlockPlaceholdersAutoLoad
+        }
         ExponeaConfigRepository.set(application, exponeaConfiguration)
+        integrationConfigFactory.reset(exponeaConfiguration)
         runCatching {
-            projectFactory.reset(exponeaConfiguration)
-            // Advanced auth could be invalid while reset.
-            // We cannot throw exception directly, it will be catch-ed anyway without runCatching
-            // but we need to complete anonymization process
-            // Exception will be still re-thrown for `safeModeEnabled` == false
+            customAuthProviderFactory.reset(exponeaConfiguration)
         }.logOnException()
+    }
 
+    private fun reinitializeForNewCustomer(token: String?, tokenType: TokenType) {
         Exponea.trackInstallEvent()
         if (exponeaConfiguration.automaticSessionTracking) {
             sessionManager.trackSessionStart(currentTimeSeconds())
@@ -316,6 +351,8 @@ internal class ExponeaComponent(
         )
         inAppMessageManager.reload()
         appInboxManager.reload()
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(
+            exponeaConfiguration.inAppContentBlockPlaceholdersAutoLoad
+        )
     }
 }

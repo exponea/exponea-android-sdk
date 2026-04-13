@@ -14,6 +14,7 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.NotificationChannelImportance
 import com.exponea.sdk.models.NotificationData
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import io.mockk.Runs
@@ -304,7 +305,7 @@ internal class ExponeaTrackPushDeliveredTest(
     private fun initSdk(notifImportance: NotificationChannelImportance) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             pushNotificationImportance = notifImportance.code
         )

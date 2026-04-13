@@ -34,6 +34,7 @@ import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.URLUtils
 import com.exponea.sdk.util.UrlOpener.openUrlExternal
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.view.AppInboxDetailFragment
 import com.exponea.sdk.view.AppInboxDetailView
@@ -66,7 +67,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         }
         Exponea.deintegration.registerForIntegrationStopped(object : OnIntegrationStoppedCallback {
             override fun onIntegrationStopped() {
-                button.visibility = GONE
+                ensureOnMainThread { button.visibility = GONE }
             }
         })
         return button
@@ -108,7 +109,7 @@ open class DefaultAppInboxProvider : AppInboxProvider {
         }
         Exponea.deintegration.registerForIntegrationStopped(object : OnIntegrationStoppedCallback {
             override fun onIntegrationStopped() {
-                showError(listView)
+                ensureOnMainThread { showError(listView) }
             }
         })
         return listView

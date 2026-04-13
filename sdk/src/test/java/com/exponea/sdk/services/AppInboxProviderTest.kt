@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.AppInboxManagerImplTest
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.view.AppInboxDetailView
 import io.mockk.every
@@ -26,16 +26,16 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
     fun before() {
         // Need to be initialized to use bitmapCache for HTML parser
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject(
-            "https://base-url.com",
-            "project-token",
-            "Token auth"
-        )
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, ExponeaConfiguration(
-            baseURL = initialProject.baseUrl,
-            projectToken = initialProject.projectToken,
-            authorization = initialProject.authorization)
+        Exponea.init(
+            context,
+            ExponeaConfiguration(
+                integrationConfig = ProjectConfig(
+                    baseUrl = "https://base-url.com",
+                    projectToken = "project-token",
+                    authorization = "Token auth"
+                )
+            )
         )
     }
 

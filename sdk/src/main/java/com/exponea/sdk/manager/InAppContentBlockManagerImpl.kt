@@ -16,7 +16,7 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.DefaultInAppContentCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockComparator
@@ -35,7 +35,7 @@ import java.util.Date
 internal class InAppContentBlockManagerImpl(
     private val displayStateRepository: InAppContentBlockDisplayStateRepository,
     private val fetchManager: FetchManager,
-    private val projectFactory: ExponeaProjectFactory,
+    private val integrationConfigFactory: IntegrationConfigFactory,
     private val customerIdsRepository: CustomerIdsRepository,
     private val imageCache: DrawableCache,
     private val htmlCache: HtmlNormalizedCache,
@@ -245,7 +245,7 @@ internal class InAppContentBlockManagerImpl(
         Logger.i(this, "InAppCB: Prefetching personalized content for current customer")
         val contentBlockIdsAsString = contentBlockIds.joinToString()
         fetchManager.fetchPersonalizedContentBlocks(
-            exponeaProject = projectFactory.mutualExponeaProject,
+            integrationConfig = integrationConfigFactory.integrationConfig,
             customerIds = customerIds,
             contentBlockIds = contentBlockIds,
             onSuccess = { result ->
@@ -367,7 +367,7 @@ internal class InAppContentBlockManagerImpl(
         return@runThreadSafelyWithResult contentBlocksForPlaceholder
     } ?: listOf()
 
-    override fun loadInAppContentBlockPlaceholders() {
+    override fun loadInAppContentBlockPlaceholders(inAppContentBlockPlaceholdersAutoLoad: List<String>) {
         if (Exponea.isStopped) {
             Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
             return
@@ -382,9 +382,8 @@ internal class InAppContentBlockManagerImpl(
                 }
                 Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders starts")
                 val customerIds = customerIdsRepository.get()
-                val exponeaProject = projectFactory.mutualExponeaProject
                 fetchManager.fetchStaticInAppContentBlocks(
-                    exponeaProject = exponeaProject,
+                    integrationConfig = integrationConfigFactory.integrationConfig,
                     onSuccess = { result ->
                         if (Exponea.isStopped) {
                             Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
@@ -411,7 +410,7 @@ internal class InAppContentBlockManagerImpl(
                         contentBlocksData = supportedContentBlocks
                         forceContentByPlaceholders(
                             supportedContentBlocks,
-                            exponeaProject.inAppContentBlockPlaceholdersAutoLoad
+                            inAppContentBlockPlaceholdersAutoLoad
                         ) {
                             Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
                             done()

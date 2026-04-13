@@ -3,7 +3,10 @@ package com.exponea.sdk.testutil.mocks
 import com.exponea.sdk.models.CustomerAttributesRequest
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.models.RecommendationsRequest
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.network.ExponeaService
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.util.TokenType
@@ -23,30 +26,41 @@ internal class ExponeaMockService(
     private val server = ExponeaMockServer.createServer()
     private val dummyUrl = server.url("/").toString()
 
-    override fun postCampaignClick(exponeaProject: ExponeaProject, event: Event): Call {
+    override fun postCampaignClick(
+        integrationConfig: IntegrationConfig,
+        event: Event,
+        isCurrentCustomer: Boolean
+    ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postEvent(exponeaProject: ExponeaProject, event: Event): Call {
+    override fun postEvent(integrationConfig: IntegrationConfig, event: Event, isCurrentCustomer: Boolean): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postCustomer(exponeaProject: ExponeaProject, event: Event): Call {
+    override fun postCustomer(integrationConfig: IntegrationConfig, event: Event, isCurrentCustomer: Boolean): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchConsents(exponeaProject: ExponeaProject): Call {
+    override fun fetchConsents(integrationConfig: IntegrationConfig): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
     override fun postFetchAttributes(
-        exponeaProject: ExponeaProject,
+        projectConfig: ProjectConfig,
         attributesRequest: CustomerAttributesRequest
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchInAppMessages(exponeaProject: ExponeaProject, customerIds: CustomerIds): Call {
+    override fun postFetchRecommendations(
+        streamConfig: StreamConfig,
+        recommendationsRequest: RecommendationsRequest
+    ): Call {
+        return if (success) mockSuccessCall() else mockFailCall()
+    }
+
+    override fun postFetchInAppMessages(integrationConfig: IntegrationConfig, customerIds: CustomerIds): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
@@ -83,7 +97,7 @@ internal class ExponeaMockService(
     }
 
     override fun postPushSelfCheck(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         pushToken: String,
         tokenType: TokenType
@@ -91,12 +105,12 @@ internal class ExponeaMockService(
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun fetchStaticInAppContentBlocks(exponeaProject: ExponeaProject): Call {
+    override fun fetchStaticInAppContentBlocks(integrationConfig: IntegrationConfig): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
     override fun fetchPersonalizedInAppContentBlocks(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         contentBlockIds: List<String>
     ): Call {
@@ -104,7 +118,7 @@ internal class ExponeaMockService(
     }
 
     override fun postFetchAppInbox(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         syncToken: String?,
         applicationId: String
@@ -113,7 +127,7 @@ internal class ExponeaMockService(
     }
 
     override fun postReadFlagAppInbox(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         messageIds: List<String>,
         syncToken: String
@@ -121,12 +135,12 @@ internal class ExponeaMockService(
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun fetchSegments(exponeaProject: ExponeaProject, engagementCookieId: String): Call {
+    override fun fetchSegments(integrationConfig: IntegrationConfig, engagementCookieId: String): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
     override fun linkIdsToCookie(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         engagementCookieId: String,
         externalIds: HashMap<String, String?>
     ): Call {

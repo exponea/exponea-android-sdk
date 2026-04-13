@@ -13,12 +13,14 @@ import androidx.appcompat.app.AppCompatActivity
 import com.exponea.example.App
 import com.exponea.example.databinding.FragmentTrackBinding
 import com.exponea.example.managers.CustomerTokenStorage
+import com.exponea.example.managers.LocalJwtTokenGenerator
 import com.exponea.example.models.Constants
+import com.exponea.example.models.SdkSetupState
 import com.exponea.example.view.base.BaseFragment
-import com.exponea.example.view.dialogs.TrackCustomAttributesDialog
+import com.exponea.example.view.dialogs.IdentifyCustomerDialog
 import com.exponea.example.view.dialogs.TrackCustomEventDialog
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
@@ -56,6 +58,20 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         viewBinding.listView.adapter = Adapter()
 
+        viewBinding.authTokenGroup.visibility = if (SdkSetupState.isStreamConfig) View.VISIBLE else View.GONE
+
+        childFragmentManager.setFragmentResultListener(
+            IdentifyCustomerDialog.REQUEST_KEY,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            @Suppress("UNCHECKED_CAST", "DEPRECATION")
+            val properties = PropertiesList(
+                bundle.getSerializable(IdentifyCustomerDialog.KEY_PROPERTIES) as HashMap<String, Any>
+            )
+            val withAuthToken = bundle.getBoolean(IdentifyCustomerDialog.KEY_WITH_AUTH_TOKEN)
+            trackUpdateCustomerProperties(properties, withAuthToken)
+        }
+
         // Init buttons listeners
         initListeners()
     }
@@ -69,14 +85,42 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
         viewBinding.buttonAuthorizePush.setOnClickListener { requestPushAuthorization() }
 
         viewBinding.buttonUpdateProperties.setOnClickListener {
-            TrackCustomAttributesDialog.show(childFragmentManager) {
-                trackUpdateCustomerProperties(it)
-            }
+            IdentifyCustomerDialog.show(childFragmentManager)
         }
 
         viewBinding.buttonCustomEvent.setOnClickListener {
             TrackCustomEventDialog.show(childFragmentManager) { eventName, properties ->
                 trackCustomEvent(eventName, properties) }
+        }
+
+        viewBinding.buttonSetAuthToken.setOnClickListener {
+            val context = requireContext()
+            if (!LocalJwtTokenGenerator.INSTANCE.isConfigured()) {
+                Toast.makeText(
+                    context,
+                    "JWT Key ID and Secret must be provided during SDK configuration.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+            if (!SdkSetupState.isCustomerIdentified) {
+                Toast.makeText(
+                    context,
+                    "Customer must be identified first.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+            val customerIds = mapOf(Constants.CUSTOMER_ID_REGISTERED to App.instance.registeredIdManager.registeredID)
+
+            val token = LocalJwtTokenGenerator.INSTANCE.generateToken(customerIds)
+
+            if (token != null) {
+                Exponea.setSdkAuthToken(token)
+                Toast.makeText(context, "Auth token set.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Token generation failed.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -108,25 +152,30 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
     /**
      * Method to handle updating customer properties
      */
-    private fun trackUpdateCustomerProperties(propertiesList: PropertiesList) {
-        val registeredIdUpdate = propertiesList.properties.remove("registered") as? String
+    private fun trackUpdateCustomerProperties(propertiesList: PropertiesList, setAuthToken: Boolean = false) {
+        val registeredIdUpdate = propertiesList.properties.remove(Constants.CUSTOMER_ID_REGISTERED) as? String
+
         if (registeredIdUpdate != null) {
             App.instance.registeredIdManager.registeredID = registeredIdUpdate
         }
-        val customerIds = CustomerIds().withId("registered", (App.instance.registeredIdManager.registeredID))
-        CustomerTokenStorage.INSTANCE.configure(
-            customerIds = hashMapOf(
-                "registered" to (App.instance.registeredIdManager.registeredID ?: "")
-            )
-        )
+
+        val customerIds = hashMapOf(Constants.CUSTOMER_ID_REGISTERED to App.instance.registeredIdManager.registeredID)
+
+        CustomerTokenStorage.INSTANCE.configure(customerIds = customerIds)
+
         Exponea.identifyCustomer(
+            customerIdentity = CustomerIdentity(
                 customerIds = customerIds,
-                properties = propertiesList
+                sdkAuthToken = if (setAuthToken) LocalJwtTokenGenerator.INSTANCE.generateToken(customerIds) else null
+            ),
+            properties = propertiesList.properties
         )
+
+        SdkSetupState.isCustomerIdentified = true
     }
 
     /**
-     * Method to handle push delivered event tracking"
+     * Method to handle push delivered event tracking
      */
     private fun trackPushDelivered() {
         Exponea.trackDeliveredPush(
@@ -138,7 +187,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
      * Method to handle token tracking
      */
     private fun trackToken() {
-        TokenTracker().trackToken(context)
+        TokenTracker().trackToken(requireContext())
     }
 
     /**
@@ -160,10 +209,10 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
         // Track purchase at position
         trackPayment(position)
-        Toast.makeText(context, "Payment Tracked", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Payment Tracked", Toast.LENGTH_SHORT).show()
     }
 
-    inner class Adapter : BaseAdapter() {
+    class Adapter : BaseAdapter() {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val inflater = LayoutInflater.from(parent?.context)

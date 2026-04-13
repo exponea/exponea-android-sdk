@@ -14,6 +14,7 @@ import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import java.util.concurrent.atomic.AtomicReference
@@ -211,6 +212,6 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     override fun onIntegrationStopped() {
-        visibility = GONE
+        ensureOnMainThread { visibility = GONE }
     }
 }

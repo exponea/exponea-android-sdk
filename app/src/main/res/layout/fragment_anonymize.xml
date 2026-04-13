@@ -22,8 +22,7 @@
             android:id="@+id/btnAnonymize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Anonymize"
-            android:theme="@style/AppButton"
+            android:text="@string/anonymize"
             android:layout_gravity="center" />
 
         <Button
@@ -31,8 +30,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="50dp"
-            android:text="Stop Integration"
-            android:theme="@style/AppButtonRed"
+            android:text="@string/action_stop_integration"
+            style="@style/AppButtonRed"
             android:layout_gravity="center" />
 
     </LinearLayout>

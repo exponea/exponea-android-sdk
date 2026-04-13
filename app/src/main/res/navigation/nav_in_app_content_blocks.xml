@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/inAppContentBlocksFragment"
         android:name="com.exponea.example.view.fragments.InAppContentBlocksFragment"
-        android:label="InAppContentBlocksFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_inapp_content_blocks">
         <action
             android:id="@+id/action_cb_to_carousel"
@@ -18,7 +18,7 @@
     <fragment
         android:id="@+id/inAppCarouselsFragment"
         android:name="com.exponea.example.view.fragments.CarouselsFragment"
-        android:label="CarouselsFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_carousels" />
 
 </navigation>

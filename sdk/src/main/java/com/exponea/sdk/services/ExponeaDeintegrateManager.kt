@@ -8,6 +8,7 @@ import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCacheImpl
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
@@ -87,6 +88,7 @@ class ExponeaDeintegrateManager {
             clearResourcesCaches(it)
             clearCookieRepository(it)
             clearCustomerIdsRepository(it)
+            clearAuthTokenRepository(it)
             clearTelemetry(it)
             DeviceIdManager.clear(it)
         }
@@ -102,6 +104,10 @@ class ExponeaDeintegrateManager {
         val prefs = ExponeaPreferencesImpl(context)
         val cookieRepo = UniqueIdentifierRepositoryImpl(prefs)
         CustomerIdsRepositoryImpl(ExponeaGson.instance, cookieRepo, prefs).clear()
+    }
+
+    private fun clearAuthTokenRepository(context: Context) {
+        AuthTokenRepositoryProvider.get(context).clear()
     }
 
     private fun clearCookieRepository(context: Context) {

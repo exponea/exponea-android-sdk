@@ -1,6 +1,5 @@
 package com.exponea.example.view.fragments
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,6 +11,7 @@ import com.exponea.example.databinding.FragmentFlushBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.view.base.BaseFragment
 import com.exponea.sdk.Exponea
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class FlushFragment : BaseFragment() {
 
@@ -39,7 +39,7 @@ class FlushFragment : BaseFragment() {
                 if (!this.isVisible) return@flushData
                 Handler(Looper.getMainLooper()).post {
                     viewBinding.progressBar.visibility = View.INVISIBLE
-                    AlertDialog.Builder(context)
+                    MaterialAlertDialogBuilder(requireContext())
                         .setTitle(if (result.isSuccess) "Flush successful" else "Flush failed")
                         .setMessage(if (result.isFailure) result.exceptionOrNull()?.localizedMessage else null)
                         .setPositiveButton("OK") { _, _ -> }

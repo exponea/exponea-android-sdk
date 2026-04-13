@@ -7,12 +7,16 @@ import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
+import com.exponea.sdk.models.StreamConfig
+import com.exponea.sdk.repository.AuthTokenRepositoryImpl
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.TokenType
@@ -47,7 +51,10 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     @Test
     fun `should identify customer`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 
@@ -75,10 +82,140 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should identify customer with CustomerIdentity and skip auth token for project integration`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        mockkConstructorFix(AuthTokenRepositoryImpl::class)
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+
+        val authToken = "test-auth-token"
+        Exponea.identifyCustomer(
+            CustomerIdentity(
+                customerIds = mapOf("registered" to "john@doe.com"),
+                sdkAuthToken = authToken
+            ),
+            mapOf("first_name" to "NewName")
+        )
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        verify(exactly = 0) {
+            anyConstructed<AuthTokenRepositoryImpl>().setToken(any())
+        }
+
+        assertEquals(
+            hashMapOf<String, Any>(
+                "first_name" to "NewName"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))
+        assertEquals(EventType.TRACK_CUSTOMER, eventTypeSlot.captured)
+    }
+
+    @Test
+    fun `should identify customer with CustomerIdentity and set auth token for stream integration`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            integrationConfig = StreamConfig(streamId = "mock-stream-id"),
+            automaticSessionTracking = false
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        mockkConstructorFix(AuthTokenRepositoryImpl::class)
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        val sdkAuthTokenSlot = slot<String>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+        every {
+            anyConstructed<AuthTokenRepositoryImpl>().setToken(capture(sdkAuthTokenSlot))
+        } just Runs
+
+        val authToken = "test-auth-token"
+        Exponea.identifyCustomer(
+            CustomerIdentity(
+                customerIds = mapOf("registered" to "john@doe.com"),
+                sdkAuthToken = authToken
+            ),
+            mapOf("first_name" to "NewName")
+        )
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+        verify(exactly = 1) {
+            anyConstructed<AuthTokenRepositoryImpl>().setToken(any())
+        }
+
+        assertEquals(
+            hashMapOf<String, Any>(
+                "first_name" to "NewName"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))
+        assertEquals(EventType.TRACK_CUSTOMER, eventTypeSlot.captured)
+        assertEquals(authToken, sdkAuthTokenSlot.captured)
+    }
+
+    @Test
+    fun `should identify customer with CustomerIdentity without token`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        mockkConstructorFix(AuthTokenRepositoryImpl::class)
+        Exponea.init(context, configuration)
+
+        val eventSlot = slot<Event>()
+        val eventTypeSlot = slot<EventType>()
+        every {
+            anyConstructed<EventManagerImpl>().addEventToQueue(capture(eventSlot), capture(eventTypeSlot), any())
+        } just Runs
+
+        Exponea.identifyCustomer(
+            CustomerIdentity(
+                customerIds = mapOf("registered" to "john@doe.com")
+            ),
+            mapOf("first_name" to "NewName")
+        )
+        verify(exactly = 1) {
+            anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
+        }
+
+        verify(exactly = 0) {
+            anyConstructed<AuthTokenRepositoryImpl>().setToken(any())
+        }
+
+        assertEquals(
+            hashMapOf<String, Any>(
+                "first_name" to "NewName"
+            ),
+            eventSlot.captured.properties
+        )
+        assertEquals("john@doe.com", eventSlot.captured.customerIds?.get("registered"))
+        assertEquals(EventType.TRACK_CUSTOMER, eventTypeSlot.captured)
+    }
+
+    @Test
     fun `should add default properties to track_customer by default`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             defaultProperties = hashMapOf(
                 "def_key" to "def_value"
@@ -115,7 +252,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should add default properties to track_customer if allowed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = true,
             defaultProperties = hashMapOf(
@@ -153,7 +290,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should NOT add default properties to trackPushToken() if allowed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = true,
             defaultProperties = hashMapOf(
@@ -192,7 +329,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should NOT add default properties to trackHmsPushToken() if allowed`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = true,
             defaultProperties = hashMapOf(
@@ -231,7 +368,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should NOT add default properties to track_customer if denied`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = false,
             defaultProperties = hashMapOf(
@@ -268,7 +405,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should NOT add default properties to trackPushToken() if denied`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = false,
             defaultProperties = hashMapOf(
@@ -308,7 +445,7 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     fun `should NOT add default properties to trackHmsPushToken() if denied`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val configuration = ExponeaConfiguration(
-            projectToken = "mock-token",
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false,
             allowDefaultCustomerProperties = false,
             defaultProperties = hashMapOf(
@@ -347,7 +484,10 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
     @Test
     fun `should track identify telemetry`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
 

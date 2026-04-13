@@ -2,7 +2,7 @@ package com.exponea.sdk.telemetry
 
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -174,7 +174,7 @@ internal class TelemetryUtilityTest {
         fun `should format configuration`() {
             assertEquals(
                 hashMapOf(
-                    "projectRouteMap" to "[REDACTED]",
+                    "integrationRouteMap" to "[REDACTED]",
                     "automaticSessionTracking" to "true [default]",
                     "maxTries" to "10 [default]",
                     "pushIcon" to "null [default]",
@@ -200,9 +200,9 @@ internal class TelemetryUtilityTest {
                     "applicationId" to "default-application [default]"
                 ),
                 TelemetryUtility.formatConfigurationForTracking(ExponeaConfiguration(
-                    projectToken = "mock_project_token",
-                    projectRouteMap = hashMapOf(EventType.INSTALL to arrayListOf(
-                        ExponeaProject("mock_base_url.com", "mock_project_token", "mock_auth")
+                    integrationConfig = ProjectConfig(projectToken = "mock_project_token"),
+                    integrationRouteMap = mapOf(EventType.INSTALL to listOf(
+                        ProjectConfig("mock_base_url.com", "mock_project_token", "mock_auth")
                     )),
                     automaticPushNotification = false
                 ))

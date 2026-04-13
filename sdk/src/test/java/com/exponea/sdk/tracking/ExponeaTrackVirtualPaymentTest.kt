@@ -9,6 +9,7 @@ import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
@@ -40,7 +41,10 @@ internal class ExponeaTrackVirtualPaymentTest : ExponeaSDKTest() {
         }
         skipInstallEvent()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val configuration = ExponeaConfiguration(projectToken = "mock-token", automaticSessionTracking = false)
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(projectToken = "mock-token"),
+            automaticSessionTracking = false
+        )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
     }

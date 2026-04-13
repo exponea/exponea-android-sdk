@@ -6,6 +6,7 @@ import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.SegmentsManagerImpl
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
@@ -33,10 +34,10 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
     @Before
     fun before() {
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         }
-        every { anyConstructed<FetchManagerImpl>().linkCustomerIdsSync(any(), any()) } answers {
-            Result<Any?>(true, null)
+        every { anyConstructed<FetchManagerImpl>().linkCustomerIdsSync(any<ProjectConfig>(), any()) } answers {
+            Result(true, null)
         }
         mockkConstructorFix(CustomerIdsRepositoryImpl::class)
         every { anyConstructed<CustomerIdsRepositoryImpl>().get() } returns SegmentTest.getCustomerIds()
@@ -53,7 +54,7 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
 
     @Test
     fun `should fetch some segmentation data`() {
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -70,7 +71,7 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
 
     @Test
     fun `should fetch no segmentation data for different category`() {
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -96,7 +97,7 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
             )
         } just Runs
         Exponea.telemetry = TelemetryManager(ApplicationProvider.getApplicationContext())
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -121,14 +122,14 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
 
     @Test
     fun `should left no callback instance after successful get`() {
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
             ))
         }
         waitForIt(timeoutMS = SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + ACCEPTED_INIT_DURATION_MILLIS) { done ->
-            Exponea.getSegments("discovery") { segments ->
+            Exponea.getSegments("discovery") { _ ->
                 done()
             }
         }
@@ -137,14 +138,14 @@ internal class ExponeaFetchSegmentsTest : ExponeaSDKTest() {
 
     @Test
     fun `should left no callback instance after empty get`() {
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
             ))
         }
         waitForIt(timeoutMS = SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + ACCEPTED_INIT_DURATION_MILLIS) { done ->
-            Exponea.getSegments("content") { segments ->
+            Exponea.getSegments("content") { _ ->
                 done()
             }
         }

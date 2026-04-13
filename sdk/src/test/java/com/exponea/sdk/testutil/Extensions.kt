@@ -8,6 +8,7 @@ import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.util.ExponeaGson
 import io.mockk.clearMocks
@@ -39,7 +40,9 @@ internal fun Exponea.reset() {
     resetField(Exponea, "configuration")
     safeModeOverride = null
     runDebugModeOverride = null
+    sdkAuthCallback = null
     segmentationDataCallbacks.clear()
+    telemetry = null
     flushMode = Constants.Flush.defaultFlushMode
     flushPeriod = Constants.Flush.defaultFlushPeriod
     initGate.clear()
@@ -47,6 +50,7 @@ internal fun Exponea.reset() {
     if (!wasInitialized) return
     componentForTesting.campaignRepository.clear()
     componentForTesting.customerIdsRepository.clear()
+    AuthTokenRepositoryProvider.clear()
     componentForTesting.deviceInitiatedRepository.set(false)
     componentForTesting.eventRepository.onIntegrationStopped()
     componentForTesting.pushTokenRepository.clear()

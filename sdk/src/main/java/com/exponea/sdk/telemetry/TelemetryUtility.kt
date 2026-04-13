@@ -3,6 +3,7 @@ package com.exponea.sdk.telemetry
 import android.content.Context
 import android.os.Looper
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.telemetry.model.ErrorData
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
 import com.exponea.sdk.telemetry.model.ThreadInfo
@@ -53,13 +54,14 @@ object TelemetryUtility {
         val formatConfigurationProperty = { property: KProperty1<ExponeaConfiguration, Any?> ->
             "${property.get(configuration)}${if (isDefault(property)) " [default]" else ""}"
         }
-        return hashMapOf(
-            "projectRouteMap"
-                to if (configuration.projectRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
-            "authorization"
-                to if (configuration.authorization.isNullOrEmpty()) "[]" else "[REDACTED]",
-            "baseURL"
-                to formatConfigurationProperty(ExponeaConfiguration::baseURL),
+        val configForTracking = hashMapOf(
+            "integrationRouteMap"
+                to if (configuration.integrationRouteMap.isNotEmpty()) "[REDACTED]" else "[]",
+            "baseURL" to "${configuration.integrationConfig.baseUrl}${
+                if (configuration.integrationConfig.baseUrl
+                    == defaultConfiguration.integrationConfig.baseUrl
+                ) " [default]" else ""
+            }",
             "httpLoggingLevel"
                 to formatConfigurationProperty(ExponeaConfiguration::httpLoggingLevel),
             "maxTries"
@@ -103,6 +105,12 @@ object TelemetryUtility {
             "applicationId"
                 to formatConfigurationProperty(ExponeaConfiguration::applicationId)
         )
+        configuration.integrationConfig.let {
+            if (it is ProjectConfig) {
+                configForTracking["authorization"] = if (it.authorization.isNullOrEmpty()) "[]" else "[REDACTED]"
+            }
+        }
+        return configForTracking
     }
 
     internal data class AppInfo(

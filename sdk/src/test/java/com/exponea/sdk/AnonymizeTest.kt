@@ -4,26 +4,40 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.FetchManagerImpl
+import com.exponea.sdk.manager.FlushFinishedCallback
+import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.manager.SegmentsManagerImpl
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.Constants.EventTypes.installation
+import com.exponea.sdk.models.Constants.EventTypes.pushTokenTrack
+import com.exponea.sdk.models.Constants.EventTypes.sessionStart
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.SdkAuthCallback
+import com.exponea.sdk.models.SdkAuthError
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.SegmentationDataCallback
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.every
+import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.nullValue
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -58,12 +72,18 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     private fun checkEvent(
         event: ExportedEvent,
         expectedEventType: String?,
-        expectedProject: ExponeaProject,
+        expectedProjectConfig: ProjectConfig,
         expectedUserId: String,
         expectedProperties: HashMap<String, Any>? = null
     ) {
+        val transformedIntegrationConfiguration = IntegrationConfiguration(
+            integrationId = expectedProjectConfig.projectToken,
+            authorization = expectedProjectConfig.authorization,
+            baseUrl = expectedProjectConfig.baseUrl,
+            type = IntegrationConfigType.PROJECT
+        )
         assertEquals(expectedEventType, event.type)
-        assertEquals(expectedProject, event.exponeaProject)
+        assertEquals(transformedIntegrationConfiguration, event.integrationConfiguration)
         assertEquals(hashMapOf<String, String?>("cookie" to expectedUserId), event.customerIds)
         if (expectedProperties != null) assertEquals(expectedProperties, event.properties)
     }
@@ -71,25 +91,25 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     @Test
     fun `should anonymize sdk and switch projects`() = runInSingleThread { idleThreads ->
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
-        Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(context, ExponeaConfiguration(
-            baseURL = initialProject.baseUrl,
-            projectToken = initialProject.projectToken,
-            authorization = initialProject.authorization)
+        val initialProjectConfig = ProjectConfig(
+            "https://base-url.com",
+            "project-token",
+            "Token auth"
         )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = initialProjectConfig))
         val testFirebaseToken = "push_token"
         val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
 
         Exponea.trackEvent(
-                eventType = "test",
-                properties = PropertiesList(hashMapOf("name" to "test")),
-                timestamp = currentTimeSeconds()
+            eventType = "test",
+            properties = PropertiesList(hashMapOf("name" to "test")),
+            timestamp = currentTimeSeconds()
         )
         Exponea.trackPushToken(testFirebaseToken)
 
-        val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
-        Exponea.anonymize(exponeaProject = newProject)
+        val newProjectConfig = ProjectConfig("https://other-base-url.com", "new_project_token", "Token other-auth")
+        Exponea.anonymize(integrationConfig = newProjectConfig)
         Exponea.trackEvent(
             eventType = "test",
             properties = PropertiesList(hashMapOf("name" to "test")),
@@ -101,42 +121,50 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         val deviceId = DeviceIdManager.getDeviceId(context)
         events.sortedBy { it.timestamp }
         assertEquals(9, events.size)
-        checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-        checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
-        checkEvent(events[2], Constants.EventTypes.pushTokenTrack, initialProject, userId, expectedPushTokenProperties(
-            valid = true,
-            description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
-            deviceId = deviceId
-        ))
-        checkEvent(events[3], Constants.EventTypes.sessionEnd, initialProject, userId, null)
+        checkEvent(events[0], installation, initialProjectConfig, userId!!, null)
+        checkEvent(events[1], "test", initialProjectConfig, userId, expectedTestEventProperties(deviceId))
+        checkEvent(
+            events[2], pushTokenTrack, initialProjectConfig, userId, expectedPushTokenProperties(
+                valid = true,
+                description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                deviceId = deviceId
+            )
+        )
+        checkEvent(events[3], Constants.EventTypes.sessionEnd, initialProjectConfig, userId, null)
         // anonymize is called. We clear push token in old user and track initial events for new user
-        checkEvent(events[4], Constants.EventTypes.pushTokenTrack, initialProject, userId, expectedPushTokenProperties(
-            valid = false,
-            description = Constants.PushPermissionStatus.INVALIDATED_TOKEN,
-            deviceId = deviceId
-        ))
-        checkEvent(events[5], Constants.EventTypes.installation, newProject, newUserId!!, null)
-        checkEvent(events[6], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-        checkEvent(events[7], Constants.EventTypes.pushTokenTrack, newProject, newUserId, expectedPushTokenProperties(
-            valid = true,
-            description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
-            deviceId = deviceId
-        ))
-        checkEvent(events[8], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
+        checkEvent(
+            events[4], pushTokenTrack, initialProjectConfig, userId, expectedPushTokenProperties(
+                valid = false,
+                description = Constants.PushPermissionStatus.INVALIDATED_TOKEN,
+                deviceId = deviceId
+            )
+        )
+        checkEvent(events[5], installation, newProjectConfig, newUserId!!, null)
+        checkEvent(events[6], sessionStart, newProjectConfig, newUserId, null)
+        checkEvent(
+            events[7], pushTokenTrack, newProjectConfig, newUserId, expectedPushTokenProperties(
+                valid = true,
+                description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
+                deviceId = deviceId
+            )
+        )
+        checkEvent(events[8], "test", newProjectConfig, newUserId, expectedTestEventProperties(deviceId))
     }
 
     @Test
     fun `should not track session start on anonymize when automaticSessionTracking is off`() {
         runInSingleThread { idleThreads ->
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            val initialProjectConfig = ProjectConfig(
+                "https://base-url.com",
+                "project-token",
+                "Token auth"
+            )
             val deviceId = DeviceIdManager.getDeviceId(context)
             Exponea.flushMode = FlushMode.MANUAL
-            Exponea.init(context, ExponeaConfiguration(
-                baseURL = initialProject.baseUrl,
-                projectToken = initialProject.projectToken,
-                authorization = initialProject.authorization,
-                automaticSessionTracking = false)
+            Exponea.init(
+                context,
+                ExponeaConfiguration(integrationConfig = initialProjectConfig, automaticSessionTracking = false)
             )
             val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
             Exponea.trackEvent(
@@ -144,8 +172,8 @@ internal class AnonymizeTest : ExponeaSDKTest() {
                 properties = PropertiesList(hashMapOf("name" to "test")),
                 timestamp = currentTimeSeconds()
             )
-            val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
-            Exponea.anonymize(exponeaProject = newProject)
+            val newProjectConfig = ProjectConfig("https://other-base-url.com", "new_project_token", "Token other-auth")
+            Exponea.anonymize(integrationConfig = newProjectConfig)
             val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
             Exponea.trackEvent(
                 eventType = "test",
@@ -156,10 +184,10 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             val events = Exponea.componentForTesting.eventRepository.all()
             events.sortedBy { it.timestamp }
             assertEquals(expected = 4, actual = events.size)
-            checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
-            checkEvent(events[2], Constants.EventTypes.installation, newProject, newUserId!!, null)
-            checkEvent(events[3], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
+            checkEvent(events[0], installation, initialProjectConfig, userId!!, null)
+            checkEvent(events[1], "test", initialProjectConfig, userId, expectedTestEventProperties(deviceId))
+            checkEvent(events[2], installation, newProjectConfig, newUserId!!, null)
+            checkEvent(events[3], "test", newProjectConfig, newUserId, expectedTestEventProperties(deviceId))
         }
     }
 
@@ -167,14 +195,19 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     fun `should track session start and end on anonymize when automaticSessionTracking is on`() {
         runInSingleThread { idleThreads ->
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val initialProject = ExponeaProject("https://base-url.com", "project-token", "Token auth")
+            val initialProjectConfig = ProjectConfig(
+                "https://base-url.com",
+                "project-token",
+                "Token auth"
+            )
             val deviceId = DeviceIdManager.getDeviceId(context)
             Exponea.flushMode = FlushMode.MANUAL
-            Exponea.init(context, ExponeaConfiguration(
-                baseURL = initialProject.baseUrl,
-                projectToken = initialProject.projectToken,
-                authorization = initialProject.authorization,
-                automaticSessionTracking = true)
+            Exponea.init(
+                context,
+                ExponeaConfiguration(
+                    integrationConfig = initialProjectConfig,
+                    automaticSessionTracking = true
+                )
             )
             val userId = Exponea.componentForTesting.customerIdsRepository.get().cookie
             Exponea.trackEvent(
@@ -182,8 +215,12 @@ internal class AnonymizeTest : ExponeaSDKTest() {
                 properties = PropertiesList(hashMapOf("name" to "test")),
                 timestamp = currentTimeSeconds()
             )
-            val newProject = ExponeaProject("https://other-base-url.com", "new_project_token", "Token other-auth")
-            Exponea.anonymize(exponeaProject = newProject)
+            val newProjectConfig = ProjectConfig(
+                "https://other-base-url.com",
+                "new_project_token",
+                "Token other-auth"
+            )
+            Exponea.anonymize(integrationConfig = newProjectConfig)
             val newUserId = Exponea.componentForTesting.customerIdsRepository.get().cookie
             Exponea.trackEvent(
                 eventType = "test",
@@ -194,12 +231,12 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             val events = Exponea.componentForTesting.eventRepository.all()
             events.sortedBy { it.timestamp }
             assertEquals(expected = 6, actual = events.size)
-            checkEvent(events[0], Constants.EventTypes.installation, initialProject, userId!!, null)
-            checkEvent(events[1], "test", initialProject, userId, expectedTestEventProperties(deviceId))
-            checkEvent(events[2], Constants.EventTypes.sessionEnd, initialProject, userId, null)
-            checkEvent(events[3], Constants.EventTypes.installation, newProject, newUserId!!, null)
-            checkEvent(events[4], Constants.EventTypes.sessionStart, newProject, newUserId, null)
-            checkEvent(events[5], "test", newProject, newUserId, expectedTestEventProperties(deviceId))
+            checkEvent(events[0], installation, initialProjectConfig, userId!!, null)
+            checkEvent(events[1], "test", initialProjectConfig, userId, expectedTestEventProperties(deviceId))
+            checkEvent(events[2], Constants.EventTypes.sessionEnd, initialProjectConfig, userId, null)
+            checkEvent(events[3], installation, newProjectConfig, newUserId!!, null)
+            checkEvent(events[4], sessionStart, newProjectConfig, newUserId, null)
+            checkEvent(events[5], "test", newProjectConfig, newUserId, expectedTestEventProperties(deviceId))
         }
     }
 
@@ -207,14 +244,9 @@ internal class AnonymizeTest : ExponeaSDKTest() {
     fun `should clear segmentation cache and processes`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
-        val project = ExponeaProject("https://base-url.com", "project-token", "Token auth")
-        Exponea.init(context, ExponeaConfiguration(
-                baseURL = project.baseUrl,
-                projectToken = project.projectToken,
-                authorization = project.authorization,
-                automaticSessionTracking = false)
-        )
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        val projectConfig = ProjectConfig("https://base-url.com", "project-token", "Token auth")
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = projectConfig, automaticSessionTracking = false))
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                 Result(true, SegmentTest.getSegmentations())
             )
@@ -235,5 +267,117 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         assertEquals(0, segmentsManager.newbieCallbacks.size)
         assertNull(Exponea.componentForTesting.segmentsCache.get())
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 10)
+    }
+
+    @Test
+    fun `should auto flush before anonymize when StreamConfig and JWT is active`() = runInSingleThread { idleThreads ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val streamConfig = StreamConfig(streamId = "test-stream")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = streamConfig))
+        Exponea.componentForTesting.authTokenRepository.setToken("test-jwt")
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            firstArg<FlushFinishedCallback?>()?.invoke(kotlin.Result.success(Unit))
+        }
+        Exponea.anonymize()
+        idleThreads()
+        verify(exactly = 1) { anyConstructed<FlushManagerImpl>().flushData(any()) }
+        assertThat(Exponea.componentForTesting.authTokenRepository.getToken(), nullValue())
+    }
+
+    @Test
+    fun `should not flush before anonymize when ProjectConfig is used`() = runInSingleThread { idleThreads ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val projectConfig = ProjectConfig(projectToken = "project-token", authorization = "Token auth")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = projectConfig))
+        Exponea.anonymize()
+        idleThreads()
+        verify(exactly = 0) { anyConstructed<FlushManagerImpl>().flushData(any()) }
+    }
+
+    @Test
+    fun `should not flush before anonymize when StreamConfig has no JWT and no auth callback`() =
+        runInSingleThread { idleThreads ->
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val streamConfig = StreamConfig(streamId = "test-stream")
+            Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(context, ExponeaConfiguration(integrationConfig = streamConfig))
+            Exponea.anonymize()
+            idleThreads()
+            verify(exactly = 0) { anyConstructed<FlushManagerImpl>().flushData(any()) }
+        }
+
+    @Test
+    fun `should auto flush before anonymize when StreamConfig and auth callback is set without token`() =
+        runInSingleThread { idleThreads ->
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val streamConfig = StreamConfig(streamId = "test-stream")
+            Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(context, ExponeaConfiguration(integrationConfig = streamConfig))
+            Exponea.sdkAuthCallback = object : SdkAuthCallback {
+                override fun onAuthFailure(error: SdkAuthError) {}
+            }
+            every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+                firstArg<FlushFinishedCallback?>()?.invoke(kotlin.Result.success(Unit))
+            }
+            Exponea.anonymize()
+            idleThreads()
+            verify(exactly = 1) { anyConstructed<FlushManagerImpl>().flushData(any()) }
+        }
+
+    @Test
+    fun `should invoke onAnonymized callback after completion`() = runInSingleThread { idleThreads ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val projectConfig = ProjectConfig(projectToken = "project-token", authorization = "Token auth")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = projectConfig))
+        var callbackInvoked = false
+        Exponea.anonymize(null, null) { callbackInvoked = true }
+        idleThreads()
+        assertThat(callbackInvoked, equalTo(true))
+    }
+
+    @Test
+    fun `should invoke onAnonymized callback after flush completes`() = runInSingleThread { idleThreads ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val streamConfig = StreamConfig(streamId = "test-stream")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = streamConfig))
+        Exponea.componentForTesting.authTokenRepository.setToken("test-jwt")
+        var callbackInvoked = false
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            assertThat(
+                "Callback should not be invoked before flush completes",
+                callbackInvoked,
+                equalTo(false)
+            )
+            firstArg<FlushFinishedCallback?>()?.invoke(kotlin.Result.success(Unit))
+        }
+        Exponea.anonymize(null, null) { callbackInvoked = true }
+        idleThreads()
+        assertThat(callbackInvoked, equalTo(true))
+    }
+
+    @Test
+    fun `should complete anonymize even when flush fails`() = runInSingleThread { idleThreads ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val streamConfig = StreamConfig(streamId = "test-stream")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = streamConfig))
+        Exponea.componentForTesting.authTokenRepository.setToken("test-jwt")
+        every { anyConstructed<FlushManagerImpl>().flushData(any()) } answers {
+            firstArg<FlushFinishedCallback?>()?.invoke(
+                kotlin.Result.failure(Exception("No internet connection"))
+            )
+        }
+        var callbackInvoked = false
+        Exponea.anonymize(null, null) { callbackInvoked = true }
+        idleThreads()
+        assertThat(
+            "onAnonymized should be invoked even when flush fails",
+            callbackInvoked,
+            equalTo(true)
+        )
     }
 }

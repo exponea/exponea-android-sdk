@@ -20,12 +20,13 @@ import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
@@ -114,9 +115,9 @@ internal class TrackingConsentManagerImpl(
             properties["consent_category_tracking"] = data.consentCategoryTracking
         }
         eventManager.processTrack(
-            eventType = if (data?.hasCustomEventType == true) data.eventType else Constants.EventTypes.push,
+            eventType = if (data?.hasCustomEventType == true) data.eventType else EventTypes.push,
             properties = properties.properties,
-            type = if (data?.hasCustomEventType == true) EventType.TRACK_EVENT else EventType.PUSH_DELIVERED,
+            type = if (data?.hasCustomEventType == true) TRACK_EVENT else EventType.PUSH_DELIVERED,
             timestamp = timestamp,
             trackingAllowed = trackingAllowed
         )
@@ -201,7 +202,7 @@ internal class TrackingConsentManagerImpl(
         properties["action_type"] = "app inbox"
         properties["platform"] = "android"
         eventManager.processTrack(
-            eventType = Constants.EventTypes.push,
+            eventType = EventTypes.push,
             properties = properties.properties,
             type = EventType.APP_INBOX_OPENED,
             timestamp = currentTimeSeconds(),
@@ -248,7 +249,7 @@ internal class TrackingConsentManagerImpl(
         properties["action_type"] = "app inbox"
         properties["platform"] = "android"
         eventManager.processTrack(
-            eventType = Constants.EventTypes.push,
+            eventType = EventTypes.push,
             properties = properties.properties,
             type = EventType.APP_INBOX_CLICKED,
             timestamp = currentTimeSeconds(),
@@ -343,40 +344,39 @@ internal class TrackingConsentManagerImpl(
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences
             )
-            val networkManager = NetworkHandlerImpl(configuration)
+            val integrationConfigFactory = IntegrationConfigFactory(configuration)
+
+            val networkManager = NetworkHandlerImpl(
+                configuration,
+                AuthTokenRepositoryProvider.get(context),
+                customerIdsRepository,
+                null
+            ) { Exponea.sdkAuthCallback }
             val exponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
             val connectionManager = ConnectionManagerImpl(context)
             val flushManager = FlushManagerImpl(
                 configuration,
                 eventRepository,
                 exponeaService,
-                connectionManager
+                connectionManager,
+                customerIdsRepository
             ) {
                 // no action for identifyCustomer - SDK is not initialized
             }
-            val projectFactory = try {
-                ExponeaProjectFactory(context, configuration)
-            } catch (e: InvalidConfigurationException) {
-                if (configuration.advancedAuthEnabled) {
-                    Logger.w(this, "Turning off advanced auth for campaign data tracking")
-                    configuration.advancedAuthEnabled = false
-                }
-                ExponeaProjectFactory(context, configuration)
-            }
             val eventManager = EventManagerImpl(
-                configuration, eventRepository, customerIdsRepository, flushManager, projectFactory,
-                onEventCreated = { event, type ->
+                configuration,
+                eventRepository,
+                customerIdsRepository,
+                flushManager,
+                integrationConfigFactory,
+                onEventCreated = { _, _ ->
                     // no action for any event - SDK is not initialized
                 },
                 deviceId = DeviceIdManager.getDeviceId(context = context)
             )
             val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
-            val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
-                context, eventManager
-            )
-            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
-                context, eventManager
-            )
+            val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(context, eventManager)
+            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(context, eventManager)
             return TrackingConsentManagerImpl(
                 eventManager = eventManager,
                 campaignRepository = campaignRepository,

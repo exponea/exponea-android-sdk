@@ -1,17 +1,13 @@
 package com.exponea.sdk.util
 
 import android.app.Activity
-import android.app.Application
-import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Build
-import android.os.Bundle
 import android.os.Looper
 import android.view.View
 import androidx.annotation.DrawableRes
@@ -21,8 +17,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.InAppContentBlock
+import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PushNotificationDelegate
 import com.exponea.sdk.models.PushOpenedData
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.services.MessagingUtils
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -54,47 +53,6 @@ internal fun Call.enqueue(
 
         override fun onResponse(call: Call, response: Response) {
             onResponse(call, response)
-        }
-    })
-}
-
-internal fun Context.addAppStateCallbacks(onOpen: () -> Unit, onClosed: () -> Unit) {
-    val application = this.applicationContext as Application
-    application.registerActivityLifecycleCallbacks(object :
-            Application.ActivityLifecycleCallbacks {
-        private var activityCount: Int = 0
-        override fun onActivityResumed(activity: Activity) {
-            runCatching {
-                onOpen()
-            }.logOnException()
-            activityCount++
-        }
-
-        override fun onActivityStarted(activity: Activity) {}
-        override fun onActivityDestroyed(activity: Activity) {}
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-        override fun onActivityStopped(activity: Activity) {}
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-        override fun onActivityPaused(activity: Activity) {
-            activityCount--
-            if (activityCount <= 0) {
-                runCatching {
-                    onClosed()
-                }.logOnException()
-            }
-        }
-    })
-    this.registerComponentCallbacks(object : ComponentCallbacks2 {
-        override fun onLowMemory() {}
-
-        override fun onConfigurationChanged(newConfig: Configuration) {}
-
-        override fun onTrimMemory(level: Int) {
-            if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
-                runCatching {
-                    onClosed()
-                }.logOnException()
-            }
         }
     })
 }
@@ -565,4 +523,11 @@ internal fun InAppContentBlock.deepCopy(): InAppContentBlock {
         target.personalizedData!!.loadedAt = Date(sourcePersonData.loadedAt!!.time)
     }
     return target
+}
+
+internal fun IntegrationConfig.getId(): String {
+    return when (this) {
+        is ProjectConfig -> this.projectToken
+        is StreamConfig -> this.streamId
+    }
 }

@@ -9,6 +9,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -40,7 +41,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token when Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewToken(context, pushToken)
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -64,7 +65,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token when Exponea Config is available`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewToken(context, pushToken)
         verify {
             anyConstructed<EventManagerImpl>().track(
@@ -127,7 +128,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track fcm token after Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewToken(context, pushToken)
         assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -161,7 +162,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // Firebase sends a new token, but no SDK config is stored
         Exponea.handleNewToken(context, pushToken)
         // And SDK is initialized later
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         // should re-track a stored token
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -193,7 +194,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         // HMS sends a new token, but no SDK config is stored
         Exponea.handleNewHmsToken(context, pushToken)
         // And SDK is initialized later
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         // should re-track a stored token
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -214,7 +215,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token when Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewHmsToken(context, pushToken)
         verify {
             Exponea.componentForTesting.eventManager.track(
@@ -238,7 +239,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token when Exponea Config is available`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewHmsToken(context, pushToken)
         verify {
             anyConstructed<EventManagerImpl>().track(
@@ -262,7 +263,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should track hms token after Exponea is initialized`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.handleNewHmsToken(context, pushToken)
         assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
         assertNotNull(PushTokenRepositoryProvider.get(context).getLastTrackDateInMilliseconds())
@@ -285,7 +286,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should not track fcm token when Exponea was initialized but stopped`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.isStopped = true
         Exponea.handleNewToken(context, pushToken)
         verify(exactly = 0) {
@@ -303,7 +304,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `should not track fcm token when Exponea Config is available but stopped`() {
-        ExponeaConfigRepository.set(context, ExponeaConfiguration(projectToken = "mock-token"))
+        ExponeaConfigRepository.set(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         Exponea.isStopped = true
         Exponea.handleNewToken(context, pushToken)
         verify(exactly = 0) {
@@ -341,7 +342,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `track old token as invalid when new token is received - FCM`() {
         val firstPushToken = "push-token-1"
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         // 1. Track the first token
         Exponea.handleNewToken(context, firstPushToken)
 
@@ -400,7 +401,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
     @Test
     fun `track old token as invalid when new token is received - HMS`() {
         val firstPushToken = "push-token-1"
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         // 1. Track the first token
         Exponea.handleNewHmsToken(context, firstPushToken)
 
@@ -456,7 +457,7 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
 
     @Test
     fun `do nothing when same token has arrived`() {
-        Exponea.init(context, ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
         // 1. Track the first token
         Exponea.handleNewToken(context, pushToken)
 

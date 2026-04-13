@@ -1,13 +1,14 @@
 package com.exponea.sdk.database
 
 import androidx.room.TypeConverter
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
 import com.exponea.sdk.models.Route
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.fromJson
 import com.google.gson.Gson
 
-class Converters {
+internal class Converters {
 
     private val separator = "§§§§§"
 
@@ -24,50 +25,28 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromProject(value: ExponeaProject?): String {
-        if (value == null) return ""
-        return value.projectToken + separator + value.authorization + separator + value.baseUrl
+    fun fromIntegrationConfiguration(value: IntegrationConfiguration?): String {
+        return value?.let {
+            it.integrationId + separator + it.authorization + separator + it.baseUrl + separator + it.type.name
+        } ?: ""
     }
 
     @TypeConverter
-    fun toProject(value: String): ExponeaProject? {
+    fun toIntegrationConfiguration(value: String): IntegrationConfiguration? {
         if (value.isEmpty()) return null
         val parts = value.split(separator)
         return if (parts.size < 3) {
             null
         } else {
-            val result = ExponeaProject(
-                projectToken = parts[0],
-                authorization = parts[1],
+            IntegrationConfiguration(
+                integrationId = parts[0],
+                authorization = if (parts[1] == "null") null else parts[1],
                 baseUrl = parts[2],
-                inAppContentBlockPlaceholdersAutoLoad = toStringList(parts.getOrNull(3))
+                type = if (parts.size == 3)
+                    IntegrationConfigType.PROJECT
+                else IntegrationConfigType.valueOf(parts[3])
             )
-            return result
         }
-    }
-
-    @TypeConverter
-    fun toStringList(source: String?): List<String> {
-        if (source.isNullOrBlank()) {
-            return emptyList()
-        }
-        try {
-            return Gson().fromJson<List<String>>(source)
-        } catch (ex: Exception) {
-            Logger.e(this, ex.message ?: "Unable to deserialize the list", ex)
-        }
-        return emptyList()
-    }
-
-    @TypeConverter
-    fun fromStringList(data: List<String>?): String? {
-        if (data == null) return ""
-        try {
-            return Gson().toJson(data)
-        } catch (ex: Exception) {
-            Logger.e(this, ex.message ?: "Unable to serialize the list", ex)
-        }
-        return null
     }
 
     @TypeConverter

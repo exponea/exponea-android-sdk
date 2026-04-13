@@ -10,12 +10,18 @@ import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaConfigurationOverrides
+import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.InAppMessageTest
+import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Segment
@@ -23,8 +29,10 @@ import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.AppInboxCacheImplTest
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KFunction
+import kotlin.reflect.KFunction0
 import kotlin.reflect.KFunction1
 import kotlin.reflect.KFunction2
+import kotlin.reflect.KFunction3
 import kotlin.reflect.KFunction4
 
 internal object PublicApiTestCases {
@@ -47,6 +55,7 @@ internal object PublicApiTestCases {
         Pair(Exponea::safeModeEnabled, true),
         Pair(Exponea::runDebugMode, false),
         Pair(Exponea::segmentationDataCallbacks, CopyOnWriteArrayList<SegmentationDataCallback>()),
+        Pair(Exponea::sdkAuthCallback, null),
         Pair(Exponea::pushNotificationsDelegate, null)
     )
 
@@ -54,7 +63,7 @@ internal object PublicApiTestCases {
         Pair<KFunction1<Context, Boolean>, () -> Any>(
             Exponea::init
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) },
-        Pair<KFunction2<Context, ExponeaConfiguration, Unit>, () -> Any>(
+        Pair<KFunction3<Context, ExponeaConfiguration, CustomerIdentity?, Unit>, () -> Any>(
             Exponea::init
         ) { Exponea.init(
             ApplicationProvider.getApplicationContext(),
@@ -65,12 +74,39 @@ internal object PublicApiTestCases {
         ) { Exponea.init(ApplicationProvider.getApplicationContext()) }
     )
 
+    private val anonymizeNoArgs: KFunction0<Unit> = Exponea::anonymize
+    private val anonymizeWithProject: KFunction2<ExponeaProject?, Map<EventType, List<ExponeaProject>>?, Unit> =
+        Exponea::anonymize
+    private val anonymizeWithIntegrationConfig: KFunction2<IntegrationConfig?, ExponeaConfigurationOverrides?, Unit> =
+        Exponea::anonymize
+    private val anonymizeWithCallback:
+            KFunction3<IntegrationConfig?, ExponeaConfigurationOverrides?, () -> Unit, Unit> = Exponea::anonymize
+    private val identifyCustomerWithCustomerIds: KFunction2<CustomerIds, PropertiesList, Unit> =
+        Exponea::identifyCustomer
+    private val identifyCustomerWithCustomerIdentity: KFunction2<CustomerIdentity, Map<String, Any>, Unit> =
+        Exponea::identifyCustomer
+
     val methods = arrayOf(
-        Pair(Exponea::anonymize
-        ) { Exponea.anonymize() },
-        Pair(
-            Exponea::identifyCustomer
-        ) { Exponea.identifyCustomer(CustomerIds(), PropertiesList(hashMapOf())) },
+        Pair(anonymizeNoArgs) { Exponea.anonymize() },
+        Pair(anonymizeWithProject) {
+            Exponea.anonymize(
+                ExponeaProject(baseUrl = "", projectToken = "", authorization = null),
+                null
+            )
+        },
+        Pair(anonymizeWithIntegrationConfig) {
+            Exponea.anonymize(ProjectConfig(projectToken = ""), null)
+        },
+        Pair(anonymizeWithCallback) {
+            Exponea.anonymize(ProjectConfig(projectToken = ""), null) { }
+        },
+        Pair(identifyCustomerWithCustomerIds) {
+            Exponea.identifyCustomer(CustomerIds(), PropertiesList(hashMapOf()))
+        },
+        Pair(identifyCustomerWithCustomerIdentity) {
+            Exponea.identifyCustomer(CustomerIdentity(mapOf("customer_id" to "test-id")))
+        },
+        Pair(Exponea::setSdkAuthToken) { Exponea.setSdkAuthToken("mock-token") },
         Pair(
             Exponea::flushData
         ) { Exponea.flushData() },
@@ -327,7 +363,9 @@ internal object PublicApiTestCases {
     }
 
     val awaitInitMethods = arrayOf(
-        Exponea::identifyCustomer,
+        identifyCustomerWithCustomerIds,
+        identifyCustomerWithCustomerIdentity,
+        Exponea::setSdkAuthToken,
         Exponea::flushData,
         Exponea::getConsents,
         Exponea::trackClickedPush,

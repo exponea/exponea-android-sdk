@@ -1,63 +1,53 @@
 package com.exponea.sdk.models
 
 internal data class ApiEndPoint(
-    private val endPointName: EndPointName,
-    private val pathParams: Map<String, String> = emptyMap(),
-    private val queryParams: List<Pair<String, String>> = emptyList()
+    private val endPointName: EndPointName
 ) {
 
     companion object {
-        fun forName(name: EndPointName) = ApiEndPoint(name)
-
-        internal const val TOKEN_PATH_PARAM = "$$\$TOK$$$"
-        internal const val COOKIE_ID_PATH_PARAM = "$$\$CIT$$$"
+        const val TOKEN_PLACEHOLDER = "{projectToken}"
+        const val STREAM_ID_PLACEHOLDER = "{streamId}"
+        const val COOKIE_ID_PLACEHOLDER = "{cookieId}"
     }
 
     enum class EndPointName(internal val urlTemplate: String) {
-        TRACK_CUSTOMERS("/track/v2/projects/$TOKEN_PATH_PARAM/customers"),
-        TRACK_EVENTS("/track/v2/projects/$TOKEN_PATH_PARAM/customers/events"),
-        TRACK_CAMPAIGN("/track/v2/projects/$TOKEN_PATH_PARAM/campaigns/clicks"),
-        CUSTOMERS_ATTRIBUTES("/data/v2/projects/$TOKEN_PATH_PARAM/customers/attributes"),
-        CONSENTS("/data/v2/projects/$TOKEN_PATH_PARAM/consent/categories"),
-        IN_APP_MESSAGES("/webxp/s/$TOKEN_PATH_PARAM/inappmessages?compatibility=3"),
-        PUSH_SELF_CHECK("/campaigns/send-self-check-notification?project_id=$TOKEN_PATH_PARAM"),
-        MESSAGE_INBOX("/webxp/projects/$TOKEN_PATH_PARAM/appinbox/fetch"),
-        MESSAGE_INBOX_READ("/webxp/projects/$TOKEN_PATH_PARAM/appinbox/markasread"),
-        INAPP_CONTENT_BLOCKS_STATIC("/wxstatic/projects/$TOKEN_PATH_PARAM/bundle-android.json?v=2"),
-        INAPP_CONTENT_BLOCKS_PERSONAL("/webxp/s/$TOKEN_PATH_PARAM/inappcontentblocks?v=2"),
-        SEGMENTS("/webxp/projects/$TOKEN_PATH_PARAM/segments"),
-        LINK_CUSTOMER_IDS("/webxp/projects/$TOKEN_PATH_PARAM/cookies/$COOKIE_ID_PATH_PARAM/link-ids")
+        TRACK_CUSTOMERS("/track/v2/projects/$TOKEN_PLACEHOLDER/customers"),
+        U_TRACK_CUSTOMERS("/track/u/v1/customers?stream_id=$STREAM_ID_PLACEHOLDER"),
+        TRACK_EVENTS("/track/v2/projects/$TOKEN_PLACEHOLDER/customers/events"),
+        U_TRACK_EVENTS("/track/u/v1/customers/events?stream_id=$STREAM_ID_PLACEHOLDER"),
+        TRACK_CAMPAIGN("/track/v2/projects/$TOKEN_PLACEHOLDER/campaigns/clicks"),
+        U_TRACK_CAMPAIGN("/track/u/v1/campaigns/clicks?stream_id=$STREAM_ID_PLACEHOLDER"),
+        CUSTOMERS_ATTRIBUTES("/data/v2/projects/$TOKEN_PLACEHOLDER/customers/attributes"),
+        U_RECOMMENDATIONS("/optimization/streams/$STREAM_ID_PLACEHOLDER/recommend/user"),
+        CONSENTS("/data/v2/projects/$TOKEN_PLACEHOLDER/consent/categories"),
+        U_CONSENTS("/data/v2/streams/$STREAM_ID_PLACEHOLDER/consent/categories"),
+        IN_APP_MESSAGES("/webxp/s/$TOKEN_PLACEHOLDER/inappmessages?compatibility=3"),
+        U_IN_APP_MESSAGES("/webxp/streams/$STREAM_ID_PLACEHOLDER/inappmessages?compatibility=3"),
+        PUSH_SELF_CHECK("/campaigns/send-self-check-notification?project_id=$TOKEN_PLACEHOLDER"),
+        U_PUSH_SELF_CHECK("/campaigns/streams/$STREAM_ID_PLACEHOLDER/send-self-check-notification"),
+        MESSAGE_INBOX("/webxp/projects/$TOKEN_PLACEHOLDER/appinbox/fetch"),
+        U_MESSAGE_INBOX("/webxp/streams/$STREAM_ID_PLACEHOLDER/appinbox/fetch"),
+        MESSAGE_INBOX_READ("/webxp/projects/$TOKEN_PLACEHOLDER/appinbox/markasread"),
+        U_MESSAGE_INBOX_READ("/webxp/streams/$STREAM_ID_PLACEHOLDER/appinbox/markasread"),
+        INAPP_CONTENT_BLOCKS_STATIC("/wxstatic/projects/$TOKEN_PLACEHOLDER/bundle-android.json?v=2"),
+        U_INAPP_CONTENT_BLOCKS_STATIC("/wxstatic/streams/$STREAM_ID_PLACEHOLDER/bundle-android.json?v=2"),
+        INAPP_CONTENT_BLOCKS_PERSONAL("/webxp/s/$TOKEN_PLACEHOLDER/inappcontentblocks?v=2"),
+        U_INAPP_CONTENT_BLOCKS_PERSONAL("/webxp/streams/$STREAM_ID_PLACEHOLDER/inappcontentblocks?v=2"),
+        SEGMENTS("/webxp/projects/$TOKEN_PLACEHOLDER/segments?cookie=$COOKIE_ID_PLACEHOLDER"),
+        U_SEGMENTS("/webxp/streams/$STREAM_ID_PLACEHOLDER/segments?cookie=$COOKIE_ID_PLACEHOLDER"),
+        LINK_CUSTOMER_IDS("/webxp/projects/$TOKEN_PLACEHOLDER/cookies/$COOKIE_ID_PLACEHOLDER/link-ids"),
+        U_LINK_CUSTOMER_IDS("/webxp/streams/$STREAM_ID_PLACEHOLDER/cookies/$COOKIE_ID_PLACEHOLDER/link-ids")
     }
 
-    override fun toString(): String {
-        var requestUrl = endPointName.urlTemplate
-        pathParams.forEach { pathParamDesc ->
-            requestUrl = requestUrl.replace(pathParamDesc.key, pathParamDesc.value)
+    fun applyPlaceholders(placeholderMappings: Map<String, String>): String {
+        var url = endPointName.urlTemplate
+        placeholderMappings.forEach {
+            url = url.replace(it.key, it.value)
         }
-        val queryParamsPart = queryParams.map {
-            it.first + "=" + it.second
-        }.joinToString("&")
-        if (queryParamsPart.isNotBlank()) {
-            requestUrl = "$requestUrl?$queryParamsPart"
-        }
-        return requestUrl
+        return url
     }
 
-    fun withToken(projectToken: String) = withPathParam(TOKEN_PATH_PARAM, projectToken)
+    fun applyStreamId(streamId: String) = applyPlaceholders(mapOf(STREAM_ID_PLACEHOLDER to streamId))
 
-    fun withPathParam(pathKey: String, pathValue: String): ApiEndPoint {
-        return ApiEndPoint(
-            endPointName = this.endPointName,
-            pathParams = this.pathParams.plus(Pair(pathKey, pathValue)),
-            queryParams = this.queryParams
-        )
-    }
-
-    fun withQueryParam(queryKey: String, queryValue: String): ApiEndPoint {
-        return ApiEndPoint(
-            endPointName = this.endPointName,
-            pathParams = this.pathParams,
-            queryParams = this.queryParams.plus(Pair(queryKey, queryValue))
-        )
-    }
+    fun applyProjectToken(projectToken: String) = applyPlaceholders(mapOf(TOKEN_PLACEHOLDER to projectToken))
 }

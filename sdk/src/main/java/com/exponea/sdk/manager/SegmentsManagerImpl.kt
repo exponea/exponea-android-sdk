@@ -10,7 +10,7 @@ import com.exponea.sdk.models.SegmentationData
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.SegmentsCache
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.runOnBackgroundThread
@@ -21,7 +21,7 @@ import kotlinx.coroutines.Job
 
 internal class SegmentsManagerImpl(
     private val fetchManager: FetchManager,
-    private val projectFactory: ExponeaProjectFactory,
+    private val integrationConfigFactory: IntegrationConfigFactory,
     private val customerIdsRepository: CustomerIdsRepository,
     private val segmentsCache: SegmentsCache
 ) : SegmentsManager {
@@ -130,7 +130,7 @@ internal class SegmentsManagerImpl(
         if (customerIdsMergeIsRequired(triggeringCustomerIds)) {
             Logger.i(this, "Segments: Current customer IDs require to be linked")
             val mergeResult = fetchManager.linkCustomerIdsSync(
-                projectFactory.mainExponeaProject,
+                integrationConfigFactory.integrationConfig,
                 triggeringCustomerIds
             )
             if (mergeResult.success != true) {
@@ -148,7 +148,7 @@ internal class SegmentsManagerImpl(
             }
         }
         fetchManager.fetchSegments(
-            exponeaProject = projectFactory.mainExponeaProject,
+            integrationConfig = integrationConfigFactory.integrationConfig,
             customerIds = triggeringCustomerIds,
             onSuccess = {
                 checkSegmentsJob = null
@@ -391,7 +391,7 @@ internal class SegmentsManagerImpl(
         if (customerIdsMergeIsRequired(triggeringCustomerIds)) {
             Logger.i(this, "Segments: Current customer IDs require to be linked")
             val mergeResult = fetchManager.linkCustomerIdsSync(
-                projectFactory.mainExponeaProject,
+                integrationConfigFactory.integrationConfig,
                 triggeringCustomerIds
             )
             if (mergeResult.success != true) {
@@ -410,7 +410,7 @@ internal class SegmentsManagerImpl(
             }
         }
         fetchManager.fetchSegments(
-            exponeaProject = projectFactory.mainExponeaProject,
+            integrationConfig = integrationConfigFactory.integrationConfig,
             customerIds = triggeringCustomerIds,
             onSuccess = {
                 if (Exponea.isStopped) {

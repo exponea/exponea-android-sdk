@@ -33,23 +33,20 @@
             android:id="@+id/recommendationsButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Recommended"
-            android:theme="@style/AppButton" />
+            android:text="@string/action_get_recommendations" />
 
 
         <Button
             android:id="@+id/consentsButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Consents"
-            android:theme="@style/AppButton" />
+            android:text="@string/action_get_consents" />
 
         <Button
             android:id="@+id/segmentationButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Segments"
-            android:theme="@style/AppButton" />
+            android:text="@string/action_get_segments" />
 
     </LinearLayout>
 
@@ -74,7 +71,7 @@
                 android:id="@+id/resultTextView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="No data loaded" />
+                android:text="@string/no_data_loaded" />
 
         </androidx.core.widget.NestedScrollView>
 

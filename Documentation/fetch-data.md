@@ -46,9 +46,9 @@ val recommendationOptions = CustomerRecommendationOptions(
 
 // Get recommendations for the current customer
 Exponea.fetchRecommendation(
-        customerRecommendation = recommendation, 
+        recommendationOptions = recommendationOptions,
         onSuccess = {
-            // SDK will return a list of a CustomerRecommendation objects.
+            // SDK will return a list of CustomerRecommendation objects.
         },
         onFailure = {
             // SDK will return a FetchError object.

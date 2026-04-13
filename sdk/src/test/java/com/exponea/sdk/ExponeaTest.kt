@@ -3,6 +3,8 @@ package com.exponea.sdk
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -284,8 +286,11 @@ internal class ExponeaTest : ExponeaSDKTest() {
         assertTrue(Exponea.isInitialized)
     }
 
-    private fun initSdk() {
+    private fun initSdk(integrationConfig: IntegrationConfig = ProjectConfig(projectToken = "mock-token")) {
         Exponea.flushMode = FlushMode.MANUAL
-        Exponea.init(ApplicationProvider.getApplicationContext(), ExponeaConfiguration(projectToken = "mock-token"))
+        Exponea.init(
+            ApplicationProvider.getApplicationContext(),
+            ExponeaConfiguration(integrationConfig = integrationConfig)
+        )
     }
 }

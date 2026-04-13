@@ -3,8 +3,7 @@ package com.exponea.sdk.manager
 import android.os.Build
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendationOptions
-import com.exponea.sdk.models.CustomerRecommendationRequest
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.testutil.ExponeaMockServer
@@ -114,7 +113,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(consentsResponse)),
                 ExponeaGson.instance
             ).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { result ->
                     it.assertEquals(1, result.results.size)
                     it.assertEquals(false, result.results[0].legitimateInterest)
@@ -129,7 +128,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns invalid json for consents`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("{{{{")), ExponeaGson.instance).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -142,7 +141,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns empty json for consents`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("{}")), ExponeaGson.instance).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -158,7 +157,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: false, results:[]}")),
                 ExponeaGson.instance
             ).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -174,7 +173,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: true, results:[]}")),
                 ExponeaGson.instance
             ).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -187,7 +186,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns raw-empty for consents`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse("")), ExponeaGson.instance).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -200,7 +199,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
     fun `should call onFailure when server returns null for consents`() {
         waitForIt {
             FetchManagerImpl(ExponeaMockService(true, getResponse(null)), ExponeaGson.instance).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -214,7 +213,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(false, getResponse(consentsResponse)),
                 ExponeaGson.instance
             ).fetchConsents(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -230,7 +229,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success:true, results:[]}")),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
@@ -247,7 +246,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success:true}")),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
@@ -263,7 +262,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -278,7 +277,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("")),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -293,7 +292,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{{{")),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -308,7 +307,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(null)),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -323,7 +322,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(false, getResponse("{}")),
                 ExponeaGson.instance
             ).fetchInAppMessages(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
@@ -341,13 +340,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it() },
-                onFailure = { _ -> it.fail("This should not happen") }
-            )
+                onSuccess = { _ -> it() }
+            ) { _ -> it.fail("This should not happen") }
         }
     }
 
@@ -361,13 +359,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it() },
-                onFailure = { _ -> it.fail("This should not happen") }
-            )
+                onSuccess = { _ -> it() }
+            ) { _ -> it.fail("This should not happen") }
         }
     }
 
@@ -379,13 +376,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -397,13 +393,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -415,13 +410,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -433,13 +427,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -451,13 +444,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchAppInbox(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -468,11 +460,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(recommendationsResponse)),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { result ->
                     it.assertEquals(2, result.results.size)
                     it.assertEquals("5dd6af3d147f518cb457c63c", result.results[0].recommendationId)
@@ -490,11 +480,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{{{{")),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -510,11 +498,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{}")),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -530,11 +516,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: false, results:[]}")),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -550,11 +534,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: true, results:[]}")),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -570,11 +552,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("")),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -590,11 +570,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(null)),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -608,11 +586,9 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(false, getResponse(recommendationsResponse)),
                 ExponeaGson.instance
             ).fetchRecommendation(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
-                CustomerRecommendationRequest(
-                    customerIds = hashMapOf("cookie" to "mock-cookie"),
-                    options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true)
-                ),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
+                customerIds = hashMapOf("cookie" to "mock-cookie"),
+                options = CustomerRecommendationOptions(id = "mock-id", fillWithRandom = true),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -628,13 +604,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: true}")),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it() },
-                onFailure = { _ -> it.fail("This should not happen") }
-            )
+                onSuccess = { _ -> it() }
+            ) { _ -> it.fail("This should not happen") }
         }
     }
 
@@ -647,13 +622,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: false}")),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -666,13 +640,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{{{")),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -685,13 +658,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{}")),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -704,13 +676,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("")),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -723,13 +694,12 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse(null)),
                 ExponeaGson.instance
             ).markAppInboxAsRead(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")),
                 "mock-sync-token",
                 listOf("1"),
-                onSuccess = { _ -> it.fail("This should not happen") },
-                onFailure = { _ -> it() }
-            )
+                onSuccess = { _ -> it.fail("This should not happen") }
+            ) { _ -> it() }
         }
     }
 
@@ -743,7 +713,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
             )
@@ -760,7 +730,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it() },
                 onFailure = { _ -> it.fail("This should not happen") }
             )
@@ -775,7 +745,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -790,7 +760,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -805,7 +775,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -820,7 +790,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -835,7 +805,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchStaticInAppContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
             )
@@ -852,7 +822,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it() },
@@ -871,7 +841,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it() },
@@ -888,7 +858,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{success:false}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it.fail("This should not happen") },
@@ -905,7 +875,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it.fail("This should not happen") },
@@ -922,7 +892,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it.fail("This should not happen") },
@@ -939,7 +909,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it.fail("This should not happen") },
@@ -956,7 +926,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = listOf("1"),
                 onSuccess = { _ -> it.fail("This should not happen") },
@@ -975,7 +945,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchPersonalizedContentBlocks(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 customerIds = CustomerIds(hashMapOf("user" to "test")),
                 contentBlockIds = emptyList(),
                 onSuccess = { _ -> it() },
@@ -994,7 +964,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1014,7 +984,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             ))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1033,7 +1003,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(SegmentTest.SEGMENTATIONS_JSON))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1083,7 +1053,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(false, getResponse(null))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1101,7 +1071,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse("{{{"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1119,7 +1089,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(""))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1137,7 +1107,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(true, getResponse(null))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1155,7 +1125,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
             val emptyResponseInstance = ExponeaMockService(false, getResponse("{}"))
             val fetchManagerImpl = FetchManagerImpl(emptyResponseInstance, ExponeaGson.instance)
             fetchManagerImpl.fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 CustomerIds(hashMapOf("user" to "test")).apply {
                     cookie = "mock-cookie"
                 },
@@ -1177,7 +1147,7 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 ExponeaMockService(true, getResponse("{success: true, results:[]}")),
                 ExponeaGson.instance
             ).fetchSegments(
-                ExponeaProject("mock-base-url.com", "mock-project-token", "mock-auth"),
+                ProjectConfig("mock-base-url.com", "mock-project-token", "mock-auth"),
                 invalidCustomerIds,
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }

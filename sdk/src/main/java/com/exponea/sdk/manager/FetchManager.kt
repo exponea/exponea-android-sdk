@@ -3,39 +3,40 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
-import com.exponea.sdk.models.CustomerRecommendationRequest
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
+import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentationCategories
 
 internal interface FetchManager {
     fun fetchConsents(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         onSuccess: (Result<ArrayList<Consent>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 
     fun fetchRecommendation(
-        exponeaProject: ExponeaProject,
-        recommendationRequest: CustomerRecommendationRequest,
+        integrationConfig: IntegrationConfig,
+        customerIds: Map<String, Any?>,
+        options: CustomerRecommendationOptions,
         onSuccess: (Result<ArrayList<CustomerRecommendation>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 
     fun fetchInAppMessages(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 
     fun fetchAppInbox(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         syncToken: String?,
         applicationId: String,
@@ -44,7 +45,7 @@ internal interface FetchManager {
     )
 
     fun markAppInboxAsRead(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         syncToken: String,
         messageIds: List<String>,
@@ -53,13 +54,13 @@ internal interface FetchManager {
     )
 
     fun fetchStaticInAppContentBlocks(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         onSuccess: (Result<ArrayList<InAppContentBlock>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 
     fun fetchPersonalizedContentBlocks(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         contentBlockIds: List<String>,
         onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
@@ -67,14 +68,14 @@ internal interface FetchManager {
     )
 
     fun fetchSegments(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         onSuccess: (Result<SegmentationCategories>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )
 
     fun linkCustomerIdsSync(
-        exponeaProject: ExponeaProject,
+        integrationConfig: IntegrationConfig,
         customerIds: CustomerIds
     ): Result<out Any?>
 }

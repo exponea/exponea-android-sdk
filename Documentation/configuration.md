@@ -16,20 +16,43 @@ This page provides an overview of all configuration parameters for the SDK. You 
 
 ## Configuration parameters
 
-* `projectToken` **(required)**
+* `integrationConfig`
+    * Use this property to set your integration configuration.
+    * Use `ProjectConfig` to set up integration with a project using `projectToken`, `authorization` and `baseUrl`, or `StreamConfig` to set up [Event stream](https://documentation.bloomreach.com/data-hub/docs/event-streams) integration using `streamId` and `baseUrl`.
+    * Example:
+   ```kotlin
+   integrationConfig = ProjectConfig(
+       baseUrl = "https://api.exponea.com",
+       projectToken = "YOUR_PROJECT_TOKEN",
+       authorization = "Token YOUR_API_KEY"
+   )
+   ```
+  or
+   ```kotlin
+   integrationConfig = StreamConfig(
+       baseUrl = "https://api.exponea.com",
+       streamId = "YOUR_STREAM_ID"
+   )
+   ```
+
+* `projectToken`
+   * **Deprecated** - Please use `integrationConfig` property instead.
    * Your project token. You can find this in the Engagement web app under `Project settings` > `Access management` > `API`.
 
-* `authorization` **(required)**
+* `authorization`
+   * **Deprecated** - Please use `integrationConfig` property instead.
    * Format `"Token <token>"` where `<token>` is an Engagement API key.
-   * The token must be an Engagement **public** key. See [Mobile SDKs API Access Management](mobile-sdks-api-access-management) for details.
+   * The token must be an Engagement **public** key. See [Mobile SDKs API Access Management](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management) for details.
    * For more information, refer to [Exponea API documentation](https://docs.exponea.com/reference#access-keys).
 
 * `baseURL`
+  * **Deprecated** - Please use `integrationConfig` property instead.
   * Your API base URL which can be found in the Engagement web app under `Project settings` > `Access management` > `API`.
   * Default value `https://api.exponea.com`.
   * If you have custom base URL, you must set this property.
 
 * `projectRouteMap`
+  * **Deprecated** - please use `integrationRouteMap` property instead. 
   * If you need to track events into more than one project, you can define project information for "event types" which should be tracked multiple times.
     Example:
     ```kotlin
@@ -43,7 +66,23 @@ This page provides an overview of all configuration parameters for the SDK. You 
         )
     )
     ```
-  
+
+* `integrationRouteMap`
+  * If you need to track events into more than one project, you can define integration configuration for "event types" which should be tracked multiple times.
+  * **Only applicable when `integrationConfig` is `ProjectConfig`.** Ignored for `StreamConfig`.
+  * Example:
+    ```kotlin
+    var integrationRouteMap = mapOf<EventType, List<ProjectConfig>> (
+        EventType.TRACK_CUSTOMER to listOf(
+            ProjectConfig(
+                "https://api.exponea.com",
+                "YOUR_PROJECT_TOKEN",
+                "Token YOUR_API_KEY"
+            )
+        )
+    )
+    ```
+
 * `defaultProperties`
   * A list of properties to be added to all tracking events.
   * Default value: `nil`
@@ -113,6 +152,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
 
 * `advancedAuthEnabled`
   * If set, advanced authorization is used for communication with the Engagement APIs listed in [Customer Token Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#customer-token-authorization).
+  * **Only applicable when `integrationConfig` is `ProjectConfig`.** Ignored for `StreamConfig`.
   * Refer to the [Authorization for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization) documentation for details.
 
 * `inAppContentBlocksPlaceholders`
@@ -130,19 +170,19 @@ This page provides an overview of all configuration parameters for the SDK. You 
     > * By changing this setting and enabling cookies in WebViews you take full responsibility for any security vulnerabilities or incidents caused by them.
 
 * `manualSessionAutoClose`
-    * Determines whether the SDK automatically tracks `session_end` for sessions that remain open when `Exponea.trackSessionStart()` is called multiple times in manual session tracking mode.
-    * Default value: `true`
+  * Determines whether the SDK automatically tracks `session_end` for sessions that remain open when `Exponea.trackSessionStart()` is called multiple times in manual session tracking mode.
+  * Default value: `true`
 
 * `applicationId`
-    * This `applicationId` defines a unique identifier for the mobile app within the Engagement project. Change this value only if your Engagement project contains and supports multiple mobile apps.
-    * This identifier distinguishes between different apps in the same project.
-    * Your `applicationId` value must be the same as the one defined in your Engagement project settings.
-    * If your Engagement project supports only one app, skip the `applicationId` configuration. The SDK will use the default value automatically.
-    * Must be in a specific format, see rules:
-      * Starts with one or more lowercase letters or digits
-      * Additional words are separated by single hyphens or dots
-      * No leading or trailing hyphens or dots
-      * No consecutive hyphens or dots
-      * Maximum length is 50 characters
-      * E.g. `com.example.myapp`, `com-example-myapp`, `my-application1`
-    * Default value: `default-application`
+  * This `applicationId` defines a unique identifier for the mobile app within the Engagement project. Change this value only if your Engagement project contains and supports multiple mobile apps.
+  * This identifier distinguishes between different apps in the same project.
+  * Your `applicationId` value must be the same as the one defined in your Engagement project settings.
+  * If your Engagement project supports only one app, skip the `applicationId` configuration. The SDK will use the default value automatically.
+  * Must be in a specific format, see rules:
+    * Starts with one or more lowercase letters or digits
+    * Additional words are separated by single hyphens or dots
+    * No leading or trailing hyphens or dots
+    * No consecutive hyphens or dots
+    * Maximum length is 50 characters
+    * E.g. `com.example.myapp`, `com-example-myapp`, `my-application1`
+  * Default value: `default-application`

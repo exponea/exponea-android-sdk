@@ -2,7 +2,6 @@ package com.exponea.sdk.manager
 
 import android.content.Context
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.EventType
@@ -10,11 +9,12 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.repository.CampaignRepository
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 
@@ -32,7 +32,13 @@ internal class CampaignManagerImpl(
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences
             )
-            val networkManager = NetworkHandlerImpl(configuration)
+            val integrationConfigFactory = IntegrationConfigFactory(configuration)
+            val networkManager = NetworkHandlerImpl(
+                configuration,
+                AuthTokenRepositoryProvider.get(context),
+                customerIdsRepository,
+                null
+            ) { Exponea.sdkAuthCallback }
             val exponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
             val connectionManager = ConnectionManagerImpl(context)
             val flushManager = FlushManagerImpl(
@@ -40,22 +46,18 @@ internal class CampaignManagerImpl(
                 eventRepository,
                 exponeaService,
                 connectionManager,
+                customerIdsRepository,
                 {
                     // no action for identifyCustomer - SDK is not initialized
                 }
             )
-            val projectFactory = try {
-                ExponeaProjectFactory(context, configuration)
-            } catch (e: InvalidConfigurationException) {
-                if (configuration.advancedAuthEnabled) {
-                    Logger.w(this, "Turning off advanced auth for campaign data tracking")
-                    configuration.advancedAuthEnabled = false
-                }
-                ExponeaProjectFactory(context, configuration)
-            }
             val eventManager = EventManagerImpl(
-                configuration, eventRepository, customerIdsRepository, flushManager, projectFactory,
-                onEventCreated = { event, type ->
+                configuration,
+                eventRepository,
+                customerIdsRepository,
+                flushManager,
+                integrationConfigFactory,
+                onEventCreated = { _, _ ->
                     // no action for any event - SDK is not initialized
                 },
                 deviceId = DeviceIdManager.getDeviceId(context = context)

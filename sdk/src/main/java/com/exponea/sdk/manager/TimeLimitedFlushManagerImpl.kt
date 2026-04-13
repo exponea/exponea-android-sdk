@@ -3,6 +3,7 @@ package com.exponea.sdk.manager
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.network.ExponeaService
+import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runWithTimeout
@@ -12,6 +13,7 @@ internal class TimeLimitedFlushManagerImpl(
     eventRepository: EventRepository,
     exponeaService: ExponeaService,
     connectionManager: ConnectionManager,
+    customerIdsRepository: CustomerIdsRepository,
     onEventUploaded: (ExportedEvent) -> Unit,
     val flushTimeLimit: Long
 ) : FlushManagerImpl(
@@ -19,6 +21,7 @@ internal class TimeLimitedFlushManagerImpl(
     eventRepository,
     exponeaService,
     connectionManager,
+    customerIdsRepository,
     onEventUploaded
 ) {
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {

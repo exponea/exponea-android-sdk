@@ -1,6 +1,7 @@
 package com.exponea.sdk.database
 
-import com.exponea.sdk.models.ExponeaProject
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import kotlin.test.assertEquals
 import org.junit.Test
@@ -53,17 +54,48 @@ internal class RoomConvertersTest {
     )
 
     @Test
-    fun `should convert project  correctly`() {
-        val project = ExponeaProject("mock-url", "mock-token", "mock-autorization")
-        val projectString = converters.fromProject(project)
-        assertEquals(converters.toProject(projectString), project)
+    fun `should convert integration configuration correctly`() {
+        val integrationConfiguration = IntegrationConfiguration(
+            "mock-url",
+            "mock-token",
+            "mock-autorization",
+            type = IntegrationConfigType.PROJECT
+        )
+        val integrationConfigurationString = converters.fromIntegrationConfiguration(integrationConfiguration)
+        assertEquals(
+            integrationConfiguration,
+            converters.toIntegrationConfiguration(integrationConfigurationString)
+        )
     }
 
     @Test
-    fun `should convert project with empty fields correctly`() {
-        val project = ExponeaProject("", "", "")
-        val projectString = converters.fromProject(project)
-        assertEquals(converters.toProject(projectString), project)
+    fun `should convert integration configuration with empty fields correctly`() {
+        val integrationConfiguration = IntegrationConfiguration(
+            "",
+            "",
+            "",
+            type = IntegrationConfigType.PROJECT
+        )
+        val integrationConfigurationString = converters.fromIntegrationConfiguration(integrationConfiguration)
+        assertEquals(
+            integrationConfiguration,
+            converters.toIntegrationConfiguration(integrationConfigurationString)
+        )
+    }
+
+    @Test
+    fun `should convert integration configuration with null authorization correctly`() {
+        val integrationConfiguration = IntegrationConfiguration(
+            "mock-url",
+            "",
+            null,
+            type = IntegrationConfigType.PROJECT
+        )
+        val integrationConfigurationString = converters.fromIntegrationConfiguration(integrationConfiguration)
+        assertEquals(
+            integrationConfiguration,
+            converters.toIntegrationConfiguration(integrationConfigurationString)
+        )
     }
 
     @Test

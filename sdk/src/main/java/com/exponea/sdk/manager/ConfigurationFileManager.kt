@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
@@ -13,8 +14,14 @@ internal object ConfigurationFileManager {
             Logger.e(this, "No data found on Configuration file")
             return null
         }
+        val configuration = Gson().fromJson(data, ExponeaConfiguration::class.java)
+        // Gson uses reflection for deserialization, so we manually call setters to apply custom logic in deprecated property setters
+        configuration.authorization?.let { configuration.authorization = it }
+        configuration.baseURL.takeIf { it != Constants.Repository.baseURL }?.let { configuration.baseURL = it }
+        configuration.projectToken.takeIf { it.isNotEmpty() }?.let { configuration.projectToken = it }
+        configuration.projectRouteMap.takeIf { it.isNotEmpty() }?.let { configuration.projectRouteMap = it }
 
-        return Gson().fromJson(data, ExponeaConfiguration::class.java)
+        return configuration
     }
 
     private fun readContentFromDefaultFile(context: Context): String? {
@@ -27,7 +34,7 @@ internal object ConfigurationFileManager {
             val inputString = buffer.use { it.readText() }
             Logger.d(this, "Configuration file successfully loaded")
             inputString
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Logger.e(this, "Could not load configuration file ")
             null
         }

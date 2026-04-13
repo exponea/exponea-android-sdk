@@ -13,6 +13,8 @@ import com.exponea.sdk.manager.InAppMessageManagerImpl
 import com.exponea.sdk.manager.PushNotificationSelfCheckManagerImpl
 import com.exponea.sdk.manager.ReloadMode
 import com.exponea.sdk.mockkConstructorFix
+import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
@@ -53,7 +55,7 @@ internal open class ExponeaSDKTest {
             every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) }
         }
         every { anyConstructed<SentryTelemetryUpload>().sendSentryEnvelope(any(), any()) } answers {
-            secondArg<(kotlin.Result<Unit>) -> Unit>().invoke(kotlin.Result.success(Unit))
+            secondArg<(Result<Unit>) -> Unit>().invoke(Result.success(Unit))
         }
         mockkConstructorFix(TelemetryManager::class)
         every { anyConstructed<TelemetryManager>().reportEvent(any(), any()) } just Runs
@@ -77,10 +79,12 @@ internal open class ExponeaSDKTest {
     @Before
     fun mockNetworkManagers() {
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<StreamConfig>(), any(), any(), any()) }
         }
         mockkConstructorFix(ExponeaServiceImpl::class) {
-            every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any(), any()) }
+            every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any<ProjectConfig>(), any()) }
+            every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any<StreamConfig>(), any()) }
         }
         mockkConstructorFix(FlushManagerImpl::class)
     }
@@ -113,7 +117,7 @@ internal open class ExponeaSDKTest {
 
     fun unmockAllSafely() {
         // mockk has a problem when it sometimes throws an exception, in that case just try again
-        try { unmockkAll() } catch (error: ConcurrentModificationException) { unmockAllSafely() }
+        try { unmockkAll() } catch (_: ConcurrentModificationException) { unmockAllSafely() }
     }
 
     fun resetExponea() {

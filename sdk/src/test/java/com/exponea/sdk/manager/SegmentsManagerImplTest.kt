@@ -7,6 +7,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FetchError
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentTest
@@ -15,7 +16,7 @@ import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.SegmentsCache
 import com.exponea.sdk.repository.SegmentsCacheImpl
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.resetVerifyMockkCount
 import com.exponea.sdk.testutil.waitForIt
@@ -43,29 +44,29 @@ import org.robolectric.RobolectricTestRunner
 internal class SegmentsManagerImplTest {
     private lateinit var fetchManager: FetchManager
     private lateinit var customerIdsRepository: CustomerIdsRepository
-    private lateinit var projectFactory: ExponeaProjectFactory
+    private lateinit var projectFactory: IntegrationConfigFactory
     private lateinit var segmentsCache: SegmentsCache
     private lateinit var segmentsManager: SegmentsManager
 
     @Before
     fun before() {
         fetchManager = mockk()
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                 Result(true, SegmentTest.buildSingleSegmentWithData(emptyMap()))
             )
         }
-        every { fetchManager.linkCustomerIdsSync(any(), any()) } answers {
-            Result<Any?>(true, null)
+        every { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) } answers {
+            Result(true, null)
         }
         customerIdsRepository = mockk()
         every { customerIdsRepository.get() } returns SegmentTest.getCustomerIds()
-        val configuration = ExponeaConfiguration(projectToken = "mock-token")
-        projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
+        val configuration = ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
+        projectFactory = IntegrationConfigFactory(configuration)
         segmentsCache = spyk(SegmentsCacheImpl(ApplicationProvider.getApplicationContext(), ExponeaGson.instance))
         segmentsManager = SegmentsManagerImpl(
             fetchManager = fetchManager,
-            projectFactory = projectFactory,
+            integrationConfigFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
             segmentsCache = segmentsCache
         )
@@ -98,7 +99,7 @@ internal class SegmentsManagerImplTest {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
         segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<FetchError>) -> Unit>(3).invoke(Result(false, FetchError(null, "error")))
                 done()
             }
@@ -118,7 +119,7 @@ internal class SegmentsManagerImplTest {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
         segmentsCache.resetVerifyMockkCount()
         waitForIt(5000) { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                     Result(true, SegmentationCategories())
                 )
@@ -137,7 +138,7 @@ internal class SegmentsManagerImplTest {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
         segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                     true,
                     SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "another-mock-val"))
@@ -160,7 +161,7 @@ internal class SegmentsManagerImplTest {
         segmentsCache.set(SegmentTest.buildSegmentDataWithData(mapOf("prop" to "mock-val")))
         segmentsCache.resetVerifyMockkCount()
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                     true,
                     SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -191,7 +192,7 @@ internal class SegmentsManagerImplTest {
             }
         })
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                     true,
                     SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "another-mock-val"))
@@ -219,7 +220,7 @@ internal class SegmentsManagerImplTest {
             }
         })
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                     true,
                     SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -245,7 +246,7 @@ internal class SegmentsManagerImplTest {
             }
         })
         waitForIt { done ->
-            every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+            every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
                 arg<(Result<FetchError>) -> Unit>(3).invoke(Result(false, FetchError(null, "error")))
                 done()
             }
@@ -259,26 +260,26 @@ internal class SegmentsManagerImplTest {
     fun `should not reload segments for inactive callback - track event`() {
         Exponea.segmentationDataCallbacks.clear()
         segmentsManager.onEventUploaded(buildExportedEvent())
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
     fun `should not reload segments for inactive callback - callback changed`() {
         Exponea.segmentationDataCallbacks.clear()
         segmentsManager.reload()
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
     fun `should not reload segments for inactive callback - reload`() {
         Exponea.segmentationDataCallbacks.clear()
         segmentsManager.reload()
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
     fun `should fetch segments with debounce`() {
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -295,9 +296,9 @@ internal class SegmentsManagerImplTest {
                 }
             })
         }
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -305,8 +306,8 @@ internal class SegmentsManagerImplTest {
         segmentsCache.clear()
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -316,8 +317,8 @@ internal class SegmentsManagerImplTest {
         ))
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -327,8 +328,8 @@ internal class SegmentsManagerImplTest {
         ))
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -338,8 +339,8 @@ internal class SegmentsManagerImplTest {
         ))
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -352,8 +353,8 @@ internal class SegmentsManagerImplTest {
         ))
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -362,7 +363,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -389,7 +390,7 @@ internal class SegmentsManagerImplTest {
             data = SegmentationCategories()
         ))
         segmentsCache.resetVerifyMockkCount()
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -406,7 +407,7 @@ internal class SegmentsManagerImplTest {
         segmentsManager.reload()
         assertFalse(called.await(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 2000, TimeUnit.MILLISECONDS))
         // callback has not been called but verify that process has been invoked
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         verify(exactly = 1) { segmentsCache.set(any()) }
     }
 
@@ -416,7 +417,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -445,7 +446,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -486,7 +487,7 @@ internal class SegmentsManagerImplTest {
             data = SegmentationCategories()
         ))
         segmentsCache.resetVerifyMockkCount()
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -504,7 +505,7 @@ internal class SegmentsManagerImplTest {
         assertEquals(0, Exponea.segmentationDataCallbacks.size)
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         verify(exactly = 0) { segmentsCache.set(any()) }
     }
 
@@ -516,7 +517,7 @@ internal class SegmentsManagerImplTest {
             data = SegmentationCategories()
         ))
         segmentsCache.resetVerifyMockkCount()
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -534,7 +535,7 @@ internal class SegmentsManagerImplTest {
         assertEquals(0, Exponea.segmentationDataCallbacks.size)
         segmentsManager.reload()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         verify(exactly = 0) { segmentsCache.set(any()) }
     }
 
@@ -544,7 +545,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -576,7 +577,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentationCategories()
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
@@ -610,7 +611,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -644,7 +645,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -652,7 +653,7 @@ internal class SegmentsManagerImplTest {
         }
         segmentsManager.onSdkInit()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -670,7 +671,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -678,7 +679,7 @@ internal class SegmentsManagerImplTest {
         }
         segmentsManager.onSdkInit()
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -689,7 +690,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -706,7 +707,7 @@ internal class SegmentsManagerImplTest {
         Exponea.registerSegmentationDataCallback(callback)
         segmentsManager.onCallbackAdded(callback)
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -717,7 +718,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -734,7 +735,7 @@ internal class SegmentsManagerImplTest {
         Exponea.registerSegmentationDataCallback(callback)
         segmentsManager.onCallbackAdded(callback)
         Thread.sleep(SegmentsManagerImpl.CHECK_DEBOUNCE_MILLIS + 500)
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -755,7 +756,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -788,7 +789,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -815,7 +816,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -838,7 +839,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -868,7 +869,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -906,7 +907,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = segmentationsData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 segmentationsData
@@ -940,7 +941,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = emptyData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 emptyData
@@ -969,7 +970,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = emptyData
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 emptyData
@@ -1017,7 +1018,7 @@ internal class SegmentsManagerImplTest {
             data = cachedData
         ))
         val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 fetchedData
@@ -1033,7 +1034,7 @@ internal class SegmentsManagerImplTest {
         assertNotNull(caughtSegments)
         assertEquals(1, caughtSegments?.size)
         assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
-        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
     }
 
     @Test
@@ -1044,7 +1045,7 @@ internal class SegmentsManagerImplTest {
             data = cachedData
         ))
         val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 fetchedData
@@ -1060,7 +1061,7 @@ internal class SegmentsManagerImplTest {
         assertNotNull(caughtSegments)
         assertEquals(1, caughtSegments?.size)
         assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
-        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
     }
 
     @Test
@@ -1072,7 +1073,7 @@ internal class SegmentsManagerImplTest {
             updateMillis = System.currentTimeMillis() - SegmentsCacheImpl.CACHE_AGE_MILLIS - 1000
         ))
         val fetchedData = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val-2"))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(Result(
                 true,
                 fetchedData
@@ -1088,7 +1089,7 @@ internal class SegmentsManagerImplTest {
         assertNotNull(caughtSegments)
         assertEquals(1, caughtSegments?.size)
         assertEquals("mock-val-2", caughtSegments?.get(0)?.get("prop"))
-        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
     }
 
     @Test
@@ -1104,7 +1105,7 @@ internal class SegmentsManagerImplTest {
         val fetchProcessBlock = CountDownLatch(1)
         val customerChangedBlock = CountDownLatch(1)
         val segmentsCallbackBlock = CountDownLatch(1)
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             val fetchCustomerId = arg<CustomerIds>(1).toHashMap()["registered"]
             fetchProcessBlock.countDown()
             assertTrue(customerChangedBlock.await(awaitTime, TimeUnit.SECONDS))
@@ -1132,7 +1133,7 @@ internal class SegmentsManagerImplTest {
         assertNotNull(caughtSegments)
         assertEquals(1, caughtSegments?.size)
         assertEquals("mock-val-for-re-fetch-user-2", caughtSegments?.get(0)?.get("prop"))
-        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any(), any()) }
+        verify(exactly = 1) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
     }
 
     @Test
@@ -1142,7 +1143,7 @@ internal class SegmentsManagerImplTest {
         val fetchReleaseBlock = CountDownLatch(1)
         val segmentsCallbackBlock1 = CountDownLatch(1)
         val segmentsCallbackBlock2 = CountDownLatch(1)
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             val fetchCustomerId = arg<CustomerIds>(1).toHashMap()["registered"]
             fetchProcessBlock.countDown()
             assertTrue(fetchReleaseBlock.await(awaitTime, TimeUnit.SECONDS))
@@ -1182,14 +1183,14 @@ internal class SegmentsManagerImplTest {
         assertEquals(1, caughtSegments2?.size)
         assertEquals("mock-val-for-mock-registered", caughtSegments1?.get(0)?.get("prop"))
         assertEquals("mock-val-for-mock-registered", caughtSegments2?.get(0)?.get("prop"))
-        verify(exactly = 1) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 1) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
     fun `should not reload segments for stopped SDK`() {
         Exponea.isStopped = true
         segmentsManager.onEventUploaded(buildExportedEvent())
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     @Test
@@ -1199,7 +1200,7 @@ internal class SegmentsManagerImplTest {
             customerIds = customerIdsRepository.get().toHashMap(),
             data = SegmentTest.buildSingleSegmentWithData(mapOf("prop" to "mock-val"))
         ))
-        every { fetchManager.fetchSegments(any(), any(), any(), any()) } answers {
+        every { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                 Result(
                     true,
@@ -1215,8 +1216,8 @@ internal class SegmentsManagerImplTest {
         }
         assertNotNull(caughtSegments)
         assertEquals(0, caughtSegments!!.size)
-        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any(), any()) }
-        verify(exactly = 0) { fetchManager.fetchSegments(any(), any(), any(), any()) }
+        verify(exactly = 0) { fetchManager.linkCustomerIdsSync(any<ProjectConfig>(), any()) }
+        verify(exactly = 0) { fetchManager.fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
     }
 
     private fun buildExportedEvent(): ExportedEvent {
@@ -1226,7 +1227,7 @@ internal class SegmentsManagerImplTest {
             projectId = "mock-proj",
             route = null,
             shouldBeSkipped = false,
-            exponeaProject = null,
+            integrationConfiguration = null,
             type = null,
             timestamp = currentTimeSeconds(),
             customerIds = customerIdsRepository.get().toHashMap(),

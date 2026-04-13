@@ -12,8 +12,7 @@ category:
 
 ## What is the Exponea Android SDK?
 
-The Exponea Android SDK allows you to integrate your mobile application with Bloomreach Engagement and track your customers' behavior in your app. Integrating the SDK in your app will enable you to track events and customer properties, send push notifications, and display in-app messages and content blocks.
-
+The Exponea Android SDK allows you to integrate your mobile application with Bloomreach. Integrate directly with an Engagement project or via [Data hub Event Streams](https://documentation.bloomreach.com/data-hub/docs/event-streams) to track your customers' behavior in your app. Integrating the SDK into your app enables you to track events and customer properties, send push notifications, and display in-app messages and content blocks.
 The SDK is [available as open source on GitHub](https://github.com/exponea/exponea-android-sdk) for maximum transparency and includes an [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) you can use as a reference implementation.
 
 > ❗️

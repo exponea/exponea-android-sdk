@@ -15,6 +15,10 @@ You can configure the inbox to receive messages from multiple projects by settin
 >
 > The SDK can only retrieve App Inbox messages when the current app user has a customer profile with a [hard ID](https://documentation.bloomreach.com/engagement/docs/customer-identification#hard-id). Without this identification, the feature won't work.
 
+> ❗️
+>
+> When using `StreamConfig` integration, the App Inbox requires a valid SDK auth token. Make sure to set the token using `setSdkAuthToken()` or by including it in `CustomerIdentity` before fetching App Inbox messages. Refer to [SDK auth token authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) for details.
+
 Refer to the [App Inbox](https://documentation.bloomreach.com/engagement/docs/app-inbox) documentation for information on creating and sending App Inbox messages in the Engagement web app.
 
 > 👍

@@ -4,10 +4,14 @@ import androidx.annotation.WorkerThread
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.network.ExponeaService
+import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.enqueue
@@ -24,6 +28,7 @@ internal open class FlushManagerImpl(
     private val eventRepository: EventRepository,
     private val exponeaService: ExponeaService,
     private val connectionManager: ConnectionManager,
+    private val customerIdsRepository: CustomerIdsRepository,
     private val onEventUploaded: (ExportedEvent) -> Unit
 ) : FlushManager {
 
@@ -192,31 +197,64 @@ internal open class FlushManagerImpl(
     }
 
     internal fun routeSendingEvent(exportedEvent: ExportedEvent): Call? {
-        // for older event in database without exponeaProject, fallback to current configuration data
-        @Suppress("DEPRECATION")
-        val exponeaProject = exportedEvent.exponeaProject ?: ExponeaProject(
-            configuration.baseURL,
-                exportedEvent.projectId,
-            configuration.authorization,
-            configuration.inAppContentBlockPlaceholdersAutoLoad
-        )
+        val integrationConfig: IntegrationConfig = when (exportedEvent.integrationConfiguration?.type) {
+            IntegrationConfigType.PROJECT -> ProjectConfig(
+                exportedEvent.integrationConfiguration.baseUrl,
+                exportedEvent.integrationConfiguration.integrationId,
+                exportedEvent.integrationConfiguration.authorization
+            )
+
+            IntegrationConfigType.STREAM -> StreamConfig(
+                exportedEvent.integrationConfiguration.baseUrl,
+                exportedEvent.integrationConfiguration.integrationId
+            )
+
+            else -> {
+                configuration.integrationConfig.let { ic ->
+                    // for older event in database without exponeaProject, fallback to current project config if available
+                    if (exportedEvent.projectId != null && ic is ProjectConfig) {
+                        ProjectConfig(
+                            ic.baseUrl,
+                            exportedEvent.projectId,
+                            ic.authorization
+                        )
+                    } else {
+                        // otherwise log error and skip event
+                        Logger.e(this, "Could not route event, missing project data")
+                        return null
+                    }
+                }
+            }
+        }
+
         val simpleEvent = Event(
                 type = exportedEvent.type,
                 timestamp = exportedEvent.timestamp,
                 customerIds = exportedEvent.customerIds,
                 properties = exportedEvent.properties
         )
+        val isCurrentCustomerEvent = !hasMismatchedCustomerIds(exportedEvent)
         return exponeaService.let {
             when (exportedEvent.route) {
-                Route.TRACK_EVENTS -> it.postEvent(exponeaProject, simpleEvent)
-                Route.TRACK_CUSTOMERS -> it.postCustomer(exponeaProject, simpleEvent)
-                Route.TRACK_CAMPAIGN -> it.postCampaignClick(exponeaProject, simpleEvent)
+                Route.TRACK_EVENTS -> it.postEvent(integrationConfig, simpleEvent, isCurrentCustomerEvent)
+                Route.TRACK_CUSTOMERS -> it.postCustomer(integrationConfig, simpleEvent, isCurrentCustomerEvent)
+                Route.TRACK_CAMPAIGN -> it.postCampaignClick(integrationConfig, simpleEvent, isCurrentCustomerEvent)
                 else -> {
                     Logger.e(this, "Couldn't find properly route")
                     return null
                 }
             }
         }
+    }
+
+    /**
+     * Returns true when the event’s customerIds differ from the current customer.
+     * If the event has no customerIds, returns false.
+     */
+    private fun hasMismatchedCustomerIds(exportedEvent: ExportedEvent): Boolean {
+        val eventIds = exportedEvent.customerIds ?: return false
+        val currentIds = customerIdsRepository.get().toHashMap()
+        return currentIds != eventIds
     }
 
     @WorkerThread

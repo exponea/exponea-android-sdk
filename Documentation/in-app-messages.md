@@ -198,11 +198,11 @@ Let's look at an example of how the logs may look when displaying an in-app mess
    ```
    The in-app message process was triggered while application UI is not visible to user therefore no in-app message could be shown anyway.
 4. ```
-   --> POST https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?v=1
+   --> POST https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?compatibility=3
    ```  
    The SDK requested in-app messages from the Engagement platform.
 5. ```
-   <-- 200 https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?v=1 (2293ms)
+   <-- 200 https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?compatibility=3 (2293ms)
    ```
    The SDK received in-app messages from the Engagement platform. You should see the in-app messages data in JSON format a few lines below the above message:
    ```

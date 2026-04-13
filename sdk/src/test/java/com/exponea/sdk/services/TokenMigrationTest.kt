@@ -12,6 +12,7 @@ import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.receiver.AppUpdateReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -148,7 +149,7 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
     }
 
     private fun getExponeaConfiguration(): ExponeaConfiguration {
-        val configuration = ExponeaConfiguration(projectToken = "mock-token")
+        val configuration = ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token"))
         configuration.automaticPushNotification = true
         return configuration
     }

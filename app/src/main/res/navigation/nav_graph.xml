@@ -8,25 +8,25 @@
     <fragment
         android:id="@+id/fetchFragment"
         android:name="com.exponea.example.view.fragments.FetchFragment"
-        android:label="FetchFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_fetch" />
 
     <fragment
         android:id="@+id/trackFragment"
         android:name="com.exponea.example.view.fragments.TrackFragment"
-        android:label="TrackFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_track" />
 
     <fragment
         android:id="@+id/flushFragment"
         android:name="com.exponea.example.view.fragments.FlushFragment"
-        android:label="FlushFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_flush" />
 
     <fragment
         android:id="@+id/anonymizeFragment"
         android:name="com.exponea.example.view.fragments.AnonymizeFragment"
-        android:label="AnonymizeFragment"
+        android:label="Examples"
         tools:layout="@layout/fragment_anonymize" />
 
     <include app:graph="@navigation/nav_in_app_content_blocks"/>

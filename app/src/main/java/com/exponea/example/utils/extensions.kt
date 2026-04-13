@@ -27,7 +27,7 @@ fun TextInputEditText.isVaildUrl(): Boolean {
     return !isEmpty && isUrl
 }
 
-fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
+fun TextInputEditText.onTextChanged(validate: Boolean = false, callback: (String) -> Unit) {
     this.addTextChangedListener(object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
             //
@@ -40,7 +40,7 @@ fun TextInputEditText.onTextChanged(callback: (String) -> Unit) {
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
             val text = s.toString()
             callback(text)
-            isValid()
+            if (validate) { isValid() }
         }
     })
 }

@@ -6,19 +6,24 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
+import com.exponea.sdk.models.IntegrationConfigType
+import com.exponea.sdk.models.IntegrationConfiguration
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Route
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.EventRepository
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.getId
 
 internal open class EventManagerImpl(
     private val configuration: ExponeaConfiguration,
     private val eventRepository: EventRepository,
     private val customerIdsRepository: CustomerIdsRepository,
     private val flushManager: FlushManager,
-    private val projectFactory: ExponeaProjectFactory,
+    private val integrationConfigFactory: IntegrationConfigFactory,
     private val onEventCreated: (Event, EventType) -> Unit,
     private val deviceId: String
 ) : EventManager {
@@ -32,18 +37,28 @@ internal open class EventManagerImpl(
             else -> Route.TRACK_EVENTS
         }
 
-        val projects = arrayListOf(projectFactory.mainExponeaProject)
-        projects.addAll(configuration.projectRouteMap[eventType] ?: arrayListOf())
+        val integrations = arrayListOf(integrationConfigFactory.integrationConfig)
+        // Integration route map is only applicable for ProjectConfig
+        if (configuration.integrationConfig is ProjectConfig) {
+            integrations.addAll(configuration.integrationRouteMap[eventType] ?: arrayListOf())
+        }
         ensureOnBackgroundThread {
-            for (project in projects.distinct()) {
+            for (integration in integrations.distinct()) {
                 val exportedEvent = ExportedEvent(
                     type = event.type,
                     timestamp = event.timestamp,
                     customerIds = event.customerIds,
                     properties = event.properties,
-                    projectId = project.projectToken,
+                    integrationConfiguration = IntegrationConfiguration(
+                        integration.getId(),
+                        baseUrl = integration.baseUrl,
+                        authorization = if (integration is ProjectConfig) integration.authorization else null,
+                        type = when (integration) {
+                            is ProjectConfig -> IntegrationConfigType.PROJECT
+                            is StreamConfig -> IntegrationConfigType.STREAM
+                        }
+                    ),
                     route = route,
-                    exponeaProject = project,
                     sdkEventType = eventType.name
                 )
                 if (trackingAllowed) {
@@ -55,7 +70,7 @@ internal open class EventManagerImpl(
                 }
             }
 
-            // If flush mode is set to immediate, events should be send to Exponea APP immediatelly
+            // If flush mode is set to immediate, events should be send to Exponea APP immediately
             if (Exponea.flushMode == FlushMode.IMMEDIATE) {
                 flushManager.flushData()
             }

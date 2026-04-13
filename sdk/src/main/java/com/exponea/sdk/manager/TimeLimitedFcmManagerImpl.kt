@@ -3,18 +3,17 @@ package com.exponea.sdk.manager
 import android.content.Context
 import android.graphics.Bitmap
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.exceptions.InvalidConfigurationException
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.network.ExponeaServiceImpl
 import com.exponea.sdk.network.NetworkHandlerImpl
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.repository.CampaignRepositoryImpl
 import com.exponea.sdk.repository.CustomerIdsRepositoryImpl
-import com.exponea.sdk.repository.PushNotificationRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
@@ -44,11 +43,11 @@ internal class TimeLimitedFcmManagerImpl(
 
     companion object {
 
-        private val NOTIF_BITMAP_DOWNLOAD_TIMELIMIT: Long = 5000
-        private val FLUSH_TIMELIMIT: Long = 5000
+        private const val NOTIF_BITMAP_DOWNLOAD_TIMELIMIT: Long = 5000
+        private const val FLUSH_TIMELIMIT: Long = 5000
 
         /**
-         * Creates an instance of TimeLimitedFcmManager that is intependent from SDK initialization process.
+         * Creates an instance of TimeLimitedFcmManager that is independent from SDK initialization process.
          */
         fun createSdklessInstance(context: Context, configuration: ExponeaConfiguration): TimeLimitedFcmManagerImpl {
             val preferences = ExponeaPreferencesImpl(context)
@@ -57,7 +56,13 @@ internal class TimeLimitedFcmManagerImpl(
             val customerIdsRepository = CustomerIdsRepositoryImpl(
                 ExponeaGson.instance, uniqueIdentifierRepository, preferences
             )
-            val networkManager = NetworkHandlerImpl(configuration)
+            val integrationConfigFactory = IntegrationConfigFactory(configuration)
+            val networkManager = NetworkHandlerImpl(
+                configuration,
+                AuthTokenRepositoryProvider.get(context),
+                customerIdsRepository,
+                null
+            ) { Exponea.sdkAuthCallback }
             val exponeaService = ExponeaServiceImpl(ExponeaGson.instance, networkManager)
             val connectionManager = ConnectionManagerImpl(context)
             val flushManager = TimeLimitedFlushManagerImpl(
@@ -65,36 +70,23 @@ internal class TimeLimitedFcmManagerImpl(
                 eventRepository,
                 exponeaService,
                 connectionManager,
+                customerIdsRepository,
                 {
                     // no action for identifyCustomer - SDK is not initialized
                 },
                 FLUSH_TIMELIMIT
             )
-            val projectFactory = try {
-                ExponeaProjectFactory(context, configuration)
-            } catch (e: InvalidConfigurationException) {
-                if (configuration.advancedAuthEnabled) {
-                    Logger.w(this, "Turning off advanced auth for notification data tracking")
-                    configuration.advancedAuthEnabled = false
-                }
-                ExponeaProjectFactory(context, configuration)
-            }
             val eventManager = EventManagerImpl(
-                configuration, eventRepository, customerIdsRepository, flushManager, projectFactory,
-                onEventCreated = { event, type ->
+                configuration, eventRepository, customerIdsRepository, flushManager, integrationConfigFactory,
+                onEventCreated = { _, _ ->
                     // no action for any event - SDK is not initialized
                 },
                 deviceId = DeviceIdManager.getDeviceId(context = context)
             )
             val pushTokenRepository = PushTokenRepositoryProvider.get(context)
-            val pushNotificationRepository = PushNotificationRepositoryImpl(preferences)
             val campaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
-            val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(
-                context, eventManager
-            )
-            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(
-                context, eventManager
-            )
+            val inappMessageTrackingDelegate = EventManagerInAppMessageTrackingDelegate(context, eventManager)
+            val inAppContentBlockTrackingDelegate = InAppContentBlockTrackingDelegateImpl(context, eventManager)
             val trackingConsentManager = TrackingConsentManagerImpl(
                 eventManager, campaignRepository, inappMessageTrackingDelegate, inAppContentBlockTrackingDelegate
             )

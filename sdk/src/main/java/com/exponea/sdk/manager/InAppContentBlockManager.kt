@@ -21,7 +21,7 @@ interface InAppContentBlockManager : OnIntegrationStoppedCallback {
         context: Context,
         config: InAppContentBlockPlaceholderConfiguration
     ): InAppContentBlockPlaceholderView
-    fun loadInAppContentBlockPlaceholders()
+    fun loadInAppContentBlockPlaceholders(inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList())
     fun clearAll()
     fun onEventCreated(event: Event, type: EventType)
     fun getAllInAppContentBlocksForPlaceholder(placeholderId: String): List<InAppContentBlock>

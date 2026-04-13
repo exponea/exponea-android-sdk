@@ -16,13 +16,14 @@ import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockStatus
 import com.exponea.sdk.models.InAppContentBlockType
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.CustomerIdsRepository
 import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
-import com.exponea.sdk.services.ExponeaProjectFactory
+import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.testutil.runInSingleThread
 import java.util.Date
@@ -284,7 +285,7 @@ internal class InAppContentBlockManagerImplTest {
     private lateinit var drawableCache: DrawableCache
     private lateinit var fetchManager: FetchManager
     private lateinit var displayStateRepository: InAppContentBlockDisplayStateRepository
-    private lateinit var projectFactory: ExponeaProjectFactory
+    private lateinit var projectFactory: IntegrationConfigFactory
     private lateinit var htmlCache: HtmlNormalizedCache
     private lateinit var fontCache: FontCache
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
@@ -312,11 +313,13 @@ internal class InAppContentBlockManagerImplTest {
             doNothing().on { preload(any(), any()) }
         }
         val configuration = ExponeaConfiguration(
-            projectToken = "token",
-            authorization = "Token auth",
-            baseURL = "https://test.com"
+            integrationConfig = ProjectConfig(
+                projectToken = "token",
+                authorization = "Token auth",
+                baseUrl = "https://test.com"
+            )
         )
-        projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
+        projectFactory = IntegrationConfigFactory(configuration)
         htmlCache = mock {
             doNothing().on { remove(any()) }
             on { get(any(), any()) } doReturn null
@@ -325,7 +328,7 @@ internal class InAppContentBlockManagerImplTest {
         inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
-            projectFactory = projectFactory,
+            integrationConfigFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
             imageCache = drawableCache,
             htmlCache = htmlCache,
@@ -354,7 +357,7 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         assertEquals(1, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
     }
 
@@ -373,7 +376,7 @@ internal class InAppContentBlockManagerImplTest {
             )
         }
         Exponea.isStopped = true
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         assertEquals(0, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
     }
 
@@ -392,7 +395,7 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         assertEquals(0, (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.size)
     }
 
@@ -412,7 +415,7 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData.firstOrNull()
         assertNotNull(staticForm)
         assertEquals("id1", staticForm.id)
@@ -463,7 +466,7 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         val staticForm = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
             .firstOrNull()
         assertNotNull(staticForm)
@@ -527,7 +530,7 @@ internal class InAppContentBlockManagerImplTest {
         }
         val inAppContentBlockManagerImpl = inAppContentBlockManager as InAppContentBlockManagerImpl
         // static fetch is successful
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         val staticForm = inAppContentBlockManagerImpl.contentBlocksData.firstOrNull()
         assertNotNull(staticForm)
         assertEquals(messageId, staticForm.id)
@@ -583,7 +586,7 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertEquals(1, personalizedLoadCount)
         (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
@@ -639,22 +642,26 @@ internal class InAppContentBlockManagerImplTest {
         }
         // flag is read from ExponeaProject, need to be re-created
         val configuration = ExponeaConfiguration(
-            projectToken = "token",
-            authorization = "Token auth",
-            baseURL = "https://test.com",
+            integrationConfig = ProjectConfig(
+                projectToken = "token",
+                authorization = "Token auth",
+                baseUrl = "https://test.com"
+            ),
             inAppContentBlockPlaceholdersAutoLoad = listOf(placeholderToAutoLoad)
         )
-        projectFactory = ExponeaProjectFactory(ApplicationProvider.getApplicationContext(), configuration)
+        projectFactory = IntegrationConfigFactory(configuration)
         inAppContentBlockManager = InAppContentBlockManagerImpl(
             displayStateRepository = displayStateRepository,
             fetchManager = fetchManager,
-            projectFactory = projectFactory,
+            integrationConfigFactory = projectFactory,
             customerIdsRepository = customerIdsRepository,
             imageCache = drawableCache,
             htmlCache = htmlCache,
             fontCache = fontCache
         )
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(
+            configuration.inAppContentBlockPlaceholdersAutoLoad
+        )
         val messages = (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData
         assertEquals(2, messages.size)
         val message1 = messages.find { it.id == "id1" }
@@ -700,7 +707,7 @@ internal class InAppContentBlockManagerImplTest {
             )
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message)
         assertEquals("brownie1", message.customerIds["cookie"])
@@ -751,7 +758,7 @@ internal class InAppContentBlockManagerImplTest {
             )
         }
         identifyCustomer(cookie = "brownie1", ids = hashMapOf("login" to "test"))
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         val message = (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
         assertNotNull(message)
         assertNotNull(message.personalizedData)
@@ -825,7 +832,7 @@ internal class InAppContentBlockManagerImplTest {
             it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, msgData))
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         repeat((0..1000).count()) {
             val chosenContentBlock = (inAppContentBlockManager as InAppContentBlockManagerImpl)
                 .loadContent(placeholderId)
@@ -1200,7 +1207,7 @@ internal class InAppContentBlockManagerImplTest {
             it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
                 .invoke(Result(true, msgData))
         }
-        inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
         idleThreads()
         val contentBlocks = inAppContentBlockManager.getAllInAppContentBlocksForPlaceholder(placeholderId = "ph1")
         assertEquals(3, contentBlocks.size)

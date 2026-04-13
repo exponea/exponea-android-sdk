@@ -3,14 +3,12 @@ package com.exponea.sdk.manager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.mockkConstructorFix
-import com.exponea.sdk.models.ApiEndPoint
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
-import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppContentBlock
@@ -18,11 +16,13 @@ import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.MessageItem
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.eventfilter.EventFilter
 import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.network.auth.AuthStrategy
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.EventRepositoryImpl
 import com.exponea.sdk.repository.InAppMessagesCacheImpl
@@ -60,48 +60,91 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     @Before
     fun disableFetchData() {
         mockkConstructorFix(FetchManagerImpl::class) {
-            every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) }
+            every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
         }
-        every { anyConstructed<FetchManagerImpl>().fetchConsents(any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchConsents(any<ProjectConfig>(), any(), any()) } answers {
             secondArg<(Result<ArrayList<Consent>>) -> Unit>().invoke(
                 Result(true, arrayListOf())
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchRecommendation(any(), any(), any(), any()) } answers {
+        every {
+            anyConstructed<FetchManagerImpl>().fetchRecommendation(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             thirdArg<(Result<ArrayList<CustomerRecommendation>>) -> Unit>().invoke(
                 Result(true, arrayListOf())
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchAppInbox(any(), any(), any(), any(), any(), any()) } answers {
+        every {
+            anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
                 Result(true, arrayListOf())
             )
         }
         every {
-            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().fetchPersonalizedContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
                 Result(true, arrayListOf())
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(any(), any(), any()) } answers {
+        every {
+            anyConstructed<FetchManagerImpl>().fetchStaticInAppContentBlocks(
+                any<ProjectConfig>(),
+                any(),
+                any()
+            )
+        } answers {
             arg<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
                 Result(true, arrayListOf())
             )
         }
         every {
-            anyConstructed<FetchManagerImpl>().markAppInboxAsRead(any(), any(), any(), any(), any(), any())
+            anyConstructed<FetchManagerImpl>().markAppInboxAsRead(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
         } answers {
             arg<(Result<Any?>) -> Unit>(4).invoke(
                 Result(true, null)
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchInAppMessages(any(), any(), any(), any()) } answers {
+        every {
+            anyConstructed<FetchManagerImpl>().fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             arg<(Result<ArrayList<InAppMessage>>) -> Unit>(2).invoke(
                 Result(true, arrayListOf())
             )
         }
-        every { anyConstructed<FetchManagerImpl>().fetchSegments(any(), any(), any(), any()) } answers {
+        every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) } answers {
             arg<(Result<SegmentationCategories>) -> Unit>(2).invoke(
                 Result(true, SegmentationCategories())
             )
@@ -131,10 +174,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             .Builder()
             .addInterceptor(mockInterceptor)
             .build()
-        every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any<String>(), any()) } answers {
-            okHttpClient.newCall(Request.Builder().url(mockUrl).get().build())
-        }
-        every { anyConstructed<ExponeaServiceImpl>().doPost(any(), any<ApiEndPoint.EndPointName>(), any()) } answers {
+        every {
+            anyConstructed<ExponeaServiceImpl>().doPost(
+                any<ProjectConfig>(),
+                any<String>(),
+                any<AuthStrategy.PublicApiKey>(),
+                any()
+            )
+        } answers {
             okHttpClient.newCall(Request.Builder().url(mockUrl).get().build())
         }
     }
@@ -448,7 +495,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     }
 
     private fun prepareMessagesMocks(pendingMessages: ArrayList<InAppMessage>) {
-        every { anyConstructed<FetchManagerImpl>().fetchInAppMessages(any(), any(), any(), any()) } answers {
+        every {
+            anyConstructed<FetchManagerImpl>().fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
                 Result(true, pendingMessages)
             )
@@ -494,17 +548,14 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
     private fun initSdk() {
         skipInstallEvent()
-        val initialProject = ExponeaProject(
-            "https://base-url.com",
-            "project-token",
-            "Token auth"
-        )
         Exponea.init(
             ApplicationProvider.getApplicationContext(),
             ExponeaConfiguration(
-                baseURL = initialProject.baseUrl,
-                projectToken = initialProject.projectToken,
-                authorization = initialProject.authorization,
+                integrationConfig = ProjectConfig(
+                    baseUrl = "https://base-url.com",
+                    projectToken = "project-token",
+                    authorization = "Token auth"
+                ),
                 automaticSessionTracking = false
             )
         )

@@ -25,7 +25,7 @@ data class CustomerRecommendation(
     val data: Map<String, JsonElement>
 )
 
-class CustomerRecommendationDeserializer() : JsonDeserializer<CustomerRecommendation> {
+internal class CustomerRecommendationDeserializer() : JsonDeserializer<CustomerRecommendation> {
     companion object {
         val baseKeys = arrayListOf("engine_name", "item_id", "recommendation_id", "recommendation_variant_id")
     }

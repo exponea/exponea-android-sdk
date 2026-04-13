@@ -28,14 +28,15 @@ import com.exponea.sdk.manager.TrackingConsentManagerImpl
 import com.exponea.sdk.models.CampaignData
 import com.exponea.sdk.models.Consent
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.CustomerRecommendation
 import com.exponea.sdk.models.CustomerRecommendationOptions
-import com.exponea.sdk.models.CustomerRecommendationRequest
 import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaConfiguration.TokenFrequency
+import com.exponea.sdk.models.ExponeaConfigurationOverrides
 import com.exponea.sdk.models.ExponeaNotificationActionType
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.FetchError
@@ -50,18 +51,22 @@ import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
+import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.NotificationAction
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.NotificationPayload
+import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.PushNotificationDelegate
 import com.exponea.sdk.models.PushOpenedData
 import com.exponea.sdk.models.Result
+import com.exponea.sdk.models.SdkAuthCallback
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentationDataCallback
+import com.exponea.sdk.models.StreamConfig
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
@@ -78,14 +83,15 @@ import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewContro
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController.Companion.DEFAULT_SCROLL_DELAY
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.TelemetryEvent
+import com.exponea.sdk.util.AppStateCallbackHandle
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.TokenType
 import com.exponea.sdk.util.VersionChecker
-import com.exponea.sdk.util.addAppStateCallbacks
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
+import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.handleClickedPushUpdate
 import com.exponea.sdk.util.handleReceivedPushUpdate
 import com.exponea.sdk.util.isViewUrlIntent
@@ -190,7 +196,7 @@ object Exponea {
     /**
      * Indicate the frequency which Firebase token needs to be updated
      */
-    val tokenTrackFrequency: ExponeaConfiguration.TokenFrequency
+    val tokenTrackFrequency: TokenFrequency
         get() = runCatching {
             configuration.tokenTrackFrequency
         }.returnOnException {
@@ -240,8 +246,8 @@ object Exponea {
         }.logOnException()
 
     /**
-     * Whenever a in-app message button is clicked, this callback is called, if set up.
-     * Otherwise default button behaviour is handled by the SDK
+     * Whenever an in-app message button is clicked, this callback is called, if set up.
+     * Otherwise, default button behaviour is handled by the SDK
      */
     var inAppMessageActionCallback: InAppMessageCallback = Constants.InApps.defaultInAppMessageDelegate
         set(value) = runCatching {
@@ -339,6 +345,11 @@ object Exponea {
      */
     var checkPushSetup: Boolean = false
 
+    var sdkAuthCallback: SdkAuthCallback? = null
+        set(value) = runCatching {
+            field = value
+        }.logOnException()
+
     /**
      * Callback is notified for segmentation data updates.
      */
@@ -367,7 +378,7 @@ object Exponea {
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
-    @Deprecated("Json configuration is deprecated")
+    @Deprecated("Json configuration is deprecated and will be removed in next major release")
     @Throws(InvalidConfigurationException::class)
     fun initFromFile(context: Context) = runCatching {
         // Try to parse our file
@@ -389,7 +400,7 @@ object Exponea {
      * Use this method using a file as configuration. The SDK searches for a file called
      * "exponea_configuration.json" that must be inside the "assets" folder of your application
      */
-    @Deprecated("Json configuration is deprecated")
+    @Deprecated("Json configuration is deprecated and will be removed in next major release")
     fun init(context: Context): Boolean = runCatching {
         @Suppress("DEPRECATION")
         initFromFile(context)
@@ -402,14 +413,19 @@ object Exponea {
     }
 
     /**
-     * This is the main init method that should be called to initialize Exponea SDK
+     * This is the main init method that should be called to initialize Exponea SDK.
      */
     @Synchronized
-    fun init(context: Context, configuration: ExponeaConfiguration) = runCatching {
+    @JvmOverloads
+    fun init(
+        context: Context,
+        configuration: ExponeaConfiguration,
+        customerIdentity: CustomerIdentity? = null
+    ) = runCatching {
         this.application = context.applicationContext as Application
         if (isInitialized) {
             Logger.e(this, "Exponea SDK is already initialized!")
-            return
+            return@runCatching
         }
         isStopped = false
 
@@ -432,7 +448,7 @@ object Exponea {
         telemetry?.reportInitEvent(configuration)
         segmentationDataCallbacks.forEach { reportSegmentationCallbackAdded(it) }
 
-        initializeSdk(context)
+        initializeSdk(context, customerIdentity)
         isInitialized = true
         initGate.notifyInitializedState()
         ExponeaContextProvider.registerForegroundStateListener(object : OnForegroundStateListener {
@@ -462,19 +478,38 @@ object Exponea {
     }.logOnException()
 
     /**
-     * Update the informed properties to a specific customer.
-     * All properties will be stored into database until it will be
-     * flushed (send it to api).
+     * Identify a customer with their unique IDs. Additional customer properties can be tracked if provided.
+     *
+     * @param customerIds - customer unique identifiers
+     * @param properties - customer properties to be tracked
      */
+    @Deprecated(
+        message = "Please use identifyCustomer with customerIdentity and properties params instead.",
+        replaceWith = ReplaceWith("identifyCustomer(CustomerIdentity(customerIds.externalIds), properties.properties)")
+    )
+    fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) =
+        identifyCustomer(CustomerIdentity(customerIds = customerIds.externalIds), properties.properties)
 
-    fun identifyCustomer(customerIds: CustomerIds, properties: PropertiesList) = runCatching {
+    /**
+     * Identify a customer with their unique IDs and optional SDK auth token.
+     * Additional customer properties can be tracked if provided.
+     *
+     * @param customerIdentity - customer identity information
+     * @param properties - optional customer properties
+     */
+    @JvmOverloads
+    fun identifyCustomer(customerIdentity: CustomerIdentity, properties: Map<String, Any>? = null) = runCatching {
         initGate.waitForInitialize {
-            component.customerIdsRepository.set(customerIds)
-            component.eventManager.track(
-                properties = properties.properties,
-                type = EventType.TRACK_CUSTOMER
-            )
-            telemetry?.reportEvent(TelemetryEvent.IDENTIFY_CUSTOMER)
+            processCustomerIdentification(customerIdentity, properties)
+        }
+    }.logOnException()
+
+    /**
+     * Set SDK authentication token
+     */
+    fun setSdkAuthToken(authToken: String) = runCatching {
+        initGate.waitForInitialize {
+            setSdkAuthTokenIfSupported(authToken)
         }
     }.logOnException()
 
@@ -520,7 +555,7 @@ object Exponea {
     ) = runCatching {
         initGate.waitForInitialize {
             component.fetchManager.fetchConsents(
-                exponeaProject = component.projectFactory.mainExponeaProject,
+                integrationConfig = component.integrationConfigFactory.integrationConfig,
                 onSuccess = onSuccess,
                 onFailure = onFailure
             )
@@ -542,11 +577,9 @@ object Exponea {
         initGate.waitForInitialize {
             val customer = component.customerIdsRepository.get()
             component.fetchManager.fetchRecommendation(
-                exponeaProject = component.projectFactory.mainExponeaProject,
-                recommendationRequest = CustomerRecommendationRequest(
-                    customerIds = customer.toHashMap().filter { e -> e.value != null },
-                    options = recommendationOptions
-                ),
+                integrationConfig = component.integrationConfigFactory.integrationConfig,
+                customerIds = customer.toHashMap().filter { e -> e.value != null },
+                options = recommendationOptions,
                 onSuccess = {
                     onSuccess(it)
                     val data = it.results
@@ -611,7 +644,7 @@ object Exponea {
     fun trackPushToken(token: String) = runCatching {
         trackPushTokenInternal(
             token,
-            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
             TokenType.FCM
         )
     }.logOnException()
@@ -622,14 +655,14 @@ object Exponea {
     fun trackHmsPushToken(token: String) = runCatching {
         trackPushTokenInternal(
             token,
-            ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
             TokenType.HMS
         )
     }.logOnException()
 
     private fun trackPushTokenInternal(
         fcmToken: String,
-        tokenTrackFrequency: ExponeaConfiguration.TokenFrequency,
+        tokenTrackFrequency: TokenFrequency,
         tokenType: TokenType
     ) = runCatching {
         initGate.waitForInitialize {
@@ -768,10 +801,7 @@ object Exponea {
         showNotification: Boolean = true
     ): Boolean = runCatching {
         if (!isExponeaPushNotification(messageData)) return@runCatching false
-        val fcmManagerInstance = getFcmManager(applicationContext)
-        if (fcmManagerInstance != null) {
-            fcmManagerInstance.handleRemoteMessage(messageData, manager, showNotification)
-        }
+        getFcmManager(applicationContext)?.handleRemoteMessage(messageData, manager, showNotification)
         return true
     }.returnOnException { true }
 
@@ -789,7 +819,7 @@ object Exponea {
             return TrackingConsentManagerImpl.createSdklessInstance(applicationContext)
         } catch (e: Exception) {
             Logger.e(this, "Tracking not handled" +
-                " error occured while preparing a tracking process, see logs", e)
+                " error occurred while preparing a tracking process, see logs", e)
             return null
         }
     }
@@ -797,7 +827,7 @@ object Exponea {
     /**
      * Returns FcmManager implementation that fits current SDK state:
      * - SDK is initialized = FcmManager impl from SDK is returned
-     * - SDK is not initialized = Lightweigt SimpleFcmManager is returned
+     * - SDK is not initialized = Lightweight SimpleFcmManager is returned
      */
     private fun getFcmManager(applicationContext: Context): FcmManager? {
         if (isInitialized) {
@@ -814,7 +844,7 @@ object Exponea {
             return TimeLimitedFcmManagerImpl.createSdklessInstance(applicationContext, configuration)
         } catch (e: Exception) {
             Logger.e(this, "Notification delivery not handled," +
-                " error occured while preparing a handling process, see logs", e)
+                " error occurred while preparing a handling process, see logs", e)
             return null
         }
     }
@@ -822,7 +852,7 @@ object Exponea {
     /**
      * Returns PushNotificationRepository implementation that fits current SDK state:
      * - SDK is initialized = PushNotificationRepository impl from SDK is returned
-     * - SDK is not initialized = Lightweigt PushNotificationRepository is returned
+     * - SDK is not initialized = Lightweight PushNotificationRepository is returned
      */
     internal fun getPushNotificationRepository(): PushNotificationRepository? {
         if (isInitialized) {
@@ -866,7 +896,7 @@ object Exponea {
      * Initialize and start all services and automatic configurations.
      */
 
-    private fun initializeSdk(context: Context) {
+    private fun initializeSdk(context: Context, customerIdentity: CustomerIdentity? = null) {
         this.component = ExponeaComponent(this.configuration, context)
         deintegration.registerForIntegrationStopped(component.serviceManager)
         deintegration.registerForIntegrationStopped(component.eventRepository)
@@ -891,17 +921,22 @@ object Exponea {
 
         if (flushMode == PERIOD) startPeriodicFlushService()
 
+        customerIdentity?.let { processCustomerIdentification(it) }
+
         trackInstallEvent()
 
         trackSavedToken()
 
         startSessionTracking(configuration.automaticSessionTracking)
 
-        component.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        component.inAppContentBlockManager.loadInAppContentBlockPlaceholders(
+            configuration.inAppContentBlockPlaceholdersAutoLoad
+        )
 
         component.segmentsManager.onSdkInit()
 
-        context.addAppStateCallbacks(
+        val appStateCallbackHandle = AppStateCallbackHandle(
+            context = context,
             onOpen = {
                 Logger.i(this, "App is opened")
                 if (flushMode == APP_CLOSE) {
@@ -917,6 +952,8 @@ object Exponea {
                 }
             }
         )
+        appStateCallbackHandle.start()
+        deintegration.registerForIntegrationStopped(appStateCallbackHandle)
 
         if (checkPushSetup && runDebugMode) {
             component.pushNotificationSelfCheckManager.start()
@@ -938,8 +975,43 @@ object Exponea {
     private fun initWorkManager(context: Context) {
         try {
             WorkManager.initialize(context, Configuration.Builder().build())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Logger.i(this, "WorkManager already init, skipping")
+        }
+    }
+
+    /**
+     * Process customer identification by setting the provided customer IDs and SDK auth token
+     * (if supported by the current integration) and tracking the TRACK_CUSTOMER event with optional properties.
+     */
+    private fun processCustomerIdentification(
+        customerIdentity: CustomerIdentity,
+        properties: Map<String, Any>? = null
+    ) {
+        component.customerIdsRepository.set(CustomerIds(HashMap(customerIdentity.customerIds)))
+        if (customerIdentity.sdkAuthToken != null) {
+            setSdkAuthTokenIfSupported(customerIdentity.sdkAuthToken)
+        } else if (configuration.integrationConfig is StreamConfig) {
+            component.authTokenRepository.clear()
+        }
+        component.eventManager.track(
+            properties = properties?.let { HashMap(properties) } ?: hashMapOf(),
+            type = EventType.TRACK_CUSTOMER
+        )
+        telemetry?.reportEvent(TelemetryEvent.IDENTIFY_CUSTOMER)
+    }
+
+    /**
+     * Set SDK auth token if the current integration supports it, otherwise log a warning.
+     */
+    private fun setSdkAuthTokenIfSupported(token: String) {
+        when (configuration.integrationConfig) {
+            is StreamConfig -> component.authTokenRepository.setToken(token)
+            else -> Logger.w(
+                this,
+                "Current integration does not support SDK auth token operations, " +
+                        "set operation will be ignored."
+            )
         }
     }
 
@@ -1044,35 +1116,127 @@ object Exponea {
         component.deviceInitiatedRepository.set(true)
     }
 
-    /**
-     * Xamarin SDK binding library does not support default value parameters
-     * so this method accepts nulls and replaces them with the default value internally.
-     * Please do not modify.
-     */
+    @Deprecated(
+        "Please use anonymize with integrationConfig and exponeaConfigurationOverrides parameters instead."
+    )
     fun anonymize(
         exponeaProject: ExponeaProject? = null,
         projectRouteMap: Map<EventType, List<ExponeaProject>>? = null
-    ) = runCatching {
-        requireInitialized(
-                notInitializedBlock = {
-                    Logger.v(this@Exponea, "Exponea is not initialize")
-                },
-                initializedBlock = {
-                    initGate.clear()
-                    val projectToUse = exponeaProject ?: component.projectFactory.mainExponeaProject
-                    component.anonymize(projectToUse, projectRouteMap ?: configuration.projectRouteMap)
-                    telemetry?.reportEvent(TelemetryEvent.ANONYMIZE, hashMapOf(
-                        "baseUrl" to projectToUse.baseUrl,
-                        "projectToken" to projectToUse.projectToken,
-                        "authorization" to (projectToUse.authorization ?: "")
-                    ))
+    ): Unit = anonymize(
+        integrationConfig = exponeaProject?.let {
+            ProjectConfig(
+                baseUrl = it.baseUrl,
+                projectToken = it.projectToken,
+                authorization = it.authorization
+            )
+        },
+        exponeaConfigurationOverrides = ExponeaConfigurationOverrides(
+            integrationRouteMap = projectRouteMap?.mapValues { integrations ->
+                integrations.value.map {
+                    ProjectConfig(
+                        baseUrl = it.baseUrl,
+                        projectToken = it.projectToken,
+                        authorization = it.authorization
+                    )
                 }
+            },
+            inAppContentBlockPlaceholdersAutoLoad = exponeaProject?.inAppContentBlockPlaceholdersAutoLoad
+        )
+    )
+
+    /**
+     * Deletes all information stored locally and resets the current SDK state.
+     */
+    fun anonymize(): Unit = anonymize(integrationConfig = null, exponeaConfigurationOverrides = null)
+
+    /**
+     * Deletes all information stored locally and resets the current SDK state.
+     *
+     * @param integrationConfig implementation of IntegrationConfig to be used after anonymization.
+     * @param exponeaConfigurationOverrides ExponeaConfigurationOverrides to be applied after anonymization.
+     */
+    // Xamarin SDK binding library does not support default value parameters
+    // so this method accepts nulls and replaces them with the default value internally.
+    // Please do not modify.
+    fun anonymize(
+        integrationConfig: IntegrationConfig? = null,
+        exponeaConfigurationOverrides: ExponeaConfigurationOverrides? = null
+    ): Unit = runCatching {
+        requireInitialized(
+            notInitializedBlock = {
+                Logger.v(this@Exponea, "Exponea is not initialized")
+            },
+            initializedBlock = {
+                anonymizeInternal(integrationConfig, exponeaConfigurationOverrides, null)
+            }
         )
     }.logOnException()
 
     /**
+     * Deletes all information stored locally and resets the current SDK state.
+     * Invokes [onAnonymized] when the operation completes (including any internal flush).
+     *
+     * @param integrationConfig implementation of IntegrationConfig to be used after anonymization.
+     * @param exponeaConfigurationOverrides ExponeaConfigurationOverrides to be applied after anonymization.
+     * @param onAnonymized callback invoked when the anonymization process is fully complete.
+     */
+    fun anonymize(
+        integrationConfig: IntegrationConfig? = null,
+        exponeaConfigurationOverrides: ExponeaConfigurationOverrides? = null,
+        onAnonymized: () -> Unit
+    ): Unit = runCatching {
+        requireInitialized(
+            notInitializedBlock = {
+                Logger.v(this@Exponea, "Exponea is not initialized")
+            },
+            initializedBlock = {
+                anonymizeInternal(integrationConfig, exponeaConfigurationOverrides, onAnonymized)
+            }
+        )
+    }.logOnException()
+
+    private fun anonymizeInternal(
+        integrationConfig: IntegrationConfig?,
+        exponeaConfigurationOverrides: ExponeaConfigurationOverrides?,
+        onAnonymized: (() -> Unit)?
+    ) {
+        initGate.clear()
+        if (integrationConfig is StreamConfig &&
+            !exponeaConfigurationOverrides?.integrationRouteMap.isNullOrEmpty()
+        ) {
+            Logger.w(
+                this,
+                "Integration route mapping is only supported when using ProjectConfig. " +
+                "This setting will be ignored for StreamConfig."
+            )
+        }
+        val integrationToUse = integrationConfig ?: component.integrationConfigFactory.integrationConfig
+        val shouldFlush = component.exponeaConfiguration.integrationConfig is StreamConfig &&
+            (component.authTokenRepository.getToken() != null || sdkAuthCallback != null)
+
+        component.anonymize(integrationToUse, exponeaConfigurationOverrides, shouldFlush) {
+            telemetry?.reportEvent(
+                TelemetryEvent.ANONYMIZE, hashMapOf(
+                    "baseUrl" to integrationToUse.baseUrl
+                ).apply {
+                    when (integrationToUse) {
+                        is ProjectConfig -> {
+                            put("projectToken", integrationToUse.projectToken)
+                            put("authorization", integrationToUse.authorization ?: "")
+                        }
+                        is StreamConfig -> put("streamId", integrationToUse.streamId)
+                    }
+                }
+            )
+            ensureOnMainThread {
+                onAnonymized?.invoke()
+            }
+        }
+    }
+
+    /**
      * Tries to handle Intent from Activity. If Intent contains data as defined for Deeplinks,
-     * given Uri is parsed, info is send to Campaign server and TRUE is returned. Otherwise FALSE
+     * given Uri is parsed, info is sent to Campaign server and TRUE is returned. Otherwise, FALSE
      * is returned.
      */
     fun handleCampaignIntent(intent: Intent?, appContext: Context): Boolean = runCatching {
@@ -1392,7 +1556,7 @@ object Exponea {
     ): InAppContentBlockPlaceholderView? = runCatching<InAppContentBlockPlaceholderView?> {
         requireInitialized<InAppContentBlockPlaceholderView>(
             initializedBlock = {
-                Exponea.component.inAppContentBlockManager.getPlaceholderView(
+                component.inAppContentBlockManager.getPlaceholderView(
                     placeholderId,
                     context,
                     config ?: InAppContentBlockPlaceholderConfiguration()
@@ -1594,7 +1758,13 @@ object Exponea {
         deintegration.clearLocalCustomerData()
     }.logOnException()
 
-    fun stopIntegration() = runCatching {
+    /**
+     * Stops SDK integration, flushes all pending data, and removes all locally stored data.
+     *
+     * @param onStopped optional callback invoked when the stop process is fully complete.
+     */
+    @JvmOverloads
+    fun stopIntegration(onStopped: (() -> Unit)? = null) = runCatching {
         requireInitialized(
             notInitializedBlock = {
                 Logger.e(this, "This functionality is unavailable without initialization of SDK")
@@ -1602,12 +1772,27 @@ object Exponea {
             initializedBlock = {
                 Logger.i(this, "Stopping of SDK integration starts")
                 telemetry?.reportEvent(TelemetryEvent.INTEGRATION_STOPPED)
-                isStopped = true
-                deintegration.notifyDeintegration()
-                deintegration.clearLocalCustomerData()
-                initGate.clear()
-                isInitialized = false
-                Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")
+                if (isAutomaticSessionTracking) {
+                    component.sessionManager.trackSessionEnd(currentTimeSeconds())
+                }
+                val token = component.pushTokenRepository.get()
+                val tokenType = component.pushTokenRepository.getLastTokenType()
+                component.fcmManager.removeToken(
+                    token = token,
+                    tokenTrackFrequency = TokenFrequency.EVERY_LAUNCH,
+                    tokenType = tokenType
+                )
+                component.flushManager.flushData {
+                    isStopped = true
+                    deintegration.notifyDeintegration()
+                    deintegration.clearLocalCustomerData()
+                    initGate.clear()
+                    isInitialized = false
+                    Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")
+                    onStopped?.let { callback ->
+                        ensureOnMainThread { callback() }
+                    }
+                }
             }
         )
     }.logOnException()

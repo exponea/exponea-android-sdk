@@ -1,9 +1,10 @@
 ---
 title: Android SDK
-excerpt: Exponea SDK for Android
 slug: android-sdk
 category:
   uri: /branches/2/categories/guides/Developers
+content:
+  excerpt: Exponea SDK for Android
 ---
 
 > 📘 

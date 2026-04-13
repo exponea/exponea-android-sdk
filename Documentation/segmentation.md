@@ -1,11 +1,12 @@
 ---
 title: Segmentation for Android SDK
-excerpt: Implement Real-Time Segments using the Android SDK
 slug: android-sdk-segmentation
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk
+content:
+  excerpt: Implement Real-Time Segments using the Android SDK
 ---
 
 The [Real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) feature personalizes the product search, category and pathway results in real-time based on customer demographic and behavioral data. The feature combines Bloomreach Discovery’s extensive search algorithms and Bloomreach Engagement’s rich customer data to get the best of both worlds.

@@ -1,11 +1,14 @@
 ---
 title: Huawei Mobile Services
-excerpt: Integrate Huawei Mobile Services in your app to support Engagement push notifications on Huawei devices
 slug: android-sdk-huawei
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk-push-notifications
+content:
+  excerpt: >-
+    Integrate Huawei Mobile Services in your app to support Engagement push
+    notifications on Huawei devices
 ---
 
 > 📘

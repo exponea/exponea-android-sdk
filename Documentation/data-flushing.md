@@ -1,11 +1,14 @@
 ---
 title: Data flushing for Android SDK
-excerpt: Learn how the Android SDK uploads data to the Engagement API and how to customize this behavior
 slug: android-sdk-data-flushing
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk-setup
+content:
+  excerpt: >-
+    Learn how the Android SDK uploads data to the Engagement API and how to
+    customize this behavior
 ---
 
 ## Data flushing

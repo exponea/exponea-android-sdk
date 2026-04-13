@@ -1,11 +1,12 @@
 ---
 title: Tracking for Android SDK
-excerpt: Track customers and events using the Android SDK
 slug: android-sdk-tracking
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk
+content:
+  excerpt: Track customers and events using the Android SDK
 ---
 
 You can track events in Engagement to learn more about your app’s usage patterns and to segment your customers by their interactions.

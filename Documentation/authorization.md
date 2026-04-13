@@ -1,11 +1,12 @@
 ---
 title: Authorization for Android SDK
-excerpt: Full authorization reference for the Android SDK
 slug: android-sdk-authorization
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk-setup
+content:
+  excerpt: Full authorization reference for the Android SDK
 ---
 
 The SDK exchanges data with Bloomreach APIs — either the Engagement API directly (when using `ProjectConfig`) or the [Data hub Event Stream API](https://documentation.bloomreach.com/data-hub/docs/event-streams) (when using `StreamConfig`) — through authorized HTTP/HTTPS communication. The SDK supports several authorization modes depending on the integration type:

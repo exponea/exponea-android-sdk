@@ -1,11 +1,14 @@
 ---
 title: In-app messages for Android SDK
-excerpt: Display native in-app messages based on definitions set up in Engagement using the Android SDK
 slug: android-sdk-in-app-messages
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk-in-app-personalization
+content:
+  excerpt: >-
+    Display native in-app messages based on definitions set up in Engagement
+    using the Android SDK
 ---
 
 The SDK enables you to display native in-app messages in your app based on definitions set up in Engagement. 

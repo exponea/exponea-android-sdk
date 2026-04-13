@@ -1,11 +1,12 @@
 ---
 title: App Inbox for Android SDK
-excerpt: Add a message inbox to your app using the Android SDK
 slug: android-sdk-app-inbox
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk
+content:
+  excerpt: Add a message inbox to your app using the Android SDK
 ---
 
 The App Inbox feature creates a mobile communication channel that lives directly in your app. This inbox can receive messages from marketing campaigns and stores mobile push notifications for a set time period.

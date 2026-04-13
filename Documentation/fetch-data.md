@@ -1,11 +1,12 @@
 ---
 title: Fetch data for Android SDK
-excerpt: Fetch data from Bloomreach Engagement using the Android SDK
 slug: android-sdk-fetch-data
 category:
   uri: /branches/2/categories/guides/Developers
 parent:
   uri: android-sdk
+content:
+  excerpt: Fetch data from Bloomreach Engagement using the Android SDK
 ---
 
 The SDK provides methods to retrieve data from the Engagement platform. Responses are available in the `onSuccess` and `onFailure` callback properties.

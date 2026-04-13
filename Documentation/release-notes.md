@@ -14,6 +14,18 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.0.0
+#### April 13, 2026
+* Added:
+  * Adds support for Data hub Event streams integration with optional SDK auth token authorization.
+* Fixed:
+  * Fixes false crash reports from CrashManager handler frames.
+  * Fixes carousel crash when Custom Tabs service was not bound.
+  * Fixes CrashManager log buffer race condition.
+  * Fixes In-app message button configuration parsing.
+  * Fixes SimpleDataCache crashes, improves in-memory caching, and enhances thread safety.
+
+
 ## Release Notes for 4.10.0
 #### March 11, 2026
 * Fixed:

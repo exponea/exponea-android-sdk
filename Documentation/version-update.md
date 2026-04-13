@@ -11,6 +11,82 @@ content:
 
 This guide will help you upgrade your Exponea SDK to the latest major version.
 
+## Update from version 4.x.x to 5.x.x
+
+Version 5.0.0 adds support for integration with [Data hub Event Streams](https://documentation.bloomreach.com/data-hub/docs/event-streams). The SDK can now be configured with the new `StreamConfig` integration type as an alternative to `ProjectConfig` for Engagement projects.
+
+### Deprecated configuration properties
+
+The top-level `ExponeaConfiguration` properties `projectToken`, `authorization`, and `baseURL` are **deprecated**. Use the `integrationConfig` property with `ProjectConfig` instead:
+
+```kotlin
+// Deprecated
+configuration.projectToken = "YOUR_PROJECT_TOKEN"
+configuration.authorization = "Token YOUR_API_KEY"
+configuration.baseURL = "https://api.exponea.com"
+
+// Use instead
+configuration.integrationConfig = ProjectConfig(
+    baseUrl = "https://api.exponea.com",
+    projectToken = "YOUR_PROJECT_TOKEN",
+    authorization = "Token YOUR_API_KEY"
+)
+```
+
+The `projectRouteMap` property is also **deprecated** in favor of `integrationRouteMap` on `ExponeaConfiguration`.
+
+### Deprecated identifyCustomer parameters
+
+The `CustomerIds` type and the `customerIds` parameter of `identifyCustomer()` are **deprecated**. Use `CustomerIdentity` with the `customerIdentity` parameter instead:
+
+```kotlin
+// Deprecated
+Exponea.identifyCustomer(
+    customerIds = CustomerIds().withId("registered", "jane.doe@example.com"),
+    properties = PropertiesList(hashMapOf(...))
+)
+
+// Use instead
+Exponea.identifyCustomer(
+    customerIdentity = CustomerIdentity(
+        customerIds = mapOf("registered" to "jane.doe@example.com")
+    ),
+    properties = mapOf("first_name" to "Jane")
+)
+```
+
+`CustomerIdentity` also accepts an optional `sdkAuthToken` field, which sets the SDK auth token used for stream-based integrations.
+
+### Changes to anonymize parameters
+
+The `anonymize()` overload with `exponeaProject` and `projectRouteMap` is **deprecated**. Use the new overload with `integrationConfig` (accepting `ProjectConfig` or `StreamConfig`) and `exponeaConfigurationOverrides`:
+
+```kotlin
+// Deprecated
+Exponea.anonymize(
+    exponeaProject = ExponeaProject(
+        baseUrl = "https://api.exponea.com",
+        projectToken = "YOUR PROJECT TOKEN",
+        authorization = "Token YOUR API KEY"
+    ),
+    projectRouteMap = mapOf(...)
+)
+
+// Use instead
+Exponea.anonymize(
+    integrationConfig = ProjectConfig(
+        projectToken = "YOUR PROJECT TOKEN",
+        baseUrl = "https://api.exponea.com",
+        authorization = "Token YOUR API KEY"
+    ),
+    exponeaConfigurationOverrides = ExponeaConfigurationOverrides(
+        integrationRouteMap = mapOf(...)
+    )
+)
+```
+
+---
+
 ## Update to version 4.6.0 or higher
 
 SDK versions 4.6.0 and higher support multiple mobile applications within a single Bloomreach Engagement project.

@@ -7,6 +7,7 @@ import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -63,16 +64,17 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
+        val context = ApplicationProvider.getApplicationContext<Context>()
         assertEquals(Constants.EventTypes.pushTokenTrack, eventSlot.captured.type)
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to pushToken,
-                "platform" to TokenType.FCM.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", pushToken)
+                put("platform", TokenType.FCM.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", DeviceIdManager.getDeviceId(context))
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
@@ -102,16 +104,17 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
 
+        val context = ApplicationProvider.getApplicationContext<Context>()
         assertEquals(Constants.EventTypes.pushTokenTrack, eventSlot.captured.type)
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to token,
-                "platform" to TokenType.HMS.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to DeviceIdManager.getDeviceId(ApplicationProvider.getApplicationContext())
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", token)
+                put("platform", TokenType.HMS.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", DeviceIdManager.getDeviceId(context))
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)

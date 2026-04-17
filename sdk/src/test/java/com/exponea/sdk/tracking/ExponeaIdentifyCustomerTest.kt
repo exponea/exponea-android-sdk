@@ -9,6 +9,7 @@ import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.CustomerIds
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
@@ -312,14 +313,14 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to pushToken,
-                "platform" to TokenType.FCM.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to deviceId
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", pushToken)
+                put("platform", TokenType.FCM.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", deviceId)
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
@@ -351,14 +352,14 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any())
         }
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to pushToken,
-                "platform" to TokenType.HMS.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to deviceId
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", pushToken)
+                put("platform", TokenType.HMS.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", deviceId)
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
@@ -428,14 +429,14 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         }
 
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to pushToken,
-                "platform" to TokenType.FCM.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to deviceId
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", pushToken)
+                put("platform", TokenType.FCM.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", deviceId)
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)
@@ -468,14 +469,14 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
         }
 
         assertEquals(
-            hashMapOf<String, Any>(
-                "push_notification_token" to pushToken,
-                "platform" to TokenType.HMS.selfCheckProperty,
-                "application_id" to "default-application",
-                "valid" to true,
-                "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED,
-                "device_id" to deviceId
-            ),
+            DeviceProperties(context).toHashMap().apply {
+                put("push_notification_token", pushToken)
+                put("platform", TokenType.HMS.selfCheckProperty)
+                put("application_id", "default-application")
+                put("valid", true)
+                put("description", Constants.PushPermissionStatus.PERMISSION_GRANTED)
+                put("device_id", deviceId)
+            },
             eventSlot.captured.properties
         )
         assertEquals(EventType.PUSH_TOKEN, eventTypeSlot.captured)

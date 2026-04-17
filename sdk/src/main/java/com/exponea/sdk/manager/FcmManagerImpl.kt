@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.ExponeaExtras
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExponeaNotificationActionType
@@ -130,12 +131,13 @@ internal open class FcmManagerImpl(
                     permissionMismatched -> Constants.PushPermissionStatus.PERMISSION_DENIED
                     else -> Constants.PushPermissionStatus.PERMISSION_GRANTED
                 }
-                val properties = PropertiesList(hashMapOf(
-                    "push_notification_token" to token,
-                    "platform" to tokenType.selfCheckProperty,
-                    "valid" to validityResult,
-                    "description" to validityMessage
-                ))
+
+                val properties = PropertiesList(DeviceProperties(application).toHashMap().apply {
+                    put("push_notification_token", token)
+                    put("platform", tokenType.selfCheckProperty)
+                    put("valid", validityResult)
+                    put("description", validityMessage)
+                })
 
                 eventManager.track(
                     eventType = Constants.EventTypes.pushTokenTrack,

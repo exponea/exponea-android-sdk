@@ -11,6 +11,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.Constants.EventTypes.installation
 import com.exponea.sdk.models.Constants.EventTypes.pushTokenTrack
 import com.exponea.sdk.models.Constants.EventTypes.sessionStart
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
@@ -46,6 +47,7 @@ import org.robolectric.RobolectricTestRunner
 internal class AnonymizeTest : ExponeaSDKTest() {
 
     private fun expectedPushTokenProperties(
+        context: Context,
         pushToken: String = "push_token",
         platform: String = "android",
         applicationId: String = "default-application",
@@ -53,14 +55,14 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         description: String,
         deviceId: String
     ): HashMap<String, Any> =
-        hashMapOf(
-            "push_notification_token" to pushToken,
-            "platform" to platform,
-            "application_id" to applicationId,
-            "valid" to valid,
-            "description" to description,
-            "device_id" to deviceId
-        )
+        DeviceProperties(context).toHashMap().apply {
+            put("push_notification_token", pushToken)
+            put("platform", platform)
+            put("application_id", applicationId)
+            put("valid", valid)
+            put("description", description)
+            put("device_id", deviceId)
+        }
 
     private fun expectedTestEventProperties(deviceId: String): HashMap<String, Any> =
         hashMapOf(
@@ -125,6 +127,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         checkEvent(events[1], "test", initialProjectConfig, userId, expectedTestEventProperties(deviceId))
         checkEvent(
             events[2], pushTokenTrack, initialProjectConfig, userId, expectedPushTokenProperties(
+                context = context,
                 valid = true,
                 description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
                 deviceId = deviceId
@@ -134,6 +137,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         // anonymize is called. We clear push token in old user and track initial events for new user
         checkEvent(
             events[4], pushTokenTrack, initialProjectConfig, userId, expectedPushTokenProperties(
+                context = context,
                 valid = false,
                 description = Constants.PushPermissionStatus.INVALIDATED_TOKEN,
                 deviceId = deviceId
@@ -143,6 +147,7 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         checkEvent(events[6], sessionStart, newProjectConfig, newUserId, null)
         checkEvent(
             events[7], pushTokenTrack, newProjectConfig, newUserId, expectedPushTokenProperties(
+                context = context,
                 valid = true,
                 description = Constants.PushPermissionStatus.PERMISSION_GRANTED,
                 deviceId = deviceId

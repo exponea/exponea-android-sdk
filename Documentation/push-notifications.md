@@ -420,6 +420,8 @@ The frequency of `notification_state` event tracking depends on the `tokenTrackF
 | `application_id`          | Application identifier from SDK configuration | Custom ID or `default-application` (default) |
 | `device_id`               | Unique device identifier                 | UUID string                             |
 
+In addition to the properties above, each `notification_state` event includes device-related properties: `os_name`, `os_version`, `sdk`, `sdk_version`, `device_model`, `device_type`, and `app_version`.
+
 > 📘 Note
 >
 > If you don't specify an `application_id` in your SDK configuration, the default value `default-application` is used. [See Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).

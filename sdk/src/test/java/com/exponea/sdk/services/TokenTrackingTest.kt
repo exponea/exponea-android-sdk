@@ -6,6 +6,7 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.mockkConstructorFix
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
@@ -39,6 +40,18 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         Exponea.flushMode = FlushMode.MANUAL
     }
 
+    private fun expectedTokenProps(
+        token: String,
+        platform: String,
+        valid: Boolean,
+        description: String
+    ): HashMap<String, Any> = DeviceProperties(context).toHashMap().apply {
+        put("push_notification_token", token)
+        put("platform", platform)
+        put("valid", valid)
+        put("description", description)
+    }
+
     @Test
     fun `should track fcm token when Exponea is initialized`() {
         Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
@@ -47,11 +60,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -71,11 +84,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -136,11 +149,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -168,11 +181,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -200,11 +213,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -221,11 +234,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -245,11 +258,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             anyConstructed<EventManagerImpl>().track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -271,11 +284,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -352,11 +365,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to firstPushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = firstPushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -372,11 +385,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to firstPushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to false,
-                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                expectedTokenProps(
+                    token = firstPushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = false,
+                    description = Constants.PushPermissionStatus.INVALIDATED_TOKEN
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -386,11 +399,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to secondPushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = secondPushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -411,11 +424,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to firstPushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = firstPushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -430,11 +443,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to firstPushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to false,
-                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                expectedTokenProps(
+                    token = firstPushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = false,
+                    description = Constants.PushPermissionStatus.INVALIDATED_TOKEN
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -443,11 +456,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to secondPushToken,
-                    "platform" to TokenType.HMS.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = secondPushToken,
+                    platform = TokenType.HMS.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -467,11 +480,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to true,
-                    "description" to Constants.PushPermissionStatus.PERMISSION_GRANTED
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = true,
+                    description = Constants.PushPermissionStatus.PERMISSION_GRANTED
                 ),
                 EventType.PUSH_TOKEN
             )
@@ -485,11 +498,11 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             Exponea.componentForTesting.eventManager.track(
                 Constants.EventTypes.pushTokenTrack,
                 any(),
-                hashMapOf(
-                    "push_notification_token" to pushToken,
-                    "platform" to TokenType.FCM.selfCheckProperty,
-                    "valid" to false,
-                    "description" to Constants.PushPermissionStatus.INVALIDATED_TOKEN
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = false,
+                    description = Constants.PushPermissionStatus.INVALIDATED_TOKEN
                 ),
                 EventType.PUSH_TOKEN
             )

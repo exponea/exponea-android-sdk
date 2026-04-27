@@ -233,6 +233,12 @@ The SDK removes push notification tokens differently depending on the version:
 
 You can also use the `anonymize` method to switch to a different integration configuration. The SDK will then track events to a new customer record in the new project or stream, similar to the first app session after installation on a new device.
 
+> ❗️ Avoid anonymous events on logout
+>
+> `anonymize()` creates a new anonymous customer profile and tracks events against it. If your integration should not generate events against a customer profile that is not identified, use [`stopIntegration()`](#stop-sdk-integration) on logout instead. Unlike `anonymize()`, `stopIntegration()` does not create or track events on an anonymous profile after logout.
+>
+> The typical example where you do not want anonymous traffic is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+
 #### Examples
 
 ```kotlin
@@ -372,7 +378,30 @@ Exponea.trackHmsPushToken("value-of-push-token")
 
 > ❗️
 >
-> Remember to invoke [anonymize](#anonymize) whenever the user signs out to ensure the push notification token is removed from the user's customer profile. Failing to do this may cause multiple customer profiles share the same token, resulting in duplicate push notifications.
+> Remember to detach the push notification token from the signed-out customer profile on logout. Failing to do so may cause multiple customer profiles to share the same token, resulting in duplicate push notifications.
+>
+> Call [`anonymize()`](#anonymize) or [`stopIntegration()`](#stop-sdk-integration) on logout, depending on whether a new anonymous profile should be created or not. When using `stopIntegration()`, you must re-track the push token after each re-initialization — see [Re-tracking the push token after stopIntegration()](#re-tracking-the-push-token-after-stopintegration).
+
+#### Re-tracking the push token after stopIntegration()
+
+On Android, `stopIntegration()` clears the locally stored push notification token. A subsequent `init()` calls without a stored push token, and the SDK cannot recover the token — even though the host app may still hold a valid token it received earlier from the push service.
+
+If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, the host app must call `trackPushToken()` (FCM) or `trackHmsPushToken()` (HMS) again after each re-initialization, passing the token it already holds:
+
+```kotlin
+Exponea.stopIntegration()
+
+// ... later, whenever the SDK is re-initialized ...
+Exponea.init(context, configuration)
+// Re-track the push token the host app already received from FCM/HMS:
+Exponea.trackPushToken("value-of-push-token")
+// or, for Huawei:
+Exponea.trackHmsPushToken("value-of-push-token")
+```
+
+> 📘
+>
+> Refer to [Firebase Cloud Messaging for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase) and [Huawei Mobile Services](https://documentation.bloomreach.com/engagement/docs/android-sdk-huawei) for information on how to retrieve a valid push notification token.
 
 ### Track push notification delivery manually
 
@@ -509,6 +538,10 @@ If the customer doesn't consent to any tracking before the SDK is initialized, i
 
 The customer may also revoke all tracking consent later, after the SDK is fully initialized and tracking is enabled. In this case, you can stop SDK integration and remove all locally stored data by using the `Exponea.stopIntegration()` method.
 
+> 👍 Preferred when avoiding anonymous events
+>
+> Use `stopIntegration()` instead of [`anonymize()`](#anonymize) on logout whenever your integration should not generate events against an anonymous customer profile. Unlike `anonymize()`, `stopIntegration()` does not create a new anonymous customer profile. This applies to any SDK configuration; the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+
 > ❗️
 >
 > `stopIntegration()` can only be called when the SDK **is initialized and running**. If the SDK is not initialized, the call is ignored and an error is logged. To clear locally stored data when the SDK is not running, use [clearLocalCustomerData](#clear-local-customer-data) instead.
@@ -520,7 +553,7 @@ Invoking this method will cause the SDK to:
 * Track a `session_end` event (if automatic session tracking is enabled).
 * Send a push notification token invalidation event to the server.
 * Flush all pending events to the server.
-* Remove the push notification token for the current customer from local device storage.
+* Remove the push notification token for the current customer from local device storage. If you re-initialize the SDK later (for example for a new logged-in user), you must call `trackPushToken()` or `trackHmsPushToken()` again — see [Re-tracking the push token after stopIntegration()](#re-tracking-the-push-token-after-stopintegration).
 * Clear local repositories and caches, including any tracked events that failed to upload.
 * Clear all session start and end information.
 * Remove the customer record stored locally.

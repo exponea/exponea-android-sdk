@@ -122,6 +122,10 @@ A push token is typically generated at the first application start, but it has i
 >
 > The methods `Exponea.handleNewToken` and `Exponea.handleRemoteMessage` can be used before SDK initialization if a previous initialization was done. In such a case, each method will track events with the configuration of the last initialization. Consider initializing the SDK in `Application::onCreate` to make sure a fresh configuration is applied in case of an application update.
 
+> ❗️
+>
+> If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, the push token stored by the SDK is cleared on `stopIntegration()` and the SDK cannot recover it. After each re-initialization, call `Exponea.trackPushToken(token)` again with the token your app already holds. Refer to [Re-tracking the push token after stopIntegration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
+
 ## Configure the Firebase Cloud Messaging integration in Engagement
 
 Finally, you must configure the Firebase Cloud Messaging integration in Engagement so the platform can use it to send push notifications.

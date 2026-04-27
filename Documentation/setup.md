@@ -61,6 +61,10 @@ Now that you have installed the SDK in your project, you must import, configure,
 >
 > Refer to [Stop SDK integration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#stop-sdk-integration) for details.
 
+> ❗️ Re-initializing after `stopIntegration()`
+>
+> If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, call `Exponea.trackPushToken()` (FCM) or `Exponea.trackHmsPushToken()` (HMS) again after each `init()`. `stopIntegration()` clears the local push token, and the SDK cannot recover it. Refer to [Re-tracking the push token after stopIntegration()](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
+
 The required configuration parameter is `integrationConfig` with `projectToken`, `authorization` and `baseUrl` when using `ProjectConfig`, or `streamId` and `baseUrl` when using `StreamConfig`. For `ProjectConfig`, you can find the credentials in the Bloomreach Engagement webapp under `Project settings` > `Access management` > `API`. For `StreamConfig`, you can find the stream ID in the Data hub app under `Event streams` > *your stream* > `Access Security`.
 
 > 📘

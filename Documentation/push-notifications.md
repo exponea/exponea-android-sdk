@@ -260,6 +260,10 @@ Invoking this method will track the push token immediately regardless of the [Co
 >
 > SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](#token-tracking-via-notification_state-event).
 
+> ❗️ Re-track the push token after `stopIntegration()`
+>
+> If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, you must re-track the push token after each re-initialization. Refer to [Re-tracking the push token after stopIntegration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
+
 #### Track delivered push notification
 
 Use the [`trackDeliveredPush`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#track-push-notification-delivery-manually) method to manually track a delivered push notification:
@@ -477,11 +481,15 @@ If battery optimization is on for devices running MIUI, it can make push notific
 - Set the "No restrictions" option in the battery saver options for your app.
 - And (probably) most important, turn off `Memory and MIUI Optimization` under `Developer Options`.
 
-### Push notification token is missing after anonymization
+### Push notification token is missing after stopIntegration()
 
-Your app may be using `Exponea.anonymize()` as a sign out feature.
+`Exponea.stopIntegration()` clears the locally stored push notification token. The SDK cannot recover the token, and a subsequent `init()` is called without a stored token — even though the host app may still hold a valid token it received earlier from the push service.
 
-Keep in mind that invoking the `anonymize` method will remove the push notification token from storage. Your application should retrieve a valid token manually before using any push notification features. You may do this directly after `anonymize` or before or after `identifyCustomer`, depending on your push notifications usage.
+After `stopIntegration()` followed by a later `init()`, the host app must call `trackPushToken()` (FCM) or `trackHmsPushToken()` (HMS) again after each `init()`, passing the token it already holds. See [Re-tracking the push token after stopIntegration()](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration).
+
+> 📘 Note
+>
+> Unlike `stopIntegration()`, `Exponea.anonymize()` does not clear the locally stored push token. The SDK automatically invalidates the token on the previous customer profile and re-tracks the same token against the new anonymous customer profile. No manual token re-tracking is required after `anonymize()`.
 
 > 📘
 >
@@ -489,9 +497,12 @@ Keep in mind that invoking the `anonymize` method will remove the push notificat
 
 ### Multiple customer profiles have the same push notification token assigned
 
-This is most likely because your app does not call [`anonymize`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#anonymize) when a user logs out.
+This is most likely because your app does not detach the push token from the signed-out customer profile on logout.
 
-It's essential to call `anonymize` when a user logs out of your app to ensure that the push notification token is removed from that user's profile. The token will be assigned to the user who logs in next. If your app fails to call `anonymize` at one user's logout and a different user logs in, both users will have the same token in their profile.
+Call either [`anonymize()`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#anonymize) or [`stopIntegration()`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#stop-sdk-integration) when a user logs out so the push token is removed from that user's profile.
+
+Prefer `stopIntegration()` whenever your integration should avoid anonymous events after logout — the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+If neither `stopIntegration()` nor `anonymize()` is called, the same token can end up on multiple customer profiles when a different user signs in.
 
 ### Push notification click events are too rare on production (low conversion)
 

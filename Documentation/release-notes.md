@@ -14,6 +14,14 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.1.0
+#### April 27, 2026
+* Added:
+  * Adds missing device properties to `notification_state` event.
+* Fixed:
+  * Fixes documentation to clarify `anonymize`/`stopIntegration` guidance and push token re-tracking.
+
+
 ## Release Notes for 5.0.0
 #### April 13, 2026
 * Added:

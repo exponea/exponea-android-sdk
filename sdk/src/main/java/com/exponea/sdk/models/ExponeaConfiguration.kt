@@ -267,6 +267,7 @@ data class ExponeaConfiguration(
 
     fun validate() {
         validateIntegrationId(integrationConfig)
+        validateBaseUrl(integrationConfig)
         when (val config = integrationConfig) {
             is ProjectConfig -> {
                 validateBasicAuthValue(config.authorization)
@@ -313,6 +314,7 @@ data class ExponeaConfiguration(
             integrations.forEach { integration ->
                 try {
                     validateIntegrationId(integration)
+                    validateBaseUrl(integration)
                 } catch (e: Exception) {
                     throw InvalidConfigurationException(
                         "Integration route mapping for event type $type is not valid. ${e.localizedMessage}"
@@ -324,24 +326,34 @@ data class ExponeaConfiguration(
 
     private fun warnIfAdvancedAuthEnabledForStream() {
         if (advancedAuthEnabled) {
-            // todo adjust log message with final documentation version
             Logger.w(
                 this,
                 "Advanced authentication is only supported when using ProjectConfig. " +
-                "This setting will be ignored for StreamConfig. " +
-                "For more details, see "
+                "This setting will be ignored for StreamConfig."
             )
         }
     }
 
     private fun warnIfRouteMapConfiguredForStream() {
         if (integrationRouteMap.isNotEmpty()) {
-            // todo adjust log message with final documentation version
             Logger.w(
                 this,
                 "Integration route mapping is only supported when using ProjectConfig. " +
-                "This setting will be ignored for StreamConfig. " +
-                "For more details, see "
+                "This setting will be ignored for StreamConfig."
+            )
+        }
+    }
+
+    private fun validateBaseUrl(integrationConfig: IntegrationConfig) {
+        val baseUrl = integrationConfig.baseUrl
+        val hasValidScheme = baseUrl.startsWith("http://") || baseUrl.startsWith("https://")
+        if (!hasValidScheme) {
+            throw InvalidConfigurationException(
+                if (baseUrl.isBlank()) {
+                    "Provided baseUrl is not valid. Cannot be empty string."
+                } else {
+                    "Provided baseUrl is not valid. Must start with 'http://' or 'https://' (got '$baseUrl')."
+                }
             )
         }
     }

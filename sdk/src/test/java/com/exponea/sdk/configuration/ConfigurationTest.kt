@@ -932,8 +932,7 @@ internal class ConfigurationTest : ExponeaSDKTest() {
             Logger.w(
                 config,
                 "Advanced authentication is only supported when using ProjectConfig. " +
-                        "This setting will be ignored for StreamConfig. " +
-                        "For more details, see "
+                        "This setting will be ignored for StreamConfig."
             )
         }
     }
@@ -961,9 +960,81 @@ internal class ConfigurationTest : ExponeaSDKTest() {
             Logger.w(
                 config,
                 "Integration route mapping is only supported when using ProjectConfig. " +
-                        "This setting will be ignored for StreamConfig. " +
-                        "For more details, see "
+                        "This setting will be ignored for StreamConfig."
             )
         }
+    }
+
+    @Test
+    fun `should throw when baseUrl is empty baseUrl`() {
+        val config = ExponeaConfiguration(
+            integrationConfig = StreamConfig(baseUrl = "", streamId = "mock-stream-id")
+        )
+        val exception = assertThrows(InvalidConfigurationException::class.java) {
+            config.validate()
+        }
+        assertThat(exception.message, equalTo("Provided baseUrl is not valid. Cannot be empty string."))
+    }
+
+    @Test
+    fun `should throw when baseUrl is missing http or https scheme`() {
+        val config = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                baseUrl = "api.exponea.com",
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            )
+        )
+        val exception = assertThrows(InvalidConfigurationException::class.java) {
+            config.validate()
+        }
+        assertThat(
+            exception.message,
+            equalTo("Provided baseUrl is not valid. Must start with 'http://' or 'https://' (got 'api.exponea.com').")
+        )
+    }
+
+    @Test
+    fun `should throw when integrationRouteMap entry has invalid baseUrl`() {
+        val eventType = EventType.INSTALL
+        val invalidUrl = "not-a-valid-url"
+
+        val config = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            integrationRouteMap = hashMapOf(
+                eventType to listOf(
+                    ProjectConfig(
+                        baseUrl = invalidUrl,
+                        projectToken = "mock-token-2",
+                        authorization = "Token mock-auth-2"
+                    )
+                )
+            )
+        )
+        val exception = assertThrows(InvalidConfigurationException::class.java) {
+            config.validate()
+        }
+        assertThat(
+            exception.message,
+            equalTo("Integration route mapping for event type $eventType is not valid. " +
+                    "Provided baseUrl is not valid. Must start with 'http://' or 'https://' (got '$invalidUrl').")
+        )
+    }
+
+    @Test
+    fun `should throw when deprecated constructor receives empty baseURL`() {
+        @Suppress("DEPRECATION")
+        val config = ExponeaConfiguration(
+            projectToken = "mock-token",
+            authorization = "Token mock-auth",
+            baseURL = ""
+        )
+        val exception = assertThrows(InvalidConfigurationException::class.java) {
+            config.validate()
+        }
+        assertThat(exception.message, equalTo("Provided baseUrl is not valid. Cannot be empty string."))
     }
 }

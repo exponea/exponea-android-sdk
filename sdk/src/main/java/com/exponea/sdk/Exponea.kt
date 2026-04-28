@@ -436,8 +436,9 @@ object Exponea {
         if (Looper.myLooper() == null)
             Looper.prepare()
 
-        this.configuration = configuration
-        ExponeaConfigRepository.set(context, configuration)
+        // Deep-copy so host-app mutations to the original instance after init cannot affect SDK state.
+        this.configuration = configuration.deepCopy()
+        ExponeaConfigRepository.set(context, this.configuration)
 
         telemetry = TelemetryManager(
             context.applicationContext as Application
@@ -445,7 +446,7 @@ object Exponea {
             deintegration.registerForIntegrationStopped(this)
         }
         telemetry?.start()
-        telemetry?.reportInitEvent(configuration)
+        telemetry?.reportInitEvent(this.configuration)
         segmentationDataCallbacks.forEach { reportSegmentationCallbackAdded(it) }
 
         initializeSdk(context, customerIdentity)

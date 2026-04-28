@@ -1037,4 +1037,119 @@ internal class ConfigurationTest : ExponeaSDKTest() {
         }
         assertThat(exception.message, equalTo("Provided baseUrl is not valid. Cannot be empty string."))
     }
+
+    @Test
+    fun `deepCopy should preserve all field values`() {
+        val original = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                baseUrl = "https://api.exponea.com",
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            integrationRouteMap = hashMapOf(
+                EventType.INSTALL to listOf(
+                    ProjectConfig(projectToken = "mock-token-2", authorization = "Token mock-auth-2")
+                )
+            ),
+            httpLoggingLevel = ExponeaConfiguration.HttpLoggingLevel.HEADERS,
+            maxTries = 5,
+            sessionTimeout = 30.0,
+            campaignTTL = 10.0,
+            automaticSessionTracking = false,
+            automaticPushNotification = false,
+            requirePushAuthorization = true,
+            pushIcon = 1,
+            pushAccentColor = 2,
+            pushChannelName = "Test Channel",
+            pushChannelDescription = "Test Channel Description",
+            pushChannelId = "test-channel-id",
+            pushNotificationImportance = NotificationManager.IMPORTANCE_HIGH,
+            defaultProperties = hashMapOf("key" to "value"),
+            tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.DAILY,
+            allowDefaultCustomerProperties = false,
+            advancedAuthEnabled = true,
+            inAppContentBlockPlaceholdersAutoLoad = listOf("placeholder-1"),
+            appInboxDetailImageInset = 10,
+            allowWebViewCookies = true,
+            manualSessionAutoClose = false,
+            applicationId = "test-app"
+        )
+
+        assertDeepEquals(original, original.deepCopy())
+    }
+
+    @Test
+    fun `deepCopy should return independent copy with isolated defaultProperties`() {
+        val original = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            defaultProperties = hashMapOf("key" to "original")
+        )
+        val copy = original.deepCopy()
+
+        original.defaultProperties["key"] = "mutated"
+        original.defaultProperties["extra"] = "added"
+
+        assertThat(copy.defaultProperties["key"] as String, equalTo("original"))
+        assertFalse(copy.defaultProperties.containsKey("extra"))
+    }
+
+    @Test
+    fun `deepCopy should return independent copy with isolated inAppContentBlockPlaceholdersAutoLoad`() {
+        val original = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            inAppContentBlockPlaceholdersAutoLoad = mutableListOf("placeholder-1")
+        )
+        val copy = original.deepCopy()
+
+        (original.inAppContentBlockPlaceholdersAutoLoad as? MutableList)?.clear()
+
+        assertThat(copy.inAppContentBlockPlaceholdersAutoLoad.size, equalTo(1))
+        assertThat(copy.inAppContentBlockPlaceholdersAutoLoad[0], equalTo("placeholder-1"))
+    }
+
+    @Test
+    fun `deepCopy should return independent copy with isolated integrationRouteMap`() {
+        val routeList = mutableListOf(
+            ProjectConfig(
+                projectToken = "mock-token-2",
+                authorization = "Token mock-auth-2"
+            )
+        )
+        val original = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            integrationRouteMap = hashMapOf(EventType.INSTALL to routeList)
+        )
+        val copy = original.deepCopy()
+
+        (original.integrationRouteMap[EventType.INSTALL] as? MutableList)?.clear()
+
+        assertThat(copy.integrationRouteMap[EventType.INSTALL]?.size, equalTo(1))
+    }
+
+    @Test
+    fun `host mutation of defaultProperties after init should not affect SDK internal state`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val hostConfig = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "mock-token",
+                authorization = "Token mock-auth"
+            ),
+            defaultProperties = hashMapOf("key" to "original")
+        )
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, hostConfig)
+
+        hostConfig.defaultProperties.clear()
+
+        assertThat(Exponea.defaultProperties["key"] as? String, equalTo("original"))
+    }
 }

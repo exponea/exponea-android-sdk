@@ -239,6 +239,17 @@ data class ExponeaConfiguration(
         applicationId = applicationId
     )
 
+    /**
+     * Returns an independent copy of this configuration. Mutable collection fields
+     * ([defaultProperties], [integrationRouteMap], [inAppContentBlockPlaceholdersAutoLoad])
+     * are defensively copied so that mutations on the original do not affect the returned instance.
+     */
+    internal fun deepCopy(): ExponeaConfiguration = copy(
+        integrationRouteMap = integrationRouteMap.mapValues { it.value.toList() }.toMap(),
+        defaultProperties = HashMap(defaultProperties),
+        inAppContentBlockPlaceholdersAutoLoad = inAppContentBlockPlaceholdersAutoLoad.toList()
+    )
+
     companion object {
         const val TOKEN_AUTH_PREFIX = "Token "
         const val BASIC_AUTH_PREFIX = "Basic "

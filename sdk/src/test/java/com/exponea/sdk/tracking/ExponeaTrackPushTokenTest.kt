@@ -13,12 +13,14 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode.MANUAL
 import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -35,6 +37,8 @@ internal class ExponeaTrackPushTokenTest : ExponeaSDKTest() {
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
+        mockkObject(NotificationsPermissionReceiver)
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
         skipInstallEvent()
     }
 

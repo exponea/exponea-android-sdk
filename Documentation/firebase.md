@@ -27,7 +27,7 @@ First, you must set up a Firebase project. For step-by-step instructions, please
 
 To summarize, you'll create a project using the Firebase console, download a generated `google-services.json` configuration file and add it to your app, and update the Gradle build scripts in your app.
 
-#### Checklist:
+#### Checklist
 - [ ] The `google-services.json` file downloaded from the Firebase console is in your **application** folder, for example, *my-project/app/google-services.json*.
 - [ ] Your **application** Gradle build file (for example, *my-project/app/build.gradle*) contains `apply plugin: 'com.google.gms.google-services'`.
 - [ ] Your **top level** Gradle build file (for example, *my-project/build.gradle*) has `classpath 'com.google.gms:google-services:X.X.X'` listed in build script dependencies.
@@ -38,7 +38,7 @@ Next, you must create and register a service that extends `FirebaseMessagingServ
 
 > 👍
 >
->  This implementation is not included in the SDK in order to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy the example code below and use it in your app.
+> This implementation isn't included in the SDK to avoid adding non-essential libraries. Copy the example code below and use it in your app.
 
 
 1. Create the service:
@@ -89,17 +89,15 @@ You can also verify token tracking manually by locating the customer in the Bloo
 >
 > SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#token-tracking-via-notification_state-event).
 
-A push token is typically generated at the first application start, but it has its own lifecycle. Your `FirebaseMessagingService` implementation is triggered only if a token is created or its value has changed. Please validate your expectations against the defined [token update triggers](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register)
+A push token is typically generated at the first application start, but it has its own lifecycle. Your `FirebaseMessagingService` implementation is triggered only if a token is created or its value has changed. Please validate your expectations against the defined [token update triggers](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register).
 
 > ❗️
 >
 > As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
->
-> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
 
 > ❗️
 >
-> If you are integrating a new Firebase project in an existing project, or if you are changing Firebase project completely, you may face an issue that your 'FirebaseMessagingService' is not called automatically.
+> If you are integrating a new Firebase project in an existing project, or if you are changing Firebase project completely, you can face an issue that your `FirebaseMessagingService` isn't called automatically.
 >
 > To retrieve a fresh FCM token, consider requesting a token manually as soon as possible after Firebase initialization:
 >

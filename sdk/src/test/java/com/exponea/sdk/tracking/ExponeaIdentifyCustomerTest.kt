@@ -17,6 +17,7 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.StreamConfig
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.AuthTokenRepositoryImpl
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -24,6 +25,7 @@ import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -46,6 +48,8 @@ internal class ExponeaIdentifyCustomerTest : ExponeaSDKTest() {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
         mockkConstructorFix(TelemetryManager::class)
+        mockkObject(NotificationsPermissionReceiver)
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
         skipInstallEvent()
     }
 

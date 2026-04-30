@@ -11,12 +11,14 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.util.TokenType
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,6 +39,8 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
+        mockkObject(NotificationsPermissionReceiver)
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
         Exponea.flushMode = FlushMode.MANUAL
     }
 

@@ -46,10 +46,10 @@ Next, you must create and register a service that extends `HmsMessageService`. T
 
 > 👍
 >
->  This implementation is not included in the SDK in order to keep it as small as possible and avoid including the libraries that are not essential for its functionality. You can copy the example code below and use it in your app.
+> This implementation isn't included in the SDK to avoid adding non-essential libraries. Copy the example code below and use it in your app.
 
 1. Create the service:
-    ``` kotlin
+    ```kotlin
     import android.app.NotificationManager  
     import android.content.Context  
     import com.exponea.sdk.Exponea  
@@ -98,25 +98,23 @@ You can also verify token tracking manually by locating the customer in the Bloo
 >
 > SDK versions 4.6.0 and higher use event-based token tracking to support multiple mobile applications per project. Learn more about [Token tracking via notification_state event](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#token-tracking-via-notification_state-event).
 
-A push token is typically generated at the first application start, but it has its own lifecycle. Your `HmsMessageService` implementation is triggered only if a token is created or its value has changed. Please validate your expectations against the defined [token update triggers](https://developer.huawei.com/consumer/en/doc/HMSCore-Guides/android-client-dev-0000001050042041#section487774626)
+A push token is typically generated at the first application start, but it has its own lifecycle. Your `HmsMessageService` implementation triggers only when a token is created or its value changes. Validate your expectations against the defined [token update triggers](https://developer.huawei.com/consumer/en/doc/HMSCore-Guides/android-client-dev-0000001050042041#section487774626).
 
 > ❗️
 >
 > As of Android 13 (API level 33), a runtime notification permission must be registered in your `AndroidManifest.xml` and must also be granted by the user for your application to be able to show push notifications. The SDK takes care of registering the permission. However, your app must ask for notification permission from the user by invoking `Exponea.requestPushAuthorization(context)`. Refer to [Request notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#request-notification-permission) for details.
->
-> If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization to `true`. Refer to [Require notification permission](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#require-notification-permission) for details.
 
 > ❗️
 >
 > If you are integrating the SDK into an existing project, you may face an issue that your `HmsMessageService` is not called automatically.
 >
-> To retrieve a fresh push token, consider requesting a token manually as soon as possible after after application start:
+> To retrieve a fresh push token, request a token manually as soon as possible after application start:
 >
 > Refer to [Obtaining and Deleting a Push Token](https://developer.huawei.com/consumer/en/doc/development/HMSCore-Guides/android-client-dev-0000001050042041) in the HMS documentation for instructions on how to retrieve the current push token.
 
 > ❗️
 >
-> The methods `Exponea.handleNewToken` and `Exponea.handleRemoteMessage` can be used before SDK initialization if a previous initialization was done. In such a case, each method will track events with the configuration of the last initialization. Consider initializing the SDK in `Application::onCreate` to make sure a fresh configuration is applied in case of an application update.
+> The methods `Exponea.handleNewHmsToken` and `Exponea.handleRemoteMessage` can be used before SDK initialization if a previous initialization was done. Each method tracks events with the configuration of the last initialization. Initialize the SDK in `Application::onCreate` to apply a fresh configuration on application update.
 
 > ❗️
 >
@@ -130,9 +128,9 @@ A push token is typically generated at the first application start, but it has i
 2. Open the Engagement web application and navigate to `Data & Assets` > `Integrations`. Click `+ Add new integration`.
 
 3. Locate `Huawei Push Service` and click `+ Add integration`.  
-   ![Engagement Integrations - Select Firebase Cloud Messaging integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei2.png)
+   ![Engagement Integrations - Select Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei2.png)
 
 4. Enter the `Client ID` and `Client secret` values you copied in step 1. Click `Save integration` to finish.  
-   ![Engagement Integrations - Configure Firebase Cloud Messaging integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei3.png)
+   ![Engagement Integrations - Configure Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei3.png)
 
 5. Navigate to `Settings` > `Project settings` > `Channels` > `Push notifications` > `Android Notifications` and set `Huawei integration` to `Huawei Push Service`.  

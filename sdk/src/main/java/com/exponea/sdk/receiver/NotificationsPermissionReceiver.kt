@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.logOnException
@@ -48,14 +49,16 @@ class NotificationsPermissionReceiver(
         }
 
         fun isPermissionGranted(context: Context): Boolean {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                return true
-            }
-            val permissionState: Int = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            )
-            return permissionState == PackageManager.PERMISSION_GRANTED
+            // On Android 13+ notification settings and runtime permission can theoretically diverge,
+            // so both are checked. Below Android 13 only notification settings exist.
+            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else true
         }
 
         fun requestPushAuthorization(context: Context, listener: (Boolean) -> Unit) {

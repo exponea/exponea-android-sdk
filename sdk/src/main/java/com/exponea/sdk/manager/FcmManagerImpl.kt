@@ -124,12 +124,13 @@ internal open class FcmManagerImpl(
 
                 val validityResult = when {
                     isTokenCanceled -> false
-                    else -> !permissionMismatched
+                    permissionGranted -> true
+                    else -> false
                 }
                 val validityMessage = when {
                     isTokenCanceled -> Constants.PushPermissionStatus.INVALIDATED_TOKEN
-                    permissionMismatched -> Constants.PushPermissionStatus.PERMISSION_DENIED
-                    else -> Constants.PushPermissionStatus.PERMISSION_GRANTED
+                    permissionGranted -> Constants.PushPermissionStatus.PERMISSION_GRANTED
+                    else -> Constants.PushPermissionStatus.PERMISSION_DENIED
                 }
 
                 val properties = PropertiesList(DeviceProperties(application).toHashMap().apply {

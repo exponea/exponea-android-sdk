@@ -79,14 +79,19 @@ The behavior of this callback is as follows:
   * Show the dialog, return the user's decision (`true`/`false`).
   * In case of previously granted permission, don't show the dialog return `true`.
 
-#### Require notification permission
+#### Notification permission and token validity
 
-On Android 13 and higher, the app may not be able to send normal push notifications, even though a freshly generated token (at application start) is valid, if the user didn't grant permission to receive notifications.
+On Android 13 and higher, the app may not be able to send normal push notifications, even though a freshly generated token (at application start) is valid, if the user didn't grant permission to receive notifications. The same applies on any Android version when the user disables notifications for the app in system settings.
 
-If your marketing flow strictly requires normal push notifications usage, configure the SDK to track only authorized push tokens by setting [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization to `true`. The SDK will track push tokens only if the user granted push notification permission, otherwise the push token will be removed. If you leave `requirePushAuthorization` to `false` (the default value), the SDK will track the push token regardless of the user's permission. These tokens can only be used to send silent push notifications.
+The SDK tracks the push token regardless of the user's notification permission. Every `notification_state` event reflects the current status in its `valid` and `description` properties:
+
+* `valid: true`, `description: "Permission granted"` - the user has granted notification permission. The token can be used to send both normal and silent push notifications.
+* `valid: false`, `description: "Permission denied"` - the user has denied (or not yet granted) notification permission, or notifications are disabled for the app in system settings. The token can only be used to send silent push notifications until the user authorizes notifications.
+
+Learn more about [Token tracking via notification_state event](#token-tracking-via-notification_state-event).
+
 
 ## Customization
-
 This section describes the customizations you can implement once you have integrated the minimum push notification functionality.
 
 ### Configure automatic push notification tracking
@@ -434,11 +439,11 @@ In addition to the properties above, each `notification_state` event includes de
 
 The combination of `valid` and `description` properties indicates the token's current state:
 
-| Valid | Description         | When this occurs                                                        |
-|-------|---------------------|------------------------------------------------------------------------|
-| `false` | `Invalidated`         | New token received \(old token becomes invalid\) or `Exponea.anonymize()` called |
-| `false` | `Permission denied`   | [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) requirePushAuthorization is `true` and user denied notification permission |
-| `true`  | `Permission granted`  | Valid token tracked successfully \(all other cases\)                     |
+| Valid | Description         | When this occurs                                                                      |
+|-------|---------------------|---------------------------------------------------------------------------------------|
+| `false` | `Invalidated`         | New token received \(old token becomes invalid\) or `Exponea.anonymize()` called.     |
+| `false` | `Permission denied`   | User denied notification permission or notifications are disabled in system settings. |
+| `true`  | `Permission granted`  | User has granted notification permission and notifications are enabled.               |
 
 ### Configuring Application ID
 

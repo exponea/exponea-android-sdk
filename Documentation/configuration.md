@@ -140,11 +140,8 @@ This page provides an overview of all configuration parameters for the SDK. You 
     * `DAILY` - tracks push token once per day
 
 * `requirePushAuthorization`
-  * Flag indicating whether the SDK should check [push notification permission status](https://developer.android.com/develop/ui/views/notifications/notification-permission) and only track the push token if the user granted permission to receive push notifications.
-  * Possible values:
-    * `true` - tracks the push token only if the user granted permission to receive push notifications. An empty token value is tracked if the user denied permission. This is useful to send normal push notifications to a target audience that allows receiving notifications.
-    * `false` - tracks the push token regardless of notification permission status. This is useful to send silent push notifications that do not require permission from the user.
-  * Default value: `false`
+  * **Deprecated** - This property is no longer used and will be removed in a future SDK release.
+  * The SDK now always tracks the push token, regardless of this flag. The token is tracked through the `notification_state` event, whose `valid` and `description` properties reflect the user's current notification permission status. Learn more about [Token tracking via notification_state event](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#token-tracking-via-notification_state-event).
 
 * `maxTries`
   * Controls how many times the SDK should attempt to flush an event before aborting. Useful for example in case the API is down or some other temporary error happens.

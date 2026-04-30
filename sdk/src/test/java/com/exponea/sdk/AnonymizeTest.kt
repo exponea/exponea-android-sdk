@@ -27,11 +27,13 @@ import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.models.StreamConfig
+import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -92,6 +94,8 @@ internal class AnonymizeTest : ExponeaSDKTest() {
 
     @Test
     fun `should anonymize sdk and switch projects`() = runInSingleThread { idleThreads ->
+        mockkObject(NotificationsPermissionReceiver)
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialProjectConfig = ProjectConfig(
             "https://base-url.com",

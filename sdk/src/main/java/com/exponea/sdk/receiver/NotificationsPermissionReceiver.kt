@@ -16,7 +16,7 @@ import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.view.NotificationsPermissionActivity
 
-class NotificationsPermissionReceiver(
+internal class NotificationsPermissionReceiver(
     private val listener: (Boolean) -> Unit
 ) : BroadcastReceiver() {
 

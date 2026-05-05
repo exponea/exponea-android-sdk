@@ -69,8 +69,6 @@ internal open class FcmManagerImpl(
             return
         }
         val permissionGranted = NotificationsPermissionReceiver.isPermissionGranted(application)
-        val permissionRequired = configuration.requirePushAuthorization
-        val permissionMismatched = permissionRequired && !permissionGranted
         val currentAppVersion = application.getAppVersion(application)
         val shouldUpdateToken = run {
             val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
@@ -81,8 +79,8 @@ internal open class FcmManagerImpl(
             } else if (lastTrackDateInMilliseconds == null) {
                 Logger.d(this, "trackToken - reason: token never tracked")
                 true
-            } else if (permissionMismatched) {
-                Logger.d(this, "trackToken - reason: permission mismatched")
+            } else if (permissionGranted != pushTokenRepository.getLastPermissionFlag()) {
+                Logger.d(this, "trackToken - reason: permission state changed to $permissionGranted")
                 true
             } else if (currentAppVersion.isNotEmpty() &&
                     currentAppVersion != pushTokenRepository.getLastTrackedAppVersion()) {
@@ -93,10 +91,7 @@ internal open class FcmManagerImpl(
                 true
             } else {
                 when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
-                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> {
-                        token != pushTokenRepository.get() ||
-                                permissionGranted != pushTokenRepository.getLastPermissionFlag()
-                    }
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != pushTokenRepository.get()
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
                     ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
                 }.also { frequencyCheckPassed ->

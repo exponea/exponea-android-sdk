@@ -72,13 +72,11 @@ internal class FcmManagerImplTest {
     }
 
     private fun createFcmManager(
-        notifImportance: Int = NotificationManager.IMPORTANCE_DEFAULT,
-        requirePushAuthorization: Boolean = Constants.PushNotif.defaultPushAuthorizationRequired
+        notifImportance: Int = NotificationManager.IMPORTANCE_DEFAULT
     ) = FcmManagerImpl(
         context,
         ExponeaConfiguration(
-            pushNotificationImportance = notifImportance,
-            requirePushAuthorization = requirePushAuthorization
+            pushNotificationImportance = notifImportance
         ),
         eventManager,
         pushTokenRepository,
@@ -197,65 +195,14 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    fun `should track token in ON_TOKEN_CHANGE if permission denied but required (forcibly)`() {
+    fun `should track token in EVERY_LAUNCH if permission denied`() {
         val pushToken = "mock-push-token"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = true)
+        manager = createFcmManager()
         // simulate previous token track
         pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
-        pushTokenRepository.resetVerifyMockkCount()
-        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
-        // track same token again
-        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
-        // has to store exactly-same token again
-        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
-        verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.pushTokenTrack,
-            any(),
-            capture(pushTokenPropsSlot),
-            EventType.PUSH_TOKEN,
-            any()
-        ) }
-        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
-        assertEquals(false, pushTokenPropsSlot.captured["valid"])
-        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
-    }
-
-    @Test
-    fun `should track token in DAILY if permission denied but required (forcibly)`() {
-        val pushToken = "mock-push-token"
-        val permissionGranted = false
-        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = true)
-        // simulate previous token track
-        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
-        pushTokenRepository.resetVerifyMockkCount()
-        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
-        // track same token again
-        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
-        // has to store exactly-same token again
-        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
-        verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.pushTokenTrack,
-            any(),
-            capture(pushTokenPropsSlot),
-            EventType.PUSH_TOKEN,
-            any()
-        ) }
-        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
-        assertEquals(false, pushTokenPropsSlot.captured["valid"])
-        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
-    }
-
-    @Test
-    fun `should track token in EVERY_LAUNCH if permission denied but required (forcibly)`() {
-        val pushToken = "mock-push-token"
-        val permissionGranted = false
-        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = true)
-        // simulate previous token track
-        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
         pushTokenRepository.resetVerifyMockkCount()
         every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
         // track same token again
@@ -275,36 +222,10 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    fun `should track full token in EVERY_LAUNCH if permission denied but not required`() {
+    fun `should not call setTrackedToken when token is null`() {
         val pushToken = "mock-push-token"
-        val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = false)
-        // simulate previous token track
-        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
-        pushTokenRepository.resetVerifyMockkCount()
-        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
-        // track same token again
-        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
-        // has to store exactly-same token again
-        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
-        verify(exactly = 1) { eventManager.track(
-            Constants.EventTypes.pushTokenTrack,
-            any(),
-            capture(pushTokenPropsSlot),
-            EventType.PUSH_TOKEN,
-            any()
-        ) }
-        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
-        assertEquals(false, pushTokenPropsSlot.captured["valid"])
-        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
-    }
-
-    @Test
-    fun `should not call setTrackedToken when token is null and no permission mismatch`() {
-        // token=null, no permission mismatch → early return, no setTrackedToken call
-        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = false)
+        manager = createFcmManager()
         every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
         // First call: no prior tracking, token is null
         manager.trackToken(null, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
@@ -316,8 +237,8 @@ internal class FcmManagerImplTest {
         verify(exactly = 0) { eventManager.track(any(), any(), any(), any(), any()) }
         // Real token arrives: must be tracked correctly
         pushTokenRepository.resetVerifyMockkCount()
-        manager.trackToken("real-token", ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
-        verify(exactly = 1) { pushTokenRepository.setTrackedToken("real-token", any(), TokenType.FCM, true) }
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, true) }
         verify(exactly = 1) { eventManager.track(
             Constants.EventTypes.pushTokenTrack,
             any(),
@@ -325,43 +246,21 @@ internal class FcmManagerImplTest {
             EventType.PUSH_TOKEN,
             any()
         ) }
-        assertEquals("real-token", pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
         assertEquals(true, pushTokenPropsSlot.captured["valid"])
         assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
     }
 
     @Test
-    fun `should not track same token in ON_TOKEN_CHANGE if permission denied but not required`() {
-        val pushToken = "mock-push-token"
-        val permissionGranted = false
-        manager = createFcmManager(requirePushAuthorization = false)
-        // simulate previous token track
-        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
-        pushTokenRepository.setLastTrackedApplicationId("default-application")
-        pushTokenRepository.resetVerifyMockkCount()
-        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
-        // track same token again
-        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
-        // has to store exactly-same token again
-        verify(exactly = 0) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
-        verify(exactly = 0) { eventManager.track(
-            Constants.EventTypes.push,
-            any(),
-            any(),
-            EventType.PUSH_TOKEN,
-            any()
-        ) }
-    }
-
-    @Test
-    fun `should track new full token in ON_TOKEN_CHANGE if permission denied but not required`() {
+    fun `should track new token in ON_TOKEN_CHANGE when token changes and permission denied`() {
         val pushToken1 = "mock-push-token-1"
         val pushToken2 = "mock-push-token-2"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = false)
+        manager = createFcmManager()
         // simulate previous token track
         pushTokenRepository.setTrackedToken(pushToken1, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
         pushTokenRepository.resetVerifyMockkCount()
         every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
         // track same token again
@@ -381,39 +280,14 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    @LooperMode(LEGACY)
-    fun `should not track fresh token in DAILY if permission denied but not required`() {
-        val pushToken = "mock-push-token"
-        val permissionGranted = false
-        manager = createFcmManager(requirePushAuthorization = false)
-        // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912
-        ShadowSystemClock.setNanoTime(System.currentTimeMillis() * 1000 * 1000)
-        // simulate previous token track
-        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, permissionGranted)
-        pushTokenRepository.setLastTrackedApplicationId("default-application")
-        pushTokenRepository.resetVerifyMockkCount()
-        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
-        // track same token again
-        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.DAILY, TokenType.FCM)
-        // has to store exactly-same token again
-        verify(exactly = 0) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
-        verify(exactly = 0) { eventManager.track(
-            Constants.EventTypes.push,
-            any(),
-            any(),
-            EventType.PUSH_TOKEN,
-            any()
-        ) }
-    }
-
-    @Test
-    fun `should track new full token in DAILY if permission denied but not required`() {
+    fun `should track token in DAILY when previous track date expired and permission denied`() {
         val pushToken = "mock-push-token"
         val permissionGranted = false
         val pushTokenPropsSlot = slot<HashMap<String, Any>>()
-        manager = createFcmManager(requirePushAuthorization = false)
-        // simulate previous token track
+        manager = createFcmManager()
+        // simulate previous token track with expired date (epoch 0)
         pushTokenRepository.setTrackedToken(pushToken, 0, TokenType.FCM, permissionGranted)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
         pushTokenRepository.resetVerifyMockkCount()
         every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
         // track same token again
@@ -430,6 +304,106 @@ internal class FcmManagerImplTest {
         assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
         assertEquals(false, pushTokenPropsSlot.captured["valid"])
         assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
+    }
+
+    @Test
+    fun `should track when permission changes from granted to denied`() {
+        val pushToken = "mock-push-token"
+        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
+        manager = createFcmManager()
+        // simulate previous token track with permission granted
+        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, true)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns false
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, false) }
+        verify(exactly = 1) { eventManager.track(
+            Constants.EventTypes.pushTokenTrack,
+            any(),
+            capture(pushTokenPropsSlot),
+            EventType.PUSH_TOKEN,
+            any()
+        ) }
+        assertEquals(false, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_DENIED, pushTokenPropsSlot.captured["description"])
+    }
+
+    @Test
+    fun `should track when permission changes from denied to granted`() {
+        val pushToken = "mock-push-token"
+        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
+        manager = createFcmManager()
+        // simulate previous token track with permission denied
+        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, false)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, true) }
+        verify(exactly = 1) { eventManager.track(
+            Constants.EventTypes.pushTokenTrack,
+            any(),
+            capture(pushTokenPropsSlot),
+            EventType.PUSH_TOKEN,
+            any()
+        ) }
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
+    }
+
+    @Test
+    fun `should not track on repeated foreground when permission denied and unchanged`() {
+        val pushToken = "mock-push-token"
+        manager = createFcmManager()
+        // simulate previous token track with permission already denied
+        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, false)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns false
+        // first foreground
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken(any(), any(), any(), any()) }
+        verify(exactly = 0) { eventManager.track(any(), any(), any(), any(), any()) }
+        // second foreground — still no re-track
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken(any(), any(), any(), any()) }
+        verify(exactly = 0) { eventManager.track(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `should track when applicationId changes`() {
+        val pushToken = "mock-push-token"
+        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
+        manager = createFcmManager()
+        // simulate previous token track with different applicationId
+        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, true)
+        pushTokenRepository.setLastTrackedApplicationId("old-application-id")
+        pushTokenRepository.resetVerifyMockkCount()
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, true) }
+        verify(exactly = 1) { eventManager.track(
+            Constants.EventTypes.pushTokenTrack,
+            any(),
+            capture(pushTokenPropsSlot),
+            EventType.PUSH_TOKEN,
+            any()
+        ) }
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
+        verify { pushTokenRepository.setLastTrackedApplicationId("default-application") }
+    }
+
+    @Test
+    fun `should not track when applicationId unchanged`() {
+        val pushToken = "mock-push-token"
+        manager = createFcmManager()
+        pushTokenRepository.setTrackedToken(pushToken, System.currentTimeMillis(), TokenType.FCM, true)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken(any(), any(), any(), any()) }
+        verify(exactly = 0) { eventManager.track(any(), any(), any(), any(), any()) }
     }
 
     @Test

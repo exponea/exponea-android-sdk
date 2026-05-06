@@ -35,6 +35,7 @@ internal class PushNotificationSelfCheckManagerImpl(
     private val flushManager: FlushManager,
     private val exponeaService: ExponeaService,
     private val integrationConfigFactory: IntegrationConfigFactory,
+    private val applicationId: String,
     private val operationsTimeout: Long = 5000
 ) : PushNotificationSelfCheckManager {
     companion object {
@@ -176,7 +177,8 @@ internal class PushNotificationSelfCheckManagerImpl(
             integrationConfigFactory.integrationConfig,
             customerIdsRepository.get(),
             pushToken,
-            tokenType
+            tokenType,
+            applicationId
         ).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {

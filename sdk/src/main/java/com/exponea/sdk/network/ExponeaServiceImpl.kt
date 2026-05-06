@@ -193,7 +193,8 @@ internal class ExponeaServiceImpl(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         pushToken: String,
-        tokenType: TokenType
+        tokenType: TokenType,
+        applicationId: String
     ) = doPost(
         integrationConfig,
         when (integrationConfig) {
@@ -207,7 +208,8 @@ internal class ExponeaServiceImpl(
         hashMapOf(
             "platform" to tokenType.selfCheckProperty,
             "customer_ids" to customerIds.toHashMap(),
-            "push_notification_id" to pushToken
+            "push_notification_id" to pushToken,
+            "application_id" to applicationId
         )
     )
 

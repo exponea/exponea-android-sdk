@@ -37,7 +37,8 @@ internal interface ExponeaService {
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         pushToken: String,
-        tokenType: TokenType
+        tokenType: TokenType,
+        applicationId: String
     ): Call
     fun fetchStaticInAppContentBlocks(integrationConfig: IntegrationConfig): Call
     fun fetchPersonalizedInAppContentBlocks(

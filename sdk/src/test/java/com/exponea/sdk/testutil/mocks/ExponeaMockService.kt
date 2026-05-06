@@ -100,7 +100,8 @@ internal class ExponeaMockService(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         pushToken: String,
-        tokenType: TokenType
+        tokenType: TokenType,
+        applicationId: String
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }

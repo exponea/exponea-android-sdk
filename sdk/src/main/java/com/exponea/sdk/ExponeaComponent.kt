@@ -230,7 +230,8 @@ internal class ExponeaComponent(
             pushTokenRepository,
             flushManager,
             exponeaService,
-            integrationConfigFactory
+            integrationConfigFactory,
+            exponeaConfiguration.applicationId
         )
 
     internal val appInboxManager: AppInboxManager = AppInboxManagerImpl(

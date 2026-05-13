@@ -402,7 +402,7 @@ allowing you to track multiple push tokens for the same customer across differen
 The SDK automatically tracks `notification_state` events in the following scenarios:
 
 * SDK initialization
-* App transitions from background to foreground
+* App transitions from background to foreground (only if notification permission status changed)
 * SDK version changes (app update)
 * `application_id` changes in the SDK configuration
 * New token received from Firebase or Huawei

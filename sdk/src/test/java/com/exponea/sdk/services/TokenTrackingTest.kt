@@ -16,6 +16,7 @@ import com.exponea.sdk.repository.ExponeaConfigRepository
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.resetVerifyMockkCount
 import com.exponea.sdk.util.TokenType
 import io.mockk.every
 import io.mockk.mockkObject
@@ -512,5 +513,55 @@ internal class TokenTrackingTest() : ExponeaSDKTest() {
             )
         }
         assertEquals(pushToken, PushTokenRepositoryProvider.get(context).get())
+    }
+
+    @Test
+    fun `should not track token on foreground transition when permission status is unchanged`() {
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
+        // Track a token so permission flag is stored as true in the repository
+        Exponea.handleNewToken(context, pushToken)
+
+        // Reset call counts - we only care about what happens during the foreground transition
+        Exponea.componentForTesting.eventManager.resetVerifyMockkCount()
+
+        // Simulate foreground transition - permission still true (unchanged)
+        ExponeaContextProvider.applicationIsForeground = true
+
+        verify(exactly = 0) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                any(),
+                EventType.PUSH_TOKEN
+            )
+        }
+    }
+
+    @Test
+    fun `should track token on foreground transition when notification permission is revoked`() {
+        Exponea.init(context, ExponeaConfiguration(ProjectConfig(projectToken = "mock-token")))
+        // Track a token so permission flag is stored as true in the repository
+        Exponea.handleNewToken(context, pushToken)
+        // Revoke notification permission
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns false
+        // Reset call counts - we only care about what happens during the foreground transition
+        Exponea.componentForTesting.eventManager.resetVerifyMockkCount()
+
+        // Simulate foreground transition - permission changed from true to false
+        ExponeaContextProvider.applicationIsForeground = true
+
+        verify(exactly = 1) {
+            Exponea.componentForTesting.eventManager.track(
+                Constants.EventTypes.pushTokenTrack,
+                any(),
+                expectedTokenProps(
+                    token = pushToken,
+                    platform = TokenType.FCM.selfCheckProperty,
+                    valid = false,
+                    description = Constants.PushPermissionStatus.PERMISSION_DENIED
+                ),
+                EventType.PUSH_TOKEN
+            )
+        }
     }
 }

@@ -461,7 +461,10 @@ object Exponea {
                     },
                     initializedBlock = {
                         if (isForeground) {
-                            trackSavedToken()
+                            val currentPermission = NotificationsPermissionReceiver.isPermissionGranted(application)
+                            if (currentPermission != component.pushTokenRepository.getLastPermissionFlag()) {
+                                trackSavedToken()
+                            }
                         }
                     }
                 )

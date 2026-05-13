@@ -51,6 +51,13 @@ internal open class FcmManagerImpl(
     private val pushTokenRepository: PushTokenRepository,
     internal val trackingConsentManager: TrackingConsentManager
 ) : FcmManager {
+
+    companion object {
+        // Refresh the notification_state event at least once every 30 days, even when the push
+        // token has not changed (applies to ON_TOKEN_CHANGE frequency only).
+        internal const val NOTIFICATION_STATE_REFRESH_THRESHOLD: Long = 30L * 24 * 60 * 60 * 1000
+    }
+
     private val application = context.applicationContext
     private val requestCodeGenerator: Random = Random()
     private var lastPushNotificationId: Int? = null
@@ -61,42 +68,63 @@ internal open class FcmManagerImpl(
         tokenType: TokenType?,
         isTokenCanceled: Boolean
     ) {
-        Logger.d(this, "trackToken - token: ${token?.take(8) ?: "null"}, " +
-                "type: $tokenType, canceled: $isTokenCanceled, tokenTrackFrequency: $tokenTrackFrequency")
-
         if (Exponea.isStopped) {
-            Logger.e(this, "Push token track failed, SDK is stopping")
+            Logger.e(this, "trackToken - Push token track failed, SDK is stopping")
             return
         }
         val permissionGranted = NotificationsPermissionReceiver.isPermissionGranted(application)
         val currentAppVersion = application.getAppVersion(application)
+        val previousToken = pushTokenRepository.get()
+        var trackReason = "no change"
+        val effectiveFrequency = tokenTrackFrequency ?: configuration.tokenTrackFrequency
         val shouldUpdateToken = run {
             val lastTrackDateInMilliseconds = pushTokenRepository.getLastTrackDateInMilliseconds()
 
             if (isTokenCanceled) {
-                Logger.d(this, "trackToken - reason: token canceled")
+                trackReason = "token canceled"
                 true
             } else if (lastTrackDateInMilliseconds == null) {
-                Logger.d(this, "trackToken - reason: token never tracked")
+                trackReason = "token never tracked"
                 true
             } else if (permissionGranted != pushTokenRepository.getLastPermissionFlag()) {
-                Logger.d(this, "trackToken - reason: permission state changed to $permissionGranted")
+                trackReason = "permission state changed to $permissionGranted"
                 true
             } else if (currentAppVersion.isNotEmpty() &&
-                    currentAppVersion != pushTokenRepository.getLastTrackedAppVersion()) {
-                Logger.d(this, "trackToken - reason: app version changed to $currentAppVersion")
+                currentAppVersion != pushTokenRepository.getLastTrackedAppVersion()
+            ) {
+                trackReason = "app version changed to $currentAppVersion"
                 true
             } else if (configuration.applicationId != pushTokenRepository.getLastTrackedApplicationId()) {
-                Logger.d(this, "trackToken - reason: applicationId changed to ${configuration.applicationId}")
+                trackReason = "applicationId changed to ${configuration.applicationId}"
                 true
             } else {
-                when (tokenTrackFrequency ?: configuration.tokenTrackFrequency) {
-                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> token != pushTokenRepository.get()
-                    ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> true
-                    ExponeaConfiguration.TokenFrequency.DAILY -> !DateUtils.isToday(lastTrackDateInMilliseconds)
-                }.also { frequencyCheckPassed ->
-                    if (frequencyCheckPassed) {
-                        Logger.d(this, "trackToken - reason: token tracked by frequency $tokenTrackFrequency")
+                when (effectiveFrequency) {
+                    ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE -> {
+                        val timeSinceLastTrack = System.currentTimeMillis() - lastTrackDateInMilliseconds
+                        val isTokenChanged = token != previousToken
+
+                        when {
+                            isTokenChanged -> {
+                                trackReason = "token changed"
+                                true
+                            }
+                            timeSinceLastTrack > NOTIFICATION_STATE_REFRESH_THRESHOLD -> {
+                                trackReason = "30 days refresh threshold reached"
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> {
+                        trackReason = "tracked by frequency $effectiveFrequency"
+                        true
+                    }
+                    ExponeaConfiguration.TokenFrequency.DAILY -> {
+                        val notTrackedToday = !DateUtils.isToday(lastTrackDateInMilliseconds)
+                        if (notTrackedToday) {
+                            trackReason = "tracked by frequency $effectiveFrequency"
+                        }
+                        notTrackedToday
                     }
                 }
             }
@@ -140,14 +168,28 @@ internal open class FcmManagerImpl(
                     properties = properties.properties,
                     type = EventType.PUSH_TOKEN
                 )
-                Logger.i(this, "trackToken - notification_state tracked, " +
-                        "valid: $validityResult, description: $validityMessage")
+                Logger.i(
+                    this, "trackToken - notification_state tracked, " +
+                            "reason: $trackReason, " +
+                            "type: $tokenType, " +
+                            "frequency: $effectiveFrequency, " +
+                            "token: ${token.take(8)}, " +
+                            "previousToken: ${previousToken?.take(8) ?: "null"}, " +
+                            "valid: $validityResult, " +
+                            "description: $validityMessage"
+                )
                 return
             }
         }
 
-        Logger.i(this, "trackToken - token not tracked, shouldUpdateToken: $shouldUpdateToken, " +
-                "token: ${token?.take(8) ?: "null"}, tokenRepo: ${pushTokenRepository.get()?.take(8) ?: "null"}")
+        Logger.i(
+            this, "trackToken - token not tracked, " +
+                    "reason: $trackReason, " +
+                    "type: $tokenType, " +
+                    "frequency: $effectiveFrequency, " +
+                    "token: ${token?.take(8) ?: "null"}, " +
+                    "previousToken: ${previousToken?.take(8) ?: "null"}"
+        )
     }
 
     override fun handleRemoteMessage(

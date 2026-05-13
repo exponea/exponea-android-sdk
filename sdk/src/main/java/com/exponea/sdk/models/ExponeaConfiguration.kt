@@ -277,7 +277,10 @@ data class ExponeaConfiguration(
     }
 
     enum class TokenFrequency {
-        /** Tracked on the first launch or if the token changes */
+        /**
+         * Tracked on the first launch, if the token changes, or if more than 30 days have passed
+         * since the last successful track (refresh interval).
+         */
         ON_TOKEN_CHANGE,
         /** Tracked every time the app is launched */
         EVERY_LAUNCH,

@@ -418,6 +418,10 @@ Exponea.requestPushAuthorization(requireContext()) { granted ->
 
 The frequency of `notification_state` event tracking depends on the `tokenTrackFrequency` configuration property. [See Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 
+> 📘 Note
+>
+> When `tokenTrackFrequency` is set to `ON_TOKEN_CHANGE` (the default), the SDK also refreshes the `notification_state` event every 30 days, even when the token hasn't changed.
+
 ### notification_state event properties
 
 | Property                | Description                              | Example values                          |

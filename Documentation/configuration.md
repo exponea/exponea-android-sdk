@@ -135,7 +135,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Indicates the frequency with which the SDK should track the push notification token to Engagement.
   * Default value: `ON_TOKEN_CHANGE`
   * Possible values:
-    * `ON_TOKEN_CHANGE` - tracks push token if it differs from a previously tracked one
+    * `ON_TOKEN_CHANGE` - tracks the push token if it differs from a previously tracked one. The SDK also automatically refreshes the `notification_state` event every 30 days, even when the token hasn't changed.
     * `EVERY_LAUNCH` - always tracks push token
     * `DAILY` - tracks push token once per day
 

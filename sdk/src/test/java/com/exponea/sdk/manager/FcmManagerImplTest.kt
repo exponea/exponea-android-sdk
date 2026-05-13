@@ -167,6 +167,56 @@ internal class FcmManagerImplTest {
     }
 
     @Test
+    fun `should re-track same token in ON_TOKEN_CHANGE mode after 30 days threshold passed`() {
+        val pushToken = "mock-push-token"
+        val permissionGranted = true
+        val pushTokenPropsSlot = slot<HashMap<String, Any>>()
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
+        // simulate previous token track 31 days ago
+        val thirtyOneDaysAgoMillis = System.currentTimeMillis() - 31L * 24 * 60 * 60 * 1000
+        pushTokenRepository.setTrackedToken(pushToken, thirtyOneDaysAgoMillis, TokenType.FCM, permissionGranted)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        // track same token again
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        // has to re-track due to 30-day refresh threshold
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
+        verify(exactly = 1) { eventManager.track(
+            Constants.EventTypes.pushTokenTrack,
+            any(),
+            capture(pushTokenPropsSlot),
+            EventType.PUSH_TOKEN,
+            any()
+        ) }
+        assertEquals(pushToken, pushTokenPropsSlot.captured["push_notification_token"])
+        assertEquals(true, pushTokenPropsSlot.captured["valid"])
+        assertEquals(Constants.PushPermissionStatus.PERMISSION_GRANTED, pushTokenPropsSlot.captured["description"])
+    }
+
+    @Test
+    fun `should not re-track same token in ON_TOKEN_CHANGE mode within 30 days threshold`() {
+        val pushToken = "mock-push-token"
+        val permissionGranted = true
+        every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns permissionGranted
+        // simulate previous token track 29 days ago (below 30-day threshold)
+        val twentyNineDaysAgoMillis = System.currentTimeMillis() - 29L * 24 * 60 * 60 * 1000
+        pushTokenRepository.setTrackedToken(pushToken, twentyNineDaysAgoMillis, TokenType.FCM, permissionGranted)
+        pushTokenRepository.setLastTrackedApplicationId("default-application")
+        pushTokenRepository.resetVerifyMockkCount()
+        // track same token again
+        manager.trackToken(pushToken, ExponeaConfiguration.TokenFrequency.ON_TOKEN_CHANGE, TokenType.FCM)
+        // must NOT re-track: token unchanged and threshold not yet passed
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken(pushToken, any(), TokenType.FCM, permissionGranted) }
+        verify(exactly = 0) { eventManager.track(
+            Constants.EventTypes.pushTokenTrack,
+            any(),
+            any(),
+            EventType.PUSH_TOKEN,
+            any()
+        ) }
+    }
+
+    @Test
     @LooperMode(LEGACY)
     fun `should track token in DAILY mode`() {
         // there is a bug in robolectric, we have to set time https://github.com/robolectric/robolectric/issues/3912

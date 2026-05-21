@@ -422,6 +422,10 @@ The frequency of `notification_state` event tracking depends on the `tokenTrackF
 >
 > When `tokenTrackFrequency` is set to `ON_TOKEN_CHANGE` (the default), the SDK also refreshes the `notification_state` event every 30 days, even when the token hasn't changed.
 
+> 📘 Note
+>
+> When `tokenTrackFrequency` is set to `EVERY_LAUNCH`, the SDK tracks the push token once per app launch (process start). Multiple SDK operations within the same launch will not cause duplicate `notification_state` events. Force-tracked operations such as `trackPushToken()` (manual token tracking), receiving a new token from FCM/HMS, or calling `anonymize()` are always tracked regardless of this limit.
+
 ### notification_state event properties
 
 | Property                | Description                              | Example values                          |

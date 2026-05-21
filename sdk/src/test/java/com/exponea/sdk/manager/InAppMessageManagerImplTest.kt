@@ -383,8 +383,9 @@ internal class InAppMessageManagerImplTest {
             addedEvents.size
         )
     }
+
     @Test
-    fun `should preload messages only once`() {
+    fun `should preload messages only once`() = runInSingleThread { idleThreads ->
         every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
         }
@@ -395,6 +396,7 @@ internal class InAppMessageManagerImplTest {
             currentTimeSeconds(),
             customerIdsRepository.get().toHashMap()
         )
+        idleThreads()
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
         manager.inAppShowingTriggered(
             EventType.SESSION_START,
@@ -403,6 +405,7 @@ internal class InAppMessageManagerImplTest {
             currentTimeSeconds(),
             customerIdsRepository.get().toHashMap()
         )
+        idleThreads()
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
         manager.inAppShowingTriggered(
             EventType.SESSION_START,
@@ -411,6 +414,7 @@ internal class InAppMessageManagerImplTest {
             currentTimeSeconds(),
             customerIdsRepository.get().toHashMap()
         )
+        idleThreads()
         verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
     }
 

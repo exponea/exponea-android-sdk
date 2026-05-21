@@ -648,7 +648,7 @@ object Exponea {
     fun trackPushToken(token: String) = runCatching {
         trackPushTokenInternal(
             token,
-            TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            null, // frequency is irrelevant — forceTrack = true bypasses all frequency checks
             TokenType.FCM
         )
     }.logOnException()
@@ -659,18 +659,18 @@ object Exponea {
     fun trackHmsPushToken(token: String) = runCatching {
         trackPushTokenInternal(
             token,
-            TokenFrequency.EVERY_LAUNCH, // always track it when tracking manually
+            null, // frequency is irrelevant — forceTrack = true bypasses all frequency checks
             TokenType.HMS
         )
     }.logOnException()
 
     private fun trackPushTokenInternal(
         fcmToken: String,
-        tokenTrackFrequency: TokenFrequency,
+        tokenTrackFrequency: TokenFrequency?,
         tokenType: TokenType
     ) = runCatching {
         initGate.waitForInitialize {
-            component.fcmManager.trackToken(fcmToken, tokenTrackFrequency, tokenType)
+            component.fcmManager.trackToken(fcmToken, tokenTrackFrequency, tokenType, forceTrack = true)
         }
     }.logOnException()
 
@@ -1393,7 +1393,7 @@ object Exponea {
             Logger.d(this, "Track old token as invalid")
             fcmManager.removeToken(
                 token = oldToken,
-                tokenTrackFrequency = TokenFrequency.EVERY_LAUNCH,
+                tokenTrackFrequency = null,
                 tokenType = tokenRepository.getLastTokenType()
             )
         }
@@ -1401,7 +1401,8 @@ object Exponea {
         fcmManager.trackToken(
             token = newToken,
             tokenTrackFrequency = newTokenFrequency,
-            tokenType = newTokenType
+            tokenType = newTokenType,
+            forceTrack = true
         )
     }
 
@@ -1783,7 +1784,7 @@ object Exponea {
                 val tokenType = component.pushTokenRepository.getLastTokenType()
                 component.fcmManager.removeToken(
                     token = token,
-                    tokenTrackFrequency = TokenFrequency.EVERY_LAUNCH,
+                    tokenTrackFrequency = null,
                     tokenType = tokenType
                 )
                 component.flushManager.flushData {

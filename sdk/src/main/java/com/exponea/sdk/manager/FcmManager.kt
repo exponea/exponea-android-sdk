@@ -25,7 +25,8 @@ internal interface FcmManager {
         token: String? = null,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?,
-        isTokenCanceled: Boolean = false
+        isTokenCanceled: Boolean = false,
+        forceTrack: Boolean = false
     )
     fun handleRemoteMessage(
         messageData: Map<String, String>?,

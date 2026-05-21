@@ -282,9 +282,9 @@ data class ExponeaConfiguration(
          * since the last successful track (refresh interval).
          */
         ON_TOKEN_CHANGE,
-        /** Tracked every time the app is launched */
+        /** Tracked once per app launch (process start). */
         EVERY_LAUNCH,
-        /** Tracked once on days when the user opens the app */
+        /** Tracked once on days when the user opens the app. */
         DAILY
     }
 

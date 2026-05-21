@@ -37,6 +37,7 @@ import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.util.Random
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 /**
@@ -62,11 +63,15 @@ internal open class FcmManagerImpl(
     private val requestCodeGenerator: Random = Random()
     private var lastPushNotificationId: Int? = null
 
+    // Ensures notification_state is emitted at most once per process session under EVERY_LAUNCH.
+    private val hasTrackedThisSession = AtomicBoolean(false)
+
     override fun trackToken(
         token: String?,
         tokenTrackFrequency: ExponeaConfiguration.TokenFrequency?,
         tokenType: TokenType?,
-        isTokenCanceled: Boolean
+        isTokenCanceled: Boolean,
+        forceTrack: Boolean
     ) {
         if (Exponea.isStopped) {
             Logger.e(this, "trackToken - Push token track failed, SDK is stopping")
@@ -82,6 +87,9 @@ internal open class FcmManagerImpl(
 
             if (isTokenCanceled) {
                 trackReason = "token canceled"
+                true
+            } else if (forceTrack) {
+                trackReason = "force tracked"
                 true
             } else if (lastTrackDateInMilliseconds == null) {
                 trackReason = "token never tracked"
@@ -116,8 +124,12 @@ internal open class FcmManagerImpl(
                         }
                     }
                     ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH -> {
-                        trackReason = "tracked by frequency $effectiveFrequency"
-                        true
+                        if (hasTrackedThisSession.compareAndSet(false, true)) {
+                            trackReason = "tracked by frequency $effectiveFrequency"
+                            true
+                        } else {
+                            false
+                        }
                     }
                     ExponeaConfiguration.TokenFrequency.DAILY -> {
                         val notTrackedToday = !DateUtils.isToday(lastTrackDateInMilliseconds)
@@ -168,6 +180,12 @@ internal open class FcmManagerImpl(
                     properties = properties.properties,
                     type = EventType.PUSH_TOKEN
                 )
+                // forceTrack bypasses the EVERY_LAUNCH compareAndSet() gate, so we set the flag
+                // manually here to prevent a duplicate track on the next non-forced call.
+                // Skipped for token cancellation so the following valid token can still be tracked.
+                if (!isTokenCanceled) {
+                    hasTrackedThisSession.set(true)
+                }
                 Logger.i(
                     this, "trackToken - notification_state tracked, " +
                             "reason: $trackReason, " +

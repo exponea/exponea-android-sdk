@@ -236,12 +236,34 @@ internal class FcmManagerImplTest {
     }
 
     @Test
-    fun `should track token in EVERY_LAUNCH mode`() {
+    fun `should track token only once per session in EVERY_LAUNCH mode`() {
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
         manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
         manager.trackToken("other_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM, true) }
+        verify(exactly = 0) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM, true) }
+    }
+
+    @Test
+    fun `should force track token even after EVERY_LAUNCH session flag is set`() {
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM, forceTrack = true)
         verify(exactly = 2) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM, true) }
-        verify(exactly = 1) { pushTokenRepository.setTrackedToken("other_token", any(), TokenType.FCM, true) }
+    }
+
+    @Test
+    fun `should block EVERY_LAUNCH after forceTrack sets session flag`() {
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM, forceTrack = true)
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("token", any(), TokenType.FCM, true) }
+    }
+
+    @Test
+    fun `should not block EVERY_LAUNCH after token cancel`() {
+        manager.trackToken("token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM,
+            isTokenCanceled = true)
+        manager.trackToken("new_token", ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH, TokenType.FCM)
+        verify(exactly = 1) { pushTokenRepository.setTrackedToken("new_token", any(), TokenType.FCM, true) }
     }
 
     @Test

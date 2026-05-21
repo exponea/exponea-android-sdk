@@ -289,7 +289,7 @@ internal class ExponeaComponent(
         // Do not use TokenFrequency from the configuration, clear tokens immediately during anonymize
         fcmManager.removeToken(
             token = token,
-            tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH,
+            tokenTrackFrequency = null,
             tokenType = tokenType
         )
 
@@ -347,8 +347,9 @@ internal class ExponeaComponent(
         // Do not use TokenFrequency from the configuration, setup token from new customer immediately during anonymize
         fcmManager.trackToken(
             token = token,
-            tokenTrackFrequency = ExponeaConfiguration.TokenFrequency.EVERY_LAUNCH,
-            tokenType = tokenType
+            tokenTrackFrequency = null,
+            tokenType = tokenType,
+            forceTrack = true
         )
         inAppMessageManager.reload()
         appInboxManager.reload()

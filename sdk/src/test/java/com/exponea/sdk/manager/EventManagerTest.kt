@@ -134,7 +134,7 @@ internal class EventManagerTest : ExponeaSDKTest() {
             onEventCreated = { event, type ->
                 inAppMessageManager.onEventCreated(event, type)
             },
-            deviceId = DeviceIdManager.getDeviceId(context = context)
+            deviceIdProvider = { DeviceIdManager.getDeviceId(context = context) }
         )
     }
 

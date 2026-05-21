@@ -310,7 +310,7 @@ internal class InAppMessageManagerImplTest {
             onEventCreated = { event, type ->
                 manager.onEventCreated(event, type)
             },
-            DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext())
+            deviceIdProvider = { DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext()) }
         )
         return eventManager
     }
@@ -351,15 +351,15 @@ internal class InAppMessageManagerImplTest {
         val flushManager = mockk<FlushManager>()
         every { flushManager.flushData(any()) } just Runs
         val eventManager = EventManagerImpl(
-                ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token")),
-                eventRepo,
-                customerIdsRepo,
-                flushManager,
-                projectFactory,
-                onEventCreated = { event, type ->
-                    manager.onEventCreated(event, type)
-                },
-                DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext())
+            ExponeaConfiguration(integrationConfig = ProjectConfig(projectToken = "mock-token")),
+            eventRepo,
+            customerIdsRepo,
+            flushManager,
+            projectFactory,
+            onEventCreated = { event, type ->
+                manager.onEventCreated(event, type)
+            },
+            deviceIdProvider = { DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext()) }
         )
         every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
             thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
@@ -797,10 +797,12 @@ internal class InAppMessageManagerImplTest {
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
-        every { presenter.show(
-            any(), any(), any(), any(), any(),
-            capture(actionCallbackSlot), any(), capture(errorCallbackSlot)
-        ) } returns mockk()
+        every {
+            presenter.show(
+                any(), any(), any(), any(), any(),
+                capture(actionCallbackSlot), any(), capture(errorCallbackSlot)
+            )
+        } returns mockk()
         waitForIt { manager.reload { it() } }
         runBlocking {
             manager.inAppShowingTriggered(
@@ -1082,7 +1084,8 @@ internal class InAppMessageManagerImplTest {
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
-            ) {}
+            ) {
+            }
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
@@ -1189,7 +1192,8 @@ internal class InAppMessageManagerImplTest {
                 button: InAppMessageButton?,
                 interaction: Boolean,
                 context: Context
-            ) {}
+            ) {
+            }
         })
         Exponea.inAppMessageActionCallback = spykCallback
 
@@ -1283,6 +1287,7 @@ internal class InAppMessageManagerImplTest {
             override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
                 trackingConsentManager.trackInAppMessageClick(message, button.text, button.url, CONSIDER_CONSENT)
             }
+
             override fun inAppMessageCloseAction(
                 message: InAppMessage,
                 button: InAppMessageButton?,
@@ -1882,7 +1887,7 @@ internal class InAppMessageManagerImplTest {
             0,
             lostRequestsCount,
             "Expected no lost requests with proper synchronization, but $lostRequestsCount " +
-                "requests were lost out of $iterations iterations."
+                    "requests were lost out of $iterations iterations."
         )
     }
 

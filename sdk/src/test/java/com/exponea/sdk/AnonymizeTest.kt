@@ -36,6 +36,7 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.hamcrest.CoreMatchers.equalTo
@@ -389,4 +390,58 @@ internal class AnonymizeTest : ExponeaSDKTest() {
             equalTo(true)
         )
     }
+
+    @Test
+    fun `should preserve device_id across anonymize when regenerateDeviceIdOnAnonymize is false`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val projectConfig = ProjectConfig("https://base-url.com", "project-token", "Token auth")
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(
+            context,
+            ExponeaConfiguration(
+                integrationConfig = projectConfig,
+                regenerateDeviceIdOnAnonymize = false
+            )
+        )
+        val deviceIdBefore = DeviceIdManager.getDeviceId(context)
+        Exponea.anonymize()
+        val deviceIdAfter = DeviceIdManager.getDeviceId(context)
+        assertEquals(deviceIdBefore, deviceIdAfter)
+    }
+
+    @Test
+    fun `should regenerate device_id on anonymize when regenerateDeviceIdOnAnonymize is true`() =
+        runInSingleThread { idleThreads ->
+            mockkObject(NotificationsPermissionReceiver)
+            every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val projectConfig = ProjectConfig("https://base-url.com", "project-token", "Token auth")
+            Exponea.flushMode = FlushMode.MANUAL
+            Exponea.init(
+                context,
+                ExponeaConfiguration(
+                    integrationConfig = projectConfig,
+                    automaticSessionTracking = false,
+                    regenerateDeviceIdOnAnonymize = true
+                )
+            )
+            Exponea.trackPushToken("push_token")
+            val deviceIdBefore = DeviceIdManager.getDeviceId(context)
+            Exponea.anonymize()
+            idleThreads()
+            val deviceIdAfter = DeviceIdManager.getDeviceId(context)
+
+            assertNotEquals(deviceIdBefore, deviceIdAfter)
+
+            val events = Exponea.componentForTesting.eventRepository.all()
+            // events[0]: installation        (old user) — OLD device_id
+            // events[1]: pushTokenTrack valid=true (old user) — OLD device_id
+            // events[2]: pushTokenTrack valid=false INVALIDATED (old user) — OLD device_id (before clear)
+            // events[3]: installation        (new user) — NEW device_id
+            // events[4]: pushTokenTrack valid=true (new user) — NEW device_id
+            assertEquals(5, events.size)
+            assertEquals(deviceIdBefore, events[2].properties?.get("device_id"))
+            assertEquals(deviceIdAfter, events[3].properties?.get("device_id"))
+            assertEquals(deviceIdAfter, events[4].properties?.get("device_id"))
+        }
 }

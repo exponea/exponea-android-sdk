@@ -60,7 +60,7 @@ internal class CampaignManagerImpl(
                 onEventCreated = { _, _ ->
                     // no action for any event - SDK is not initialized
                 },
-                deviceId = DeviceIdManager.getDeviceId(context = context)
+                deviceIdProvider = { DeviceIdManager.getDeviceId(context = context) }
             )
             return CampaignManagerImpl(campaignRepository, eventManager)
         }

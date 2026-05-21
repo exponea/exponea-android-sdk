@@ -187,7 +187,7 @@ internal class ExponeaComponent(
             appInboxManager.onEventCreated(event, type)
             inAppContentBlockManager.onEventCreated(event, type)
         },
-        deviceId = DeviceIdManager.getDeviceId(context)
+        deviceIdProvider = { DeviceIdManager.getDeviceId(application) }
     )
 
     internal val campaignManager: CampaignManager = CampaignManagerImpl(
@@ -320,6 +320,9 @@ internal class ExponeaComponent(
         pushNotificationRepository.clearAll()
         fontCache.clear()
         drawableCache.clear()
+        if (exponeaConfiguration.regenerateDeviceIdOnAnonymize) {
+            DeviceIdManager.clear(application)
+        }
     }
 
     private fun applyConfiguration(

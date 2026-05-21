@@ -111,7 +111,13 @@ data class ExponeaConfiguration(
      * - No consecutive hyphens or dots
      * - Maximum length is 50 characters
      */
-    var applicationId: String = APP_ID_DEFAULT_VALUE
+    var applicationId: String = APP_ID_DEFAULT_VALUE,
+
+    /**
+     * If true, anonymize() regenerates device_id so the new anonymous customer gets a fresh device_id.
+     * Default false preserves existing behavior.
+     */
+    var regenerateDeviceIdOnAnonymize: Boolean = false
 ) {
 
     @Deprecated("Please use projectToken in integrationConfig instead")

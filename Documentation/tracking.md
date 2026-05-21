@@ -207,6 +207,7 @@ Invoking this method will cause the SDK to:
 * Clear local repositories and caches, excluding tracked events.
 * Track a new session start if `automaticSessionTracking` is enabled.
 * Create a new customer record in Engagement (a new `cookie` soft ID is generated).
+* Regenerate `device_id` for the new customer if `regenerateDeviceIdOnAnonymize` is set to `true`. [See Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration)
 * Assign the previous push notification token to the new customer record.
 * Preload in-app messages, in-app content blocks, and app inbox for the new customer.
 * Track a new `installation` event for the new customer.

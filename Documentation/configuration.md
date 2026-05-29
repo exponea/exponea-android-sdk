@@ -186,5 +186,5 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Default value: `default-application`
 
 * `regenerateDeviceIdOnAnonymize`
-  * If true, `anonymize()` regenerates `device_id` so the new anonymous customer gets a fresh `device_id`.
+  * If `true`, `anonymize()` generates a new `device_id` for the anonymous customer.
   * Default value: `false`

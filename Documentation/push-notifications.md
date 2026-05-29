@@ -407,7 +407,7 @@ The SDK automatically tracks `notification_state` events in the following scenar
 * `application_id` changes in the SDK configuration
 * New token received from Firebase or Huawei
 * Manual token tracking using `Exponea.trackPushToken(...)` or `Exponea.trackHmsPushToken(...)` (this method allows you to force tracking/sending the current push token via notification_state event)
-* User anonymization via `Exponea.anonymize()`
+* User anonymization via `Exponea.anonymize()` or `Exponea.stopIntegration()`
 * Notification permission requested via `Exponea.requestPushAuthorization(...)`
 
 ```kotlin
@@ -424,7 +424,12 @@ The frequency of `notification_state` event tracking depends on the `tokenTrackF
 
 > 📘 Note
 >
-> When `tokenTrackFrequency` is set to `EVERY_LAUNCH`, the SDK tracks the push token once per app launch (process start). Multiple SDK operations within the same launch will not cause duplicate `notification_state` events. Force-tracked operations such as `trackPushToken()` (manual token tracking), receiving a new token from FCM/HMS, or calling `anonymize()` are always tracked regardless of this limit.
+> When you set `tokenTrackFrequency` to `EVERY_LAUNCH`, the SDK tracks the push token once per app launch (process start). All other SDK operations during that launch reuse this tracking, so each launch produces a single `notification_state` event.
+>
+> Some operations bypass this limit and always trigger tracking:
+> - Manual tracking through `trackPushToken()`.
+> - Receiving a new token from FCM or HMS.
+> - Calling `anonymize()` or `stopIntegration()`.
 
 ### notification_state event properties
 

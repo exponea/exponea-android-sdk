@@ -63,7 +63,7 @@ internal open class FcmManagerImpl(
     private val requestCodeGenerator: Random = Random()
     private var lastPushNotificationId: Int? = null
 
-    // Ensures notification_state is emitted at most once per process session under EVERY_LAUNCH.
+    // Ensures that with EVERY_LAUNCH, the SDK emits a single notification_state event per process session.
     private val hasTrackedThisSession = AtomicBoolean(false)
 
     override fun trackToken(

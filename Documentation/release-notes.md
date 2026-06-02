@@ -14,6 +14,22 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.2.0
+#### June 02, 2026
+* Added:
+  * Validates the `baseUrl` scheme at SDK initialization.
+  * Tracks `notification_state` based on notification permission status and deprecates the `requirePushAuthorization` parameter.
+  * Adds `application_id` to the push notification self-check request.
+  * Automatically re-tracks notification state after 30 days.
+  * Regenerates the device ID when calling `anonymize()`.
+* Fixed:
+  * Deep-copies the configuration at initialization to prevent host-app mutation.
+  * Fixes excessive `notification_state` events on every foreground transition when permission status is mismatched.
+  * Fixes tracking being triggered on `EVERY_LAUNCH` token frequency during the foreground transition.
+  * Fixes duplicate `notification_state` tracking with `EVERY_LAUNCH` token frequency.
+  * Removes redundant OkHttp and HMS rules and `-ignorewarnings` from the SDK's bundled ProGuard rules.
+
+
 ## Release Notes for 5.1.0
 #### April 27, 2026
 * Added:

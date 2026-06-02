@@ -43,8 +43,8 @@ android {
         }
         release {
             signingConfig signingConfigs.config
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -55,6 +55,7 @@ android {
         }
         hms {
             dimension = "messagingService"
+            proguardFiles 'hms-rules.pro'
         }
     }
 }

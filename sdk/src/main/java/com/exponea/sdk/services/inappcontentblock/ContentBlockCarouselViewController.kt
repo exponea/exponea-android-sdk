@@ -90,7 +90,9 @@ internal class ContentBlockCarouselViewController(
     }
 
     private fun updateAutoHeight(onlyCurrentView: Boolean) {
-        carouselView.recalculateHeightIfNeeded(onlyCurrentView)
+        ensureOnMainThread {
+            carouselView.recalculateHeightIfNeeded(onlyCurrentView)
+        }
     }
 
     internal fun moveToIndex(itemIndex: Int, smoothScroll: Boolean) {

@@ -175,6 +175,11 @@ class InAppContentBlockPlaceholderView internal constructor(
             this,
             "InAppCB: $placeholderId: View has been detached from window"
         )
+        jobAccess.waitForAccess {
+            contentLoadedForceUpdate?.cancel()
+            contentLoadedForceUpdate = null
+        }
+        contentLoadedFlag.set(null)
         controller.onViewDetachedFromWindow()
         Exponea.deintegration.unregisterForIntegrationStopped(this)
         super.onDetachedFromWindow()

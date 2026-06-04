@@ -209,7 +209,11 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
         }
         val viewHolderScope = collectActivePlaceholderViews(onlyCurrentView)
         val planned = post {
-            val highestValue = viewHolderScope.maxOfOrNull {
+            val highestValue = viewHolderScope.mapNotNull {
+                if (!it.isLaidOut || it.width == 0) {
+                    Logger.v(this, "InAppCbCarousel: View not yet laid out, skipping height measurement")
+                    return@mapNotNull null
+                }
                 it.measure(
                     MeasureSpec.makeMeasureSpec(it.width, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -218,8 +222,8 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
                     this,
                     "InAppCbCarousel: Auto-height feature detects height: ${it.measuredHeight}"
                 )
-                it.measuredHeight
-            }
+                it.measuredHeight.takeIf { h -> h > 0 }
+            }.maxOrNull()
             Logger.v(this, "InAppCbCarousel: Max height of content block is: $highestValue")
             highestValue?.let {
                 if (viewPager.layoutParams.height != it) {

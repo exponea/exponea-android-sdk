@@ -41,6 +41,7 @@ public class ExponeaWebView : WebView {
     private var onUrlClickCallback: ((String) -> Unit)? = null
     internal var onPageLoadedCallback: (() -> Unit)? = null
     private val loadedHtmlCrc = AtomicInteger()
+    @Volatile private var skipNextPageLoad = false
 
     private fun init() {
         applyAntiXssSetup()
@@ -63,6 +64,11 @@ public class ExponeaWebView : WebView {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Logger.d(this, "[HTML] Web page has been loaded")
+                if (skipNextPageLoad) {
+                    skipNextPageLoad = false
+                    Logger.v(this, "[HTML] Blank reset page loaded, skipping content-ready callback")
+                    return
+                }
                 onPageLoadedCallback?.invoke()
             }
         }
@@ -109,6 +115,7 @@ public class ExponeaWebView : WebView {
         val htmlCrc = html.hashCode()
         if (loadedHtmlCrc.getAndSet(htmlCrc) == htmlCrc) {
             Logger.v(this, "[HTML] WebView wants to load same HTML content, force-refresh required")
+            skipNextPageLoad = true
             loadDataCompat("")
         }
         loadDataCompat(html)

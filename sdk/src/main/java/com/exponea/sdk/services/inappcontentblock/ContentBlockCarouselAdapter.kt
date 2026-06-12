@@ -83,6 +83,20 @@ internal class ContentBlockCarouselAdapter(
         holder.updateContent(contentBlock)
     }
 
+    override fun onViewAttachedToWindow(holder: ContentBlockCarouselViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        val view = holder.getContentBlockPlaceholderView()
+        view?.htmlContainer?.onResume()
+        view?.refreshContent()
+    }
+
+    override fun onViewDetachedFromWindow(holder: ContentBlockCarouselViewHolder) {
+        val view = holder.getContentBlockPlaceholderView()
+        view?.htmlContainer?.onPause()
+        view?.resetContent()
+        super.onViewDetachedFromWindow(holder)
+    }
+
     override fun getItemCount(): Int = shownContentBlockIds.size
 
     fun getItem(position: Int): InAppContentBlock? {
@@ -146,7 +160,9 @@ internal class ContentBlockCarouselViewHolder(
         }
         contentBlockLoader.assignedContentBlock = contentBlock
         val placeholderView = getContentBlockPlaceholderView()
-        if (placeholderView != null) {
+        // Only load if already attached; if not, onViewAttachedToWindow will trigger the load
+        // when the page actually becomes visible, preventing tile allocation for off-screen WebViews.
+        if (placeholderView != null && placeholderView.isAttachedToWindow) {
             placeholderView.refreshContent()
         } else {
             Logger.w(this, "InAppCbCarousel: View was not created properly, unable to update content")

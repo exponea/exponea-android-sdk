@@ -13,7 +13,6 @@ import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
-import com.exponea.sdk.util.ThreadSafeAccess
 import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
@@ -35,8 +34,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     private var onContentReady: ((Boolean) -> Unit)? = null
     private var onHeightUpdate: ((Int) -> Unit)? = null
     private val contentLoadedFlag = AtomicReference<Boolean?>(null)
-    private var contentLoadedForceUpdate: Job? = null
-    private val jobAccess = ThreadSafeAccess()
+    private val contentLoadedForceUpdate = AtomicReference<Job?>(null)
     private val placeholderId: String = controller.placeholderId
 
     /**
@@ -72,11 +70,11 @@ class InAppContentBlockPlaceholderView internal constructor(
             Logger.v(this, "InAppCB: $placeholderId: View layout changed")
             // layout change should notify only if content was loaded
             contentLoadedFlag.getAndSet(null)?.let { contentLoaded ->
-                jobAccess.waitForAccess {
-                    contentLoadedForceUpdate?.cancel()
-                    contentLoadedForceUpdate = null
-                }
-                Logger.v(this, "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change")
+                contentLoadedForceUpdate.getAndSet(null)?.cancel()
+                Logger.v(
+                    this,
+                    "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change"
+                )
                 notifyContentReadyListener(contentLoaded)
             }
             onHeightUpdate?.let {
@@ -139,16 +137,12 @@ class InAppContentBlockPlaceholderView internal constructor(
     private fun startNotifyContentReadyProcess(contentLoaded: Boolean) {
         contentLoadedFlag.set(contentLoaded)
         // OnLayoutChangeListener should be called in near future or force to notify onContentReady
-        jobAccess.waitForAccess {
-            contentLoadedForceUpdate?.cancel()
-            contentLoadedForceUpdate = runOnBackgroundThread(CONTENT_READY_TIMEOUT) {
-                jobAccess.waitForAccess {
-                    contentLoadedForceUpdate = null
-                }
+        contentLoadedForceUpdate.getAndSet(
+            runOnBackgroundThread(CONTENT_READY_TIMEOUT) {
                 Logger.v(this, "InAppCB: $placeholderId: Force-notifying content ready listener")
                 notifyContentReadyListener(contentLoadedFlag.getAndSet(null) ?: false)
             }
-        }
+        )?.cancel()
     }
 
     private fun mayHaveZeroSizeForEmptyContent(): Boolean {
@@ -175,10 +169,7 @@ class InAppContentBlockPlaceholderView internal constructor(
             this,
             "InAppCB: $placeholderId: View has been detached from window"
         )
-        jobAccess.waitForAccess {
-            contentLoadedForceUpdate?.cancel()
-            contentLoadedForceUpdate = null
-        }
+        contentLoadedForceUpdate.getAndSet(null)?.cancel()
         contentLoadedFlag.set(null)
         controller.onViewDetachedFromWindow()
         Exponea.deintegration.unregisterForIntegrationStopped(this)
@@ -194,6 +185,13 @@ class InAppContentBlockPlaceholderView internal constructor(
     fun refreshContent() {
         Logger.i(this, "InAppCB: $placeholderId: View requested to be refreshed")
         controller.loadContent(false)
+    }
+
+    internal fun resetContent() {
+        contentLoadedForceUpdate.getAndSet(null)?.cancel()
+        contentLoadedFlag.set(null)
+        htmlContainer.clearContent()
+        applyVisibilityMode(PlaceholderVisibilityMode.INIT)
     }
 
     fun setOnContentReadyListener(listener: (Boolean) -> Unit) {

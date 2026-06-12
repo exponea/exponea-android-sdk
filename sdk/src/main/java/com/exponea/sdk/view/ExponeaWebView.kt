@@ -114,9 +114,8 @@ public class ExponeaWebView : WebView {
     public fun loadData(html: String) {
         val htmlCrc = html.hashCode()
         if (loadedHtmlCrc.getAndSet(htmlCrc) == htmlCrc) {
-            Logger.v(this, "[HTML] WebView wants to load same HTML content, force-refresh required")
-            skipNextPageLoad = true
-            loadDataCompat("")
+            Logger.v(this, "[HTML] WebView wants to load same HTML content, skipping redundant reload")
+            return
         }
         loadDataCompat(html)
     }
@@ -139,5 +138,11 @@ public class ExponeaWebView : WebView {
 
     fun setOnPageLoadedCallback(callback: (() -> Unit)?) {
         onPageLoadedCallback = callback
+    }
+
+    fun clearContent() {
+        skipNextPageLoad = true
+        loadedHtmlCrc.set(0)
+        loadUrl("about:blank")
     }
 }

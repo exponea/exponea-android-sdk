@@ -134,7 +134,7 @@ internal class ContentBlockCarouselViewController(
                 val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
                 runOnMainThread {
                     contentBlockCarouselAdapter.updateData(limitedContentBlocks)
-                    carouselView.prepareOffscreenPages(limitedContentBlocks.size + 2)
+                    carouselView.prepareOffscreenPages(ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT)
                     moveToIndex(0, false)
                     updateAutoHeight(true)
                 }

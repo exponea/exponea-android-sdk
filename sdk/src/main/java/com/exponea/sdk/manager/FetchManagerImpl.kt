@@ -28,7 +28,6 @@ import java.io.IOException
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
-import okhttp3.internal.closeQuietly
 
 internal class FetchManagerImpl(
     private val api: ExponeaService,
@@ -369,20 +368,15 @@ internal class FetchManagerImpl(
             Logger.w(this, "Fetch of segments for no cookie ID is forbidden")
             return Result(false, FetchError(null, "No cookie ID found"))
         }
-        val externalIds = customerIds.externalIds
-        val call = api.linkIdsToCookie(
-            integrationConfig, engagementCookieId, externalIds
-        )
-        var response: Response? = null
-        try {
-            response = call.execute()
-            val emptyType = object : TypeToken<Any?>() {}
-            val jsonBody = response.body?.string()
-            return parseRawResponse(response, jsonBody, emptyType)
+        return try {
+            api.linkIdsToCookie(integrationConfig, engagementCookieId, customerIds.externalIds)
+                .execute()
+                .use { response ->
+                    val jsonBody = response.body?.string()
+                    parseRawResponse(response, jsonBody, object : TypeToken<Any?>() {})
+                }
         } catch (e: Exception) {
-            return parseErrorResult(e)
-        } finally {
-            response?.closeQuietly()
+            parseErrorResult(e)
         }
     }
 }

@@ -1205,7 +1205,8 @@ object Exponea {
         onAnonymized: (() -> Unit)?
     ) {
         initGate.clear()
-        if (integrationConfig is StreamConfig &&
+        val integrationToUse = integrationConfig ?: component.integrationConfigFactory.integrationConfig
+        if (integrationToUse is StreamConfig &&
             !exponeaConfigurationOverrides?.integrationRouteMap.isNullOrEmpty()
         ) {
             Logger.w(
@@ -1214,7 +1215,6 @@ object Exponea {
                 "This setting will be ignored for StreamConfig."
             )
         }
-        val integrationToUse = integrationConfig ?: component.integrationConfigFactory.integrationConfig
         val shouldFlush = component.exponeaConfiguration.integrationConfig is StreamConfig &&
             (component.authTokenRepository.getToken() != null || sdkAuthCallback != null)
 

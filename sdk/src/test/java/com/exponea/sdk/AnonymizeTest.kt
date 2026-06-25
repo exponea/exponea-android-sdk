@@ -12,7 +12,9 @@ import com.exponea.sdk.models.Constants.EventTypes.installation
 import com.exponea.sdk.models.Constants.EventTypes.pushTokenTrack
 import com.exponea.sdk.models.Constants.EventTypes.sessionStart
 import com.exponea.sdk.models.DeviceProperties
+import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
+import com.exponea.sdk.models.ExponeaConfigurationOverrides
 import com.exponea.sdk.models.ExportedEvent
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.IntegrationConfigType
@@ -31,15 +33,18 @@ import com.exponea.sdk.receiver.NotificationsPermissionReceiver
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.currentTimeSeconds
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -367,6 +372,76 @@ internal class AnonymizeTest : ExponeaSDKTest() {
         Exponea.anonymize(null, null) { callbackInvoked = true }
         idleThreads()
         assertThat(callbackInvoked, equalTo(true))
+    }
+
+    @Test
+    fun `should warn when explicit StreamConfig is combined with integrationRouteMap`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(
+            context, ExponeaConfiguration(
+                integrationConfig = ProjectConfig(projectToken = "token", authorization = "Token auth")
+            )
+        )
+        mockkObject(Logger)
+        every { Logger.w(any(), any<String>()) } returns Unit
+        val messages = mutableListOf<String>()
+        val overrides = ExponeaConfigurationOverrides(
+            integrationRouteMap = mapOf(
+                EventType.TRACK_EVENT to listOf(
+                    ProjectConfig(projectToken = "other", authorization = "Token other")
+                )
+            )
+        )
+
+        Exponea.anonymize(
+            integrationConfig = StreamConfig(streamId = "stream"),
+            exponeaConfigurationOverrides = overrides
+        )
+
+        verify { Logger.w(any(), capture(messages)) }
+        assertThat(
+            messages,
+            hasItem(
+                "Integration route mapping is only supported when using ProjectConfig. " +
+                        "This setting will be ignored for StreamConfig."
+            )
+        )
+        unmockkObject(Logger)
+    }
+
+    @Test
+    fun `should warn when inherited StreamConfig is combined with integrationRouteMap`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        Exponea.flushMode = FlushMode.MANUAL
+        Exponea.init(context, ExponeaConfiguration(integrationConfig = StreamConfig(streamId = "stream")))
+        mockkObject(Logger)
+        every { Logger.w(any(), any<String>()) } returns Unit
+        val messages = mutableListOf<String>()
+        val overrides = ExponeaConfigurationOverrides(
+            integrationRouteMap = mapOf(
+                EventType.TRACK_EVENT to listOf(
+                    ProjectConfig(
+                        projectToken = "other", authorization = "Token other"
+                    )
+                )
+            )
+        )
+
+        Exponea.anonymize(
+            integrationConfig = null,
+            exponeaConfigurationOverrides = overrides
+        )
+
+        verify { Logger.w(any(), capture(messages)) }
+        assertThat(
+            messages,
+            hasItem(
+                "Integration route mapping is only supported when using ProjectConfig. " +
+                        "This setting will be ignored for StreamConfig."
+            )
+        )
+        unmockkObject(Logger)
     }
 
     @Test

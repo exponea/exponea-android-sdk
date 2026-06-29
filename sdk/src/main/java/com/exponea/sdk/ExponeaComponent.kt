@@ -183,9 +183,11 @@ internal class ExponeaComponent(
     internal val eventManager: EventManager = EventManagerImpl(
         exponeaConfiguration, eventRepository, customerIdsRepository, flushManager, integrationConfigFactory,
         onEventCreated = { event, type ->
-            inAppMessageManager.onEventCreated(event, type)
-            appInboxManager.onEventCreated(event, type)
-            inAppContentBlockManager.onEventCreated(event, type)
+            Exponea.initGate.runAfterInit {
+                inAppMessageManager.onEventCreated(event, type)
+                appInboxManager.onEventCreated(event, type)
+                inAppContentBlockManager.onEventCreated(event, type)
+            }
         },
         deviceIdProvider = { DeviceIdManager.getDeviceId(application) }
     )

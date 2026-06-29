@@ -33,7 +33,7 @@ internal class ExponeaInitManager {
 
     /**
      * Runs `afterInitBlock` code after ExponeaSDK is fully initialized.
-     * If SDK is already initialized so is code invoked immediatelly.
+     * If SDK is already initialized so is code invoked immediately.
      * !!! Pending callbacks are cleared on `anonymize` call.
      */
     fun waitForInitialize(
@@ -48,6 +48,27 @@ internal class ExponeaInitManager {
         }, initializedBlock = {
             executeCallbackSafely(afterInitBlock)
         })
+    }
+
+    /**
+     * Like [waitForInitialize], but when the SDK is not yet initialized it defers quietly instead of
+     * routing through [Exponea.requireInitialized], which logs an error. Use for callers that may
+     * legitimately run before init() completes, where a deferral is expected rather than misuse.
+     */
+    fun runAfterInit(block: () -> Unit) {
+        if (Exponea.isStopped) {
+            Logger.e(this, "Skipping execution, SDK is stopping")
+            return
+        }
+        if (Exponea.isInitialized) {
+            executeCallbackSafely(block)
+        } else {
+            Logger.v(
+                this,
+                "SDK is not initialized yet, deferring execution until initialization finishes"
+            )
+            afterInitCallbacks.add(block)
+        }
     }
 
     private fun executeCallbackSafely(block: () -> Unit) {

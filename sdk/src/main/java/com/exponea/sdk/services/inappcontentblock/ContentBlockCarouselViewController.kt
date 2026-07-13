@@ -7,6 +7,7 @@ import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.InAppContentBlockActionType
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
@@ -15,6 +16,7 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.RepeatableJob
+import com.exponea.sdk.util.UrlOpener
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
@@ -294,7 +296,14 @@ internal class ContentBlockCarouselViewController(
     }
 
     private fun invokeAction(action: InAppContentBlockAction) {
-        carouselView.openInnerBrowser(action.url)
+        when (action.type) {
+            InAppContentBlockActionType.CLOSE -> return
+            InAppContentBlockActionType.DEEPLINK -> UrlOpener.openUrlInApp(
+                context = carouselView.context,
+                url = action.url
+            )
+            InAppContentBlockActionType.BROWSER -> carouselView.openInnerBrowser(action.url)
+        }
     }
 
     private fun shouldBeRemovedAfterAction(contentBlock: InAppContentBlock): Boolean {

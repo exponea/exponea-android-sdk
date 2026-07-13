@@ -31,11 +31,15 @@ import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.shutdown
+import com.exponea.sdk.util.UrlOpener
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.unmockkObject
 import io.mockk.verify
 import java.io.File
 import kotlin.test.assertEquals
@@ -728,6 +732,144 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         assertEquals(0, changeCount)
         assertEquals(0, changeMsgs?.size)
         assertEquals("placeholder_1", noMsgPlaceholderId)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should open deeplink action via UrlOpener in carousel`() = runInSingleThread { idleThreads ->
+        mockkObject(UrlOpener)
+        every { UrlOpener.openUrlInApp(any(), any()) } just Runs
+
+        val (_, createdCbView) = prepareLoadedCarouselPlaceholderView(idleThreads)
+        val deeplinkUrl = "message:%3C3358921718340173851@unknownmsgid%3E"
+        createdCbView.controller.onUrlClick(deeplinkUrl)
+        idleThreads()
+
+        verify(exactly = 1) { UrlOpener.openUrlInApp(any(), deeplinkUrl) }
+        unmockkObject(UrlOpener)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should open universal link deeplink action via UrlOpener in carousel`() = runInSingleThread { idleThreads ->
+        mockkObject(UrlOpener)
+        every { UrlOpener.openUrlInApp(any(), any()) } just Runs
+
+        val universalLinkUrl = "https://example.com/app/universal-link"
+        val (_, createdCbView) = prepareLoadedCarouselPlaceholderView(
+            idleThreads,
+            htmlContent = buildHtmlWithExplicitDeepLinkAction(universalLinkUrl)
+        )
+
+        createdCbView.controller.onUrlClick(universalLinkUrl)
+        idleThreads()
+
+        verify(exactly = 1) { UrlOpener.openUrlInApp(any(), universalLinkUrl) }
+        verify(exactly = 0) { UrlOpener.openUrlExternal(any(), any()) }
+        unmockkObject(UrlOpener)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should open browser action in inner browser not UrlOpener in carousel`() = runInSingleThread { idleThreads ->
+        mockkObject(UrlOpener)
+        every { UrlOpener.openUrlInApp(any(), any()) } just Runs
+        every { UrlOpener.openUrlExternal(any(), any()) } just Runs
+
+        val (carousel, createdCbView) = prepareLoadedCarouselPlaceholderView(idleThreads)
+        spyk(carousel)
+        every { carousel.openInnerBrowser(any()) } just Runs
+
+        val browserUrl = "https://exponea.com?xnpe_force_track=true"
+        createdCbView.controller.onUrlClick(browserUrl)
+        idleThreads()
+
+        verify(exactly = 1) { carousel.openInnerBrowser(browserUrl) }
+        verify(exactly = 0) { UrlOpener.openUrlInApp(any(), any()) }
+        unmockkObject(UrlOpener)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not invoke default action when overrideDefaultBehavior is true`() = runInSingleThread { idleThreads ->
+        mockkObject(UrlOpener)
+        every { UrlOpener.openUrlInApp(any(), any()) } just Runs
+
+        val (_, placeholderView) = prepareLoadedCarouselPlaceholderView(
+            idleThreads,
+            behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+                override val overrideDefaultBehavior = true
+            }
+        )
+
+        placeholderView.controller.onUrlClick("message:%3C3358921718340173851@unknownmsgid%3E")
+        placeholderView.controller.onUrlClick("https://exponea.com?xnpe_force_track=true")
+        idleThreads()
+
+        verify(exactly = 0) { UrlOpener.openUrlInApp(any(), any()) }
+        unmockkObject(UrlOpener)
+    }
+
+    private fun prepareLoadedCarouselPlaceholderView(
+        idleThreads: () -> Unit,
+        htmlContent: String = buildHtmlMessageContent(),
+        behaviourCallback: ContentBlockCarouselCallback? = null
+    ): Pair<ContentBlockCarouselView, InAppContentBlockPlaceholderView> {
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    type = "html",
+                    data = mapOf("html" to htmlContent)
+                )
+            ))
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        behaviourCallback?.let { carousel.behaviourCallback = it }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        val cbViewHolder = carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        cbViewHolder.updateContent(carousel.getShownContentBlock())
+        val placeholderView = requireNotNull(createdCbView)
+        placeholderView.controller.loadContent(false)
+        idleThreads()
+        return carousel to placeholderView
+    }
+
+    private fun buildHtmlWithExplicitDeepLinkAction(deepLinkUrl: String): String {
+        return """
+            <html>
+            <body>
+            <div class="in-app-message-wrapper">
+                <div class="in-app-message modal-in-app-message">
+                    <div class="close-icon" data-actiontype="close"></div>
+                    <div class="content">
+                        <div class="buttons">
+                            <span class="button" data-actiontype="deep-link" data-link="$deepLinkUrl">
+                                Universal link
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </body>
+            </html>
+        """.trimIndent()
     }
 
     private fun prepareContentBlockMessages(messages: ArrayList<InAppContentBlock>) {

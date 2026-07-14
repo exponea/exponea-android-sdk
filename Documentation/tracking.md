@@ -335,6 +335,23 @@ Exponea.trackSessionEnd()
 >
 > The default behavior for manually calling `Exponea.trackSessionStart()` multiple times can be controlled by the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag, which is set to `true` by default. If a previous session is still open (i.e. it has not been manually closed with `Exponea.trackSessionEnd()`) and `Exponea.trackSessionStart()` is called again, the SDK will automatically track a `session_end` for the previous session and then tracks a new `session_start` event. To prevent this behavior, set the [manualSessionAutoClose](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) flag to `false`.
 
+### Get the current customer cookie
+
+Use `Exponea.customerCookie` to retrieve the cookie that identifies the current customer being tracked. The value is available only after the SDK is initialized. Before initialization, the API returns `null`.
+
+By default, the SDK tracks events for an anonymous customer identified by a cookie. When you identify the customer with a hard ID, the SDK keeps using the same cookie alongside the hard ID. The cookie persists until you call:
+
+* `anonymize()` to generate a new cookie immediately.
+* `stopIntegration()` or `clearLocalCustomerData()` to remove the cookie. A new one is created only on the next SDK initialization.
+
+Use this cookie value to work with the current anonymous identity in your app, for example, to synchronize identity with a webview.
+
+#### Example
+
+```kotlin
+val customerCookie = Exponea.customerCookie
+```
+
 ## Push notifications
 
 If developers [integrate push notification functionality](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications#integration) in their app, the SDK automatically tracks push notifications by default.

@@ -15,7 +15,7 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
 
 > 📘
 >
-> Refer to the [release notes](https://github.com/exponea/exponea-android-sdk/releases) for the latest Exponea Android SDK release.
+> Refer to the [Android SDK release notes](https://documentation.bloomreach.com/engagement/docs/android-sdk-release-notes) for the latest Exponea Android SDK release.
 
 ### Gradle (Kotlin)
 

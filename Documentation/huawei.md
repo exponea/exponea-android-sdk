@@ -15,7 +15,7 @@ content:
 >
 > Newer phones manufactured by Huawei come with [Huawei Mobile Services (HMS)](https://developer.huawei.com/consumer/en/hms/) - a service that delivers push notifications _instead of_ Google's Firebase Cloud Messaging (FCM).
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must set up Huawei Mobile Services (HMS), implement HMS in your app, and configure the Huawei Push Service integration in the Engagement web app.
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must set up Huawei Mobile Services (HMS), implement HMS in your app, and configure the Huawei Push Service integration in the Engagement web app.
 
 > 👍
 >

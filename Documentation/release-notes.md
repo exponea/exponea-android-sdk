@@ -63,7 +63,6 @@ content:
   * Fixed tracking of `notification_state` events when the app version or `applicationId` changes.
   * Disabled custom event logging for telemetry.
 
-
 ## Release Notes for 4.9.0
 #### February 16, 2026
 * Added:

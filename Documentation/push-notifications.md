@@ -189,7 +189,7 @@ Note that if the SDK previously received any additional data while no listener w
 
 > ❗️
 >
-> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](./TRACKING_CONSENT.md).
+> The behaviour of `trackDeliveredPush` may be affected by the tracking consent feature, which in enabled mode considers the requirement of explicit consent for tracking. Read more in [tracking consent documentation](https://documentation.bloomreach.com/engagement/docs/tracking-consent).
 
 ### Custom processing of notification actions
 

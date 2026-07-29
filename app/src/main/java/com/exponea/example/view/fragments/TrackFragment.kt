@@ -2,6 +2,7 @@ package com.exponea.example.view.fragments
 
 import TokenTracker
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,10 +25,10 @@ import com.exponea.sdk.models.CustomerIdentity
 import com.exponea.sdk.models.NotificationData
 import com.exponea.sdk.models.PropertiesList
 import com.exponea.sdk.models.PurchasedItem
-import com.exponea.sdk.util.Logger
 
 class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
+    private val tag = this::class.simpleName
     private lateinit var viewBinding: FragmentTrackBinding
 
     override fun onCreateView(
@@ -126,7 +127,7 @@ class TrackFragment : BaseFragment(), AdapterView.OnItemClickListener {
 
     private fun requestPushAuthorization() {
         Exponea.requestPushAuthorization(requireContext()) { granted ->
-            Logger.i(this, "Push notifications are allowed: $granted")
+            Log.i(tag, "Push notifications are allowed: $granted")
         }
     }
 

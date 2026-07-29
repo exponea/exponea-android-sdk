@@ -1,7 +1,7 @@
 package com.exponea.example.managers
 
 import android.util.Base64
-import com.exponea.sdk.util.Logger
+import android.util.Log
 import java.util.Date
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -22,6 +22,7 @@ class LocalJwtTokenGenerator private constructor() {
         private const val ALG_NAME = "HS512"
     }
 
+    private val tag = this::class.simpleName
     private var secret: String? = null
     private var kid: String? = null
 
@@ -34,7 +35,7 @@ class LocalJwtTokenGenerator private constructor() {
     fun configure(secret: String, kid: String) {
         this.secret = secret.takeIf { it.isNotBlank() }
         this.kid = kid.takeIf { it.isNotBlank() }
-        Logger.d(this, "Configured, secret present: ${this.secret != null}, kid: ${this.kid}")
+        Log.d(tag, "Configured, secret present: ${this.secret != null}, kid: ${this.kid}")
     }
 
     /**
@@ -56,15 +57,15 @@ class LocalJwtTokenGenerator private constructor() {
      */
     fun generateToken(customerIds: Map<String, String>): String? {
         val currentSecret = secret ?: run {
-            Logger.w(this, "Secret is not configured, skipping token generation.")
+            Log.w(tag, "Secret is not configured, skipping token generation.")
             return null
         }
         val currentKid = kid ?: run {
-            Logger.w(this, "Kid is not configured, skipping token generation.")
+            Log.w(tag, "Kid is not configured, skipping token generation.")
             return null
         }
         if (customerIds.isEmpty()) {
-            Logger.w(this, "Token without customer IDs would not be valid, skipping generation.")
+            Log.w(tag, "Token without customer IDs would not be valid, skipping generation.")
             return null
         }
         return try {
@@ -87,10 +88,10 @@ class LocalJwtTokenGenerator private constructor() {
             val signature = base64Url(mac.doFinal(signingInput.toByteArray()))
 
             val token = "$signingInput.$signature"
-            Logger.d(this, "Token generated, expires at $expiresAt, ids: ${customerIds.keys}.")
+            Log.d(tag, "Token generated, expires at $expiresAt, ids: ${customerIds.keys}.")
             token
         } catch (e: Exception) {
-            Logger.e(this, "Token generation failed: ${e.message}")
+            Log.e(tag, "Token generation failed: ${e.message}")
             null
         }
     }

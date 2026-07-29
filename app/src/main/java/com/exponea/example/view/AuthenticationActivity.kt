@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.exponea.example.App
+import com.exponea.example.callbacks.ExampleLoggerCallback
 import com.exponea.example.databinding.ActivityAuthenticationBinding
 import com.exponea.example.managers.CustomerTokenStorage
 import com.exponea.example.managers.LocalJwtTokenGenerator
@@ -127,6 +128,7 @@ class AuthenticationActivity : AppCompatActivity() {
 
         viewBinding.clearLocalDataButton.setOnClickListener {
             Exponea.clearLocalCustomerData()
+            Exponea.unregisterLoggerCallback(ExampleLoggerCallback)
             SdkSetupState.reset()
         }
     }
@@ -213,6 +215,9 @@ class AuthenticationActivity : AppCompatActivity() {
                 .show()
             return
         }
+
+        // Observe SDK warnings/errors via a LoggerCallback
+        Exponea.registerLoggerCallback(ExampleLoggerCallback)
 
         // Wire up local JWT generation for StreamConfig when a kid/secret were provided
         if (LocalJwtTokenGenerator.INSTANCE.isConfigured()) {

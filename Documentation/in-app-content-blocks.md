@@ -167,7 +167,7 @@ In such use cases you can use the `setOnHeightUpdateListener` callback on the pl
 val placeholderView = Exponea.getInAppContentBlocksPlaceholder("placeholder_1", activityContext)
 placeholderView?.let {
     it.setOnHeightUpdateListener { height ->
-        Logger.i(this, "InApp CB has height ${height}px")
+        Log.i("InAppContentBlocks", "InApp CB has height ${height}px")
         // update your layout according to `height` in pixels
     }
 }
@@ -181,7 +181,7 @@ placeholderView?.let {
     it.setOnContentReadyListener { contentLoaded ->
         if (contentLoaded) {
             // you now know the exact dimensions for the loaded content block
-            Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+            Log.i("InAppContentBlocks", "InApp CB has dimens width ${it.width}px height ${it.height}px")
         } else {
             // you can hide this view because no in-app content block is available right now
             it.visibility = View.GONE
@@ -212,7 +212,7 @@ val origBehaviour = placeholderView.behaviourCallback
 placeholderView.behaviourCallback = object : InAppContentBlockCallback {
     override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
         origBehaviour.onMessageShown(placeholderId, contentBlock)   // tracks 'show'
-        Logger.i(this, "Content block with HTML: ${contentBlock.htmlContent}")
+        Log.i("ContentBlockCallback", "Content block with HTML: ${contentBlock.htmlContent}")
         // you may set this placeholder visible
     }
     override fun onNoMessageFound(placeholderId: String) {

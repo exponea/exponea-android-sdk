@@ -263,10 +263,46 @@ You can set the log level at runtime as follows:
 Exponea.loggerLevel = Logger.Level.VERBOSE
 ```
 
+### Observe SDK logs with a LoggerCallback
+
+The [log level](#log-level) controls what the SDK prints to Logcat. Register a `LoggerCallback` to forward the SDK's log lines into your own logging pipeline or a crash-reporting tool.
+
+Implement the `com.exponea.sdk.models.LoggerCallback` interface and register it with `Exponea.registerLoggerCallback`:
+
+```kotlin
+object LoggerCallbackImpl : LoggerCallback {
+    override fun onLog(level: Logger.Level, message: String, throwable: Throwable?) {
+        // Hand the log line off to your own destination: a file, a telemetry or
+        // crash-reporting service, an in-memory buffer, etc. Do it quickly and never
+        // block here. `yourLogSink` represents whatever pipeline you provide.
+        yourLogSink.submit(level, message, throwable)
+    }
+}
+
+// Register the callback
+Exponea.registerLoggerCallback(LoggerCallbackImpl)
+
+// Unregister it once you no longer need it
+Exponea.unregisterLoggerCallback(LoggerCallbackImpl)
+```
+
+The callback behaves as follows:
+
+* **Unconditional dispatch:** The callback receives every SDK log line regardless of `Exponea.loggerLevel` or the configured Logcat verbosity, including logs emitted while the SDK is stopped.
+* **Read-only side channel:** The callback can't modify the message, suppress the SDK's own Logcat output, or stop other registered callbacks.
+* **`throwable` availability:** Only error logs may carry a `throwable`; it's `null` for all other log levels.
+* **Lifetime:** A registration persists for the whole process and isn't cleared by `stopIntegration()` or re-initialization. Always pair `registerLoggerCallback` with `unregisterLoggerCallback` to avoid leaking the callback.
+
+> ❗️ **Callback contract**
+>
+> `onLog` is invoked synchronously, on the thread that produced the log — which may be the app's main thread — and at high frequency. Because of this:
+>
+> * Don't perform blocking or long-running work inside `onLog`. If you need to forward a log elsewhere, hand the data off (enqueue, buffer, or post to another thread) instead of processing it inline.
+> * Never call the SDK's `Logger` (or any SDK code that logs) from inside `onLog`. Dispatch is synchronous and unconditional, so logging through `Logger` — directly or transitively — re-enters dispatch and causes unbounded recursion.
+
 ### Data flushing
 
-Read [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing) to learn more about how the SDK uploads data to the Engagement API and how to customize this behavior.
-
+For more information on how the SDK uploads data to the Engagement API and how to customize this behavior, see [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing).
 ## Troubleshooting
 
 ### Build error "Manifest merger failed"

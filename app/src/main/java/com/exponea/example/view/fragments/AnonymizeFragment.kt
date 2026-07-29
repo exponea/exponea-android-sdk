@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import com.exponea.example.callbacks.ExampleLoggerCallback
 import com.exponea.example.databinding.FragmentAnonymizeBinding
 import com.exponea.example.models.Constants
 import com.exponea.example.models.SdkSetupState
@@ -66,6 +67,7 @@ class AnonymizeFragment : BaseFragment() {
                     .create()
                     .show()
             }
+            Exponea.unregisterLoggerCallback(ExampleLoggerCallback)
         }
     }
 }

@@ -71,12 +71,16 @@ internal class ExponeaSafeModeMethodTest(
         lambda()
         if (method == Exponea::isExponeaPushNotification ||
             method == Exponea::unregisterSegmentationDataCallback ||
-            method == Exponea::clearLocalCustomerData
+            method == Exponea::clearLocalCustomerData ||
+            method == Exponea::registerLoggerCallback ||
+            method == Exponea::unregisterLoggerCallback
         ) {
             // Note: methods cannot throw TestPurposeException
             // - isExponeaPushNotification: because it is not accessing SDK in any way
             // - unregisterSegmentationDataCallback: because it is not accessing SDK in any way
             // - clearLocalCustomerData: because it is not accessing SDK after init
+            // - registerLoggerCallback: because it is not accessing SDK in any way
+            // - unregisterLoggerCallback: because it is not accessing SDK in any way
             //
             // we kept invocation of methods in this test for check of any other exception/error possibility
             // but TestPurposeException has to be simulated for test pass

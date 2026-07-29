@@ -19,6 +19,7 @@ import com.exponea.sdk.models.ExponeaConfigurationOverrides
 import com.exponea.sdk.models.ExponeaProject
 import com.exponea.sdk.models.InAppMessageTest
 import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.LoggerCallback
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.MessageItemAction.Type.BROWSER
 import com.exponea.sdk.models.ProjectConfig
@@ -27,6 +28,7 @@ import com.exponea.sdk.models.PurchasedItem
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentationDataCallback
 import com.exponea.sdk.repository.AppInboxCacheImplTest
+import com.exponea.sdk.util.Logger
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KFunction
 import kotlin.reflect.KFunction0
@@ -331,6 +333,20 @@ internal object PublicApiTestCases {
                 override val exposingCategory = "discovery"
                 override val includeFirstLoad = false
                 override fun onNewData(segments: List<Segment>) {
+                    // nothing
+                }
+            })
+        },
+        Pair(Exponea::registerLoggerCallback) {
+            Exponea.registerLoggerCallback(object : LoggerCallback {
+                override fun onLog(level: Logger.Level, message: String, throwable: Throwable?) {
+                    // nothing
+                }
+            })
+        },
+        Pair(Exponea::unregisterLoggerCallback) {
+            Exponea.unregisterLoggerCallback(object : LoggerCallback {
+                override fun onLog(level: Logger.Level, message: String, throwable: Throwable?) {
                     // nothing
                 }
             })

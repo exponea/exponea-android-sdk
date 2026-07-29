@@ -632,7 +632,7 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
     ) {
         if (messageIsForGdpr(message) && interaction) {
             // regardless from `button` nullability, parameter `interaction` with true tells that user closed message
-            Logger.i(this, "Stopping SDK")
+            Log.i("InAppMessageCallback", "Stopping SDK")
             Exponea.stopIntegration()
         }
     }
@@ -661,7 +661,7 @@ Exponea.inAppMessageActionCallback = object : InAppMessageCallback {
                 }
             )
         } catch (e: ActivityNotFoundException) {
-            Logger.e(this, "Unable to open URL", e)
+            Log.e("InAppMessageCallback", "Unable to open URL", e)
         }
     }
 }

@@ -1,11 +1,14 @@
 import android.content.Context
 import android.text.TextUtils
+import android.util.Log
 import com.exponea.sdk.Exponea
-import com.exponea.sdk.util.Logger
 import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.common.ApiException
 
 class TokenTracker {
+
+    private val tag = this::class.simpleName
+
     fun trackToken(context: Context?) {
         object : Thread() {
             override fun run() {
@@ -22,7 +25,7 @@ class TokenTracker {
                         Exponea.trackHmsPushToken(token)
                     }
                 } catch (e: ApiException) {
-                    Logger.e(this@TokenTracker, "get hms token failed, $e")
+                    Log.e(tag, "get hms token failed, $e")
                 }
             }
         }.start()

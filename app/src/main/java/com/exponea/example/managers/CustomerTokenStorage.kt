@@ -1,9 +1,9 @@
 package com.exponea.example.managers
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.preference.PreferenceManager
 import com.exponea.example.App
-import com.exponea.sdk.util.Logger
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
@@ -30,8 +30,10 @@ class CustomerTokenStorage(
     init {
         loadConfiguration()
         val confJson = gson.toJson(confAsMap())
-        Logger.d(this, "[CTS] Conf loaded $confJson")
+        Log.d("CustomerTokenStorage", "[CTS] Conf loaded $confJson")
     }
+
+    private val tag = this::class.simpleName
 
     private var host: String? = null
     private var projectToken: String? = null
@@ -47,13 +49,13 @@ class CustomerTokenStorage(
         val now = System.currentTimeMillis()
         if (TimeUnit.MILLISECONDS.toMinutes(abs(now - lastTokenRequestTime)) < 5) {
             // allows request for token once per 5 minutes, doesn't care if cache is NULL
-            Logger.d(this, "[CTS] Token retrieved within 5min, using cache $tokenCache")
+            Log.d(tag, "[CTS] Token retrieved within 5min, using cache $tokenCache")
             return tokenCache
         }
         lastTokenRequestTime = now
         if (tokenCache != null) {
             // return cached value
-            Logger.d(this, "[CTS] Token cache returned $tokenCache")
+            Log.d(tag, "[CTS] Token cache returned $tokenCache")
             return tokenCache
         }
         synchronized(this) {
@@ -70,7 +72,7 @@ class CustomerTokenStorage(
             host == null || projectToken == null ||
             publicKey == null || customerIds == null || customerIds?.size == 0
         ) {
-            Logger.d(this, "[CTS] Not configured yet")
+            Log.d(tag, "[CTS] Not configured yet")
             return null
         }
         val reqBody = hashMapOf(
@@ -87,27 +89,27 @@ class CustomerTokenStorage(
             null,
             jsonRequest
         ).execute()
-        Logger.d(this, "[CTS] Requested for token with $jsonRequest")
+        Log.d(tag, "[CTS] Requested for token with $jsonRequest")
         if (!response.isSuccessful) {
             if (response.code == 404) {
                 // that is fine, only some BE has this endpoint
-                Logger.d(this, "[CTS] Token request returns 404")
+                Log.d(tag, "[CTS] Token request returns 404")
                 return null
             }
-            Logger.e(this, "[CTS] Token request returns ${response.code}")
+            Log.e(tag, "[CTS] Token request returns ${response.code}")
             return null
         }
         val jsonResponse = response.body?.string()
         val responseData = try {
             gson.fromJson(jsonResponse, Response::class.java)
         } catch (e: Exception) {
-            Logger.e(this, "[CTS] Token cannot be parsed from $jsonResponse")
+            Log.e(tag, "[CTS] Token cannot be parsed from $jsonResponse")
             return null
         }
         if (responseData?.token == null) {
-            Logger.e(this, "[CTS] Token received NULL")
+            Log.e(tag, "[CTS] Token received NULL")
         }
-        Logger.d(this, "[CTS] Token received ${responseData?.token}")
+        Log.d(tag, "[CTS] Token received ${responseData?.token}")
         return responseData?.token
     }
 

@@ -67,7 +67,7 @@ The runtime permission dialog to ask the user to grant the permission must be tr
 
 ```kotlin
 Exponea.requestPushAuthorization(requireContext()) { granted ->
-    Logger.i(this, "Push notifications are allowed: $granted")
+    Log.i("PushNotifications", "Push notifications are allowed: $granted")
 }
 ```
 
@@ -412,7 +412,7 @@ The SDK automatically tracks `notification_state` events in the following scenar
 
 ```kotlin
 Exponea.requestPushAuthorization(requireContext()) { granted ->
-    Logger.i(this, "Push notifications are allowed: $granted")
+    Log.i("PushNotifications", "Push notifications are allowed: $granted")
 }
 ```
 

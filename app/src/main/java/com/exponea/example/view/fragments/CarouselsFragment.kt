@@ -1,6 +1,7 @@
 package com.exponea.example.view.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,10 +14,10 @@ import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
-import com.exponea.sdk.util.Logger
 
 class CarouselsFragment : BaseFragment() {
 
+    private val tag = this::class.simpleName
     private lateinit var viewBinding: FragmentCarouselsBinding
 
     override fun onCreateView(
@@ -92,15 +93,15 @@ class CarouselsFragment : BaseFragment() {
             }
 
             override fun onNoMessageFound(placeholderId: String) {
-                Logger.i(this, "Carousel $placeholderId is empty")
+                Log.i(tag, "Carousel $placeholderId is empty")
             }
 
             override fun onError(placeholderId: String, contentBlock: InAppContentBlock?, errorMessage: String) {
-                Logger.e(this, "Carousel $placeholderId error: $errorMessage")
+                Log.e(tag, "Carousel $placeholderId error: $errorMessage")
             }
 
             override fun onCloseClicked(placeholderId: String, contentBlock: InAppContentBlock) {
-                Logger.i(this, "Message ${contentBlock.name} has been closed in carousel $placeholderId")
+                Log.i(tag, "Message ${contentBlock.name} has been closed in carousel $placeholderId")
             }
 
             override fun onActionClicked(
@@ -108,11 +109,11 @@ class CarouselsFragment : BaseFragment() {
                 contentBlock: InAppContentBlock,
                 action: InAppContentBlockAction
             ) {
-                Logger.i(this, "Action ${action.name} has been clicked in carousel $placeholderId")
+                Log.i(tag, "Action ${action.name} has been clicked in carousel $placeholderId")
             }
 
             override fun onHeightUpdate(placeholderId: String, height: Int) {
-                Logger.i(this, "Carousel $placeholderId has new height $height")
+                Log.i(tag, "Carousel $placeholderId has new height $height")
             }
         }
     }

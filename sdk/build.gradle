@@ -6,6 +6,12 @@ apply plugin: 'com.panaxeo.shadow-aar'
 apply plugin: 'com.google.devtools.ksp'
 apply plugin: 'androidx.room'
 
+kotlin {
+    sourceSets.configureEach {
+        languageSettings.optIn("com.exponea.sdk.util.InternalLoggerApi")
+    }
+}
+
 android {
 
     namespace 'com.exponea.sdk'

@@ -325,14 +325,14 @@ The App Inbox assigned to the current customer can be fetched as follows:
 ```kotlin
 Exponea.fetchAppInbox { data ->
     if (data == null) {
-        Logger.e(this, "Error while loading AppInbox")
+        Log.e("AppInbox", "Error while loading AppInbox")
         return@fetchAppInbox
     }
     if (data.isEmpty()) {
-        Logger.i(this, "AppInbox loaded but is empty")
+        Log.i("AppInbox", "AppInbox loaded but is empty")
         return@fetchAppInbox
     }
-    Logger.i(this, "AppInbox loaded")
+    Log.i("AppInbox", "AppInbox loaded")
 }
 ```
 
@@ -341,7 +341,7 @@ It's also possible to fetch a single message by its ID from the App Inbox as fol
 ```kotlin
 Exponea.fetchAppInboxItem(messageId, { message ->
     message?.let {
-        Logger.i(this, "AppInbox message found and loaded")
+        Log.i("AppInbox", "AppInbox message found and loaded")
     }
 })
 ```
@@ -354,7 +354,7 @@ Use the `markAppInboxAsRead` method to mark an App Inbox message (specified by t
 
 ```kotlin
 Exponea.markAppInboxAsRead(message) { marked ->
-    Logger.i(this, "AppInbox message marked as read: $marked")
+    Log.i("AppInbox", "AppInbox message marked as read: $marked")
 }
 ```
 

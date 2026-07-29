@@ -52,6 +52,7 @@ import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageCallback
 import com.exponea.sdk.models.IntegrationConfig
+import com.exponea.sdk.models.LoggerCallback
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.MessageItemAction
 import com.exponea.sdk.models.NotificationAction
@@ -373,6 +374,22 @@ object Exponea {
         segmentationDataCallbacks.removeAll { it == callback }
         return@runCatching
     }.logOnException()
+
+    /**
+     * Registers a [LoggerCallback] to observe log lines produced by the SDK's [Logger].
+     *
+     * The callback is dispatched unconditionally (independent of [loggerLevel]) and synchronously on
+     * the thread that produced the log. See [LoggerCallback.onLog] for the contract implementations
+     * must follow. Pair this with [unregisterLoggerCallback] when the callback is no longer needed —
+     * the registration is retained for the whole process and is not cleared on stop/re-init.
+     */
+    fun registerLoggerCallback(callback: LoggerCallback) = Logger.registerCallback(callback)
+
+    /**
+     * Unregisters a previously registered [LoggerCallback].
+     * Removing an already unregistered callback does nothing.
+     */
+    fun unregisterLoggerCallback(callback: LoggerCallback) = Logger.unregisterCallback(callback)
 
     /**
      * Use this method using a file as configuration. The SDK searches for a file called

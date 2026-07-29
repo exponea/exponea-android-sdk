@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
@@ -14,6 +15,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.exponea.example.R
+import com.exponea.example.callbacks.ExampleLoggerCallback
 import com.exponea.example.databinding.ActivityMainBinding
 import com.exponea.example.models.SdkSetupState
 import com.exponea.example.services.ExampleAppInboxProvider
@@ -42,14 +44,12 @@ import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
 
+    private val tag = this::class.simpleName
     private val contentSegmentsCallback = object : SegmentationDataCallback() {
         override val exposingCategory = "content"
         override val includeFirstLoad = false
         override fun onNewData(segments: List<Segment>) {
-            Logger.i(
-                this@MainActivity,
-                "Segments: New for category $exposingCategory with IDs: $segments"
-            )
+            Log.i(tag, "Segments: New for category $exposingCategory with IDs: $segments")
         }
     }
 
@@ -57,10 +57,7 @@ class MainActivity : AppCompatActivity() {
         override val exposingCategory = "discovery"
         override val includeFirstLoad = false
         override fun onNewData(segments: List<Segment>) {
-            Logger.i(
-                this@MainActivity,
-                "Segments: New for category $exposingCategory with IDs: $segments"
-            )
+            Log.i(tag, "Segments: New for category $exposingCategory with IDs: $segments")
         }
     }
 
@@ -68,10 +65,7 @@ class MainActivity : AppCompatActivity() {
         override val exposingCategory = "merchandising"
         override val includeFirstLoad = false
         override fun onNewData(segments: List<Segment>) {
-            Logger.i(
-                this@MainActivity,
-                "Segments: New for category $exposingCategory with IDs: $segments"
-            )
+            Log.i(tag, "Segments: New for category $exposingCategory with IDs: $segments")
         }
     }
 
@@ -120,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton("OK") { _, _ -> }
                         .show()
                 } else {
-                    Logger.i(this, message)
+                    Log.i(tag, message)
                 }
             }
         }
@@ -249,23 +243,23 @@ class MainActivity : AppCompatActivity() {
             override var trackActions = true
 
             override fun inAppMessageShown(message: InAppMessage, context: Context) {
-                Logger.i(this, "In app message ${message.name} has been shown")
+                Log.i(tag, "In app message ${message.name} has been shown")
                 if (message.name.contains("StopSDK")) {
-                    Logger.i(this, "In app message ${message.name} will stop SDK")
+                    Log.i(tag, "In app message ${message.name} will stop SDK")
                     CoroutineScope(Dispatchers.Default).async {
                         delay(4000)
-                        Logger.i(this, "Stopping SDK")
+                        Log.i(tag, "Stopping SDK")
                         stopIntegration()
                     }
                 }
             }
 
             override fun inAppMessageError(message: InAppMessage?, errorMessage: String, context: Context) {
-                Logger.e(this, "Error occurred '$errorMessage' while showing in app message ${message?.name}")
+                Log.e(tag, "Error occurred '$errorMessage' while showing in app message ${message?.name}")
             }
 
             override fun inAppMessageClickAction(message: InAppMessage, button: InAppMessageButton, context: Context) {
-                Logger.i(this, "In app message ${message.name} has been clicked: ${button.url}")
+                Log.i(tag, "In app message ${message.name} has been clicked: ${button.url}")
                 if (messageIsForGdpr(message)) {
                     handleGdprUserResponse(button)
                 } else if (button.url != null) {
@@ -284,7 +278,7 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     "https://bloomreach.com/tracking/deny" -> {
-                        Logger.i(this, "Stopping SDK")
+                        Log.i(tag, "Stopping SDK")
                         stopIntegration()
                     }
                 }
@@ -306,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 } catch (e: ActivityNotFoundException) {
-                    Logger.e(this, "Unable to open URL", e)
+                    Log.e(tag, "Unable to open URL", e)
                 }
             }
 
@@ -316,10 +310,10 @@ class MainActivity : AppCompatActivity() {
                 interaction: Boolean,
                 context: Context
             ) {
-                Logger.i(this, "In app message ${message.name} has been closed: ${button?.url}")
+                Log.i(tag, "In app message ${message.name} has been closed: ${button?.url}")
                 if (messageIsForGdpr(message) && interaction) {
                     // regardless from `button` nullability, parameter `interaction` tells that user closed message
-                    Logger.i(this, "Stopping SDK")
+                    Log.i(tag, "Stopping SDK")
                     stopIntegration()
                 }
             }
@@ -329,6 +323,7 @@ class MainActivity : AppCompatActivity() {
     private fun stopIntegration() {
         Exponea.stopIntegration {
             SdkSetupState.reset()
+            Exponea.unregisterLoggerCallback(ExampleLoggerCallback)
         }
     }
 

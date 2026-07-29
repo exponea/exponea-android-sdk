@@ -39,7 +39,7 @@ Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
     override val exposingCategory = "discovery"
     override val includeFirstLoad = true
     override fun onNewData(segments: List<Segment>) {
-        Logger.i(this, "Segments: Got new segments: $segments")
+        Log.i("SegmentationCallback", "Segments: Got new segments: $segments")
     }
 })
 ```
@@ -59,7 +59,7 @@ The SDK provides an API to get segmentation data directly. Invoke the `Exponea.g
 
 ```kotlin
 Exponea.getSegments(exposingCategory = exposingCategory) { segments ->
-    Logger.i(this, "Segments: Got new segments: $segments")
+    Log.i("Segmentation", "Segments: Got new segments: $segments")
 }
 ```
 
@@ -73,7 +73,7 @@ If you want to force to fetch segmentations data from server, use `force` parame
 
 ```kotlin
 Exponea.getSegments(exposingCategory = exposingCategory, force = true) { segments ->
-    Logger.i(this, "Segments: Got new segments: $segments")
+    Log.i("Segmentation", "Segments: Got new segments: $segments")
 }
 ```
 
@@ -127,7 +127,7 @@ val segmentCallbackInstance = object : SegmentationDataCallback() {
     override val exposingCategory = "discovery"
     override val includeFirstLoad = true
     override fun onNewData(segments: List<Segment>) {
-        Logger.i(this, "Segments: Got new segments: $segments")
+        Log.i("SegmentationCallback", "Segments: Got new segments: $segments")
     }
 }
 Exponea.registerSegmentationDataCallback(segmentCallbackInstance)
@@ -158,7 +158,7 @@ Exponea.registerSegmentationDataCallback(object : SegmentationDataCallback() {
     }
 })
 dataCollector.observeForever { 
-    Logger.i(this, "New data arrived! Category is ${it.first} with values ${it.second}")
+    Log.i("Segmentation", "New data arrived! Category is ${it.first} with values ${it.second}")
     // will produce example log "New data arrived! Category is discovery with values [{"id": "66140257f4cb337324209871", "segmentation_id": "66140215fb50effc8a7218b4"}]"
 }
 ```

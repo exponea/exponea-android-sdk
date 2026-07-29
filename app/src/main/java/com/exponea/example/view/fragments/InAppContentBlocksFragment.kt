@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -28,11 +29,11 @@ import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.util.HtmlNormalizer
-import com.exponea.sdk.util.Logger
 import kotlin.math.ceil
 
 class InAppContentBlocksFragment : BaseFragment() {
 
+    private val tag = "InAppCBFragment"
     private lateinit var viewBinding: FragmentInappContentBlocksBinding
 
     override fun onCreateView(
@@ -135,17 +136,17 @@ class InAppContentBlocksFragment : BaseFragment() {
             InAppContentBlockPlaceholderConfiguration(true)
         )?.let {
             it.setOnContentReadyListener { contentLoaded ->
-                Logger.i(this, "InApp CB has dimens width ${it.width}px height ${it.height}px")
+                Log.i(tag, "InApp CB has dimens width ${it.width}px height ${it.height}px")
             }
             it.setOnHeightUpdateListener { height ->
-                Logger.i(this, "InApp CB has height ${height}px")
+                Log.i(tag, "InApp CB has height ${height}px")
                 examplePlaceholderHeightInfoView.text = "Height: ${height}px"
             }
             val origBehaviour = it.behaviourCallback
             it.behaviourCallback = object : InAppContentBlockCallback {
                 override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
                     origBehaviour.onMessageShown(placeholderId, contentBlock)
-                    Logger.i(this, "Content block with HTML: ${contentBlock.htmlContent}")
+                    Log.i(tag, "Content block with HTML: ${contentBlock.htmlContent}")
                     contentBlock.htmlContent?.let { rawHtml ->
                         val normalizationConfig = HtmlNormalizer.HtmlNormalizerConfig(
                             true,
@@ -154,7 +155,7 @@ class InAppContentBlocksFragment : BaseFragment() {
                         val normalizedHtml = HtmlNormalizer(requireContext(), rawHtml)
                             .normalize(normalizationConfig)
                             .html
-                        Logger.i(this, "Normalized HTML: $normalizedHtml")
+                        Log.i(tag, "Normalized HTML: $normalizedHtml")
                     }
                 }
                 override fun onNoMessageFound(placeholderId: String) {
@@ -187,7 +188,7 @@ class InAppContentBlocksFragment : BaseFragment() {
                             }
                         )
                     } catch (e: ActivityNotFoundException) {
-                        Logger.e(this, "Unable to perform deeplink", e)
+                        Log.e(tag, "Unable to perform deeplink", e)
                     }
                 }
             }
@@ -202,6 +203,7 @@ class InAppContentBlocksFragment : BaseFragment() {
 
 class ProductsAdapter(private val data: List<ProductsViewModel>) : Adapter<ProductsAdapter.ViewHolder>() {
 
+    private val tag = this::class.simpleName
     private val CONTENT_BLOCK_TYPE = 1
     private val PRODUCT_TYPE = 0
     private val CONTENT_BLOCK_FREQUENCY = 5
@@ -218,7 +220,7 @@ class ProductsAdapter(private val data: List<ProductsViewModel>) : Adapter<Produ
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        Logger.v(this, "InAppCbCarousel: Creating ViewHolder of type $viewType")
+        Log.v(tag, "InAppCbCarousel: Creating ViewHolder of type $viewType")
         return when (viewType) {
             CONTENT_BLOCK_TYPE -> {
                 var contentBlocksPlaceholder: View? = Exponea.getInAppContentBlocksPlaceholder(
@@ -248,7 +250,7 @@ class ProductsAdapter(private val data: List<ProductsViewModel>) : Adapter<Produ
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val viewType = getItemViewType(position)
-        Logger.v(this, "InAppCbCarousel: Binding ViewHolder of type $viewType")
+        Log.v(tag, "InAppCbCarousel: Binding ViewHolder of type $viewType")
         when (viewType) {
             CONTENT_BLOCK_TYPE -> {
                 // nothing, InAppContentBlockView will load itself
@@ -262,7 +264,7 @@ class ProductsAdapter(private val data: List<ProductsViewModel>) : Adapter<Produ
                 }
             }
             else -> {
-                Logger.e(this, "Unknown view type $viewType")
+                Log.e(tag, "Unknown view type $viewType")
             }
         }
     }

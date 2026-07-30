@@ -22,7 +22,7 @@ internal class InAppRichstylePayloadBuilder(
         internal const val DEFAULT_RATIO_HEIGHT = 3
         internal val DEFAULT_CLOSE_BUTTON_MARGIN = LayoutSpacing.parse("20dp")!!
         internal val DEFAULT_CLOSE_BUTTON_PADDING = LayoutSpacing.parse("8dp")!!
-        internal val DEFAULT_CLOSE_BUTTON_SIZE = PlatformSize.parse("32dp")!!
+        internal val DEFAULT_CLOSE_BUTTON_SIZE = PlatformSize.parse("40dp")!!
         internal val DEFAULT_CLOSE_BUTTON_BACKGROUND_COLOR = ConversionUtils.parseColor("#BDCEE3")!!
     }
 

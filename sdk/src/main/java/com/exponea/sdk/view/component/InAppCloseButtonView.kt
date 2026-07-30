@@ -18,7 +18,7 @@ internal class InAppCloseButtonView : AppCompatImageButton {
     }
 
     private fun initDefaults() {
-        scaleType = ScaleType.CENTER_INSIDE
+        scaleType = ScaleType.FIT_CENTER
     }
 
     fun applyStyle(style: InAppCloseButtonStyle) {

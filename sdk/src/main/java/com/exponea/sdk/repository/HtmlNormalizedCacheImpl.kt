@@ -19,19 +19,39 @@ internal class HtmlNormalizedCacheImpl(
         val result: NormalizedResult
     )
 
+    private data class MemoryNormalizedResult(
+        val controlHash: String,
+        val version: String,
+        val fileName: String,
+        val fileLastModified: Long,
+        val result: NormalizedResult
+    )
+
     companion object {
         const val DIRECTORY = "exponeasdk_html_storage"
+        private const val IN_MEMORY_CACHE_MAX_ITEMS = 128
     }
 
     private val fileCache = SimpleFileCache(context, DIRECTORY)
+    private val inMemoryCache = object : LinkedHashMap<String, MemoryNormalizedResult>(
+        IN_MEMORY_CACHE_MAX_ITEMS,
+        0.75f,
+        true
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, MemoryNormalizedResult>?): Boolean {
+            return size > IN_MEMORY_CACHE_MAX_ITEMS
+        }
+    }
+    private val inMemoryCacheLock = Any()
 
     override fun get(key: String, htmlOrigin: String): NormalizedResult? {
+        val controlHash = hashOf(htmlOrigin)
+        getInMemoryResult(key, controlHash)?.let { return it }
         val hashKey = asHashKey(key)
         val cachedControlHash = preferences.getString(hashKey, "")
         if (cachedControlHash.isEmpty()) {
             return null
         }
-        val controlHash = hashOf(htmlOrigin)
         if (!controlHash.equals(cachedControlHash)) {
             Logger.w(this, "HTML cache differs in control hash")
             return null
@@ -70,6 +90,13 @@ internal class HtmlNormalizedCacheImpl(
                 remove(key)
                 return null
             }
+            setInMemoryResult(
+                key = key,
+                controlHash = controlHash,
+                fileName = fileName,
+                fileLastModified = cachedHtmlFile.lastModified(),
+                versionedResult = cachedHtmlWithVersion
+            )
             return cachedHtmlWithVersion.result
         } catch (e: Exception) {
             Logger.e(this, "HTML cache cannot be used, removing it", e)
@@ -98,14 +125,22 @@ internal class HtmlNormalizedCacheImpl(
             Logger.w(this, "Normalized HTML content is not stored, as it is invalid")
             return
         }
+        val versionedResult = VersionedNormalizedResult(getCurrentCacheVersion(), normalizedResult)
         // content storaging
         val fileName = "InAppContentBlock_cached_$key.json"
         try {
-            val versionedResult = VersionedNormalizedResult(getCurrentCacheVersion(), normalizedResult)
             val cachedResult = ExponeaGson.instance.toJson(versionedResult)
             val file = createTempFile()
             file.writeText(cachedResult)
-            file.renameTo(fileCache.retrieveFileDirectly(fileName))
+            val targetFile = fileCache.retrieveFileDirectly(fileName)
+            file.renameTo(targetFile)
+            setInMemoryResult(
+                key = key,
+                controlHash = hashOf(htmlOrigin),
+                fileName = fileName,
+                fileLastModified = targetFile.lastModified(),
+                versionedResult = versionedResult
+            )
         } catch (e: Exception) {
             Logger.e(this, "Hash for HTML cannot be stored", e)
             return
@@ -132,11 +167,56 @@ internal class HtmlNormalizedCacheImpl(
             }
         }
         // metadata removing
+        synchronized(inMemoryCacheLock) {
+            inMemoryCache.remove(key)
+        }
         preferences.remove(asHashKey(key))
         preferences.remove(fileKey)
     }
 
     override fun clearAll() {
+        synchronized(inMemoryCacheLock) {
+            inMemoryCache.clear()
+        }
         fileCache.clear()
+    }
+
+    private fun getInMemoryResult(key: String, controlHash: String): NormalizedResult? {
+        val cached = synchronized(inMemoryCacheLock) { inMemoryCache[key] } ?: return null
+        if (cached.version != getCurrentCacheVersion()) {
+            synchronized(inMemoryCacheLock) { inMemoryCache.remove(key) }
+            return null
+        }
+        if (cached.controlHash != controlHash) {
+            return null
+        }
+        if (!cached.result.valid) {
+            synchronized(inMemoryCacheLock) { inMemoryCache.remove(key) }
+            return null
+        }
+        val cachedFile = fileCache.getFile(cached.fileName)
+        if (cachedFile == null || cachedFile.lastModified() != cached.fileLastModified) {
+            synchronized(inMemoryCacheLock) { inMemoryCache.remove(key) }
+            return null
+        }
+        return cached.result
+    }
+
+    private fun setInMemoryResult(
+        key: String,
+        controlHash: String,
+        fileName: String,
+        fileLastModified: Long,
+        versionedResult: VersionedNormalizedResult
+    ) {
+        synchronized(inMemoryCacheLock) {
+            inMemoryCache[key] = MemoryNormalizedResult(
+                controlHash = controlHash,
+                version = versionedResult.version,
+                fileName = fileName,
+                fileLastModified = fileLastModified,
+                result = versionedResult.result
+            )
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import java.io.File
 import java.util.Collections
+import java.util.LinkedHashSet
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
@@ -19,6 +20,9 @@ import kotlin.text.RegexOption.IGNORE_CASE
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Node
+import org.jsoup.select.NodeFilter
+import org.jsoup.select.NodeTraversor
 
 /**
  * Implementation is used by InAppMessageWebView to handle HTML inapp message paylod.
@@ -36,6 +40,7 @@ public class HtmlNormalizer {
     private val fontCache: FontCache
     private val originalHtml: String
     private val document: Document?
+    private var actionAnchorStyleInjected = false
 
     internal constructor(
         imageCache: DrawableCache,
@@ -46,7 +51,9 @@ public class HtmlNormalizer {
         this.fontCache = fontCache
         this.originalHtml = originalHtml
         document = try {
-            Jsoup.parse(originalHtml)
+            Jsoup.parse(originalHtml).apply {
+                outputSettings().prettyPrint(false)
+            }
         } catch (e: Exception) {
             Logger.i(this, "[HTML] Unable to parse original HTML source code $originalHtml")
             null
@@ -68,16 +75,11 @@ public class HtmlNormalizer {
         private const val CLOSE_BUTTON_SELECTOR = "[$CLOSE_BUTTON_ATTR_DEF]"
         private const val DATA_LINK_ATTR = "data-link"
         private const val DATA_ACTIONTYPE_ATTR = "data-actiontype"
-        private const val DATA_LINK_SELECTOR = "[$DATA_LINK_ATTR]"
-        private const val ANCHOR_BUTTON_SELECTOR = "a[href]"
+        private const val ACTION_LINK_RESET_CLASS = "exponea-action-link-reset"
+        private const val ACTION_LINK_RESET_STYLE_ID = "exponea-action-link-reset-style"
 
         private const val HREF_ATTR = "href"
         private const val ANCHOR_TAG_SELECTOR = "a"
-        private const val META_TAG_SELECTOR = "meta:not([name='viewport'])"
-        private const val SCRIPT_TAG_SELECTOR = "script"
-        private const val TITLE_TAG_SELECTOR = "title"
-        private const val LINK_TAG_SELECTOR = "link"
-        private const val IFRAME_TAG_SELECTOR = "iframe"
 
         private const val IMAGE_MIMETYPE = "image/png"
         private const val FONT_MIMETYPE = "application/font"
@@ -102,7 +104,7 @@ public class HtmlNormalizer {
         /**
          * Inline javascript attributes. Listed here https://www.w3schools.com/tags/ref_eventattributes.asp
          */
-        internal val INLINE_SCRIPT_ATTRIBUTES = arrayOf(
+        internal val INLINE_SCRIPT_ATTRIBUTES = setOf(
                 "onafterprint", "onbeforeprint", "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage",
                 "onoffline", "ononline", "onpagehide", "onpageshow", "onpopstate", "onresize", "onstorage", "onunload",
                 "onblur", "onchange", "oncontextmenu", "onfocus", "oninput", "oninvalid", "onreset", "onsearch",
@@ -114,12 +116,9 @@ public class HtmlNormalizer {
                 "onplay", "onplaying", "onprogress", "onratechange", "onseeked", "onseeking", "onstalled", "onsuspend",
                 "ontimeupdate", "onvolumechange", "onwaiting", "ontoggle"
         )
+        private val ANCHOR_LINK_ATTRIBUTES_SET = setOf("download", "ping", "target")
 
-        private val ANCHOR_LINK_ATTRIBUTES = arrayOf(
-            "download", "ping", "target"
-        )
-
-        internal val SUPPORTED_CSS_URL_PROPERTIES = arrayOf(
+        internal val SUPPORTED_CSS_URL_PROPERTIES = setOf(
             "background", "background-image", "border-image", "border-image-source", "content", "cursor", "filter",
             "list-style", "list-style-image", "mask", "mask-image", "offset-path", "src"
         )
@@ -133,18 +132,24 @@ public class HtmlNormalizer {
             result.valid = false
             return result
         }
+        val normalizeStart = System.currentTimeMillis()
+        Logger.i(this, "[HTML] [TIMING] normalize started")
         try {
-            cleanHtml()
+            val visitor = NormalizationVisitor(config.makeResourcesOffline)
+            NodeTraversor.filter(visitor, document)
+            val actionAnchors = LinkedHashSet(visitor.actionAnchorElements)
             if (config.makeResourcesOffline) {
-                makeResourcesToBeOffline()
+                makeResourcesToBeOffline(visitor)
             }
-            normalizeCloseButtons(config.ensureCloseButton)
-            normalizeDataLinkButtons()
-            result.actions = collectAnchorLinkButtons()
+            normalizeCloseButtons(config.ensureCloseButton, visitor.closeButtonElements, actionAnchors)
+            normalizeDataLinkButtons(visitor.dataLinkElements, actionAnchors)
+            result.actions = collectAnchorLinkButtons(actionAnchors)
             result.html = exportHtml()
             result.valid = true
+            Logger.i(this, "[HTML] [TIMING] normalize complete: ${System.currentTimeMillis() - normalizeStart}ms")
         } catch (e: Exception) {
             Logger.w(this, "[HTML] HTML parsing failed ${e.localizedMessage}")
+            Logger.w(this, "[HTML] [TIMING] normalize failed after: ${System.currentTimeMillis() - normalizeStart}ms")
             result.valid = false
         }
         return result
@@ -179,53 +184,12 @@ public class HtmlNormalizer {
         }
     }
 
-    private fun cleanHtml() {
-        // !!! Has to be called before #ensureCloseButton and #ensureActionButtons.
-        removeAttributes(HREF_ATTR, ANCHOR_TAG_SELECTOR)
-        ANCHOR_LINK_ATTRIBUTES.forEach {
-            removeAttributes(it)
-        }
-        INLINE_SCRIPT_ATTRIBUTES.forEach {
-            removeAttributes(it)
-        }
-        removeElements(META_TAG_SELECTOR)
-        removeElements(SCRIPT_TAG_SELECTOR)
-        removeElements(TITLE_TAG_SELECTOR)
-        removeElements(LINK_TAG_SELECTOR)
-        removeElements(IFRAME_TAG_SELECTOR)
-    }
-
-    private fun removeElements(selector: String) {
-        val unwantedElements = document!!.select(selector)
-        for (element in unwantedElements) {
-            element.remove()
-        }
-    }
-
-    /**
-     * Removes 'href' attribute from HTML elements
-     */
-    private fun removeAttributes(attribute: String, skipTag: String? = null) {
-        val attributedElements = document!!.select("[$attribute]")
-        for (each in attributedElements) {
-            if (skipTag != null && each.`is`(skipTag)) {
-                continue
-            }
-            each.removeAttr(attribute)
-        }
-    }
-
     private fun exportHtml(): String {
         return document!!.html()
     }
 
-    private fun collectAnchorLinkButtons(): List<ActionInfo> {
+    private fun collectAnchorLinkButtons(actionButtons: Collection<Element>): List<ActionInfo> {
         val result = hashMapOf<String, ActionInfo>()
-        if (document == null) {
-            Logger.e(this, "[HTML] Original HTML code is invalid, unable to collect buttons")
-            return result.values.toList()
-        }
-        val actionButtons = document.select(ANCHOR_BUTTON_SELECTOR)
         for (actionButton in actionButtons) {
             val targetAction = actionButton.attr(HREF_ATTR)
             if (targetAction.isNullOrBlank()) {
@@ -253,11 +217,7 @@ public class HtmlNormalizer {
      * Transforms 'data-link' value into clickable <a href> form if is required.
      * Any href URL is replaced with a data-link URL.
      */
-    private fun normalizeDataLinkButtons() {
-        if (document == null) {
-            return
-        }
-        val actionButtons = document.select(DATA_LINK_SELECTOR)
+    private fun normalizeDataLinkButtons(actionButtons: List<Element>, actionAnchors: MutableSet<Element>) {
         for (actionButton in actionButtons) {
             val actionUrl = actionButton.attr(DATA_LINK_ATTR)
             if (actionUrl.isNullOrBlank()) {
@@ -271,23 +231,23 @@ public class HtmlNormalizer {
                 actionButton.`is`(ANCHOR_TAG_SELECTOR) -> {
                     Logger.v(this, "[HTML] Applying data-link to an a-href link")
                     applyActionInfo(actionButton, actionUrl, dataLinkType)
+                    actionAnchors.add(actionButton)
                 }
                 actionButton.parent()?.`is`(ANCHOR_TAG_SELECTOR) == true -> {
                     Logger.v(this, "[HTML] Applying data-link to a parent as an a-href link")
                     applyActionInfo(actionButton, actionUrl, dataLinkType)
                     applyActionInfo(actionButton.parent()!!, actionUrl, dataLinkType)
+                    actionAnchors.add(actionButton.parent()!!)
                 }
                 else -> {
                     Logger.v(this, "[HTML] Wrapping data-link with an a-href")
                     applyActionInfo(actionButton, actionUrl, dataLinkType)
-                    // randomize class name => prevents from CSS styles overriding in HTML
-                    val actionButtonHrefClass = "action-button-href-${UUID.randomUUID()}"
-                    wrapWithAnchorLink(
+                    val wrapper = wrapWithAnchorLink(
                         actionButton,
                         actionUrl,
-                        actionButtonHrefClass,
                         dataLinkType
                     )
+                    wrapper?.let { actionAnchors.add(it) }
                 }
             }
         }
@@ -320,11 +280,14 @@ public class HtmlNormalizer {
      * Transforms elements with 'data-actiontype="close"' into clickable <a href> form if is required.
      * Any existing href URL is replaced with a close URL.
      */
-    private fun normalizeCloseButtons(ensureCloseButton: Boolean) {
+    private fun normalizeCloseButtons(
+        ensureCloseButton: Boolean,
+        closeButtons: MutableList<Element>,
+        actionAnchors: MutableSet<Element>
+    ) {
         if (document == null) {
             return
         }
-        var closeButtons = document.select(CLOSE_BUTTON_SELECTOR)
         if (closeButtons.isEmpty() && ensureCloseButton) {
             Logger.i(this, "[HTML] Adding default close-button")
             // randomize class name => prevents from CSS styles overriding in HTML
@@ -358,7 +321,7 @@ public class HtmlNormalizer {
                 </style>
             """.trimIndent()
             )
-            closeButtons = document.select(CLOSE_BUTTON_SELECTOR)
+            closeButtons.addAll(document.select(CLOSE_BUTTON_SELECTOR))
         }
         if (ensureCloseButton && closeButtons.isEmpty()) {
             // defined or default has to exist
@@ -372,23 +335,23 @@ public class HtmlNormalizer {
                 closeButton.`is`(ANCHOR_TAG_SELECTOR) -> {
                     Logger.i(this, "[HTML] Fixing close button as a-href link to close action")
                     applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
+                    actionAnchors.add(closeButton)
                 }
                 closeButton.parent()?.`is`(ANCHOR_TAG_SELECTOR) == true -> {
                     Logger.i(this, "[HTML] Fixing parent a-href link to close action")
                     applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
                     applyActionInfo(closeButton.parent()!!, closeButtonUrl, HtmlActionType.CLOSE)
+                    actionAnchors.add(closeButton.parent()!!)
                 }
                 else -> {
                     Logger.i(this, "[HTML] Wrapping Close button with an a-href")
                     applyActionInfo(closeButton, closeButtonUrl, HtmlActionType.CLOSE)
-                    // randomize class name => prevents from CSS styles overriding in HTML
-                    val closeButtonHrefClass = "close-button-href-$closeButtonId"
-                    wrapWithAnchorLink(
+                    val wrapper = wrapWithAnchorLink(
                         closeButton,
                         closeButtonUrl,
-                        closeButtonHrefClass,
                         HtmlActionType.CLOSE
                     )
+                    wrapper?.let { actionAnchors.add(it) }
                 }
             }
         }
@@ -405,45 +368,77 @@ public class HtmlNormalizer {
     private fun wrapWithAnchorLink(
         child: Element,
         href: String,
-        cssClass: String,
         dataActionType: HtmlActionType
-    ) {
-        document?.head()?.append("""
-            <style>
-            .$cssClass {
-              text-decoration: none;
-            }
-            </style>
-        """.trimIndent())
+    ): Element? {
+        ensureActionAnchorStyle()
         child.wrap("""
         <a href='$href'
-            class='$cssClass'
+            class='$ACTION_LINK_RESET_CLASS'
             $DATA_LINK_ATTR='$href'
             $DATA_ACTIONTYPE_ATTR='${dataActionType.value}'
             >
         </a>
         """.trimIndent())
+        return child.parent()
     }
 
-    private fun makeResourcesToBeOffline() {
-        makeImageTagsToBeOffline()
-        makeStylesheetsToBeOffline()
-        makeStyleAttributesToBeOffline()
+    private fun ensureActionAnchorStyle() {
+        if (actionAnchorStyleInjected) return
+        document?.head()?.append("""
+            <style id='$ACTION_LINK_RESET_STYLE_ID'>
+            .$ACTION_LINK_RESET_CLASS {
+              text-decoration: none;
+            }
+            </style>
+        """.trimIndent())
+        actionAnchorStyleInjected = true
     }
 
-    private fun makeStyleAttributesToBeOffline() {
-        val styleAttrsElements = document!!.select("[style]")
+    private fun preloadAllResources(
+        imageUrls: Set<String>,
+        fontUrls: Set<String>
+    ) {
+        if (imageUrls.isEmpty() && fontUrls.isEmpty()) return
+        if (imageUrls.isNotEmpty()) {
+            try {
+                imageCache.preload(imageUrls.toList()) {}
+            } catch (e: Exception) {
+                Logger.w(this, "[HTML] Image preload failed, continuing with direct loading: ${e.localizedMessage}")
+            }
+        }
+        if (fontUrls.isNotEmpty()) {
+            try {
+                fontCache.preload(fontUrls.toList()) {}
+            } catch (e: Exception) {
+                Logger.w(this, "[HTML] Font preload failed, continuing with direct loading: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private fun makeResourcesToBeOffline(visitor: NormalizationVisitor) {
+        preloadAllResources(visitor.imageUrls, visitor.fontUrls)
+        makeImageTagsToBeOffline(visitor.imgElements)
+        makeStylesheetsToBeOffline(visitor.styleTagElements, visitor.styleTagOnlineStatements)
+        makeStyleAttributesToBeOffline(visitor.styleAttrElements, visitor.styleAttrOnlineStatements)
+    }
+
+    private fun makeStyleAttributesToBeOffline(
+        styleAttrsElements: List<Element>,
+        precollectedStatements: Map<Element, List<CssOnlineUrl>>
+    ) {
         for (element in styleAttrsElements) {
             val styleAttr = element.attr("style")
             if (styleAttr.isNullOrEmpty()) {
                 continue
             }
-            element.attr("style", downloadOnlineResources(styleAttr))
+            element.attr("style", downloadOnlineResources(styleAttr, precollectedStatements[element] ?: emptyList()))
         }
     }
 
-    private fun downloadOnlineResources(styleSource: String): String {
-        val onlineStatements = collectOnlineUrlStatements(styleSource)
+    private fun downloadOnlineResources(
+        styleSource: String,
+        onlineStatements: List<CssOnlineUrl> = collectOnlineUrlStatements(styleSource)
+    ): String {
         var styleTarget = styleSource
         for (statement in onlineStatements) {
             val dataBase64: String?
@@ -467,6 +462,9 @@ public class HtmlNormalizer {
     }
 
     private fun collectOnlineUrlStatements(cssStyle: String): List<CssOnlineUrl> {
+        if (!cssStyle.contains("url(", ignoreCase = true)) {
+            return emptyList()
+        }
         val result = mutableListOf<CssOnlineUrl>()
         // CSS @import search
         val cssImportMatches = cssImportUrlRegexp.findAll(cssStyle)
@@ -507,15 +505,16 @@ public class HtmlNormalizer {
         return result
     }
 
-    private fun makeStylesheetsToBeOffline() {
-        val styles = document!!.select("style")
+    private fun makeStylesheetsToBeOffline(
+        styles: List<Element>,
+        precollectedStatements: Map<Element, List<CssOnlineUrl>>
+    ) {
         for (style in styles) {
-            style.text(downloadOnlineResources(style.data()))
+            style.text(downloadOnlineResources(style.data(), precollectedStatements[style] ?: emptyList()))
         }
     }
 
-    private fun makeImageTagsToBeOffline() {
-        val images = document!!.select("img")
+    private fun makeImageTagsToBeOffline(images: List<Element>) {
         for (image in images) {
             val imageSource = image.attr("src")
             if (imageSource.isNullOrEmpty()) {
@@ -685,4 +684,90 @@ public class HtmlNormalizer {
         val mimeType: String,
         val url: String
     )
+
+    private inner class NormalizationVisitor(
+        private val makeResourcesOffline: Boolean
+    ) : NodeFilter {
+        val closeButtonElements: MutableList<Element> = mutableListOf()
+        val dataLinkElements: MutableList<Element> = mutableListOf()
+        val imgElements: MutableList<Element> = mutableListOf()
+        val styleTagElements: MutableList<Element> = mutableListOf()
+        val styleAttrElements: MutableList<Element> = mutableListOf()
+        val imageUrls: MutableSet<String> = mutableSetOf()
+        val fontUrls: MutableSet<String> = mutableSetOf()
+        val styleTagOnlineStatements: MutableMap<Element, List<CssOnlineUrl>> = mutableMapOf()
+        val styleAttrOnlineStatements: MutableMap<Element, List<CssOnlineUrl>> = mutableMapOf()
+        val actionAnchorElements: MutableList<Element> = mutableListOf()
+
+        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
+            if (node !is Element) return NodeFilter.FilterResult.CONTINUE
+            val tagName = node.normalName()
+
+            when (tagName) {
+                "script", "title", "iframe", "link" -> return NodeFilter.FilterResult.REMOVE
+                "meta" -> if (!node.attr("name").equals("viewport", ignoreCase = true))
+                    return NodeFilter.FilterResult.REMOVE
+            }
+
+            if (tagName != "a") node.removeAttr(HREF_ATTR)
+            val attributesToRemove = mutableListOf<String>()
+            for (attribute in node.attributes()) {
+                val key = attribute.key
+                val keyNormalized = key.lowercase()
+                if (ANCHOR_LINK_ATTRIBUTES_SET.contains(keyNormalized) ||
+                    INLINE_SCRIPT_ATTRIBUTES.contains(keyNormalized)
+                ) {
+                    attributesToRemove.add(key)
+                }
+            }
+            attributesToRemove.forEach { node.removeAttr(it) }
+
+            if (makeResourcesOffline) {
+                if (tagName == "img") {
+                    imgElements.add(node)
+                    val imageUrl = node.attr("src")
+                    if (imageUrl.isNotEmpty() && !isBase64Uri(imageUrl)) {
+                        imageUrls.add(imageUrl)
+                    }
+                }
+                if (tagName == "style") {
+                    styleTagElements.add(node)
+                    val statements = collectOnlineUrlStatements(node.data())
+                    if (statements.isNotEmpty()) {
+                        styleTagOnlineStatements[node] = statements
+                    }
+                    addCssStatementsToResourceSets(statements)
+                }
+                if (node.hasAttr("style")) {
+                    styleAttrElements.add(node)
+                    val statements = collectOnlineUrlStatements(node.attr("style"))
+                    if (statements.isNotEmpty()) {
+                        styleAttrOnlineStatements[node] = statements
+                    }
+                    addCssStatementsToResourceSets(statements)
+                }
+            }
+            if (tagName == ANCHOR_TAG_SELECTOR && node.hasAttr(HREF_ATTR)) {
+                actionAnchorElements.add(node)
+            }
+
+            val actionTypeAttr = node.attr(DATA_ACTIONTYPE_ATTR)
+            if (actionTypeAttr.equals("close", ignoreCase = true)) {
+                closeButtonElements.add(node)
+            } else if (node.hasAttr(DATA_LINK_ATTR)) {
+                dataLinkElements.add(node)
+            }
+
+            return NodeFilter.FilterResult.CONTINUE
+        }
+
+        private fun addCssStatementsToResourceSets(statements: List<CssOnlineUrl>) {
+            for (statement in statements) {
+                when (statement.mimeType) {
+                    FONT_MIMETYPE -> fontUrls.add(statement.url)
+                    IMAGE_MIMETYPE -> imageUrls.add(statement.url)
+                }
+            }
+        }
+    }
 }

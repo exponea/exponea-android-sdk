@@ -79,7 +79,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         every {
             anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
-            arg<(Result<Boolean>) -> Unit>(1).invoke(Result(true, true))
+            arg<((Boolean) -> Unit)?>(1)?.invoke(true)
         }
         every {
             anyConstructed<DrawableCacheImpl>().getFile(any())
@@ -90,6 +90,11 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         every { anyConstructed<FontCacheImpl>().getFontFile(any()) } returns File(
             this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
         )
+        every {
+            anyConstructed<FontCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            arg<((Boolean) -> Unit)?>(1)?.invoke(true)
+        }
         every { anyConstructed<FontCacheImpl>().has(any()) } returns true
     }
 

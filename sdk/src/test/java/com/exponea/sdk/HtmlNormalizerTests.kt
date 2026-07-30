@@ -1,6 +1,9 @@
 package com.exponea.sdk
 
 import android.content.Context
+import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCache
@@ -11,9 +14,13 @@ import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
+import com.exponea.sdk.util.LocalResourceUrlMapper
 import com.exponea.sdk.util.runOnBackgroundThread
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -85,6 +92,16 @@ internal class HtmlNormalizerTests {
         imageCache: DrawableCache = mock(),
         fontCache: FontCache = mock()
     ) = HtmlNormalizer(imageCache, fontCache, originalHtml)
+
+    private fun assertContainsLocalImage(html: String, originalUrl: String) {
+        assertTrue(html.contains(LocalResourceUrlMapper.imageUrl(originalUrl)))
+        assertFalse(html.contains("data:image/png;base64"))
+    }
+
+    private fun assertContainsLocalFont(html: String, originalUrl: String) {
+        assertTrue(html.contains(LocalResourceUrlMapper.fontUrl(originalUrl)))
+        assertFalse(html.contains("data:application/font"))
+    }
 
     @Test
     fun test_closeButtonSingleAction() {
@@ -375,7 +392,7 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalImage(result.html!!, imageUrl)
     }
 
     @Test
@@ -390,6 +407,101 @@ internal class HtmlNormalizerTests {
         val bitmapCache = DrawableCacheImpl(context)
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertFalse(result.valid)
+    }
+
+    @Test
+    fun test_InvalidFont() {
+        val fontUrl = server.url("/missing_font.ttf").toString()
+        val rawHtml =
+            """
+            <html>
+                <head>
+                    <style>
+                        @font-face {
+                          font-family: 'Open Sans';
+                          src: url($fontUrl) format('woff');
+                        }
+                    </style>
+                </head>
+                <body></body>
+            </html>
+            """.trimIndent()
+        val bitmapCache = DrawableCacheImpl(context)
+        val fontCache = FontCacheImpl(context)
+        val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
+        assertFalse(result.valid)
+    }
+
+    @Test
+    fun `should start image and font resource preload batches before waiting for either to finish`() {
+        val imageUrl = "https://example.com/image.png"
+        val fontUrl = "https://example.com/font.ttf"
+        val rawHtml =
+            """
+            <html>
+                <head>
+                    <style>
+                        @font-face {
+                          font-family: 'Open Sans';
+                          src: url($fontUrl) format('woff');
+                        }
+                    </style>
+                </head>
+                <body><img src="$imageUrl"/></body>
+            </html>
+            """.trimIndent()
+        val imagePreloadStarted = CountDownLatch(1)
+        val imagePreloadCanFinish = CountDownLatch(1)
+        val fontPreloadStarted = CountDownLatch(1)
+        val normalizationResult = AtomicReference<HtmlNormalizer.NormalizedResult?>()
+        val normalizationError = AtomicReference<Throwable?>()
+        val imageCache = object : DrawableCache {
+            override fun preload(urls: List<String>, callback: ((Boolean) -> Unit)?) {
+                imagePreloadStarted.countDown()
+                Thread {
+                    imagePreloadCanFinish.await(2, TimeUnit.SECONDS)
+                    callback?.invoke(true)
+                }.start()
+            }
+            override fun has(url: String): Boolean = true
+            override fun clear() {}
+            override fun getFile(url: String): File? = File("cached-image")
+            override fun showImage(url: String?, target: ImageView, onImageNotLoaded: ((ImageView) -> Unit)?) {}
+            override fun getDrawable(url: String?): Drawable? = null
+            override fun getDrawable(resourceId: Int): Drawable? = null
+        }
+        val fontCache = object : FontCache {
+            override fun getTypeface(url: String): Typeface? = null
+            override fun getFontFile(url: String): File? = File("cached-font")
+            override fun preload(urls: List<String>, callback: ((Boolean) -> Unit)?) {
+                fontPreloadStarted.countDown()
+                callback?.invoke(true)
+            }
+            override fun has(url: String): Boolean = true
+            override fun clear() {}
+        }
+        val normalizationThread = Thread {
+            runCatching {
+                getHtmlNormalizer(rawHtml, imageCache, fontCache).normalize()
+            }.onSuccess {
+                normalizationResult.set(it)
+            }.onFailure {
+                normalizationError.set(it)
+            }
+        }
+
+        normalizationThread.start()
+        assertTrue(imagePreloadStarted.await(2, TimeUnit.SECONDS), "Image preload did not start")
+        assertTrue(
+            fontPreloadStarted.await(2, TimeUnit.SECONDS),
+            "Font preload should start before image preload finishes"
+        )
+        imagePreloadCanFinish.countDown()
+        normalizationThread.join(TimeUnit.SECONDS.toMillis(2))
+
+        normalizationError.get()?.let { throw it }
+        assertFalse(normalizationThread.isAlive, "Normalization did not finish")
+        assertTrue(normalizationResult.get()?.valid == true)
     }
 
     @Test
@@ -434,7 +546,7 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalImage(result.html!!, imageUrl)
     }
 
     @Test
@@ -453,7 +565,7 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalImage(result.html!!, testImageUrl)
     }
 
     @Test
@@ -472,7 +584,7 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalImage(result.html!!, testImageUrl)
     }
 
     @Test
@@ -491,7 +603,7 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalImage(result.html!!, testImageUrl)
     }
 
     @Test
@@ -527,7 +639,10 @@ internal class HtmlNormalizerTests {
             val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
             assertTrue(result.valid, "Invalid for usage '$each'")
             assertFalse(result.html!!.contains("test_image"), "Invalid for usage '$each'")
-            assertTrue(result.html!!.contains("data:image/png;base64"), "Invalid for usage '$each'")
+            assertTrue(
+                result.html!!.contains(LocalResourceUrlMapper.imageUrl(testImageUrl)),
+                "Invalid for usage '$each'"
+            )
         }
     }
 
@@ -646,14 +761,16 @@ internal class HtmlNormalizerTests {
             )
             if (each.first == "src") {
                 assertTrue(
-                    result.html!!.contains("data:application/font;charset=utf-8;base64"),
+                    result.html!!.contains(LocalResourceUrlMapper.fontUrl(testImageUrl)),
                     "Invalid for usage '${each.first}: ${each.second}'"
                 )
+                assertFalse(result.html!!.contains("data:application/font"))
             } else {
                 assertTrue(
-                    result.html!!.contains("data:image/png;base64"),
+                    result.html!!.contains(LocalResourceUrlMapper.imageUrl(testImageUrl)),
                     "Invalid for usage '${each.first}: ${each.second}'"
                 )
+                assertFalse(result.html!!.contains("data:image/png;base64"))
             }
         }
     }
@@ -704,8 +821,8 @@ internal class HtmlNormalizerTests {
         val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
         assertTrue(result.valid)
         assertFalse(result.html!!.contains("test_image"))
-        assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64"))
-        assertTrue(result.html!!.contains("data:image/png;base64"))
+        assertContainsLocalFont(result.html!!, fontUrl)
+        assertContainsLocalImage(result.html!!, testImageUrl)
     }
 
     @Test
@@ -735,7 +852,7 @@ internal class HtmlNormalizerTests {
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
-        assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64,"))
+        assertContainsLocalFont(result.html!!, fontUrl)
     }
 
     @Test
@@ -760,7 +877,7 @@ internal class HtmlNormalizerTests {
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
-        assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64,"))
+        assertContainsLocalFont(result.html!!, fontUrl)
     }
 
     @Test
@@ -785,7 +902,7 @@ internal class HtmlNormalizerTests {
         assertTrue { result.valid }
         assertFalse(result.html!!.contains("css2"))
         assertFalse(result.html!!.contains("data:image/png;base64"))
-        assertTrue(result.html!!.contains("data:application/font;charset=utf-8;base64,"))
+        assertContainsLocalFont(result.html!!, fontUrl)
     }
 
     @Test
@@ -871,7 +988,7 @@ internal class HtmlNormalizerTests {
     }
 
     @Test
-    fun `should parse image to base64 - stress test`() {
+    fun `should rewrite image to local resource url - stress test`() {
         val testImageUrl = server.url(pathToFont).toString()
         val stressTestCount = 1000
         val normalizationDoneCount = AtomicInteger(0)
@@ -896,7 +1013,7 @@ internal class HtmlNormalizerTests {
                     val result = getHtmlNormalizer(rawHtml, bitmapCache).normalize()
                     assertTrue { result.valid }
                     assertFalse(result.html!!.contains("test_image"))
-                    assertTrue(result.html!!.contains("data:image/png;base64"))
+                    assertContainsLocalImage(result.html!!, testImageUrl)
                     if (normalizationDoneCount.incrementAndGet() == stressTestCount) {
                         done()
                     }

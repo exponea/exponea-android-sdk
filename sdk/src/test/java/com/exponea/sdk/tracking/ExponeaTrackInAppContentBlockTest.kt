@@ -25,6 +25,7 @@ import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
 import io.mockk.Runs
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.slot
@@ -37,6 +38,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
@@ -58,7 +60,7 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         every {
             anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
         } answers {
-            arg<(Result<Boolean>) -> Unit>(1).invoke(Result(true, true))
+            arg<((Boolean) -> Unit)?>(1)?.invoke(true)
         }
         every {
             anyConstructed<DrawableCacheImpl>().getFile(any())
@@ -74,6 +76,8 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
+        ShadowLooper.idleMainLooper()
+        clearAllMocks(answers = false)
     }
 
     @Test

@@ -30,6 +30,7 @@ import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
@@ -222,6 +223,17 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         } answers {
             events.toList()
         }
+        every {
+            anyConstructed<EventRepositoryImpl>().remove(any())
+        } answers {
+            events.removeAll { it.id == firstArg<String>() }
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().update(any())
+        } answers {
+            val updatedEvent = firstArg<ExportedEvent>()
+            events.replaceAll { if (it.id == updatedEvent.id) updatedEvent else it }
+        }
     }
 
     @Test
@@ -281,6 +293,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         verify(exactly = 1) {
             anyConstructed<InAppMessageManagerImpl>().show(pendingMessage)
         }
+        waitUntilFlushFinished(threadAwaitSeconds)
     }
 
     @Test
@@ -559,5 +572,19 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 automaticSessionTracking = false
             )
         )
+    }
+
+    private fun waitUntilFlushFinished(timeoutSeconds: Long) {
+        val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds)
+        while (
+            Exponea.isInitialized &&
+            Exponea.componentForTesting.flushManager.isRunning &&
+            System.currentTimeMillis() < deadline
+        ) {
+            ShadowLooper.idleMainLooper()
+            Thread.sleep(50)
+        }
+        ShadowLooper.idleMainLooper()
+        assertTrue(!Exponea.componentForTesting.flushManager.isRunning)
     }
 }

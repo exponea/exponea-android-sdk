@@ -34,6 +34,7 @@ internal class ContentBlockCarouselAdapter(
      * Contains pure content blocks list as they are loaded by `updateData` method.
      */
     private val contentBlocksData = mutableListOf<InAppContentBlock>()
+    private val contentBlocksById = mutableMapOf<String, InAppContentBlock>()
 
     fun updateData(newData: List<InAppContentBlock>) {
         val newDataIds = newData.map { it.id }
@@ -44,6 +45,8 @@ internal class ContentBlockCarouselAdapter(
         shownContentBlockIds.addAll(enhancedNewDataIds)
         contentBlocksData.clear()
         contentBlocksData.addAll(newData)
+        contentBlocksById.clear()
+        contentBlocksData.forEach { contentBlocksById[it.id] = it }
         ensureOnMainThread {
             diffResult.dispatchUpdatesTo(this)
         }
@@ -79,7 +82,7 @@ internal class ContentBlockCarouselAdapter(
 
     override fun onBindViewHolder(holder: ContentBlockCarouselViewHolder, position: Int) {
         val contentBlockId = shownContentBlockIds[position]
-        val contentBlock = contentBlocksData.find { it.id == contentBlockId }
+        val contentBlock = contentBlocksById[contentBlockId]
         holder.updateContent(contentBlock)
     }
 

@@ -95,6 +95,10 @@ internal class InAppMessagePresenterTest(
     @Before
     fun mockCaches() {
         bitmapCache = mock {
+            on { preload(any(), any()) } doAnswer { invocation ->
+                invocation.getArgument<((Boolean) -> Unit)?>(1)?.invoke(true)
+                null
+            }
             on { getFile(any()) } doReturn MockFile()
             doNothing().on { showImage(any(), any(), any()) }
             on { getDrawable(any<Int>()) } doReturn AppCompatDrawableManager.get().getDrawable(
@@ -108,6 +112,10 @@ internal class InAppMessagePresenterTest(
         }
 
         fontCache = mock {
+            on { preload(any(), any()) } doAnswer { invocation ->
+                invocation.getArgument<((Boolean) -> Unit)?>(1)?.invoke(true)
+                null
+            }
             on { getFontFile(any()) } doReturn File(
                 this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
             )

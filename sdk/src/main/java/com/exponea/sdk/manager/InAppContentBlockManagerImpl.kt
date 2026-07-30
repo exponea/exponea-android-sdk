@@ -1,6 +1,7 @@
 package com.exponea.sdk.manager
 
 import android.content.Context
+import android.os.SystemClock
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -16,6 +17,7 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
+import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.DefaultInAppContentCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
@@ -31,6 +33,10 @@ import com.exponea.sdk.util.deepCopy
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.Date
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class InAppContentBlockManagerImpl(
     private val displayStateRepository: InAppContentBlockDisplayStateRepository,
@@ -51,9 +57,40 @@ internal class InAppContentBlockManagerImpl(
     private val SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD = SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW + NOT_DEFINED
 
     private var sessionStartDate = Date()
+    @Volatile private var contentBlocksByPlaceholder: Map<String, List<InAppContentBlock>> = emptyMap()
+    @Volatile private var contentBlocksById: Map<String, InAppContentBlock> = emptyMap()
     internal var contentBlocksData: List<InAppContentBlock> = emptyList()
+        set(value) {
+            field = value
+            contentBlocksById = value.associateBy { it.id }
+            val blocksByPlaceholder = hashMapOf<String, MutableList<InAppContentBlock>>()
+            value.forEach { contentBlock ->
+                contentBlock.placeholders.forEach { placeholder ->
+                    blocksByPlaceholder.getOrPut(placeholder) { mutableListOf() }.add(contentBlock)
+                }
+            }
+            contentBlocksByPlaceholder = blocksByPlaceholder
+        }
+    private val inFlightPersonalizedFetchLock = Any()
+    private val inFlightPersonalizedFetchCallbacks =
+        mutableMapOf<String, MutableList<PersonalizedFetchCallbacks>>()
+    private val inFlightContentLoads = mutableMapOf<InFlightContentLoadKey, MutableList<(Boolean) -> Unit>>()
+    // trying to display the same in a short time window, drop
+    private val shownEventDedupWindowMs = 100L
+    private val shownEventDedupLock = Any()
+    private val shownEventRecent = mutableMapOf<String, Long>()
 
     internal val dataAccess = ThreadSafeAccess()
+
+    private data class PersonalizedFetchCallbacks(
+        val onSuccess: (List<InAppContentBlockPersonalizedData>) -> Unit,
+        val onFailure: (FetchError) -> Unit
+    )
+
+    private data class InFlightContentLoadKey(
+        val contentBlockId: String,
+        val customerScope: String
+    )
 
     override fun onEventCreated(event: Event, type: EventType) {
         when (type) {
@@ -117,9 +154,7 @@ internal class InAppContentBlockManagerImpl(
     }
 
     override fun clearAll() = runThreadSafelyInBackground {
-        contentBlocksData.forEach { contentBlock ->
-            htmlCache.remove(contentBlock.id)
-        }
+        clearRenderableCaches(contentBlocksData.map { it.id }.toSet())
         contentBlocksData = emptyList()
         displayStateRepository.clear()
         Logger.i(this, "InAppCB: All data and cache has been cleared completely")
@@ -152,13 +187,120 @@ internal class InAppContentBlockManagerImpl(
         }
     }
 
-    private fun updateContentForLocalContentBlocks(source: List<InAppContentBlock>) {
-        val dataMap = source.groupBy { it.id }
+    private fun updateContentForLocalContentBlocks(dataMap: Map<String, InAppContentBlockPersonalizedData>) {
         Logger.d(this, "InAppCB: Request to update personalized content of ${dataMap.keys.joinToString()}")
-        contentBlocksData.forEach { localContentBlock ->
-            dataMap[localContentBlock.id]?.firstOrNull()?.let { newContentBlock ->
-                localContentBlock.personalizedData = newContentBlock.personalizedData
+        dataMap.forEach { (blockId, personalizedData) ->
+            contentBlocksById[blockId]?.personalizedData = personalizedData
+        }
+    }
+
+    private fun clearRenderableCaches(contentBlockIds: Set<String>, clearResourceCaches: Boolean = true) {
+        contentBlockIds.forEach { contentBlockId ->
+            htmlCache.remove(contentBlockId)
+        }
+        if (clearResourceCaches) {
+            imageCache.clear()
+            fontCache.clear()
+        }
+    }
+
+    private fun findStaticContentCacheInvalidations(
+        currentContentBlocks: List<InAppContentBlock>,
+        newContentBlocks: List<InAppContentBlock>
+    ): Set<String> {
+        if (currentContentBlocks.isEmpty()) return emptySet()
+        val currentBlocksById = currentContentBlocks.associateBy { it.id }
+        val newBlocksById = newContentBlocks.associateBy { it.id }
+        val invalidatedIds = currentBlocksById.keys.minus(newBlocksById.keys).toMutableSet()
+        newBlocksById.forEach { (blockId, newBlock) ->
+            val currentBlock = currentBlocksById[blockId] ?: return@forEach
+            if (currentBlock.contentType != newBlock.contentType || currentBlock.htmlContent != newBlock.htmlContent) {
+                invalidatedIds.add(blockId)
             }
+        }
+        return invalidatedIds
+    }
+
+    private fun registerInFlightContentLoad(
+        contentBlockIds: List<String>,
+        customerIds: Map<String, String?>,
+        completion: (Boolean) -> Unit
+    ): List<String> {
+        val requestedIds = contentBlockIds.distinct()
+        if (requestedIds.isEmpty()) {
+            return emptyList()
+        }
+        val customerScope = buildPersonalizedCustomerKey(customerIds)
+        val pendingIdsCount = AtomicInteger(requestedIds.size)
+        val allSucceeded = AtomicBoolean(true)
+        val loadCompletion: (Boolean) -> Unit = { success ->
+            if (!success) {
+                allSucceeded.set(false)
+            }
+            if (pendingIdsCount.decrementAndGet() == 0) {
+                completion(allSucceeded.get())
+            }
+        }
+        val blockIdsToFetch = mutableListOf<String>()
+        dataAccess.waitForAccess {
+            requestedIds.forEach { blockId ->
+                val key = InFlightContentLoadKey(blockId, customerScope)
+                val existingLoads = inFlightContentLoads[key]
+                if (existingLoads == null) {
+                    inFlightContentLoads[key] = mutableListOf(loadCompletion)
+                    blockIdsToFetch.add(blockId)
+                } else {
+                    existingLoads.add(loadCompletion)
+                }
+            }
+        }
+        return blockIdsToFetch
+    }
+
+    private fun completeInFlightContentLoad(
+        contentBlockId: String,
+        customerIds: Map<String, String?>,
+        success: Boolean
+    ) {
+        val key = InFlightContentLoadKey(contentBlockId, buildPersonalizedCustomerKey(customerIds))
+        val completions = dataAccess.waitForAccessWithResult {
+            inFlightContentLoads.remove(key)?.toList() ?: emptyList()
+        }.getOrElse {
+            emptyList()
+        }
+        completions.forEach { completion ->
+            completion(success)
+        }
+    }
+
+    private fun completeInFlightContentLoad(
+        contentBlockIds: List<String>,
+        customerIds: Map<String, String?>,
+        success: Boolean
+    ) {
+        contentBlockIds.distinct().forEach { blockId ->
+            completeInFlightContentLoad(blockId, customerIds, success)
+        }
+    }
+
+    private fun shouldTrackShownEvent(placeholderId: String, contentBlockId: String): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        val dedupeKey = "$placeholderId:$contentBlockId"
+        synchronized(shownEventDedupLock) {
+            val clearThreshold = shownEventDedupWindowMs * 5
+            val iterator = shownEventRecent.entries.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                if (now - entry.value > clearThreshold) {
+                    iterator.remove()
+                }
+            }
+            val previousShownAt = shownEventRecent[dedupeKey]
+            if (previousShownAt != null && now - previousShownAt < shownEventDedupWindowMs) {
+                return false
+            }
+            shownEventRecent[dedupeKey] = now
+            return true
         }
     }
 
@@ -170,18 +312,22 @@ internal class InAppContentBlockManagerImpl(
             Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
             return
         }
-        dataAccess.waitForAccessWithDone { done ->
-            loadContentIfNeededAsync(contentBlocks) {
-                done()
-            }
+        val finished = CountDownLatch(1)
+        loadContentIfNeededAsync(contentBlocks) {
+            finished.countDown()
+        }
+        if (!finished.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)) {
+            Logger.e(this, "InAppCB: Content load has timed out")
         }
     }
 
     private fun loadContentIfNeededAsync(contentBlocks: List<InAppContentBlock>, done: () -> Unit) {
-        val blockIdsToCheck = contentBlocks.map { it.id }
-        val blockIdsToUpdate = contentBlocksData
-            .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
-            .map { it.id }
+        val blockIdsToCheck = contentBlocks.map { it.id }.toSet()
+        val blockIdsToUpdate = runThreadSafelyWithResult {
+            contentBlocksData
+                .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
+                .map { it.id }
+        } ?: emptyList()
         if (blockIdsToUpdate.isEmpty()) {
             Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
             done()
@@ -192,66 +338,98 @@ internal class InAppContentBlockManagerImpl(
             done()
             return
         }
-        Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToUpdate.joinToString()}")
-        prefetchContentForBlocks(
-            blockIdsToUpdate,
-            onSuccess = { contentData ->
-                if (Exponea.isStopped) {
-                    Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-                    done()
-                    return@prefetchContentForBlocks
-                }
-                val dataMap = contentData.groupBy { it.blockId }
-                // update personalized data for requested 'contentBlocks'
-                val updateContentBlocks = mutableListOf<InAppContentBlock>()
-                contentBlocks.forEach { contentBlock ->
-                    dataMap[contentBlock.id]?.firstOrNull()?.let {
-                        contentBlock.personalizedData = it
-                        updateContentBlocks.add(contentBlock)
-                    }
-                }
-                // update personalized data for local 'contentBlocksData'
-                updateContentForLocalContentBlocks(contentBlocks)
-                Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_PERSONALISED_FETCH, hashMapOf(
-                    "count" to contentData.size.toString(),
-                    "data" to ExponeaGson.instance.toJson(updateContentBlocks.map {
-                        mapOf(
-                            "messageId" to it.id,
-                            "placeholders" to it.placeholders,
-                            "type" to if (it.isContentPersonalized()) "personal" else "static"
-                        )
-                    })
-                ))
-                done()
-            },
-            onFailure = {
-                // dont do anything, showing will fail
-                done()
-            }
-        )
-    }
-
-    private fun prefetchContentForBlocks(
-        contentBlockIds: List<String>,
-        onSuccess: (List<InAppContentBlockPersonalizedData>) -> Unit,
-        onFailure: (FetchError) -> Unit
-    ) {
-        if (Exponea.isStopped) {
-            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-            onFailure(FetchError(null, "SDK is stopping"))
+        val customerIdsSnapshot = customerIdsRepository.get()
+        val customerIdsMap = customerIdsSnapshot.toHashMap()
+        val blockIdsToFetch = registerInFlightContentLoad(blockIdsToUpdate, customerIdsMap) { _ ->
+            done()
+        }
+        if (blockIdsToFetch.isEmpty()) {
+            Logger.d(this, "InAppCB: Joining in-flight content load for blocks: ${blockIdsToUpdate.joinToString()}")
             return
         }
-        val customerIds = customerIdsRepository.get()
+        val joinedBlockIds = blockIdsToUpdate.distinct().filterNot { it in blockIdsToFetch }
+        if (joinedBlockIds.isNotEmpty()) {
+            Logger.d(this, "InAppCB: Joining in-flight content load for blocks: ${joinedBlockIds.joinToString()}")
+        }
+        Logger.i(this, "InAppCB: Loading content for blocks: ${blockIdsToFetch.joinToString()}")
+        if (Exponea.isStopped) {
+            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+            completeInFlightContentLoad(blockIdsToFetch, customerIdsMap, false)
+            return
+        }
+        val personalizedFetchKey = buildPersonalizedFetchKey(customerIdsMap, blockIdsToFetch)
+        val shouldStartFetch = addInFlightPersonalizedFetchCallback(
+            personalizedFetchKey,
+            PersonalizedFetchCallbacks(
+                onSuccess = onPersonalizedSuccess@{ contentData ->
+                    if (Exponea.isStopped) {
+                        Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                        completeInFlightContentLoad(blockIdsToFetch, customerIdsMap, false)
+                        return@onPersonalizedSuccess
+                    }
+                    val dataMap = contentData.associateBy { it.blockId }
+                    // update personalized data for requested 'contentBlocks'
+                    val updateContentBlocks = mutableListOf<InAppContentBlock>()
+                    var cacheInvalidationIds = emptySet<String>()
+                    dataAccess.waitForAccess {
+                        cacheInvalidationIds = contentBlocksData
+                            .filter { it.id in blockIdsToFetch && it.personalizedData != null }
+                            .map { it.id }
+                            .toSet()
+                        contentBlocks.forEach { contentBlock ->
+                            dataMap[contentBlock.id]?.let {
+                                contentBlock.personalizedData = it
+                                updateContentBlocks.add(contentBlock)
+                            }
+                        }
+                        // update personalized data for local 'contentBlocksData'
+                        updateContentForLocalContentBlocks(dataMap)
+                    }
+                    if (cacheInvalidationIds.isNotEmpty()) {
+                        Logger.d(
+                            this,
+                            "InAppCB: Clearing render cache for refreshed personalized blocks: " +
+                                cacheInvalidationIds.joinToString()
+                        )
+                        clearRenderableCaches(cacheInvalidationIds)
+                    }
+                    Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_PERSONALISED_FETCH, hashMapOf(
+                        "count" to contentData.size.toString(),
+                        "data" to ExponeaGson.instance.toJson(updateContentBlocks.map {
+                            mapOf(
+                                "messageId" to it.id,
+                                "placeholders" to it.placeholders,
+                                "type" to if (it.isContentPersonalized()) "personal" else "static"
+                            )
+                        })
+                    ))
+                    completeInFlightContentLoad(blockIdsToFetch, customerIdsMap, true)
+                },
+                onFailure = {
+                    completeInFlightContentLoad(blockIdsToFetch, customerIdsMap, false)
+                }
+            )
+        )
+        if (!shouldStartFetch) {
+            Logger.d(
+                this,
+                "InAppCB: Joining in-flight personalized fetch for blocks ${blockIdsToFetch.joinToString()}"
+            )
+            return
+        }
         Logger.i(this, "InAppCB: Prefetching personalized content for current customer")
-        val contentBlockIdsAsString = contentBlockIds.joinToString()
+        val contentBlockIdsAsString = blockIdsToFetch.joinToString()
         fetchManager.fetchPersonalizedContentBlocks(
             integrationConfig = integrationConfigFactory.integrationConfig,
-            customerIds = customerIds,
-            contentBlockIds = contentBlockIds,
+            customerIds = customerIdsSnapshot,
+            contentBlockIds = blockIdsToFetch,
             onSuccess = { result ->
                 if (Exponea.isStopped) {
                     Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-                    onFailure(FetchError(null, "SDK is stopping"))
+                    notifyInFlightPersonalizedFetchFailure(
+                        personalizedFetchKey,
+                        FetchError(null, "SDK is stopping")
+                    )
                     return@fetchPersonalizedContentBlocks
                 }
                 Logger.i(
@@ -262,7 +440,7 @@ internal class InAppContentBlockManagerImpl(
                 data.forEach {
                     it.loadedAt = Date()
                 }
-                onSuccess(data)
+                notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
             },
             onFailure = {
                 val errorMessage = it.results.message
@@ -270,9 +448,59 @@ internal class InAppContentBlockManagerImpl(
                     this,
                     "InAppCB: Personalized content for blocks $contentBlockIdsAsString failed: $errorMessage"
                 )
-                onFailure(it.results)
+                notifyInFlightPersonalizedFetchFailure(personalizedFetchKey, it.results)
             }
         )
+    }
+
+    private fun buildPersonalizedFetchKey(
+        customerIds: Map<String, String?>,
+        contentBlockIds: List<String>
+    ): String {
+        val customerScope = buildPersonalizedCustomerKey(customerIds)
+        val sortedBlockIds = contentBlockIds.sorted().joinToString(",")
+        return "$customerScope|$sortedBlockIds"
+    }
+
+    private fun buildPersonalizedCustomerKey(customerIds: Map<String, String?>): String {
+        val sortedCustomerIds = customerIds
+            .toList()
+            .sortedBy { it.first }
+            .joinToString("&") { (key, value) -> "$key=${value ?: ""}" }
+        return sortedCustomerIds
+    }
+
+    private fun addInFlightPersonalizedFetchCallback(
+        key: String,
+        callbacks: PersonalizedFetchCallbacks
+    ): Boolean = synchronized(inFlightPersonalizedFetchLock) {
+        val listeners = inFlightPersonalizedFetchCallbacks.getOrPut(key) { mutableListOf() }
+        listeners.add(callbacks)
+        listeners.size == 1
+    }
+
+    private fun popInFlightPersonalizedFetchCallbacks(key: String): List<PersonalizedFetchCallbacks> {
+        return synchronized(inFlightPersonalizedFetchLock) {
+            inFlightPersonalizedFetchCallbacks.remove(key)?.toList() ?: emptyList()
+        }
+    }
+
+    private fun notifyInFlightPersonalizedFetchSuccess(
+        key: String,
+        data: List<InAppContentBlockPersonalizedData>
+    ) {
+        popInFlightPersonalizedFetchCallbacks(key).forEach { callbacks ->
+            callbacks.onSuccess(data)
+        }
+    }
+
+    private fun notifyInFlightPersonalizedFetchFailure(
+        key: String,
+        error: FetchError
+    ) {
+        popInFlightPersonalizedFetchCallbacks(key).forEach { callbacks ->
+            callbacks.onFailure(error)
+        }
     }
 
     private fun pickInAppContentBlock(placeholderId: String): InAppContentBlock? {
@@ -351,9 +579,7 @@ internal class InAppContentBlockManagerImpl(
     override fun getAllInAppContentBlocksForPlaceholder(
         placeholderId: String
     ): List<InAppContentBlock> = runThreadSafelyWithResult {
-        val contentBlocksForPlaceholder = contentBlocksData.filter { block ->
-            block.placeholders.contains(placeholderId)
-        }
+        val contentBlocksForPlaceholder = contentBlocksByPlaceholder[placeholderId] ?: emptyList()
         // ^ DEEPCOPY
         Logger.i(this,
             """InAppCB: ${contentBlocksForPlaceholder.size} blocks found for placeholder $placeholderId
@@ -374,57 +600,66 @@ internal class InAppContentBlockManagerImpl(
         }
         Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders requested")
         ensureOnBackgroundThread {
-            dataAccess.waitForAccessWithDone { done ->
-                if (Exponea.isStopped) {
-                    Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-                    done()
-                    return@waitForAccessWithDone
-                }
-                Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders starts")
-                val customerIds = customerIdsRepository.get()
-                fetchManager.fetchStaticInAppContentBlocks(
-                    integrationConfig = integrationConfigFactory.integrationConfig,
-                    onSuccess = { result ->
-                        if (Exponea.isStopped) {
-                            Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-                            done()
-                            return@fetchStaticInAppContentBlocks
-                        }
-                        val inAppContentBlocks = result.results ?: emptyList()
-                        Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_INIT_FETCH, hashMapOf(
-                            "count" to inAppContentBlocks.size.toString(),
-                            "data" to ExponeaGson.instance.toJson(inAppContentBlocks.map {
-                                mapOf(
-                                    "messageId" to it.id,
-                                    "placeholders" to it.placeholders,
-                                    "type" to if (it.isContentPersonalized()) "personal" else "static"
-                                )
-                            })
-                        ))
-                        val supportedContentBlocks = inAppContentBlocks.filter {
-                            isContentSupportedToDownload(it)
-                        }
-                        supportedContentBlocks.forEach {
-                            it.customerIds = customerIds.toHashMap()
-                        }
-                        contentBlocksData = supportedContentBlocks
-                        forceContentByPlaceholders(
-                            supportedContentBlocks,
-                            inAppContentBlockPlaceholdersAutoLoad
-                        ) {
-                            Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
-                            done()
-                        }
-                    },
-                    onFailure = {
-                        Logger.e(
-                            this,
-                            "InAppCB: InApp Content Block placeholders failed. ${it.results.message}"
-                        )
-                        done()
-                    }
-                )
+            if (Exponea.isStopped) {
+                Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                return@ensureOnBackgroundThread
             }
+            Logger.d(this, "InAppCB: Loading of InApp Content Block placeholders starts")
+            val customerIds = customerIdsRepository.get().toHashMap()
+            fetchManager.fetchStaticInAppContentBlocks(
+                integrationConfig = integrationConfigFactory.integrationConfig,
+                onSuccess = { result ->
+                    if (Exponea.isStopped) {
+                        Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
+                        return@fetchStaticInAppContentBlocks
+                    }
+                    val inAppContentBlocks = result.results ?: emptyList()
+                    Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_INIT_FETCH, hashMapOf(
+                        "count" to inAppContentBlocks.size.toString(),
+                        "data" to ExponeaGson.instance.toJson(inAppContentBlocks.map {
+                            mapOf(
+                                "messageId" to it.id,
+                                "placeholders" to it.placeholders,
+                                "type" to if (it.isContentPersonalized()) "personal" else "static"
+                            )
+                        })
+                    ))
+                    val supportedContentBlocks = inAppContentBlocks.filter {
+                        isContentSupportedToDownload(it)
+                    }
+                    supportedContentBlocks.forEach {
+                        it.customerIds = customerIds
+                    }
+                    var invalidatedCacheIds = emptySet<String>()
+                    dataAccess.waitForAccess {
+                        invalidatedCacheIds = findStaticContentCacheInvalidations(
+                            contentBlocksData,
+                            supportedContentBlocks
+                        )
+                        contentBlocksData = supportedContentBlocks
+                    }
+                    if (invalidatedCacheIds.isNotEmpty()) {
+                        Logger.d(
+                            this,
+                            "InAppCB: Clearing render cache for updated static blocks: " +
+                                invalidatedCacheIds.joinToString()
+                        )
+                        clearRenderableCaches(invalidatedCacheIds)
+                    }
+                    forceContentByPlaceholders(
+                        supportedContentBlocks,
+                        inAppContentBlockPlaceholdersAutoLoad
+                    ) {
+                        Logger.i(this, "InAppCB: Block placeholders preloaded successfully")
+                    }
+                },
+                onFailure = {
+                    Logger.e(
+                        this,
+                        "InAppCB: InApp Content Block placeholders failed. ${it.results.message}"
+                    )
+                }
+            )
         }
     }
 
@@ -480,6 +715,13 @@ internal class InAppContentBlockManagerImpl(
     }
 
     override fun onShown(placeholderId: String, contentBlock: InAppContentBlock) {
+        if (!shouldTrackShownEvent(placeholderId, contentBlock.id)) {
+            Logger.d(
+                this,
+                "InAppCB: Duplicate shown suppressed for block ${contentBlock.id} in placeholder $placeholderId"
+            )
+            return
+        }
         Logger.i(this, "InAppCB: Block ${contentBlock.id} has been shown")
         displayStateRepository.setDisplayed(contentBlock, Date())
     }
@@ -493,7 +735,6 @@ internal class InAppContentBlockManagerImpl(
                 this,
                 "InAppCB: InApp Content Block ${contentBlock.id} for placeholder $placeholderId"
             )
-            loadContentIfNeededSync(listOf(contentBlock))
         }
         return contentBlock
     }

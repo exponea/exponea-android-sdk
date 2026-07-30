@@ -15,9 +15,6 @@ import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewControlle
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
-import com.exponea.sdk.util.runOnBackgroundThread
-import java.util.concurrent.atomic.AtomicReference
-import kotlinx.coroutines.Job
 
 @SuppressLint("ViewConstructor")
 class InAppContentBlockPlaceholderView internal constructor(
@@ -25,17 +22,13 @@ class InAppContentBlockPlaceholderView internal constructor(
     internal val controller: InAppContentBlockViewController
 ) : RelativeLayout(context, null, 0), OnIntegrationStoppedCallback {
 
-    private companion object {
-        private const val CONTENT_READY_TIMEOUT = 200L
-    }
-
     internal lateinit var htmlContainer: ExponeaWebView
     internal lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
     private var onHeightUpdate: ((Int) -> Unit)? = null
-    private val contentLoadedFlag = AtomicReference<Boolean?>(null)
-    private val contentLoadedForceUpdate = AtomicReference<Job?>(null)
     private val placeholderId: String = controller.placeholderId
+    internal var isReadyForHeightMeasurement: Boolean = false
+        private set
 
     /**
      * Whenever a in-app content block message is handled, this callback is called, if set up.
@@ -62,20 +55,18 @@ class InAppContentBlockPlaceholderView internal constructor(
             Logger.v(this, "InAppCB: $placeholderId: URL $url clicked")
             controller.onUrlClick(url)
         }
-        htmlContainer.setOnPageLoadedCallback {
-            Logger.v(this, "InAppCB: $placeholderId: HTML content has been fully loaded")
-            startNotifyContentReadyProcess(true)
+        htmlContainer.setOnPageLoadedCallback { finishSource ->
+            Logger.v(
+                this,
+                "InAppCB: $placeholderId: HTML content has been fully loaded with finishSource=$finishSource"
+            )
+            notifyContentReadyListener(true, ContentReadyFinishSourceValue(finishSource))
         }
         this@InAppContentBlockPlaceholderView.addOnLayoutChangeListener { viewInstance, _, _, _, _, _, _, _, _ ->
             Logger.v(this, "InAppCB: $placeholderId: View layout changed")
-            // layout change should notify only if content was loaded
-            contentLoadedFlag.getAndSet(null)?.let { contentLoaded ->
-                contentLoadedForceUpdate.getAndSet(null)?.cancel()
-                Logger.v(
-                    this,
-                    "InAppCB: $placeholderId: Finishing NotifyContentReadyProcess after layout change"
-                )
-                notifyContentReadyListener(contentLoaded)
+            if (!isReadyForHeightMeasurement) {
+                Logger.v(this, "InAppCB: $placeholderId: Skipping height update, content is not ready")
+                return@addOnLayoutChangeListener
             }
             onHeightUpdate?.let {
                 kotlin.runCatching {
@@ -85,8 +76,17 @@ class InAppContentBlockPlaceholderView internal constructor(
         }
     }
 
-    private fun notifyContentReadyListener(contentLoaded: Boolean) {
-        Logger.i(this, "InAppCB: $placeholderId: Page loaded, notifying content ready with $contentLoaded")
+    private fun notifyContentReadyListener(
+        contentLoaded: Boolean,
+        finishSource: ContentReadyFinishSourceValue
+    ) {
+        Logger.i(
+            this,
+            "InAppCB: $placeholderId: Page loaded, notifying content ready with $contentLoaded, " +
+                "finishSource=${finishSource.value}"
+        )
+        isReadyForHeightMeasurement = true
+        controller.onContentReady(contentLoaded, finishSource.value)
         onContentReady?.let {
             kotlin.runCatching {
                 it.invoke(contentLoaded)
@@ -130,19 +130,8 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     internal fun showNoContent() {
         Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
-        startNotifyContentReadyProcess(false)
         applyVisibilityMode(PlaceholderVisibilityMode.EMPTY)
-    }
-
-    private fun startNotifyContentReadyProcess(contentLoaded: Boolean) {
-        contentLoadedFlag.set(contentLoaded)
-        // OnLayoutChangeListener should be called in near future or force to notify onContentReady
-        contentLoadedForceUpdate.getAndSet(
-            runOnBackgroundThread(CONTENT_READY_TIMEOUT) {
-                Logger.v(this, "InAppCB: $placeholderId: Force-notifying content ready listener")
-                notifyContentReadyListener(contentLoadedFlag.getAndSet(null) ?: false)
-            }
-        )?.cancel()
+        notifyContentReadyListener(false, ContentReadyFinishSource.EMPTY)
     }
 
     private fun mayHaveZeroSizeForEmptyContent(): Boolean {
@@ -169,8 +158,6 @@ class InAppContentBlockPlaceholderView internal constructor(
             this,
             "InAppCB: $placeholderId: View has been detached from window"
         )
-        contentLoadedForceUpdate.getAndSet(null)?.cancel()
-        contentLoadedFlag.set(null)
         controller.onViewDetachedFromWindow()
         Exponea.deintegration.unregisterForIntegrationStopped(this)
         super.onDetachedFromWindow()
@@ -178,14 +165,16 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     internal fun showHtmlContent(html: String) {
         Logger.i(this, "InAppCB: $placeholderId: View going to show HTML block")
+        isReadyForHeightMeasurement = false
         htmlContainer.loadData(html)
         applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
     }
 
     internal fun showExistingContent() {
         Logger.d(this, "InAppCB: $placeholderId: Reusing already-rendered content, skipping WebView reload")
+        isReadyForHeightMeasurement = true
         applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
-        startNotifyContentReadyProcess(true)
+        notifyContentReadyListener(true, ContentReadyFinishSource.EXISTING)
     }
 
     fun refreshContent() {
@@ -194,8 +183,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     }
 
     internal fun resetContent() {
-        contentLoadedForceUpdate.getAndSet(null)?.cancel()
-        contentLoadedFlag.set(null)
+        isReadyForHeightMeasurement = false
         htmlContainer.clearContent()
         applyVisibilityMode(PlaceholderVisibilityMode.INIT)
     }
@@ -218,6 +206,20 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     private enum class PlaceholderVisibilityMode {
         INIT, EMPTY, CONTENT
+    }
+
+    private enum class ContentReadyFinishSource(val value: String) {
+        EXISTING("existing"),
+        EMPTY("empty")
+    }
+
+    private data class ContentReadyFinishSourceValue(val value: String)
+
+    private fun notifyContentReadyListener(
+        contentLoaded: Boolean,
+        finishSource: ContentReadyFinishSource
+    ) {
+        notifyContentReadyListener(contentLoaded, ContentReadyFinishSourceValue(finishSource.value))
     }
 
     override fun onIntegrationStopped() {

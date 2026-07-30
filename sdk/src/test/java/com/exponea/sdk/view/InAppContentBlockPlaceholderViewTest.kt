@@ -29,6 +29,8 @@ import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
 import com.exponea.sdk.services.IntegrationConfigFactory
+import com.exponea.sdk.telemetry.TelemetryManager
+import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
@@ -45,6 +47,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -72,14 +76,21 @@ internal class InAppContentBlockPlaceholderViewTest {
         customerIdsRepository = mock()
         displayStateRepository = InAppContentBlockDisplayStateMock()
         drawableCache = mock {
-            on { has(any()) } doReturn false
-            doNothing().on { preload(any(), any()) }
+            on { has(any()) } doReturn true
+            doAnswer {
+                it.getArgument<((Boolean) -> Unit)?>(1)?.invoke(true)
+                null
+            }.on { preload(any(), any()) }
             doNothing().on { clear() }
             on { getFile(any()) } doReturn MockFile()
         }
         fontCache = mock {
-            on { has(any()) } doReturn false
-            doNothing().on { preload(any(), any()) }
+            on { has(any()) } doReturn true
+            doAnswer {
+                it.getArgument<((Boolean) -> Unit)?>(1)?.invoke(true)
+                null
+            }.on { preload(any(), any()) }
+            on { getFontFile(any()) } doReturn MockFile()
         }
         val configuration = ExponeaConfiguration(
             integrationConfig = ProjectConfig(
@@ -365,7 +376,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             }
         }
         // Simulate WebView on page loaded event, then layout change
-        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         placeholder.layout(0, 0, 10, 10)
         idleThreads()
         // simulates action click
@@ -580,7 +591,7 @@ internal class InAppContentBlockPlaceholderViewTest {
         placeholder.refreshContent()
         assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
-        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         placeholder.layout(0, 0, 10, 10)
         assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
     }
@@ -610,8 +621,143 @@ internal class InAppContentBlockPlaceholderViewTest {
         placeholder.refreshContent()
         assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
-        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun `should notify height update only after content is ready`() {
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            "placeholder_1",
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        var heightUpdateCount = 0
+        placeholder.setOnHeightUpdateListener {
+            heightUpdateCount++
+        }
+
+        placeholder.layout(0, 0, 10, 10)
+        assertEquals(0, heightUpdateCount)
+
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
+        placeholder.layout(0, 0, 10, 20)
+        assertEquals(1, heightUpdateCount)
+    }
+
+    @Test
+    fun `should track render completion when content ready`() = runInSingleThread { idleThreads ->
+        val telemetryEventCaptor = argumentCaptor<TelemetryEvent>()
+        val telemetryPropertiesCaptor = argumentCaptor<MutableMap<String, String>>()
+        Exponea.telemetry = mock<TelemetryManager> {
+            doNothing().on {
+                reportEvent(
+                    telemetryEventCaptor.capture(),
+                    telemetryPropertiesCaptor.capture()
+                )
+            }
+        }
+        try {
+            val placeholder = inAppContentBlockManager.getPlaceholderView(
+                "placeholder_1",
+                ApplicationProvider.getApplicationContext(),
+                InAppContentBlockPlaceholderConfiguration(true)
+            )
+            preloadInAppContentBlocks(
+                arrayListOf(
+                    buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+                )
+            )
+            val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+            placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+                override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                    messageShownInvoked.release()
+                }
+            }
+            val contentReadyInvoked = CountDownLatch(1)
+            placeholder.setOnContentReadyListener {
+                contentReadyInvoked.countDown()
+            }
+
+            placeholder.refreshContent()
+            idleThreads()
+            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            idleThreads()
+            placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
+            placeholder.layout(0, 0, 10, 10)
+            assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
+
+            val renderedEventIndex = telemetryEventCaptor.allValues.indexOf(TelemetryEvent.CONTENT_BLOCK_RENDERED)
+            assertTrue(renderedEventIndex >= 0, "Render telemetry was not tracked")
+            val capturedProps = telemetryPropertiesCaptor.allValues[renderedEventIndex]
+            assertEquals("placeholder_1", capturedProps["placeholderId"])
+            assertEquals("id1", capturedProps["messageId"])
+            assertEquals("true", capturedProps["contentLoaded"])
+            assertEquals("webview_visual_state", capturedProps["finishSource"])
+            assertEquals("rendered", capturedProps["result"])
+            assertNull(capturedProps["durationMs"])
+            assertNull(capturedProps["requestToRenderMs"])
+            assertNull(capturedProps["showToRenderMs"])
+        } finally {
+            Exponea.telemetry = null
+        }
+    }
+
+    @Test
+    fun `should track render completion with timeout finish source`() = runInSingleThread { idleThreads ->
+        val telemetryEventCaptor = argumentCaptor<TelemetryEvent>()
+        val telemetryPropertiesCaptor = argumentCaptor<MutableMap<String, String>>()
+        Exponea.telemetry = mock<TelemetryManager> {
+            doNothing().on {
+                reportEvent(
+                    telemetryEventCaptor.capture(),
+                    telemetryPropertiesCaptor.capture()
+                )
+            }
+        }
+        try {
+            val placeholder = inAppContentBlockManager.getPlaceholderView(
+                "placeholder_1",
+                ApplicationProvider.getApplicationContext(),
+                InAppContentBlockPlaceholderConfiguration(true)
+            )
+            preloadInAppContentBlocks(
+                arrayListOf(
+                    buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+                )
+            )
+            val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+            placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+                override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                    messageShownInvoked.release()
+                }
+            }
+            val contentReadyInvoked = CountDownLatch(1)
+            placeholder.setOnContentReadyListener {
+                contentReadyInvoked.countDown()
+            }
+
+            placeholder.refreshContent()
+            idleThreads()
+            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            idleThreads()
+            placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_timeout")
+            assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
+
+            val renderedEventIndex = telemetryEventCaptor.allValues.indexOf(TelemetryEvent.CONTENT_BLOCK_RENDERED)
+            assertTrue(renderedEventIndex >= 0, "Render telemetry was not tracked")
+            val capturedProps = telemetryPropertiesCaptor.allValues[renderedEventIndex]
+            assertEquals("placeholder_1", capturedProps["placeholderId"])
+            assertEquals("id1", capturedProps["messageId"])
+            assertEquals("true", capturedProps["contentLoaded"])
+            assertEquals("webview_timeout", capturedProps["finishSource"])
+            assertEquals("rendered", capturedProps["result"])
+            assertNull(capturedProps["durationMs"])
+            assertNull(capturedProps["requestToRenderMs"])
+            assertNull(capturedProps["showToRenderMs"])
+        } finally {
+            Exponea.telemetry = null
+        }
     }
 
     @Test
@@ -640,14 +786,14 @@ internal class InAppContentBlockPlaceholderViewTest {
         placeholder.refreshContent()
         assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
-        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         placeholder.layout(0, 0, 10, 10)
         assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
         // second load, onPageLoadedCallback called, layoutChange not called
         placeholder.refreshContent()
         assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
-        placeholder.htmlContainer.onPageLoadedCallback?.invoke()
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
     }
 

@@ -210,6 +210,10 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
         val viewHolderScope = collectActivePlaceholderViews(onlyCurrentView)
         val planned = post {
             val highestValue = viewHolderScope.mapNotNull {
+                if (!it.isReadyForHeightMeasurement) {
+                    Logger.v(this, "InAppCbCarousel: Content block is still rendering, skipping height measurement")
+                    return@mapNotNull null
+                }
                 if (!it.isLaidOut || it.width == 0) {
                     Logger.v(this, "InAppCbCarousel: View not yet laid out, skipping height measurement")
                     return@mapNotNull null

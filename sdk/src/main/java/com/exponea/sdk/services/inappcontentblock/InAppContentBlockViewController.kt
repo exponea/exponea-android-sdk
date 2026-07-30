@@ -42,10 +42,12 @@ internal open class InAppContentBlockViewController(
 ) {
 
     internal lateinit var view: InAppContentBlockPlaceholderView
-    private var isViewAttachedToWindow: Boolean = false
+    @Volatile private var isViewAttachedToWindow: Boolean = false
+    private val stateLock = Any()
     private var contentLoaded: AtomicBoolean = AtomicBoolean(false)
     private val messageShown: AtomicBoolean = AtomicBoolean(false)
     private val lastTrackedMessageId: AtomicReference<String?> = AtomicReference(null)
+    private val renderTrackingPending: AtomicBoolean = AtomicBoolean(false)
     private var lastRenderedNormalizedHtml: String? = null
     internal var assignedHtmlContent: NormalizedResult? = null
     internal var assignedMessage: InAppContentBlock? = null
@@ -53,7 +55,7 @@ internal open class InAppContentBlockViewController(
     internal fun onUrlClick(url: String) {
         Logger.i(this, "InAppCB: Placeholder $placeholderId is clicked for action $url")
         val action = parseInAppContentBlockAction(url)
-        val message = assignedMessage
+        val message = synchronized(stateLock) { assignedMessage }
         if (action == null || message == null) {
             Logger.e(
                 this,
@@ -92,7 +94,9 @@ internal open class InAppContentBlockViewController(
     }
 
     private fun parseInAppContentBlockAction(url: String): InAppContentBlockAction? {
-        val htmlAction = assignedHtmlContent?.findActionInfoByUrl(url)
+        val htmlAction = synchronized(stateLock) {
+            assignedHtmlContent?.findActionInfoByUrl(url)
+        }
         if (htmlAction == null) {
             Logger.e(this, "InAppCB: Placeholder $placeholderId has invalid state - action is invalid")
             return null
@@ -117,6 +121,7 @@ internal open class InAppContentBlockViewController(
             Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
             return
         }
+        renderTrackingPending.set(true)
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
             val loadedMessage = dataLoader.loadContent(placeholderId)
@@ -127,10 +132,13 @@ internal open class InAppContentBlockViewController(
                     this,
                     "InAppCB: Placeholder $placeholderId content is unchanged, skipping redundant load"
                 )
+                renderTrackingPending.set(false)
                 return@runOnBackgroundThread
             }
-            assignedMessage = loadedMessage
-            assignedHtmlContent = normalizedHtml
+            synchronized(stateLock) {
+                assignedMessage = loadedMessage
+                assignedHtmlContent = normalizedHtml
+            }
             contentLoaded.set(true)
             if (contentChanged) {
                 messageShown.set(false)
@@ -143,7 +151,8 @@ internal open class InAppContentBlockViewController(
                     InAppCB: Placeholder $placeholderId attached to window ($isViewAttachedToWindow), showing message
                     """.trimIndent()
                 )
-                showMessage(assignedMessage, allowDetachedRender = !requiresAttachedView)
+                val currentAssignedMessage = synchronized(stateLock) { assignedMessage }
+                showMessage(currentAssignedMessage, allowDetachedRender = !requiresAttachedView)
             } else {
                 Logger.d(
                     this,
@@ -160,13 +169,15 @@ internal open class InAppContentBlockViewController(
         if (!contentLoaded.get()) {
             return true
         }
-        if (assignedMessage?.id != loadedMessage?.id) {
+        val currentMessage = synchronized(stateLock) { assignedMessage }
+        if (currentMessage?.id != loadedMessage?.id) {
             return true
         }
-        if (assignedMessage?.contentType != loadedMessage?.contentType) {
+        if (currentMessage?.contentType != loadedMessage?.contentType) {
             return true
         }
-        return assignedHtmlContent?.html != normalizedHtml?.html
+        val currentAssignedHtml = synchronized(stateLock) { assignedHtmlContent }
+        return currentAssignedHtml?.html != normalizedHtml?.html
     }
 
     private fun normalizeHtmlIfPossible(message: InAppContentBlock?): NormalizedResult? {
@@ -241,8 +252,8 @@ internal open class InAppContentBlockViewController(
         runOnMainThread {
             view.showNoContent()
         }
-        actionDispatcher.onNoContent(placeholderId, assignedMessage)
-        val message = assignedMessage
+        val message = synchronized(stateLock) { assignedMessage }
+        actionDispatcher.onNoContent(placeholderId, message)
         if (message == null) {
             Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
             runCatching {
@@ -272,7 +283,7 @@ internal open class InAppContentBlockViewController(
                 showNoContent()
                 return@runOnBackgroundThread
             }
-            val normalizedHtml = assignedHtmlContent?.html
+            val normalizedHtml = synchronized(stateLock) { assignedHtmlContent?.html }
             if (normalizedHtml.isNullOrEmpty()) {
                 // htmlContent is non-null, normalized HTML has to be prepared; otherwise htmlContent is invalid
                 Logger.e(this, "InAppCB: HTML content for message ${message.id} is invalid")
@@ -286,11 +297,18 @@ internal open class InAppContentBlockViewController(
                     messageShown.set(false)
                     return@runOnMainThread
                 }
-                if (lastRenderedNormalizedHtml == normalizedHtml) {
+                val shouldShowExisting = synchronized(stateLock) {
+                    if (lastRenderedNormalizedHtml == normalizedHtml) {
+                        true
+                    } else {
+                        lastRenderedNormalizedHtml = normalizedHtml
+                        false
+                    }
+                }
+                if (shouldShowExisting) {
                     view.showExistingContent()
                 } else {
                     view.showHtmlContent(normalizedHtml)
-                    lastRenderedNormalizedHtml = normalizedHtml
                 }
             }
             if (lastTrackedMessageId.getAndSet(message.id) != message.id) {
@@ -321,9 +339,12 @@ internal open class InAppContentBlockViewController(
         contentLoaded.set(false)
         messageShown.set(false)
         lastTrackedMessageId.set(null)
-        lastRenderedNormalizedHtml = null
-        assignedMessage = null
-        assignedHtmlContent = null
+        renderTrackingPending.set(false)
+        synchronized(stateLock) {
+            lastRenderedNormalizedHtml = null
+            assignedMessage = null
+            assignedHtmlContent = null
+        }
     }
 
     fun onViewAttachedToWindow() {
@@ -339,7 +360,8 @@ internal open class InAppContentBlockViewController(
                 InAppCB: Placeholder $placeholderId view attached to window, content is loaded, going to show content
                 """.trimIndent()
             )
-            showMessage(assignedMessage)
+            val currentAssignedMessage = synchronized(stateLock) { assignedMessage }
+            showMessage(currentAssignedMessage)
         } else if (config.defferedLoad) {
             Logger.d(
                 this,
@@ -355,6 +377,31 @@ internal open class InAppContentBlockViewController(
         isViewAttachedToWindow = false
         messageShown.set(false)
         // Placeholder reset clears WebView content; drop render cache to force real reload on next attach.
-        lastRenderedNormalizedHtml = null
+        synchronized(stateLock) {
+            lastRenderedNormalizedHtml = null
+        }
+    }
+
+    internal fun onContentReady(contentLoaded: Boolean, finishSource: String) {
+        if (!renderTrackingPending.getAndSet(false)) {
+            return
+        }
+        val message = synchronized(stateLock) { assignedMessage }
+        val messageId = message?.id
+        Logger.i(
+            this,
+            "InAppCB: Placeholder $placeholderId render completed with contentLoaded=$contentLoaded, " +
+                "finishSource=$finishSource, messageId=${messageId ?: "none"}"
+        )
+        val properties = hashMapOf(
+            "placeholderId" to placeholderId,
+            "contentLoaded" to contentLoaded.toString(),
+            "finishSource" to finishSource,
+            "result" to if (contentLoaded) "rendered" else "not_rendered"
+        )
+        messageId?.let {
+            properties["messageId"] = it
+        }
+        Exponea.telemetry?.reportEvent(TelemetryEvent.CONTENT_BLOCK_RENDERED, properties)
     }
 }

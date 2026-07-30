@@ -1,7 +1,6 @@
 package com.exponea.sdk.util
 
 import android.content.Context
-import android.util.Base64
 import androidx.annotation.WorkerThread
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.repository.DrawableCache
@@ -9,12 +8,12 @@ import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
-import java.io.File
 import java.util.Collections
 import java.util.LinkedHashSet
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.text.RegexOption.DOT_MATCHES_ALL
 import kotlin.text.RegexOption.IGNORE_CASE
 import org.jsoup.Jsoup
@@ -397,26 +396,77 @@ public class HtmlNormalizer {
     private fun preloadAllResources(
         imageUrls: Set<String>,
         fontUrls: Set<String>
-    ) {
-        if (imageUrls.isEmpty() && fontUrls.isEmpty()) return
-        if (imageUrls.isNotEmpty()) {
-            try {
-                imageCache.preload(imageUrls.toList()) {}
-            } catch (e: Exception) {
-                Logger.w(this, "[HTML] Image preload failed, continuing with direct loading: ${e.localizedMessage}")
-            }
+    ): Boolean {
+        val imagesPreload = startPreloadResources("Image", imageUrls) { urls, callback ->
+            imageCache.preload(urls, callback)
         }
-        if (fontUrls.isNotEmpty()) {
-            try {
-                fontCache.preload(fontUrls.toList()) {}
-            } catch (e: Exception) {
-                Logger.w(this, "[HTML] Font preload failed, continuing with direct loading: ${e.localizedMessage}")
-            }
+        val fontsPreload = startPreloadResources("Font", fontUrls) { urls, callback ->
+            fontCache.preload(urls, callback)
         }
+        val imagesLoaded = imagesPreload.awaitLoaded()
+        val fontsLoaded = fontsPreload.awaitLoaded()
+        return imagesLoaded && fontsLoaded
+    }
+
+    private fun startPreloadResources(
+        resourceType: String,
+        urls: Set<String>,
+        preload: (List<String>, (Boolean) -> Unit) -> Unit
+    ): ResourcePreload {
+        if (urls.isEmpty()) return ResourcePreload(resourceType, CountDownLatch(0), AtomicBoolean(true))
+        val preloadResult = ResourcePreload(resourceType, CountDownLatch(1), AtomicBoolean(false))
+        try {
+            preload(urls.toList()) { loaded ->
+                preloadResult.allLoaded.set(loaded)
+                preloadResult.finished.countDown()
+            }
+        } catch (e: Exception) {
+            Logger.w(this, "[HTML] $resourceType preload failed: ${e.localizedMessage}")
+            preloadResult.finished.countDown()
+        }
+        return preloadResult
+    }
+
+    private fun ResourcePreload.awaitLoaded(): Boolean {
+        val completed = finished.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
+        if (!completed) {
+            Logger.w(this, "[HTML] $resourceType preload timed out")
+            return false
+        }
+        return allLoaded.get()
+    }
+
+    private data class ResourcePreload(
+        val resourceType: String,
+        val finished: CountDownLatch,
+        val allLoaded: AtomicBoolean
+    )
+
+    private fun validateAllResourcesAvailable(
+        imageUrls: Set<String>,
+        fontUrls: Set<String>
+    ): Boolean {
+        val missingImages = imageUrls.filter { imageCache.getFile(it) == null }
+        val missingFonts = fontUrls.filter { fontCache.getFontFile(it) == null }
+        if (missingImages.isNotEmpty()) {
+            Logger.w(this, "[HTML] Missing offline images: ${missingImages.joinToString()}")
+        }
+        if (missingFonts.isNotEmpty()) {
+            Logger.w(this, "[HTML] Missing offline fonts: ${missingFonts.joinToString()}")
+        }
+        return missingImages.isEmpty() && missingFonts.isEmpty()
     }
 
     private fun makeResourcesToBeOffline(visitor: NormalizationVisitor) {
-        preloadAllResources(visitor.imageUrls, visitor.fontUrls)
+        Logger.d(
+            this,
+            "[HTML] Offline resources collected: images=${visitor.imageUrls.size}, fonts=${visitor.fontUrls.size}"
+        )
+        if (!preloadAllResources(visitor.imageUrls, visitor.fontUrls) ||
+            !validateAllResourcesAvailable(visitor.imageUrls, visitor.fontUrls)
+        ) {
+            throw IllegalStateException("HTML resources are not fully available offline")
+        }
         makeImageTagsToBeOffline(visitor.imgElements)
         makeStylesheetsToBeOffline(visitor.styleTagElements, visitor.styleTagOnlineStatements)
         makeStyleAttributesToBeOffline(visitor.styleAttrElements, visitor.styleAttrOnlineStatements)
@@ -441,21 +491,25 @@ public class HtmlNormalizer {
     ): String {
         var styleTarget = styleSource
         for (statement in onlineStatements) {
-            val dataBase64: String?
+            val localResourceUrl: String?
             when (statement.mimeType) {
-                FONT_MIMETYPE -> dataBase64 = asBase64Font(statement.url)
-                IMAGE_MIMETYPE -> dataBase64 = asBase64Image(statement.url)
+                FONT_MIMETYPE -> localResourceUrl = LocalResourceUrlMapper.fontUrl(statement.url)
+                IMAGE_MIMETYPE -> localResourceUrl = LocalResourceUrlMapper.imageUrl(statement.url)
                 else -> {
-                    dataBase64 = null
+                    localResourceUrl = null
                     Logger.e(this, "Unsupported mime type ${statement.mimeType}")
                 }
             }
-            if (dataBase64.isNullOrBlank()) {
-                Logger.e(this, "Unable to make offline resource ${statement.url}")
+            if (localResourceUrl.isNullOrBlank()) {
+                Logger.e(this, "Unable to rewrite offline resource ${statement.url}")
                 continue
             }
+            Logger.d(
+                this,
+                "[HTML] Rewriting CSS ${statement.mimeType} resource to local cache URL: ${statement.url}"
+            )
             styleTarget = styleTarget.replace(
-                statement.url, dataBase64
+                statement.url, localResourceUrl
             )
         }
         return styleTarget
@@ -471,9 +525,13 @@ public class HtmlNormalizer {
         for (importRule in cssImportMatches) {
             val importUrlMatches = cssUrlRegexp.findAll(importRule.value)
             for (importUrl in importUrlMatches) {
+                val url = importUrl.groupValues.last().trim('\'', '"')
+                if (isOfflineResourceUri(url)) {
+                    continue
+                }
                 result.add(CssOnlineUrl(
                     mimeType = FONT_MIMETYPE,
-                    url = importUrl.groupValues.last().trim('\'', '"')
+                    url = url
                 ))
             }
         }
@@ -496,9 +554,14 @@ public class HtmlNormalizer {
             }
             val urlValueMatches = cssUrlRegexp.findAll(cssValue)
             for (urlValue in urlValueMatches) {
+                val url = urlValue.groupValues.last().trim('\'', '"')
+                if (isOfflineResourceUri(url)) {
+                    continue
+                }
+                val cssKeyNormalized = cssKey.lowercase()
                 result.add(CssOnlineUrl(
-                    mimeType = if (cssKey == "src") { FONT_MIMETYPE } else { IMAGE_MIMETYPE },
-                    url = urlValue.groupValues.last().trim('\'', '"')
+                    mimeType = if (cssKeyNormalized == "src") { FONT_MIMETYPE } else { IMAGE_MIMETYPE },
+                    url = url
                 ))
             }
         }
@@ -520,79 +583,20 @@ public class HtmlNormalizer {
             if (imageSource.isNullOrEmpty()) {
                 continue
             }
-            try {
-                image.attr("src", asBase64Image(imageSource))
-            } catch (e: Exception) {
-                Logger.w(this, "[HTML] Image url $imageSource has not been preloaded: ${e.localizedMessage}")
-                throw e
+            if (isOfflineResourceUri(imageSource)) {
+                continue
             }
+            Logger.d(this, "[HTML] Rewriting image resource to local cache URL: $imageSource")
+            image.attr("src", LocalResourceUrlMapper.imageUrl(imageSource))
         }
-    }
-
-    private fun asBase64Image(imageSource: String): String {
-        if (isBase64Uri(imageSource)) {
-            return imageSource
-        }
-        val imageData = getImageFromUrl(imageSource)
-        val result = Base64.encodeToString(imageData.readBytes(), Base64.NO_WRAP)
-        // image type is not needed to be checked from source, WebView will fix it anyway...
-        return "data:$IMAGE_MIMETYPE;base64,$result"
-    }
-
-    private fun asBase64Font(fontSource: String): String {
-        if (isBase64Uri(fontSource)) {
-            return fontSource
-        }
-        val fontData = getFileFromUrl(fontSource)
-        if (fontData == null) {
-            Logger.e(this, "Unable to load font $fontSource for HTML")
-            return fontSource
-        }
-        val result = Base64.encodeToString(fontData.readBytes(), Base64.NO_WRAP)
-        // font type is not needed to be precise, WebView will fix it anyway...
-        return "data:$FONT_MIMETYPE;charset=utf-8;base64,$result"
-    }
-
-    private fun getFileFromUrl(url: String): File? {
-        var fileData = fontCache.getFontFile(url)
-        if (fileData == null) {
-            val semaphore = CountDownLatch(1)
-            fontCache.preload(listOf(url)) {
-                semaphore.countDown()
-            }
-            semaphore.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
-            fileData = fontCache.getFontFile(url)
-        }
-        if (fileData == null) {
-            Logger.e(this, "Unable to load file $url for HTML")
-            throw IllegalStateException("File is not preloaded")
-        }
-        return fileData
-    }
-
-    private fun getImageFromUrl(url: String): File {
-        var fileData = imageCache.getFile(url)
-        if (fileData == null) {
-            val semaphore = CountDownLatch(1)
-            imageCache.preload(listOf(url)) {
-                semaphore.countDown()
-            }
-            semaphore.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)
-            fileData = imageCache.getFile(url)
-        }
-        if (fileData == null) {
-            Logger.e(this, "Unable to load image $url for HTML")
-            throw IllegalStateException("Image is not preloaded")
-        }
-        return fileData
     }
 
     /**
      * According to https://en.wikipedia.org/wiki/Data_URI_scheme#Syntax
      * data:[<media type>][;charset=<character set>][;base64],<data>
      */
-    private fun isBase64Uri(uri: String): Boolean {
-        return uri.startsWith("data:image/", true) && uri.contains("base64,", true)
+    private fun isOfflineResourceUri(uri: String): Boolean {
+        return uri.startsWith("data:", true) || LocalResourceUrlMapper.isLocalResourceUrl(uri)
     }
 
     fun collectImages(): Collection<String> {
@@ -604,7 +608,7 @@ public class HtmlNormalizer {
         val images = document.select("img")
         for (imgEl in images) {
             val imageUrl = imgEl.attr("src")
-            if (imageUrl.isNotBlank() && !isBase64Uri(imageUrl)) {
+            if (imageUrl.isNotBlank() && !isOfflineResourceUri(imageUrl)) {
                 onlineUrls.add(imageUrl)
             }
         }
@@ -669,7 +673,7 @@ public class HtmlNormalizer {
 
     /**
      * Default config for HTML normalization process:
-     * - Images are transformed into Base64 format
+     * - Online resources are transformed into local cache URLs
      * - Close button is ensured to be shown
      */
     private class DefaultConfig : HtmlNormalizerConfig(
@@ -726,7 +730,7 @@ public class HtmlNormalizer {
                 if (tagName == "img") {
                     imgElements.add(node)
                     val imageUrl = node.attr("src")
-                    if (imageUrl.isNotEmpty() && !isBase64Uri(imageUrl)) {
+                    if (imageUrl.isNotEmpty() && !isOfflineResourceUri(imageUrl)) {
                         imageUrls.add(imageUrl)
                     }
                 }

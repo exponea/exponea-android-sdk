@@ -26,6 +26,8 @@ import com.exponea.sdk.util.runForInitializedSDK
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.ContentBlockCarouselView
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 internal class ContentBlockCarouselViewController(
@@ -43,13 +45,15 @@ internal class ContentBlockCarouselViewController(
         internal const val BOUNDARY_FLICKER_PRELOAD_PAGES = 2
     }
 
-    private val showTrackedContentBlockIds = mutableSetOf<String>()
+    private val showTrackedContentBlockIds = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
     internal var contentBlockSelector: ContentBlockSelector = ContentBlockSelector()
     internal var behaviourCallback: ContentBlockCarouselCallback? = null
     private val autoscrollJob: RepeatableJob = RepeatableJob(TimeUnit.SECONDS.toMillis(scrollDelay.toLong())) {
         scrollToNext()
     }
-    private var selectedBlockIndex: Int = -1
+    private var autoHeightUpdatePending = false
+    private var autoHeightUpdateOnlyCurrentView = true
+    @Volatile private var selectedBlockIndex: Int = -1
     internal var contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
         placeholderId = placeholderId,
         onPlaceholderCreated = {
@@ -94,7 +98,22 @@ internal class ContentBlockCarouselViewController(
 
     private fun updateAutoHeight(onlyCurrentView: Boolean) {
         ensureOnMainThread {
-            carouselView.recalculateHeightIfNeeded(onlyCurrentView)
+            autoHeightUpdateOnlyCurrentView = autoHeightUpdateOnlyCurrentView && onlyCurrentView
+            if (autoHeightUpdatePending) {
+                return@ensureOnMainThread
+            }
+            autoHeightUpdatePending = true
+            val planned = carouselView.post {
+                val pendingOnlyCurrentView = autoHeightUpdateOnlyCurrentView
+                autoHeightUpdateOnlyCurrentView = true
+                autoHeightUpdatePending = false
+                carouselView.recalculateHeightIfNeeded(pendingOnlyCurrentView)
+            }
+            if (!planned) {
+                autoHeightUpdateOnlyCurrentView = true
+                autoHeightUpdatePending = false
+                Logger.w(this, "InAppCbCarousel: Auto-height update disabled, view is exiting")
+            }
         }
     }
 
@@ -226,6 +245,9 @@ internal class ContentBlockCarouselViewController(
         placeholder.setOnContentReadyListener {
             updateAutoHeight(true)
         }
+        placeholder.setOnHeightUpdateListener {
+            updateAutoHeight(true)
+        }
         placeholder.behaviourCallback = object : InAppContentBlockCallback {
             override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
                 // 'show' event is handled by 'onSelectedBlockIndexChanged'
@@ -341,23 +363,31 @@ internal class ContentBlockCarouselViewController(
     }
 
     private fun restartAutoScroll() {
-        if (scrollDelay < 0) {
-            stopAutoScroll()
-            return
+        ensureOnMainThread {
+            if (scrollDelay < 0) {
+                stopAutoScroll()
+                return@ensureOnMainThread
+            }
+            autoscrollJob.restart()
         }
-        autoscrollJob.restart()
     }
 
     private fun resumeAutoScroll() {
-        autoscrollJob.resume()
+        ensureOnMainThread {
+            autoscrollJob.resume()
+        }
     }
 
     private fun stopAutoScroll() {
-        autoscrollJob.stop("InAppCbCarousel: Auto scroll stopped")
+        ensureOnMainThread {
+            autoscrollJob.stop("InAppCbCarousel: Auto scroll stopped")
+        }
     }
 
     private fun pauseAutoScroll() {
-        autoscrollJob.pause()
+        ensureOnMainThread {
+            autoscrollJob.pause()
+        }
     }
 
     private fun limitByMaxMessagesCount(source: List<InAppContentBlock>): List<InAppContentBlock> {

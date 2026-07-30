@@ -8,7 +8,10 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.util.LocalResourceUrlMapper
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,8 +30,8 @@ internal class ExponeaWebViewTest : ExponeaSDKTest() {
         assertEquals(false, webview.settings.savePassword)
         assertEquals(false, webview.settings.javaScriptEnabled)
         assertEquals(false, webview.settings.javaScriptCanOpenWindowsAutomatically)
-        assertEquals(true, webview.settings.blockNetworkImage)
-        assertEquals(true, webview.settings.blockNetworkLoads)
+        assertEquals(false, webview.settings.blockNetworkImage)
+        assertEquals(false, webview.settings.blockNetworkLoads)
         assertEquals(false, webview.settings.databaseEnabled)
         assertEquals(false, webview.settings.domStorageEnabled)
         assertEquals(false, webview.settings.loadWithOverviewMode)
@@ -67,6 +70,43 @@ internal class ExponeaWebViewTest : ExponeaSDKTest() {
         val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
         assertEquals(false, CookieManager.getInstance().acceptCookie())
         assertEquals(false, CookieManager.getInstance().acceptThirdPartyCookies(webview))
+    }
+
+    @Test
+    fun `should serve local resource url from SDK cache`() {
+        initSdk(null)
+        val originalUrl = "https://example.com/image.png"
+        val cachedFile = Exponea.getComponent()!!.drawableCache.fileCache.retrieveFileDirectly(originalUrl)
+        cachedFile.parentFile?.mkdirs()
+        cachedFile.writeText("image-data")
+
+        val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
+        val response = webview.createLocalResourceResponse(LocalResourceUrlMapper.imageUrl(originalUrl))
+
+        assertNotNull(response)
+        assertEquals("image/png", response.mimeType)
+        assertEquals("image-data", response.data.bufferedReader().readText())
+        cachedFile.delete()
+    }
+
+    @Test
+    fun `should ignore non-local resource url`() {
+        initSdk(null)
+        val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
+
+        assertNull(webview.createLocalResourceResponse("https://example.com/image.png"))
+    }
+
+    @Test
+    fun `should block non-local network resource url`() {
+        initSdk(null)
+        val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
+
+        val response = webview.createResourceResponse("https://example.com/image.png")
+
+        assertNotNull(response)
+        assertEquals("text/plain", response.mimeType)
+        assertEquals("", response.data.bufferedReader().readText())
     }
 
     private fun initSdk(allowCookies: Boolean?) {

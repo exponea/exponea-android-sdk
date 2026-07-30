@@ -14,6 +14,7 @@ enum class TelemetryEvent(val value: String) {
     CONTENT_BLOCK_INIT_FETCH("contentBlockInitFetch"),
     CONTENT_BLOCK_PERSONALISED_FETCH("inappContentBlockPersonalisedFetch"),
     CONTENT_BLOCK_SHOWN("inappContentBlockShown"),
+    CONTENT_BLOCK_RENDERED("inappContentBlockRendered"),
     RTS_CALLBACK_REGISTERED("callbackRegistered"),
     RTS_GET_SEGMENTS("getSegments"),
     INTEGRATION_STOPPED("integrationStopped"),

@@ -27,6 +27,8 @@ import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 internal open class InAppContentBlockViewController(
     internal val placeholderId: String,
@@ -41,7 +43,10 @@ internal open class InAppContentBlockViewController(
 
     internal lateinit var view: InAppContentBlockPlaceholderView
     private var isViewAttachedToWindow: Boolean = false
-    private var contentLoaded: Boolean = false
+    private var contentLoaded: AtomicBoolean = AtomicBoolean(false)
+    private val messageShown: AtomicBoolean = AtomicBoolean(false)
+    private val lastTrackedMessageId: AtomicReference<String?> = AtomicReference(null)
+    private var lastRenderedNormalizedHtml: String? = null
     internal var assignedHtmlContent: NormalizedResult? = null
     internal var assignedMessage: InAppContentBlock? = null
 
@@ -114,9 +119,23 @@ internal open class InAppContentBlockViewController(
         }
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
-            assignedMessage = dataLoader.loadContent(placeholderId)
-            assignedHtmlContent = normalizeHtmlIfPossible(assignedMessage)
-            contentLoaded = true
+            val loadedMessage = dataLoader.loadContent(placeholderId)
+            val normalizedHtml = normalizeHtmlIfPossible(loadedMessage)
+            val contentChanged = hasRenderableContentChanged(loadedMessage, normalizedHtml)
+            if (contentLoaded.get() && messageShown.get() && !contentChanged) {
+                Logger.d(
+                    this,
+                    "InAppCB: Placeholder $placeholderId content is unchanged, skipping redundant load"
+                )
+                return@runOnBackgroundThread
+            }
+            assignedMessage = loadedMessage
+            assignedHtmlContent = normalizedHtml
+            contentLoaded.set(true)
+            if (contentChanged) {
+                messageShown.set(false)
+                lastTrackedMessageId.set(null)
+            }
             if (isViewAttachedToWindow || !requiresAttachedView) {
                 Logger.d(
                     this,
@@ -124,7 +143,7 @@ internal open class InAppContentBlockViewController(
                     InAppCB: Placeholder $placeholderId attached to window ($isViewAttachedToWindow), showing message
                     """.trimIndent()
                 )
-                showMessage(assignedMessage)
+                showMessage(assignedMessage, allowDetachedRender = !requiresAttachedView)
             } else {
                 Logger.d(
                     this,
@@ -132,6 +151,22 @@ internal open class InAppContentBlockViewController(
                 )
             }
         }
+    }
+
+    private fun hasRenderableContentChanged(
+        loadedMessage: InAppContentBlock?,
+        normalizedHtml: NormalizedResult?
+    ): Boolean {
+        if (!contentLoaded.get()) {
+            return true
+        }
+        if (assignedMessage?.id != loadedMessage?.id) {
+            return true
+        }
+        if (assignedMessage?.contentType != loadedMessage?.contentType) {
+            return true
+        }
+        return assignedHtmlContent?.html != normalizedHtml?.html
     }
 
     private fun normalizeHtmlIfPossible(message: InAppContentBlock?): NormalizedResult? {
@@ -163,7 +198,14 @@ internal open class InAppContentBlockViewController(
         return normalizedHtml
     }
 
-    private fun showMessage(message: InAppContentBlock?) {
+    private fun showMessage(message: InAppContentBlock?, allowDetachedRender: Boolean = false) {
+        if (!messageShown.compareAndSet(false, true)) {
+            Logger.d(
+                this,
+                "InAppCB: Placeholder $placeholderId message already shown, skipping duplicate showMessage call"
+            )
+            return
+        }
         if (message == null) {
             Logger.i(this, "InAppCB: No message found for placeholder $placeholderId")
             runOnMainThread {
@@ -181,7 +223,7 @@ internal open class InAppContentBlockViewController(
             "placeholders" to ExponeaGson.instance.toJson(message.placeholders)
         ))
         when (message.contentType) {
-            HTML -> showHtmlContent(message)
+            HTML -> showHtmlContent(message, allowDetachedRender)
             NATIVE -> showNativeContent()
             UNKNOWN -> showNoContent()
             NOT_DEFINED -> showNoContent()
@@ -215,8 +257,13 @@ internal open class InAppContentBlockViewController(
         }
     }
 
-    private fun showHtmlContent(message: InAppContentBlock) {
+    private fun showHtmlContent(message: InAppContentBlock, allowDetachedRender: Boolean) {
         runOnBackgroundThread {
+            if (!isViewAttachedToWindow && !allowDetachedRender) {
+                Logger.d(this, "InAppCB: Placeholder $placeholderId view not attached, skipping HTML load")
+                messageShown.set(false)
+                return@runOnBackgroundThread
+            }
             Logger.i(this, "InAppCB: Loading HTML content for placeholder $placeholderId")
             val htmlContent = message.htmlContent
             if (htmlContent.isNullOrEmpty()) {
@@ -234,12 +281,24 @@ internal open class InAppContentBlockViewController(
             }
             Logger.i(this, "InAppCB: HTML content for placeholder $placeholderId is valid")
             runOnMainThread {
-                view.showHtmlContent(normalizedHtml)
+                if (!isViewAttachedToWindow && !allowDetachedRender) {
+                    Logger.d(this, "InAppCB: Placeholder $placeholderId view detached before render, skipping")
+                    messageShown.set(false)
+                    return@runOnMainThread
+                }
+                if (lastRenderedNormalizedHtml == normalizedHtml) {
+                    view.showExistingContent()
+                } else {
+                    view.showHtmlContent(normalizedHtml)
+                    lastRenderedNormalizedHtml = normalizedHtml
+                }
             }
-            actionDispatcher.onShown(placeholderId, message)
-            runCatching {
-                behaviourCallback.onMessageShown(placeholderId, message)
-            }.logOnException()
+            if (lastTrackedMessageId.getAndSet(message.id) != message.id) {
+                actionDispatcher.onShown(placeholderId, message)
+                runCatching {
+                    behaviourCallback.onMessageShown(placeholderId, message)
+                }.logOnException()
+            }
         }
     }
 
@@ -259,7 +318,10 @@ internal open class InAppContentBlockViewController(
 
     private fun cleanUp() {
         Logger.d(this, "InAppCB: Clean up for placeholder $placeholderId")
-        contentLoaded = false
+        contentLoaded.set(false)
+        messageShown.set(false)
+        lastTrackedMessageId.set(null)
+        lastRenderedNormalizedHtml = null
         assignedMessage = null
         assignedHtmlContent = null
     }
@@ -270,7 +332,7 @@ internal open class InAppContentBlockViewController(
             Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
             return
         }
-        if (contentLoaded) {
+        if (contentLoaded.get()) {
             Logger.d(
                 this,
                 """
@@ -291,5 +353,8 @@ internal open class InAppContentBlockViewController(
 
     fun onViewDetachedFromWindow() {
         isViewAttachedToWindow = false
+        messageShown.set(false)
+        // Placeholder reset clears WebView content; drop render cache to force real reload on next attach.
+        lastRenderedNormalizedHtml = null
     }
 }

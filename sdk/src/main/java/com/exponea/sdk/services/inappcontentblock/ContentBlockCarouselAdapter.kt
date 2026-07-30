@@ -93,6 +93,7 @@ internal class ContentBlockCarouselAdapter(
     override fun onViewDetachedFromWindow(holder: ContentBlockCarouselViewHolder) {
         val view = holder.getContentBlockPlaceholderView()
         view?.htmlContainer?.onPause()
+        // Clear rendered state before holder reuse to avoid stale content flashes after rebind.
         view?.resetContent()
         super.onViewDetachedFromWindow(holder)
     }

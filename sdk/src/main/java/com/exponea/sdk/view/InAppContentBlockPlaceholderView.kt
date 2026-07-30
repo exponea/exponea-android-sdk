@@ -182,6 +182,12 @@ class InAppContentBlockPlaceholderView internal constructor(
         applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
     }
 
+    internal fun showExistingContent() {
+        Logger.d(this, "InAppCB: $placeholderId: Reusing already-rendered content, skipping WebView reload")
+        applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
+        startNotifyContentReadyProcess(true)
+    }
+
     fun refreshContent() {
         Logger.i(this, "InAppCB: $placeholderId: View requested to be refreshed")
         controller.loadContent(false)

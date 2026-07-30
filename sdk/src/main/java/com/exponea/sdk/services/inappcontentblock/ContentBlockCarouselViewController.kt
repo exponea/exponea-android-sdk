@@ -40,6 +40,7 @@ internal class ContentBlockCarouselViewController(
         internal const val RELOAD_PROCESS_ID = "ContentBlockCarouselView_reload"
         internal const val DEFAULT_MAX_MESSAGES_COUNT = 0
         internal const val DEFAULT_SCROLL_DELAY = 3
+        internal const val BOUNDARY_FLICKER_PRELOAD_PAGES = 2
     }
 
     private val showTrackedContentBlockIds = mutableSetOf<String>()
@@ -136,7 +137,13 @@ internal class ContentBlockCarouselViewController(
                 val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
                 runOnMainThread {
                     contentBlockCarouselAdapter.updateData(limitedContentBlocks)
-                    carouselView.prepareOffscreenPages(ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT)
+                    carouselView.prepareOffscreenPages(
+                        if (limitedContentBlocks.size > 2) {
+                            BOUNDARY_FLICKER_PRELOAD_PAGES
+                        } else {
+                            ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT
+                        }
+                    )
                     moveToIndex(0, false)
                     updateAutoHeight(true)
                 }

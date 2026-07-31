@@ -23,7 +23,8 @@ internal class InAppRichstylePayloadBuilder(
         internal val DEFAULT_CLOSE_BUTTON_MARGIN = LayoutSpacing.parse("20dp")!!
         internal val DEFAULT_CLOSE_BUTTON_PADDING = LayoutSpacing.parse("8dp")!!
         internal val DEFAULT_CLOSE_BUTTON_SIZE = PlatformSize.parse("40dp")!!
-        internal val DEFAULT_CLOSE_BUTTON_BACKGROUND_COLOR = ConversionUtils.parseColor("#BDCEE3")!!
+        internal const val DEFAULT_CLOSE_BUTTON_BACKGROUND_COLOR = 0x99_FF_FF_FF.toInt() // white @ 60%
+        internal const val DEFAULT_CLOSE_BUTTON_ICON_COLOR = Color.BLACK
     }
 
     fun build(payload: InAppMessagePayload?): InAppMessageUiPayload? {
@@ -103,7 +104,8 @@ internal class InAppRichstylePayloadBuilder(
                 size = DEFAULT_CLOSE_BUTTON_SIZE,
                 backgroundColor = ConversionUtils.parseColor(payload.closeButtonBackgroundColor)
                     ?: DEFAULT_CLOSE_BUTTON_BACKGROUND_COLOR,
-                iconColor = ConversionUtils.parseColor(payload.closeButtonIconColor) ?: Color.WHITE,
+                iconColor = ConversionUtils.parseColor(payload.closeButtonIconColor)
+                    ?: DEFAULT_CLOSE_BUTTON_ICON_COLOR,
                 enabled = payload.isCloseButtonEnabled ?: true
             )
         )

@@ -8,6 +8,7 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.InAppContentBlockDisplayState
 import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.InAppContentBlockType
@@ -17,6 +18,7 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
+import com.exponea.sdk.repository.InAppContentBlocksETagStore
 import com.exponea.sdk.repository.SimpleFileCache.Companion.DOWNLOAD_TIMEOUT_SECONDS
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.DefaultInAppContentCallback
@@ -28,6 +30,7 @@ import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.ThreadSafeAccess
+import com.exponea.sdk.util.buildCustomerIdsCacheKey
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.deepCopy
 import com.exponea.sdk.util.ensureOnBackgroundThread
@@ -45,7 +48,8 @@ internal class InAppContentBlockManagerImpl(
     private val customerIdsRepository: CustomerIdsRepository,
     private val imageCache: DrawableCache,
     private val htmlCache: HtmlNormalizedCache,
-    private val fontCache: FontCache
+    private val fontCache: FontCache,
+    private val etagStore: InAppContentBlocksETagStore
 ) : InAppContentBlockManager, InAppContentBlockActionDispatcher, InAppContentBlockDataLoader {
 
     companion object {
@@ -157,6 +161,7 @@ internal class InAppContentBlockManagerImpl(
         clearRenderableCaches(contentBlocksData.map { it.id }.toSet())
         contentBlocksData = emptyList()
         displayStateRepository.clear()
+        etagStore.clearAll()
         Logger.i(this, "InAppCB: All data and cache has been cleared completely")
     }
 
@@ -175,6 +180,7 @@ internal class InAppContentBlockManagerImpl(
             it.personalizedData = null
         }
         displayStateRepository.clear()
+        etagStore.clearAll()
         Logger.d(this, "InAppCB: All Content Blocks was cleared from personalized data")
     }
 
@@ -194,13 +200,9 @@ internal class InAppContentBlockManagerImpl(
         }
     }
 
-    private fun clearRenderableCaches(contentBlockIds: Set<String>, clearResourceCaches: Boolean = true) {
+    private fun clearRenderableCaches(contentBlockIds: Set<String>) {
         contentBlockIds.forEach { contentBlockId ->
             htmlCache.remove(contentBlockId)
-        }
-        if (clearResourceCaches) {
-            imageCache.clear()
-            fontCache.clear()
         }
     }
 
@@ -214,7 +216,9 @@ internal class InAppContentBlockManagerImpl(
         val invalidatedIds = currentBlocksById.keys.minus(newBlocksById.keys).toMutableSet()
         newBlocksById.forEach { (blockId, newBlock) ->
             val currentBlock = currentBlocksById[blockId] ?: return@forEach
-            if (currentBlock.contentType != newBlock.contentType || currentBlock.htmlContent != newBlock.htmlContent) {
+            val currentStaticHtml = currentBlock.content?.get("html") as? String
+            val newStaticHtml = newBlock.content?.get("html") as? String
+            if (currentBlock.rawContentType != newBlock.rawContentType || currentStaticHtml != newStaticHtml) {
                 invalidatedIds.add(blockId)
             }
         }
@@ -230,7 +234,7 @@ internal class InAppContentBlockManagerImpl(
         if (requestedIds.isEmpty()) {
             return emptyList()
         }
-        val customerScope = buildPersonalizedCustomerKey(customerIds)
+        val customerScope = buildCustomerIdsCacheKey(customerIds)
         val pendingIdsCount = AtomicInteger(requestedIds.size)
         val allSucceeded = AtomicBoolean(true)
         val loadCompletion: (Boolean) -> Unit = { success ->
@@ -262,7 +266,7 @@ internal class InAppContentBlockManagerImpl(
         customerIds: Map<String, String?>,
         success: Boolean
     ) {
-        val key = InFlightContentLoadKey(contentBlockId, buildPersonalizedCustomerKey(customerIds))
+        val key = InFlightContentLoadKey(contentBlockId, buildCustomerIdsCacheKey(customerIds))
         val completions = dataAccess.waitForAccessWithResult {
             inFlightContentLoads.remove(key)?.toList() ?: emptyList()
         }.getOrElse {
@@ -288,13 +292,7 @@ internal class InAppContentBlockManagerImpl(
         val dedupeKey = "$placeholderId:$contentBlockId"
         synchronized(shownEventDedupLock) {
             val clearThreshold = shownEventDedupWindowMs * 5
-            val iterator = shownEventRecent.entries.iterator()
-            while (iterator.hasNext()) {
-                val entry = iterator.next()
-                if (now - entry.value > clearThreshold) {
-                    iterator.remove()
-                }
-            }
+            shownEventRecent.entries.removeAll { now - it.value > clearThreshold }
             val previousShownAt = shownEventRecent[dedupeKey]
             if (previousShownAt != null && now - previousShownAt < shownEventDedupWindowMs) {
                 return false
@@ -307,13 +305,13 @@ internal class InAppContentBlockManagerImpl(
     /**
      * Loads missing or obsolete content for block.
      */
-    override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>) {
+    override fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>, forceRefresh: Boolean) {
         if (Exponea.isStopped) {
             Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
             return
         }
         val finished = CountDownLatch(1)
-        loadContentIfNeededAsync(contentBlocks) {
+        loadContentIfNeededAsync(contentBlocks, forceRefresh) {
             finished.countDown()
         }
         if (!finished.await(DOWNLOAD_TIMEOUT_SECONDS, SECONDS)) {
@@ -321,13 +319,21 @@ internal class InAppContentBlockManagerImpl(
         }
     }
 
-    private fun loadContentIfNeededAsync(contentBlocks: List<InAppContentBlock>, done: () -> Unit) {
+    private fun loadContentIfNeededAsync(
+        contentBlocks: List<InAppContentBlock>,
+        forceRefresh: Boolean = false,
+        done: () -> Unit
+    ) {
         val blockIdsToCheck = contentBlocks.map { it.id }.toSet()
-        val blockIdsToUpdate = runThreadSafelyWithResult {
-            contentBlocksData
-                .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
-                .map { it.id }
-        } ?: emptyList()
+        val blockIdsToUpdate = if (forceRefresh) {
+            blockIdsToCheck.toList()
+        } else {
+            runThreadSafelyWithResult {
+                contentBlocksData
+                    .filter { it.id in blockIdsToCheck && !it.hasFreshContent() }
+                    .map { it.id }
+            } ?: emptyList()
+        }
         if (blockIdsToUpdate.isEmpty()) {
             Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
             done()
@@ -419,10 +425,105 @@ internal class InAppContentBlockManagerImpl(
         }
         Logger.i(this, "InAppCB: Prefetching personalized content for current customer")
         val contentBlockIdsAsString = blockIdsToFetch.joinToString()
+        val integrationConfig = integrationConfigFactory.integrationConfig
+        val cacheKey = buildPersonalizedFetchKey(customerIdsMap, blockIdsToFetch)
+        val storedEtag = if (forceRefresh) null else etagStore.retrieve(cacheKey)
+        fun resetCachedPersonalizedContent(blockIds: List<String>): Set<String> {
+            val blockIdsSet = blockIds.toSet()
+            val cachedIds = mutableSetOf<String>()
+            dataAccess.waitForAccess {
+                contentBlocksData.forEach { block ->
+                    if (block.id in blockIdsSet && block.personalizedData != null) {
+                        block.personalizedData?.loadedAt = Date()
+                        cachedIds.add(block.id)
+                    }
+                }
+            }
+            return cachedIds
+        }
+        fun retryPersonalizedContentWithoutEtag(
+            retryBlockIds: List<String>,
+            mergeWithData: List<InAppContentBlockPersonalizedData> = emptyList()
+        ) {
+            val retryCacheKey = buildPersonalizedFetchKey(customerIdsMap, retryBlockIds)
+            etagStore.remove(retryCacheKey)
+            fetchManager.fetchPersonalizedContentBlocks(
+                integrationConfig = integrationConfig,
+                customerIds = customerIdsSnapshot,
+                contentBlockIds = retryBlockIds,
+                etag = null,
+                onNotModified = null,
+                onEtagHeader = { newEtag -> etagStore.store(retryCacheKey, newEtag) },
+                onSuccess = { result ->
+                    val data = mergeWithData + (result.results ?: emptyList()).onEach { it.loadedAt = Date() }
+                    notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
+                },
+                onFailure = {
+                    notifyInFlightPersonalizedFetchFailure(personalizedFetchKey, it.results)
+                }
+            )
+        }
+        fun handlePersonalizedSuccess(data: List<InAppContentBlockPersonalizedData>) {
+            data.forEach {
+                it.loadedAt = Date()
+            }
+            if (storedEtag == null) {
+                notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
+                return
+            }
+            val returnedBlockIds = data.map { it.blockId }.toSet()
+            val notReturnedBlockIds = blockIdsToFetch.filterNot { it in returnedBlockIds }
+            if (notReturnedBlockIds.isEmpty()) {
+                notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
+                return
+            }
+            val cachedBlockIds = resetCachedPersonalizedContent(notReturnedBlockIds)
+            val missingCacheBlockIds = notReturnedBlockIds.filterNot { it in cachedBlockIds }
+            if (missingCacheBlockIds.isEmpty()) {
+                Logger.d(
+                    this,
+                    "InAppCB: Conditional fetch returned updated blocks ${returnedBlockIds.joinToString()}; " +
+                        "TTL reset for unchanged blocks ${cachedBlockIds.joinToString()}"
+                )
+                notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
+            } else {
+                Logger.d(
+                    this,
+                    "InAppCB: Conditional fetch returned partial data but cache is missing for " +
+                        "${missingCacheBlockIds.joinToString()} — retrying those blocks without ETag"
+                )
+                retryPersonalizedContentWithoutEtag(missingCacheBlockIds, data)
+            }
+        }
+        val onNotModified: (() -> Unit)? = if (forceRefresh) null else {
+            {
+                val cachedBlockIds = resetCachedPersonalizedContent(blockIdsToFetch)
+                val missingCacheBlockIds = blockIdsToFetch.filterNot { it in cachedBlockIds }
+                if (missingCacheBlockIds.isEmpty()) {
+                    Logger.d(
+                        this,
+                        "InAppCB: 304 Not Modified — cache hit, TTL reset for ${blockIdsToFetch.joinToString()}"
+                    )
+                    popInFlightPersonalizedFetchCallbacks(personalizedFetchKey)
+                    completeInFlightContentLoad(blockIdsToFetch, customerIdsMap, true)
+                } else {
+                    Logger.d(
+                        this,
+                        "InAppCB: 304 Not Modified but cache is missing for " +
+                            "${missingCacheBlockIds.joinToString()} — retrying those blocks without ETag"
+                    )
+                    completeInFlightContentLoad(cachedBlockIds.toList(), customerIdsMap, true)
+                    retryPersonalizedContentWithoutEtag(missingCacheBlockIds)
+                }
+            }
+        }
         fetchManager.fetchPersonalizedContentBlocks(
-            integrationConfig = integrationConfigFactory.integrationConfig,
+            integrationConfig = integrationConfig,
             customerIds = customerIdsSnapshot,
             contentBlockIds = blockIdsToFetch,
+            etag = storedEtag,
+            onNotModified = onNotModified,
+            onEtagHeader = { etag -> etagStore.store(cacheKey, etag) },
             onSuccess = { result ->
                 if (Exponea.isStopped) {
                     Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
@@ -436,11 +537,7 @@ internal class InAppContentBlockManagerImpl(
                     this,
                     "InAppCB: Personalized content for blocks $contentBlockIdsAsString loaded"
                 )
-                val data = result.results ?: emptyList()
-                data.forEach {
-                    it.loadedAt = Date()
-                }
-                notifyInFlightPersonalizedFetchSuccess(personalizedFetchKey, data)
+                handlePersonalizedSuccess(result.results ?: emptyList())
             },
             onFailure = {
                 val errorMessage = it.results.message
@@ -457,17 +554,9 @@ internal class InAppContentBlockManagerImpl(
         customerIds: Map<String, String?>,
         contentBlockIds: List<String>
     ): String {
-        val customerScope = buildPersonalizedCustomerKey(customerIds)
+        val customerScope = buildCustomerIdsCacheKey(customerIds)
         val sortedBlockIds = contentBlockIds.sorted().joinToString(",")
         return "$customerScope|$sortedBlockIds"
-    }
-
-    private fun buildPersonalizedCustomerKey(customerIds: Map<String, String?>): String {
-        val sortedCustomerIds = customerIds
-            .toList()
-            .sortedBy { it.first }
-            .joinToString("&") { (key, value) -> "$key=${value ?: ""}" }
-        return sortedCustomerIds
     }
 
     private fun addInFlightPersonalizedFetchCallback(
@@ -548,13 +637,33 @@ internal class InAppContentBlockManagerImpl(
         return false
     }
 
+    internal fun filterContentBlocksForDisplay(source: List<InAppContentBlock>): List<InAppContentBlock> {
+        val currentTimeSeconds = System.currentTimeMillis() / 1000
+        val displayStates = displayStateRepository.getAll()
+        val defaultDisplayState = InAppContentBlockDisplayState(null, 0, null, 0)
+        return source
+            .filter { contentBlock ->
+                passesDateFilter(contentBlock, currentTimeSeconds) &&
+                    passesFrequencyFilter(
+                        contentBlock,
+                        displayStates[contentBlock.id] ?: defaultDisplayState
+                    )
+            }
+            .filter { each -> isStatusValid(each) }
+            .filter { each -> isContentSupportedToShow(each) }
+    }
+
     override fun passesFilters(contentBlock: InAppContentBlock): Boolean {
         Logger.i(this, "InAppCB: Validating filters for Content Block ${contentBlock.id}")
         return passesDateFilter(contentBlock) && passesFrequencyFilter(contentBlock)
     }
 
     override fun passesDateFilter(contentBlock: InAppContentBlock): Boolean {
-        val dateFilterPass = contentBlock.applyDateFilter(System.currentTimeMillis() / 1000)
+        return passesDateFilter(contentBlock, System.currentTimeMillis() / 1000)
+    }
+
+    private fun passesDateFilter(contentBlock: InAppContentBlock, currentTimeSeconds: Long): Boolean {
+        val dateFilterPass = contentBlock.applyDateFilter(currentTimeSeconds)
         Logger.i(this, "InAppCB: Block ${contentBlock.id} date-filter passed: $dateFilterPass")
         return dateFilterPass
     }
@@ -568,8 +677,15 @@ internal class InAppContentBlockManagerImpl(
     }
 
     override fun passesFrequencyFilter(contentBlock: InAppContentBlock): Boolean {
+        return passesFrequencyFilter(contentBlock, displayStateRepository.get(contentBlock))
+    }
+
+    private fun passesFrequencyFilter(
+        contentBlock: InAppContentBlock,
+        displayState: InAppContentBlockDisplayState
+    ): Boolean {
         val passessByFrequency = contentBlock.applyFrequencyFilter(
-            displayStateRepository.get(contentBlock),
+            displayState,
             sessionStartDate
         )
         Logger.i(this, "InAppCB: Block ${contentBlock.id} frequency-filter passed: $passessByFrequency")
@@ -680,7 +796,9 @@ internal class InAppContentBlockManagerImpl(
             done()
             return
         }
-        loadContentIfNeededAsync(contentBlocksToLoad) {
+        // Cold-start prefetch is a proactive warm-up. It intentionally skips ETag because
+        // there is no user-visible cached render to validate against.
+        loadContentIfNeededAsync(contentBlocksToLoad, forceRefresh = true) {
             done()
         }
     }

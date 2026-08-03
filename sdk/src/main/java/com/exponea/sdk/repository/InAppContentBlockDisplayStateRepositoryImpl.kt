@@ -42,68 +42,82 @@ internal class InAppContentBlockDisplayStateRepositoryImpl(
         })
         .create()
 
+    private var displayStates: MutableMap<String, InAppContentBlockDisplayState> = loadDisplayStates()
+
     init {
         deleteOldDisplayStates()
     }
 
     override fun get(message: InAppContentBlock): InAppContentBlockDisplayState = synchronized(this) {
-        return getDisplayStates()[message.id] ?: InAppContentBlockDisplayState(
+        return displayStates[message.id] ?: InAppContentBlockDisplayState(
             null, 0,
             null, 0
         )
     }
 
+    override fun getAll(): Map<String, InAppContentBlockDisplayState> = synchronized(this) {
+        return displayStates.toMap()
+    }
+
     override fun setDisplayed(message: InAppContentBlock, date: Date) = synchronized(this) {
-        val displayStates = getDisplayStates()
-        val displayState = get(message)
+        val displayState = getState(message)
         displayStates[message.id] = InAppContentBlockDisplayState(
             date,
             displayState.displayedCount + 1,
             displayState.interactedLast,
             displayState.interactedCount
         )
-        setDisplayStates(displayStates)
+        persistDisplayStates()
     }
 
     override fun setInteracted(message: InAppContentBlock, date: Date) = synchronized(this) {
-        val displayStates = getDisplayStates()
-        val displayState = get(message)
+        val displayState = getState(message)
         displayStates[message.id] = InAppContentBlockDisplayState(
             displayState.displayedLast,
             displayState.displayedCount,
             date,
             displayState.interactedCount + 1
         )
-        setDisplayStates(displayStates)
+        persistDisplayStates()
     }
 
     override fun clear() {
-        preferences.remove(KEY)
+        synchronized(this) {
+            displayStates.clear()
+            preferences.remove(KEY)
+        }
     }
 
-    private fun setDisplayStates(displayStates: Map<String, InAppContentBlockDisplayState>) {
+    private fun getState(message: InAppContentBlock): InAppContentBlockDisplayState {
+        return displayStates[message.id] ?: InAppContentBlockDisplayState(
+            null, 0,
+            null, 0
+        )
+    }
+
+    private fun persistDisplayStates() {
         preferences.setString(KEY, gson.toJson(displayStates))
     }
 
-    private fun getDisplayStates(): MutableMap<String, InAppContentBlockDisplayState> {
-        val dataString = preferences.getString(KEY, "") ?: ""
+    private fun loadDisplayStates(): MutableMap<String, InAppContentBlockDisplayState> {
+        val dataString = preferences.getString(KEY, "")
         if (dataString.isEmpty()) {
             return hashMapOf()
         }
         return gson.fromJson(dataString)
     }
 
-    private fun deleteOldDisplayStates() {
+    private fun deleteOldDisplayStates() = synchronized(this) {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -30)
         val cutOffDate = calendar.time
-        val filtered = getDisplayStates().filter {
+        displayStates = displayStates.filter {
             if (cutOffDate.before(it.value.displayedLast ?: Date(0)) ||
                 cutOffDate.before(it.value.interactedLast ?: Date(0))) {
                 return@filter true
             }
             return@filter false
-        }
-        setDisplayStates(filtered)
+        }.toMutableMap()
+        persistDisplayStates()
     }
 }

@@ -23,9 +23,12 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
+import com.exponea.sdk.repository.InAppContentBlocksETagStore
+import com.exponea.sdk.repository.VolatileInAppContentBlocksETagStore
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.testutil.runInSingleThread
+import com.exponea.sdk.util.buildCustomerIdsCacheKey
 import java.util.Collections
 import java.util.Date
 import java.util.concurrent.CountDownLatch
@@ -42,6 +45,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.clearInvocations
@@ -307,6 +311,7 @@ internal class InAppContentBlockManagerImplTest {
             on { get(any()) } doReturn InAppContentBlockDisplayState(
                 null, 0, null, 0
             )
+            on { getAll() } doReturn emptyMap()
             doNothing().on { setDisplayed(any(), any()) }
             doNothing().on { setInteracted(any(), any()) }
             doNothing().on { clear() }
@@ -341,7 +346,8 @@ internal class InAppContentBlockManagerImplTest {
             customerIdsRepository = customerIdsRepository,
             imageCache = drawableCache,
             htmlCache = htmlCache,
-            fontCache = fontCache
+            fontCache = fontCache,
+            etagStore = VolatileInAppContentBlocksETagStore()
         )
         identifyCustomer()
     }
@@ -455,11 +461,14 @@ internal class InAppContentBlockManagerImplTest {
                 any(),
                 any(),
                 argThat<List<String>> { list -> list.size == 1 && list[0] == messageId },
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 any(),
                 any()
             )
         ).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -515,10 +524,11 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
             val requestedIds = it.getArgument<List<String>>(2)
             requestedBlockIds.addAll(requestedIds)
-            val onSuccess = it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            val onSuccess = it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
             firstFetchStarted.countDown()
             Thread {
                 allowFetchSuccess.await(2, SECONDS)
@@ -577,11 +587,12 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
             val callIndex = fetchCallCount.incrementAndGet()
             val requestedCookie = readCustomerCookie(it.getArgument(1))
             fetchedCookies.add(requestedCookie)
-            val onSuccess = it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            val onSuccess = it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
             if (callIndex == 1) {
                 firstFetchStarted.countDown()
             } else {
@@ -674,12 +685,15 @@ internal class InAppContentBlockManagerImplTest {
                 any(),
                 any(),
                 argThat<List<String>> { list -> list.size == 1 && list[0] == messageId },
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 any(),
                 any()
             )
         ).thenAnswer {
             Exponea.isStopped = true
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -733,8 +747,9 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -786,8 +801,9 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         buildMessageData(
@@ -812,8 +828,8 @@ internal class InAppContentBlockManagerImplTest {
         (inAppContentBlockManager as InAppContentBlockManagerImpl).loadContent(placeholderId)
 
         verify(htmlCache).remove(messageId)
-        verify(drawableCache).clear()
-        verify(fontCache).clear()
+        verify(drawableCache, never()).clear()
+        verify(fontCache, never()).clear()
     }
 
     @Test
@@ -879,8 +895,8 @@ internal class InAppContentBlockManagerImplTest {
         idleThreads()
 
         verify(htmlCache).remove(messageId)
-        verify(drawableCache).clear()
-        verify(fontCache).clear()
+        verify(drawableCache, never()).clear()
+        verify(fontCache, never()).clear()
     }
 
     @Test
@@ -905,8 +921,9 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -939,7 +956,8 @@ internal class InAppContentBlockManagerImplTest {
             customerIdsRepository = customerIdsRepository,
             imageCache = drawableCache,
             htmlCache = htmlCache,
-            fontCache = fontCache
+            fontCache = fontCache,
+            etagStore = VolatileInAppContentBlocksETagStore()
         )
         inAppContentBlockManager.loadInAppContentBlockPlaceholders(
             configuration.inAppContentBlockPlaceholdersAutoLoad
@@ -971,8 +989,9 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -1022,8 +1041,9 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(
                     true, arrayListOf(
                         // htmlContent
@@ -1063,6 +1083,319 @@ internal class InAppContentBlockManagerImplTest {
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
     }
 
+    private fun etagCacheKey(customerIds: Map<String, String?>, contentBlockIds: List<String>): String {
+        val sortedBlockIds = contentBlockIds.distinct().sorted().joinToString(",")
+        return "${buildCustomerIdsCacheKey(customerIds)}|$sortedBlockIds"
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should reset ttl for all requested blocks on personalized content 304 cache hit`() = runInSingleThread {
+        val etagStore = InMemoryETagStore()
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
+            displayStateRepository = displayStateRepository,
+            fetchManager = fetchManager,
+            integrationConfigFactory = projectFactory,
+            customerIdsRepository = customerIdsRepository,
+            imageCache = drawableCache,
+            htmlCache = htmlCache,
+            fontCache = fontCache,
+            etagStore = etagStore
+        )
+        val placeholderId = "ph1"
+        val oldLoadedAt = Date(System.currentTimeMillis() - 60_000)
+        identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val cacheKey = etagCacheKey(customerIds, listOf("id1", "id2"))
+        etagStore.store(cacheKey, "\"etag-v1\"")
+        val blockOne = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+            personalizedData = buildMessageData(
+                "id1",
+                ttl = 1,
+                type = "html",
+                data = mapOf("html" to buildHtmlMessageContent())
+            ).apply { loadedAt = oldLoadedAt }
+            this.customerIds = customerIds
+        }
+        val blockTwo = buildMessage("id2", placeholders = listOf(placeholderId)).apply {
+            personalizedData = buildMessageData(
+                "id2",
+                ttl = 1,
+                type = "html",
+                data = mapOf("html" to buildHtmlMessageContent())
+            ).apply { loadedAt = oldLoadedAt }
+            this.customerIds = customerIds
+        }
+        val manager = inAppContentBlockManager as InAppContentBlockManagerImpl
+        manager.contentBlocksData = listOf(blockOne, blockTwo)
+        var receivedEtag: String? = null
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            receivedEtag = it.getArgument(3)
+            it.getArgument<(() -> Unit)?>(4)?.invoke()
+            null
+        }
+
+        manager.loadContentIfNeededSync(listOf(blockOne, blockTwo))
+
+        assertEquals("\"etag-v1\"", receivedEtag)
+        val loadedAtValues = manager.contentBlocksData.map { it.personalizedData?.loadedAt?.time ?: 0L }
+        loadedAtValues.forEach { assertTrue(it > oldLoadedAt.time) }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should use different etags for different personalized content block subsets`() = runInSingleThread {
+        val etagStore = InMemoryETagStore()
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
+            displayStateRepository = displayStateRepository,
+            fetchManager = fetchManager,
+            integrationConfigFactory = projectFactory,
+            customerIdsRepository = customerIdsRepository,
+            imageCache = drawableCache,
+            htmlCache = htmlCache,
+            fontCache = fontCache,
+            etagStore = etagStore
+        )
+        identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+        val customerIds = customerIdsRepository.get().toHashMap()
+        etagStore.store(etagCacheKey(customerIds, listOf("id1")), "\"etag-id1\"")
+        etagStore.store(etagCacheKey(customerIds, listOf("id2")), "\"etag-id2\"")
+        val blockOne = buildMessage("id1", placeholders = listOf("ph1")).apply {
+            this.customerIds = customerIds
+        }
+        val blockTwo = buildMessage("id2", placeholders = listOf("ph1")).apply {
+            this.customerIds = customerIds
+        }
+        val manager = inAppContentBlockManager as InAppContentBlockManagerImpl
+        manager.contentBlocksData = listOf(blockOne, blockTwo)
+        val receivedEtags = mutableListOf<String?>()
+        val requestedBlockIds = mutableListOf<List<String>>()
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            val requestedIds = it.getArgument<List<String>>(2)
+            receivedEtags.add(it.getArgument(3))
+            requestedBlockIds.add(requestedIds)
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
+                Result(
+                    true,
+                    ArrayList(requestedIds.map { id ->
+                        buildMessageData(
+                            id,
+                            ttl = 1,
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent())
+                        )
+                    })
+                )
+            )
+            null
+        }
+
+        manager.loadContentIfNeededSync(listOf(blockOne))
+        manager.loadContentIfNeededSync(listOf(blockTwo))
+
+        assertEquals(listOf(listOf("id1"), listOf("id2")), requestedBlockIds)
+        assertEquals(listOf<String?>("\"etag-id1\"", "\"etag-id2\""), receivedEtags)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should retry personalized content without etag when 304 cache is incomplete`() = runInSingleThread {
+        val etagStore = InMemoryETagStore()
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
+            displayStateRepository = displayStateRepository,
+            fetchManager = fetchManager,
+            integrationConfigFactory = projectFactory,
+            customerIdsRepository = customerIdsRepository,
+            imageCache = drawableCache,
+            htmlCache = htmlCache,
+            fontCache = fontCache,
+            etagStore = etagStore
+        )
+        val placeholderId = "ph1"
+        val oldLoadedAt = Date(System.currentTimeMillis() - 60_000)
+        identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+        val customerIds = customerIdsRepository.get().toHashMap()
+        val cacheKey = etagCacheKey(customerIds, listOf("id1", "id2"))
+        etagStore.store(cacheKey, "\"etag-v1\"")
+        val blockOne = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+            personalizedData = buildMessageData(
+                "id1",
+                ttl = 1,
+                type = "html",
+                data = mapOf("html" to buildHtmlMessageContent())
+            ).apply { loadedAt = oldLoadedAt }
+            this.customerIds = customerIds
+        }
+        val blockTwo = buildMessage("id2", placeholders = listOf(placeholderId)).apply {
+            this.customerIds = customerIds
+        }
+        val manager = inAppContentBlockManager as InAppContentBlockManagerImpl
+        manager.contentBlocksData = listOf(blockOne, blockTwo)
+        val receivedEtags = mutableListOf<String?>()
+        val requestedBlockIds = mutableListOf<List<String>>()
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            receivedEtags.add(it.getArgument(3))
+            requestedBlockIds.add(it.getArgument<List<String>>(2))
+            if (receivedEtags.size == 1) {
+                it.getArgument<(() -> Unit)?>(4)?.invoke()
+            } else {
+                it.getArgument<((String) -> Unit)?>(5)?.invoke("\"etag-v2\"")
+                it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            buildMessageData(
+                                "id1",
+                                ttl = 1,
+                                type = "html",
+                                data = mapOf("html" to buildHtmlMessageContent())
+                            ),
+                            buildMessageData(
+                                "id2",
+                                ttl = 1,
+                                type = "html",
+                                data = mapOf("html" to buildHtmlMessageContent())
+                            )
+                        )
+                    )
+                )
+            }
+            null
+        }
+
+        manager.loadContentIfNeededSync(listOf(blockOne, blockTwo))
+
+        assertEquals(listOf("\"etag-v1\"", null), receivedEtags)
+        assertEquals(listOf(listOf("id1", "id2"), listOf("id2")), requestedBlockIds)
+        assertEquals("\"etag-v1\"", etagStore.retrieve(cacheKey))
+        assertEquals("\"etag-v2\"", etagStore.retrieve(etagCacheKey(customerIds, listOf("id2"))))
+        manager.contentBlocksData.forEach { assertNotNull(it.personalizedData) }
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should process returned blocks and reset ttl for cached blocks on conditional partial 200`() =
+        runInSingleThread {
+            val etagStore = InMemoryETagStore()
+            inAppContentBlockManager = InAppContentBlockManagerImpl(
+                displayStateRepository = displayStateRepository,
+                fetchManager = fetchManager,
+                integrationConfigFactory = projectFactory,
+                customerIdsRepository = customerIdsRepository,
+                imageCache = drawableCache,
+                htmlCache = htmlCache,
+                fontCache = fontCache,
+                etagStore = etagStore
+            )
+            val placeholderId = "ph1"
+            val oldLoadedAt = Date(System.currentTimeMillis() - 60_000)
+            identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+            val customerIds = customerIdsRepository.get().toHashMap()
+            val cacheKey = etagCacheKey(customerIds, listOf("id1", "id2"))
+            etagStore.store(cacheKey, "\"etag-v1\"")
+            val cachedBlock = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+                personalizedData = buildMessageData(
+                    "id1",
+                    ttl = 1,
+                    type = "html",
+                    data = mapOf("html" to "cached-html")
+                ).apply { loadedAt = oldLoadedAt }
+                this.customerIds = customerIds
+            }
+            val changedBlock = buildMessage("id2", placeholders = listOf(placeholderId)).apply {
+                personalizedData = buildMessageData(
+                    "id2",
+                    ttl = 1,
+                    type = "html",
+                    data = mapOf("html" to "old-html")
+                ).apply { loadedAt = oldLoadedAt }
+                this.customerIds = customerIds
+            }
+            val manager = inAppContentBlockManager as InAppContentBlockManagerImpl
+            manager.contentBlocksData = listOf(cachedBlock, changedBlock)
+            var fetchCallCount = 0
+            whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(),
+            anyOrNull(), any(), any())).thenAnswer {
+                fetchCallCount++
+                it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            buildMessageData(
+                                "id2",
+                                ttl = 1,
+                                type = "html",
+                                data = mapOf("html" to "new-html")
+                            )
+                        )
+                    )
+                )
+                null
+            }
+
+            manager.loadContentIfNeededSync(listOf(cachedBlock, changedBlock))
+
+            assertEquals(1, fetchCallCount)
+            val refreshedCachedBlock = manager.contentBlocksData.first { it.id == "id1" }
+            val refreshedChangedBlock = manager.contentBlocksData.first { it.id == "id2" }
+            assertEquals("cached-html", refreshedCachedBlock.personalizedData?.content?.get("html"))
+            assertTrue((refreshedCachedBlock.personalizedData?.loadedAt?.time ?: 0L) > oldLoadedAt.time)
+            assertEquals("new-html", refreshedChangedBlock.personalizedData?.content?.get("html"))
+        }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should skip etag for prefetched in-app content blocks`() = runInSingleThread { idleThreads ->
+        val etagStore = InMemoryETagStore()
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
+            displayStateRepository = displayStateRepository,
+            fetchManager = fetchManager,
+            integrationConfigFactory = projectFactory,
+            customerIdsRepository = customerIdsRepository,
+            imageCache = drawableCache,
+            htmlCache = htmlCache,
+            fontCache = fontCache,
+            etagStore = etagStore
+        )
+        val placeholderId = "ph1"
+        identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+        val cacheKey = etagCacheKey(customerIdsRepository.get().toHashMap(), listOf("id1"))
+        etagStore.store(cacheKey, "\"etag-v1\"")
+        whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+            it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                Result(true, arrayListOf(buildMessage("id1", placeholders = listOf(placeholderId))))
+            )
+            null
+        }
+        var receivedEtag: String? = "not-called"
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
+            receivedEtag = it.getArgument(3)
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
+                Result(
+                    true,
+                    arrayListOf(
+                        buildMessageData(
+                            "id1",
+                            ttl = 60,
+                            type = "html",
+                            data = mapOf("html" to buildHtmlMessageContent())
+                        )
+                    )
+                )
+            )
+            null
+        }
+
+        inAppContentBlockManager.loadInAppContentBlockPlaceholders(listOf(placeholderId))
+        idleThreads()
+
+        assertNull(receivedEtag)
+    }
+
     @Test
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should prioritize message by priority value`() = runInSingleThread {
@@ -1099,7 +1432,8 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
             val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
             it.getArgument<List<String>>(2).forEach { messageId ->
                 msgData.add(
@@ -1111,7 +1445,7 @@ internal class InAppContentBlockManagerImplTest {
                     )
                 )
             }
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
                 .invoke(Result(true, msgData))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
@@ -1426,6 +1760,45 @@ internal class InAppContentBlockManagerImplTest {
     }
 
     @Test
+    fun `should batch filter content blocks using single display state snapshot`() {
+        val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
+        val validBlock = buildMessage("valid", type = "html")
+        val invalidByDate = buildMessage(
+            "invalidByDate",
+            type = "html",
+            dateFilter = DateFilter(
+                enabled = true,
+                fromDate = nowSeconds + 10,
+                toDate = nowSeconds + 20
+            )
+        )
+        val invalidByFrequency = buildMessage(
+            "invalidByFrequency",
+            type = "html",
+            rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
+        )
+        val invalidByStatus = buildMessage("invalidByStatus")
+        invalidByStatus.personalizedData = buildMessageData(
+            id = invalidByStatus.id,
+            status = InAppContentBlockStatus.NOT_MATCHED.value,
+            type = "html"
+        )
+        val invalidByContentType = buildMessage("invalidByContentType", type = "native")
+        doReturn(mapOf(
+            invalidByFrequency.id to InAppContentBlockDisplayState(Date(), 1, null, 0)
+        )).whenever(displayStateRepository).getAll()
+        clearInvocations(displayStateRepository)
+
+        val result = (inAppContentBlockManager as InAppContentBlockManagerImpl).filterContentBlocksForDisplay(
+            listOf(validBlock, invalidByDate, invalidByFrequency, invalidByStatus, invalidByContentType)
+        )
+
+        assertEquals(listOf(validBlock), result)
+        verify(displayStateRepository).getAll()
+        verify(displayStateRepository, never()).get(any())
+    }
+
+    @Test
     fun `should return all content blocks but only for placeholder`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
@@ -1473,7 +1846,8 @@ internal class InAppContentBlockManagerImplTest {
                 )
             )
         }
-        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), any(), any())).thenAnswer {
+        whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
+        any(), any())).thenAnswer {
             val msgData = arrayListOf<InAppContentBlockPersonalizedData>()
             it.getArgument<List<String>>(2).forEach { messageId ->
                 msgData.add(
@@ -1487,7 +1861,7 @@ internal class InAppContentBlockManagerImplTest {
                     )
                 )
             }
-            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
                 .invoke(Result(true, msgData))
         }
         inAppContentBlockManager.loadInAppContentBlockPlaceholders(emptyList())
@@ -1499,5 +1873,23 @@ internal class InAppContentBlockManagerImplTest {
         assertTrue(loadedBlockIds.contains("invalidByFrequency"))
         assertTrue(loadedBlockIds.contains("valid"))
         assertFalse(loadedBlockIds.contains("invalidByPlaceholder"))
+    }
+
+    private class InMemoryETagStore : InAppContentBlocksETagStore {
+        private val values = hashMapOf<String, String>()
+
+        override fun store(key: String, etag: String) {
+            if (key.isNotEmpty()) values[key] = etag
+        }
+
+        override fun retrieve(key: String): String? = values[key]
+
+        override fun remove(key: String) {
+            values.remove(key)
+        }
+
+        override fun clearAll() {
+            values.clear()
+        }
     }
 }

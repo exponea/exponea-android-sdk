@@ -13,6 +13,7 @@ import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.services.OnIntegrationStoppedCallback
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockViewController
 import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 
@@ -180,6 +181,50 @@ class InAppContentBlockPlaceholderView internal constructor(
     fun refreshContent() {
         Logger.i(this, "InAppCB: $placeholderId: View requested to be refreshed")
         controller.loadContent(false)
+    }
+
+    /**
+     * Triggers a load respecting the ETag cache.
+     * Use for the initial trigger and on screen re-appearance (e.g. onResume).
+     * Use [reload] only when an explicit force-refresh is required (e.g. pull-to-refresh).
+     */
+    fun load() {
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
+        Logger.i(this, "InAppCB: $placeholderId: load() requested")
+        ensureOnBackgroundThread {
+            val manager = Exponea.getComponent()?.inAppContentBlockManager ?: run {
+                Logger.e(this, "InAppCB: $placeholderId: SDK not initialized")
+                return@ensureOnBackgroundThread
+            }
+            val contentBlocks = manager.getAllInAppContentBlocksForPlaceholder(placeholderId)
+            manager.loadContentIfNeededSync(contentBlocks, forceRefresh = false)
+            controller.loadContent(false)
+        }
+    }
+
+    /**
+     * Forces an unconditional re-fetch ignoring any cached ETag.
+     * Use for explicit user actions such as pull-to-refresh.
+     * For regular re-checks on screen re-appearance use [load] instead.
+     */
+    fun reload() {
+        if (Exponea.isStopped) {
+            Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
+            return
+        }
+        Logger.i(this, "InAppCB: $placeholderId: reload() requested — force refresh")
+        ensureOnBackgroundThread {
+            val manager = Exponea.getComponent()?.inAppContentBlockManager ?: run {
+                Logger.e(this, "InAppCB: $placeholderId: SDK not initialized")
+                return@ensureOnBackgroundThread
+            }
+            val contentBlocks = manager.getAllInAppContentBlocksForPlaceholder(placeholderId)
+            manager.loadContentIfNeededSync(contentBlocks, forceRefresh = true)
+            controller.loadContent(false)
+        }
     }
 
     internal fun resetContent() {

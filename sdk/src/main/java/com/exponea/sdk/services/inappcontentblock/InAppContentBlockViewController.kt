@@ -380,6 +380,12 @@ internal open class InAppContentBlockViewController(
         synchronized(stateLock) {
             lastRenderedNormalizedHtml = null
         }
+        // For deferred-load views (carousels), holders are recycled across different blocks.
+        // Resetting contentLoaded forces loadContent() on re-attach so the controller picks up
+        // the new assigned block instead of showing stale content from the previous one.
+        if (config.defferedLoad) {
+            contentLoaded.set(false)
+        }
     }
 
     internal fun onContentReady(contentLoaded: Boolean, finishSource: String) {

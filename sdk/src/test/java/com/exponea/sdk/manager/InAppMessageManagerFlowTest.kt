@@ -101,10 +101,13 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 any(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
                 Result(true, arrayListOf())
             )
         }
@@ -138,10 +141,13 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 any<ProjectConfig>(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(2).invoke(
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf())
             )
         }
@@ -513,10 +519,13 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
                 any<ProjectConfig>(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, pendingMessages)
             )
         }

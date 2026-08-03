@@ -90,6 +90,40 @@ internal class ExponeaWebViewTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should serve gif local resource with gif mime type`() {
+        initSdk(null)
+        val originalUrl = "https://example.com/image.gif"
+        val cachedFile = Exponea.getComponent()!!.drawableCache.fileCache.retrieveFileDirectly(originalUrl)
+        cachedFile.parentFile?.mkdirs()
+        cachedFile.writeText("gif-data")
+
+        val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
+        val response = webview.createLocalResourceResponse(LocalResourceUrlMapper.imageUrl(originalUrl))
+
+        assertNotNull(response)
+        assertEquals("image/gif", response.mimeType)
+        assertEquals("gif-data", response.data.bufferedReader().readText())
+        cachedFile.delete()
+    }
+
+    @Test
+    fun `should detect image mime type from cached bytes`() {
+        initSdk(null)
+        val originalUrl = "https://example.com/image"
+        val cachedFile = Exponea.getComponent()!!.drawableCache.fileCache.retrieveFileDirectly(originalUrl)
+        cachedFile.parentFile?.mkdirs()
+        cachedFile.writeBytes("GIF89a".toByteArray())
+
+        val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())
+        val response = webview.createLocalResourceResponse(LocalResourceUrlMapper.imageUrl(originalUrl))
+
+        assertNotNull(response)
+        assertEquals("image/gif", response.mimeType)
+        assertEquals("GIF89a", response.data.bufferedReader().readText())
+        cachedFile.delete()
+    }
+
+    @Test
     fun `should ignore non-local resource url`() {
         initSdk(null)
         val webview = ExponeaWebView(ApplicationProvider.getApplicationContext())

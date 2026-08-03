@@ -60,7 +60,11 @@ internal class ExponeaMockService(
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
-    override fun postFetchInAppMessages(integrationConfig: IntegrationConfig, customerIds: CustomerIds): Call {
+    override fun postFetchInAppMessages(
+        integrationConfig: IntegrationConfig,
+        customerIds: CustomerIds,
+        ifNoneMatch: String?
+    ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }
 
@@ -113,7 +117,8 @@ internal class ExponeaMockService(
     override fun fetchPersonalizedInAppContentBlocks(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
-        contentBlockIds: List<String>
+        contentBlockIds: List<String>,
+        ifNoneMatch: String?
     ): Call {
         return if (success) mockSuccessCall() else mockFailCall()
     }

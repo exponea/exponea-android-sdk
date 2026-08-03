@@ -76,6 +76,8 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
         )
         Exponea.flushMode = FlushMode.MANUAL
         Exponea.init(context, configuration)
+        // Drain any pending main-looper tasks left by previous test classes, then clear
+        // their recorded calls so cross-test noise doesn't affect verify(exactly = N) checks.
         ShadowLooper.idleMainLooper()
         clearAllMocks(answers = false)
     }
@@ -109,10 +111,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                 any(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(Result(true, arrayListOf(
                 // htmlContent
                 InAppContentBlockManagerImplTest.buildMessageData(
                     messageId,
@@ -190,10 +195,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                 any(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3).invoke(Result(true, arrayListOf(
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(Result(true, arrayListOf(
                 // htmlContent
                 InAppContentBlockManagerImplTest.buildMessageData(
                     messageId,
@@ -256,10 +264,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                 any(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
                 .invoke(Result(true, arrayListOf(
                     // htmlContent
                     InAppContentBlockManagerImplTest.buildMessageData(
@@ -328,10 +339,13 @@ internal class ExponeaTrackInAppContentBlockTest : ExponeaSDKTest() {
                 any(),
                 any(),
                 any(),
+                any(),
+                any(),
+                any(),
                 any()
             )
         } answers {
-            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(3)
+            arg<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6)
                 .invoke(Result(true, arrayListOf(
                     // htmlContent
                     InAppContentBlockManagerImplTest.buildMessageData(

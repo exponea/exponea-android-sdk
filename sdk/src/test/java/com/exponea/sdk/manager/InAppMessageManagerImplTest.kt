@@ -37,6 +37,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.VolatileInAppMessagesETagStore
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.telemetry.TelemetryManager
@@ -54,6 +55,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
+import io.mockk.unmockkConstructor
 import io.mockk.verify
 import io.mockk.verifySequence
 import java.util.Date
@@ -149,7 +151,8 @@ internal class InAppMessageManagerImplTest {
             fontCache,
             presenter,
             trackingConsentManager,
-            projectFactory
+            projectFactory,
+            VolatileInAppMessagesETagStore()
         )
         mockActivity = Robolectric.buildActivity(Activity::class.java, Intent()).get()
         Exponea.inAppMessageActionCallback = Constants.InApps.defaultInAppMessageDelegate
@@ -157,13 +160,25 @@ internal class InAppMessageManagerImplTest {
 
     @After
     fun after() {
+        runCatching { unmockkConstructor(SentryTelemetryUpload::class) }
+        runCatching { unmockkConstructor(TelemetryManager::class) }
         Exponea.telemetry = null
         Exponea.isStopped = false
     }
 
     @Test
     fun `should gracefully fail to preload with fetch error`() {
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             lastArg<(Result<FetchError>) -> Unit>().invoke(Result(false, FetchError(null, "error")))
         }
         waitForIt {
@@ -177,8 +192,18 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should preload messages`() {
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
         }
@@ -198,9 +223,61 @@ internal class InAppMessageManagerImplTest {
     }
 
     @Test
+    fun `should send stored etag and use cached messages for 304 response`() {
+        val etag = "\"in-app-etag\""
+        val messages = arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle())
+        var requestCount = 0
+        every { messagesCache.get() } returns messages
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            val currentRequest = requestCount++
+            if (currentRequest == 0) {
+                assertNull(arg<String?>(2))
+                arg<((String?) -> Unit)>(4).invoke(etag)
+                arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, messages))
+            } else {
+                assertEquals(etag, arg<String?>(2))
+                arg<() -> Unit>(3).invoke()
+            }
+        }
+
+        waitForIt { done ->
+            manager.reload { firstResult ->
+                assertTrue(firstResult.isSuccess)
+                manager.reload { secondResult ->
+                    assertTrue(secondResult.isSuccess)
+                    done()
+                }
+            }
+        }
+
+        assertEquals(2, requestCount)
+        verify(exactly = 2) { messagesCache.set(messages) }
+    }
+
+    @Test
     fun `should not preload messages if SDK is stopped`() {
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
         }
@@ -221,9 +298,19 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should ignore preloaded messages if SDK is stopped`() {
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             Exponea.isStopped = true
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
         }
@@ -244,55 +331,135 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should always preload messages on first event`() {
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
 
         eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     @Test
     fun `should not preload messages on first event while in background`() {
         ExponeaContextProvider.applicationIsForeground = false
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
 
         eventManager.track("test-event", Date().time.toDouble(), hashMapOf("prop" to "value"), EventType.TRACK_EVENT)
-        verify(exactly = 0) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 0) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     @Test
     fun `should not preload messages for identifyCustomer while in background`() {
         ExponeaContextProvider.applicationIsForeground = false
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
 
         eventManager.track(
             type = EventType.TRACK_CUSTOMER
         )
-        verify(exactly = 0) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 0) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     @Test
     fun `should not preload messages on push events and session-end`() {
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
 
         eventManager.track("delivered", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.PUSH_DELIVERED)
         eventManager.track("click", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.PUSH_OPENED)
         eventManager.track("sessionEnd", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_END)
-        verify(exactly = 0) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 0) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     private fun getEventManager(): EventManager {
@@ -318,8 +485,18 @@ internal class InAppMessageManagerImplTest {
     @Test
     fun `should preload only once when tracking from more threads`() {
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
 
         val numberOfThreads = 5
@@ -338,7 +515,7 @@ internal class InAppMessageManagerImplTest {
         }
         latch.await(20, TimeUnit.SECONDS)
         verify(exactly = 1) {
-            fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any())
+            fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any(), any(), any(), any())
         }
     }
 
@@ -361,8 +538,18 @@ internal class InAppMessageManagerImplTest {
             },
             deviceIdProvider = { DeviceIdManager.getDeviceId(context = ApplicationProvider.getApplicationContext()) }
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
 
         val addedEvents: java.util.ArrayList<ExportedEvent> = arrayListOf()
@@ -386,8 +573,18 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should preload messages only once`() = runInSingleThread { idleThreads ->
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         manager.inAppShowingTriggered(
             EventType.SESSION_START,
@@ -397,7 +594,17 @@ internal class InAppMessageManagerImplTest {
             customerIdsRepository.get().toHashMap()
         )
         idleThreads()
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
         manager.inAppShowingTriggered(
             EventType.SESSION_START,
             "session_start",
@@ -406,7 +613,17 @@ internal class InAppMessageManagerImplTest {
             customerIdsRepository.get().toHashMap()
         )
         idleThreads()
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
         manager.inAppShowingTriggered(
             EventType.SESSION_START,
             "session_start",
@@ -415,24 +632,77 @@ internal class InAppMessageManagerImplTest {
             customerIdsRepository.get().toHashMap()
         )
         idleThreads()
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     @Test
-    fun `should refresh messages only after expiration`() {
+    fun `should refresh messages only after expiration`() = runInSingleThread { idleThreads ->
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         every { messagesCache.get() } returns arrayListOf()
 
         eventManager.track("test-event", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_START)
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        idleThreads()
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
         eventManager.track("test-event", currentTimeSeconds(), hashMapOf("prop" to "value"), EventType.SESSION_START)
-        verify(exactly = 1) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
-        val expiredTimestamp = (Date().time + InAppMessageManagerImpl.REFRESH_CACHE_AFTER * 2).toDouble()
+        idleThreads()
+        verify(exactly = 1) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
+        val expiredTimestamp = currentTimeSeconds() + InAppMessageManagerImpl.REFRESH_CACHE_AFTER / 1000.0 * 2
         eventManager.track("test-event", expiredTimestamp, hashMapOf("prop" to "value"), EventType.SESSION_START)
-        verify(exactly = 2) { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) }
+        idleThreads()
+        verify(exactly = 2) {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
     }
 
     @Test
@@ -632,8 +902,18 @@ internal class InAppMessageManagerImplTest {
 
     @Test
     fun `should apply 'once_per_visit' frequency filter`() {
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         every { messagesCache.get() } returns arrayListOf(
             InAppMessageTest.buildInAppMessageWithRichstyle(frequency = InAppMessageFrequency.ONCE_PER_VISIT.value)
@@ -663,8 +943,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val dismissedCallbackSlot = slot<(Activity, Boolean, InAppMessagePayloadButton?) -> Unit>()
@@ -714,8 +1004,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5)
                 .invoke(Result(true, arrayListOf(inAppMessage)))
         }
         val showInvoked = CountDownLatch(1)
@@ -792,8 +1092,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val actionCallbackSlot = slot<(Activity, InAppMessagePayloadButton) -> Unit>()
         val errorCallbackSlot = slot<(String) -> Unit>()
@@ -869,8 +1179,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_2"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             )
         }
@@ -934,8 +1254,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any(), any()) } returns mockk()
 
@@ -977,8 +1307,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val showCalled = CountDownLatch(1)
         every {
@@ -1032,8 +1372,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         every { presenter.show(any(), any(), any(), any(), any(), any(), any(), any()) } returns mockk()
         waitForIt { manager.reload { it() } }
@@ -1070,8 +1420,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = false
@@ -1178,8 +1538,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
@@ -1276,8 +1646,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         val spykCallback: InAppMessageCallback = spyk(object : InAppMessageCallback {
             override var overrideDefaultBehavior = true
@@ -1356,8 +1736,18 @@ internal class InAppMessageManagerImplTest {
             customerIds
         )
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
         // use null eventType to skip message showing
@@ -1379,8 +1769,18 @@ internal class InAppMessageManagerImplTest {
             customerIds
         )
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         messagesCache.set(arrayListOf())
         // use null eventType to skip message showing
@@ -1402,8 +1802,18 @@ internal class InAppMessageManagerImplTest {
             customerIds
         )
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         // simulate loading, to invoke STOP ReloadMode
         manager.preloadStarted()
@@ -1427,8 +1837,18 @@ internal class InAppMessageManagerImplTest {
             customerIds
         )
         val eventManager = getEventManager()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(Result(true, arrayListOf()))
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(Result(true, arrayListOf()))
         }
         // simulate loading, to invoke STOP ReloadMode
         manager.preloadStarted()
@@ -1456,8 +1876,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter("other_event", arrayListOf()),
             imageUrl = "other_image_url_2"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage, otherMessage1, otherMessage2))
             )
         }
@@ -1491,8 +1921,18 @@ internal class InAppMessageManagerImplTest {
     fun `should register single pending request for multiple same triggers`() {
         val customerIds = customerIdsRepository.get().toHashMap()
         val activeEventType = Constants.EventTypes.sessionEnd
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf())
             )
         }
@@ -1527,8 +1967,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage))
             )
         }
@@ -1564,8 +2014,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage))
             )
         }
@@ -1591,8 +2051,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter(activeEventType, arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage))
             )
         }
@@ -1622,8 +2092,18 @@ internal class InAppMessageManagerImplTest {
             trigger = EventFilter("not_active_event_type", arrayListOf()),
             imageUrl = "pending_image_url"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage))
             )
         }
@@ -1657,8 +2137,18 @@ internal class InAppMessageManagerImplTest {
             priority = 10,
             id = "67890"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessageTopPrio, pendingMessageSecond))
             )
         }
@@ -1693,8 +2183,18 @@ internal class InAppMessageManagerImplTest {
             priority = 100,
             id = "67890"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage1, pendingMessage2))
             )
         }
@@ -1728,8 +2228,18 @@ internal class InAppMessageManagerImplTest {
             priority = null,
             id = "67890"
         )
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(pendingMessage1, pendingMessage2))
             )
         }
@@ -1773,8 +2283,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5)
                 .invoke(Result(true, arrayListOf(inAppMessage)))
         }
         val presentCalled = CountDownLatch(1)
@@ -1918,8 +2438,18 @@ internal class InAppMessageManagerImplTest {
         every { fontCache.has(any()) } returns true
         every { fontCache.getFontFile(any()) } returns MockFile()
         every { fontCache.getTypeface(any()) } returns null
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<ArrayList<InAppMessage>>) -> Unit>()
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5)
                 .invoke(Result(true, arrayListOf(inAppMessage)))
         }
         val presentCalled = CountDownLatch(1)

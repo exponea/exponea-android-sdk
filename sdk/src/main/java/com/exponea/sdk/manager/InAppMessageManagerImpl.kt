@@ -10,6 +10,7 @@ import com.exponea.sdk.models.DeviceProperties
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExportedEvent
+import com.exponea.sdk.models.FetchError
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.InAppMessage
 import com.exponea.sdk.models.InAppMessageButton
@@ -22,6 +23,7 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.InAppMessagesETagStore
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
@@ -31,6 +33,7 @@ import com.exponea.sdk.util.GdprTracking
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
+import com.exponea.sdk.util.buildCustomerIdsCacheKey
 import com.exponea.sdk.util.currentTimeSeconds
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
@@ -54,7 +57,8 @@ internal class InAppMessageManagerImpl(
     private val fontCache: FontCache,
     private val presenter: InAppMessagePresenter,
     private val eventManager: TrackingConsentManager,
-    private val integrationConfigFactory: IntegrationConfigFactory
+    private val integrationConfigFactory: IntegrationConfigFactory,
+    private val etagStore: InAppMessagesETagStore
 ) : InAppMessageManager {
     companion object {
         const val REFRESH_CACHE_AFTER = 1000 * 60 * 30 // when session is started and cache is older than this, refresh
@@ -108,49 +112,77 @@ internal class InAppMessageManagerImpl(
             // CustomerIds constructor removes cookie, add it back:
             cookie = customerIds[CustomerIds.COOKIE]
         }
+        val integrationConfig = integrationConfigFactory.integrationConfig
+        val cacheKey = buildCustomerIdsCacheKey(customerIdsForFetch.toHashMap())
+        val storedEtag = etagStore.retrieve(cacheKey)
+        fun handleLoadedMessages(result: com.exponea.sdk.models.Result<ArrayList<InAppMessage>>) {
+            if (Exponea.isStopped) {
+                Logger.e(this, "In-app fetch failed, SDK is stopping")
+                preloadFinished()
+                callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
+                return
+            }
+            trackTelemetry(result)
+            if (areCustomerIdsActual(customerIds)) {
+                inAppMessagesCache.set(result.results)
+                Logger.d(this, "[InApp] In-app messages preloaded successfully")
+                preloadOnlineResourcesAsync(
+                    messages = result.results
+                )
+                preloadFinished()
+                callback?.invoke(Result.success(Unit))
+            } else {
+                preloadFinished()
+                notifyAboutObsoleteFetch(callback)
+            }
+        }
+        fun handleFetchFailure(it: com.exponea.sdk.models.Result<FetchError>) {
+            if (Exponea.isStopped) {
+                Logger.e(this, "In-app fetch failed, SDK is stopping")
+                preloadFinished()
+                callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
+                return
+            }
+            if (retryCount < MAX_RETRY_COUNT) {
+                Logger.w(this, "[InApp] Preloading in-app messages failed, going to retry")
+                reload(customerIds, callback, retryCount + 1)
+            } else if (areCustomerIdsActual(customerIds)) {
+                Logger.e(this, "[InApp] Preloading in-app messages failed. ${it.results.message}")
+                preloadFinished()
+                callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
+            } else {
+                preloadFinished()
+                notifyAboutObsoleteFetch(callback)
+            }
+        }
         fetchManager.fetchInAppMessages(
-            integrationConfig = integrationConfigFactory.integrationConfig,
+            integrationConfig = integrationConfig,
             customerIds = customerIdsForFetch,
-            onSuccess = { result ->
-                if (Exponea.isStopped) {
-                    Logger.e(this, "In-app fetch failed, SDK is stopping")
-                    preloadFinished()
-                    callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
-                    return@fetchInAppMessages
-                }
-                trackTelemetry(result)
-                if (areCustomerIdsActual(customerIds)) {
-                    inAppMessagesCache.set(result.results)
-                    Logger.d(this, "[InApp] In-app messages preloaded successfully")
-                    preloadOnlineResourcesAsync(
-                        messages = result.results
-                    )
-                    preloadFinished()
-                    callback?.invoke(Result.success(Unit))
+            etag = storedEtag,
+            onNotModified = {
+                if (inAppMessagesCache.getTimestamp() > 0L) {
+                    Logger.d(this, "[InApp] 304 Not Modified - using cached in-app messages")
+                    handleLoadedMessages(com.exponea.sdk.models.Result(true, ArrayList(inAppMessagesCache.get())))
                 } else {
-                    preloadFinished()
-                    notifyAboutObsoleteFetch(callback)
+                    Logger.d(this, "[InApp] 304 Not Modified but in-app messages cache is missing")
+                    etagStore.remove(cacheKey)
+                    handleFetchFailure(
+                        com.exponea.sdk.models.Result(
+                            false,
+                            FetchError(null, "No cached in-app messages available for 304 response")
+                        )
+                    )
                 }
             },
-            onFailure = {
-                if (Exponea.isStopped) {
-                    Logger.e(this, "In-app fetch failed, SDK is stopping")
-                    preloadFinished()
-                    callback?.invoke(Result.failure(Exception("In-app fetch failed, SDK is stopping")))
-                    return@fetchInAppMessages
-                }
-                if (retryCount < MAX_RETRY_COUNT) {
-                    Logger.w(this, "[InApp] Preloading in-app messages failed, going to retry")
-                    reload(customerIds, callback, retryCount + 1)
-                } else if (areCustomerIdsActual(customerIds)) {
-                    Logger.e(this, "[InApp] Preloading in-app messages failed. ${it.results.message}")
-                    preloadFinished()
-                    callback?.invoke(Result.failure(Exception("Preloading in-app messages failed.")))
+            onEtagHeader = { etag ->
+                if (etag == null) {
+                    etagStore.remove(cacheKey)
                 } else {
-                    preloadFinished()
-                    notifyAboutObsoleteFetch(callback)
+                    etagStore.store(etag, cacheKey)
                 }
-            }
+            },
+            onSuccess = ::handleLoadedMessages,
+            onFailure = ::handleFetchFailure
         )
     }
 
@@ -729,6 +761,7 @@ internal class InAppMessageManagerImpl(
 
     override fun clear() {
         Logger.d(this, "[InApp] Clearing all data")
+        etagStore.clearAll()
         inAppMessagesCache.clear()
         displayStateRepository.clear()
         clearPendingShowRequests()

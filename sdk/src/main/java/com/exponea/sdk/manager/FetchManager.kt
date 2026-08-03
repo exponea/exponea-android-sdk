@@ -33,6 +33,26 @@ internal interface FetchManager {
         customerIds: CustomerIds,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
+    ) {
+        fetchInAppMessages(
+            integrationConfig = integrationConfig,
+            customerIds = customerIds,
+            etag = null,
+            onNotModified = null,
+            onEtagHeader = null,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+    }
+
+    fun fetchInAppMessages(
+        integrationConfig: IntegrationConfig,
+        customerIds: CustomerIds,
+        etag: String?,
+        onNotModified: (() -> Unit)?,
+        onEtagHeader: ((String?) -> Unit)?,
+        onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
+        onFailure: (Result<FetchError>) -> Unit
     )
 
     fun fetchAppInbox(
@@ -63,6 +83,9 @@ internal interface FetchManager {
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         contentBlockIds: List<String>,
+        etag: String? = null,
+        onNotModified: (() -> Unit)? = null,
+        onEtagHeader: ((String) -> Unit)? = null,
         onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     )

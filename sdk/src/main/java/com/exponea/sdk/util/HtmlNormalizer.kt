@@ -80,9 +80,6 @@ public class HtmlNormalizer {
         private const val HREF_ATTR = "href"
         private const val ANCHOR_TAG_SELECTOR = "a"
 
-        private const val IMAGE_MIMETYPE = "image/png"
-        private const val FONT_MIMETYPE = "application/font"
-
         private val regExpOptions = setOf<RegexOption>(IGNORE_CASE, DOT_MATCHES_ALL)
         private val cssUrlRegexp = Regex(
             pattern = "url\\((.+?)\\)",
@@ -467,7 +464,7 @@ public class HtmlNormalizer {
         ) {
             throw IllegalStateException("HTML resources are not fully available offline")
         }
-        makeImageTagsToBeOffline(visitor.imgElements)
+        makeImageTagsToBeOffline(visitor.imgElements, visitor.srcsetElements)
         makeStylesheetsToBeOffline(visitor.styleTagElements, visitor.styleTagOnlineStatements)
         makeStyleAttributesToBeOffline(visitor.styleAttrElements, visitor.styleAttrOnlineStatements)
     }
@@ -491,14 +488,9 @@ public class HtmlNormalizer {
     ): String {
         var styleTarget = styleSource
         for (statement in onlineStatements) {
-            val localResourceUrl: String?
-            when (statement.mimeType) {
-                FONT_MIMETYPE -> localResourceUrl = LocalResourceUrlMapper.fontUrl(statement.url)
-                IMAGE_MIMETYPE -> localResourceUrl = LocalResourceUrlMapper.imageUrl(statement.url)
-                else -> {
-                    localResourceUrl = null
-                    Logger.e(this, "Unsupported mime type ${statement.mimeType}")
-                }
+            val localResourceUrl = when (statement.resourceType) {
+                CssResourceType.FONT -> LocalResourceUrlMapper.fontUrl(statement.url)
+                CssResourceType.IMAGE -> LocalResourceUrlMapper.imageUrl(statement.url)
             }
             if (localResourceUrl.isNullOrBlank()) {
                 Logger.e(this, "Unable to rewrite offline resource ${statement.url}")
@@ -506,7 +498,8 @@ public class HtmlNormalizer {
             }
             Logger.d(
                 this,
-                "[HTML] Rewriting CSS ${statement.mimeType} resource to local cache URL: ${statement.url}"
+                "[HTML] Rewriting CSS ${statement.resourceType.name.lowercase()} resource to local cache URL: " +
+                    statement.url
             )
             styleTarget = styleTarget.replace(
                 statement.url, localResourceUrl
@@ -530,7 +523,7 @@ public class HtmlNormalizer {
                     continue
                 }
                 result.add(CssOnlineUrl(
-                    mimeType = FONT_MIMETYPE,
+                    resourceType = CssResourceType.FONT,
                     url = url
                 ))
             }
@@ -560,7 +553,11 @@ public class HtmlNormalizer {
                 }
                 val cssKeyNormalized = cssKey.lowercase()
                 result.add(CssOnlineUrl(
-                    mimeType = if (cssKeyNormalized == "src") { FONT_MIMETYPE } else { IMAGE_MIMETYPE },
+                    resourceType = if (cssKeyNormalized == "src") {
+                        CssResourceType.FONT
+                    } else {
+                        CssResourceType.IMAGE
+                    },
                     url = url
                 ))
             }
@@ -577,17 +574,35 @@ public class HtmlNormalizer {
         }
     }
 
-    private fun makeImageTagsToBeOffline(images: List<Element>) {
+    private fun makeImageTagsToBeOffline(images: List<Element>, srcsetElements: List<Element>) {
         for (image in images) {
             val imageSource = image.attr("src")
-            if (imageSource.isNullOrEmpty()) {
-                continue
+            if (!imageSource.isNullOrEmpty() && !isOfflineResourceUri(imageSource)) {
+                Logger.d(this, "[HTML] Rewriting image resource to local cache URL: $imageSource")
+                image.attr("src", LocalResourceUrlMapper.imageUrl(imageSource))
             }
-            if (isOfflineResourceUri(imageSource)) {
-                continue
+        }
+        for (element in srcsetElements) {
+            val srcset = element.attr("srcset")
+            if (!srcset.isNullOrEmpty()) {
+                element.attr("srcset", rewriteSrcset(srcset))
             }
-            Logger.d(this, "[HTML] Rewriting image resource to local cache URL: $imageSource")
-            image.attr("src", LocalResourceUrlMapper.imageUrl(imageSource))
+        }
+    }
+
+    private fun rewriteSrcset(srcset: String): String {
+        return srcset.split(",").joinToString(", ") { part ->
+            val trimmed = part.trim()
+            val spaceIdx = trimmed.indexOfFirst { it.isWhitespace() }
+            val url = if (spaceIdx == -1) trimmed else trimmed.substring(0, spaceIdx)
+            val descriptor = if (spaceIdx == -1) "" else trimmed.substring(spaceIdx)
+            val localUrl = if (url.isEmpty() || isOfflineResourceUri(url)) {
+                url
+            } else {
+                Logger.d(this, "[HTML] Rewriting srcset resource to local cache URL: $url")
+                LocalResourceUrlMapper.imageUrl(url)
+            }
+            if (descriptor.isEmpty()) localUrl else "$localUrl$descriptor"
         }
     }
 
@@ -617,7 +632,7 @@ public class HtmlNormalizer {
         for (styleTag in styleTags) {
             val styleSource = styleTag.data()
             val onlineSources = collectOnlineUrlStatements(styleSource)
-            val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
+            val imageOnlineSources = onlineSources.filter { it.resourceType == CssResourceType.IMAGE }
             onlineUrls.addAll(imageOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // style attributes
@@ -628,7 +643,7 @@ public class HtmlNormalizer {
                 continue
             }
             val onlineSources = collectOnlineUrlStatements(styleAttrSource)
-            val imageOnlineSources = onlineSources.filter { it.mimeType == IMAGE_MIMETYPE }
+            val imageOnlineSources = onlineSources.filter { it.resourceType == CssResourceType.IMAGE }
             onlineUrls.addAll(imageOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // end
@@ -645,7 +660,7 @@ public class HtmlNormalizer {
         for (styleTag in styleTags) {
             val styleSource = styleTag.data()
             val onlineSources = collectOnlineUrlStatements(styleSource)
-            val fontOnlineSources = onlineSources.filter { it.mimeType == FONT_MIMETYPE }
+            val fontOnlineSources = onlineSources.filter { it.resourceType == CssResourceType.FONT }
             onlineUrls.addAll(fontOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // style attributes
@@ -656,7 +671,7 @@ public class HtmlNormalizer {
                 continue
             }
             val onlineSources = collectOnlineUrlStatements(styleAttrSource)
-            val fontOnlineSources = onlineSources.filter { it.mimeType == FONT_MIMETYPE }
+            val fontOnlineSources = onlineSources.filter { it.resourceType == CssResourceType.FONT }
             onlineUrls.addAll(fontOnlineSources.map { it.url }.filter { it.isNotBlank() })
         }
         // end
@@ -681,11 +696,12 @@ public class HtmlNormalizer {
         ensureCloseButton = true
     )
 
-    /**
-     * Holds mime-type for 'url(...)' in CSS
-     */
+    private enum class CssResourceType {
+        IMAGE, FONT
+    }
+
     private data class CssOnlineUrl(
-        val mimeType: String,
+        val resourceType: CssResourceType,
         val url: String
     )
 
@@ -695,6 +711,7 @@ public class HtmlNormalizer {
         val closeButtonElements: MutableList<Element> = mutableListOf()
         val dataLinkElements: MutableList<Element> = mutableListOf()
         val imgElements: MutableList<Element> = mutableListOf()
+        val srcsetElements: MutableList<Element> = mutableListOf()
         val styleTagElements: MutableList<Element> = mutableListOf()
         val styleAttrElements: MutableList<Element> = mutableListOf()
         val imageUrls: MutableSet<String> = mutableSetOf()
@@ -733,6 +750,10 @@ public class HtmlNormalizer {
                     if (imageUrl.isNotEmpty() && !isOfflineResourceUri(imageUrl)) {
                         imageUrls.add(imageUrl)
                     }
+                    collectSrcsetUrls(node)
+                }
+                if (tagName == "source") {
+                    collectSrcsetUrls(node)
                 }
                 if (tagName == "style") {
                     styleTagElements.add(node)
@@ -765,11 +786,27 @@ public class HtmlNormalizer {
             return NodeFilter.FilterResult.CONTINUE
         }
 
+        private fun collectSrcsetUrls(node: Element) {
+            val srcset = node.attr("srcset")
+            if (srcset.isEmpty()) return
+            var hasOnlineUrl = false
+            srcset.split(",").forEach { part ->
+                val url = part.trim().split(Regex("\\s+")).firstOrNull() ?: return@forEach
+                if (url.isNotEmpty() && !isOfflineResourceUri(url)) {
+                    imageUrls.add(url)
+                    hasOnlineUrl = true
+                }
+            }
+            if (hasOnlineUrl) {
+                srcsetElements.add(node)
+            }
+        }
+
         private fun addCssStatementsToResourceSets(statements: List<CssOnlineUrl>) {
             for (statement in statements) {
-                when (statement.mimeType) {
-                    FONT_MIMETYPE -> fontUrls.add(statement.url)
-                    IMAGE_MIMETYPE -> imageUrls.add(statement.url)
+                when (statement.resourceType) {
+                    CssResourceType.FONT -> fontUrls.add(statement.url)
+                    CssResourceType.IMAGE -> imageUrls.add(statement.url)
                 }
             }
         }

@@ -44,6 +44,8 @@ import com.exponea.sdk.util.TokenType
 import com.google.gson.Gson
 import okhttp3.Call
 
+private const val IF_NONE_MATCH = "If-None-Match"
+
 internal class ExponeaServiceImpl(
     private val gson: Gson,
     private val networkManager: NetworkHandler
@@ -124,7 +126,11 @@ internal class ExponeaServiceImpl(
         }
     )
 
-    override fun postFetchInAppMessages(integrationConfig: IntegrationConfig, customerIds: CustomerIds) = doPost(
+    override fun postFetchInAppMessages(
+        integrationConfig: IntegrationConfig,
+        customerIds: CustomerIds,
+        ifNoneMatch: String?
+    ) = doPost(
         integrationConfig,
         when (integrationConfig) {
             is ProjectConfig -> ApiEndPoint(IN_APP_MESSAGES).applyProjectToken(integrationConfig.projectToken)
@@ -137,7 +143,10 @@ internal class ExponeaServiceImpl(
         hashMapOf(
             "customer_ids" to customerIds.toHashMap(),
             "device" to "android"
-        )
+        ),
+        headers = ifNoneMatch?.takeIf { it.isNotBlank() }?.let {
+            mapOf(IF_NONE_MATCH to it)
+        } ?: emptyMap()
     )
 
     override fun postFetchAppInbox(
@@ -230,7 +239,8 @@ internal class ExponeaServiceImpl(
     override fun fetchPersonalizedInAppContentBlocks(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
-        contentBlockIds: List<String>
+        contentBlockIds: List<String>,
+        ifNoneMatch: String?
     ) = doPost(
         integrationConfig,
         when (integrationConfig) {
@@ -246,7 +256,10 @@ internal class ExponeaServiceImpl(
         hashMapOf(
             "customer_ids" to customerIds.toHashMap(),
             "content_block_ids" to contentBlockIds
-        )
+        ),
+        headers = ifNoneMatch?.takeIf { it.isNotBlank() }?.let {
+            mapOf(IF_NONE_MATCH to it)
+        } ?: emptyMap()
     )
 
     override fun fetchSegments(
@@ -307,11 +320,13 @@ internal class ExponeaServiceImpl(
         integrationConfig: IntegrationConfig,
         endpoint: String,
         authStrategy: AuthStrategy,
-        bodyContent: Any
+        bodyContent: Any,
+        headers: Map<String, String> = emptyMap()
     ) = networkManager.post(
         integrationConfig.baseUrl + endpoint,
         authStrategy,
-        bodyContent.let { gson.toJson(it) }
+        bodyContent.let { gson.toJson(it) },
+        headers
     )
 
     internal fun doGet(

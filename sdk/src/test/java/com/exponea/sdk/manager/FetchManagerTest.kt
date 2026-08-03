@@ -6,17 +6,27 @@ import com.exponea.sdk.models.CustomerRecommendationOptions
 import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationCategories
+import com.exponea.sdk.network.ExponeaServiceImpl
+import com.exponea.sdk.network.NetworkHandler
+import com.exponea.sdk.network.auth.AuthStrategy
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.ExponeaGson
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -1151,6 +1161,342 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 invalidCustomerIds,
                 onSuccess = { _ -> it.fail("This should not happen") },
                 onFailure = { _ -> it() }
+            )
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should send etag and invoke onNotModified for in-app messages 304 revalidation`() {
+        val etag = "\"inapp-etag\""
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", etag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(304)
+                .setHeader("ETag", etag)
+        )
+        val fetchManagerImpl = FetchManagerImpl(
+            ExponeaServiceImpl(ExponeaGson.instance, TestNetworkHandler()),
+            ExponeaGson.instance
+        )
+        val projectConfig = ProjectConfig(server.url("/").toString(), "mock-project-token", "mock-auth")
+        val customerIds = CustomerIds(hashMapOf("registered" to "test")).apply {
+            cookie = "cookie-1"
+        }
+        var storedEtag: String? = null
+        var notModifiedFired = false
+        waitForIt { done ->
+            fetchManagerImpl.fetchInAppMessages(
+                integrationConfig = projectConfig,
+                customerIds = customerIds,
+                etag = null,
+                onNotModified = null,
+                onEtagHeader = { storedEtag = it },
+                onSuccess = {
+                    fetchManagerImpl.fetchInAppMessages(
+                        integrationConfig = projectConfig,
+                        customerIds = customerIds,
+                        etag = storedEtag,
+                        onNotModified = {
+                            notModifiedFired = true
+                            done()
+                        },
+                        onEtagHeader = { storedEtag = it },
+                        onSuccess = { _ -> done.fail("Should have fired onNotModified") },
+                        onFailure = { _ -> done.fail("This should not happen") }
+                    )
+                },
+                onFailure = { _ -> done.fail("This should not happen") }
+            )
+        }
+        assertEquals(2, server.requestCount)
+        val firstRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val secondRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        assertNotNull(firstRequest)
+        assertNotNull(secondRequest)
+        assertNull(firstRequest.getHeader("If-None-Match"))
+        assertEquals(etag, secondRequest.getHeader("If-None-Match"))
+        assertEquals(etag, storedEtag)
+        assertTrue(notModifiedFired)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should send etag and invoke onNotModified for personalized content 304 revalidation`() {
+        val etag = "\"personalized-etag\""
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", etag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(304)
+        )
+        val fetchManagerImpl = FetchManagerImpl(
+            ExponeaServiceImpl(ExponeaGson.instance, TestNetworkHandler()),
+            ExponeaGson.instance
+        )
+        val projectConfig = ProjectConfig(server.url("/").toString(), "mock-project-token", "mock-auth")
+        val customerIds = CustomerIds(hashMapOf("registered" to "test")).apply {
+            cookie = "cookie-1"
+        }
+        val requestedBlockIds = listOf("block-a", "block-b")
+        var storedEtag: String? = null
+        var notModifiedFired = false
+        waitForIt { done ->
+            fetchManagerImpl.fetchPersonalizedContentBlocks(
+                integrationConfig = projectConfig,
+                customerIds = customerIds,
+                contentBlockIds = requestedBlockIds,
+                etag = null,
+                onEtagHeader = { storedEtag = it },
+                onSuccess = {
+                    fetchManagerImpl.fetchPersonalizedContentBlocks(
+                        integrationConfig = projectConfig,
+                        customerIds = customerIds,
+                        contentBlockIds = requestedBlockIds,
+                        etag = storedEtag,
+                        onNotModified = {
+                            notModifiedFired = true
+                            done()
+                        },
+                        onSuccess = { _ -> done.fail("Should have fired onNotModified") },
+                        onFailure = { _ -> done.fail("This should not happen") }
+                    )
+                },
+                onFailure = { _ -> done.fail("This should not happen") }
+            )
+        }
+        assertEquals(2, server.requestCount)
+        val firstRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val secondRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        assertNotNull(firstRequest)
+        assertNotNull(secondRequest)
+        assertNull(firstRequest.getHeader("If-None-Match"))
+        assertEquals(etag, secondRequest.getHeader("If-None-Match"))
+        assertEquals(etag, storedEtag)
+        assertTrue(notModifiedFired)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not send If-None-Match when caller passes no etag`() {
+        val etag = "\"inapp-etag\""
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", etag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", etag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        val fetchManagerImpl = FetchManagerImpl(
+            ExponeaServiceImpl(ExponeaGson.instance, TestNetworkHandler()),
+            ExponeaGson.instance
+        )
+        val projectConfig = ProjectConfig(server.url("/").toString(), "mock-project-token", "mock-auth")
+        val customerIds = CustomerIds(hashMapOf("registered" to "test")).apply {
+            cookie = "cookie-1"
+        }
+        waitForIt { done ->
+            fetchManagerImpl.fetchInAppMessages(
+                integrationConfig = projectConfig,
+                customerIds = customerIds,
+                etag = null,
+                onNotModified = null,
+                onEtagHeader = { },
+                onSuccess = {
+                    fetchManagerImpl.fetchInAppMessages(
+                        integrationConfig = projectConfig,
+                        customerIds = customerIds,
+                        etag = null,
+                        onNotModified = null,
+                        onEtagHeader = { },
+                        onSuccess = { done() },
+                        onFailure = { _ -> done.fail("This should not happen") }
+                    )
+                },
+                onFailure = { _ -> done.fail("This should not happen") }
+            )
+        }
+        assertEquals(2, server.requestCount)
+        val firstRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val secondRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        assertNull(firstRequest?.getHeader("If-None-Match"))
+        assertNull(secondRequest?.getHeader("If-None-Match"))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should report missing etag header on successful in-app messages fetch`() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        val fetchManagerImpl = FetchManagerImpl(
+            ExponeaServiceImpl(ExponeaGson.instance, TestNetworkHandler()),
+            ExponeaGson.instance
+        )
+        val projectConfig = ProjectConfig(server.url("/").toString(), "mock-project-token", "mock-auth")
+        val customerIds = CustomerIds(hashMapOf("registered" to "test")).apply {
+            cookie = "cookie-1"
+        }
+        var storedEtag: String? = "\"old-etag\""
+        waitForIt { done ->
+            fetchManagerImpl.fetchInAppMessages(
+                integrationConfig = projectConfig,
+                customerIds = customerIds,
+                etag = null,
+                onNotModified = null,
+                onEtagHeader = { storedEtag = it },
+                onSuccess = {
+                    fetchManagerImpl.fetchInAppMessages(
+                        integrationConfig = projectConfig,
+                        customerIds = customerIds,
+                        etag = storedEtag,
+                        onNotModified = null,
+                        onEtagHeader = { storedEtag = it },
+                        onSuccess = { done() },
+                        onFailure = { _ -> done.fail("This should not happen") }
+                    )
+                },
+                onFailure = { _ -> done.fail("This should not happen") }
+            )
+        }
+        assertEquals(2, server.requestCount)
+        val firstRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val secondRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        assertNull(firstRequest?.getHeader("If-None-Match"))
+        assertNull(secondRequest?.getHeader("If-None-Match"))
+        assertNull(storedEtag)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should update stored etag when server returns new ETag on 200`() {
+        val firstEtag = "\"etag-v1\""
+        val secondEtag = "\"etag-v2\""
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", firstEtag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("ETag", secondEtag)
+                .setBody("{\"success\":true,\"results\":[]}")
+        )
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(304)
+                .setHeader("ETag", secondEtag)
+        )
+        val fetchManagerImpl = FetchManagerImpl(
+            ExponeaServiceImpl(ExponeaGson.instance, TestNetworkHandler()),
+            ExponeaGson.instance
+        )
+        val projectConfig = ProjectConfig(server.url("/").toString(), "mock-project-token", "mock-auth")
+        val customerIds = CustomerIds(hashMapOf("registered" to "test")).apply {
+            cookie = "cookie-1"
+        }
+        var storedEtag: String? = null
+        var notModifiedFired = false
+        waitForIt { done ->
+            fetchManagerImpl.fetchInAppMessages(
+                integrationConfig = projectConfig,
+                customerIds = customerIds,
+                etag = storedEtag,
+                onNotModified = null,
+                onEtagHeader = { storedEtag = it },
+                onSuccess = {
+                    fetchManagerImpl.fetchInAppMessages(
+                        integrationConfig = projectConfig,
+                        customerIds = customerIds,
+                        etag = storedEtag,
+                        onNotModified = null,
+                        onEtagHeader = { storedEtag = it },
+                        onSuccess = {
+                            fetchManagerImpl.fetchInAppMessages(
+                                integrationConfig = projectConfig,
+                                customerIds = customerIds,
+                                etag = storedEtag,
+                                onNotModified = {
+                                    notModifiedFired = true
+                                    done()
+                                },
+                                onEtagHeader = { storedEtag = it },
+                                onSuccess = { _ -> done.fail("Should have fired onNotModified") },
+                                onFailure = { _ -> done.fail("This should not happen") }
+                            )
+                        },
+                        onFailure = { _ -> done.fail("This should not happen") }
+                    )
+                },
+                onFailure = { _ -> done.fail("This should not happen") }
+            )
+        }
+        assertEquals(3, server.requestCount)
+        val firstRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val secondRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        val thirdRequest = server.takeRequest(1, TimeUnit.SECONDS)
+        assertNull(firstRequest?.getHeader("If-None-Match"))
+        assertEquals(firstEtag, secondRequest?.getHeader("If-None-Match"))
+        assertEquals(secondEtag, thirdRequest?.getHeader("If-None-Match"))
+        assertEquals(secondEtag, storedEtag)
+        assertTrue(notModifiedFired)
+    }
+
+    private class TestNetworkHandler : NetworkHandler {
+        private val client = OkHttpClient()
+        private val mediaTypeJson = "application/json".toMediaType()
+
+        override fun post(
+            url: String,
+            authStrategy: AuthStrategy,
+            body: String,
+            headers: Map<String, String>
+        ): Call {
+            return client.newCall(
+                Request.Builder()
+                    .url(url)
+                    .apply {
+                        headers.forEach { (name, value) -> addHeader(name, value) }
+                    }
+                    .post(body.toRequestBody(mediaTypeJson))
+                    .build()
+            )
+        }
+
+        override fun get(url: String, authStrategy: AuthStrategy): Call {
+            return client.newCall(
+                Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
             )
         }
     }

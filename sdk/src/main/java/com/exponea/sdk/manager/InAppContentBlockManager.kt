@@ -26,7 +26,7 @@ interface InAppContentBlockManager : OnIntegrationStoppedCallback {
     fun onEventCreated(event: Event, type: EventType)
     fun getAllInAppContentBlocksForPlaceholder(placeholderId: String): List<InAppContentBlock>
     fun passesFilters(contentBlock: InAppContentBlock): Boolean
-    fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>)
+    fun loadContentIfNeededSync(contentBlocks: List<InAppContentBlock>, forceRefresh: Boolean = false)
     fun passesFrequencyFilter(contentBlock: InAppContentBlock): Boolean
     fun passesDateFilter(contentBlock: InAppContentBlock): Boolean
     override fun onIntegrationStopped()

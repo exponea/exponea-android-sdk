@@ -2,6 +2,7 @@ package com.exponea.sdk.services.inappcontentblock
 
 import androidx.viewpager2.widget.ViewPager2
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
 import com.exponea.sdk.models.ContentBlockCarouselCallback
 import com.exponea.sdk.models.ContentBlockSelector
@@ -127,6 +128,10 @@ internal class ContentBlockCarouselViewController(
     }
 
     fun reload() {
+        reload(forceRefresh = true)
+    }
+
+    internal fun reload(forceRefresh: Boolean) {
         if (placeholderId == EMPTY_PLACEHOLDER_ID) {
             Logger.e(this, "InAppCbCarousel: Placeholder ID is required, skipping data reload")
             return
@@ -145,8 +150,8 @@ internal class ContentBlockCarouselViewController(
                 }
                 showTrackedContentBlockIds.clear()
                 val allContentBlocks = manager.getAllInAppContentBlocksForPlaceholder(placeholderId)
-                manager.loadContentIfNeededSync(allContentBlocks)
-                val validContentBlocks = filterContentBlocks(allContentBlocks)
+                manager.loadContentIfNeededSync(allContentBlocks, forceRefresh = forceRefresh)
+                val validContentBlocks = filterContentBlocks(allContentBlocks, manager)
                 val filteredContentBlocks = runCatching {
                     contentBlockSelector.filterContentBlocks(validContentBlocks)
                 }.logOnExceptionWithResult().returnOnException { validContentBlocks }
@@ -183,11 +188,12 @@ internal class ContentBlockCarouselViewController(
         }
     }
 
-    private fun filterContentBlocks(source: List<InAppContentBlock>): List<InAppContentBlock> {
-        val manager = Exponea.getComponent()?.inAppContentBlockManager
-        if (manager == null) {
-            Logger.e(this, "InAppCbCarousel: Exponea SDK is not initialized, unable to filter content blocks")
-            return source
+    private fun filterContentBlocks(
+        source: List<InAppContentBlock>,
+        manager: InAppContentBlockManager
+    ): List<InAppContentBlock> {
+        if (manager is InAppContentBlockManagerImpl) {
+            return manager.filterContentBlocksForDisplay(source)
         }
         val filteredContentBlocks = source.filter { each -> manager.passesFilters(each) }
         val validFilteredContentBlocks = filteredContentBlocks
@@ -202,7 +208,7 @@ internal class ContentBlockCarouselViewController(
             return
         }
         ExponeaContextProvider.registerForegroundStateListener(this)
-        reload()
+        reload(forceRefresh = false)
     }
 
     fun onViewDetachedFromWindow() {

@@ -80,14 +80,25 @@ internal class NetworkHandlerImpl(
 
     private fun requestBuilder(
         url: String,
-        authStrategy: AuthStrategy
+        authStrategy: AuthStrategy,
+        headers: Map<String, String> = emptyMap()
     ): Request.Builder = Request.Builder()
         .url(url)
         .addHeader("Content-Type", mediaTypeJson.toString())
+        .apply {
+            headers.forEach { (name, value) ->
+                addHeader(name, value)
+            }
+        }
         .tag(AuthStrategy::class.java, authStrategy)
 
-    override fun post(url: String, authStrategy: AuthStrategy, body: String) = networkClient.newCall(
-        requestBuilder(url, authStrategy)
+    override fun post(
+        url: String,
+        authStrategy: AuthStrategy,
+        body: String,
+        headers: Map<String, String>
+    ) = networkClient.newCall(
+        requestBuilder(url, authStrategy, headers)
             .post(body.toRequestBody(mediaTypeJson))
             .build()
     )

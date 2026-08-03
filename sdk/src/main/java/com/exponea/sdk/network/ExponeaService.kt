@@ -20,7 +20,11 @@ internal interface ExponeaService {
     fun postFetchRecommendations(streamConfig: StreamConfig, recommendationsRequest: RecommendationsRequest): Call
     fun fetchConsents(integrationConfig: IntegrationConfig): Call
     fun postCampaignClick(integrationConfig: IntegrationConfig, event: Event, isCurrentCustomer: Boolean): Call
-    fun postFetchInAppMessages(integrationConfig: IntegrationConfig, customerIds: CustomerIds): Call
+    fun postFetchInAppMessages(
+        integrationConfig: IntegrationConfig,
+        customerIds: CustomerIds,
+        ifNoneMatch: String? = null
+    ): Call
     fun postFetchAppInbox(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
@@ -44,7 +48,8 @@ internal interface ExponeaService {
     fun fetchPersonalizedInAppContentBlocks(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
-        contentBlockIds: List<String>
+        contentBlockIds: List<String>,
+        ifNoneMatch: String? = null
     ): Call
 
     fun fetchSegments(

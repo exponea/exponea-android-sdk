@@ -29,11 +29,12 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 
+private const val HEADER_ETAG = "ETag"
+
 internal class FetchManagerImpl(
     private val api: ExponeaService,
     private val gson: Gson
 ) : FetchManager {
-
     /**
      * Creates Callback to read HTTP response body and parses it into standardised {com.exponea.sdk.models.Result}
      */
@@ -242,17 +243,63 @@ internal class FetchManagerImpl(
     override fun fetchInAppMessages(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
+        etag: String?,
+        onNotModified: (() -> Unit)?,
+        onEtagHeader: ((String?) -> Unit)?,
         onSuccess: (Result<ArrayList<InAppMessage>>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
-        api.postFetchInAppMessages(integrationConfig, customerIds).enqueue(
-            getStandardFetchCallback(
-                object : TypeToken<Result<ArrayList<InAppMessage>?>>() {},
-                { result: Result<ArrayList<InAppMessage>?> ->
-                    onSuccess(Result(true, result.results ?: arrayListOf()))
-                },
-                onFailure
-            )
+        Logger.d(
+            this,
+            "ETag debug (in-app): sending fetch, revalidation=${etag != null}, ifNoneMatch=$etag"
+        )
+        api.postFetchInAppMessages(integrationConfig, customerIds, etag).enqueue(
+            object : Callback {
+                @Suppress("UNCHECKED_CAST")
+                override fun onResponse(call: Call, response: Response) {
+                    response.use { rawResponse ->
+                        Logger.d(
+                            this,
+                            "ETag debug (in-app): response code=${rawResponse.code}, " +
+                                    "etag=${rawResponse.header(HEADER_ETAG)}"
+                        )
+                        if (rawResponse.code == 304) {
+                            rawResponse.header(HEADER_ETAG)?.takeIf { it.isNotBlank() }
+                                ?.let { onEtagHeader?.invoke(it) }
+                            if (onNotModified != null) {
+                                Logger.d(this, "ETag debug (in-app): 304 received, notifying manager")
+                                onNotModified.invoke()
+                            } else {
+                                Logger.d(this, "ETag debug (in-app): 304 received, no handler - failing")
+                                onFailure(
+                                    Result(
+                                        false,
+                                        FetchError(null, "304 Not Modified with no cache handler")
+                                    )
+                                )
+                            }
+                            return
+                        }
+                        val result = parseStandardResult(
+                            rawResponse,
+                            object : TypeToken<Result<ArrayList<InAppMessage>?>>() {}
+                        )
+                        if (result.success == true) {
+                            val parsedResult = result as Result<ArrayList<InAppMessage>?>
+                            val messages = parsedResult.results ?: arrayListOf()
+                            onEtagHeader?.invoke(rawResponse.header(HEADER_ETAG)?.takeIf { it.isNotBlank() })
+                            Logger.d(this, "ETag debug (in-app): 200 received")
+                            onSuccess(Result(true, messages))
+                        } else {
+                            onFailure(result as Result<FetchError>)
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    onFailure(parseErrorResult(e))
+                }
+            }
         )
     }
 
@@ -304,6 +351,9 @@ internal class FetchManagerImpl(
         integrationConfig: IntegrationConfig,
         customerIds: CustomerIds,
         contentBlockIds: List<String>,
+        etag: String?,
+        onNotModified: (() -> Unit)?,
+        onEtagHeader: ((String) -> Unit)?,
         onSuccess: (Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit,
         onFailure: (Result<FetchError>) -> Unit
     ) {
@@ -311,12 +361,63 @@ internal class FetchManagerImpl(
             onSuccess(Result(true, ArrayList()))
             return
         }
-        api.fetchPersonalizedInAppContentBlocks(integrationConfig, customerIds, contentBlockIds).enqueue(
-            getStandardFetchCallback(
-                object : TypeToken<Result<ArrayList<InAppContentBlockPersonalizedData>?>>() {},
-                onSuccess,
-                onFailure
-            )
+        Logger.d(
+            this,
+            "ETag debug (personalized): sending fetch, revalidation=${etag != null}, ifNoneMatch=$etag"
+        )
+        api.fetchPersonalizedInAppContentBlocks(
+            integrationConfig,
+            customerIds,
+            contentBlockIds,
+            etag
+        ).enqueue(
+            object : Callback {
+                @Suppress("UNCHECKED_CAST")
+                override fun onResponse(call: Call, response: Response) {
+                    response.use { rawResponse ->
+                        Logger.d(
+                            this,
+                            "ETag debug (personalized): response code=${rawResponse.code}, " +
+                                "etag=${rawResponse.header(HEADER_ETAG)}"
+                        )
+                        if (rawResponse.code == 304) {
+                            rawResponse.header(HEADER_ETAG)?.takeIf { it.isNotBlank() }
+                                ?.let { onEtagHeader?.invoke(it) }
+                            if (onNotModified != null) {
+                                Logger.d(this, "ETag debug (personalized): 304 received, notifying manager")
+                                onNotModified.invoke()
+                            } else {
+                                Logger.d(this, "ETag debug (personalized): 304 received, no handler — failing")
+                                onFailure(
+                                    Result(
+                                        false,
+                                        FetchError(null, "304 Not Modified with no cache handler")
+                                    )
+                                )
+                            }
+                            return
+                        }
+                        val result = parseStandardResult(
+                            rawResponse,
+                            object : TypeToken<Result<ArrayList<InAppContentBlockPersonalizedData>?>>() {}
+                        )
+                        if (result.success == true) {
+                            val parsedResult = result as Result<ArrayList<InAppContentBlockPersonalizedData>?>
+                            val content = parsedResult.results ?: arrayListOf()
+                            rawResponse.header(HEADER_ETAG)?.takeIf { it.isNotBlank() }
+                                ?.let { onEtagHeader?.invoke(it) }
+                            Logger.d(this, "ETag debug (personalized): 200 received")
+                            onSuccess(Result(true, content))
+                        } else {
+                            onFailure(result as Result<FetchError>)
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    onFailure(parseErrorResult(e))
+                }
+            }
         )
     }
 

@@ -23,6 +23,7 @@ import com.exponea.sdk.repository.EventRepository
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.InAppMessageDisplayStateRepository
 import com.exponea.sdk.repository.InAppMessagesCache
+import com.exponea.sdk.repository.VolatileInAppMessagesETagStore
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -79,8 +80,18 @@ internal class EventManagerTest : ExponeaSDKTest() {
         every { flushManager.flushData(any()) } just Runs
 
         fetchManager = mockk()
-        every { fetchManager.fetchInAppMessages(any<ProjectConfig>(), any(), any(), any()) } answers {
-            thirdArg<(Result<List<InAppMessage>>) -> Unit>().invoke(
+        every {
+            fetchManager.fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            arg<(Result<List<InAppMessage>>) -> Unit>(5).invoke(
                 Result(true, arrayListOf(InAppMessageTest.buildInAppMessageWithRichstyle()))
             )
         }
@@ -120,7 +131,8 @@ internal class EventManagerTest : ExponeaSDKTest() {
                 fontCache,
                 presenter,
                 trackingConsentManager,
-                projectFactory
+                projectFactory,
+                VolatileInAppMessagesETagStore()
             )
         )
         every { inAppMessageManager.sessionStarted(any()) } just Runs

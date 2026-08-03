@@ -127,13 +127,15 @@ configuration.inAppContentBlockPlaceholdersAutoLoad = listOf("placeholder_1", "p
 Exponea.init(App.instance, configuration)
 ```
 
+> **Note:** Calling `anonymize()` clears all in-memory ETag values alongside the personalized content cache. This ensures that requests issued under a new customer identity never carry an ETag derived from a previous identity's response.
+
 ### Defer in-app content blocks loading
 
 Placing multiple placeholders on the same screen may have a negative impact on performance. We recommend only loading in-app content blocks that are visible to the user, especially for large scrollable screens using `RecyclerView`.
 
 To add a placeholder to your layout but defer loading of the corresponding in-app content block, enable `deferredLoad` in its `InAppContentBlockPlaceholderConfiguration`.
 
-The example below shows how to load the in-app content block in the `onBindViewHolder` method, however, you can call `refreshContent()` whenever it is appropriate (for example, after a 'shimmer' animation).
+The example below shows how to load the in-app content block in the `onBindViewHolder` method, however, you can call `load()` whenever it is appropriate (for example, after a 'shimmer' animation).
 
 ```kotlin
 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -148,8 +150,27 @@ override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(placeholderView)
 }
 override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    // do nothing, content will load itself OR refresh content:
-    (holder.itemView as InAppContentBlockPlaceholderView).refreshContent()
+    // do nothing, content will load itself OR trigger content load:
+    (holder.itemView as InAppContentBlockPlaceholderView).load()
+}
+```
+
+> **`load()` vs `reload()`**
+>
+> Use `load()` for the initial trigger and for re-checking content when navigating back to a screen. Use `reload()` only when an explicit force-refresh is required, for example a pull-to-refresh action.
+>
+> `load()` uses the server-side TTL to decide whether a network request is needed. When the TTL has expired, the SDK sends a conditional request with an `If-None-Match` header. If the server responds with `304 Not Modified`, cached content is displayed without re-downloading the full payload.
+>
+> `reload()` always sends a fresh unconditional network request without an `If-None-Match` header and updates the in-memory ETag from the resulting `200 OK` response.
+
+### Refresh content on screen re-appearance
+
+To ensure a placeholder re-checks its content when the user navigates back to a screen, call `load()` in `onResume`:
+
+```kotlin
+override fun onResume() {
+    super.onResume()
+    placeholderView.load()
 }
 ```
 
@@ -376,7 +397,7 @@ class CustomView : FrameLayout {
         ) ?: return
         overrideBehaviour(placeholderView)
         addView(placeholderView, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        placeholderView.refreshContent()
+        placeholderView.load()
     }
 }
 ```
@@ -434,7 +455,7 @@ Your `CustomView` will now receive all in-app content block data.
 
 > ❗️
 >
-> Ensure that the `InAppContentBlockPlaceholderView` instance is added to the `Layout`. It could be hidden but it relies on the [attachToWindow](https://developer.android.com/reference/android/view/View#onAttachedToWindow()) lifecycle to be able to refresh content on a data update. Otherwise, you have to invoke `refreshContent()` manually after `invokeActionClick()`.
+> Ensure that the `InAppContentBlockPlaceholderView` instance is added to the `Layout`. It could be hidden but it relies on the [attachToWindow](https://developer.android.com/reference/android/view/View#onAttachedToWindow()) lifecycle to be able to refresh content on a data update. Otherwise, invoke `load()` manually after `invokeActionClick()`.
 
 ### Customize carousel view filtration and sorting
 
@@ -499,13 +520,22 @@ While troubleshooting in-app content block issues, you can find useful informati
 1. ```
     InAppCB: Placeholder ["placeholder"] has invalid state - action or message is invalid.
     ```
-    Data for the message is empty. Try to call `.refreshContent()` method over InAppContentBlockPlaceholderView or `.reload()` method over ContentBlockCarouselView.
+    Data for the message is empty. Try to call `.load()` to trigger a non-forced re-check, or `.reload()` to force a full re-fetch.
 
 2. ```
+    InAppCB: 304 Not Modified — cache hit, TTL reset for placeholder
+    ```
+    The server confirmed that cached content is still current. No new payload was downloaded; the existing cached content is being re-displayed. This is expected behavior after a TTL-driven re-fetch when content has not changed on the backend.
+
+3. Backend without ETag support:
+
+    If the backend environment does not return an `ETag` header, the SDK operates identically to its previous behavior: no `If-None-Match` header is sent and the full payload is downloaded on every TTL re-fetch. No configuration change is needed.
+
+4. ```
     [HTML] Unknown action URL: ["url"]
     ```
     Invalid action URL. Verify the URL for the content block in the Engagement web app.
-3. ```
+5. ```
     InAppCB: Manual action ["actionUrl"] invoked on placeholder ["placeholder"]
     ```
     This log message informs you which action/URL was called.

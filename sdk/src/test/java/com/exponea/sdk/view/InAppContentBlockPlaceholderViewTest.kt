@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.manager.FetchManager
 import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
@@ -28,12 +29,18 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.HtmlNormalizedCache
 import com.exponea.sdk.repository.InAppContentBlockDisplayStateRepository
+import com.exponea.sdk.repository.VolatileInAppContentBlocksETagStore
 import com.exponea.sdk.services.IntegrationConfigFactory
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -43,6 +50,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,6 +60,7 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.LooperMode
@@ -113,9 +122,18 @@ internal class InAppContentBlockPlaceholderViewTest {
             customerIdsRepository = customerIdsRepository,
             imageCache = drawableCache,
             htmlCache = htmlCache,
-            fontCache = fontCache
+            fontCache = fontCache,
+            etagStore = VolatileInAppContentBlocksETagStore()
         )
         identifyCustomer()
+    }
+
+    @After
+    fun after() {
+        runCatching { unmockkObject(Exponea) }
+        Exponea.safeModeOverride = null
+        Exponea.telemetry = null
+        Exponea.isStopped = false
     }
 
     @Test
@@ -161,6 +179,52 @@ internal class InAppContentBlockPlaceholderViewTest {
         }
         placeholder.refreshContent()
         idleThreads()
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `load should refresh content without force refresh`() = runInSingleThread { idleThreads ->
+        val placeholderId = "ph1"
+        val contentBlocks = listOf(buildMessage("id1", placeholders = listOf(placeholderId)))
+        val componentManager = mock<InAppContentBlockManager> {
+            on { getAllInAppContentBlocksForPlaceholder(placeholderId) } doReturn contentBlocks
+        }
+        installExponeaComponent(componentManager)
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            noContentDataLoader(),
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(defferedLoad = true)
+        )
+
+        placeholder.load()
+        idleThreads()
+
+        verify(componentManager).getAllInAppContentBlocksForPlaceholder(placeholderId)
+        verify(componentManager).loadContentIfNeededSync(contentBlocks, forceRefresh = false)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `reload should refresh content with force refresh`() = runInSingleThread { idleThreads ->
+        val placeholderId = "ph1"
+        val contentBlocks = listOf(buildMessage("id1", placeholders = listOf(placeholderId)))
+        val componentManager = mock<InAppContentBlockManager> {
+            on { getAllInAppContentBlocksForPlaceholder(placeholderId) } doReturn contentBlocks
+        }
+        installExponeaComponent(componentManager)
+        val placeholder = inAppContentBlockManager.getPlaceholderView(
+            placeholderId,
+            noContentDataLoader(),
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(defferedLoad = true)
+        )
+
+        placeholder.reload()
+        idleThreads()
+
+        verify(componentManager).getAllInAppContentBlocksForPlaceholder(placeholderId)
+        verify(componentManager).loadContentIfNeededSync(contentBlocks, forceRefresh = true)
     }
 
     @Test
@@ -813,6 +877,30 @@ internal class InAppContentBlockPlaceholderViewTest {
         )
         inAppContentBlockManager.onEventCreated(Event(), EventType.TRACK_CUSTOMER)
     }
+
+    private fun noContentDataLoader(): InAppContentBlockDataLoader {
+        return object : InAppContentBlockDataLoader {
+            override fun loadContent(placeholderId: String): InAppContentBlock? {
+                return null
+            }
+        }
+    }
+
+    private fun installExponeaComponent(manager: InAppContentBlockManager) {
+        val component = mockk<ExponeaComponent>()
+        val configuration = ExponeaConfiguration(
+            integrationConfig = ProjectConfig(
+                projectToken = "token",
+                authorization = "Token auth",
+                baseUrl = "https://test.com"
+            )
+        )
+        mockkObject(Exponea)
+        every { Exponea.isStopped } returns false
+        every { Exponea.getComponent() } returns component
+        every { component.exponeaConfiguration } returns configuration
+        every { component.inAppContentBlockManager } returns manager
+    }
 }
 
 open class EmptyInAppContentBlockCallback : InAppContentBlockCallback {
@@ -834,6 +922,10 @@ class InAppContentBlockDisplayStateMock : InAppContentBlockDisplayStateRepositor
         return displayStates[message.id] ?: InAppContentBlockDisplayState(
             null, 0, null, 0
         )
+    }
+
+    override fun getAll(): Map<String, InAppContentBlockDisplayState> {
+        return displayStates.toMap()
     }
 
     override fun setDisplayed(message: InAppContentBlock, date: Date) {

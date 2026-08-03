@@ -71,6 +71,8 @@ import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.repository.SegmentsCacheImpl
 import com.exponea.sdk.repository.UniqueIdentifierRepository
 import com.exponea.sdk.repository.UniqueIdentifierRepositoryImpl
+import com.exponea.sdk.repository.VolatileInAppContentBlocksETagStore
+import com.exponea.sdk.repository.VolatileInAppMessagesETagStore
 import com.exponea.sdk.services.CustomAuthProviderFactory
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockTrackingDelegateImpl
@@ -119,6 +121,8 @@ internal class ExponeaComponent(
     internal val campaignRepository: CampaignRepository = CampaignRepositoryImpl(ExponeaGson.instance, preferences)
 
     internal val inAppMessagesCache: InAppMessagesCache = InAppMessagesCacheImpl(context, ExponeaGson.instance)
+
+    internal val inAppMessagesETagStore = VolatileInAppMessagesETagStore()
 
     internal val appInboxCache: AppInboxCache = AppInboxCacheImpl(
         context = context,
@@ -254,7 +258,8 @@ internal class ExponeaComponent(
         fontCache,
         inAppMessagePresenter,
         trackingConsentManager,
-        integrationConfigFactory
+        integrationConfigFactory,
+        inAppMessagesETagStore
     )
 
     internal val inAppContentBlockDisplayStateRepository = InAppContentBlockDisplayStateRepositoryImpl(
@@ -273,7 +278,8 @@ internal class ExponeaComponent(
         customerIdsRepository,
         drawableCache,
         htmlNormalizedCache,
-        fontCache
+        fontCache,
+        VolatileInAppContentBlocksETagStore()
     )
 
     fun anonymize(

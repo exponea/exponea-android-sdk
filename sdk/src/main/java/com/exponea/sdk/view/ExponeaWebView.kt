@@ -19,6 +19,7 @@ import android.webkit.WebViewClient
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.util.LocalResourceUrlMapper
 import com.exponea.sdk.util.Logger
+import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -245,7 +246,12 @@ public class ExponeaWebView : WebView {
         resourceFile: File,
         localResource: LocalResourceUrlMapper.LocalResource
     ): String {
-        return URLConnection.guessContentTypeFromName(localResource.originalUrl)
+        return runCatching {
+            BufferedInputStream(FileInputStream(resourceFile)).use {
+                URLConnection.guessContentTypeFromStream(it)
+            }
+        }.getOrNull()
+            ?: URLConnection.guessContentTypeFromName(localResource.originalUrl)
             ?: URLConnection.guessContentTypeFromName(resourceFile.name)
             ?: when (localResource.type) {
                 LocalResourceUrlMapper.ResourceType.IMAGE -> "image/png"

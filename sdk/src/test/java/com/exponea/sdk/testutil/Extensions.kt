@@ -1,5 +1,6 @@
 package com.exponea.sdk.testutil
 
+import android.content.Context
 import android.preference.PreferenceManager
 import android.webkit.CookieManager
 import androidx.test.core.app.ApplicationProvider
@@ -8,6 +9,7 @@ import com.exponea.sdk.ExponeaComponent
 import com.exponea.sdk.database.ExponeaDatabase
 import com.exponea.sdk.manager.FlushManagerImpl
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.preferences.ExponeaPreferencesConstants
 import com.exponea.sdk.repository.AuthTokenRepositoryProvider
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.util.ExponeaGson
@@ -61,6 +63,9 @@ internal fun Exponea.reset() {
     componentForTesting.serviceManager.stopPeriodicFlush(ApplicationProvider.getApplicationContext())
     componentForTesting.backgroundTimerManager.stopTimer()
     PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
+        .edit().clear().commit()
+    ApplicationProvider.getApplicationContext<Context>()
+        .getSharedPreferences(ExponeaPreferencesConstants.EXPONEA_PREFERENCES_FILE, Context.MODE_PRIVATE)
         .edit().clear().commit()
     loggerLevel = Constants.Logger.defaultLoggerLevel
     telemetry = null

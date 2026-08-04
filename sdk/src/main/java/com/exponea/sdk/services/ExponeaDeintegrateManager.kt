@@ -6,6 +6,8 @@ import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.DeviceIdManager
 import com.exponea.sdk.manager.SessionManagerImpl
 import com.exponea.sdk.models.Constants
+import com.exponea.sdk.preferences.ExponeaPreferences
+import com.exponea.sdk.preferences.ExponeaPreferencesCleanup
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCacheImpl
 import com.exponea.sdk.repository.AuthTokenRepositoryProvider
@@ -67,31 +69,29 @@ class ExponeaDeintegrateManager {
     }
 
     /**
-     * Removes all SDK local data, caches, etc...
+     * Removes all SDK local data, caches, etc. using the given application [context].
      */
-    fun clearLocalCustomerData() {
-        val context = ExponeaContextProvider.applicationContext
-        if (context == null) {
-            Logger.e(this, "Unable to clear all SDK data because application context is null")
-        }
-        context?.let {
-            clearTrackedEvents(it)
-            clearAppInbox(it)
-            clearSegments(it)
-            clearSession(it)
-            clearPushToken(it)
-            clearCampaignData(it)
-            clearInstallEvent(it)
-            clearConfiguration(it)
-            clearContentBlocks(it)
-            clearInAppMessages(it)
-            clearResourcesCaches(it)
-            clearCookieRepository(it)
-            clearCustomerIdsRepository(it)
-            clearAuthTokenRepository(it)
-            clearTelemetry(it)
-            DeviceIdManager.clear(it)
-        }
+    internal fun clearLocalCustomerData(context: Context) {
+        val appContext = context.applicationContext
+        val prefs = ExponeaPreferencesImpl(appContext)
+        clearTrackedEvents(appContext)
+        clearAppInbox(appContext, prefs)
+        clearSegments(appContext)
+        clearSession(prefs)
+        clearPushToken(appContext, prefs)
+        clearCampaignData(prefs)
+        clearInstallEvent(prefs)
+        clearConfiguration(prefs)
+        clearContentBlocks(appContext, prefs)
+        clearInAppMessages(appContext, prefs)
+        clearResourcesCaches(appContext)
+        clearCookieRepository(prefs)
+        clearCustomerIdsRepository(prefs)
+        clearAuthTokenRepository(appContext)
+        clearTelemetry(appContext)
+        DeviceIdManager.clear(appContext)
+        // Final dual-file wipe: default EXPONEA_PREFERENCES + SDK keys in legacy SharedPreferences
+        ExponeaPreferencesCleanup.clearAllSdkPreferenceFiles(appContext)
     }
 
     private fun clearTelemetry(context: Context) {
@@ -100,8 +100,7 @@ class ExponeaDeintegrateManager {
         TelemetryManager.getSharedPreferences(application).edit().clear().apply()
     }
 
-    private fun clearCustomerIdsRepository(context: Context) {
-        val prefs = ExponeaPreferencesImpl(context)
+    private fun clearCustomerIdsRepository(prefs: ExponeaPreferences) {
         val cookieRepo = UniqueIdentifierRepositoryImpl(prefs)
         CustomerIdsRepositoryImpl(ExponeaGson.instance, cookieRepo, prefs).clear()
     }
@@ -110,8 +109,7 @@ class ExponeaDeintegrateManager {
         AuthTokenRepositoryProvider.get(context).clear()
     }
 
-    private fun clearCookieRepository(context: Context) {
-        val prefs = ExponeaPreferencesImpl(context)
+    private fun clearCookieRepository(prefs: ExponeaPreferences) {
         UniqueIdentifierRepositoryImpl(prefs).clear()
     }
 
@@ -120,42 +118,37 @@ class ExponeaDeintegrateManager {
         FontCacheImpl(context).clear()
     }
 
-    private fun clearInAppMessages(context: Context) {
-        val prefs = ExponeaPreferencesImpl(context)
+    private fun clearInAppMessages(context: Context, prefs: ExponeaPreferences) {
         InAppMessagesCacheImpl(context, ExponeaGson.instance).clear()
         InAppMessageDisplayStateRepositoryImpl(prefs, ExponeaGson.instance).clear()
     }
 
-    private fun clearContentBlocks(context: Context) {
-        val prefs = ExponeaPreferencesImpl(context)
+    private fun clearContentBlocks(context: Context, prefs: ExponeaPreferences) {
         InAppContentBlockDisplayStateRepositoryImpl(prefs).clear()
         HtmlNormalizedCacheImpl(context, prefs).clearAll()
     }
 
-    private fun clearConfiguration(context: Context) {
-        ExponeaConfigRepository.clear(context)
+    private fun clearConfiguration(prefs: ExponeaPreferences) {
+        prefs.remove(ExponeaConfigRepository.PREF_CONFIG)
     }
 
-    private fun clearInstallEvent(context: Context) {
-        DeviceInitiatedRepositoryImpl(ExponeaPreferencesImpl(context)).set(false)
+    private fun clearInstallEvent(prefs: ExponeaPreferences) {
+        DeviceInitiatedRepositoryImpl(prefs).set(false)
     }
 
-    private fun clearCampaignData(context: Context) {
-        val prefs = ExponeaPreferencesImpl(context)
+    private fun clearCampaignData(prefs: ExponeaPreferences) {
         CampaignRepositoryImpl(ExponeaGson.instance, prefs).clear()
     }
 
-    private fun clearPushToken(context: Context) {
+    private fun clearPushToken(context: Context, prefs: ExponeaPreferences) {
         PushTokenRepositoryProvider.get(context).clear()
         // Clear legacy push token storage to avoid re-migration after deintegration.
-        PushTokenRepositoryImpl(ExponeaPreferencesImpl(context)).clear()
+        PushTokenRepositoryImpl(prefs).clear()
     }
 
-    private fun clearSession(context: Context) {
-        ExponeaPreferencesImpl(context).apply {
-            this.remove(SessionManagerImpl.PREF_SESSION_START)
-            this.remove(SessionManagerImpl.PREF_SESSION_END)
-        }
+    private fun clearSession(prefs: ExponeaPreferences) {
+        prefs.remove(SessionManagerImpl.PREF_SESSION_START)
+        prefs.remove(SessionManagerImpl.PREF_SESSION_END)
     }
 
     private fun clearSegments(context: Context) {
@@ -163,11 +156,11 @@ class ExponeaDeintegrateManager {
         SegmentsCacheImpl(context, ExponeaGson.instance).clear()
     }
 
-    private fun clearAppInbox(context: Context) {
+    private fun clearAppInbox(context: Context, prefs: ExponeaPreferences) {
         AppInboxCacheImpl(
             context = context,
             gson = ExponeaGson.instance,
-            applicationId = ExponeaConfigRepository.get(context)?.applicationId
+            applicationId = ExponeaConfigRepository.get(prefs)?.applicationId
                 ?: Constants.ApplicationId.APP_ID_DEFAULT_VALUE
         ).clear()
     }

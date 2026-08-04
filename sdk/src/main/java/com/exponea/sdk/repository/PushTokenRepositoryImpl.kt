@@ -7,13 +7,15 @@ import com.exponea.sdk.util.TokenType
 
 internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferences) : PushTokenRepository {
 
-    // keeping the names for backward compatibility, but repo can contain HMS token as well as Firebase token
-    private val key = "ExponeaFirebaseToken"
-    private val keyDate = "ExponeaLastFirebaseTokenDate"
-    private val keyType = "ExponeaLastTokenType"
-    private val keyPermFlag = "ExponeaLastTokenPermissionGranted"
-    private val keyAppVersion = "ExponeaLastNotificationStateAppVersion"
-    private val keyApplicationId = "ExponeaLastNotificationStateApplicationId"
+    companion object {
+        // keeping the names for backward compatibility, but repo can contain HMS token as well as Firebase token
+        internal const val KEY = "ExponeaFirebaseToken"
+        internal const val KEY_DATE = "ExponeaLastFirebaseTokenDate"
+        internal const val KEY_TYPE = "ExponeaLastTokenType"
+        internal const val KEY_PERMISSION_GRANTED = "ExponeaLastTokenPermissionGranted"
+        internal const val KEY_APP_VERSION = "ExponeaLastNotificationStateAppVersion"
+        internal const val KEY_APPLICATION_ID = "ExponeaLastNotificationStateApplicationId"
+    }
 
     override fun setTrackedToken(
         token: String,
@@ -54,61 +56,61 @@ internal class PushTokenRepositoryImpl(private val preferences: ExponeaPreferenc
             Logger.e(this, "Push token not stored, SDK is stopping")
             return false
         }
-        preferences.setString(key, token)
+        preferences.setString(KEY, token)
         if (lastTrackDateInMilliseconds == null) {
-            preferences.remove(keyDate)
+            preferences.remove(KEY_DATE)
         } else {
-            preferences.setLong(keyDate, lastTrackDateInMilliseconds)
+            preferences.setLong(KEY_DATE, lastTrackDateInMilliseconds)
         }
-        preferences.setString(keyType, tokenType.name)
-        preferences.setBoolean(keyPermFlag, permissionGranted)
+        preferences.setString(KEY_TYPE, tokenType.name)
+        preferences.setBoolean(KEY_PERMISSION_GRANTED, permissionGranted)
         return true
     }
 
     override fun clear(): Boolean {
-        return preferences.remove(key) &&
-            preferences.remove(keyDate) &&
-            preferences.remove(keyType) &&
-            preferences.remove(keyPermFlag) &&
-            preferences.remove(keyAppVersion) &&
-            preferences.remove(keyApplicationId)
+        return preferences.remove(KEY) &&
+            preferences.remove(KEY_DATE) &&
+            preferences.remove(KEY_TYPE) &&
+            preferences.remove(KEY_PERMISSION_GRANTED) &&
+            preferences.remove(KEY_APP_VERSION) &&
+            preferences.remove(KEY_APPLICATION_ID)
     }
 
     override fun get(): String? {
-        val token = preferences.getString(key, "")
+        val token = preferences.getString(KEY, "")
         return token.ifEmpty { null }
     }
 
     override fun getLastTrackDateInMilliseconds(): Long? {
-        val millis = preferences.getLong(keyDate, 0)
+        val millis = preferences.getLong(KEY_DATE, 0)
         return if (millis > 0) millis else null
     }
 
     override fun getLastTokenType(): TokenType {
-        val type = preferences.getString(keyType, TokenType.FCM.name)
+        val type = preferences.getString(KEY_TYPE, TokenType.FCM.name)
         return TokenType.valueOf(type)
     }
 
     override fun getLastPermissionFlag(): Boolean {
-        return preferences.getBoolean(keyPermFlag, false)
+        return preferences.getBoolean(KEY_PERMISSION_GRANTED, false)
     }
 
     override fun getLastTrackedAppVersion(): String? {
-        val version = preferences.getString(keyAppVersion, "")
+        val version = preferences.getString(KEY_APP_VERSION, "")
         return version.ifEmpty { null }
     }
 
     override fun setLastTrackedAppVersion(version: String) {
-        preferences.setString(keyAppVersion, version)
+        preferences.setString(KEY_APP_VERSION, version)
     }
 
     override fun getLastTrackedApplicationId(): String? {
-        val appId = preferences.getString(keyApplicationId, "")
+        val appId = preferences.getString(KEY_APPLICATION_ID, "")
         return appId.ifEmpty { null }
     }
 
     override fun setLastTrackedApplicationId(appId: String) {
-        preferences.setString(keyApplicationId, appId)
+        preferences.setString(KEY_APPLICATION_ID, appId)
     }
 
     override fun onIntegrationStopped() {

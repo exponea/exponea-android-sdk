@@ -12,4 +12,5 @@ internal interface ExponeaPreferences {
     fun getDouble(key: String, default: Double): Double
 
     fun remove(key: String): Boolean
+    fun removeKeysWithPrefix(prefix: String)
 }

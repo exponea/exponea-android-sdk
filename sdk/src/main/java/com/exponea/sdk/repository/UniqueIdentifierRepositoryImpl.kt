@@ -8,21 +8,21 @@ internal class UniqueIdentifierRepositoryImpl(
 ) : UniqueIdentifierRepository {
 
     companion object {
-        internal const val key = "ExponeaUniqueIdentifierToken"
+        internal const val KEY = "ExponeaUniqueIdentifierToken"
     }
 
     override fun get(): String {
-        var token = preferences.getString(key, "")
+        var token = preferences.getString(KEY, "")
 
         if (token.isEmpty()) {
             token = UUID.randomUUID().toString()
-            preferences.setString(key, token)
+            preferences.setString(KEY, token)
         }
 
         return token
     }
 
     override fun clear(): Boolean {
-        return preferences.remove(key)
+        return preferences.remove(KEY)
     }
 }

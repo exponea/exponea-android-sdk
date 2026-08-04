@@ -8,7 +8,9 @@
 
     <application
         android:fullBackupContent="@xml/exponea_default_backup_rules"
-        tools:ignore="UnusedAttribute">
+        android:dataExtractionRules="@xml/exponea_default_backup_rules_v12"
+        tools:ignore="UnusedAttribute"
+        tools:targetApi="31">
         <activity
             android:name=".view.InAppMessageActivity"
             android:theme="@style/Theme.InAppMessageActivity"

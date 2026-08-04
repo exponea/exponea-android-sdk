@@ -7,6 +7,7 @@
         <include domain="external" path="."/>
         <include domain="root" path="."/>
         <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml" tools:ignore="FullBackupContent"/>
+        <exclude domain="sharedpref" path="EXPONEA_AUTH.xml" tools:ignore="FullBackupContent"/>
     </cloud-backup>
     <device-transfer>
         <include domain="file" path="."/>
@@ -15,5 +16,6 @@
         <include domain="external" path="."/>
         <include domain="root" path="."/>
         <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml" tools:ignore="FullBackupContent"/>
+        <exclude domain="sharedpref" path="EXPONEA_AUTH.xml" tools:ignore="FullBackupContent"/>
     </device-transfer>
 </data-extraction-rules>

@@ -30,6 +30,12 @@ internal class HtmlNormalizedCacheImpl(
     companion object {
         const val DIRECTORY = "exponeasdk_html_storage"
         private const val IN_MEMORY_CACHE_MAX_ITEMS = 128
+
+        internal const val HASH_PREFIX = "InAppContentBlock_hash_"
+        internal const val FILE_PREFIX = "InAppContentBlock_file_"
+
+        internal fun isDynamicSdkKey(key: String): Boolean =
+            key.startsWith(HASH_PREFIX) || key.startsWith(FILE_PREFIX)
     }
 
     private val fileCache = SimpleFileCache(context, DIRECTORY)
@@ -105,9 +111,9 @@ internal class HtmlNormalizedCacheImpl(
         }
     }
 
-    private fun asFileNameKey(key: String) = "InAppContentBlock_file_$key"
+    private fun asFileNameKey(key: String) = "$FILE_PREFIX$key"
 
-    private fun asHashKey(key: String) = "InAppContentBlock_hash_$key"
+    private fun asHashKey(key: String) = "$HASH_PREFIX$key"
 
     private fun hashOf(data: String): String {
         try {
@@ -179,6 +185,8 @@ internal class HtmlNormalizedCacheImpl(
             inMemoryCache.clear()
         }
         fileCache.clear()
+        preferences.removeKeysWithPrefix(HASH_PREFIX)
+        preferences.removeKeysWithPrefix(FILE_PREFIX)
     }
 
     private fun getInMemoryResult(key: String, controlHash: String): NormalizedResult? {

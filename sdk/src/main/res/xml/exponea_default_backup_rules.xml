@@ -6,4 +6,5 @@
     <include domain="external" path="."/>
     <include domain="root" path="."/>
     <exclude domain="sharedpref" path="EXPONEA_PUSH_TOKEN.xml" tools:ignore="FullBackupContent"/>
+    <exclude domain="sharedpref" path="EXPONEA_AUTH.xml" tools:ignore="FullBackupContent"/>
 </full-backup-content>

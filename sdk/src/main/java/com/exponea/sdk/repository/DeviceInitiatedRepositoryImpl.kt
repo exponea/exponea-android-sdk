@@ -7,7 +7,10 @@ import com.exponea.sdk.util.Logger
 internal class DeviceInitiatedRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : DeviceInitiatedRepository {
-    private val KEY = "ExponeaDeviceInitiated"
+
+    companion object {
+        internal const val KEY = "ExponeaDeviceInitiated"
+    }
 
     override fun get(): Boolean {
         if (Exponea.isStopped) {

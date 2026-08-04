@@ -13,7 +13,9 @@ internal class CampaignRepositoryImpl(
     private val preferences: ExponeaPreferences
 ) : CampaignRepository {
 
-    private val key = "ExponeaCampaign"
+    companion object {
+        internal const val KEY = "ExponeaCampaign"
+    }
 
     override fun set(campaignData: CampaignData) {
         if (Exponea.isStopped) {
@@ -21,11 +23,11 @@ internal class CampaignRepositoryImpl(
             return
         }
         val json = gson.toJson(campaignData)
-        preferences.setString(key, json)
+        preferences.setString(KEY, json)
     }
 
     override fun clear(): Boolean {
-        return preferences.remove(key)
+        return preferences.remove(KEY)
     }
 
     override fun get(): CampaignData? {
@@ -33,7 +35,7 @@ internal class CampaignRepositoryImpl(
             Logger.e(this, "Campaign event not loaded, SDK is stopping")
             return null
         }
-        val data = gson.fromJson(preferences.getString(key, ""), CampaignData::class.java)
+        val data = gson.fromJson(preferences.getString(KEY, ""), CampaignData::class.java)
         if (data != null && abs(currentTimeSeconds() - data.createdAt) > Exponea.campaignTTL) {
             clear()
             return null

@@ -3,6 +3,7 @@ package com.exponea.sdk.services
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.manager.FlushFinishedCallback
@@ -20,6 +21,7 @@ import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Segment
 import com.exponea.sdk.models.SegmentTest
 import com.exponea.sdk.models.SegmentationDataCallback
+import com.exponea.sdk.preferences.ExponeaPreferencesConstants
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.repository.AppInboxCacheImpl
 import com.exponea.sdk.repository.AppInboxCacheImplTest
@@ -160,6 +162,31 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
     }
 
     @Test
+    fun `Clearing local user data removes SDK keys from dedicated and legacy preference files`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dedicated = context.getSharedPreferences(
+            ExponeaPreferencesConstants.EXPONEA_PREFERENCES_FILE,
+            Context.MODE_PRIVATE
+        )
+        val legacy = PreferenceManager.getDefaultSharedPreferences(context)
+        dedicated.edit()
+            .putString(UniqueIdentifierRepositoryImpl.KEY, "dedicated-cookie")
+            .putBoolean(ExponeaPreferencesConstants.MIGRATION_COMPLETE_KEY, true)
+            .commit()
+        legacy.edit()
+            .putString(UniqueIdentifierRepositoryImpl.KEY, "legacy-cookie")
+            .putInt(ExponeaPreferencesConstants.MIGRATION_FAILURE_COUNT_KEY, 2)
+            .commit()
+
+        ExponeaDeintegrateManager().clearLocalCustomerData(context)
+
+        assertTrue(dedicated.all.isEmpty(), "Dedicated preferences should be empty after clear")
+        assertFalse(legacy.contains(UniqueIdentifierRepositoryImpl.KEY))
+        assertFalse(legacy.contains(ExponeaPreferencesConstants.MIGRATION_FAILURE_COUNT_KEY))
+        assertFalse(legacy.contains(ExponeaPreferencesConstants.MIGRATION_INCOMPLETE_COUNT_KEY))
+    }
+
+    @Test
     fun `Stop SDK tracks session_end and push token invalidation before flush`() {
         createSdkData()
         Exponea.flushMode = FlushMode.MANUAL
@@ -290,6 +317,7 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
 
     private fun validateEmptySdkData() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        assertNoSdkKeysInPreferenceFiles(context)
         assertEquals(0, EventRepositoryImpl(context).count())
         val appInboxCache = AppInboxCacheImpl(context, ExponeaGson.instance, "default-application")
         assertEquals(0, appInboxCache.getMessages().size)
@@ -322,13 +350,33 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         assertNull(iaDisplayState.displayed)
         assertNull(iaDisplayState.interacted)
         // UniqueIdentifierRepositoryImpl:
-        assertEquals("", exponeaPrefs.getString(UniqueIdentifierRepositoryImpl.key, ""))
+        assertEquals("", exponeaPrefs.getString(UniqueIdentifierRepositoryImpl.KEY, ""))
         // CustomerIdsRepositoryImpl:
         assertEquals("", exponeaPrefs.getString(CustomerIdsRepositoryImpl.PREFS_CUSTOMERIDS, ""))
         val telemetryManagerPrefs = TelemetryManager.getSharedPreferences(context.applicationContext as Application)
         assertEquals("", telemetryManagerPrefs.getString(INSTALL_ID_KEY, ""))
         assertEquals(0, Exponea.telemetry?.crashManager?.latestLogMessages?.size ?: 0)
         assertNotEquals(Exponea.telemetry?.crashManager, Thread.getDefaultUncaughtExceptionHandler())
+    }
+
+    private fun assertNoSdkKeysInPreferenceFiles(context: Context) {
+        val dedicated = context.getSharedPreferences(
+            ExponeaPreferencesConstants.EXPONEA_PREFERENCES_FILE,
+            Context.MODE_PRIVATE
+        )
+        val legacy = PreferenceManager.getDefaultSharedPreferences(context)
+        assertTrue(dedicated.all.isEmpty(), "Dedicated preferences should be empty after SDK data clear")
+        legacy.all.keys.forEach { key ->
+            assertFalse(
+                ExponeaPreferencesConstants.isSdkKeyForMigration(key),
+                "Legacy default preferences should not contain SDK key: $key"
+            )
+            assertFalse(
+                key == ExponeaPreferencesConstants.MIGRATION_FAILURE_COUNT_KEY ||
+                    key == ExponeaPreferencesConstants.MIGRATION_INCOMPLETE_COUNT_KEY,
+                "Legacy default preferences should not contain migration counter: $key"
+            )
+        }
     }
 
     private fun validateNonEmptySdkData() {
@@ -365,9 +413,12 @@ internal class IntegrationStopTests : ExponeaSDKTest() {
         assertNotNull(iaDisplayState.displayed)
         assertNotNull(iaDisplayState.interacted)
         // UniqueIdentifierRepositoryImpl:
-        assertNotEquals("", exponeaPrefs.getString(UniqueIdentifierRepositoryImpl.key, ""))
+        assertNotEquals("", exponeaPrefs.getString(UniqueIdentifierRepositoryImpl.KEY, ""))
         // CustomerIdsRepositoryImpl:
         assertNotEquals("", exponeaPrefs.getString(CustomerIdsRepositoryImpl.PREFS_CUSTOMERIDS, ""))
+        assertFalse(
+            PreferenceManager.getDefaultSharedPreferences(context).contains(UniqueIdentifierRepositoryImpl.KEY)
+        )
         val telemetryManagerPrefs = TelemetryManager.getSharedPreferences(context.applicationContext as Application)
         assertNotEquals("", telemetryManagerPrefs.getString(INSTALL_ID_KEY, ""))
         assertNotEquals(0, Exponea.telemetry?.crashManager?.latestLogMessages?.size ?: 0)

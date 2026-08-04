@@ -1777,7 +1777,7 @@ object Exponea {
         TelemetryManager(context.applicationContext as Application).reportEvent(
             TelemetryEvent.LOCAL_CUSTOMER_DATA_CLEARED
         )
-        deintegration.clearLocalCustomerData()
+        deintegration.clearLocalCustomerData(context.applicationContext)
     }.logOnException()
 
     /**
@@ -1807,7 +1807,7 @@ object Exponea {
                 component.flushManager.flushData {
                     isStopped = true
                     deintegration.notifyDeintegration()
-                    deintegration.clearLocalCustomerData()
+                    deintegration.clearLocalCustomerData(application)
                     initGate.clear()
                     isInitialized = false
                     Logger.i(this, "Stopping of SDK integration ends, good bye \uD83D\uDC4B")

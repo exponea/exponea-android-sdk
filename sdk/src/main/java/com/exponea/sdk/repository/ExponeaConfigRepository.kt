@@ -6,6 +6,7 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.IntegrationConfig
 import com.exponea.sdk.models.IntegrationConfigJsonAdapter
+import com.exponea.sdk.preferences.ExponeaPreferences
 import com.exponea.sdk.preferences.ExponeaPreferencesImpl
 import com.exponea.sdk.util.Logger
 import com.google.gson.GsonBuilder
@@ -34,9 +35,20 @@ internal object ExponeaConfigRepository {
             return null
         }
 
-        val jsonConfig = ExponeaPreferencesImpl(context).getString(PREF_CONFIG, "")
-        if (jsonConfig.isEmpty())
+        return get(ExponeaPreferencesImpl(context))
+    }
+
+    /**
+     * Reads configuration from the given [prefs] instance (same active file as deintegrate cleanup).
+     */
+    fun get(prefs: ExponeaPreferences): ExponeaConfiguration? {
+        return parseConfiguration(prefs.getString(PREF_CONFIG, ""))
+    }
+
+    private fun parseConfiguration(jsonConfig: String): ExponeaConfiguration? {
+        if (jsonConfig.isEmpty()) {
             return null
+        }
 
         return try {
             val gson = GsonBuilder()
@@ -54,9 +66,5 @@ internal object ExponeaConfigRepository {
             Logger.e(this, "Failed to parse stored Exponea configuration")
             null
         }
-    }
-
-    fun clear(context: Context) {
-        ExponeaPreferencesImpl(context).remove(PREF_CONFIG)
     }
 }

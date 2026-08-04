@@ -19,10 +19,14 @@ import org.junit.Test
 internal class AuthTokenRepositoryProviderTest {
 
     private lateinit var context: Context
+    private lateinit var appContext: Context
 
     @Before
     fun setUp() {
+        appContext = mockk(relaxed = true)
         context = mockk(relaxed = true)
+        every { context.applicationContext } returns appContext
+        every { appContext.applicationContext } returns appContext
         mockkConstructorFix(AuthTokenRepositoryImpl::class) {
             every { anyConstructed<AuthTokenRepositoryImpl>().clear() }
         }
@@ -80,6 +84,6 @@ internal class AuthTokenRepositoryProviderTest {
     @Test
     fun `get should create preferences with dedicated EXPONEA_AUTH file`() {
         AuthTokenRepositoryProvider.get(context)
-        verify { context.applicationContext.getSharedPreferences("EXPONEA_AUTH", any()) }
+        verify { appContext.getSharedPreferences("EXPONEA_AUTH", any()) }
     }
 }

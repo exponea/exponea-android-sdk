@@ -13,9 +13,10 @@ import com.exponea.sdk.models.Constants
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.ProjectConfig
-import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.preferences.ExponeaPreferencesConstants
 import com.exponea.sdk.receiver.AppUpdateReceiver
 import com.exponea.sdk.repository.ExponeaConfigRepository
+import com.exponea.sdk.repository.PushTokenRepositoryImpl
 import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.TokenType
@@ -32,7 +33,6 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(RobolectricTestRunner::class)
 internal class TokenMigrationTest() : ExponeaSDKTest() {
 
-    private val token_repo_key = "ExponeaFirebaseToken"
     private val token_1 = "ABCD_token_1"
     private val token_repo_name = "EXPONEA_PUSH_TOKEN"
 
@@ -55,8 +55,9 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
 
     @Test
     fun `should migrate token after update`() {
-        val obsoleteStorage = ExponeaPreferencesImpl(context)
-        obsoleteStorage.setString(token_repo_key, token_1)
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+            .putString(PushTokenRepositoryImpl.KEY, token_1)
+            .commit()
         initExponea()
         simulateAppUpdate()
         assertEquals(token_1, PushTokenRepositoryProvider.get(context).get())
@@ -87,6 +88,8 @@ internal class TokenMigrationTest() : ExponeaSDKTest() {
     private fun simulateUninstall() {
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
         context.getSharedPreferences(token_repo_name, 0).edit().clear().commit()
+        context.getSharedPreferences(ExponeaPreferencesConstants.EXPONEA_PREFERENCES_FILE, 0)
+            .edit().clear().commit()
     }
 
     @Test

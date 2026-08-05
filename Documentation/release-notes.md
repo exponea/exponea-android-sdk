@@ -14,6 +14,20 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.3.0
+#### August 05, 2026
+* Added:
+  * Adds the `LoggerCallback` API to observe SDK logs.
+  * Adds `ETag` support for in-app content block and in-app message fetching to reduce redundant network requests.
+  * Migrates SDK persistence out of the app's default `SharedPreferences` into dedicated SDK storage, with automatic migration from legacy data.
+* Fixed:
+  * Improves in-app content block loading performance, including HTML normalizer optimizations and fetch deduplication.
+  * Fixes the close button's size and default colors on rich-style in-app messages.
+  * Fixes opening deep and universal links in carousels.
+  * Fixes event listeners running before SDK initialization completes by deferring the `onEventCreated` cascade.
+  * Fixes the `integrationRouteMap` warning not firing when `anonymize()` inherits `StreamConfig`.
+
+
 ## Release Notes for 5.2.1
 #### June 12, 2026
 * Fixed:

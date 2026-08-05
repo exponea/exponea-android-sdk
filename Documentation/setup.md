@@ -21,7 +21,7 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
 
 1. In your app's `build.gradle.kts` file, add `com.exponea.sdk:sdk` inside the `dependencies { }` section:
    ```kotlin
-   implementation("com.exponea.sdk:sdk:5.2.1")
+   implementation("com.exponea.sdk:sdk:5.3.0")
    ```
 2. Rebuild your project (`Build` > `Rebuild Project`).
 
@@ -29,7 +29,7 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
 
 1. In your app's `build.gradle` file, add `com.exponea.sdk:sdk` inside the `dependencies { }` section:
    ```groovy
-   implementation 'com.exponea.sdk:sdk:5.2.1'
+   implementation 'com.exponea.sdk:sdk:5.3.0'
    ```
 2. Rebuild your project (`Build` > `Rebuild Project`).
 
@@ -40,7 +40,7 @@ The Exponea Android SDK can be installed or updated using [Gradle](https://gradl
    <dependency>
       <groupId>com.exponea.sdk</groupId>
       <artifactId>sdk</artifactId>
-      <version>5.2.1</version>
+      <version>5.3.0</version>
    </dependency>   
    ```
 2. Rebuild your app with Maven.
@@ -382,7 +382,7 @@ You may get a build error similar to the following, especially in a default new 
 
 ```
 Manifest merger failed : Attribute application@fullBackupContent value=(@xml/backup_rules) from AndroidManifest.xml:8:9-54
-	is also present at [com.exponea.sdk:sdk:5.2.1] AndroidManifest.xml:15:9-70 value=(@xml/exponea_default_backup_rules).
+	is also present at [com.exponea.sdk:sdk:5.3.0] AndroidManifest.xml:15:9-70 value=(@xml/exponea_default_backup_rules).
 ```
 
 On Android 12 and above, you may see the same conflict for `application@dataExtractionRules`.

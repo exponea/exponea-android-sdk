@@ -17,13 +17,13 @@ You can strategically position placeholders for in-app content blocks within you
 
 > 📘
 >
-> Refer to the [In-app content blocks](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks) user guide for instructions on how to create in-app content blocks in Engagement.
+> Refer to the [In-app content blocks](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks) user guide for instructions on how to create in-app content blocks in {user.mkg}.
 
 ![In-app content blocks in the example app](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/in-app-content-blocks.png)
 
 ## Integration of a placeholder view
 
-You can integrate in-app content blocks by adding one or more placeholder views in your app. Each in-app content block must have a `Placeholder ID` specified in its [settings](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks#3-fill-the-settings) in Engagement. The SDK will display an in-app content block in the corresponding placeholder in the app if the current app user matches the target audience. In-app content block is shown until user interacts with it or placeholder view instance is reloaded programmatically.
+You can integrate in-app content blocks by adding one or more placeholder views in your app. Each in-app content block must have a `Placeholder ID` specified in its [settings](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks#3-fill-the-settings) in {user.mkg}. The SDK will display an in-app content block in the corresponding placeholder in the app if the current app user matches the target audience. In-app content block is shown until user interacts with it or placeholder view instance is reloaded programmatically.
 
 ### Add a placeholder view
 
@@ -46,7 +46,7 @@ After the SDK [initializes](https://documentation.bloomreach.com/engagement/docs
 
 > 👍
 >
-> Always us descriptive, human-readable placeholder IDs. They are tracked as an event property and can be used for analytics within Engagement.
+> Always us descriptive, human-readable placeholder IDs. They are tracked as an event property and can be used for analytics within {user.mkg}.
 
 ## Integration of a carousel view
 
@@ -91,7 +91,7 @@ Or you may add the carousel view directly into your layout XML:
 
 > 👍
 >
-> Always us descriptive, human-readable placeholder IDs. They are tracked as an event property and can be used for analytics within Engagement.
+> Always us descriptive, human-readable placeholder IDs. They are tracked as an event property and can be used for analytics within {user.mkg}.
 
 ## Tracking
 
@@ -461,8 +461,8 @@ Your `CustomView` will now receive all in-app content block data.
 
 A carousel view filters available content blocks in the same way as a placeholder view:
 
-- The content block must meet the `Schedule` setting configured in the Engagement web app
-- The content block must meet the `Display` setting configured in the Engagement web app
+- The content block must meet the `Schedule` setting configured in the {user.mkg} web app
+- The content block must meet the `Display` setting configured in the {user.mkg} web app
 - The content must be valid and supported by the SDK
 
 The order in which content blocks are displayed is determined by:
@@ -507,7 +507,7 @@ This section provides helpful pointers for troubleshooting in-app content blocks
 ### In-app content block not displayed
 
 - The SDK can only display an in-app content block after it has been fully loaded (including its content, any images, and its height). Therefore, the in-app content block may only show in the app after a delay.
-- Always ensure that the placeholder IDs in the in-app content block configuration (in the Engagement web app) and in your mobile app match.
+- Always ensure that the placeholder IDs in the in-app content block configuration (in the {user.mkg} web app) and in your mobile app match.
 
 ### In-app content block shows incorrect image
 
@@ -534,8 +534,8 @@ While troubleshooting in-app content block issues, you can find useful informati
 4. ```
     [HTML] Unknown action URL: ["url"]
     ```
-    Invalid action URL. Verify the URL for the content block in the Engagement web app.
-5. ```
+    Invalid action URL. Verify the URL for the content block in the {user.mkg} web app.
+3. ```
     InAppCB: Manual action ["actionUrl"] invoked on placeholder ["placeholder"]
     ```
     This log message informs you which action/URL was called.

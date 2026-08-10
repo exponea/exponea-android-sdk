@@ -65,7 +65,7 @@ Now that you have installed the SDK in your project, you must import, configure,
 >
 > If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, call `Exponea.trackPushToken()` (FCM) or `Exponea.trackHmsPushToken()` (HMS) again after each `init()`. `stopIntegration()` clears the local push token, and the SDK cannot recover it. Refer to [Re-tracking the push token after stopIntegration()](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
 
-The required configuration parameter is `integrationConfig` with `projectToken`, `authorization` and `baseUrl` when using `ProjectConfig`, or `streamId` and `baseUrl` when using `StreamConfig`. For `ProjectConfig`, you can find the credentials in the Bloomreach Engagement webapp under `Project settings` > `Access management` > `API`. For `StreamConfig`, you can find the stream ID in the Data hub app under `Event streams` > *your stream* > `Access Security`.
+The required configuration parameter is `integrationConfig` with `projectToken`, `authorization` and `baseUrl` when using `ProjectConfig`, or `streamId` and `baseUrl` when using `StreamConfig`. For `ProjectConfig`, you can find the credentials in the {user.mkg} webapp under `Project settings` > `Access management` > `API`. For `StreamConfig`, you can find the stream ID in the {user.dh} app under `Event streams` > *your stream* > `Access Security`.
 
 > 📘
 >
@@ -111,7 +111,7 @@ Exponea.init(this, configuration)
 > 📘  Note
 >
 > - Refer to [SDK auth token authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) for detailed JWT setup.
-> - See the Data hub documentation for an overview of how to [configure Android SDK with JWT authentication](https://documentation.bloomreach.com/data-hub/docs/configure-android-sdk-with-jwt-authentication) for event streams.
+> - See the {user.dh} documentation for an overview of how to [configure Android SDK with JWT authentication](https://documentation.bloomreach.com/data-hub/docs/configure-android-sdk-with-jwt-authentication) for event streams.
 
 #### Initialize with customer identity
 
@@ -136,16 +136,16 @@ Exponea.init(
 
 #### Configure application ID
 
-**Multiple mobile apps:** If your Engagement project supports multiple mobile apps, specify the `applicationId` in your configuration. This helps distinguish between different apps in your project.
+**Multiple mobile apps:** If your {user.mkg} project supports multiple mobile apps, specify the `applicationId` in your configuration. This helps distinguish between different apps in your project.
 
 
 ```kotlin
 configuration.applicationId = "<Your application id>" 
 ```
 
-Make sure your `applicationId` value matches exactly Application ID configured in your Bloomreach Engagement under **Project Settings > Campaigns > Channels > Push Notifications.**
+Make sure your `applicationId` value matches exactly Application ID configured in your {user.mkg} under **Project Settings > Campaigns > Channels > Push Notifications.**
 
-**Single mobile app:** If your Engagement project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".
+**Single mobile app:** If your {user.mkg} project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".
 
 
 ### Using a configuration file
@@ -302,7 +302,7 @@ The callback behaves as follows:
 
 ### Data flushing
 
-For more information on how the SDK uploads data to the Engagement API and how to customize this behavior, see [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing).
+For more information on how the SDK uploads data to the {user.mkg} API and how to customize this behavior, see [Data flushing for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-data-flushing).
 
 ### Android Auto Backup and SDK SharedPreferences
 

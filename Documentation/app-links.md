@@ -9,7 +9,7 @@ content:
   excerpt: Enable and track Android App Links in your app using the Android SDK
 ---
 
-Android App Links (sometimes called Universal Links) allow the links you send through Engagement to open directly in your native mobile application without any redirects that would hinder your users' experience.
+Android App Links (sometimes called Universal Links) allow the links you send through {user.mkg} to open directly in your native mobile application without any redirects that would hinder your users' experience.
 
 For details on how Android App Links work and how they can improve your users' experience, refer to the [Universal Links](https://documentation.bloomreach.com/engagement/docs/universal-link) section in the Campaigns documentation.
 

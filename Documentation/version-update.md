@@ -13,7 +13,7 @@ This guide will help you upgrade your Exponea SDK to the latest major version.
 
 ## Update from version 4.x.x to 5.x.x
 
-Version 5.0.0 adds support for integration with [Data hub Event Streams](https://documentation.bloomreach.com/data-hub/docs/event-streams). The SDK can now be configured with the new `StreamConfig` integration type as an alternative to `ProjectConfig` for Engagement projects.
+Version 5.0.0 adds support for integration with {user.dh} [event streams](https://documentation.bloomreach.com/data-hub/docs/event-streams). The SDK can now be configured with the new `StreamConfig` integration type as an alternative to `ProjectConfig` for {user.mkg} projects.
 
 ### Deprecated configuration properties
 
@@ -89,7 +89,7 @@ Exponea.anonymize(
 
 ## Update to version 4.6.0 or higher
 
-SDK versions 4.6.0 and higher support multiple mobile applications within a single Bloomreach Engagement project.
+SDK versions 4.6.0 and higher support multiple mobile applications within a single {user.mkg} project.
 
 This update introduces two major changes:
 
@@ -99,7 +99,7 @@ Each mobile application integrated with the SDK can now have its own unique `app
 
 **When to configure Application ID:**
 
-- **Multiple mobile apps:** You must specify a unique `applicationId` for each app in the SDK configuration. The value must match the Application ID configured in Bloomreach Engagement under **Project Settings > Campaigns > Channels > Push Notifications.**
+- **Multiple mobile apps:** You must specify a unique `applicationId` for each app in the SDK configuration. The value must match the Application ID configured in {user.mkg} under **Project Settings > Campaigns > Channels > Push Notifications.**
 - **Single mobile app:** If you use only one mobile application, you don't need to set `applicationId`. The SDK uses the default value `default-application` automatically.
 
 Learn more about [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration) and [Configure Application ID](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#configure-application-id).
@@ -112,7 +112,7 @@ Push notification tokens are now tracked using `notification_state` events inste
 
 The SDK automatically generates `notification_state` events. Before upgrading to version 4.6.0 or higher:
 
-- Ensure event creation is enabled for your Bloomreach Engagement project
+- Ensure event creation is enabled for your {user.mkg} project
 - If your project uses custom event schemas or restricts event creation, add `notification_state` to the list of allowed events
 - If your project blocks creation of new event types, push token registration will fail silently
 
@@ -183,7 +183,7 @@ You are required to make the following changes in your application:
 
 1. You must change the second parameter when calling the `Exponea.handleRemoteMessage` method. It no longer accepts a Firebase `RemoteMessage` but now accepts the message data directly instead.
 
-2. Instead of calling `Exponea.trackPushToken` when a new token is obtained, call `Exponea.handleNewToken` with the application context. This method will track the new token to the Engagement platform. If the SDK is not initialized at the moment of invokation, it will persist the token and track it later, after SDK initialization. 
+2. Instead of calling `Exponea.trackPushToken` when a new token is obtained, call `Exponea.handleNewToken` with the application context. This method will track the new token to the {user.mkg} platform. If the SDK is not initialized at the moment of invokation, it will persist the token and track it later, after SDK initialization. 
 
 #### If you do not have your own service and you were relying on the implementation included in the SDK
 

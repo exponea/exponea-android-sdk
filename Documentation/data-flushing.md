@@ -13,7 +13,7 @@ content:
 
 ## Data flushing
 
-The SDK caches data (sessions, events, customer properties, etc.) in an internal database and periodically sends it to the Engagement API. After the data has been uploaded, the values in the Engagement web app are updated, and the cached data is removed from the SDK's internal database. This process is called **data flushing**.
+The SDK caches data (sessions, events, customer properties, etc.) in an internal database and periodically sends it to the {user.mkg} API. After the data has been uploaded, the values in the {user.mkg} web app are updated, and the cached data is removed from the SDK's internal database. This process is called **data flushing**.
 
 By default, the SDK automatically flushes the data as soon as it is tracked or when the application is backgrounded. You can configure the [flushing mode](#flushing-modes) to customize this behavior to suit your needs.
  

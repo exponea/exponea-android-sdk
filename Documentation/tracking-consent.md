@@ -9,15 +9,15 @@ content:
   excerpt: Manage tracking consent using the Android SDK.
 ---
 
-Depending on local data access regulations, access to data on a user's device may require explicit consent. To follow such requirements, Engagement allows you to enable the standalone "tracking consent" feature. This feature activates the tracking consent option for in-app messages, in-app content blocks, and mobile push notifications.
+Depending on local data access regulations, access to data on a user's device may require explicit consent. To follow such requirements, {user.mkg} allows you to enable the standalone "tracking consent" feature. This feature activates the tracking consent option for in-app messages, in-app content blocks, and mobile push notifications.
 
 > 📘
 >
-> Refer to [Configuration of the tracking consent categories](https://documentation.bloomreach.com/engagement/docs/configuration-of-tracking-consent) in the Engagement Consent Management documentation for more information about the tracking consent feature.
+> Refer to [Configuration of the tracking consent categories](https://documentation.bloomreach.com/engagement/docs/configuration-of-tracking-consent) in the {user.mkg} Consent Management documentation for more information about the tracking consent feature.
 
 ## How the SDK manages tracking consent
 
-If the tracking consent feature is enabled, the Engagement platform sents a `has_tracking_consent` attribute along with push notifications, in-app messages, and in-app content blocks data. The SDK tracks events according to the boolean value of this attribute.
+If the tracking consent feature is enabled, the {user.mkg} platform sents a `has_tracking_consent` attribute along with push notifications, in-app messages, and in-app content blocks data. The SDK tracks events according to the boolean value of this attribute.
 
 If the tracking consent feature is disabled, the `has_tracking_consent` attribute is not included in push notifications, in-app messages, and in-app content blocks data. In this case, the SDK considers `has_tracking_consent` to be `true` and tracks event accordingly.
 

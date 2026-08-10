@@ -9,7 +9,7 @@ content:
   excerpt: Full authorization reference for the Android SDK
 ---
 
-The SDK exchanges data with Bloomreach APIs — either the Engagement API directly (when using `ProjectConfig`) or the [Data hub Event Stream API](https://documentation.bloomreach.com/data-hub/docs/event-streams) (when using `StreamConfig`) — through authorized HTTP/HTTPS communication. The SDK supports several authorization modes depending on the integration type:
+The SDK exchanges data with {user.br} APIs — either the {user.mkg} API directly (when using `ProjectConfig`) or the {user.dh} [event stream API](https://documentation.bloomreach.com/data-hub/docs/event-streams) (when using `StreamConfig`) — through authorized HTTP/HTTPS communication. The SDK supports several authorization modes depending on the integration type:
 
 - **Token authorization** (default for `ProjectConfig`) — public API access using an API key
 - **Customer token authorization** (optional for `ProjectConfig`) — private API access using JWT via `AuthorizationProvider`
@@ -58,7 +58,7 @@ class App : Application() {
 
 ### Customer token authorization
 
-Customer token authorization is optional and provides [private API access](https://documentation.bloomreach.com/engagement/reference/authentication#private-api-access) to select Engagement API endpoints. The [customer token](https://documentation.bloomreach.com/engagement/docs/customer-token) contains encoded customer IDs and a signature. When the Bloomreach Engagement API receives a customer token, it first verifies the signature and only processes the request if the signature is valid.
+Customer token authorization is optional and provides [private API access](https://documentation.bloomreach.com/engagement/reference/authentication#private-api-access) to select {user.mkg} API endpoints. The [customer token](https://documentation.bloomreach.com/engagement/docs/customer-token) contains encoded customer IDs and a signature. When the {user.mkg} API receives a customer token, it first verifies the signature and only processes the request if the signature is valid.
 
 > ❗️
 >
@@ -66,7 +66,7 @@ Customer token authorization is optional and provides [private API access](https
 
 The customer token is encoded using **JSON Web Token (JWT)**, an open industry standard [RFC 7519](https://tools.ietf.org/html/rfc7519) that defines a compact and self-contained way for securely transmitting information between parties.
 
-The SDK sends the customer token in `Bearer <value>` format. Currently, the SDK supports customer token authorization for the following Engagement API endpoints:
+The SDK sends the customer token in `Bearer <value>` format. Currently, the SDK supports customer token authorization for the following {user.mkg} API endpoints:
 
 * `POST /webxp/projects/<projectToken>/appinbox/fetch` for fetching of AppInbox data
 * `POST /webxp/projects/<projectToken>/appinbox/markasread` for marking of AppInbox message as read
@@ -253,11 +253,11 @@ The `SdkAuthError` object contains:
 
 ## Configure application ID
 
-**Multiple mobile apps:** If your Engagement project supports multiple mobile apps, specify the `applicationId` in your configuration. This helps distinguish between different apps in your project.
+**Multiple mobile apps:** If your {user.mkg} project supports multiple mobile apps, specify the `applicationId` in your configuration. This helps distinguish between different apps in your project.
 
 ```kotlin
 configuration.applicationId = "<Your application id>" 
 ```
-Make sure your `applicationId` value matches exactly Application ID configured in your Bloomreach Engagement under **Project Settings > Campaigns > Channels > Push Notifications.**
+Make sure your `applicationId` value matches exactly Application ID configured in your {user.mkg} under **Project Settings > Campaigns > Channels > Push Notifications.**
 
-**Single mobile app:** If your Engagement project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".
+**Single mobile app:** If your {user.mkg} project supports only one app, you can skip the `applicationId` configuration. The SDK will automatically use the default value "default-application".

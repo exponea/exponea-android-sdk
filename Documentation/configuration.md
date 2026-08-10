@@ -19,7 +19,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
 
 * `integrationConfig`
     * Use this property to set your integration configuration.
-    * Use `ProjectConfig` to set up integration with a project using `projectToken`, `authorization` and `baseUrl`, or `StreamConfig` to set up [Event stream](https://documentation.bloomreach.com/data-hub/docs/event-streams) integration using `streamId` and `baseUrl`.
+    * Use `ProjectConfig` to set up integration with a project using `projectToken`, `authorization` and `baseUrl`, or `StreamConfig` to set up [event stream](https://documentation.bloomreach.com/data-hub/docs/event-streams) integration using `streamId` and `baseUrl`.
     * Example:
    ```kotlin
    integrationConfig = ProjectConfig(
@@ -38,17 +38,17 @@ This page provides an overview of all configuration parameters for the SDK. You 
 
 * `projectToken`
    * **Deprecated** - Please use `integrationConfig` property instead.
-   * Your project token. You can find this in the Engagement web app under `Project settings` > `Access management` > `API`.
+   * Your project token. You can find this in the {user.mkg} web app under `Project settings` > `Access management` > `API`.
 
 * `authorization`
    * **Deprecated** - Please use `integrationConfig` property instead.
-   * Format `"Token <token>"` where `<token>` is an Engagement API key.
-   * The token must be an Engagement **public** key. See [Mobile SDKs API Access Management](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management) for details.
+   * Format `"Token <token>"` where `<token>` is an {user.mkg} API key.
+   * The token must be an {user.mkg} **public** key. See [Mobile SDKs API Access Management](https://documentation.bloomreach.com/engagement/docs/mobile-sdks-api-access-management) for details.
    * For more information, refer to [Exponea API documentation](https://docs.exponea.com/reference#access-keys).
 
 * `baseURL`
   * **Deprecated** - Please use `integrationConfig` property instead.
-  * Your API base URL which can be found in the Engagement web app under `Project settings` > `Access management` > `API`.
+  * Your API base URL which can be found in the {user.mkg} web app under `Project settings` > `Access management` > `API`.
   * Default value `https://api.exponea.com`.
   * If you have custom base URL, you must set this property.
 
@@ -132,7 +132,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Only available for API level 26+. Refer to https://developer.android.com/training/notify-user/channels for details.
 
 * `tokenTrackFrequency`
-  * Indicates the frequency with which the SDK should track the push notification token to Engagement.
+  * Indicates the frequency with which the SDK should track the push notification token to {user.mkg}.
   * Default value: `ON_TOKEN_CHANGE`
   * Possible values:
     * `ON_TOKEN_CHANGE` - tracks the push token if it differs from a previously tracked one. The SDK also automatically refreshes the `notification_state` event every 30 days, even when the token hasn't changed.
@@ -149,7 +149,7 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Default value: `10`
 
 * `advancedAuthEnabled`
-  * If set, advanced authorization is used for communication with the Engagement APIs listed in [Customer Token Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#customer-token-authorization).
+  * If set, advanced authorization is used for communication with the {user.mkg} APIs listed in [Customer Token Authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#customer-token-authorization).
   * **Only applicable when `integrationConfig` is `ProjectConfig`.** Ignored for `StreamConfig`.
   * Refer to the [Authorization for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization) documentation for details.
 
@@ -172,10 +172,10 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Default value: `true`
 
 * `applicationId`
-  * This `applicationId` defines a unique identifier for the mobile app within the Engagement project. Change this value only if your Engagement project contains and supports multiple mobile apps.
+  * This `applicationId` defines a unique identifier for the mobile app within the {user.mkg} project. Change this value only if your {user.mkg} project contains and supports multiple mobile apps.
   * This identifier distinguishes between different apps in the same project.
-  * Your `applicationId` value must be the same as the one defined in your Engagement project settings.
-  * If your Engagement project supports only one app, skip the `applicationId` configuration. The SDK will use the default value automatically.
+  * Your `applicationId` value must be the same as the one defined in your {user.mkg} project settings.
+  * If your {user.mkg} project supports only one app, skip the `applicationId` configuration. The SDK will use the default value automatically.
   * Must be in a specific format, see rules:
     * Starts with one or more lowercase letters or digits
     * Additional words are separated by single hyphens or dots

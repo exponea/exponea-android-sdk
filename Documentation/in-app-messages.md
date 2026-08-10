@@ -11,17 +11,17 @@ content:
     using the Android SDK
 ---
 
-The SDK enables you to display native in-app messages in your app based on definitions set up in Engagement. 
+The SDK enables you to display native in-app messages in your app based on definitions set up in {user.mkg}. 
 
 In-app messages work out-of-the-box once the [Initial SDK setup for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup) in your app; no development work is required. However, you can customize the behavior to meet your specific requirements.
 
 > 📘
 >
-> Refer to the [In-app messages](https://documentation.bloomreach.com/engagement/docs/in-app-messages) user guide for instructions on how to create in-app messages in the Engagement web app.
+> Refer to the [In-app messages](https://documentation.bloomreach.com/engagement/docs/in-app-messages) user guide for instructions on how to create in-app messages in the {user.mkg} web app.
 
 > 📘
 >
-> Also see [In-app messages FAQ](https://support.bloomreach.com/hc/en-us/articles/18152718785437-In-App-Messages-FAQ) at Bloomreach Support Help Center.
+> Also see [In-app messages FAQ](https://support.bloomreach.com/hc/en-us/articles/18152718785437-In-App-Messages-FAQ) at {user.br} Support Help Center.
 
 ## Tracking
 
@@ -139,16 +139,16 @@ When troubleshooting why an in-app message did not display on your device, alway
 
 #### Troubleshoot in-app messages preloading issues
 
-- The SDK requests in-app messages from the Engagement platform any time one of the following occurs:
+- The SDK requests in-app messages from the {user.mkg} platform any time one of the following occurs:
   - `Exponea.identifyCustomer` is called
   - `Exponea.anonymize` is called
   - Any event (except push notification clicked or opened, or session ends) is tracked **and** the in-app messages cache is older then 30 minutes
-- The SDK should subsequently receive a response from the Engagement platform containing all available in-app messages targeted at the current customer. The SDK preload these messages in a local cache.
-- If you create or modify an in-app message in Engagement, typically any changes you made are reflected in the SDK after 30 minutes due to the in-app messages being cached. Call `Exponea.identifyCustomer` or `Exponea.anonymize` to trigger reloading so changes are reflected immediately.
+- The SDK should subsequently receive a response from the {user.mkg} platform containing all available in-app messages targeted at the current customer. The SDK preload these messages in a local cache.
+- If you create or modify an in-app message in {user.mkg}, typically any changes you made are reflected in the SDK after 30 minutes due to the in-app messages being cached. Call `Exponea.identifyCustomer` or `Exponea.anonymize` to trigger reloading so changes are reflected immediately.
 - Analyze the [log messages](#log-messages) (especially examples 2-5) to determine whether the SDK is requesting and receiving in-app messages and your message was preloaded.
 - If the SDK is requesting and receiving in-app messages but your message is not preloaded:
   - The local cache may be outdated. Wait for or trigger the next preload.
-  - The current customer may not match the audience targeted by the in-app message. Verify the message's audience in Engagement.
+  - The current customer may not match the audience targeted by the in-app message. Verify the message's audience in {user.mkg}.
 
 > ❗️
 >
@@ -158,7 +158,7 @@ When troubleshooting why an in-app message did not display on your device, alway
 
 If your app is successfully requesting and receiving in-app messages but they are not displayed, consider the following:
 
-- In-app messages are triggered when an event is tracked based on conditions set up in Engagement. Once a message passes those filters, the SDK will try to present the message.
+- In-app messages are triggered when an event is tracked based on conditions set up in {user.mkg}. Once a message passes those filters, the SDK will try to present the message.
 
 - The SDK hooks into the application lifecycle, and every time an activity is resumed, the SDK will use it for presenting the in-app message. In-app messages are displayed in a new Activity that is started for them (except for slide-in messages which are directly injected into the currently running Activity).
 
@@ -203,11 +203,11 @@ Let's look at an example of how the logs may look when displaying an in-app mess
 4. ```
    --> POST https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?compatibility=3
    ```  
-   The SDK requested in-app messages from the Engagement platform.
+   The SDK requested in-app messages from the {user.mkg} platform.
 5. ```
    <-- 200 https://api.exponea.com/webxp/s/2c4f2d02-1dbe-11eb-844d-2a3b671acf41/inappmessages?compatibility=3 (2293ms)
    ```
-   The SDK received in-app messages from the Engagement platform. You should see the in-app messages data in JSON format a few lines below the above message:
+   The SDK received in-app messages from the {user.mkg} platform. You should see the in-app messages data in JSON format a few lines below the above message:
    ```
    {"success":true,"data":[{"id":"65baf899dd467ee54357e371","name":"Payment in-app message","date_filter":{"enabled":false},"frequency":"until_visitor_interacts","load_priority":null,"load_delay":null,"close_timeout":null,"trigger":{"event_type": "payment", "filter": [], "type": "event"},"has_tracking_consent":true,"message_type":"slide_in","variant_id":0,"variant_name":"Variant A","is_html":false,"payload":{"title":"Payment In-App Message","body_text":"This is an example of your in-app personalization body text.","image_url":"https://asset-templates.exponea.com/misc/media/canyon/canyon.jpg","title_text_color":"#000000","title_text_size":"22px","body_text_color":"#000000","body_text_size":"14px","background_color":"#ffffff","message_position":"top","buttons":[{"button_text":"Action","button_type":"deep-link","button_link":"https://www.bloomreach.com","button_text_color":"#2dbaee","button_background_color":"#ffffff"}]}}]}
    ```
@@ -218,7 +218,7 @@ Let's look at an example of how the logs may look when displaying an in-app mess
 7. ```
    Picking in-app message for eventType {eventType}. {X} messages available: [{message1 name}, {message2 name}, ...].
    ```
-   This log message includes a list of **all** in-app messages received from the server and preloaded in the local cache. If you don't see your message here, it may not have been available yet the last time the SDK requested in-app messages. If you have confirmed the message was available when the last preload occurred, the current user may not match the audience targeted by the in-app message. Check the in-app message set up in Engagement. 
+   This log message includes a list of **all** in-app messages received from the server and preloaded in the local cache. If you don't see your message here, it may not have been available yet the last time the SDK requested in-app messages. If you have confirmed the message was available when the last preload occurred, the current user may not match the audience targeted by the in-app message. Check the in-app message set up in {user.mkg}. 
 8. ```
    Message '{message name}' failed event filter. Message filter: {"event_type":"session_start","filter":[]} Event type: payment properties: {price=2011.1, product_title=Item #1} timestamp: 1.59921557821E9
    ```
@@ -226,7 +226,7 @@ Let's look at an example of how the logs may look when displaying an in-app mess
 9. ```
    {X} messages available after filtering. Going to pick the highest priority messages.
    ```
-   After applying all the filters, there are `X` in-app messages left that satisfy the criteria to be displayed to the current user. The filters are determined by the in-app messages' settings in Engagement, including `Schedule`, `Show on` and `Display`.
+   After applying all the filters, there are `X` in-app messages left that satisfy the criteria to be displayed to the current user. The filters are determined by the in-app messages' settings in {user.mkg}, including `Schedule`, `Show on` and `Display`.
 10. ```
     Got {X} messages with highest priority for eventType {eventType}. [{message1 name}, {message2 name}, ...]
     ```
@@ -242,7 +242,7 @@ Let's look at an example of how the logs may look when displaying an in-app mess
 13. ```
     Picking top message '{message name}' to be shown.
     ```
-    The SDK selects the in-app message with the highest priority configured in Engagement. If there are multiple messages with the highest priority, the SDK randomly selects a single  message from the candidates. This message will be displayed to user.
+    The SDK selects the in-app message with the highest priority configured in {user.mkg}. If there are multiple messages with the highest priority, the SDK randomly selects a single  message from the candidates. This message will be displayed to user.
 14. ```
     Only logging in-app message for control group '${message.name}'
     ```
@@ -254,7 +254,7 @@ Let's look at an example of how the logs may look when displaying an in-app mess
 16. ```
     Posting show to main thread with delay {X}ms.
     ```
-    A message display request is posted to the main thread with a delay of `X` milliseconds. The delay can be configured using the `Display delay` field in the in-app message's settings in Engagement. The message will be displayed in the last resumed Activity. 
+    A message display request is posted to the main thread with a delay of `X` milliseconds. The delay can be configured using the `Display delay` field in the in-app message's settings in {user.mkg}. The message will be displayed in the last resumed Activity. 
 17. ```
     Attempting to present in-app message.
     ```

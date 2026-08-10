@@ -9,7 +9,7 @@ content:
   excerpt: Track customers and events using the Android SDK
 ---
 
-You can track events in Engagement to learn more about your app’s usage patterns and to segment your customers by their interactions.
+You can track events in {user.mkg} to learn more about your app’s usage patterns and to segment your customers by their interactions.
 
 By default, the SDK tracks certain events automatically, including:
 
@@ -22,7 +22,7 @@ Additionally, you can track any custom event relevant to your business.
 
 > 📘
 >
-> Also see [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at Bloomreach Support Help Center.
+> Also see [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at {user.br} Support Help Center.
 
 > ❗️ Protect the privacy of your customers
 > 
@@ -122,7 +122,7 @@ Without identification, events are tracked for an anonymous customer, only ident
 
 Use the `identifyCustomer()` method to identify a customer using their unique [hard ID](https://documentation.bloomreach.com/engagement/docs/customer-identification#hard-id).
 
-The default hard ID is `registered` and its value is typically the customer's email address. However, your Engagement project may define a different hard ID.
+The default hard ID is `registered` and its value is typically the customer's email address. However, your {user.mkg} project may define a different hard ID.
 
 Optionally, you can track additional customer properties such as first and last names, age, etc.
 
@@ -133,7 +133,7 @@ Optionally, you can track additional customer properties such as first and last 
 > ❗️
 >
 > The SDK stores data, including customer hard ID, in a local cache on the device. Removing the hard ID from the local cache requires calling [anonymize](#anonymize) in the app.
-> If the customer profile is anonymized or deleted in the Bloomreach Engagement webapp, subsequent initialization of the SDK in the app can cause the customer profile to be reidentified or recreated from the locally cached data.
+> If the customer profile is anonymized or deleted in the {user.mkg} webapp, subsequent initialization of the SDK in the app can cause the customer profile to be reidentified or recreated from the locally cached data.
 
 #### Arguments
 
@@ -146,7 +146,7 @@ Optionally, you can track additional customer properties such as first and last 
 
 | Name         | Type                  | Description                                                                                          |
 |--------------|-----------------------|------------------------------------------------------------------------------------------------------|
-| customerIds  | Map<String, String?>  | Map of customer unique identifiers. Only identifiers defined in the Engagement project are accepted. |
+| customerIds  | Map<String, String?>  | Map of customer unique identifiers. Only identifiers defined in the {user.mkg} project are accepted. |
 | sdkAuthToken | String?               | Optional SDK authentication token. If provided, it will be set as the current SDK auth token.        |
 
 #### Examples
@@ -203,10 +203,10 @@ Use the `anonymize()` method to delete all information stored locally and reset 
 
 Invoking this method will cause the SDK to:
 
-* Remove the push notification token for the current customer from local device storage and the customer profile in Engagement.
+* Remove the push notification token for the current customer from local device storage and the customer profile in {user.mkg}.
 * Clear local repositories and caches, excluding tracked events.
 * Track a new session start if `automaticSessionTracking` is enabled.
-* Create a new customer record in Engagement (a new `cookie` soft ID is generated).
+* Create a new customer record in {user.mkg} (a new `cookie` soft ID is generated).
 * Regenerate `device_id` for the new customer if `regenerateDeviceIdOnAnonymize` is set to `true`. See [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration)
 * Assign the previous push notification token to the new customer record.
 * Preload in-app messages, in-app content blocks, and app inbox for the new customer.
@@ -238,7 +238,7 @@ You can also use the `anonymize` method to switch to a different integration con
 >
 > `anonymize()` creates a new anonymous customer profile and tracks events against it. If your integration should not generate events against a customer profile that is not identified, use [`stopIntegration()`](#stop-sdk-integration) on logout instead. Unlike `anonymize()`, `stopIntegration()` does not create or track events on an anonymous profile after logout.
 >
-> The typical example where you do not want anonymous traffic is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+> The typical example where you do not want anonymous traffic is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a {user.dh} event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
 
 #### Examples
 
@@ -558,7 +558,7 @@ The customer may also revoke all tracking consent later, after the SDK is fully 
 
 > 👍 Preferred when avoiding anonymous events
 >
-> Use `stopIntegration()` instead of [`anonymize()`](#anonymize) on logout whenever your integration should not generate events against an anonymous customer profile. Unlike `anonymize()`, `stopIntegration()` does not create a new anonymous customer profile. This applies to any SDK configuration; the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+> Use `stopIntegration()` instead of [`anonymize()`](#anonymize) on logout whenever your integration should not generate events against an anonymous customer profile. Unlike `anonymize()`, `stopIntegration()` does not create a new anonymous customer profile. This applies to any SDK configuration; the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a {user.dh} event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
 
 > ❗️
 >
@@ -681,11 +681,11 @@ Exponea.stopIntegration {
 
 #### Wipe all locally stored data without uploading
 
-The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to the Bloomreach Engagement app. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
+The SDK caches data (such as sessions, events, and customer properties) in an internal local database and periodically sends them to the {user.mkg} app. These data are kept locally if the device has no network, or if you configured SDK to upload them less frequently.
 
-You may face a use case where the customer gets removed from the Bloomreach Engagement platform, and you want to remove them from local storage too.
+You may face a use case where the customer gets removed from the {user.mkg} platform, and you want to remove them from local storage too.
 
-Do not initialize the SDK in this case. Depending on your configuration, the SDK may upload the stored tracked events during initialization. This may lead to the customer's profile being recreated in Bloomreach Engagement, because stored events were tracked for that customer and uploading them will result in the recreation of the customer profile based on the assigned customer IDs.
+Do not initialize the SDK in this case. Depending on your configuration, the SDK may upload the stored tracked events during initialization. This may lead to the customer's profile being recreated in {user.mkg}, because stored events were tracked for that customer and uploading them will result in the recreation of the customer profile based on the assigned customer IDs.
 
 To prevent this from happening, call `clearLocalCustomerData()` without initializing the SDK:
 

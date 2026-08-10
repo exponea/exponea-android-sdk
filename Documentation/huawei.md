@@ -15,11 +15,11 @@ content:
 >
 > Newer phones manufactured by Huawei come with [Huawei Mobile Services (HMS)](https://developer.huawei.com/consumer/en/hms/) - a service that delivers push notifications _instead of_ Google's Firebase Cloud Messaging (FCM).
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must set up Huawei Mobile Services (HMS), implement HMS in your app, and configure the Huawei Push Service integration in the Engagement web app.
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the {user.mkg} platform and receive them in your app on Huawei devices, you must set up Huawei Mobile Services (HMS), implement HMS in your app, and configure the Huawei Push Service integration in the {user.mkg} web app.
 
 > 👍
 >
-> The SDK provides a push setup self-check feature to help developers successfully set up push notifications. The self-check will try to track the push token, request the Engagement backend to send a silent push to the device, and check if the app is ready to open push notifications.
+> The SDK provides a push setup self-check feature to help developers successfully set up push notifications. The self-check will try to track the push token, request the {user.mkg} backend to send a silent push to the device, and check if the app is ready to open push notifications.
 >
 > To enable the setup check, set `Exponea.checkPushSetup = true` before [initializing the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk).
 >
@@ -86,10 +86,10 @@ Next, you must create and register a service that extends `HmsMessageService`. T
     <meta-data  android:name="push_kit_auto_init_enabled" android:value="true"/>
     ```
 
-The SDK will only handle push notification messages sent from the Engagement platform. A helper method `Exponea.isExponeaPushNotification()` is also provided.
+The SDK will only handle push notification messages sent from the {user.mkg} platform. A helper method `Exponea.isExponeaPushNotification()` is also provided.
 
-After running your application, the SDK tracks the push token to the Engagement platform. If you enabled the self-check feature, it will confirm successful tracking.
-You can also verify token tracking manually by locating the customer in the Bloomreach Engagement web application:
+After running your application, the SDK tracks the push token to the {user.mkg} platform. If you enabled the self-check feature, it will confirm successful tracking.
+You can also verify token tracking manually by locating the customer in the {user.mkg} web application:
 
 - **SDK versions below 4.6.0:** Check the customer property `huawei_push_notification_id`
 - **SDK versions 4.6.0 and higher:** Check the `notification_state` event with property `push_notification_token`
@@ -120,17 +120,17 @@ A push token is typically generated at the first application start, but it has i
 >
 > If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, the push token stored by the SDK is cleared on `stopIntegration()` and the SDK cannot recover it. After each re-initialization, call `Exponea.trackHmsPushToken(token)` again with the token your app already holds. Refer to [Re-tracking the push token after stopIntegration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
 
-## Configure the Huawei Push Service integration in Engagement
+## Configure the Huawei Push Service integration in {user.mkg}
 
-1. In Huawei App Gallery Connect, navigate to `Project settings` > `App information` > `OAuth 2.0 client ID`. Locate the `Client ID` and `Client secret` copy their values. You will use these to configure the Huawei Push Service integration in Engagement.
+1. In Huawei App Gallery Connect, navigate to `Project settings` > `App information` > `OAuth 2.0 client ID`. Locate the `Client ID` and `Client secret` copy their values. You will use these to configure the Huawei Push Service integration in {user.mkg}.
    ![HMS - Client ID and Client secret](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei1.png)
 
-2. Open the Engagement web application and navigate to `Data & Assets` > `Integrations`. Click `+ Add new integration`.
+2. Open the {user.mkg} web application and navigate to `Data & Assets` > `Integrations`. Click `+ Add new integration`.
 
 3. Locate `Huawei Push Service` and click `+ Add integration`.  
-   ![Engagement Integrations - Select Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei2.png)
+   ![Select Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei2.png)
 
 4. Enter the `Client ID` and `Client secret` values you copied in step 1. Click `Save integration` to finish.  
-   ![Engagement Integrations - Configure Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei3.png)
+   ![Configure Huawei Push Service integration](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/huawei3.png)
 
 5. Navigate to `Settings` > `Project settings` > `Channels` > `Push notifications` > `Android Notifications` and set `Huawei integration` to `Huawei Push Service`.  

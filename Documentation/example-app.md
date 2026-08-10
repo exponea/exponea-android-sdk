@@ -9,7 +9,7 @@ content:
   excerpt: 'Build, run, and navigate the example app included with the Android SDK'
 ---
 
-The Exponea Android SDK includes an example application you can use as a reference implementation. You can build and run the app, test Engagement features, and compare the code and behavior of your implementation with the expected behavior and code in the example app.
+The Exponea Android SDK includes an example application you can use as a reference implementation. You can build and run the app, test {user.mkg} features, and compare the code and behavior of your implementation with the expected behavior and code in the example app.
 
 ## Prerequisites
 
@@ -51,9 +51,9 @@ When you run the app in the emulator, you'll see the **Authentication** view. Th
 3. For **Stream Config**:
    - Enter your `Stream ID`.
    - **Optional:** Enter `JWT Key ID` and `JWT Secret` to enable local JWT token generation for testing. Both must be provided together. Refer to [SDK auth token authorization](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) for details.
-4. Enter the `API Url` (API base URL for the Bloomreach platform).
+4. Enter the `API Url` (API base URL for the {user.br} platform).
 5. **Optional:** Enter an email address hard ID in the `Registered` field to identify the customer. Leave blank for anonymous tracking.
-6. **Optional:** Enter `Application ID` if your Engagement project supports multiple mobile apps. If you leave this blank, the SDK uses the default value `default-application`. [Learn more about Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
+6. **Optional:** Enter `Application ID` if your {user.mkg} project supports multiple mobile apps. If you leave this blank, the SDK uses the default value `default-application`. [Learn more about Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration).
 7. Click **Authenticate** to [initialize the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk).
 
 The **Clear local data** button invokes `Exponea.clearLocalCustomerData()` to delete all locally stored data without initializing the SDK.
@@ -87,11 +87,11 @@ The app provides several views, accessible using the bottom navigation, to test 
   > [`InAppContentBlocksFragment.kt`](https://github.com/exponea/exponea-android-sdk/blob/bf48aba5a58e5632bdc5d963c18ee24d7e200ec9/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt)
   > [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml)
 
-Try out the different features in the app, then find the customer profile in the Engagement web app (under `Data & Assets` > `Customers`) to see the properties and events tracked by the SDK.
+Try out the different features in the app, then find the customer profile in the {user.mkg} web app (under `Data & Assets` > `Customers`) to see the properties and events tracked by the SDK.
 
-If you left the `Registered` field blank, the customer is tracked anonymously using a cookie soft ID. You can look up the cookie value in the logs and find the corresponding profile in the Engagement web app.
+If you left the `Registered` field blank, the customer is tracked anonymously using a cookie soft ID. You can look up the cookie value in the logs and find the corresponding profile in the {user.mkg} web app.
 
-If you entered a hard ID (use an email address as value) in the `Registered` field, the customer is identified and can be found in Engagement web app by their email address.
+If you entered a hard ID (use an email address as value) in the `Registered` field, the customer is identified and can be found in {user.mkg} web app by their email address.
 
 > 📘
 >

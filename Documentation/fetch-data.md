@@ -9,11 +9,11 @@ content:
   excerpt: Fetch data from Bloomreach Engagement using the Android SDK
 ---
 
-The SDK provides methods to retrieve data from the Engagement platform. Responses are available in the `onSuccess` and `onFailure` callback properties.
+The SDK provides methods to retrieve data from the {user.mkg} platform. Responses are available in the `onSuccess` and `onFailure` callback properties.
 
 ## Fetch recommendations
 
-Use the `fetchRecommendation` method to get personalized recommendations for the current customer from an Engagement [recommendation model](https://documentation.bloomreach.com/engagement/docs/recommendations).
+Use the `fetchRecommendation` method to get personalized recommendations for the current customer from an {user.mkg} [recommendation model](https://documentation.bloomreach.com/engagement/docs/recommendations).
 
 The method returns a list of `CustomerRecommendation` objects containing the recommendation engine data and recommended item IDs.
 

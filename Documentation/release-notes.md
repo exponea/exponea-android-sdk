@@ -62,7 +62,7 @@ content:
 ## Release Notes for 5.0.0
 #### April 13, 2026
 * Added:
-  * Adds support for Data hub Event streams integration with optional SDK auth token authorization.
+  * Adds support for {user.dh} event streams integration with optional SDK auth token authorization.
 * Fixed:
   * Fixes false crash reports from CrashManager handler frames.
   * Fixes carousel crash when Custom Tabs service was not bound.
@@ -123,7 +123,7 @@ content:
 #### October 03, 2025
 * Added:
   * Adds Multiple Mobile applications feature
-  * Replaces age with timestamp for tracked Engagement events
+  * Replaces age with timestamp for tracked {user.mkg} events
   * Improves database migration
 * Fixed:
   * Fixes issue where storing delivered notification data exceeds limits

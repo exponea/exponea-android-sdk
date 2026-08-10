@@ -9,9 +9,9 @@ content:
   excerpt: Implement Real-Time Segments using the Android SDK
 ---
 
-The [Real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) feature personalizes the product search, category and pathway results in real-time based on customer demographic and behavioral data. The feature combines Bloomreach Discovery’s extensive search algorithms and Bloomreach Engagement’s rich customer data to get the best of both worlds.
+The [Real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) feature personalizes the product search, category and pathway results in real-time based on customer demographic and behavioral data. The feature combines {user.search}’s extensive search algorithms and {user.mkg}’s rich customer data to get the best of both worlds.
 
-Refer to the [Discovery real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) documentation for more details about this feature.
+Refer to the {user.search} [real-time segments](https://documentation.bloomreach.com/discovery/docs/real-time-customer-segments-for-discovery) documentation for more details about this feature.
 
 This page describes the integration steps required to retrieve any segmentation data changes assigned to the current customer.
 
@@ -215,7 +215,7 @@ If you are not receiving segmentation data while registering a customer, please 
 - ```
   Segments: Customer IDs <customer_ids> merge failed, unable to fetch segments
   ```
-  The segmentation data update process requires to link IDs but that part of the process failed. Please refer to the error log messages and check your `Exponea.identifyCustomer` usage. This  should not happen, please discuss this with the Bloomreach support team.
+  The segmentation data update process requires to link IDs but that part of the process failed. Please refer to the error log messages and check your `Exponea.identifyCustomer` usage. This  should not happen, please discuss this with the {user.br} support team.
 - ```
   Segments: New data are ignored because were loaded for different customer
   ```

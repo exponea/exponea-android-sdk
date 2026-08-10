@@ -9,17 +9,17 @@ content:
   excerpt: Enable push notifications in your app using the Android SDK
 ---
 
-Engagement enables sending push notifications to your app users using [scenarios](https://documentation.bloomreach.com/engagement/docs/scenarios-1). The mobile application handles the push message using the SDK and renders the notification on the customer's device.
+{user.mkg} enables sending push notifications to your app users using [scenarios](https://documentation.bloomreach.com/engagement/docs/scenarios-1). The mobile application handles the push message using the SDK and renders the notification on the customer's device.
 
 Push notifications can also be silent, used only to update the app’s interface or trigger some background task.
 
 > 📘
 >
-> Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
+> Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the {user.mkg} web app.
 
 > 📘
 >
-> Also see [Mobile push notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) at Bloomreach Support Help Center.
+> Also see [Mobile push notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) at {user.br} Support Help Center.
 
 ## Integration
 
@@ -27,11 +27,11 @@ This section describes the steps to add the minimum push notification functional
 
 ### Standard (Firebase) integration
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must:
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the {user.mkg} platform and receive them in your app on Android devices, you must:
 
 1. Set up a Firebase project.
 2. Implement Firebase messaging in your app.
-3. Configure the Firebase Cloud Messaging integration in the Engagement web app.
+3. Configure the Firebase Cloud Messaging integration in the {user.mkg} web app.
 
 > 📘
 >
@@ -39,19 +39,19 @@ To be able to send [push notifications](https://documentation.bloomreach.com/eng
 
 > 👍
 >
-> Please note that with Google deprecating and removing the FCM legacy API in June 2024, Bloomreach Engagement is now using Firebase HTTP v1 API. Refer to [Firebase upgrade to HTTP v1 API](https://support.bloomreach.com/hc/en-us/articles/18931691055133-Firebase-upgrade-to-HTTP-v1-API) at the Bloomreach Support Help Center for upgrade information.
+> Please note that with Google deprecating and removing the FCM legacy API in June 2024, {user.mkg} is now using Firebase HTTP v1 API. Refer to [Firebase upgrade to HTTP v1 API](https://support.bloomreach.com/hc/en-us/articles/18931691055133-Firebase-upgrade-to-HTTP-v1-API) at the {user.br} Support Help Center for upgrade information.
 >
-> If your Engagement project uses a deprecated version of the Firebase integration, you must [read and reconfigure the FCM integration following the current instructions](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase#configure-the-firebase-cloud-messaging-integration-in-engagement).
+> If your {user.mkg} project uses a deprecated version of the Firebase integration, you must [read and reconfigure the FCM integration following the current instructions](https://documentation.bloomreach.com/engagement/docs/android-sdk-firebase#configure-the-firebase-cloud-messaging-integration-in-engagement).
 >
 > ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/fcm-deprecated.png)
 
 ### Huawei integration
 
-To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the Engagement platform and receive them in your app on Huawei devices, you must:
+To be able to send [push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications) from the {user.mkg} platform and receive them in your app on Huawei devices, you must:
 
 1. Set up Huawei Mobile Services (HMS)
 2. Implement HMS in your app.
-3. Configure the Huawei Push Service integration in the Engagement web app.
+3. Configure the Huawei Push Service integration in the {user.mkg} web app.
 
 > 📘
 >
@@ -98,7 +98,7 @@ This section describes the customizations you can implement once you have integr
 
 By default, the SDK tracks push notifications automatically. In the [Configuration for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-configuration), you can set the desired frequency using the `tokenTrackFrequency` property (default value is `ON_TOKEN_CHANGE`). You can also disable automatic push notification tracking by setting the Boolean value of the `automaticPushNotification` property to `false`.
 
-If `automaticPushNotification` is enabled, the SDK will display push notifications from Engagement and track a "campaign" event for every delivered/opened push notification with the relevant properties.
+If `automaticPushNotification` is enabled, the SDK will display push notifications from {user.mkg} and track a "campaign" event for every delivered/opened push notification with the relevant properties.
 
 > ❗️Important
 >
@@ -118,7 +118,7 @@ The "Open app" action generates an intent with action `com.exponea.sdk.action.PU
 
 #### Deep link
 
-The "Deep link" action creates a "view" intent that contains the URL specified when setting up the action in Engagement. To respond to this intent, create an intent filter on the activity that handles it in your Android manifest file. For details, refer to [Create Deep Links to App Content](https://developer.android.com/training/app-links/deep-linking) in the official Android documentation.
+The "Deep link" action creates a "view" intent that contains the URL specified when setting up the action in {user.mkg}. To respond to this intent, create an intent filter on the activity that handles it in your Android manifest file. For details, refer to [Create Deep Links to App Content](https://developer.android.com/training/app-links/deep-linking) in the official Android documentation.
 
 ```xml
 <intent-filter>
@@ -228,18 +228,18 @@ class MyReceiver : BroadcastReceiver() {
 
 ### Silent push notifications
 
-The Engagement web app allows you to set up silent push notifications, that are not displayed to the user. The SDK tracks a `campaign` event when a silent push notification is delivered. Silent push notifications cannot be opened but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handle extra data payload](#handle-extra-data-payload).
+The {user.mkg} web app allows you to set up silent push notifications, that are not displayed to the user. The SDK tracks a `campaign` event when a silent push notification is delivered. Silent push notifications cannot be opened but if you have set up extra data in the payload, the SDK will call `Exponea.notificationDataCallback` as described in [Handle extra data payload](#handle-extra-data-payload).
 
 ### Push notification alert sound
 
 Received push notifications handled by `Exponea.handleRemoteMessage()` will play a default or customized sound when the notification is displayed.
 
-To use the default sound for a notification, keep empty or enter `default` as value for `Media > Sound` in your push notification scenario in the Engagement web app.
-![Configure sound for a push notification in Engagement](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/push-sound-config.png)
+To use the default sound for a notification, keep empty or enter `default` as value for `Media > Sound` in your push notification scenario in the {user.mkg} web app.
+![Configure sound for a push notification](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/push-sound-config.png)
 
 To use a custom sound for a notification, you must create a sound file that [Android supports](https://developer.android.com/media/platform/supported-formats#audio-formats). Include the sound file in your 'raw' Android resources.
 
-Once the custom sound is in place in your app, enter the file name of the sound file as value for `Media > Sound` in your push notification scenario in the Engagement web app. Ensure that you enter the exact file name (case sensitive) without extension.
+Once the custom sound is in place in your app, enter the file name of the sound file as value for `Media > Sound` in your push notification scenario in the {user.mkg} web app. Ensure that you enter the exact file name (case sensitive) without extension.
 
 > ❗️
 >
@@ -331,7 +331,7 @@ Exponea.trackClickedPush(
 
 If the provided `Exponea.handleRemoteMessage` method does not fit the requirements of your app, or you decide to disable automatic push notifications, you must handle push notifications and process their payload yourself.
 
-Notification payloads are generated from (possibly complex) scenarios in the Engagement platform and contain all data for Android, iOS and web platforms. Therefore, the payload itself can be complex.
+Notification payloads are generated from (possibly complex) scenarios in the {user.mkg} platform and contain all data for Android, iOS and web platforms. Therefore, the payload itself can be complex.
 
 Notification payloads use a JSON data structure.
 
@@ -467,12 +467,12 @@ The combination of `valid` and `description` properties indicates the token's cu
 > ❗️Important
 >
 > The SDK can automatically generate `notification_state` events,
-> but your Engagement project must have event creation enabled. If your project uses custom event schemas
+> but your {user.mkg} project must have event creation enabled. If your project uses custom event schemas
 > or restricts event creation, add `notification_state` to the list of allowed events. Otherwise, push token registration will fail silently.
 
 ### Verifying token tracking
 
-You can verify that tokens are being tracked correctly in the Bloomreach Engagement web application:
+You can verify that tokens are being tracked correctly in the {user.mkg} web application:
 
 1. Navigate to Data & Assets > Customers
 2. Locate the customer profile
@@ -519,7 +519,7 @@ This is most likely because your app does not detach the push token from the sig
 
 Call either [`anonymize()`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#anonymize) or [`stopIntegration()`](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#stop-sdk-integration) when a user logs out so the push token is removed from that user's profile.
 
-Prefer `stopIntegration()` whenever your integration should avoid anonymous events after logout — the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a Data hub event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
+Prefer `stopIntegration()` whenever your integration should avoid anonymous events after logout — the typical example is a `StreamConfig` integration with an [SDK auth token (JWT)](https://documentation.bloomreach.com/engagement/docs/android-sdk-authorization#sdk-auth-token-authorization) on a {user.dh} event stream configured with [signed-only permissions](https://documentation.bloomreach.com/data-hub/docs/set-up-event-stream-security-and-permissions#configure-permissions).
 If neither `stopIntegration()` nor `anonymize()` is called, the same token can end up on multiple customer profiles when a different user signs in.
 
 ### Push notification click events are too rare on production (low conversion)

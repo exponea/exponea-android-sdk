@@ -9,11 +9,11 @@ content:
 
 > 📘 
 > 
-> Bloomreach Engagement was formerly known as Exponea. For backward compatibility, the Exponea name continues to be used in the Android SDK.
+> {user.mkg} was formerly known as Exponea. For backward compatibility, the Exponea name continues to be used in the Android SDK.
 
 ## What is the Exponea Android SDK?
 
-The Exponea Android SDK allows you to integrate your mobile application with Bloomreach. Integrate directly with an Engagement project or via [Data hub Event Streams](https://documentation.bloomreach.com/data-hub/docs/event-streams) to track your customers' behavior in your app. Integrating the SDK into your app enables you to track events and customer properties, send push notifications, and display in-app messages and content blocks.
+The Exponea Android SDK allows you to integrate your mobile application with {user.br}. Integrate directly with an {user.mkg} project or via {user.dh} [event streams](https://documentation.bloomreach.com/data-hub/docs/event-streams) to track your customers' behavior in your app. Integrating the SDK into your app enables you to track events and customer properties, send push notifications, and display in-app messages and content blocks.
 The SDK is [available as open source on GitHub](https://github.com/exponea/exponea-android-sdk) for maximum transparency and includes an [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) you can use as a reference implementation.
 
 > ❗️
@@ -50,6 +50,6 @@ This short video guide provides a step-by-step introduction to integrating the A
 
 ## Frequently asked questions
 
-- [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at Bloomreach Support Help Center
-- [Mobile push notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) at Bloomreach Support Help Center
-- [In-app messages FAQ](https://support.bloomreach.com/hc/en-us/articles/18152718785437-In-App-Messages-FAQ) at Bloomreach Support Help Center
+- [Mobile SDK tracking FAQ](https://support.bloomreach.com/hc/en-us/articles/18153058904733-Mobile-SDK-tracking-FAQ) at {user.br} Support Help Center
+- [Mobile push notifications FAQ](https://support.bloomreach.com/hc/en-us/articles/18152713374877-Mobile-Push-Notifications-FAQ) at {user.br} Support Help Center
+- [In-app messages FAQ](https://support.bloomreach.com/hc/en-us/articles/18152718785437-In-App-Messages-FAQ) at {user.br} Support Help Center

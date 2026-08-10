@@ -11,11 +11,11 @@ content:
     notifications on Android devices
 ---
 
-To be able to send [Push notifications for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the Engagement platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the Engagement web app.
+To be able to send [Push notifications for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-push-notifications) from the {user.mkg} platform and receive them in your app on Android devices, you must set up a Firebase project, implement Firebase messaging in your app, and configure the Firebase Cloud Messaging integration in the {user.mkg} web app.
 
 > 👍
 >
-> The SDK provides a push setup self-check feature to help developers successfully set up push notifications. The self-check will try to track the push token, request the Engagement backend to send a silent push to the device, and check if the app is ready to open push notifications.
+> The SDK provides a push setup self-check feature to help developers successfully set up push notifications. The self-check will try to track the push token, request the {user.mkg} backend to send a silent push to the device, and check if the app is ready to open push notifications.
 >
 > To enable the setup check, set `Exponea.checkPushSetup = true` before [initializing the SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-setup#initialize-the-sdk).
 >
@@ -77,10 +77,10 @@ Next, you must create and register a service that extends `FirebaseMessagingServ
     </service>   
    ```
 
-The SDK will only handle push notification messages sent from the Engagement platform. A helper method `Exponea.isExponeaPushNotification()` is also provided.
+The SDK will only handle push notification messages sent from the {user.mkg} platform. A helper method `Exponea.isExponeaPushNotification()` is also provided.
 
-After running your application, the SDK tracks the push token to the Engagement platform. If you enabled the self-check feature, it will confirm successful tracking.
-You can also verify token tracking manually by locating the customer in the Bloomreach Engagement web application:
+After running your application, the SDK tracks the push token to the {user.mkg} platform. If you enabled the self-check feature, it will confirm successful tracking.
+You can also verify token tracking manually by locating the customer in the {user.mkg} web application:
 
 - **SDK versions below 4.6.0:** Check the customer property `google_push_notification_id`
 - **SDK versions 4.6.0 and higher:** Check the `notification_state` event with property `push_notification_token`
@@ -124,11 +124,11 @@ A push token is typically generated at the first application start, but it has i
 >
 > If your app re-initializes the SDK by calling `init()` after a previous `stopIntegration()`, the push token stored by the SDK is cleared on `stopIntegration()` and the SDK cannot recover it. After each re-initialization, call `Exponea.trackPushToken(token)` again with the token your app already holds. Refer to [Re-tracking the push token after stopIntegration](https://documentation.bloomreach.com/engagement/docs/android-sdk-tracking#re-tracking-the-push-token-after-stopintegration) for details.
 
-## Configure the Firebase Cloud Messaging integration in Engagement
+## Configure the Firebase Cloud Messaging integration in {user.mkg}
 
-Finally, you must configure the Firebase Cloud Messaging integration in Engagement so the platform can use it to send push notifications.
+Finally, you must configure the Firebase Cloud Messaging integration in {user.mkg} so the platform can use it to send push notifications.
 
-The setup requires you to use a private key from a Service Account that you create in Google Cloud and then copy-paste that key into the integration authentication in Bloomreach Engagement.
+The setup requires you to use a private key from a Service Account that you create in Google Cloud and then copy-paste that key into the integration authentication in {user.mkg}.
 
 Follow the steps below:
 
@@ -136,7 +136,7 @@ Follow the steps below:
 
 2. **Generate a new private key**. Locate the FCM service account you created in the previous step, then select `Actions` > `Manage Keys`. Select `Add Key` > `Create new key`. Download the JSON key file.
 
-3. **Add the Firebase Cloud Messaging integration** to your Engagement project. In Engagement, navigate to `Data & Assets` > `Integration`. Click on `Add new integration` and select `Firebase Cloud Messaging` for sending push notifications via the push notification node. Please note that if you’d like to send push notifications via webhooks, you must select `Firebase Service Account Authentication` instead.
+3. **Add the Firebase Cloud Messaging integration** to your {user.mkg} project. In {user.mkg}, navigate to `Data & Assets` > `Integration`. Click on `Add new integration` and select `Firebase Cloud Messaging` for sending push notifications via the push notification node. Please note that if you’d like to send push notifications via webhooks, you must select `Firebase Service Account Authentication` instead.
 ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/firebase-1.png)
 
 4. **Insert the key from step 2** into the Firebase Cloud Messaging integration settings page in the `Service Account JSON Credentials` field. Click on `Save integration`.
@@ -144,17 +144,17 @@ Follow the steps below:
 
 5. **Select the Firebase Cloud Messaging integration** in `Project Settings` > `Channels` > `Push notifications` > `Firebase Cloud Messaging integration`. Click on `Save changes`.
 
-The Engagement platform should now be able to send push notifications to Android devices via the push notification node.
+The {user.mkg} platform should now be able to send push notifications to Android devices via the push notification node.
 
 #### Checklist
 
 - [ ] If you run the app, the self-check should be able to send and receive a silent push notification. 
   ![](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/self-check.png)
-- [ ] You should now be able to send push notifications using the Engagement web app and receive them in your app. Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the Engagement web app.
-- [ ] Send a test push notification from Engagement to the device and tap on it. Your broadcast receiver should be called.
+- [ ] You should now be able to send push notifications using the {user.mkg} web app and receive them in your app. Refer to [Mobile push notifications](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) to learn how to create push notifications in the {user.mkg} web app.
+- [ ] Send a test push notification from {user.mkg} to the device and tap on it. Your broadcast receiver should be called.
 
 > 👍
 >
-> The Engagement service for sending push notifications and the Firebase connection may take a minute to wake up properly. If sending a push notification fails, try restarting the app. If the issue persists after 2-3 retries, review your setup.
+> The {user.mkg} service for sending push notifications and the Firebase connection may take a minute to wake up properly. If sending a push notification fails, try restarting the app. If the issue persists after 2-3 retries, review your setup.
 
-You should now be able to use Engagement push notifications. You may disable the self-check or leave it on to check your push setup in every debug build run.
+You should now be able to use {user.mkg} push notifications. You may disable the self-check or leave it on to check your push setup in every debug build run.

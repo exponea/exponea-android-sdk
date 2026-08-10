@@ -11,7 +11,7 @@ content:
     using the Android SDK
 ---
 
-Through in-app personalization, Engagement provides ways to display campaigns within your mobile applications. In-app personalization can take the form of in-app messages that appear as overlays or pop-ups, or in-app content blocks that appear in line with the app's existing content.
+Through in-app personalization, {user.mkg} provides ways to display campaigns within your mobile applications. In-app personalization can take the form of in-app messages that appear as overlays or pop-ups, or in-app content blocks that appear in line with the app's existing content.
 
 The following two pages describe how to implement in-app messages and in-app content blocks using the SDK:
 

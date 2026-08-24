@@ -104,7 +104,7 @@ internal class FetchManagerImpl(
                 return Result(false, error)
             }
         } else {
-            val error = FetchError(jsonBody, response.message)
+            val error = FetchError(jsonBody, response.message, response.code)
             Logger.e(this, "Failed to fetch data: $error")
             return Result(false, error)
         }

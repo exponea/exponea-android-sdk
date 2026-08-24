@@ -17,6 +17,7 @@ import com.exponea.sdk.util.ExponeaGson
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
+import java.net.HttpURLConnection
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -150,6 +151,10 @@ internal class AppInboxManagerImpl(
                 },
                 onFailure = {
                     Logger.e(this, "AppInbox loading failed. ${it.results.message}")
+                    if (it.results.httpCode == HttpURLConnection.HTTP_GONE) {
+                        Logger.w(this, "AppInbox sync token is no longer valid, clearing cache")
+                        appInboxCache.clearAndSetApplicationId()
+                    }
                     handleDataFetchResult(null, customerIds)
                 }
             )

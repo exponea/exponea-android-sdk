@@ -777,6 +777,88 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
     }
 
     @Test
+    fun `should clear sync token on HTTP 410 error so next fetch recovers`() = runInSingleThread { idleThreads ->
+        seedCachedInbox("stale_sync_token")
+        idleThreads()
+        assertEquals("stale_sync_token", appInboxCache.getSyncToken())
+        assertEquals(1, appInboxCache.getMessages().size)
+
+        every { fetchManager.fetchAppInbox(any<ProjectConfig>(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<FetchError>) -> Unit>(5).invoke(
+                // HTTP Error 410 invalid sync token
+                Result(false, FetchError(null, "Gone", httpCode = 410))
+            )
+        }
+        var failedFetchData: List<MessageItem>? = listOf()
+        appInboxManager.fetchAppInbox { data ->
+            failedFetchData = data
+        }
+        idleThreads()
+        assertNull(failedFetchData)
+        assertNull(appInboxCache.getSyncToken())
+        assertEquals(0, appInboxCache.getMessages().size)
+        assertEquals(Constants.ApplicationId.APP_ID_DEFAULT_VALUE, appInboxCache.getApplicationId())
+
+        val syncTokensSent = mutableListOf<String?>()
+        every { fetchManager.fetchAppInbox(any<ProjectConfig>(), any(), any(), any(), any(), any()) } answers {
+            syncTokensSent.add(arg<String?>(2))
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
+                Result(true, arrayListOf(buildMessage("id2", type = "push")), "fresh_sync_token")
+            )
+        }
+        var recoveredData: List<MessageItem>? = null
+        appInboxManager.fetchAppInbox { data ->
+            recoveredData = data
+        }
+        idleThreads()
+        assertEquals(listOf<String?>(null), syncTokensSent)
+        assertEquals(1, recoveredData?.size)
+        assertEquals("fresh_sync_token", appInboxCache.getSyncToken())
+    }
+
+    @Test
+    fun `should keep inbox cache on generic fetch failure`() = runInSingleThread { idleThreads ->
+        seedCachedInbox("valid_sync_token")
+        idleThreads()
+        assertEquals("valid_sync_token", appInboxCache.getSyncToken())
+        assertEquals(1, appInboxCache.getMessages().size)
+
+        every { fetchManager.fetchAppInbox(any<ProjectConfig>(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<FetchError>) -> Unit>(5).invoke(
+                Result(false, FetchError(null, "timeout", httpCode = 500))
+            )
+        }
+        var failedFetchData: List<MessageItem>? = listOf()
+        appInboxManager.fetchAppInbox { data ->
+            failedFetchData = data
+        }
+        idleThreads()
+        assertNull(failedFetchData)
+        assertEquals("valid_sync_token", appInboxCache.getSyncToken())
+        assertEquals(1, appInboxCache.getMessages().size)
+
+        val syncTokensSent = mutableListOf<String?>()
+        every { fetchManager.fetchAppInbox(any<ProjectConfig>(), any(), any(), any(), any(), any()) } answers {
+            syncTokensSent.add(arg<String?>(2))
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
+                Result(true, arrayListOf(buildMessage("id2", type = "push")), "valid_sync_token")
+            )
+        }
+        appInboxManager.fetchAppInbox {}
+        idleThreads()
+        assertEquals(listOf<String?>("valid_sync_token"), syncTokensSent)
+    }
+
+    private fun seedCachedInbox(syncToken: String) {
+        every { fetchManager.fetchAppInbox(any<ProjectConfig>(), any(), any(), any(), any(), any()) } answers {
+            arg<(Result<ArrayList<MessageItem>?>) -> Unit>(4).invoke(
+                Result(true, arrayListOf(buildMessage("id1", type = "push")), syncToken)
+            )
+        }
+        appInboxManager.fetchAppInbox {}
+    }
+
+    @Test
     @LooperMode(LooperMode.Mode.LEGACY)
     fun `should not allow markAsRead action if SDK is stopping`() {
         Exponea.isStopped = true

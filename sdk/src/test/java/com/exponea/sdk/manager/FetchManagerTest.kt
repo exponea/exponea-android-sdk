@@ -459,7 +459,10 @@ internal class FetchManagerTest : ExponeaSDKTest() {
                 syncToken = "mock-sync-token",
                 applicationId = "default-application",
                 onSuccess = { _ -> it.fail("This should not happen") }
-            ) { _ -> it() }
+            ) { error ->
+                it.assertEquals(400, error.results.httpCode)
+                it()
+            }
         }
     }
 

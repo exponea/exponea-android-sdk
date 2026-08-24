@@ -89,7 +89,6 @@ class AuthenticationActivity : AppCompatActivity() {
                     projectSpecificLayouts.forEach { it.visibility = VISIBLE }
                     streamSpecificLayouts.forEach { it.visibility = GONE }
                 }
-
                 IntegrationConfigOption.STREAM_CONFIG -> {
                     streamSpecificLayouts.forEach { it.visibility = VISIBLE }
                     projectSpecificLayouts.forEach { it.visibility = GONE }

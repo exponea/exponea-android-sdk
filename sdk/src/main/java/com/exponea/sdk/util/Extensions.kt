@@ -8,7 +8,6 @@ import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Build
-import android.os.Looper
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
@@ -32,12 +31,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import kotlin.reflect.KClass
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
@@ -226,116 +219,6 @@ private fun Context.getSDKVersion(metadataName: String): String? = runCatching {
     if (appInfo.metaData == null) return null
     return appInfo.metaData[metadataName] as String?
 }.returnOnException { null }
-
-internal var mainThreadDispatcher = CoroutineScope(Dispatchers.Main)
-internal var backgroundThreadDispatcher = CoroutineScope(Dispatchers.Default)
-
-internal inline fun runOnMainThread(crossinline block: () -> Unit): Job {
-    return mainThreadDispatcher.launch {
-        runCatching {
-            block.invoke()
-        }.logOnException()
-    }
-}
-
-internal inline fun runOnMainThread(delayMillis: Long, crossinline block: () -> Unit): Job {
-    return mainThreadDispatcher.launch {
-        runCatching {
-            try {
-                delay(delayMillis)
-            } catch (e: Exception) {
-                Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
-                return@runCatching
-            }
-            block.invoke()
-        }.logOnException()
-    }
-}
-
-internal inline fun runOnBackgroundThread(crossinline block: () -> Unit): Job {
-    return backgroundThreadDispatcher.launch {
-        runCatching {
-            block.invoke()
-        }.logOnException()
-    }
-}
-
-internal inline fun runOnBackgroundThread(
-    delayMillis: Long,
-    crossinline block: () -> Unit
-): Job {
-    return backgroundThreadDispatcher.launch {
-        runCatching {
-            try {
-                delay(delayMillis)
-            } catch (e: Exception) {
-                Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
-                return@runCatching
-            }
-            block.invoke()
-        }.logOnException()
-    }
-}
-
-internal inline fun runOnBackgroundThread(
-    delayMillis: Long,
-    timeoutMillis: Long? = null,
-    crossinline block: suspend () -> Unit,
-    crossinline onTimeout: () -> Unit
-): Job {
-    var cancellerJob: Job? = null
-    val backgroundJob = backgroundThreadDispatcher.launch {
-        runCatching {
-            try {
-                delay(delayMillis)
-            } catch (e: Exception) {
-                Logger.w(this, "Delayed task has been cancelled: ${e.localizedMessage}")
-                return@runCatching
-            }
-            block.invoke()
-            cancellerJob?.cancel("Task finished successfully")
-        }.logOnException()
-    }
-    cancellerJob = timeoutMillis?.let {
-        backgroundThreadDispatcher.launch {
-            runCatching {
-                try {
-                    delay(it)
-                } catch (e: Exception) {
-                    Logger.v(this, "Task cancellation stopped: ${e.localizedMessage}")
-                    return@runCatching
-                }
-                backgroundJob.cancel("Task timed out after $it millis")
-                onTimeout.invoke()
-            }.logOnException()
-        }
-    }
-    return backgroundJob
-}
-
-internal inline fun ensureOnBackgroundThread(crossinline block: () -> Unit) {
-    if (isRunningOnUiThread()) {
-        runOnBackgroundThread(block)
-    } else {
-        runCatching {
-            block.invoke()
-        }.logOnException()
-    }
-}
-
-internal inline fun ensureOnMainThread(crossinline block: () -> Unit) {
-    if (isRunningOnUiThread()) {
-        runCatching {
-            block.invoke()
-        }.logOnException()
-    } else {
-        runOnMainThread(block)
-    }
-}
-
-internal fun isRunningOnUiThread(): Boolean {
-    return Looper.myLooper() == Looper.getMainLooper()
-}
 
 /**
  * Runs 'work' with 'timeout' limitation. If work takes too long, 'onExpire' is called.

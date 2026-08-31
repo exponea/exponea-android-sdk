@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -41,6 +43,7 @@ import com.exponea.sdk.view.AppInboxDetailView
 import com.exponea.sdk.view.AppInboxListActivity
 import com.exponea.sdk.view.AppInboxListFragment
 import com.exponea.sdk.view.AppInboxListView
+import com.exponea.sdk.view.ExponeaWebView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -243,6 +246,15 @@ open class DefaultAppInboxProvider : AppInboxProvider {
                     Logger.w(this, "[HTML] Action cannot be parsed from URL: $url")
                 }
                 return true
+            }
+
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): WebResourceResponse? {
+                return request?.url?.toString()?.let { url ->
+                    (view as? ExponeaWebView)?.createResourceResponse(url)
+                } ?: super.shouldInterceptRequest(view, request)
             }
         }
     }

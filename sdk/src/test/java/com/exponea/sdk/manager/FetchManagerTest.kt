@@ -38,6 +38,8 @@ import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
 internal class FetchManagerTest : ExponeaSDKTest() {
+    override val stubAppInboxFetch = false
+
     private lateinit var server: MockWebServer
 
     @Before

@@ -349,11 +349,21 @@ internal class InAppContentBlockManagerImplTest {
             fontCache = fontCache,
             etagStore = VolatileInAppContentBlocksETagStore()
         )
-        identifyCustomer()
+        // onEventCreated(TRACK_CUSTOMER) dispatches work asynchronously.  Drain this
+        // fixture setup work before the test starts; otherwise it can outlive this
+        // Mockito test and execute while a later test has changed mock state.
+        runInSingleThread { idleThreads ->
+            identifyCustomer()
+            idleThreads()
+        }
     }
 
     @After
     fun after() {
+        // This fixture exercises manager callbacks before SDK initialization. Those callbacks
+        // are held by Exponea's process-global init gate, so remove them before the next test
+        // can initialize a different SDK fixture.
+        Exponea.initGate.clear()
         Exponea.telemetry = null
         Exponea.isStopped = false
     }

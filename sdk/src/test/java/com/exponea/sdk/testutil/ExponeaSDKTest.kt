@@ -33,11 +33,19 @@ import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowApplication
 
 internal open class ExponeaSDKTest {
+    /**
+     * SDK initialization tests should not start an App Inbox request that can outlive
+     * MockK teardown. Low-level FetchManager tests override this to exercise the real call.
+     */
+    protected open val stubAppInboxFetch: Boolean = true
+
     companion object {
         fun skipInstallEvent() {
-            DeviceInitiatedRepositoryImpl(ExponeaPreferencesImpl(
-                ApplicationProvider.getApplicationContext()
-            )).set(true)
+            DeviceInitiatedRepositoryImpl(
+                ExponeaPreferencesImpl(
+                    ApplicationProvider.getApplicationContext()
+                )
+            ).set(true)
         }
     }
 
@@ -82,6 +90,24 @@ internal open class ExponeaSDKTest {
             every { anyConstructed<FetchManagerImpl>().fetchSegments(any<ProjectConfig>(), any(), any(), any()) }
             every { anyConstructed<FetchManagerImpl>().fetchSegments(any<StreamConfig>(), any(), any(), any()) }
         }
+        if (stubAppInboxFetch) {
+            // SDK initialization may schedule an App Inbox refresh. Individual tests that
+            // exercise it install their own response; the shared fixture must not start a
+            // real OkHttp request that can outlive MockK cleanup.
+            every {
+                anyConstructed<FetchManagerImpl>().fetchAppInbox(
+                    any<ProjectConfig>(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+                )
+            } just Runs
+            every {
+                anyConstructed<FetchManagerImpl>().fetchAppInbox(any<StreamConfig>(), any(), any(), any(), any(), any())
+            } just Runs
+        }
         mockkConstructorFix(ExponeaServiceImpl::class) {
             every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any<ProjectConfig>(), any()) }
             every { anyConstructed<ExponeaServiceImpl>().fetchSegments(any<StreamConfig>(), any()) }
@@ -110,14 +136,20 @@ internal open class ExponeaSDKTest {
 
     @After
     fun afterExponeaTest() {
-        // we need to enforce the order here, first unmock, then resetExponea
+        // Keep MockK teardown separate from SDK reset. Mocked manager cleanup can itself
+        // schedule callbacks, which makes unmockkAll contend with active instrumentation.
+        // App Inbox refreshes are stubbed above so no network callback can outlive this step.
         unmockAllSafely()
         resetExponea()
     }
 
     fun unmockAllSafely() {
         // mockk has a problem when it sometimes throws an exception, in that case just try again
-        try { unmockkAll() } catch (_: ConcurrentModificationException) { unmockAllSafely() }
+        try {
+            unmockkAll()
+        } catch (_: ConcurrentModificationException) {
+            unmockAllSafely()
+        }
     }
 
     fun resetExponea() {

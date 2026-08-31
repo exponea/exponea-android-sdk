@@ -10,6 +10,8 @@ import com.exponea.sdk.models.EventType
 import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.preferences.ExponeaPreferencesImpl
+import com.exponea.sdk.repository.DeviceInitiatedRepositoryImpl
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import io.mockk.Runs
 import io.mockk.every
@@ -28,10 +30,13 @@ internal class ExponeaTrackInstallTest : ExponeaSDKTest() {
     lateinit var configuration: ExponeaConfiguration
     @Before
     fun before() {
+        context = ApplicationProvider.getApplicationContext()
+        // The installation marker is deliberately persisted by the SDK. Reset it for this
+        // fixture so assertions do not depend on a test that ran earlier in the suite.
+        DeviceInitiatedRepositoryImpl(ExponeaPreferencesImpl(context)).set(false)
         mockkConstructorFix(EventManagerImpl::class) {
             every { anyConstructed<EventManagerImpl>().addEventToQueue(any(), any(), any()) }
         }
-        context = ApplicationProvider.getApplicationContext()
         configuration = ExponeaConfiguration(
             integrationConfig = ProjectConfig(projectToken = "mock-token"),
             automaticSessionTracking = false

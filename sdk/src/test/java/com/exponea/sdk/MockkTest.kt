@@ -3,10 +3,12 @@ package com.exponea.sdk
 import io.mockk.MockKAdditionalAnswerScope
 import io.mockk.every
 import io.mockk.mockkConstructor
+import io.mockk.unmockkAll
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,6 +29,14 @@ internal class MockkTest {
         fun add(a: Int, b: Int) = a + b
         fun sub(a: Int, b: Int) = a - b
     }
+
+    @After
+    fun after() {
+        // Constructor mocking is global. Do not let this compatibility test alter the
+        // MockK instrumentation seen by Mockito-based tests that run afterwards.
+        unmockkAll()
+    }
+
     @Test
     fun `mockk should pass - origin mockk behaviour`() {
         // constructor for class has to be moccked

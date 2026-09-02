@@ -14,6 +14,14 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.3.1
+#### September 02, 2026
+* Fixed:
+  * Fixes App Inbox images not loading in the message detail for dependent Flutter apps by intercepting WebView resource requests.
+  * Fixes cold-start ANR errors when receiving push notifications while the app is in the background or terminated state.
+  * Fixes App Inbox sync after an invalid sync token by clearing the cached token on HTTP 410 responses.
+
+
 ## Release Notes for 5.3.0
 #### August 05, 2026
 * Added:

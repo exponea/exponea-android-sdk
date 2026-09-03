@@ -7,7 +7,7 @@ parent:
   uri: android-sdk-setup
 content:
   excerpt: >-
-    Learn how the Android SDK uploads data to the Engagement API and how to
+    Learn how the Android SDK uploads data to the Marketing API and how to
     customize this behavior
 ---
 

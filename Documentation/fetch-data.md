@@ -6,7 +6,7 @@ category:
 parent:
   uri: android-sdk
 content:
-  excerpt: Fetch data from Bloomreach Engagement using the Android SDK
+  excerpt: Fetch data from Marketing using the Android SDK
 ---
 
 The SDK provides methods to retrieve data from the {user.mkg} platform. Responses are available in the `onSuccess` and `onFailure` callback properties.

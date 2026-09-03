@@ -7,7 +7,7 @@ parent:
   uri: android-sdk-push-notifications
 content:
   excerpt: >-
-    Integrate Huawei Mobile Services in your app to support Engagement push
+    Integrate Huawei Mobile Services in your app to support Marketing push
     notifications on Huawei devices
 ---
 

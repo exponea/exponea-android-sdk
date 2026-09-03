@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./Documentation/images/logo_engagement.png?raw=true" alt="Bloomreach Engagement"/>
+  <img src="./Documentation/images/logo_engagement.png?raw=true" alt="Bloomreach Marketing"/>
 </p>
 
 ### Specs
@@ -8,14 +8,14 @@
 
 ## Exponea Android SDK
 
-This library allows you to interact from your application or game with the Bloomreach Engagement.
+This library allows you to interact from your application or game with Bloomreach Marketing.
 
-Bloomreach Engagement empowers B2C marketers to raise conversion rates, improve acquisition ROI, and maximize customer lifetime value.
+Bloomreach Marketing empowers B2C marketers to raise conversion rates, improve acquisition ROI, and maximize customer lifetime value.
 
 It has been written 100% in Kotlin with ❤️
 
 > 
-> Bloomreach Engagement was formerly known as Exponea. For backward compatibility, the Exponea name continues to be used in the iOS SDK.
+> Bloomreach Marketing was formerly known as Exponea. For backward compatibility, the Exponea name continues to be used in the iOS SDK.
 
 ## 📦 Installation
 
@@ -73,7 +73,7 @@ Follow the detailed [step by step guide here](https://documentation.bloomreach.c
 
 ## 🔗 Useful links
 
-* [Bloomreach Engagement App](https://app.exponea.com/login)
+* [Bloomreach Marketing App](https://app.exponea.com/login)
 
 ## 📝 Release Notes
 
@@ -85,7 +85,7 @@ This SDK supports **API 21+** and **Android 5.0+**.
 
 ## Support
 
-Are you a Bloomreach customer and dealing with some issues on mobile SDK? You can reach the official Engagement Support [via these recommended ways](https://documentation.bloomreach.com/engagement/docs/engagement-support#contacting-the-support).
+Are you a Bloomreach customer and dealing with some issues on mobile SDK? You can reach official Marketing Support [via these recommended ways](https://documentation.bloomreach.com/engagement/docs/engagement-support#contacting-the-support).
 
 Note that Github repository issues and PRs will also be considered but with the lowest priority and without guaranteed output.
 

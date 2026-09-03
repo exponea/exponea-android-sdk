@@ -7,7 +7,7 @@ parent:
   uri: android-sdk-push-notifications
 content:
   excerpt: >-
-    Integrate Firebase Cloud Messaging in your app to support Engagement push
+    Integrate Firebase Cloud Messaging in your app to support Marketing push
     notifications on Android devices
 ---
 

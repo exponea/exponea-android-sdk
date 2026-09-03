@@ -106,7 +106,7 @@ If `automaticPushNotification` is enabled, the SDK will display push notificatio
 
 ### Respond to push notifications
 
-When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can choose from three different actions to be performed when tapping the notification or additional buttons displayed with the notification.
+When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the {user.mkg} web app, you can choose from three different actions to be performed when tapping the notification or additional buttons displayed with the notification.
 
 #### Open app
 
@@ -142,7 +142,7 @@ The "Open web browser" action is handled automatically by the SDK and no work is
 
 ### Handle additional data payload
 
-When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `pushNotificationsDelegate`, which you can set on the `Exponea` object.
+When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the {user.mkg} web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `pushNotificationsDelegate`, which you can set on the `Exponea` object.
 
 ``` kotlin
 Exponea.pushNotificationsDelegate = object : PushNotificationDelegate {
@@ -173,7 +173,7 @@ Note that if the SDK previously received any additional data while no listener w
 > * clicked push notification actions are delivered to listener also (with multiple records keeping feature too)
 > * you are able to determine if received notification is silent or was shown to user
 
-When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the Engagment web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `notificationCallback`, which you can set on the `Exponea` object. The additional data is provided as a `Map<String, String>`.
+When [creating a push notification](https://documentation.bloomreach.com/engagement/docs/mobile-push-notifications#creating-a-new-notification) in the {user.mkg} web app, you can set it up to contain additional data. Whenever a notification arrives, the SDK will call `notificationCallback`, which you can set on the `Exponea` object. The additional data is provided as a `Map<String, String>`.
 
 ``` kotlin
 Exponea.notificationDataCallback = {

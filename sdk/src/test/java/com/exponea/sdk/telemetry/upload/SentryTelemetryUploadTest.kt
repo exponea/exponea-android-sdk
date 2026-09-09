@@ -1,6 +1,7 @@
 package com.exponea.sdk.telemetry.upload
 
 import androidx.test.core.app.ApplicationProvider
+import com.exponea.sdk.BuildConfig
 import com.exponea.sdk.telemetry.TelemetryUtility
 import com.exponea.sdk.telemetry.model.CrashLog
 import com.exponea.sdk.telemetry.model.ErrorStackTraceElement
@@ -54,14 +55,17 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
         mockkConstructor(Date::class)
         every { anyConstructed<Date>().time } returns 1_600_000_000_000L
         try {
+            val itemBody = """
+                {"started":"2020-09-13T12:26:40Z","timestamp":"2020-09-13T12:26:40Z","did":"mock-run-id","sid":"mock-run-id","init":true,"status":"ok","seq":1600000000000,"attrs":{"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"${BuildConfig.BUILD_TYPE}"},"extra":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentrySession"}}
+                """.trimIndent()
             runUploadTest(
                 { upload, callback ->
                     upload.uploadSessionStart("mock-run-id", callback)
                 },
                 """
                 {"dsn":"https://0c1ab20fe28a048ab96370522875d4f6@msdk.bloomreach.co/10","sent_at":"2020-09-13T12:26:40Z"}
-                {"type":"session","length":637,"content_type":"application/json"}
-                {"started":"2020-09-13T12:26:40Z","timestamp":"2020-09-13T12:26:40Z","did":"mock-run-id","sid":"mock-run-id","init":true,"status":"ok","seq":1600000000000,"attrs":{"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"debug"},"extra":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentrySession"}}
+                {"type":"session","length":${itemBody.length},"content_type":"application/json"}
+                $itemBody
             """.trimIndent()
             )
         } finally {
@@ -87,6 +91,9 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
 
     @Test
     fun `should upload error data to server`() {
+        val itemBody = """
+            {"timestamp":"2019-11-19T09:29:49Z","logger":"errorLogger","threads":{"values":[{"id":19,"name":"SDK 35 Main Thread","state":"RUNNABLE","crashed":true,"current":true,"daemon":false,"main":true,"stacktrace":{"frames":[{"filename":"Thread.java","function":"run","module":"Thread","lineno":840}]}}]},"exception":{"values":[{"type":"java.lang.Exception","value":"Test exception","stacktrace":{"frames":[{"filename":"mock-file.java","function":"mock-method","module":"mock-class","lineno":123}]},"mechanism":{"type":"generic","description":"generic","handled":false},"thread_id":19}]},"level":"fatal","fingerprint":["error"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentryError"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"${BuildConfig.BUILD_TYPE}","platform":"java","extra":{}}
+            """.trimIndent()
         runUploadTest(
             { upload, callback ->
                 val exception = Exception("Test exception")
@@ -105,14 +112,17 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
             },
             """
                 {"event_id":"ca46cb383c0f46fb91ef5c5345619af7","dsn":"https://0c1ab20fe28a048ab96370522875d4f6@msdk.bloomreach.co/10","sent_at":"2019-11-19T09:29:49Z"}
-                {"type":"event","length":1439,"content_type":"application/json"}
-                {"timestamp":"2019-11-19T09:29:49Z","logger":"errorLogger","threads":{"values":[{"id":19,"name":"SDK 35 Main Thread","state":"RUNNABLE","crashed":true,"current":true,"daemon":false,"main":true,"stacktrace":{"frames":[{"filename":"Thread.java","function":"run","module":"Thread","lineno":840}]}}]},"exception":{"values":[{"type":"java.lang.Exception","value":"Test exception","stacktrace":{"frames":[{"filename":"mock-file.java","function":"mock-method","module":"mock-class","lineno":123}]},"mechanism":{"type":"generic","description":"generic","handled":false},"thread_id":19}]},"level":"fatal","fingerprint":["error"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentryError"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"debug","platform":"java","extra":{}}
+                {"type":"event","length":${itemBody.length},"content_type":"application/json"}
+                $itemBody
             """.trimIndent()
         )
     }
 
     @Test
     fun `should upload error data with logs to server`() {
+        val itemBody = """
+            {"timestamp":"2019-11-19T09:29:49Z","logger":"errorLogger","threads":{"values":[{"id":19,"name":"SDK 35 Main Thread","state":"RUNNABLE","crashed":false,"current":true,"daemon":false,"main":true,"stacktrace":{"frames":[{"filename":"Thread.java","function":"run","module":"Thread","lineno":840}]}}]},"exception":{"values":[{"type":"java.lang.Exception","value":"Test exception","stacktrace":{"frames":[]},"mechanism":{"type":"generic","description":"generic","handled":true},"thread_id":19}]},"level":"error","fingerprint":["error"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentryError"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"${BuildConfig.BUILD_TYPE}","platform":"java","extra":{}}
+            """.trimIndent()
         runUploadTest(
             { upload, callback ->
                 val exception = Exception("Test exception")
@@ -131,8 +141,8 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
             },
             """
                 {"event_id":"ca46cb383c0f46fb91ef5c5345619af7","dsn":"https://0c1ab20fe28a048ab96370522875d4f6@msdk.bloomreach.co/10","sent_at":"2019-11-19T09:29:49Z"}
-                {"type":"event","length":1350,"content_type":"application/json"}
-                {"timestamp":"2019-11-19T09:29:49Z","logger":"errorLogger","threads":{"values":[{"id":19,"name":"SDK 35 Main Thread","state":"RUNNABLE","crashed":false,"current":true,"daemon":false,"main":true,"stacktrace":{"frames":[{"filename":"Thread.java","function":"run","module":"Thread","lineno":840}]}}]},"exception":{"values":[{"type":"java.lang.Exception","value":"Test exception","stacktrace":{"frames":[]},"mechanism":{"type":"generic","description":"generic","handled":true},"thread_id":19}]},"level":"error","fingerprint":["error"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"sentryError"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"debug","platform":"java","extra":{}}
+                {"type":"event","length":${itemBody.length},"content_type":"application/json"}
+                $itemBody
             """.trimIndent()
         )
     }
@@ -154,6 +164,9 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
 
     @Test
     fun `should upload event data to server`() {
+        val itemBody = """
+            {"timestamp":"2019-11-19T09:29:49Z","message":{"formatted":"mock-name"},"logger":"messageLogger","level":"info","fingerprint":["metrics"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"mock-name"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"${BuildConfig.BUILD_TYPE}","platform":"java","extra":{"mock-2":"mock-value-2","mock-1":"mock-value-1"}}
+            """.trimIndent()
         runUploadTest(
             { upload, callback ->
                 val eventLog = EventLog(
@@ -167,8 +180,8 @@ internal class SentryTelemetryUploadTest : ExponeaSDKTest() {
             },
             """
                 {"event_id":"ca46cb383c0f46fb91ef5c5345619af7","dsn":"https://0c1ab20fe28a048ab96370522875d4f6@msdk.bloomreach.co/10","sent_at":"2019-11-19T09:29:49Z"}
-                {"type":"event","length":1002,"content_type":"application/json"}
-                {"timestamp":"2019-11-19T09:29:49Z","message":{"formatted":"mock-name"},"logger":"messageLogger","level":"info","fingerprint":["metrics"],"event_id":"ca46cb383c0f46fb91ef5c5345619af7","contexts":{"app":{"type":"app","app_identifier":"com.exponea.sdk.test","app_name":"com.exponea.sdk.test","app_build":"0"},"device":{"type":"device","model":"robolectric","manufacturer":"robolectric","brand":"robolectric"},"os":{"type":"os","name":"Android","version":"15"}},"tags":{"uuid":"mock-install-id","projectToken":"","sdkVersion":"$sdkVersion","sdkName":"ExponeaSDK.android","appName":"com.exponea.sdk.test","appVersion":"unknown version","appBuild":"0","appIdentifier":"com.exponea.sdk.test","osName":"Android","osVersion":"15","deviceModel":"robolectric","deviceManufacturer":"robolectric","brand":"robolectric","locale":"en_US","eventName":"mock-name"},"release":"com.exponea.sdk.test@unknown version - SDK $sdkVersion","environment":"debug","platform":"java","extra":{"mock-2":"mock-value-2","mock-1":"mock-value-1"}}
+                {"type":"event","length":${itemBody.length},"content_type":"application/json"}
+                $itemBody
             """.trimIndent()
         )
     }

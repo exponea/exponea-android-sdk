@@ -35,7 +35,6 @@ internal class ContentBlockCarouselAdapter(
      */
     private val contentBlocksData = mutableListOf<InAppContentBlock>()
     private val contentBlocksById = mutableMapOf<String, InAppContentBlock>()
-
     fun updateData(newData: List<InAppContentBlock>) {
         val newDataIds = newData.map { it.id }
         val enhancedNewDataIds = multiplyFirstAndLastItems(newDataIds)
@@ -163,6 +162,13 @@ internal class ContentBlockCarouselViewHolder(
             return
         }
         contentBlockLoader.assignedContentBlock = contentBlock
+        contentBlock?.let {
+            InAppContentBlockTiming.log(
+                contentBlockId = it.id,
+                source = InAppContentBlockTiming.RequestSource.CAROUSEL_ITEM_BOUND,
+                contentBlockName = it.name
+            )
+        }
         val placeholderView = getContentBlockPlaceholderView()
         // Only load if already attached; if not, onViewAttachedToWindow will trigger the load
         // when the page actually becomes visible, preventing tile allocation for off-screen WebViews.

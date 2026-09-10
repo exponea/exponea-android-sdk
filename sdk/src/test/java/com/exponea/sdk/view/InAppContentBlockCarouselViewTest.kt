@@ -27,10 +27,15 @@ import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.RecordingLoggerCallback
+import com.exponea.sdk.testutil.assertNonNegativeTimingFields
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.latestInAppContentBlockTimingLog
+import com.exponea.sdk.testutil.parseInAppContentBlockTimingLog
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.shutdown
+import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
 import io.mockk.Runs
 import io.mockk.every
@@ -138,6 +143,61 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         val capturedProps = telemetryPropertiesSlot.captured
         assertNotNull(capturedProps)
         assertEquals("static", capturedProps["type"])
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should emit timing debug log from carousel holder render`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            prepareContentBlockMessages(
+                arrayListOf(
+                    buildMessage(
+                        "id1",
+                        type = "html",
+                        data = mapOf("html" to buildHtmlMessageContent())
+                    )
+                )
+            )
+            initSdk()
+            idleThreads()
+            Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+            idleThreads()
+            val carousel = Exponea.getInAppContentBlocksCarousel(
+                ApplicationProvider.getApplicationContext(),
+                "placeholder_1"
+            )
+            assertNotNull(carousel)
+            carousel.reload()
+            idleThreads()
+
+            val adapter = carousel.viewController.contentBlockCarouselAdapter
+            val holder = adapter.createViewHolder(carousel, 0)
+            adapter.onBindViewHolder(holder, 0)
+            val placeholderView = requireNotNull(holder.getContentBlockPlaceholderView())
+            placeholderView.controller.loadContent(false)
+            idleThreads()
+            placeholderView.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
+            idleThreads()
+
+            val (level, message) = latestInAppContentBlockTimingLog(loggerCallback)
+            assertEquals(Logger.Level.DEBUG, level)
+            val fields = parseInAppContentBlockTimingLog(message)
+            assertEquals("id1", fields["contentBlockId"])
+            assertEquals("render_finished", fields["source"])
+            assertEquals("true", fields["contentLoaded"])
+            assertEquals("webview_visual_state", fields["finishSource"])
+            assertNonNegativeTimingFields(
+                fields,
+                "timestampMs"
+            )
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
     }
 
     @Test

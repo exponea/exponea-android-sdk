@@ -10,6 +10,7 @@ import com.exponea.sdk.manager.InAppContentBlockManager
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildHtmlMessageContent
 import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildMessage
+import com.exponea.sdk.manager.InAppContentBlockManagerImplTest.Companion.buildMessageData
 import com.exponea.sdk.models.CustomerIds
 import com.exponea.sdk.models.Event
 import com.exponea.sdk.models.EventType
@@ -20,6 +21,7 @@ import com.exponea.sdk.models.InAppContentBlockAction
 import com.exponea.sdk.models.InAppContentBlockCallback
 import com.exponea.sdk.models.InAppContentBlockDisplayState
 import com.exponea.sdk.models.InAppContentBlockFrequency
+import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.InAppContentBlockPlaceholderConfiguration
 import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
@@ -35,8 +37,14 @@ import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.RecordingLoggerCallback
+import com.exponea.sdk.testutil.assertNonNegativeTimingFields
+import com.exponea.sdk.testutil.latestInAppContentBlockTimingLog
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
+import com.exponea.sdk.testutil.parseInAppContentBlockTimingLog
 import com.exponea.sdk.testutil.runInSingleThread
+import com.exponea.sdk.util.Logger
+import com.exponea.sdk.util.buildCustomerIdsCacheKey
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -55,6 +63,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doNothing
@@ -768,6 +777,215 @@ internal class InAppContentBlockPlaceholderViewTest {
     }
 
     @Test
+    fun `should emit timing debug log when html content is ready`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            val placeholder = inAppContentBlockManager.getPlaceholderView(
+                "placeholder_1",
+                ApplicationProvider.getApplicationContext(),
+                InAppContentBlockPlaceholderConfiguration(true)
+            )
+            preloadInAppContentBlocks(
+                arrayListOf(
+                    buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+                )
+            )
+            val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+            placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+                override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                    messageShownInvoked.release()
+                }
+            }
+
+            placeholder.refreshContent()
+            idleThreads()
+            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
+            placeholder.layout(0, 0, 10, 10)
+            idleThreads()
+
+            val (level, message) = latestInAppContentBlockTimingLog(loggerCallback)
+            assertEquals(Logger.Level.DEBUG, level)
+            val fields = parseInAppContentBlockTimingLog(message)
+            assertEquals("id1", fields["contentBlockId"])
+            assertEquals("render_finished", fields["source"])
+            assertEquals("true", fields["contentLoaded"])
+            assertEquals("webview_visual_state", fields["finishSource"])
+            assertNonNegativeTimingFields(
+                fields,
+                "timestampMs"
+            )
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
+    }
+
+    @Test
+    fun `should emit timing debug log when no content is ready`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            val placeholder = inAppContentBlockManager.getPlaceholderView(
+                "ph1",
+                noContentDataLoader(),
+                ApplicationProvider.getApplicationContext(),
+                InAppContentBlockPlaceholderConfiguration(defferedLoad = true)
+            )
+
+            placeholder.refreshContent()
+            idleThreads()
+
+            assertTrue(loggerCallback.logs.none { it.second.startsWith("InAppCB timing: ") })
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+        }
+    }
+
+    @Test
+    fun `should emit timing debug log with stored etag mode`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            val etagStore = VolatileInAppContentBlocksETagStore()
+            val manager = replaceManager(etagStore)
+            val placeholderId = "ph1"
+            val block = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+                customerIds = customerIdsRepository.get().toHashMap()
+            }
+            manager.contentBlocksData = listOf(block)
+            etagStore.store(etagCacheKey(block.customerIds, listOf(block.id)), "\"etag-v1\"")
+            whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(),
+            anyOrNull(), any(), any())).thenAnswer {
+                it.getArgument<((String) -> Unit)?>(5)?.invoke("\"etag-v2\"")
+                it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(
+                    6
+                ).invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            buildMessageData(
+                                block.id,
+                                ttl = 60,
+                                type = "html",
+                                data = mapOf("html" to buildHtmlMessageContent())
+                            )
+                        )
+                    )
+                )
+                null
+            }
+
+            val fields = renderAndReadTimingFields(
+                manager, placeholderId, loggerCallback, idleThreads, "etag_looked_up", "stored"
+            )
+
+            assertEquals("stored", fields["etagMode"])
+            assertNonNegativeTimingFields(fields, "timestampMs")
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
+    }
+
+    @Test
+    fun `should emit timing debug log with not modified etag mode`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            val etagStore = VolatileInAppContentBlocksETagStore()
+            val manager = replaceManager(etagStore)
+            val placeholderId = "ph1"
+            val block = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+                customerIds = customerIdsRepository.get().toHashMap()
+                personalizedData = buildMessageData(
+                    id,
+                    ttl = 1,
+                    type = "html",
+                    data = mapOf("html" to buildHtmlMessageContent())
+                ).apply { loadedAt = Date(System.currentTimeMillis() - 60_000) }
+            }
+            manager.contentBlocksData = listOf(block)
+            etagStore.store(etagCacheKey(block.customerIds, listOf(block.id)), "\"etag-v1\"")
+            whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(),
+            anyOrNull(), any(), any())).thenAnswer {
+                it.getArgument<(() -> Unit)?>(4)?.invoke()
+                null
+            }
+
+            val fields = renderAndReadTimingFields(
+                manager, placeholderId, loggerCallback, idleThreads, "network_fetch_finished", "not_modified"
+            )
+
+            assertEquals("not_modified", fields["etagMode"])
+            assertNonNegativeTimingFields(fields, "timestampMs")
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
+    }
+
+    @Test
+    fun `should emit timing debug log with retry without etag mode`() = runInSingleThread { idleThreads ->
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            val etagStore = VolatileInAppContentBlocksETagStore()
+            val manager = replaceManager(etagStore)
+            val placeholderId = "ph1"
+            val block = buildMessage("id1", placeholders = listOf(placeholderId)).apply {
+                customerIds = customerIdsRepository.get().toHashMap()
+            }
+            manager.contentBlocksData = listOf(block)
+            etagStore.store(etagCacheKey(block.customerIds, listOf(block.id)), "\"etag-v1\"")
+            var fetchCount = 0
+            whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(),
+            anyOrNull(), any(), any())).thenAnswer {
+                fetchCount++
+                if (fetchCount == 1) {
+                    it.getArgument<(() -> Unit)?>(4)?.invoke()
+                } else {
+                    it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(
+                        6
+                    ).invoke(
+                        Result(
+                            true,
+                            arrayListOf(
+                                buildMessageData(
+                                    block.id,
+                                    ttl = 60,
+                                    type = "html",
+                                    data = mapOf("html" to buildHtmlMessageContent())
+                                )
+                            )
+                        )
+                    )
+                }
+                null
+            }
+
+            val fields = renderAndReadTimingFields(
+                manager, placeholderId, loggerCallback, idleThreads, "network_fetch_finished", "retry_without_etag"
+            )
+
+            assertEquals("retry_without_etag", fields["etagMode"])
+            assertNonNegativeTimingFields(fields, "timestampMs")
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
+    }
+
+    @Test
     fun `should track render completion with timeout finish source`() = runInSingleThread { idleThreads ->
         val telemetryEventCaptor = argumentCaptor<TelemetryEvent>()
         val telemetryPropertiesCaptor = argumentCaptor<MutableMap<String, String>>()
@@ -859,6 +1077,57 @@ internal class InAppContentBlockPlaceholderViewTest {
         // Simulate WebView on page loaded event, then layout change
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
+    }
+
+    private fun replaceManager(etagStore: VolatileInAppContentBlocksETagStore): InAppContentBlockManagerImpl {
+        inAppContentBlockManager = InAppContentBlockManagerImpl(
+            displayStateRepository = displayStateRepository,
+            fetchManager = fetchManager,
+            integrationConfigFactory = projectFactory,
+            customerIdsRepository = customerIdsRepository,
+            imageCache = drawableCache,
+            htmlCache = htmlCache,
+            fontCache = fontCache,
+            etagStore = etagStore
+        )
+        identifyCustomer(cookie = "cookie-1", ids = hashMapOf("login" to "test"))
+        return inAppContentBlockManager as InAppContentBlockManagerImpl
+    }
+
+    private fun etagCacheKey(customerIds: Map<String, String?>, contentBlockIds: List<String>): String {
+        val sortedBlockIds = contentBlockIds.distinct().sorted().joinToString(",")
+        return "${buildCustomerIdsCacheKey(customerIds)}|$sortedBlockIds"
+    }
+
+    private fun renderAndReadTimingFields(
+        manager: InAppContentBlockManagerImpl,
+        placeholderId: String,
+        loggerCallback: RecordingLoggerCallback,
+        idleThreads: () -> Unit,
+        source: String,
+        etagMode: String
+    ): Map<String, String> {
+        val placeholder = manager.getPlaceholderView(
+            placeholderId,
+            ApplicationProvider.getApplicationContext(),
+            InAppContentBlockPlaceholderConfiguration(true)
+        )
+        val messageShownInvoked = java.util.concurrent.Semaphore(0, true)
+        placeholder.behaviourCallback = object : EmptyInAppContentBlockCallback() {
+            override fun onMessageShown(placeholderId: String, contentBlock: InAppContentBlock) {
+                messageShownInvoked.release()
+            }
+        }
+
+        placeholder.refreshContent()
+        idleThreads()
+        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
+        idleThreads()
+
+        val (level, message) = latestInAppContentBlockTimingLog(loggerCallback, source, etagMode)
+        assertEquals(Logger.Level.DEBUG, level)
+        return parseInAppContentBlockTimingLog(message)
     }
 
     private fun preloadInAppContentBlocks(messages: ArrayList<InAppContentBlock>) {

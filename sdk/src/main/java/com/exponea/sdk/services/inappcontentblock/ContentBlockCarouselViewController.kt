@@ -159,6 +159,14 @@ internal class ContentBlockCarouselViewController(
                     contentBlockSelector.sortContentBlocks(filteredContentBlocks)
                 }.logOnExceptionWithResult().returnOnException { filteredContentBlocks }
                 val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
+                limitedContentBlocks.forEach {
+                    InAppContentBlockTiming.log(
+                        contentBlockId = it.id,
+                        source = InAppContentBlockTiming.RequestSource.CAROUSEL_RELOADED,
+                        contentBlockName = it.name,
+                        properties = mapOf("forceRefresh" to forceRefresh)
+                    )
+                }
                 runOnMainThread {
                     contentBlockCarouselAdapter.updateData(limitedContentBlocks)
                     carouselView.prepareOffscreenPages(

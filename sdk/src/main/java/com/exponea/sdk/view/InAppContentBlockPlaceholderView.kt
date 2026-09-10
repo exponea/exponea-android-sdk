@@ -27,6 +27,7 @@ class InAppContentBlockPlaceholderView internal constructor(
     internal lateinit var placeholder: CardView
     private var onContentReady: ((Boolean) -> Unit)? = null
     private var onHeightUpdate: ((Int) -> Unit)? = null
+    private var activeRenderInstanceId: String? = null
     private val placeholderId: String = controller.placeholderId
     internal var isReadyForHeightMeasurement: Boolean = false
         private set
@@ -87,7 +88,7 @@ class InAppContentBlockPlaceholderView internal constructor(
                 "finishSource=${finishSource.value}"
         )
         isReadyForHeightMeasurement = true
-        controller.onContentReady(contentLoaded, finishSource.value)
+        controller.onContentReady(contentLoaded, finishSource.value, activeRenderInstanceId)
         onContentReady?.let {
             kotlin.runCatching {
                 it.invoke(contentLoaded)
@@ -129,8 +130,9 @@ class InAppContentBlockPlaceholderView internal constructor(
         }
     }
 
-    internal fun showNoContent() {
+    internal fun showNoContent(renderInstanceId: String? = null) {
         Logger.i(this, "InAppCB: Placeholder ${controller.placeholderId} view has no content to show")
+        activeRenderInstanceId = renderInstanceId
         applyVisibilityMode(PlaceholderVisibilityMode.EMPTY)
         notifyContentReadyListener(false, ContentReadyFinishSource.EMPTY)
     }
@@ -164,15 +166,17 @@ class InAppContentBlockPlaceholderView internal constructor(
         super.onDetachedFromWindow()
     }
 
-    internal fun showHtmlContent(html: String) {
+    internal fun showHtmlContent(html: String, renderInstanceId: String? = null) {
         Logger.i(this, "InAppCB: $placeholderId: View going to show HTML block")
+        activeRenderInstanceId = renderInstanceId
         isReadyForHeightMeasurement = false
         htmlContainer.loadData(html)
         applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
     }
 
-    internal fun showExistingContent() {
+    internal fun showExistingContent(renderInstanceId: String? = null) {
         Logger.d(this, "InAppCB: $placeholderId: Reusing already-rendered content, skipping WebView reload")
+        activeRenderInstanceId = renderInstanceId
         isReadyForHeightMeasurement = true
         applyVisibilityMode(PlaceholderVisibilityMode.CONTENT)
         notifyContentReadyListener(true, ContentReadyFinishSource.EXISTING)
@@ -229,6 +233,7 @@ class InAppContentBlockPlaceholderView internal constructor(
 
     internal fun resetContent() {
         isReadyForHeightMeasurement = false
+        activeRenderInstanceId = null
         htmlContainer.clearContent()
         applyVisibilityMode(PlaceholderVisibilityMode.INIT)
     }

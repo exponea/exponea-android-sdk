@@ -28,6 +28,7 @@ import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 internal open class InAppContentBlockViewController(
@@ -48,7 +49,10 @@ internal open class InAppContentBlockViewController(
     private val messageShown: AtomicBoolean = AtomicBoolean(false)
     private val lastTrackedMessageId: AtomicReference<String?> = AtomicReference(null)
     private val renderTrackingPending: AtomicBoolean = AtomicBoolean(false)
+    private val renderInstanceSequence = AtomicLong(0)
+    private val controllerInstanceId = Integer.toHexString(System.identityHashCode(this))
     private var lastRenderedNormalizedHtml: String? = null
+    private var activeRenderInstanceId: String? = null
     internal var assignedHtmlContent: NormalizedResult? = null
     internal var assignedMessage: InAppContentBlock? = null
 
@@ -121,24 +125,33 @@ internal open class InAppContentBlockViewController(
             Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
             return
         }
-        renderTrackingPending.set(true)
+        val renderInstanceId = "$controllerInstanceId-${renderInstanceSequence.incrementAndGet()}"
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
             val loadedMessage = dataLoader.loadContent(placeholderId)
-            val normalizedHtml = normalizeHtmlIfPossible(loadedMessage)
+            loadedMessage?.let {
+                InAppContentBlockTiming.log(
+                    contentBlockId = it.id,
+                    source = InAppContentBlockTiming.RequestSource.CONTENT_LOADED,
+                    contentBlockName = it.name,
+                    properties = mapOf("renderInstanceId" to renderInstanceId)
+                )
+            }
+            val normalizedHtml = normalizeHtmlIfPossible(loadedMessage, renderInstanceId)
             val contentChanged = hasRenderableContentChanged(loadedMessage, normalizedHtml)
             if (contentLoaded.get() && messageShown.get() && !contentChanged) {
                 Logger.d(
                     this,
                     "InAppCB: Placeholder $placeholderId content is unchanged, skipping redundant load"
                 )
-                renderTrackingPending.set(false)
                 return@runOnBackgroundThread
             }
             synchronized(stateLock) {
                 assignedMessage = loadedMessage
                 assignedHtmlContent = normalizedHtml
+                activeRenderInstanceId = renderInstanceId
             }
+            renderTrackingPending.set(true)
             contentLoaded.set(true)
             if (contentChanged) {
                 messageShown.set(false)
@@ -151,8 +164,14 @@ internal open class InAppContentBlockViewController(
                     InAppCB: Placeholder $placeholderId attached to window ($isViewAttachedToWindow), showing message
                     """.trimIndent()
                 )
-                val currentAssignedMessage = synchronized(stateLock) { assignedMessage }
-                showMessage(currentAssignedMessage, allowDetachedRender = !requiresAttachedView)
+                val (currentAssignedMessage, currentRenderInstanceId) = synchronized(stateLock) {
+                    assignedMessage to activeRenderInstanceId
+                }
+                showMessage(
+                    currentAssignedMessage,
+                    currentRenderInstanceId,
+                    allowDetachedRender = !requiresAttachedView
+                )
             } else {
                 Logger.d(
                     this,
@@ -180,14 +199,28 @@ internal open class InAppContentBlockViewController(
         return currentAssignedHtml?.html != normalizedHtml?.html
     }
 
-    private fun normalizeHtmlIfPossible(message: InAppContentBlock?): NormalizedResult? {
+    private fun normalizeHtmlIfPossible(
+        message: InAppContentBlock?,
+        renderInstanceId: String
+    ): NormalizedResult? {
         val htmlContent = message?.htmlContent
         if (message == null || message.contentType != HTML || htmlContent == null) {
+            message?.let {
+                InAppContentBlockTiming.log(
+                    contentBlockId = it.id,
+                    source = InAppContentBlockTiming.RequestSource.NORMALIZATION_FINISHED,
+                    contentBlockName = it.name,
+                    normalizationMode = InAppContentBlockTiming.NormalizationMode.NOT_HTML,
+                    properties = mapOf("renderInstanceId" to renderInstanceId)
+                )
+            }
             return null
         }
         Logger.d(this, "InAppCB: Normalizing HTML content of message ${message.id}")
+        var normalizationMode = InAppContentBlockTiming.NormalizationMode.CACHE_HIT
         var normalizedHtml = htmlCache.get(message.id, htmlContent)
         if (normalizedHtml == null || !normalizedHtml.valid) {
+            normalizationMode = InAppContentBlockTiming.NormalizationMode.CACHE_MISS
             Logger.d(this, "InAppCB: No html cache for message ${message.id}, creating new")
             val normalizer = HtmlNormalizer(
                 imageCache = imageCache,
@@ -200,16 +233,30 @@ internal open class InAppContentBlockViewController(
             ))
             htmlCache.set(message.id, htmlContent, normalizedResult)
             normalizedHtml = normalizedResult
+            if (!normalizedResult.valid) {
+                normalizationMode = InAppContentBlockTiming.NormalizationMode.INVALID
+            }
         } else {
             Logger.d(
                 this,
                 "InAppCB: Using already normalized HTML content of message ${message.id} from cache"
             )
         }
+        InAppContentBlockTiming.log(
+            contentBlockId = message.id,
+            source = InAppContentBlockTiming.RequestSource.NORMALIZATION_FINISHED,
+            contentBlockName = message.name,
+            normalizationMode = normalizationMode,
+            properties = mapOf("renderInstanceId" to renderInstanceId)
+        )
         return normalizedHtml
     }
 
-    private fun showMessage(message: InAppContentBlock?, allowDetachedRender: Boolean = false) {
+    private fun showMessage(
+        message: InAppContentBlock?,
+        renderInstanceId: String?,
+        allowDetachedRender: Boolean = false
+    ) {
         if (!messageShown.compareAndSet(false, true)) {
             Logger.d(
                 this,
@@ -220,7 +267,7 @@ internal open class InAppContentBlockViewController(
         if (message == null) {
             Logger.i(this, "InAppCB: No message found for placeholder $placeholderId")
             runOnMainThread {
-                view.showNoContent()
+                view.showNoContent(renderInstanceId)
             }
             kotlin.runCatching {
                 behaviourCallback.onNoMessageFound(placeholderId)
@@ -234,23 +281,23 @@ internal open class InAppContentBlockViewController(
             "placeholders" to ExponeaGson.instance.toJson(message.placeholders)
         ))
         when (message.contentType) {
-            HTML -> showHtmlContent(message, allowDetachedRender)
-            NATIVE -> showNativeContent()
-            UNKNOWN -> showNoContent()
-            NOT_DEFINED -> showNoContent()
+            HTML -> showHtmlContent(message, renderInstanceId, allowDetachedRender)
+            NATIVE -> showNativeContent(renderInstanceId)
+            UNKNOWN -> showNoContent(renderInstanceId)
+            NOT_DEFINED -> showNoContent(renderInstanceId)
         }
     }
 
-    private fun showNativeContent() {
+    private fun showNativeContent(renderInstanceId: String?) {
         Logger.e(this, "InAppCB: Upgrade SDK!!! Native InApp Content Blocks are not supported here")
         // !!! Dont produce onError event
-        showNoContent()
+        showNoContent(renderInstanceId)
     }
 
-    private fun showNoContent() {
+    private fun showNoContent(renderInstanceId: String?) {
         Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
         runOnMainThread {
-            view.showNoContent()
+            view.showNoContent(renderInstanceId)
         }
         val message = synchronized(stateLock) { assignedMessage }
         actionDispatcher.onNoContent(placeholderId, message)
@@ -268,7 +315,11 @@ internal open class InAppContentBlockViewController(
         }
     }
 
-    private fun showHtmlContent(message: InAppContentBlock, allowDetachedRender: Boolean) {
+    private fun showHtmlContent(
+        message: InAppContentBlock,
+        renderInstanceId: String?,
+        allowDetachedRender: Boolean
+    ) {
         runOnBackgroundThread {
             if (!isViewAttachedToWindow && !allowDetachedRender) {
                 Logger.d(this, "InAppCB: Placeholder $placeholderId view not attached, skipping HTML load")
@@ -280,17 +331,23 @@ internal open class InAppContentBlockViewController(
             if (htmlContent.isNullOrEmpty()) {
                 // possible AB testing
                 Logger.i(this, "InAppCB: No HTML content provided for message ${message.id}")
-                showNoContent()
+                showNoContent(renderInstanceId)
                 return@runOnBackgroundThread
             }
             val normalizedHtml = synchronized(stateLock) { assignedHtmlContent?.html }
             if (normalizedHtml.isNullOrEmpty()) {
                 // htmlContent is non-null, normalized HTML has to be prepared; otherwise htmlContent is invalid
                 Logger.e(this, "InAppCB: HTML content for message ${message.id} is invalid")
-                showError(message, "Invalid HTML or empty")
+                showError(message, "Invalid HTML or empty", renderInstanceId)
                 return@runOnBackgroundThread
             }
             Logger.i(this, "InAppCB: HTML content for placeholder $placeholderId is valid")
+            InAppContentBlockTiming.log(
+                contentBlockId = message.id,
+                source = InAppContentBlockTiming.RequestSource.DISPLAY_STARTED,
+                contentBlockName = message.name,
+                properties = mapOf("renderInstanceId" to renderInstanceId)
+            )
             runOnMainThread {
                 if (!isViewAttachedToWindow && !allowDetachedRender) {
                     Logger.d(this, "InAppCB: Placeholder $placeholderId view detached before render, skipping")
@@ -306,9 +363,9 @@ internal open class InAppContentBlockViewController(
                     }
                 }
                 if (shouldShowExisting) {
-                    view.showExistingContent()
+                    view.showExistingContent(renderInstanceId)
                 } else {
-                    view.showHtmlContent(normalizedHtml)
+                    view.showHtmlContent(normalizedHtml, renderInstanceId)
                 }
             }
             if (lastTrackedMessageId.getAndSet(message.id) != message.id) {
@@ -320,13 +377,17 @@ internal open class InAppContentBlockViewController(
         }
     }
 
-    private fun showError(message: InAppContentBlock, errorMessage: String) {
+    private fun showError(
+        message: InAppContentBlock,
+        errorMessage: String,
+        renderInstanceId: String?
+    ) {
         Logger.e(
             this,
             "InAppCB: Content for placeholder $placeholderId cannot be shown because of: $errorMessage"
         )
         runOnMainThread {
-            view.showNoContent()
+            view.showNoContent(renderInstanceId)
         }
         actionDispatcher.onError(placeholderId, message, errorMessage)
         runCatching {
@@ -344,6 +405,7 @@ internal open class InAppContentBlockViewController(
             lastRenderedNormalizedHtml = null
             assignedMessage = null
             assignedHtmlContent = null
+            activeRenderInstanceId = null
         }
     }
 
@@ -360,8 +422,10 @@ internal open class InAppContentBlockViewController(
                 InAppCB: Placeholder $placeholderId view attached to window, content is loaded, going to show content
                 """.trimIndent()
             )
-            val currentAssignedMessage = synchronized(stateLock) { assignedMessage }
-            showMessage(currentAssignedMessage)
+            val (currentAssignedMessage, currentRenderInstanceId) = synchronized(stateLock) {
+                assignedMessage to activeRenderInstanceId
+            }
+            showMessage(currentAssignedMessage, currentRenderInstanceId)
         } else if (config.defferedLoad) {
             Logger.d(
                 this,
@@ -388,12 +452,28 @@ internal open class InAppContentBlockViewController(
         }
     }
 
-    internal fun onContentReady(contentLoaded: Boolean, finishSource: String) {
+    internal fun onContentReady(
+        contentLoaded: Boolean,
+        finishSource: String,
+        renderInstanceId: String?
+    ) {
         if (!renderTrackingPending.getAndSet(false)) {
             return
         }
         val message = synchronized(stateLock) { assignedMessage }
         val messageId = message?.id
+        message?.let {
+            InAppContentBlockTiming.log(
+                contentBlockId = it.id,
+                source = InAppContentBlockTiming.RequestSource.RENDER_FINISHED,
+                contentBlockName = it.name,
+                properties = mapOf(
+                    "contentLoaded" to contentLoaded,
+                    "finishSource" to finishSource,
+                    "renderInstanceId" to renderInstanceId
+                )
+            )
+        }
         Logger.i(
             this,
             "InAppCB: Placeholder $placeholderId render completed with contentLoaded=$contentLoaded, " +

@@ -59,6 +59,7 @@ internal class InAppContentBlockManagerImpl(
         internal val SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW = listOf(
             InAppContentBlockType.HTML
         )
+        private val HTML_URL = Regex("""https?://[^\s\"')>]+""")
     }
 
     private val SUPPORTED_CONTENT_BLOCK_TYPES_TO_DOWNLOAD = SUPPORTED_CONTENT_BLOCK_TYPES_TO_SHOW + NOT_DEFINED
@@ -82,6 +83,8 @@ internal class InAppContentBlockManagerImpl(
     private val inFlightPersonalizedFetchCallbacks =
         mutableMapOf<String, MutableList<PersonalizedFetchCallbacks>>()
     private val inFlightContentLoads = mutableMapOf<InFlightContentLoadKey, MutableList<(Boolean) -> Unit>>()
+    private val runtimeStaticFetchLock = Any()
+    private val runtimeStaticFetchCallbacks = mutableListOf<(Boolean) -> Unit>()
     // trying to display the same in a short time window, drop
     private val shownEventDedupWindowMs = 100L
     private val shownEventDedupLock = Any()
@@ -166,6 +169,110 @@ internal class InAppContentBlockManagerImpl(
         displayStateRepository.clear()
         etagStore.clearAll()
         Logger.i(this, "InAppCB: All data and cache has been cleared completely")
+    }
+
+    override fun invalidatePlaceholders(placeholderIds: List<String>) {
+        val requestedPlaceholders = placeholderIds.toSet()
+        if (requestedPlaceholders.isEmpty()) return
+        val invalidatedBlocksAndImageUrls = dataAccess.waitForAccessWithResult {
+            contentBlocksData.filter { it.placeholders.any(requestedPlaceholders::contains) }.map { block ->
+                // htmlContent prefers personalized data, so capture it before clearing that data.
+                block to HTML_URL.findAll(block.htmlContent.orEmpty()).map { it.value }.toList()
+            }.onEach { (block, _) -> block.personalizedData = null }
+        }.getOrDefault(emptyList())
+        val invalidatedBlocks = invalidatedBlocksAndImageUrls.map { it.first }
+        val ids = invalidatedBlocks.map { it.id }.toSet()
+        clearRenderableCaches(ids)
+        ids.forEach(etagStore::removeForContentBlock)
+        invalidatedBlocksAndImageUrls.flatMap { it.second }.distinct().forEach(imageCache::remove)
+        Logger.i(this, "InAppCB: Invalidated runtime placeholders ${requestedPlaceholders.joinToString()}")
+    }
+
+    override fun hasRenderableContent(placeholderId: String): Boolean = runThreadSafelyWithResult {
+        val candidates = contentBlocksByPlaceholder[placeholderId].orEmpty()
+        candidates.any { block ->
+            block.hasFreshContent() && block.htmlContent != null && passesFilters(block) &&
+                isStatusValid(block) && isContentSupportedToShow(block)
+        }
+    } ?: false
+
+    /**
+     * Runtime callers need a completion callback rather than the legacy view's blocking path.
+     * Static-list fetches are shared so concurrent placeholder requests cannot multiply requests.
+     */
+    override fun loadPlaceholderAsync(
+        placeholderId: String,
+        forceRefresh: Boolean,
+        completion: (Boolean) -> Unit
+    ) {
+        if (Exponea.isStopped) {
+            completion(false)
+            return
+        }
+        val loadResolvedPlaceholder = {
+            val target = getAllInAppContentBlocksForPlaceholder(placeholderId)
+            if (target.isEmpty()) {
+                completion(true)
+            } else {
+                loadContentIfNeededAsync(target, forceRefresh) { completion(it) }
+            }
+        }
+        if (!forceRefresh && getAllInAppContentBlocksForPlaceholder(placeholderId).isNotEmpty()) {
+            loadResolvedPlaceholder()
+        } else {
+            fetchRuntimeStaticContent { staticLoaded ->
+                if (!staticLoaded) completion(false) else loadResolvedPlaceholder()
+            }
+        }
+    }
+
+    private fun fetchRuntimeStaticContent(completion: (Boolean) -> Unit) {
+        val startFetch = synchronized(runtimeStaticFetchLock) {
+            runtimeStaticFetchCallbacks.add(completion)
+            runtimeStaticFetchCallbacks.size == 1
+        }
+        if (!startFetch) return
+        ensureOnBackgroundThread {
+            fetchManager.fetchStaticInAppContentBlocks(
+                integrationConfig = integrationConfigFactory.integrationConfig,
+                onSuccess = { result ->
+                    if (Exponea.isStopped) {
+                        completeRuntimeStaticFetch(false)
+                        return@fetchStaticInAppContentBlocks
+                    }
+                    val customerIds = customerIdsRepository.get().toHashMap()
+                    val supported = (result.results ?: emptyList())
+                        .filter(::isContentSupportedToDownload)
+                        .onEach { it.customerIds = customerIds }
+                    var invalidated = emptySet<String>()
+                    dataAccess.waitForAccess {
+                        invalidated = findStaticContentCacheInvalidations(contentBlocksData, supported)
+                        val personalizedDataByBlockId = contentBlocksData
+                            .filter { it.isContentPersonalized() }
+                            .mapNotNull { block ->
+                                block.personalizedData?.let { block.id to it }
+                            }
+                            .toMap()
+                        supported
+                            .filter { it.isContentPersonalized() }
+                            .forEach { block ->
+                                block.personalizedData = personalizedDataByBlockId[block.id]
+                            }
+                        contentBlocksData = supported
+                    }
+                    clearRenderableCaches(invalidated)
+                    completeRuntimeStaticFetch(true)
+                },
+                onFailure = { completeRuntimeStaticFetch(false) }
+            )
+        }
+    }
+
+    private fun completeRuntimeStaticFetch(success: Boolean) {
+        val callbacks = synchronized(runtimeStaticFetchLock) {
+            runtimeStaticFetchCallbacks.toList().also { runtimeStaticFetchCallbacks.clear() }
+        }
+        callbacks.forEach { it(success) }
     }
 
     private fun runThreadSafelyInBackground(action: () -> Unit) {
@@ -325,7 +432,7 @@ internal class InAppContentBlockManagerImpl(
     private fun loadContentIfNeededAsync(
         contentBlocks: List<InAppContentBlock>,
         forceRefresh: Boolean = false,
-        done: () -> Unit
+        done: (Boolean) -> Unit
     ) {
         val blockIdsToCheck = contentBlocks.map { it.id }.toSet()
         val blockIdsToUpdate = if (forceRefresh) {
@@ -347,18 +454,18 @@ internal class InAppContentBlockManagerImpl(
         }
         if (blockIdsToUpdate.isEmpty()) {
             Logger.d(this, "InAppCB: All content of blocks are fresh, nothing to update")
-            done()
+            done(true)
             return
         }
         if (Exponea.isStopped) {
             Logger.e(this, "InAppCB: In-app content blocks fetch failed, SDK is stopping")
-            done()
+            done(false)
             return
         }
         val customerIdsSnapshot = customerIdsRepository.get()
         val customerIdsMap = customerIdsSnapshot.toHashMap()
-        val blockIdsToFetch = registerInFlightContentLoad(blockIdsToUpdate, customerIdsMap) { _ ->
-            done()
+        val blockIdsToFetch = registerInFlightContentLoad(blockIdsToUpdate, customerIdsMap) { success ->
+            done(success)
         }
         if (blockIdsToFetch.isEmpty()) {
             Logger.d(this, "InAppCB: Joining in-flight content load for blocks: ${blockIdsToUpdate.joinToString()}")

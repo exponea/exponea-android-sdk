@@ -22,6 +22,16 @@ interface InAppContentBlockManager : OnIntegrationStoppedCallback {
         config: InAppContentBlockPlaceholderConfiguration
     ): InAppContentBlockPlaceholderView
     fun loadInAppContentBlockPlaceholders(inAppContentBlockPlaceholdersAutoLoad: List<String> = emptyList())
+    /** Internal asynchronous bridge used by the runtime ICB controller. */
+    fun loadPlaceholderAsync(
+        placeholderId: String,
+        forceRefresh: Boolean = false,
+        completion: (Boolean) -> Unit
+    )
+    /** Clears data derived from the supplied placeholders without affecting other placeholders. */
+    fun invalidatePlaceholders(placeholderIds: List<String>)
+    /** True only when a currently eligible, renderable block is available locally. */
+    fun hasRenderableContent(placeholderId: String): Boolean
     fun clearAll()
     fun onEventCreated(event: Event, type: EventType)
     fun getAllInAppContentBlocksForPlaceholder(placeholderId: String): List<InAppContentBlock>

@@ -282,6 +282,8 @@ internal class ExponeaComponent(
         VolatileInAppContentBlocksETagStore()
     )
 
+    internal val runtimeInAppContentBlockController = RuntimeInAppContentBlockController(inAppContentBlockManager)
+
     fun anonymize(
         integrationConfig: IntegrationConfig,
         exponeaConfigurationOverrides: ExponeaConfigurationOverrides?,
@@ -322,6 +324,7 @@ internal class ExponeaComponent(
         uniqueIdentifierRepository.clear()
         customerIdsRepository.clear()
         authTokenRepository.clear()
+        runtimeInAppContentBlockController.onAnonymized()
         inAppContentBlockManager.clearAll()
         sessionManager.reset()
         segmentsManager.clearAll()

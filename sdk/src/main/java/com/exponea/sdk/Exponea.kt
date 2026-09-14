@@ -928,6 +928,7 @@ object Exponea {
         deintegration.registerForIntegrationStopped(component.campaignRepository)
         deintegration.registerForIntegrationStopped(component.deviceInitiatedRepository)
         deintegration.registerForIntegrationStopped(component.inAppContentBlockManager)
+        deintegration.registerForIntegrationStopped(component.runtimeInAppContentBlockController)
         deintegration.registerForIntegrationStopped(component.inAppMessageManager)
         deintegration.registerForIntegrationStopped(component.inAppMessagePresenter)
 
@@ -1570,6 +1571,14 @@ object Exponea {
             }
         )
     }.logOnExceptionWithResult().getOrNull()
+
+    /** Runtime control surface for In-App Content Blocks, or null while the SDK is not running. */
+    val inAppContentBlocksController: RuntimeInAppContentBlockController?
+        get() = runCatching<RuntimeInAppContentBlockController?> {
+            requireInitialized<RuntimeInAppContentBlockController?> {
+                if (isStopped) null else component.runtimeInAppContentBlockController
+            }
+        }.logOnExceptionWithResult().getOrNull()
 
     fun getInAppContentBlocksPlaceholder(
         placeholderId: String,

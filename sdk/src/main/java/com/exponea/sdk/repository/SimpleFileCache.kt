@@ -59,6 +59,11 @@ internal open class SimpleFileCache(context: Context, directoryPath: String) {
         }
     }
 
+    fun remove(url: String) = waitForAccessWithDone(url) { releaseLock ->
+        retrieveFileDirectly(url).delete()
+        releaseLock()
+    }
+
     fun preload(url: String, callback: ((Boolean) -> Unit)?) = waitForAccessWithDone(url) { releaseLock ->
         if (isFileDownloaded(url)) {
             releaseLock()

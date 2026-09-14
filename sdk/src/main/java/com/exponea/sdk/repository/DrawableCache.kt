@@ -8,6 +8,8 @@ internal interface DrawableCache {
     fun preload(urls: List<String>, callback: ((Boolean) -> Unit)? = null)
     fun has(url: String): Boolean
     fun clear()
+    /** Optional targeted eviction; legacy cache implementations may safely ignore it. */
+    fun remove(url: String) = Unit
     fun getFile(url: String): File?
     fun showImage(url: String?, target: ImageView, onImageNotLoaded: ((ImageView) -> Unit)? = null)
     fun getDrawable(url: String?): Drawable?

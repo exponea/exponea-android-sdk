@@ -42,7 +42,6 @@ import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -332,7 +331,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     }
 
     @Test
-    fun `should show message only for last identifyCustomer for MANUAL flush`() {
+    fun `should show message only for last identifyCustomer for MANUAL flush`() = runInSingleThread { idleThreads ->
         ExponeaContextProvider.applicationIsForeground = true
         Exponea.flushMode = FlushMode.MANUAL
         // allow process
@@ -342,36 +341,42 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             callOriginal()
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
-        prepareMessagesMocks(arrayListOf())
-        initSdk()
 
-        // login customerA, message pendingMessageA has to be loaded
         val pendingMessageA = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
             id = "12345A"
         )
-        Exponea.anonymize()
-        prepareMessagesMocks(arrayListOf(pendingMessageA))
-        identifyCustomerForTest(hashMapOf("registered" to "customerA"))
-        // login customerB, message pendingMessageB has to be loaded
         val pendingMessageB = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
             imageUrl = "pending_image_url",
             priority = null,
             id = "12345B"
         )
+        prepareMessagesMocksByCustomer(
+            mapOf(
+                "customerA" to arrayListOf(pendingMessageA),
+                "customerB" to arrayListOf(pendingMessageB)
+            )
+        )
+        initSdk()
+
         Exponea.anonymize()
-        prepareMessagesMocks(arrayListOf(pendingMessageB))
+        identifyCustomerForTest(hashMapOf("registered" to "customerA"))
+        Exponea.anonymize()
         identifyCustomerForTest(hashMapOf("registered" to "customerB"))
-        // check that pendingMessageB is going to show for customerB
+        idleThreads()
+
         val messageSlot = slot<InAppMessage>()
         every { anyConstructed<InAppMessageManagerImpl>().show(capture(messageSlot)) } just Runs
         Exponea.trackSessionStart()
-        Thread.sleep(2000)
+        idleThreads()
+
+        verify(exactly = 1) {
+            anyConstructed<InAppMessageManagerImpl>().show(any())
+        }
         assertTrue(messageSlot.isCaptured)
-        assertNotNull(messageSlot.captured)
         assertEquals(pendingMessageB.id, messageSlot.captured.id)
     }
 
@@ -545,6 +550,48 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<InAppMessagesCacheImpl>().get() } returns pendingMessages
         every { anyConstructed<InAppMessagesCacheImpl>().set(any()) } just Runs
         every { anyConstructed<InAppMessagesCacheImpl>().clear() } returns true
+        every { anyConstructed<InAppMessagesCacheImpl>().getTimestamp() } returns System.currentTimeMillis()
+    }
+
+    private fun prepareMessagesMocksByCustomer(messagesByCustomer: Map<String, List<InAppMessage>>) {
+        var cachedMessages = emptyList<InAppMessage>()
+        every {
+            anyConstructed<FetchManagerImpl>().fetchInAppMessages(
+                any<ProjectConfig>(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            val customerId = secondArg<CustomerIds>().toHashMap()["registered"]
+            arg<(Result<ArrayList<InAppMessage>>) -> Unit>(5).invoke(
+                Result(true, ArrayList(messagesByCustomer[customerId].orEmpty()))
+            )
+        }
+        every {
+            anyConstructed<DrawableCacheImpl>().preload(any<List<String>>(), any())
+        } answers {
+            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
+        }
+        every {
+            anyConstructed<DrawableCacheImpl>().getFile(any())
+        } returns MockFile()
+        every {
+            anyConstructed<DrawableCacheImpl>().has(any())
+        } answers {
+            firstArg<String>() == "pending_image_url"
+        }
+        every { anyConstructed<InAppMessagesCacheImpl>().get() } answers { cachedMessages }
+        every { anyConstructed<InAppMessagesCacheImpl>().set(any()) } answers {
+            cachedMessages = firstArg<List<InAppMessage>>().toList()
+        }
+        every { anyConstructed<InAppMessagesCacheImpl>().clear() } answers {
+            cachedMessages = emptyList()
+            true
+        }
         every { anyConstructed<InAppMessagesCacheImpl>().getTimestamp() } returns System.currentTimeMillis()
     }
 

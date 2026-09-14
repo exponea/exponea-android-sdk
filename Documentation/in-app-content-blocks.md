@@ -21,6 +21,35 @@ You can strategically position placeholders for in-app content blocks within you
 
 ![In-app content blocks in the example app](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/in-app-content-blocks.png)
 
+## Runtime prefetch and targeted invalidation
+
+For navigation flows where a CMS screen is known before it is shown, use the optional runtime
+controller after SDK initialization. It resolves the static list and warms eligible content while
+selection, rendering, and tracking remain inside the SDK's existing placeholder view:
+
+```kotlin
+val controller = Exponea.inAppContentBlocksController ?: return
+controller.prefetch(listOf("article_hero")) { availability ->
+    // This callback runs on the main thread. Load re-renders from the warmed cache;
+    // it does not start another request when the content is already fresh.
+    placeholderView.load()
+}
+```
+
+For a bounded navigation decision, use `availability(id, deadlineMillis)`. Its callback receives
+`Resolved(Ready)` or `Resolved(Empty)` when content is available, or `TimedOut` when the caller's
+deadline expires. A timeout does not cancel the shared background fetch.
+
+Use `invalidate(ids, reason, EAGER) { ... }` when an individual CMS placement has changed. It
+clears only that placement's derived content, performs an unconditional refresh, and calls back
+with final `Ready` or `Empty` states. Call `placeholderView.load()` in that callback to render the
+fresh cache. `LAZY` clears cache only, immediately returns `Loading`, and waits for a later
+prefetch, availability request, or legacy placeholder `load()` to start the next load.
+
+SDK-owned runtime rendering (`RuntimeICBView`) and long-lived availability observation are deferred
+from this first runtime-control slice. Use the existing `InAppContentBlockPlaceholderView` or
+carousel to render content.
+
 ## Integration of a placeholder view
 
 You can integrate in-app content blocks by adding one or more placeholder views in your app. Each in-app content block must have a `Placeholder ID` specified in its [settings](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks#3-fill-the-settings) in {user.mkg}. The SDK will display an in-app content block in the corresponding placeholder in the app if the current app user matches the target audience. In-app content block is shown until user interacts with it or placeholder view instance is reloaded programmatically.

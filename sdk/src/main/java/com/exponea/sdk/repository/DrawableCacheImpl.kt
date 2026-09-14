@@ -125,6 +125,8 @@ internal class DrawableCacheImpl(
 
     override fun clear() = fileCache.clear()
 
+    override fun remove(url: String) = fileCache.remove(url)
+
     override fun getFile(url: String): File? = fileCache.getFile(url)
 
     override fun has(url: String): Boolean = fileCache.has(url)

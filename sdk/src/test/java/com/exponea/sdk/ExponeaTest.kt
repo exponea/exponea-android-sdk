@@ -8,6 +8,7 @@ import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.telemetry.model.EventLog
 import com.exponea.sdk.telemetry.upload.SentryTelemetryUpload
 import com.exponea.sdk.testutil.ExponeaSDKTest
+import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.DebugMockApplication
 import com.exponea.sdk.testutil.mocks.ReleaseMockApplication
 import io.mockk.Runs
@@ -19,6 +20,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +29,29 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 internal class ExponeaTest : ExponeaSDKTest() {
+    @Test
+    fun `should return null in-app content blocks controller before initialization`() {
+        assertNull(Exponea.inAppContentBlocksController)
+    }
+
+    @Test
+    fun `should return runtime in-app content blocks controller after initialization`() {
+        initSdk()
+
+        assertSame(
+            Exponea.componentForTesting.runtimeInAppContentBlockController,
+            Exponea.inAppContentBlocksController
+        )
+    }
+
+    @Test
+    fun `should return null in-app content blocks controller when SDK is stopped`() {
+        initSdk()
+        Exponea.isStopped = true
+
+        assertNull(Exponea.inAppContentBlocksController)
+    }
+
     @Test
     fun `should get null as customer cookie before initialized`() {
         assertNull(Exponea.customerCookie)

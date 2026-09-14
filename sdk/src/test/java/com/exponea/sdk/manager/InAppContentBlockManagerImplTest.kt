@@ -301,17 +301,20 @@ internal class InAppContentBlockManagerImplTest {
     private lateinit var htmlCache: HtmlNormalizedCache
     private lateinit var fontCache: FontCache
     private lateinit var inAppContentBlockManager: InAppContentBlockManager
+    private val displayStates = mutableMapOf<String, InAppContentBlockDisplayState>()
+    private val defaultDisplayState = InAppContentBlockDisplayState(null, 0, null, 0)
 
     @Before
     fun before() {
         Exponea.telemetry = null
+        displayStates.clear()
         fetchManager = mock()
         customerIdsRepository = mock()
         displayStateRepository = mock {
-            on { get(any()) } doReturn InAppContentBlockDisplayState(
-                null, 0, null, 0
-            )
-            on { getAll() } doReturn emptyMap()
+            on { get(any()) } doAnswer {
+                displayStates[it.getArgument<InAppContentBlock>(0).id] ?: defaultDisplayState
+            }
+            on { getAll() } doAnswer { displayStates.toMap() }
             doNothing().on { setDisplayed(any(), any()) }
             doNothing().on { setInteracted(any(), any()) }
             doNothing().on { clear() }
@@ -1579,8 +1582,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ALWAYS.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1591,8 +1593,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, null, 0)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1603,8 +1604,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, Date(), 1)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1615,8 +1615,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1627,8 +1626,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, null, 0)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1639,8 +1637,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, Date(), 1)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1651,8 +1648,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.ONCE_PER_VISIT.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
 
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
@@ -1664,8 +1660,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, null, 0)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1676,8 +1671,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         assertTrue(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1688,8 +1682,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html",
             rawFrequency = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(null, 0, Date(), 1))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(null, 0, Date(), 1)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
     }
 
@@ -1742,8 +1735,7 @@ internal class InAppContentBlockManagerImplTest {
             ),
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
         assertTrue(inAppContentBlockManager.passesDateFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
@@ -1762,8 +1754,7 @@ internal class InAppContentBlockManagerImplTest {
             ),
             rawFrequency = InAppContentBlockFrequency.ONLY_ONCE.name.lowercase()
         )
-        doReturn(InAppContentBlockDisplayState(Date(), 1, null, 0))
-            .whenever(displayStateRepository).get(contentBlock)
+        displayStates[contentBlock.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         assertFalse(inAppContentBlockManager.passesFrequencyFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesDateFilter(contentBlock))
         assertFalse(inAppContentBlockManager.passesFilters(contentBlock))
@@ -1794,9 +1785,7 @@ internal class InAppContentBlockManagerImplTest {
             type = "html"
         )
         val invalidByContentType = buildMessage("invalidByContentType", type = "native")
-        doReturn(mapOf(
-            invalidByFrequency.id to InAppContentBlockDisplayState(Date(), 1, null, 0)
-        )).whenever(displayStateRepository).getAll()
+        displayStates[invalidByFrequency.id] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         clearInvocations(displayStateRepository)
 
         val result = (inAppContentBlockManager as InAppContentBlockManagerImpl).filterContentBlocksForDisplay(
@@ -1812,17 +1801,7 @@ internal class InAppContentBlockManagerImplTest {
     fun `should return all content blocks but only for placeholder`() = runInSingleThread { idleThreads ->
         val placeholderId = "ph1"
         val nowSeconds = (System.currentTimeMillis() / 1000).toInt()
-        doAnswer {
-            if (it.getArgument<InAppContentBlock>(1).id == "invalidByFrequency") {
-                InAppContentBlockDisplayState(
-                    Date(), 1, null, 0
-                )
-            } else {
-                InAppContentBlockDisplayState(
-                    null, 0, null, 0
-                )
-            }
-        }.whenever(displayStateRepository).get(any())
+        displayStates["invalidByFrequency"] = InAppContentBlockDisplayState(Date(), 1, null, 0)
         whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
             it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
                 Result(
@@ -1884,6 +1863,106 @@ internal class InAppContentBlockManagerImplTest {
         assertTrue(loadedBlockIds.contains("valid"))
         assertFalse(loadedBlockIds.contains("invalidByPlaceholder"))
     }
+
+    @Test
+    fun `runtime invalidation evicts personalized html URL before clearing personalization`() {
+        val staticUrl = "https://cdn.example.com/static.png"
+        val personalizedUrl = "https://cdn.example.com/assets/personalized.png"
+        val block = buildMessage(
+            id = "runtime",
+            type = "html",
+            data = mapOf("html" to "<img src='$staticUrl'>")
+        ).also {
+            it.personalizedData = buildMessageData(
+                id = it.id,
+                type = "html",
+                data = mapOf("html" to "<img src='$personalizedUrl'>")
+            )
+        }
+        (inAppContentBlockManager as InAppContentBlockManagerImpl).contentBlocksData = listOf(block)
+
+        inAppContentBlockManager.invalidatePlaceholders(listOf("placeholder_1"))
+
+        assertNull(block.personalizedData)
+        verify(drawableCache).remove(personalizedUrl)
+        verify(drawableCache, never()).remove(staticUrl)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `runtime forced refresh preserves warmed content for other personalized placeholders`() =
+        runInSingleThread { idleThreads ->
+            val invalidatedPlaceholder = "hero"
+            val retainedPlaceholder = "footer"
+            val invalidatedId = "hero-block"
+            val retainedId = "footer-block"
+            val manager = inAppContentBlockManager as InAppContentBlockManagerImpl
+            val warmedRetainedData = buildMessageData(
+                retainedId,
+                ttl = 60,
+                type = "html",
+                data = mapOf("html" to "warmed-footer-html")
+            ).apply { loadedAt = Date() }
+            manager.contentBlocksData = listOf(
+                buildMessage(invalidatedId, placeholders = listOf(invalidatedPlaceholder)).apply {
+                    personalizedData = buildMessageData(
+                        invalidatedId,
+                        ttl = 60,
+                        type = "html",
+                        data = mapOf("html" to "stale-hero-html")
+                    ).apply { loadedAt = Date() }
+                },
+                buildMessage(retainedId, placeholders = listOf(retainedPlaceholder)).apply {
+                    personalizedData = warmedRetainedData
+                }
+            )
+            val requestedBlockIds = mutableListOf<List<String>>()
+            whenever(fetchManager.fetchStaticInAppContentBlocks(any(), any(), any())).thenAnswer {
+                it.getArgument<(Result<ArrayList<InAppContentBlock>?>) -> Unit>(1).invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            buildMessage(invalidatedId, placeholders = listOf(invalidatedPlaceholder)),
+                            buildMessage(retainedId, placeholders = listOf(retainedPlaceholder))
+                        )
+                    )
+                )
+                null
+            }
+            whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(),
+                anyOrNull(), any(), any())).thenAnswer {
+                val requestedIds = it.getArgument<List<String>>(2)
+                requestedBlockIds.add(requestedIds)
+                it.getArgument<(Result<ArrayList<InAppContentBlockPersonalizedData>?>) -> Unit>(6).invoke(
+                    Result(
+                        true,
+                        arrayListOf(
+                            buildMessageData(
+                                invalidatedId,
+                                ttl = 60,
+                                type = "html",
+                                data = mapOf("html" to "fresh-hero-html")
+                            )
+                        )
+                    )
+                )
+                null
+            }
+
+            manager.invalidatePlaceholders(listOf(invalidatedPlaceholder))
+            var loadSucceeded: Boolean? = null
+            manager.loadPlaceholderAsync(invalidatedPlaceholder, true) { loadSucceeded = it }
+            idleThreads()
+
+            assertEquals(listOf(listOf(invalidatedId)), requestedBlockIds)
+            val refreshedHero = manager.contentBlocksData.first { it.id == invalidatedId }
+            val retainedFooter = manager.contentBlocksData.first { it.id == retainedId }
+            assertEquals("fresh-hero-html", refreshedHero.personalizedData?.content?.get("html"))
+            assertEquals(warmedRetainedData, retainedFooter.personalizedData)
+            assertEquals("warmed-footer-html", retainedFooter.htmlContent)
+            assertTrue(manager.hasRenderableContent(retainedPlaceholder))
+            assertEquals(true, loadSucceeded)
+        }
 
     private class InMemoryETagStore : InAppContentBlocksETagStore {
         private val values = hashMapOf<String, String>()

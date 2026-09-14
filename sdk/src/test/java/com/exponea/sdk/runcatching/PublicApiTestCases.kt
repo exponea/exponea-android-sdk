@@ -54,6 +54,7 @@ internal object PublicApiTestCases {
         Pair(Exponea::customerCookie, null),
         Pair(Exponea::checkPushSetup, false),
         Pair(Exponea::appInboxProvider, Constants.AppInbox.defaulAppInboxProvider),
+        Pair(Exponea::inAppContentBlocksController, null),
         Pair(Exponea::safeModeEnabled, true),
         Pair(Exponea::runDebugMode, false),
         Pair(Exponea::segmentationDataCallbacks, CopyOnWriteArrayList<SegmentationDataCallback>()),

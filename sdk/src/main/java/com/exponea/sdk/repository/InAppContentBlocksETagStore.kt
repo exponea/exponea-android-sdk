@@ -7,6 +7,8 @@ internal interface InAppContentBlocksETagStore {
     fun store(key: String, etag: String)
     fun retrieve(key: String): String?
     fun remove(key: String)
+    /** Removes every request ETag containing this block, including batched placeholder loads. */
+    fun removeForContentBlock(blockId: String) = Unit
     fun clearAll()
 }
 
@@ -36,6 +38,12 @@ internal class VolatileInAppContentBlocksETagStore : InAppContentBlocksETagStore
         if (key.isEmpty()) return
 
         values.remove(key)
+    }
+
+    override fun removeForContentBlock(blockId: String) {
+        values.keys.filter { key ->
+            key.substringAfter('|', "").split(',').any { it == blockId }
+        }.forEach(values::remove)
     }
 
     override fun clearAll() {

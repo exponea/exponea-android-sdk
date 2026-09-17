@@ -14,6 +14,12 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.4.0
+#### September 17, 2026
+* Added:
+  * Adds `Exponea.inAppContentBlocksController` for runtime prefetch, availability checks with deadlines, and targeted invalidation of in-app content blocks.
+
+
 ## Release Notes for 5.3.1
 #### September 02, 2026
 * Fixed:

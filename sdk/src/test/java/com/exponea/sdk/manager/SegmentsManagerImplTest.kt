@@ -591,11 +591,14 @@ internal class SegmentsManagerImplTest {
                 override val exposingCategory = "discovery"
                 override val includeFirstLoad = false
                 override fun onNewData(segments: List<Segment>) {
-                    called.countDown()
-                    if (i == 4) {
-                        throw RuntimeException("Sorry, something went wrong")
+                    try {
+                        if (i == 4) {
+                            throw RuntimeException("Sorry, something went wrong")
+                        }
+                        orderFlag += i
+                    } finally {
+                        called.countDown()
                     }
-                    orderFlag += i
                 }
             })
         }

@@ -1,116 +1,35 @@
 package com.exponea.example.managers
 
 import android.content.SharedPreferences
-import android.util.Log
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.exponea.example.App
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-/**
- * !!! WARN for developers.
- * This implementation is just proof of concept. Do not rely on any part of it as possible solution for Customer Token
- * handling.
- * It is in your own interest to provide proper token generating and handling of its cache, expiration and secured storing.
- */
 class CustomerTokenStorage(
     private var networkManager: NetworkManager = NetworkManager(),
-    private val gson: Gson = Gson(),
+    private val json: Json = Json { ignoreUnknownKeys = true },
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.instance)
 ) {
-
     companion object {
         private const val CUSTOMER_TOKEN_CONF = "CustomerTokenConf"
         val INSTANCE = CustomerTokenStorage()
     }
-
-    init {
-        loadConfiguration()
-        val confJson = gson.toJson(confAsMap())
-        Log.d("CustomerTokenStorage", "[CTS] Conf loaded $confJson")
-    }
-
-    private val tag = this::class.simpleName
 
     private var host: String? = null
     private var projectToken: String? = null
     private var publicKey: String? = null
     private var customerIds: HashMap<String, String>? = null
     private var expiration: Int? = null
-
     private var tokenCache: String? = null
-
     private var lastTokenRequestTime: Long = 0
 
-    fun retrieveJwtToken(): String? {
-        val now = System.currentTimeMillis()
-        if (TimeUnit.MILLISECONDS.toMinutes(abs(now - lastTokenRequestTime)) < 5) {
-            // allows request for token once per 5 minutes, doesn't care if cache is NULL
-            Log.d(tag, "[CTS] Token retrieved within 5min, using cache $tokenCache")
-            return tokenCache
-        }
-        lastTokenRequestTime = now
-        if (tokenCache != null) {
-            // return cached value
-            Log.d(tag, "[CTS] Token cache returned $tokenCache")
-            return tokenCache
-        }
-        synchronized(this) {
-            // recheck nullity just in case
-            if (tokenCache == null) {
-                tokenCache = loadJwtToken()
-            }
-        }
-        return tokenCache
-    }
-
-    private fun loadJwtToken(): String? {
-        if (
-            host == null || projectToken == null ||
-            publicKey == null || customerIds == null || customerIds?.size == 0
-        ) {
-            Log.d(tag, "[CTS] Not configured yet")
-            return null
-        }
-        val reqBody = hashMapOf(
-            "project_id" to projectToken,
-            "kid" to publicKey,
-            "sub" to customerIds
-        )
-        expiration?.let {
-            reqBody.put("exp", it)
-        }
-        val jsonRequest = gson.toJson(reqBody)
-        val response = networkManager.post(
-            "$host/webxp/exampleapp/customertokens",
-            null,
-            jsonRequest
-        ).execute()
-        Log.d(tag, "[CTS] Requested for token with $jsonRequest")
-        if (!response.isSuccessful) {
-            if (response.code == 404) {
-                // that is fine, only some BE has this endpoint
-                Log.d(tag, "[CTS] Token request returns 404")
-                return null
-            }
-            Log.e(tag, "[CTS] Token request returns ${response.code}")
-            return null
-        }
-        val jsonResponse = response.body?.string()
-        val responseData = try {
-            gson.fromJson(jsonResponse, Response::class.java)
-        } catch (e: Exception) {
-            Log.e(tag, "[CTS] Token cannot be parsed from $jsonResponse")
-            return null
-        }
-        if (responseData?.token == null) {
-            Log.e(tag, "[CTS] Token received NULL")
-        }
-        Log.d(tag, "[CTS] Token received ${responseData?.token}")
-        return responseData?.token
+    init {
+        loadConfiguration()
     }
 
     fun configure(
@@ -126,52 +45,95 @@ class CustomerTokenStorage(
         this.customerIds = customerIds
         this.expiration = expiration
         storeConfig()
-        // reset token
         tokenCache = null
         lastTokenRequestTime = 0
     }
 
-    private fun storeConfig() {
-        val confMap = confAsMap()
-        val confAsJson = gson.toJson(confMap)
-        prefs.edit()
-            .putString(CUSTOMER_TOKEN_CONF, confAsJson)
-            .apply()
+    fun retrieveJwtToken(): String? {
+        val now = System.currentTimeMillis()
+        if (TimeUnit.MILLISECONDS.toMinutes(kotlin.math.abs(now - lastTokenRequestTime)) < 5) {
+            return tokenCache
+        }
+        lastTokenRequestTime = now
+        if (tokenCache != null) {
+            return tokenCache
+        }
+        synchronized(this) {
+            if (tokenCache == null) {
+                tokenCache = loadJwtToken()
+            }
+        }
+        return tokenCache
     }
-    private fun confAsMap(): Map<String, String?> {
-        return mapOf(
-            "host" to this.host,
-            "projectToken" to this.projectToken,
-            "publicKey" to this.publicKey,
-            "customerIds" to this.customerIds?.let { gson.toJson(it) },
-            "expiration" to this.expiration?.toString()
+
+    private fun loadJwtToken(): String? {
+        if (host == null || projectToken == null || publicKey == null ||
+            customerIds == null || customerIds?.isEmpty() == true
+        ) {
+            return null
+        }
+        val reqBody = TokenRequest(
+            projectId = projectToken,
+            kid = publicKey,
+            sub = customerIds,
+            exp = expiration
         )
+        val response = networkManager.post(
+            "$host/webxp/exampleapp/customertokens",
+            null,
+            json.encodeToString(reqBody)
+        ).execute()
+        if (!response.isSuccessful) {
+            return null
+        }
+        val jsonResponse = response.body?.string() ?: return null
+        return try {
+            json.decodeFromString<TokenResponse>(jsonResponse).token
+        } catch (_: Exception) {
+            null
+        }
     }
+
+    private fun storeConfig() {
+        prefs.edit {
+            putString(CUSTOMER_TOKEN_CONF, json.encodeToString(confAsMap()))
+        }
+    }
+
+    private fun confAsMap(): Map<String, String?> = mapOf(
+        "host" to host,
+        "projectToken" to projectToken,
+        "publicKey" to publicKey,
+        "customerIds" to customerIds?.let { json.encodeToString(it) },
+        "expiration" to expiration?.toString()
+    )
 
     private fun loadConfiguration() {
-        val confAsJson = prefs.getString(CUSTOMER_TOKEN_CONF, "")
-        if (confAsJson.isNullOrEmpty()) {
-            return
-        }
-        val confAsMap: Map<String, String?> = gson.fromJson(
-            confAsJson,
-            object : TypeToken<Map<String, String?>>() {}.type
+        val confAsJson = prefs.getString(CUSTOMER_TOKEN_CONF, "") ?: return
+        if (confAsJson.isEmpty()) return
+        val confAsMap = json.decodeFromString<Map<String, String?>>(confAsJson)
+        host = confAsMap["host"]
+        projectToken = confAsMap["projectToken"]
+        publicKey = confAsMap["publicKey"]
+        customerIds = HashMap(
+            json.decodeFromString<Map<String, String>>(
+                confAsMap["customerIds"] ?: "{}"
+            )
         )
-        this.host = confAsMap["host"]
-        this.projectToken = confAsMap["projectToken"]
-        this.publicKey = confAsMap["publicKey"]
-        val customerIdsMap = gson.fromJson<HashMap<String, String>>(
-            confAsMap["customerIds"] ?: "{}", object : TypeToken<HashMap<String, String>>() {}.type
-        )
-        this.customerIds = customerIdsMap
-        this.expiration = confAsMap["expiration"]?.toInt()
+        expiration = confAsMap["expiration"]?.toIntOrNull()
     }
 
-    data class Response(
-        @SerializedName("customer_token")
-        val token: String?,
+    @Serializable
+    private data class TokenRequest(
+        @SerialName("project_id") val projectId: String? = null,
+        @SerialName("kid") val kid: String? = null,
+        @SerialName("sub") val sub: Map<String, String>? = null,
+        @SerialName("exp") val exp: Int? = null
+    )
 
-        @SerializedName("expire_time")
-        val expiration: Int?
+    @Serializable
+    private data class TokenResponse(
+        @SerialName("customer_token") val token: String? = null,
+        @SerialName("expire_time") val expiration: Int? = null
     )
 }

@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.exponea.example">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:name=".App"
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_bloomreach"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher_bloomreach_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:exported="true"
-            android:name=".view.MainActivity"
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
             android:launchMode="singleTop"
-            android:screenOrientation="sensor">
+            android:screenOrientation="sensor"
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -23,24 +24,36 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- Accepts URIs that begin with "exponea://”-->
                 <data android:scheme="exponea" />
             </intent-filter>
-            <intent-filter android:autoVerify="true" tools:targetApi="m">
+            <intent-filter
+                android:autoVerify="true"
+                tools:targetApi="m">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data
-                    android:scheme="https"
                     android:host="mobile-sdk-example-apps.web.app"
-                    android:pathPattern="/exponea/.*"/>
+                    android:pathPattern="/exponea/.*"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".view.AuthenticationActivity"
-            android:screenOrientation="sensor" />
+            android:name=".ui.auth.AuthActivity"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".ui.contentblocks.ContentBlocksXmlActivity"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:theme="@style/AppTheme.Xml" />
+        <meta-data
+            android:name="ExponeaExampleApp"
+            android:value="true" />
+        <meta-data
+            android:name="ExponeaAuthProvider"
+            android:value="com.exponea.example.services.ExampleAuthProvider" />
         <receiver
             android:name=".services.MyReceiver"
             android:enabled="true"
@@ -51,10 +64,5 @@
                 <action android:name="com.exponea.sdk.action.PUSH_URL_CLICKED" />
             </intent-filter>
         </receiver>
-        <meta-data android:name="ExponeaExampleApp" android:value="true" />
-        <meta-data
-            android:name="ExponeaAuthProvider"
-            android:value="com.exponea.example.services.ExampleAuthProvider"
-        />
     </application>
 </manifest>

@@ -52,7 +52,7 @@ That's all that's required to integrate the App Inbox. Optionally, you can [cust
 
 > 📘
 >
-> See [FetchFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/FetchFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> For a reference implementation, see [`FetchingScreen.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/fetching/FetchingScreen.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 ## Default App Inbox behavior
 
@@ -78,7 +78,7 @@ The SDK fetches and displays the App Inbox automatically as follows:
 5. Call `Exponea.trackAppInboxClick` automatically when the user clicks a button in the message detail view.
 
 
-![App Inbox messages list view and message detail view](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/app-inbox-android.png)
+![App Inbox messages list view and message detail view](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/app-inbox.png)
 
 > ❗️
 >

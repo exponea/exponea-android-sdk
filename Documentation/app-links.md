@@ -90,7 +90,9 @@ Example:
 
 > 👍
 >
-> Note that `handleCampaignIntent` takes care of tracking only. You must still read the data from the intent and use it to determine the relevant app content to render. This is outside the scope of the SDK but for an example implementation you can take a look at the `resolveDeeplinkDestination` and `handleDeeplinkDestination` methods in [`MainActivity`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/MainActivity.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
+> `handleCampaignIntent` takes care of tracking only. You must still read the data from the intent and use it to determine the relevant app content to render.
+>
+> This falls outside the SDK's scope, but for an example implementation, see the `handleDeeplinkIntent` method in [`MainActivity`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/MainActivity.kt) and [`DeeplinkResolver`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/navigation/DeeplinkResolver.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 > ❗️
 >

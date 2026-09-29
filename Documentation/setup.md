@@ -178,7 +178,7 @@ The SDK will read the configuration parameters from the configuration file.
 
 > 📘
 >
-> Refer to [`exponea_configuration.json`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/assets/exponea_configuration.json) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for an example configuration file.
+> Refer to [`SdkInitializer.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/config/SdkInitializer.kt) and [`EnvConfiguration.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/config/EnvConfiguration.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation. The example app initializes the SDK from the **SDK Configuration** screen rather than from a JSON configuration file.
 
 ### Where to place the SDK initialization code
 

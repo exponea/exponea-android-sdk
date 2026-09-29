@@ -19,7 +19,6 @@ class ExponeaHmsMessageService : HmsMessageService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // replace with handleNewHmsToken once backend is ready
         Exponea.handleNewHmsToken(applicationContext, token)
     }
 }

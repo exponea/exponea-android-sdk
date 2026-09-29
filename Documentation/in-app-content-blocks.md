@@ -19,7 +19,7 @@ You can strategically position placeholders for in-app content blocks within you
 >
 > Refer to the [In-app content blocks](https://documentation.bloomreach.com/engagement/docs/in-app-content-blocks) user guide for instructions on how to create in-app content blocks in {user.mkg}.
 
-![In-app content blocks in the example app](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/in-app-content-blocks.png)
+![In-app content blocks in the example app](https://raw.githubusercontent.com/exponea/exponea-android-sdk/main/Documentation/images/content-blocks.png)
 
 ## Runtime prefetch and targeted invalidation
 
@@ -71,7 +71,7 @@ After the SDK [initializes](https://documentation.bloomreach.com/engagement/docs
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> For a reference implementation, see [`ContentBlocksScreen.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/contentblocks/ContentBlocksScreen.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 > 👍
 >
@@ -116,7 +116,7 @@ Or you may add the carousel view directly into your layout XML:
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) and [`fragment_inapp_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_inapp_content_blocks.xml) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> For a reference implementation, see [`ContentBlocksScreen.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/contentblocks/ContentBlocksScreen.kt), [`ContentBlocksXmlFragment.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/contentblocks/ContentBlocksXmlFragment.kt), and [`fragment_content_blocks.xml`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/res/layout/fragment_content_blocks.xml) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 > 👍
 >
@@ -297,7 +297,7 @@ placeholderView.behaviourCallback = object : InAppContentBlockCallback {
 
 > 📘
 >
-> Refer to [InAppContentBlocksFragment](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/view/fragments/InAppContentBlocksFragment.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app) for a reference implementation.
+> For a reference implementation, see [`ContentBlocksScreen.kt`](https://github.com/exponea/exponea-android-sdk/blob/main/app/src/main/java/com/exponea/example/ui/contentblocks/ContentBlocksScreen.kt) in the [Example app for Android SDK](https://documentation.bloomreach.com/engagement/docs/android-sdk-example-app).
 
 ### Override button action type in HTML message
 

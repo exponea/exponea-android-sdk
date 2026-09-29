@@ -41,7 +41,7 @@ Download via Maven:
 
 ## 📱 Demo Application
 
-Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tree/master/app) to try it yourself! 😉
+Check out our [sample project](https://github.com/exponea/exponea-android-sdk/tree/master/app) (`app` module) to try it yourself! 😉
 
 ## 💻 Usage
 

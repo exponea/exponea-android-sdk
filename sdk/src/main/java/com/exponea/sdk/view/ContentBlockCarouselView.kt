@@ -72,7 +72,7 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
         placeholderId: String,
         maxMessagesCount: Int = DEFAULT_MAX_MESSAGES_COUNT,
         scrollDelay: Int = DEFAULT_SCROLL_DELAY
-    ) : this(context, placeholderId, maxMessagesCount, scrollDelay, null)
+    ) : this(context, placeholderId, maxMessagesCount, scrollDelay, null, 0)
     constructor(
         context: Context,
         placeholderId: String,
@@ -99,7 +99,7 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
         attrs: AttributeSet?,
         sAttrs: Int,
         sRes: Int
-    ) : this(context, attrs, sAttrs, sRes) {
+    ) : super(context, attrs, sAttrs, sRes) {
         init(context, placeholderId, maxMessagesCount, scrollDelay)
     }
     private fun readPlaceholderId(context: Context, attrs: AttributeSet?, defStyleAttr: Int, sRes: Int): String {
@@ -155,11 +155,6 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
                 )
             }
         })
-        try {
-            customTabsHelper.bindCustomTabsService()
-        } catch (e: Exception) {
-            Logger.e(this, "InAppCbCarousel: Custom Tabs usage is turned off", e)
-        }
     }
 
     override fun onAttachedToWindow() {
@@ -168,6 +163,7 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
         Exponea.deintegration.registerForIntegrationStopped(this)
         Exponea.deintegration.registerForIntegrationStopped(viewController)
         viewController.onViewAttachedToWindow()
+        customTabsHelper.bindCustomTabsService()
     }
 
     override fun onDetachedFromWindow() {
@@ -313,6 +309,9 @@ class ContentBlockCarouselView : RelativeLayout, OnIntegrationStoppedCallback {
     }
 
     override fun onIntegrationStopped() {
-        ensureOnMainThread { visibility = GONE }
+        ensureOnMainThread {
+            customTabsHelper.unbindCustomTabsService()
+            visibility = GONE
+        }
     }
 }

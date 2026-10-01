@@ -55,6 +55,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
@@ -101,6 +102,19 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             arg<((Boolean) -> Unit)?>(1)?.invoke(true)
         }
         every { anyConstructed<FontCacheImpl>().has(any()) } returns true
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `browser action opens before Custom Tabs session is ready`() = runInSingleThread { idleThreads ->
+        initSdk()
+        idleThreads()
+        val context = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val carousel = Exponea.getInAppContentBlocksCarousel(context, "placeholder_1")
+        assertNotNull(carousel)
+        assertNull(carousel.customTabsHelper.getSession())
+        carousel.openInnerBrowser("https://example.com/early")
+        assertEquals("https://example.com/early", shadowOf(context).nextStartedActivity.dataString)
     }
 
     @Test

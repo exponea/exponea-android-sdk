@@ -62,6 +62,56 @@ internal class RuntimeInAppContentBlockControllerTest {
     }
 
     @Test
+    fun `availability and prefetch share a load before prefetch eagerly invalidates its result`() =
+        runInSingleThread { idle ->
+            val harness = ControllerHarness()
+            var availability: InAppContentBlockAvailabilityDecision? = null
+            var prefetch: Map<String, InAppContentBlockAvailability>? = null
+            var invalidation: Map<String, InAppContentBlockAvailability>? = null
+            val availabilityCallbacks = AtomicInteger()
+            val prefetchCallbacks = AtomicInteger()
+            var availabilityDeliveredOnMainThread = false
+            var prefetchDeliveredOnMainThread = false
+
+            harness.controller.availability("example_list", 2_000) { result ->
+                availabilityCallbacks.incrementAndGet()
+                availabilityDeliveredOnMainThread = Looper.myLooper() == Looper.getMainLooper()
+                availability = result
+            }
+            harness.controller.prefetch(listOf("example_list"), 2_000) { result ->
+                prefetchCallbacks.incrementAndGet()
+                prefetchDeliveredOnMainThread = Looper.myLooper() == Looper.getMainLooper()
+                prefetch = result
+                harness.controller.invalidate(result.keys.toList(), "prefetch consumed") { invalidation = it }
+            }
+
+            harness.awaitLoad("example_list")
+            assertEquals(1, harness.loads["example_list"]?.size)
+            assertEquals(listOf(false), harness.forceRefreshes)
+            harness.complete("example_list", true)
+            idle()
+
+            assertEquals(
+                InAppContentBlockAvailability.Ready,
+                (availability as InAppContentBlockAvailabilityDecision.Resolved).availability
+            )
+            assertEquals(mapOf("example_list" to InAppContentBlockAvailability.Ready), prefetch)
+            assertEquals(1, availabilityCallbacks.get())
+            assertEquals(1, prefetchCallbacks.get())
+            assertTrue(availabilityDeliveredOnMainThread)
+            assertTrue(prefetchDeliveredOnMainThread)
+
+            harness.awaitInvalidation()
+            verify(harness.manager).invalidatePlaceholders(listOf("example_list"))
+            harness.awaitLoad("example_list", 2)
+            assertEquals(listOf(false, true), harness.forceRefreshes)
+            harness.complete("example_list", true)
+            idle()
+
+            assertEquals(mapOf("example_list" to InAppContentBlockAvailability.Ready), invalidation)
+        }
+
+    @Test
     fun `prefetch deadline returns unresolved IDs as Empty while loading continues`() = runInSingleThread { idle ->
         val harness = ControllerHarness()
         var result: Map<String, InAppContentBlockAvailability>? = null

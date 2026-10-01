@@ -96,6 +96,10 @@ val carouselView = Exponea.getInAppContentBlocksCarousel(
 )
 ```
 
+Custom Tabs setup for browser actions runs in the background and does not delay carousel blocks.
+
+Browser actions still open if the session is not ready when tapped.
+
 Then, place the placeholder view at the desired location by adding it to your layout:
 
 ```kotlin

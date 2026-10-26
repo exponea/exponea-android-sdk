@@ -35,6 +35,7 @@ import com.exponea.sdk.testutil.parseInAppContentBlockTimingLog
 import com.exponea.sdk.testutil.reset
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.testutil.shutdown
+import com.exponea.sdk.testutil.testFontFile
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
 import io.mockk.Runs
@@ -46,7 +47,6 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
-import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -93,9 +93,7 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         mockkConstructorFix(FontCacheImpl::class) {
             every { anyConstructed<FontCacheImpl>().has(any()) }
         }
-        every { anyConstructed<FontCacheImpl>().getFontFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
+        every { anyConstructed<FontCacheImpl>().getFontFile(any()) } returns testFontFile()
         every {
             anyConstructed<FontCacheImpl>().preload(any<List<String>>(), any())
         } answers {

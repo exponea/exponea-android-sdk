@@ -1,20 +1,30 @@
 package com.exponea.sdk.repository
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.testutil.ExponeaMockServer
+import com.exponea.sdk.testutil.TEST_IMAGE_URL
 import com.exponea.sdk.testutil.runInSingleThread
+import com.exponea.sdk.testutil.testPngBytes
 import com.exponea.sdk.testutil.waitForIt
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okio.Buffer
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
@@ -26,6 +36,7 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class DrawableCacheImplTest {
@@ -42,14 +53,15 @@ internal class DrawableCacheImplTest {
 
     @After
     fun resetSdk() {
+        server.shutdown()
         Exponea.isStopped = false
     }
 
     @Test
     fun `should get nil on cold start`() {
         val repo = DrawableCacheImpl(context)
-        assertNull(repo.getFile("http://domain.com/image.jpg"))
-        assertFalse(repo.has("http://domain.com/image.jpg"))
+        assertNull(repo.getFile(TEST_IMAGE_URL))
+        assertFalse(repo.has(TEST_IMAGE_URL))
     }
 
     @Test
@@ -182,9 +194,7 @@ internal class DrawableCacheImplTest {
 
     @Test
     fun `should not download image if SDK is stopped`() {
-        val imageUrl = """
-            https://birdaware.org/solent/wp-content/uploads/sites/2/2021/09/Great-black-backed-gull-HERO.png
-        """.trim()
+        val imageUrl = server.url("image.png").toString()
         val cache = DrawableCacheImpl(context)
         var downloaded = false
         Exponea.isStopped = true
@@ -195,6 +205,7 @@ internal class DrawableCacheImplTest {
             }
         }
         assertFalse(downloaded)
+        assertThat(server.requestCount, equalTo(0))
     }
 
     @Test
@@ -242,5 +253,48 @@ internal class DrawableCacheImplTest {
         })
         idleThreads()
         assertThat(onImageNotLoadedCalled, equalTo(true))
+    }
+
+    @Test
+    fun `should decode downloaded image to drawable`() {
+        server.enqueue(MockResponse().setBody(Buffer().write(testPngBytes())))
+        val imageUrl = server.url("image.png").toString()
+
+        val drawable = getDrawableInBackground(DrawableCacheImpl(context), imageUrl)
+
+        assertThat(drawable, notNullValue())
+
+        assertThat(drawable!!.intrinsicWidth, equalTo(1))
+        assertThat(drawable.intrinsicHeight, equalTo(1))
+        assertThat(server.requestCount, equalTo(1))
+    }
+
+    @Test
+    fun `should not return drawable if image is not found`() {
+        server.enqueue(MockResponse().setResponseCode(404))
+        val imageUrl = server.url("missing.png").toString()
+
+        val drawable = getDrawableInBackground(DrawableCacheImpl(context), imageUrl)
+
+        assertThat(drawable, nullValue())
+    }
+
+    /**
+     * Drawable decoding reports back on the main looper, so the call runs on a worker thread
+     * while the test thread keeps the looper idle.
+     */
+    private fun getDrawableInBackground(cache: DrawableCacheImpl, url: String): Drawable? {
+        val result = AtomicReference<Drawable?>()
+        val finished = CountDownLatch(1)
+        thread(name = "get-drawable") {
+            result.set(cache.getDrawable(url))
+            finished.countDown()
+        }
+        val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(20)
+        while (!finished.await(50, TimeUnit.MILLISECONDS) && System.currentTimeMillis() < deadline) {
+            ShadowLooper.idleMainLooper()
+        }
+        assertThat(finished.count, equalTo(0L))
+        return result.get()
     }
 }

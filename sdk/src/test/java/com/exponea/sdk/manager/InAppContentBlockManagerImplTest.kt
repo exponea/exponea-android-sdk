@@ -27,6 +27,7 @@ import com.exponea.sdk.repository.InAppContentBlocksETagStore
 import com.exponea.sdk.repository.VolatileInAppContentBlocksETagStore
 import com.exponea.sdk.services.IntegrationConfigFactory
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockDataLoader
+import com.exponea.sdk.testutil.TEST_IMAGE_URL
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.buildCustomerIdsCacheKey
 import java.util.Collections
@@ -239,7 +240,7 @@ internal class InAppContentBlockManagerImplTest {
                 <div class="in-app-message modal-in-app-message " style="background-color: #ffffff">
 
                     <div class="image">
-                        <img src="https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg" />
+                        <img src="$TEST_IMAGE_URL" />
                     </div>
 
 
@@ -1251,7 +1252,7 @@ internal class InAppContentBlockManagerImplTest {
         whenever(fetchManager.fetchPersonalizedContentBlocks(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(),
         any(), any())).thenAnswer {
             receivedEtags.add(it.getArgument(3))
-            requestedBlockIds.add(it.getArgument<List<String>>(2))
+            requestedBlockIds.add(it.getArgument(2))
             if (receivedEtags.size == 1) {
                 it.getArgument<(() -> Unit)?>(4)?.invoke()
             } else {

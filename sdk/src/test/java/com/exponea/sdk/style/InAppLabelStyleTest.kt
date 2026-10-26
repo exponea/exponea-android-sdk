@@ -6,11 +6,13 @@ import android.graphics.Color
 import android.util.TypedValue
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.InAppMessagePayload
-import com.exponea.sdk.repository.DrawableCacheImpl
-import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.services.ExponeaContextProvider
+import com.exponea.sdk.testutil.FakeDrawableCache
+import com.exponea.sdk.testutil.FakeFontCache
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import org.hamcrest.CoreMatchers.hasItem
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,6 +21,10 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppLabelStyleTest {
+
+    private companion object {
+        const val TITLE_FONT_URL = "https://cdn.example.test/fonts/title.ttf"
+    }
 
     @Before
     fun before() {
@@ -33,14 +39,13 @@ internal class InAppLabelStyleTest {
 
     @Test
     fun `should parse complete style`() {
-        val appContext: Context = ApplicationProvider.getApplicationContext()
-
+        val fontCache = FakeFontCache()
         val parsedTitleStyle = InAppRichstylePayloadBuilder(
-            drawableCache = DrawableCacheImpl(appContext),
-            fontCache = FontCacheImpl(appContext)
+            drawableCache = FakeDrawableCache(),
+            fontCache = fontCache
         ).build(
             InAppMessagePayload(
-                titleFontUrl = "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+                titleFontUrl = TITLE_FONT_URL,
                 titleTextSize = "24px",
                 titleTextAlignment = "center",
                 titleTextStyle = listOf("bold"),
@@ -51,6 +56,7 @@ internal class InAppLabelStyleTest {
         )!!.title.style
 
         assertNotNull(parsedTitleStyle.customTypeface)
+        assertThat(fontCache.requestedUrls, hasItem(TITLE_FONT_URL))
         assertEquals(24, parsedTitleStyle.textSize.toPx())
         assertEquals(TypedValue.COMPLEX_UNIT_DIP, parsedTitleStyle.textSize.unit)
         assertEquals(TextAlignment.CENTER, parsedTitleStyle.textAlignment)

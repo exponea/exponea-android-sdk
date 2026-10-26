@@ -1,10 +1,9 @@
 package com.exponea.sdk.style
 
 import android.util.TypedValue
-import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.models.InAppMessageTest
-import com.exponea.sdk.repository.DrawableCacheImpl
-import com.exponea.sdk.repository.FontCacheImpl
+import com.exponea.sdk.testutil.FakeDrawableCache
+import com.exponea.sdk.testutil.FakeFontCache
 import kotlin.test.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,8 +15,8 @@ internal class InAppImageStyleTest {
     @Test
     fun `should parse complete style`() {
         val uiPayloadBuilder = InAppRichstylePayloadBuilder(
-            drawableCache = DrawableCacheImpl(ApplicationProvider.getApplicationContext()),
-            fontCache = FontCacheImpl(ApplicationProvider.getApplicationContext())
+            drawableCache = FakeDrawableCache(),
+            fontCache = FakeFontCache()
         )
         val uiPayload = uiPayloadBuilder.build(InAppMessageTest.buildInAppMessageWithRichstyle().payload!!)
         val parsed = uiPayload!!.image.style

@@ -1,5 +1,6 @@
 package com.exponea.sdk.manager
 
+import android.graphics.drawable.ColorDrawable
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
 import com.exponea.sdk.mockkConstructorFix
@@ -31,9 +32,11 @@ import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.componentForTesting
+import com.exponea.sdk.testutil.prepareFontCacheMocks
 import com.exponea.sdk.testutil.runInSingleThread
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.runOnBackgroundThread
+import com.exponea.sdk.view.InAppMessagePresenter
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -56,6 +59,11 @@ import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
+
+    private companion object {
+        // image URL that is reported as already cached by the mocked DrawableCacheImpl
+        const val PENDING_IMAGE_URL = "pending_image_url"
+    }
 
     @Before
     fun disableFetchData() {
@@ -254,10 +262,11 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             callOriginal()
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
+        preparePresenterMocks()
         // disabled real In-app fetch
         val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345"
         )
@@ -298,6 +307,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         verify(exactly = 1) {
             anyConstructed<InAppMessageManagerImpl>().show(pendingMessage)
         }
+        verifyPresenterReceivedUiPayload(timeoutMillis = TimeUnit.SECONDS.toMillis(threadAwaitSeconds))
         waitUntilFlushFinished(threadAwaitSeconds)
     }
 
@@ -313,10 +323,11 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             callOriginal()
         }
         every { anyConstructed<InAppMessageManagerImpl>().pickAndShowMessage() } answers { callOriginal() }
+        preparePresenterMocks()
         // disabled real In-app fetch
         val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345"
         )
@@ -328,6 +339,8 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         verify(exactly = 3) {
             anyConstructed<InAppMessageManagerImpl>().show(any())
         }
+        idleThreads()
+        verifyPresenterReceivedUiPayload(times = 3)
     }
 
     @Test
@@ -344,13 +357,13 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
 
         val pendingMessageA = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345A"
         )
         val pendingMessageB = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345B"
         )
@@ -394,7 +407,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         // disabled real In-app fetch
         val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345"
         )
@@ -428,7 +441,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         // disabled real In-app fetch
         val pendingMessage = InAppMessageTest.buildInAppMessageWithRichstyle(
             trigger = EventFilter(Constants.EventTypes.sessionStart, arrayListOf()),
-            imageUrl = "pending_image_url",
+            imageUrl = PENDING_IMAGE_URL,
             priority = null,
             id = "12345"
         )
@@ -518,7 +531,27 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every { anyConstructed<DrawableCacheImpl>().has(any()) } returns false
     }
 
+    /**
+     * Stubs [InAppMessagePresenter.show] to present nothing and return null, so no view is created and
+     * the manager skips show tracking. [InAppMessageManagerImpl.show] still runs and builds the UI payload.
+     */
+    private fun preparePresenterMocks() {
+        mockkConstructorFix(InAppMessagePresenter::class)
+        every {
+            anyConstructed<InAppMessagePresenter>().show(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns null
+    }
+
+    private fun verifyPresenterReceivedUiPayload(times: Int = 1, timeoutMillis: Long = 0) {
+        verify(exactly = times, timeout = timeoutMillis) {
+            anyConstructed<InAppMessagePresenter>().show(
+                any(), any(), isNull(inverse = true), any(), any(), any(), any(), any()
+            )
+        }
+    }
+
     private fun prepareMessagesMocks(pendingMessages: ArrayList<InAppMessage>) {
+        prepareFontCacheMocks()
         every {
             anyConstructed<FetchManagerImpl>().fetchInAppMessages(
                 any<ProjectConfig>(),
@@ -542,10 +575,11 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every {
             anyConstructed<DrawableCacheImpl>().getFile(any())
         } returns MockFile()
+        every { anyConstructed<DrawableCacheImpl>().getDrawable(any<String>()) } returns ColorDrawable()
         every {
             anyConstructed<DrawableCacheImpl>().has(any())
         } answers {
-            firstArg<String>() == "pending_image_url"
+            firstArg<String>() == PENDING_IMAGE_URL
         }
         every { anyConstructed<InAppMessagesCacheImpl>().get() } returns pendingMessages
         every { anyConstructed<InAppMessagesCacheImpl>().set(any()) } just Runs
@@ -554,6 +588,7 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
     }
 
     private fun prepareMessagesMocksByCustomer(messagesByCustomer: Map<String, List<InAppMessage>>) {
+        prepareFontCacheMocks()
         var cachedMessages = emptyList<InAppMessage>()
         every {
             anyConstructed<FetchManagerImpl>().fetchInAppMessages(
@@ -579,10 +614,11 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
         every {
             anyConstructed<DrawableCacheImpl>().getFile(any())
         } returns MockFile()
+        every { anyConstructed<DrawableCacheImpl>().getDrawable(any<String>()) } returns ColorDrawable()
         every {
             anyConstructed<DrawableCacheImpl>().has(any())
         } answers {
-            firstArg<String>() == "pending_image_url"
+            firstArg<String>() == PENDING_IMAGE_URL
         }
         every { anyConstructed<InAppMessagesCacheImpl>().get() } answers { cachedMessages }
         every { anyConstructed<InAppMessagesCacheImpl>().set(any()) } answers {

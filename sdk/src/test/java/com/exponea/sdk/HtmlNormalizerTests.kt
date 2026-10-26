@@ -11,6 +11,8 @@ import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCache
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.repository.HtmlNormalizedCacheImpl
+import com.exponea.sdk.testutil.TEST_FONT_URL
+import com.exponea.sdk.testutil.TEST_IMAGE_URL
 import com.exponea.sdk.testutil.waitForIt
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.HtmlNormalizerConfig
@@ -30,6 +32,8 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.junit.After
@@ -397,9 +401,10 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun test_InvalidImage() {
+        val missingImageUrl = server.url("/image_that_not_exists.jpg").toString()
         val rawHtml = "<html>" +
                 "<body>" +
-                "<img src='https://nonexisting.sk/image_that_not_exists.jpg'>" +
+                "<img src='$missingImageUrl'>" +
                 "<div data-actiontype='close' onclick='alert('hello')'>Close</div>" +
                 "<div data-link='https://example.com/1'>Action 1</div>" +
                 "<div data-link='https://example.com/2'>Action 2</div>" +
@@ -434,8 +439,8 @@ internal class HtmlNormalizerTests {
 
     @Test
     fun `should start image and font resource preload batches before waiting for either to finish`() {
-        val imageUrl = "https://example.com/image.png"
-        val fontUrl = "https://example.com/font.ttf"
+        val imageUrl = TEST_IMAGE_URL
+        val fontUrl = TEST_FONT_URL
         val rawHtml =
             """
             <html>
@@ -501,7 +506,7 @@ internal class HtmlNormalizerTests {
 
         normalizationError.get()?.let { throw it }
         assertFalse(normalizationThread.isAlive, "Normalization did not finish")
-        assertTrue(normalizationResult.get()?.valid == true)
+        assertThat(normalizationResult.get()?.valid, equalTo(true))
     }
 
     @Test
@@ -735,40 +740,40 @@ internal class HtmlNormalizerTests {
             Pair("src", "url('$testImageUrl') format('woff'), url('$testImageUrl') format('opentype')")
         )
         // self-test
-        for (each in usageOptions) {
+        for ((first) in usageOptions) {
             assertTrue(
-                HtmlNormalizer.SUPPORTED_CSS_URL_PROPERTIES.contains(each.first),
-                "Css property ${each.first} is not listed in HtmlNormalizer css props"
+                HtmlNormalizer.SUPPORTED_CSS_URL_PROPERTIES.contains(first),
+                "Css property $first is not listed in HtmlNormalizer css props"
             )
         }
         val bitmapCache = DrawableCacheImpl(context)
         val fontCache = FontCacheImpl(context)
         waitForIt { bitmapCache.preload(listOf(testImageUrl)) { it() } }
-        for (each in usageOptions) {
+        for ((first, second) in usageOptions) {
             val rawHtml =
                 """
             <html>
                 <body>
-                    <div style="${each.first}: ${each.second}"></div>
+                    <div style="$first: $second"></div>
                 </body>
             </html>
             """.trimIndent()
             val result = getHtmlNormalizer(rawHtml, bitmapCache, fontCache).normalize()
-            assertTrue(result.valid, "Invalid for usage '${each.first}: ${each.second}'")
+            assertTrue(result.valid, "Invalid for usage '$first: $second'")
             assertFalse(
                 result.html!!.contains("test_image"),
-                "Invalid for usage '${each.first}: ${each.second}'"
+                "Invalid for usage '$first: $second'"
             )
-            if (each.first == "src") {
+            if (first == "src") {
                 assertTrue(
                     result.html!!.contains(LocalResourceUrlMapper.fontUrl(testImageUrl)),
-                    "Invalid for usage '${each.first}: ${each.second}'"
+                    "Invalid for usage '$first: $second'"
                 )
                 assertFalse(result.html!!.contains("data:application/font"))
             } else {
                 assertTrue(
                     result.html!!.contains(LocalResourceUrlMapper.imageUrl(testImageUrl)),
-                    "Invalid for usage '${each.first}: ${each.second}'"
+                    "Invalid for usage '$first: $second'"
                 )
                 assertFalse(result.html!!.contains("data:image/png;base64"))
             }

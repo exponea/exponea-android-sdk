@@ -17,9 +17,11 @@ import com.exponea.sdk.repository.PushTokenRepositoryProvider
 import com.exponea.sdk.shadows.OnlyDefaultShadowRingtone
 import com.exponea.sdk.shadows.ShadowResourcesWithAllResources
 import com.exponea.sdk.shadows.ShadowRingtone
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.data.NotificationTestPayloads
 import com.exponea.sdk.testutil.data.NotificationTestPayloads.DEEPLINK_NOTIFICATION
 import com.exponea.sdk.testutil.resetVerifyMockkCount
+import com.exponea.sdk.testutil.testPngBytes
 import com.exponea.sdk.util.TokenType
 import io.mockk.Runs
 import io.mockk.every
@@ -34,6 +36,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okio.Buffer
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -53,9 +60,11 @@ internal class FcmManagerImplTest {
     private lateinit var eventManager: EventManager
     private lateinit var pushTokenRepository: PushTokenRepository
     private lateinit var trackingConsentManager: TrackingConsentManager
+    private lateinit var server: MockWebServer
 
     @Before
     fun setUp() {
+        server = ExponeaMockServer.createServer()
         ShadowRingtone.lastRingtone = null
         mockkObject(NotificationsPermissionReceiver)
         every { NotificationsPermissionReceiver.isPermissionGranted(any()) } returns true
@@ -85,6 +94,7 @@ internal class FcmManagerImplTest {
 
     @After
     fun tearDown() {
+        server.shutdown()
         pushTokenRepository.clear()
     }
 
@@ -666,12 +676,14 @@ internal class FcmManagerImplTest {
 
     @Test
     fun `should show payload image`() {
+        server.enqueue(MockResponse().setBody(Buffer().write(testPngBytes())))
         val notificationSlot = slot<Notification>()
         every { notificationManager.notify(any(), capture(notificationSlot)) } just Runs
         val payload = HashMap(NotificationTestPayloads.PRODUCTION_NOTIFICATION)
-        payload["image"] = "https://www.bloomreach.com/wp-content/uploads/2024/04/bloomreach.svg"
+        payload["image"] = server.url("/images/notification.png").toString()
         manager.handleRemoteMessage(payload, notificationManager, true)
         assertNotNull(shadowOf(notificationSlot.captured).bigPicture)
+        assertThat(server.requestCount, equalTo(1))
     }
 
     @Test

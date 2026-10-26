@@ -37,6 +37,7 @@ import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.MockApplication
+import com.exponea.sdk.testutil.testFontFile
 import com.exponea.sdk.util.HtmlNormalizer
 import com.exponea.sdk.util.HtmlNormalizer.NormalizedResult
 import com.exponea.sdk.view.InAppMessagePresenter.PresentedMessage
@@ -116,12 +117,8 @@ internal class InAppMessagePresenterTest(
                 invocation.getArgument<((Boolean) -> Unit)?>(1)?.invoke(true)
                 null
             }
-            on { getFontFile(any()) } doReturn File(
-                this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-            )
-            on { getTypeface(any()) } doReturn Typeface.createFromFile(
-                this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-            )
+            on { getFontFile(any()) } doReturn testFontFile()
+            on { getTypeface(any()) } doReturn Typeface.createFromFile(testFontFile())
         }
     }
 

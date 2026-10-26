@@ -11,12 +11,18 @@ import com.exponea.sdk.models.ExponeaConfiguration
 import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.MessageItem
 import com.exponea.sdk.models.ProjectConfig
+import com.exponea.sdk.testutil.ExponeaMockServer
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.util.LocalResourceUrlMapper
 import com.exponea.sdk.view.AppInboxDetailView
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -28,8 +34,11 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(RobolectricTestRunner::class)
 internal class AppInboxProviderTest : ExponeaSDKTest() {
 
+    private lateinit var server: MockWebServer
+
     @Before
     fun before() {
+        server = ExponeaMockServer.createServer()
         // Need to be initialized to use bitmapCache for HTML parser
         val context = ApplicationProvider.getApplicationContext<Context>()
         Exponea.flushMode = FlushMode.MANUAL
@@ -43,6 +52,11 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
                 )
             )
         )
+    }
+
+    @After
+    fun tearDown() {
+        server.shutdown()
     }
 
     @Test
@@ -88,7 +102,7 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
                 id = "id1", type = "html", data = mapOf(
                 "title" to "Title",
                 "pre_header" to "Message",
-                "message" to AppInboxManagerImplTest.buildHtmlMessageContent()
+                "message" to buildHtmlMessageContentWithServedImage()
             )))
         }
         val provider = DefaultAppInboxProvider()
@@ -107,7 +121,7 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
                 id = "id1", type = "html", data = mapOf(
                 "title" to "Title",
                 "pre_header" to "Message",
-                "message" to AppInboxManagerImplTest.buildHtmlMessageContent()
+                "message" to buildHtmlMessageContentWithServedImage()
             )))
         }
         val provider = DefaultAppInboxProvider()
@@ -116,6 +130,7 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
         val htmlDetailView = view as AppInboxDetailView
         assertEquals(View.VISIBLE, htmlDetailView.htmlContainer.visibility)
         assertEquals(View.GONE, htmlDetailView.pushContainer.visibility)
+        assertThat(server.requestCount, equalTo(1))
     }
 
     @Test
@@ -170,5 +185,10 @@ internal class AppInboxProviderTest : ExponeaSDKTest() {
         assertNotNull(response)
         assertEquals("text/plain", response!!.mimeType)
         assertEquals("", response.data.bufferedReader().readText())
+    }
+
+    private fun buildHtmlMessageContentWithServedImage(): String {
+        server.enqueue(MockResponse().setBody("mock-image-response"))
+        return AppInboxManagerImplTest.buildHtmlMessageContent(imageUrl = server.url("/images/image.jpg").toString())
     }
 }

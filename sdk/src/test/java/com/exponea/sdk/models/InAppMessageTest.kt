@@ -3,6 +3,9 @@ package com.exponea.sdk.models
 import com.exponea.sdk.models.InAppMessageType.FREEFORM
 import com.exponea.sdk.models.InAppMessageType.MODAL
 import com.exponea.sdk.models.eventfilter.EventFilter
+import com.exponea.sdk.testutil.TEST_CLOSE_ICON_URL
+import com.exponea.sdk.testutil.TEST_FONT_URL
+import com.exponea.sdk.testutil.TEST_IMAGE_URL
 import com.exponea.sdk.testutil.assertEqualsJsons
 import com.exponea.sdk.util.ExponeaGson
 import com.google.gson.Gson
@@ -19,7 +22,7 @@ internal class InAppMessageTest {
             "message_type": "modal",
             "frequency": "unknown",
             "payload": {
-                "image_url":"https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
+                "image_url":"$TEST_IMAGE_URL",
                 "title":"filip.vozar@exponea.com",
                 "title_text_color":"#000000",
                 "title_text_size":"22px",
@@ -66,7 +69,7 @@ internal class InAppMessageTest {
           "message_type": "modal",
           "frequency": "unknown",
           "payload": {
-            "image_url": "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg",
+            "image_url": "$TEST_IMAGE_URL",
             "title": "filip.vozar@exponea.com",
             "title_text_color": "#000000",
             "title_text_size": "22px",
@@ -80,7 +83,7 @@ internal class InAppMessageTest {
                 "button_link": "https://someaddress.com",
                 "button_background_color": "blue",
                 "button_text_color": "#ffffff",
-                "button_font_url": "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+                "button_font_url": "$TEST_FONT_URL",
                 "button_width": "hug",
                 "button_corner_radius": "12dp",
                 "button_margin": "20px 10px 15px 10px",
@@ -97,7 +100,7 @@ internal class InAppMessageTest {
                 "button_text": "Cancel",
                 "button_background_color": "#f44cac",
                 "button_text_color": "#ffffff",
-                "button_font_url": "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+                "button_font_url": "$TEST_FONT_URL",
                 "button_width": "hug",
                 "button_corner_radius": "12dp",
                 "button_margin": "20px 10px 15px 10px",
@@ -115,12 +118,12 @@ internal class InAppMessageTest {
             "image_size": "auto",
             "image_object_fit": "fill",
             "image_margin": "200 10 10 10",
-            "title_font_url": "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+            "title_font_url": "$TEST_FONT_URL",
             "title_align": "center",
             "title_format": ["bold"],
             "title_line_height": "32px",
             "title_padding": "200px 10px 15px 10px",
-            "body_font_url": "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
+            "body_font_url": "$TEST_FONT_URL",
             "body_align": "center",
             "body_format": ["bold"],
             "body_line_height": "32px",
@@ -162,7 +165,7 @@ internal class InAppMessageTest {
             "payload": {
                 "title": "Book a tour for Antelope Canyon",
                 "body_text": "This is an example of your in-app personalization body text.",
-                "image_url": "https://asset-templates.exponea.dev/misc/media/canyon/canyon.jpg",
+                "image_url": "$TEST_IMAGE_URL",
                 "title_text_color": "#000000",
                 "title_text_size": "22px",
                 "body_text_color": "#000000",
@@ -196,7 +199,7 @@ internal class InAppMessageTest {
                 "body_font_url": "",
                 "close_button_enabled": true,
                 "close_button_margin": "8px 8px 0px 0px",
-                "close_button_image_url": "https://www.svgrepo.com/show/503004/close.svg",
+                "close_button_image_url": "$TEST_CLOSE_ICON_URL",
                 "close_button_background_color": "rgba(250, 250, 250, 0.6)",
                 "close_button_color": "#000000",
                 "buttons": [
@@ -264,7 +267,7 @@ internal class InAppMessageTest {
             "payload": {
                 "title": "Book a tour for Antelope Canyon",
                 "body_text": "This is an example of your in-app personalization body text.",
-                "image_url": "https://asset-templates.exponea.dev/misc/media/canyon/canyon.jpg",
+                "image_url": "$TEST_IMAGE_URL",
                 "title_text_color": "#000000",
                 "title_text_size": "22px",
                 "body_text_color": "#000000",
@@ -298,7 +301,7 @@ internal class InAppMessageTest {
                 "body_font_url": "",
                 "close_button_enabled": true,
                 "close_button_margin": "8px 8px 0px 0px",
-                "close_button_image_url": "https://www.svgrepo.com/show/503004/close.svg",
+                "close_button_image_url": "$TEST_CLOSE_ICON_URL",
                 "close_button_background_color": "rgba(250, 250, 250, 0.6)",
                 "close_button_color": "#000000",
                 "buttons": [
@@ -357,7 +360,7 @@ internal class InAppMessageTest {
         }
         """.trimIndent()
 
-        val slidinRichstyle = """
+        val slideInRichstyle = """
         {
             "id": "5dd86f44511946ea55132f29",
             "name": "Test serving in-app message",
@@ -366,7 +369,7 @@ internal class InAppMessageTest {
             "payload": {
                 "title": "Book a tour for Antelope Canyon",
                 "body_text": "This is an example of your in-app personalization body text.",
-                "image_url": "https://asset-templates.exponea.dev/misc/media/canyon/canyon.jpg",
+                "image_url": "$TEST_IMAGE_URL",
                 "title_text_color": "#000000",
                 "title_text_size": "22px",
                 "body_text_color": "#000000",
@@ -400,7 +403,7 @@ internal class InAppMessageTest {
                 "body_font_url": "",
                 "close_button_enabled": true,
                 "close_button_margin": "8px 8px 0px 0px",
-                "close_button_image_url": "https://www.svgrepo.com/show/503004/close.svg",
+                "close_button_image_url": "$TEST_CLOSE_ICON_URL",
                 "close_button_background_color": "rgba(250, 250, 250, 0.6)",
                 "close_button_color": "#000000",
                 "buttons": [
@@ -478,18 +481,18 @@ internal class InAppMessageTest {
                     "<head>" +
                     "<style>" +
                     ".css-image {" +
-                    "   background-image: url('https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg')" +
+                    "   background-image: url('$TEST_IMAGE_URL')" +
                     "}" +
                     "</style>" +
                     "</head>" +
                     "<body>" +
-                    "<img src='https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg'/>" +
+                    "<img src='$TEST_IMAGE_URL'/>" +
                     "<div data-actiontype='close'>Close</div>" +
                     "<div data-link='https://someaddress.com'>Action 1</div>" +
                     "</body></html>"
             } else {
                 payload = InAppMessagePayload(
-                    imageUrl = testUrl(imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg", environment),
+                    imageUrl = testUrl(imageUrl ?: TEST_IMAGE_URL, environment),
                     title = "filip.vozar@exponea.com",
                     titleTextColor = "#000000",
                     titleTextSize = "22px",
@@ -555,9 +558,9 @@ internal class InAppMessageTest {
             isImageEnabled: Boolean? = true,
             isTitleEnabled: Boolean? = true,
             isBodyEnabled: Boolean? = true,
-            titleFontUrl: String? = "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
-            bodyFontUrl: String? = "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf",
-            buttonFontUrl: String? = "https://webpagepublicity.com/free-fonts/x/Xtrusion%20(BRK).ttf"
+            titleFontUrl: String? = TEST_FONT_URL,
+            bodyFontUrl: String? = TEST_FONT_URL,
+            buttonFontUrl: String? = TEST_FONT_URL
         ): InAppMessage {
             var payload: InAppMessagePayload? = null
             var payloadHtml: String? = null
@@ -566,18 +569,18 @@ internal class InAppMessageTest {
                     "<head>" +
                     "<style>" +
                     ".css-image {" +
-                    "   background-image: url('https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg')" +
+                    "   background-image: url('$TEST_IMAGE_URL')" +
                     "}" +
                     "</style>" +
                     "</head>" +
                     "<body>" +
-                    "<img src='https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg'/>" +
+                    "<img src='$TEST_IMAGE_URL'/>" +
                     "<div data-actiontype='close'>Close</div>" +
                     "<div data-link='https://someaddress.com'>Action 1</div>" +
                     "</body></html>"
             } else {
                 payload = InAppMessagePayload(
-                    imageUrl = testUrl(imageUrl ?: "https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg", environment),
+                    imageUrl = testUrl(imageUrl ?: TEST_IMAGE_URL, environment),
                     title = "filip.vozar@exponea.com",
                     titleTextColor = "#000000",
                     titleTextSize = "22px",
@@ -760,8 +763,8 @@ internal class InAppMessageTest {
 
     @Test
     fun `should serialize and deserialize slide-in json`() {
-        val deserialized = ExponeaGson.instance.fromJson(slidinRichstyle, InAppMessage::class.java)
+        val deserialized = ExponeaGson.instance.fromJson(slideInRichstyle, InAppMessage::class.java)
         val serialized = ExponeaGson.instance.toJson(deserialized)
-        assertEqualsJsons(slidinRichstyle, serialized)
+        assertEqualsJsons(slideInRichstyle, serialized)
     }
 }

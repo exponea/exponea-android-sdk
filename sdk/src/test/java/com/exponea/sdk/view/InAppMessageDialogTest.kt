@@ -2,7 +2,6 @@ package com.exponea.sdk.view
 
 import android.content.Context
 import android.content.pm.ProviderInfo
-import android.graphics.Typeface
 import android.view.View.MeasureSpec.AT_MOST
 import android.view.View.MeasureSpec.makeMeasureSpec
 import android.widget.Button
@@ -20,12 +19,12 @@ import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.services.ExponeaContextProvider
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.prepareFontCacheMocks
 import com.exponea.sdk.view.layout.RowFlexLayout
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import java.io.File
 import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -65,21 +64,7 @@ internal class InAppMessageDialogTest {
         } answers {
             secondArg<((Boolean) -> Unit)?>()?.invoke(true)
         }
-        mockkConstructorFix(FontCacheImpl::class) {
-            every { anyConstructed<FontCacheImpl>().has(any()) }
-        }
-        every { anyConstructed<FontCacheImpl>().getFontFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
-        every { anyConstructed<FontCacheImpl>().getTypeface(any()) } returns Typeface.createFromFile(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
-        every { anyConstructed<FontCacheImpl>().has(any()) } returns true
-        every {
-            anyConstructed<FontCacheImpl>().preload(any<List<String>>(), any())
-        } answers {
-            secondArg<((Boolean) -> Unit)?>()?.invoke(true)
-        }
+        prepareFontCacheMocks()
         uiPayloadBuilder = InAppRichstylePayloadBuilder(
             drawableCache = DrawableCacheImpl(ApplicationProvider.getApplicationContext()),
             fontCache = FontCacheImpl(ApplicationProvider.getApplicationContext())

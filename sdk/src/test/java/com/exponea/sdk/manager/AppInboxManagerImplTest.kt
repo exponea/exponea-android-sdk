@@ -25,6 +25,7 @@ import com.exponea.sdk.repository.DrawableCache
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.testutil.ExponeaSDKTest
 import com.exponea.sdk.testutil.MockFile
+import com.exponea.sdk.testutil.TEST_IMAGE_URL
 import com.exponea.sdk.testutil.componentForTesting
 import com.exponea.sdk.testutil.mocks.ExponeaMockService
 import com.exponea.sdk.testutil.runInSingleThread
@@ -77,7 +78,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
         /**
          * Copied directly from APP editor, contains 2 actions (deeplink + browser), 1 image, title and message
          */
-        fun buildHtmlMessageContent(): String {
+        fun buildHtmlMessageContent(imageUrl: String = TEST_IMAGE_URL): String {
             return """
             <style>
                 .in-app-message-wrapper {
@@ -196,7 +197,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 }
                 
                 .css-image {
-                    background-image: url('https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg')
+                    background-image: url('$imageUrl')
                 }
 
             </style>
@@ -206,7 +207,7 @@ internal class AppInboxManagerImplTest : ExponeaSDKTest() {
                 <div class="in-app-message modal-in-app-message " style="background-color: #ffffff">
 
                     <div class="image">
-                        <img src="https://i.ytimg.com/vi/t4nM1FoUqYs/maxresdefault.jpg" />
+                        <img src="$imageUrl" />
                     </div>
 
 

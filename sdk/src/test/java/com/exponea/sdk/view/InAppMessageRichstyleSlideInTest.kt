@@ -22,11 +22,11 @@ import com.exponea.sdk.style.ImageSizing
 import com.exponea.sdk.style.InAppRichstylePayloadBuilder
 import com.exponea.sdk.testutil.MockFile
 import com.exponea.sdk.testutil.mocks.MockApplication
+import com.exponea.sdk.testutil.testFontFile
 import com.exponea.sdk.view.layout.RowFlexLayout
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
-import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.fail
 import org.junit.Before
@@ -62,15 +62,11 @@ internal class InAppMessageRichstyleSlideInTest {
         mockkConstructorFix(SimpleFileCache::class) {
             every { anyConstructed<SimpleFileCache>().has(any()) }
         }
-        every { anyConstructed<SimpleFileCache>().getFile(any()) } returns File(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
+        every { anyConstructed<SimpleFileCache>().getFile(any()) } returns testFontFile()
         mockkConstructorFix(FontCacheImpl::class) {
             every { anyConstructed<FontCacheImpl>().has(any()) }
         }
-        every { anyConstructed<FontCacheImpl>().getTypeface(any()) } returns Typeface.createFromFile(
-            this.javaClass.classLoader!!.getResource("xtrusion.ttf")!!.file
-        )
+        every { anyConstructed<FontCacheImpl>().getTypeface(any()) } returns Typeface.createFromFile(testFontFile())
         every { anyConstructed<FontCacheImpl>().has(any()) } returns true
         every {
             anyConstructed<FontCacheImpl>().preload(any<List<String>>(), any())

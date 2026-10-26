@@ -237,6 +237,33 @@ internal class InAppMessageManagerFlowTest : ExponeaSDKTest() {
             events.toList()
         }
         every {
+            anyConstructed<EventRepositoryImpl>().count()
+        } answers {
+            events.size
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().nextToFlush()
+        } answers {
+            events.filter { !it.shouldBeSkipped }.minWithOrNull(compareBy(nullsFirst()) { it.timestamp })
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().markSkipped(any())
+        } answers {
+            events.replaceAll { if (it.id == firstArg<String>()) it.copy(shouldBeSkipped = true) else it }
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().markFailed(any())
+        } answers {
+            events.replaceAll {
+                if (it.id == firstArg<String>()) it.copy(tries = it.tries + 1, shouldBeSkipped = true) else it
+            }
+        }
+        every {
+            anyConstructed<EventRepositoryImpl>().resetSkipped()
+        } answers {
+            events.replaceAll { it.copy(shouldBeSkipped = false) }
+        }
+        every {
             anyConstructed<EventRepositoryImpl>().remove(any())
         } answers {
             events.removeAll { it.id == firstArg<String>() }

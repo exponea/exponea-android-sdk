@@ -15,6 +15,18 @@ internal interface ExportedEventDao {
     @Query("SELECT * FROM exported_event WHERE id IN (:ids)")
     fun loadAllByIds(ids: IntArray): List<ExportedEvent>
 
+    @Query("SELECT * FROM exported_event WHERE should_be_skipped = 0 ORDER BY timestamp, rowid LIMIT 1")
+    fun nextToFlush(): ExportedEvent?
+
+    @Query("UPDATE exported_event SET should_be_skipped = 1 WHERE id = :id")
+    fun markSkipped(id: String)
+
+    @Query("UPDATE exported_event SET tries = tries + 1, should_be_skipped = 1 WHERE id = :id")
+    fun markFailed(id: String)
+
+    @Query("UPDATE exported_event SET should_be_skipped = 0 WHERE should_be_skipped = 1")
+    fun resetSkipped()
+
     @Query("SELECT COUNT(*) FROM exported_event")
     fun count(): Int
 

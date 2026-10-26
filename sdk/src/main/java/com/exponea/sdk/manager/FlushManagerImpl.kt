@@ -58,7 +58,7 @@ internal open class FlushManagerImpl(
 
     override fun flushData(onFlushFinished: FlushFinishedCallback?) {
         if (Exponea.isStopped) {
-            Logger.e(this, "Flushing has been denied, SDK is stopping")
+            Logger.w(this, "Flushing has been denied, SDK is stopping")
             onFlushFinished?.invoke(Result.failure(Exception("Flushing denied, SDK is stopping")))
             drainPendingCallbacks(Result.failure(Exception("Flushing denied, SDK is stopping")))
             return
@@ -79,71 +79,80 @@ internal open class FlushManagerImpl(
         }
         if (!connectionManager.isConnectedToInternet()) {
             Logger.d(this, "Internet connection is not available, skipping flush")
-            endsFlushProcess()
-            val noInternetResult = Result.failure<Unit>(Exception("Internet connection is not available."))
-            runCatching {
-                onFlushFinished?.invoke(noInternetResult)
-                drainPendingCallbacks(noInternetResult)
-                return@runCatching
-            }.logOnException()
+            finishFlush(onFlushFinished, Result.failure(Exception("Internet connection is not available.")))
             return
         }
         ensureOnBackgroundThread {
-            val allEvents = eventRepository.all().sortedBy { it.timestamp }
-            Logger.d(this, "flushEvents: Count ${allEvents.size}")
-
-            val firstEvent = allEvents.firstOrNull { !it.shouldBeSkipped }
-
-            if (firstEvent != null) {
-                Logger.i(this, "Flushing Event: ${firstEvent.id}")
-                trySendingEvent(firstEvent, onFlushFinished)
-            } else {
-                Logger.i(this, "No events left to flush: ${allEvents.size}")
-                for (event in eventRepository.all()) {
-                    event.shouldBeSkipped = false
-                    eventRepository.update(event)
-                }
-                endsFlushProcess()
-                runCatching {
-                    val result = if (allEvents.isEmpty()) {
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception("Failed to upload ${allEvents.size} events."))
-                    }
-                    onFlushFinished?.invoke(result)
-                    drainPendingCallbacks(result)
-                    return@runCatching
-                }.logOnException()
+            runCatching {
+                sendNextEvent(onFlushFinished)
+            }.onFailure {
+                Logger.e(this, "Flushing failed unexpectedly", it)
+                finishFlush(onFlushFinished, Result.failure(Exception("Flushing failed unexpectedly.", it)))
             }
         }
     }
 
-    private fun onFlushDenialForStoppedSdk(onFlushFinished: ((Result<Unit>) -> Unit)?) {
+    private fun finishFlush(onFlushFinished: FlushFinishedCallback?, result: Result<Unit>) {
         endsFlushProcess()
-        Logger.e(this, "Flushing has been denied, SDK is stopping")
-        val stoppedResult = Result.failure<Unit>(Exception("Flushing denied, SDK is stopping"))
         runCatching {
-            onFlushFinished?.invoke(stoppedResult)
-            drainPendingCallbacks(stoppedResult)
+            onFlushFinished?.invoke(result)
+            drainPendingCallbacks(result)
             return@runCatching
         }.logOnException()
     }
 
-    private fun trySendingEvent(
-        exportedEvent: ExportedEvent,
-        onFlushFinished: FlushFinishedCallback?
-    ) {
-        val call = routeSendingEvent(exportedEvent)
-        if (call == null) {
-            // Event has an invalid route and can never be sent — remove it and continue
-            eventRepository.remove(exportedEvent.id)
-            flushDataInternal(onFlushFinished)
+    private fun onFlushDenialForStoppedSdk(onFlushFinished: ((Result<Unit>) -> Unit)?) {
+        Logger.w(this, "Flushing has been denied, SDK is stopping")
+        finishFlush(onFlushFinished, Result.failure(Exception("Flushing denied, SDK is stopping")))
+    }
+
+    /**
+     * Sends the oldest pending event, the response handler continues with the next one.
+     * Events that can never be sent are removed and the next one is tried right away.
+     * Events that fail to be prepared count as a failed try, so they cannot block the queue.
+     */
+    private fun sendNextEvent(onFlushFinished: FlushFinishedCallback?) {
+        while (true) {
+            val exportedEvent = eventRepository.nextToFlush()
+            if (exportedEvent == null) {
+                onNoEventToFlush(onFlushFinished)
+                return
+            }
+            Logger.d(this, "Flushing Event: ${exportedEvent.id}")
+            val call = try {
+                routeSendingEvent(exportedEvent)
+            } catch (e: Exception) {
+                Logger.e(this, "Preparing Event ${exportedEvent.id} failed", e)
+                onEventSentFailed(exportedEvent)
+                continue
+            }
+            if (call == null) {
+                eventRepository.remove(exportedEvent.id)
+                continue
+            }
+            call.enqueue(
+                handleResponse(exportedEvent, onFlushFinished),
+                handleFailure(exportedEvent, onFlushFinished)
+            )
             return
         }
-        call.enqueue(
-            handleResponse(exportedEvent, onFlushFinished),
-            handleFailure(exportedEvent, onFlushFinished)
-        )
+    }
+
+    private fun onNoEventToFlush(onFlushFinished: FlushFinishedCallback?) {
+        // Skipped events were only skipped for this run, they are eligible for the next one
+        eventRepository.resetSkipped()
+        val remaining = eventRepository.count()
+        val result = if (remaining == 0) {
+            Logger.i(this, "Flush finished, queue is empty")
+            Result.success(Unit)
+        } else {
+            Logger.w(
+                this,
+                "Flush finished, $remaining events could not be uploaded and are kept for next flush"
+            )
+            Result.failure(Exception("Failed to upload $remaining events."))
+        }
+        finishFlush(onFlushFinished, result)
     }
 
     private fun handleFailure(
@@ -160,12 +169,24 @@ internal open class FlushManagerImpl(
                         "Sending Event Failed ${exportedEvent.id}",
                         ioException
                     )
-                    onEventSentFailed(exportedEvent)
-                    // Once done continue and try to flush the rest of events
-                    flushDataInternal(onFlushFinished)
+                    continueFlushAfter(onFlushFinished) { onEventSentFailed(exportedEvent) }
                 }
             }
         }
+    }
+
+    /**
+     * Records the outcome of a request and continues with the rest of events. When recording fails the run
+     * ends, otherwise the flush would stay marked as running and block all following runs.
+     */
+    private fun continueFlushAfter(onFlushFinished: FlushFinishedCallback?, recordOutcome: () -> Unit) {
+        val failure = runCatching(recordOutcome).exceptionOrNull()
+        if (failure != null) {
+            Logger.e(this, "Flushing failed unexpectedly", failure)
+            finishFlush(onFlushFinished, Result.failure(Exception("Flushing failed unexpectedly.", failure)))
+            return
+        }
+        flushDataInternal(onFlushFinished)
     }
 
     private fun handleResponse(
@@ -178,24 +199,22 @@ internal open class FlushManagerImpl(
                 response.close()
             } else {
                 ensureOnBackgroundThread {
-                    val responseCode = response.code
-                    Logger.d(this, "Response Code: $responseCode")
-                    when (response.code) {
-                        in 200..299 -> onEventSentSuccess(exportedEvent)
-                        in 500..599 -> {
-                            exportedEvent.shouldBeSkipped = true
-                            eventRepository.update(exportedEvent)
+                    continueFlushAfter(onFlushFinished) {
+                        response.use {
+                            Logger.d(this, "Response Code: ${it.code}")
+                            when (it.code) {
+                                in 200..299 -> onEventSentSuccess(exportedEvent)
+                                in 500..599 -> eventRepository.markSkipped(exportedEvent.id)
+                                else -> onEventSentFailed(exportedEvent)
+                            }
                         }
-                        else -> onEventSentFailed(exportedEvent)
                     }
-                    response.close()
-                    // Once done continue and try to flush the rest of events
-                    flushDataInternal(onFlushFinished)
                 }
             }
         }
     }
 
+    @Suppress("DEPRECATION")
     internal fun routeSendingEvent(exportedEvent: ExportedEvent): Call? {
         val integrationConfig: IntegrationConfig = when (exportedEvent.integrationConfiguration?.type) {
             IntegrationConfigType.PROJECT -> ProjectConfig(
@@ -219,8 +238,11 @@ internal open class FlushManagerImpl(
                             ic.authorization
                         )
                     } else {
-                        // otherwise log error and skip event
-                        Logger.e(this, "Could not route event, missing project data")
+                        // otherwise log error, the event can never be sent and is removed by the flush
+                        Logger.e(
+                            this,
+                            "Event ${exportedEvent.id} cannot be sent, integration data is missing"
+                        )
                         return null
                     }
                 }
@@ -240,7 +262,10 @@ internal open class FlushManagerImpl(
                 Route.TRACK_CUSTOMERS -> it.postCustomer(integrationConfig, simpleEvent, isCurrentCustomerEvent)
                 Route.TRACK_CAMPAIGN -> it.postCampaignClick(integrationConfig, simpleEvent, isCurrentCustomerEvent)
                 else -> {
-                    Logger.e(this, "Couldn't find properly route")
+                    Logger.e(
+                        this,
+                        "Event ${exportedEvent.id} cannot be sent, unknown route: ${exportedEvent.route}"
+                    )
                     return null
                 }
             }
@@ -260,19 +285,19 @@ internal open class FlushManagerImpl(
     @WorkerThread
     private fun onEventSentSuccess(exportedEvent: ExportedEvent) {
         Logger.d(this, "onEventSentSuccess: ${exportedEvent.id}")
-        onEventUploaded(exportedEvent)
         eventRepository.remove(exportedEvent.id)
+        onEventUploaded(exportedEvent)
     }
 
     @WorkerThread
     private fun onEventSentFailed(exportedEvent: ExportedEvent) {
-        Logger.d(this, "Event ${exportedEvent.id} failed")
-        exportedEvent.tries++
-        exportedEvent.shouldBeSkipped = true
-        if (exportedEvent.tries >= configuration.maxTries) {
+        val tries = exportedEvent.tries + 1
+        if (tries >= configuration.maxTries) {
+            Logger.w(this, "Event ${exportedEvent.id} removed, upload failed $tries times")
             eventRepository.remove(exportedEvent.id)
         } else {
-            eventRepository.update(exportedEvent)
+            Logger.d(this, "Event ${exportedEvent.id} failed, attempt $tries of ${configuration.maxTries}")
+            eventRepository.markFailed(exportedEvent.id)
         }
     }
 }

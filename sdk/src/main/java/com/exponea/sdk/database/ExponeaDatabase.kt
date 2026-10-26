@@ -39,6 +39,22 @@ internal abstract class ExponeaDatabase : RoomDatabase() {
         return exportedEventDao().all()
     }
 
+    fun nextToFlush(): ExportedEvent? {
+        return exportedEventDao().nextToFlush()
+    }
+
+    fun markSkipped(id: String) {
+        exportedEventDao().markSkipped(id)
+    }
+
+    fun markFailed(id: String) {
+        exportedEventDao().markFailed(id)
+    }
+
+    fun resetSkipped() {
+        exportedEventDao().resetSkipped()
+    }
+
     fun count(): Int {
         return exportedEventDao().count()
     }

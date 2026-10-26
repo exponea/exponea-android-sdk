@@ -13,6 +13,14 @@ internal open class EventRepositoryImpl(
 
     override fun all() = safeDatabaseOperation(context) { it.all() }
 
+    override fun nextToFlush() = safeDatabaseOperation(context) { it.nextToFlush() }
+
+    override fun markSkipped(id: String) = safeDatabaseOperation(context) { it.markSkipped(id) }
+
+    override fun markFailed(id: String) = safeDatabaseOperation(context) { it.markFailed(id) }
+
+    override fun resetSkipped() = safeDatabaseOperation(context) { it.resetSkipped() }
+
     override fun add(item: ExportedEvent) = safeDatabaseOperation(context) { it.add(item) }
 
     override fun update(item: ExportedEvent) = safeDatabaseOperation(context) { it.update(item) }

@@ -34,6 +34,15 @@ plugins {
     // version must match used kotlin, find full version: https://github.com/google/ksp/releases
     id 'com.google.devtools.ksp' version "$ksp_version" apply false
     id "com.vanniktech.maven.publish" version "0.31.0"
+    id "org.jetbrains.kotlinx.binary-compatibility-validator" version "0.18.2"
+}
+
+apiValidation {
+    // only the sdk module is a public API surface
+    ignoredProjects += ["app"]
+    // Generated code that cannot be made non-public; not part of the supported public API
+    ignoredClasses += ["com.exponea.sdk.BuildConfig"]
+    ignoredPackages += ["com.exponea.sdk.databinding"]
 }
 
 allprojects {

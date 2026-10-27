@@ -1,0 +1,2288 @@
+public final class com/exponea/sdk/Exponea {
+	public static final field INSTANCE Lcom/exponea/sdk/Exponea;
+	public final fun anonymize ()V
+	public final fun anonymize (Lcom/exponea/sdk/models/ExponeaProject;Ljava/util/Map;)V
+	public final fun anonymize (Lcom/exponea/sdk/models/IntegrationConfig;Lcom/exponea/sdk/models/ExponeaConfigurationOverrides;)V
+	public final fun anonymize (Lcom/exponea/sdk/models/IntegrationConfig;Lcom/exponea/sdk/models/ExponeaConfigurationOverrides;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun anonymize$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/ExponeaProject;Ljava/util/Map;ILjava/lang/Object;)V
+	public static synthetic fun anonymize$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/IntegrationConfig;Lcom/exponea/sdk/models/ExponeaConfigurationOverrides;ILjava/lang/Object;)V
+	public static synthetic fun anonymize$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/IntegrationConfig;Lcom/exponea/sdk/models/ExponeaConfigurationOverrides;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun clearLocalCustomerData ()V
+	public final fun fetchAppInbox (Lkotlin/jvm/functions/Function1;)V
+	public final fun fetchAppInboxItem (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun fetchRecommendation (Lcom/exponea/sdk/models/CustomerRecommendationOptions;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public final fun flushData (Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun flushData$default (Lcom/exponea/sdk/Exponea;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun getAppInboxButton (Landroid/content/Context;)Landroid/widget/Button;
+	public final fun getAppInboxDetailFragment (Landroid/content/Context;Ljava/lang/String;)Landroidx/fragment/app/Fragment;
+	public final fun getAppInboxDetailView (Landroid/content/Context;Ljava/lang/String;)Landroid/view/View;
+	public final fun getAppInboxListFragment (Landroid/content/Context;)Landroidx/fragment/app/Fragment;
+	public final fun getAppInboxListView (Landroid/content/Context;Lkotlin/jvm/functions/Function2;)Landroid/view/View;
+	public final fun getAppInboxProvider ()Lcom/exponea/sdk/services/AppInboxProvider;
+	public final fun getCampaignTTL ()D
+	public final fun getCheckPushSetup ()Z
+	public final fun getConsents (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public final fun getCustomerCookie ()Ljava/lang/String;
+	public final fun getDefaultProperties ()Ljava/util/HashMap;
+	public final fun getFlushMode ()Lcom/exponea/sdk/models/FlushMode;
+	public final fun getFlushPeriod ()Lcom/exponea/sdk/models/FlushPeriod;
+	public final fun getInAppContentBlocksCarousel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;)Lcom/exponea/sdk/view/ContentBlockCarouselView;
+	public static synthetic fun getInAppContentBlocksCarousel$default (Lcom/exponea/sdk/Exponea;Landroid/content/Context;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/exponea/sdk/view/ContentBlockCarouselView;
+	public final fun getInAppContentBlocksController ()Lcom/exponea/sdk/RuntimeInAppContentBlockController;
+	public final fun getInAppContentBlocksPlaceholder (Ljava/lang/String;Landroid/content/Context;Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;)Lcom/exponea/sdk/view/InAppContentBlockPlaceholderView;
+	public static synthetic fun getInAppContentBlocksPlaceholder$default (Lcom/exponea/sdk/Exponea;Ljava/lang/String;Landroid/content/Context;Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;ILjava/lang/Object;)Lcom/exponea/sdk/view/InAppContentBlockPlaceholderView;
+	public final fun getInAppMessageActionCallback ()Lcom/exponea/sdk/models/InAppMessageCallback;
+	public final fun getLoggerLevel ()Lcom/exponea/sdk/util/Logger$Level;
+	public final fun getNotificationDataCallback ()Lkotlin/jvm/functions/Function1;
+	public final fun getPushNotificationsDelegate ()Lcom/exponea/sdk/models/PushNotificationDelegate;
+	public final fun getRunDebugMode ()Z
+	public final fun getSafeModeEnabled ()Z
+	public final fun getSdkAuthCallback ()Lcom/exponea/sdk/models/SdkAuthCallback;
+	public final fun getSegments (Ljava/lang/String;ZLkotlin/jvm/functions/Function1;)V
+	public static synthetic fun getSegments$default (Lcom/exponea/sdk/Exponea;Ljava/lang/String;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun getSessionTimeout ()D
+	public final fun getTokenTrackFrequency ()Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public final fun handleCampaignIntent (Landroid/content/Intent;Landroid/content/Context;)Z
+	public final fun handleNewHmsToken (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun handleNewToken (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun handleRemoteMessage (Landroid/content/Context;Ljava/util/Map;Landroid/app/NotificationManager;Z)Z
+	public static synthetic fun handleRemoteMessage$default (Lcom/exponea/sdk/Exponea;Landroid/content/Context;Ljava/util/Map;Landroid/app/NotificationManager;ZILjava/lang/Object;)Z
+	public final fun identifyCustomer (Lcom/exponea/sdk/models/CustomerIdentity;)V
+	public final fun identifyCustomer (Lcom/exponea/sdk/models/CustomerIdentity;Ljava/util/Map;)V
+	public final fun identifyCustomer (Lcom/exponea/sdk/models/CustomerIds;Lcom/exponea/sdk/models/PropertiesList;)V
+	public static synthetic fun identifyCustomer$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/CustomerIdentity;Ljava/util/Map;ILjava/lang/Object;)V
+	public final fun init (Landroid/content/Context;)Z
+	public final fun init (Landroid/content/Context;Lcom/exponea/sdk/models/ExponeaConfiguration;)V
+	public final fun init (Landroid/content/Context;Lcom/exponea/sdk/models/ExponeaConfiguration;Lcom/exponea/sdk/models/CustomerIdentity;)V
+	public static synthetic fun init$default (Lcom/exponea/sdk/Exponea;Landroid/content/Context;Lcom/exponea/sdk/models/ExponeaConfiguration;Lcom/exponea/sdk/models/CustomerIdentity;ILjava/lang/Object;)V
+	public final fun initFromFile (Landroid/content/Context;)V
+	public final fun isAutoPushNotification ()Z
+	public final fun isAutomaticSessionTracking ()Z
+	public final fun isExponeaPushNotification (Ljava/util/Map;)Z
+	public final fun isInitialized ()Z
+	public final fun markAppInboxAsRead (Lcom/exponea/sdk/models/MessageItem;Lkotlin/jvm/functions/Function1;)V
+	public final fun registerLoggerCallback (Lcom/exponea/sdk/models/LoggerCallback;)V
+	public final fun registerSegmentationDataCallback (Lcom/exponea/sdk/models/SegmentationDataCallback;)V
+	public final fun requestPushAuthorization (Landroid/content/Context;Lkotlin/jvm/functions/Function1;)V
+	public final fun setAppInboxProvider (Lcom/exponea/sdk/services/AppInboxProvider;)V
+	public final fun setAutoPushNotification (Z)V
+	public final fun setAutomaticSessionTracking (Z)V
+	public final fun setCampaignTTL (D)V
+	public final fun setCheckPushSetup (Z)V
+	public final fun setDefaultProperties (Ljava/util/HashMap;)V
+	public final fun setFlushMode (Lcom/exponea/sdk/models/FlushMode;)V
+	public final fun setFlushPeriod (Lcom/exponea/sdk/models/FlushPeriod;)V
+	public final fun setInAppMessageActionCallback (Lcom/exponea/sdk/models/InAppMessageCallback;)V
+	public final fun setLoggerLevel (Lcom/exponea/sdk/util/Logger$Level;)V
+	public final fun setNotificationDataCallback (Lkotlin/jvm/functions/Function1;)V
+	public final fun setPushNotificationsDelegate (Lcom/exponea/sdk/models/PushNotificationDelegate;)V
+	public final fun setRunDebugMode (Z)V
+	public final fun setSafeModeEnabled (Z)V
+	public final fun setSdkAuthCallback (Lcom/exponea/sdk/models/SdkAuthCallback;)V
+	public final fun setSdkAuthToken (Ljava/lang/String;)V
+	public final fun setSessionTimeout (D)V
+	public final fun stopIntegration ()V
+	public final fun stopIntegration (Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun stopIntegration$default (Lcom/exponea/sdk/Exponea;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun trackAppInboxClick (Lcom/exponea/sdk/models/MessageItemAction;Lcom/exponea/sdk/models/MessageItem;)V
+	public final fun trackAppInboxClickWithoutTrackingConsent (Lcom/exponea/sdk/models/MessageItemAction;Lcom/exponea/sdk/models/MessageItem;)V
+	public final fun trackAppInboxOpened (Lcom/exponea/sdk/models/MessageItem;)V
+	public final fun trackAppInboxOpenedWithoutTrackingConsent (Lcom/exponea/sdk/models/MessageItem;)V
+	public final fun trackClickedPush (Lcom/exponea/sdk/models/NotificationData;Lcom/exponea/sdk/models/NotificationAction;Ljava/lang/Double;)V
+	public static synthetic fun trackClickedPush$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/NotificationData;Lcom/exponea/sdk/models/NotificationAction;Ljava/lang/Double;ILjava/lang/Object;)V
+	public final fun trackClickedPushWithoutTrackingConsent (Lcom/exponea/sdk/models/NotificationData;Lcom/exponea/sdk/models/NotificationAction;Ljava/lang/Double;)V
+	public static synthetic fun trackClickedPushWithoutTrackingConsent$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/NotificationData;Lcom/exponea/sdk/models/NotificationAction;Ljava/lang/Double;ILjava/lang/Object;)V
+	public final fun trackDeliveredPush (Lcom/exponea/sdk/models/NotificationData;D)V
+	public static synthetic fun trackDeliveredPush$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/NotificationData;DILjava/lang/Object;)V
+	public final fun trackDeliveredPushWithoutTrackingConsent (Lcom/exponea/sdk/models/NotificationData;D)V
+	public static synthetic fun trackDeliveredPushWithoutTrackingConsent$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/NotificationData;DILjava/lang/Object;)V
+	public final fun trackEvent (Lcom/exponea/sdk/models/PropertiesList;Ljava/lang/Double;Ljava/lang/String;)V
+	public static synthetic fun trackEvent$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/PropertiesList;Ljava/lang/Double;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun trackHmsPushToken (Ljava/lang/String;)V
+	public final fun trackInAppContentBlockClick (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlockAction;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppContentBlockClickWithoutTrackingConsent (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlockAction;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppContentBlockClose (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppContentBlockCloseWithoutTrackingConsent (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppContentBlockError (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public final fun trackInAppContentBlockErrorWithoutTrackingConsent (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public final fun trackInAppContentBlockShown (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppContentBlockShownWithoutTrackingConsent (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public final fun trackInAppMessageClick (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun trackInAppMessageClickWithoutTrackingConsent (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun trackInAppMessageClose (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public static synthetic fun trackInAppMessageClose$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)V
+	public final fun trackInAppMessageCloseWithoutTrackingConsent (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public static synthetic fun trackInAppMessageCloseWithoutTrackingConsent$default (Lcom/exponea/sdk/Exponea;Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)V
+	public final fun trackPaymentEvent (DLcom/exponea/sdk/models/PurchasedItem;)V
+	public static synthetic fun trackPaymentEvent$default (Lcom/exponea/sdk/Exponea;DLcom/exponea/sdk/models/PurchasedItem;ILjava/lang/Object;)V
+	public final fun trackPushToken (Ljava/lang/String;)V
+	public final fun trackSessionEnd (D)V
+	public static synthetic fun trackSessionEnd$default (Lcom/exponea/sdk/Exponea;DILjava/lang/Object;)V
+	public final fun trackSessionStart (D)V
+	public static synthetic fun trackSessionStart$default (Lcom/exponea/sdk/Exponea;DILjava/lang/Object;)V
+	public final fun unregisterLoggerCallback (Lcom/exponea/sdk/models/LoggerCallback;)V
+	public final fun unregisterSegmentationDataCallback (Lcom/exponea/sdk/models/SegmentationDataCallback;)V
+}
+
+public final class com/exponea/sdk/ExponeaExtras {
+	public static final field ACTION_CLICKED Ljava/lang/String;
+	public static final field ACTION_DEEPLINK_CLICKED Ljava/lang/String;
+	public static final field ACTION_URL_CLICKED Ljava/lang/String;
+	public static final field Companion Lcom/exponea/sdk/ExponeaExtras$Companion;
+	public static final field EXTRA_ACTION_INFO Ljava/lang/String;
+	public static final field EXTRA_CUSTOM_DATA Ljava/lang/String;
+	public static final field EXTRA_DATA Ljava/lang/String;
+	public static final field EXTRA_DELIVERED_TIMESTAMP Ljava/lang/String;
+	public static final field EXTRA_NOTIFICATION_ID Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/exponea/sdk/ExponeaExtras$Companion {
+}
+
+public abstract class com/exponea/sdk/InAppContentBlockAvailability {
+}
+
+public final class com/exponea/sdk/InAppContentBlockAvailability$Empty : com/exponea/sdk/InAppContentBlockAvailability {
+	public static final field INSTANCE Lcom/exponea/sdk/InAppContentBlockAvailability$Empty;
+}
+
+public final class com/exponea/sdk/InAppContentBlockAvailability$Loading : com/exponea/sdk/InAppContentBlockAvailability {
+	public static final field INSTANCE Lcom/exponea/sdk/InAppContentBlockAvailability$Loading;
+}
+
+public final class com/exponea/sdk/InAppContentBlockAvailability$Ready : com/exponea/sdk/InAppContentBlockAvailability {
+	public static final field INSTANCE Lcom/exponea/sdk/InAppContentBlockAvailability$Ready;
+}
+
+public abstract class com/exponea/sdk/InAppContentBlockAvailabilityDecision {
+}
+
+public final class com/exponea/sdk/InAppContentBlockAvailabilityDecision$Resolved : com/exponea/sdk/InAppContentBlockAvailabilityDecision {
+	public fun <init> (Lcom/exponea/sdk/InAppContentBlockAvailability;)V
+	public final fun component1 ()Lcom/exponea/sdk/InAppContentBlockAvailability;
+	public final fun copy (Lcom/exponea/sdk/InAppContentBlockAvailability;)Lcom/exponea/sdk/InAppContentBlockAvailabilityDecision$Resolved;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/InAppContentBlockAvailabilityDecision$Resolved;Lcom/exponea/sdk/InAppContentBlockAvailability;ILjava/lang/Object;)Lcom/exponea/sdk/InAppContentBlockAvailabilityDecision$Resolved;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailability ()Lcom/exponea/sdk/InAppContentBlockAvailability;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/InAppContentBlockAvailabilityDecision$TimedOut : com/exponea/sdk/InAppContentBlockAvailabilityDecision {
+	public static final field INSTANCE Lcom/exponea/sdk/InAppContentBlockAvailabilityDecision$TimedOut;
+}
+
+public final class com/exponea/sdk/InAppContentBlockInvalidateMode : java/lang/Enum {
+	public static final field EAGER Lcom/exponea/sdk/InAppContentBlockInvalidateMode;
+	public static final field LAZY Lcom/exponea/sdk/InAppContentBlockInvalidateMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/InAppContentBlockInvalidateMode;
+	public static fun values ()[Lcom/exponea/sdk/InAppContentBlockInvalidateMode;
+}
+
+public final class com/exponea/sdk/RuntimeInAppContentBlockController : com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public final fun availability (Ljava/lang/String;JLkotlin/jvm/functions/Function1;)V
+	public final fun invalidate (Ljava/util/List;Ljava/lang/String;)V
+	public final fun invalidate (Ljava/util/List;Ljava/lang/String;Lcom/exponea/sdk/InAppContentBlockInvalidateMode;)V
+	public final fun invalidate (Ljava/util/List;Ljava/lang/String;Lcom/exponea/sdk/InAppContentBlockInvalidateMode;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun invalidate$default (Lcom/exponea/sdk/RuntimeInAppContentBlockController;Ljava/util/List;Ljava/lang/String;Lcom/exponea/sdk/InAppContentBlockInvalidateMode;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public fun onIntegrationStopped ()V
+	public final fun prefetch (Ljava/util/List;)V
+	public final fun prefetch (Ljava/util/List;Ljava/lang/Long;)V
+	public final fun prefetch (Ljava/util/List;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun prefetch$default (Lcom/exponea/sdk/RuntimeInAppContentBlockController;Ljava/util/List;Ljava/lang/Long;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class com/exponea/sdk/exceptions/InvalidConfigurationException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/exponea/sdk/manager/AppInboxManager : com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public abstract fun fetchAppInbox (Lkotlin/jvm/functions/Function1;)V
+	public abstract fun fetchAppInboxItem (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public abstract fun markMessageAsRead (Lcom/exponea/sdk/models/MessageItem;Lkotlin/jvm/functions/Function1;)V
+	public abstract fun onEventCreated (Lcom/exponea/sdk/models/Event;Lcom/exponea/sdk/models/EventType;)V
+	public abstract fun onIntegrationStopped ()V
+	public abstract fun reload ()V
+}
+
+public abstract interface class com/exponea/sdk/manager/InAppContentBlockManager : com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public abstract fun clearAll ()V
+	public abstract fun getAllInAppContentBlocksForPlaceholder (Ljava/lang/String;)Ljava/util/List;
+	public abstract fun getPlaceholderView (Ljava/lang/String;Landroid/content/Context;Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;)Lcom/exponea/sdk/view/InAppContentBlockPlaceholderView;
+	public abstract fun getPlaceholderView (Ljava/lang/String;Lcom/exponea/sdk/services/inappcontentblock/InAppContentBlockDataLoader;Landroid/content/Context;Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;)Lcom/exponea/sdk/view/InAppContentBlockPlaceholderView;
+	public abstract fun hasRenderableContent (Ljava/lang/String;)Z
+	public abstract fun invalidatePlaceholders (Ljava/util/List;)V
+	public abstract fun loadContentIfNeededSync (Ljava/util/List;Z)V
+	public abstract fun loadInAppContentBlockPlaceholders (Ljava/util/List;)V
+	public abstract fun loadPlaceholderAsync (Ljava/lang/String;ZLkotlin/jvm/functions/Function1;)V
+	public abstract fun onEventCreated (Lcom/exponea/sdk/models/Event;Lcom/exponea/sdk/models/EventType;)V
+	public abstract fun onIntegrationStopped ()V
+	public abstract fun passesDateFilter (Lcom/exponea/sdk/models/InAppContentBlock;)Z
+	public abstract fun passesFilters (Lcom/exponea/sdk/models/InAppContentBlock;)Z
+	public abstract fun passesFrequencyFilter (Lcom/exponea/sdk/models/InAppContentBlock;)Z
+}
+
+public final class com/exponea/sdk/manager/InAppContentBlockManager$DefaultImpls {
+	public static synthetic fun loadContentIfNeededSync$default (Lcom/exponea/sdk/manager/InAppContentBlockManager;Ljava/util/List;ZILjava/lang/Object;)V
+	public static synthetic fun loadInAppContentBlockPlaceholders$default (Lcom/exponea/sdk/manager/InAppContentBlockManager;Ljava/util/List;ILjava/lang/Object;)V
+	public static synthetic fun loadPlaceholderAsync$default (Lcom/exponea/sdk/manager/InAppContentBlockManager;Ljava/lang/String;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class com/exponea/sdk/models/AppInboxMessateType : java/lang/Enum {
+	public static final field HTML Lcom/exponea/sdk/models/AppInboxMessateType;
+	public static final field PUSH Lcom/exponea/sdk/models/AppInboxMessateType;
+	public static final field UNKNOWN Lcom/exponea/sdk/models/AppInboxMessateType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/AppInboxMessateType;
+	public static fun values ()[Lcom/exponea/sdk/models/AppInboxMessateType;
+}
+
+public final class com/exponea/sdk/models/CampaignData : android/os/Parcelable {
+	public static final field CREATOR Lcom/exponea/sdk/models/CampaignData$CREATOR;
+	public fun <init> ()V
+	public fun <init> (Landroid/os/Parcel;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()D
+	public final fun component8 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;)Lcom/exponea/sdk/models/CampaignData;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/CampaignData;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DLjava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/CampaignData;
+	public fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCampaign ()Ljava/lang/String;
+	public final fun getCompleteUrl ()Ljava/lang/String;
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getCreatedAt ()D
+	public final fun getMedium ()Ljava/lang/String;
+	public final fun getPayload ()Ljava/lang/String;
+	public final fun getSource ()Ljava/lang/String;
+	public final fun getTerm ()Ljava/lang/String;
+	public final fun getTrackingData ()Ljava/util/Map;
+	public fun hashCode ()I
+	public final fun isValidForCampaignTrack ()Z
+	public final fun setCampaign (Ljava/lang/String;)V
+	public final fun setCompleteUrl (Ljava/lang/String;)V
+	public final fun setContent (Ljava/lang/String;)V
+	public final fun setCreatedAt (D)V
+	public final fun setMedium (Ljava/lang/String;)V
+	public final fun setPayload (Ljava/lang/String;)V
+	public final fun setSource (Ljava/lang/String;)V
+	public final fun setTerm (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/exponea/sdk/models/CampaignData$CREATOR : android/os/Parcelable$Creator {
+	public fun createFromParcel (Landroid/os/Parcel;)Lcom/exponea/sdk/models/CampaignData;
+	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
+	public fun newArray (I)[Lcom/exponea/sdk/models/CampaignData;
+	public synthetic fun newArray (I)[Ljava/lang/Object;
+}
+
+public final class com/exponea/sdk/models/Consent {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZLcom/exponea/sdk/models/ConsentSources;Ljava/util/HashMap;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLcom/exponea/sdk/models/ConsentSources;Ljava/util/HashMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Lcom/exponea/sdk/models/ConsentSources;
+	public final fun component4 ()Ljava/util/HashMap;
+	public final fun copy (Ljava/lang/String;ZLcom/exponea/sdk/models/ConsentSources;Ljava/util/HashMap;)Lcom/exponea/sdk/models/Consent;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/Consent;Ljava/lang/String;ZLcom/exponea/sdk/models/ConsentSources;Ljava/util/HashMap;ILjava/lang/Object;)Lcom/exponea/sdk/models/Consent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLegitimateInterest ()Z
+	public final fun getSources ()Lcom/exponea/sdk/models/ConsentSources;
+	public final fun getTranslations ()Ljava/util/HashMap;
+	public fun hashCode ()I
+	public final fun setId (Ljava/lang/String;)V
+	public final fun setLegitimateInterest (Z)V
+	public final fun setSources (Lcom/exponea/sdk/models/ConsentSources;)V
+	public final fun setTranslations (Ljava/util/HashMap;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/ConsentSources {
+	public fun <init> ()V
+	public fun <init> (ZZZZZZ)V
+	public synthetic fun <init> (ZZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun copy (ZZZZZZ)Lcom/exponea/sdk/models/ConsentSources;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/ConsentSources;ZZZZZZILjava/lang/Object;)Lcom/exponea/sdk/models/ConsentSources;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreatedFromCRM ()Z
+	public final fun getFromConsentPage ()Z
+	public final fun getImported ()Z
+	public final fun getPrivateAPI ()Z
+	public final fun getPublicAPI ()Z
+	public final fun getTrackedFromScenario ()Z
+	public fun hashCode ()I
+	public final fun setCreatedFromCRM (Z)V
+	public final fun setFromConsentPage (Z)V
+	public final fun setImported (Z)V
+	public final fun setPrivateAPI (Z)V
+	public final fun setPublicAPI (Z)V
+	public final fun setTrackedFromScenario (Z)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/exponea/sdk/models/ContentBlockCarouselCallback {
+	public abstract fun getOverrideDefaultBehavior ()Z
+	public abstract fun getTrackActions ()Z
+	public abstract fun onActionClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Lcom/exponea/sdk/models/InAppContentBlockAction;)V
+	public abstract fun onCloseClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public abstract fun onError (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public abstract fun onHeightUpdate (Ljava/lang/String;I)V
+	public abstract fun onMessageShown (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;II)V
+	public abstract fun onMessagesChanged (ILjava/util/List;)V
+	public abstract fun onNoMessageFound (Ljava/lang/String;)V
+}
+
+public class com/exponea/sdk/models/ContentBlockSelector {
+	public fun <init> ()V
+	public fun filterContentBlocks (Ljava/util/List;)Ljava/util/List;
+	public fun sortContentBlocks (Ljava/util/List;)Ljava/util/List;
+}
+
+public abstract interface class com/exponea/sdk/models/CustomerAttributes {
+	public abstract fun getType ()Ljava/lang/String;
+}
+
+public abstract class com/exponea/sdk/models/CustomerAttributesRequest {
+	public fun <init> (Ljava/util/Map;Ljava/util/List;)V
+	public final fun getAttributes ()Ljava/util/List;
+	public final fun getCustomerIds ()Ljava/util/Map;
+}
+
+public final class com/exponea/sdk/models/CustomerIdentity {
+	public fun <init> (Ljava/util/Map;)V
+	public fun <init> (Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCustomerIds ()Ljava/util/Map;
+	public final fun getSdkAuthToken ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/CustomerIds {
+	public static final field Companion Lcom/exponea/sdk/models/CustomerIds$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/HashMap;)V
+	public synthetic fun <init> (Ljava/util/HashMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/util/HashMap;)Lcom/exponea/sdk/models/CustomerIds;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/CustomerIds;Ljava/util/HashMap;ILjava/lang/Object;)Lcom/exponea/sdk/models/CustomerIds;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun withId (Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/sdk/models/CustomerIds;
+}
+
+public final class com/exponea/sdk/models/CustomerIds$Companion {
+}
+
+public final class com/exponea/sdk/models/CustomerRecommendation {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/exponea/sdk/models/CustomerRecommendation;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/CustomerRecommendation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/exponea/sdk/models/CustomerRecommendation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/util/Map;
+	public final fun getEngineName ()Ljava/lang/String;
+	public final fun getItemId ()Ljava/lang/String;
+	public final fun getRecommendationId ()Ljava/lang/String;
+	public final fun getRecommendationVariantId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/CustomerRecommendationOptions : com/exponea/sdk/models/CustomerAttributes {
+	public fun <init> (Ljava/lang/String;ZILjava/util/Map;Ljava/lang/Boolean;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;ZILjava/util/Map;Ljava/lang/Boolean;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/lang/Boolean;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;ZILjava/util/Map;Ljava/lang/Boolean;Ljava/util/List;)Lcom/exponea/sdk/models/CustomerRecommendationOptions;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/CustomerRecommendationOptions;Ljava/lang/String;ZILjava/util/Map;Ljava/lang/Boolean;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/CustomerRecommendationOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCatalogAttributesWhitelist ()Ljava/util/List;
+	public final fun getFillWithRandom ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getItems ()Ljava/util/Map;
+	public final fun getNoTrack ()Ljava/lang/Boolean;
+	public final fun getSize ()I
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/CustomerRecommendationResponse {
+	public fun <init> (ZLjava/util/ArrayList;Ljava/lang/String;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/util/ArrayList;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (ZLjava/util/ArrayList;Ljava/lang/String;)Lcom/exponea/sdk/models/CustomerRecommendationResponse;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/CustomerRecommendationResponse;ZLjava/util/ArrayList;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/CustomerRecommendationResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getSuccess ()Z
+	public final fun getValue ()Ljava/util/ArrayList;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/DateFilter {
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/Integer;Ljava/lang/Integer;)V
+	public synthetic fun <init> (ZLjava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun copy (ZLjava/lang/Integer;Ljava/lang/Integer;)Lcom/exponea/sdk/models/DateFilter;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/DateFilter;ZLjava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/exponea/sdk/models/DateFilter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
+	public final fun getFromDate ()Ljava/lang/Integer;
+	public final fun getToDate ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/Event {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Double;Ljava/util/HashMap;Ljava/util/HashMap;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Double;Ljava/util/HashMap;Ljava/util/HashMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCustomerIds ()Ljava/util/HashMap;
+	public final fun getProperties ()Ljava/util/HashMap;
+	public final fun getTimestamp ()Ljava/lang/Double;
+	public final fun getType ()Ljava/lang/String;
+	public final fun setCustomerIds (Ljava/util/HashMap;)V
+	public final fun setProperties (Ljava/util/HashMap;)V
+	public final fun setTimestamp (Ljava/lang/Double;)V
+	public final fun setType (Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/models/EventType : java/lang/Enum {
+	public static final field APP_INBOX_CLICKED Lcom/exponea/sdk/models/EventType;
+	public static final field APP_INBOX_OPENED Lcom/exponea/sdk/models/EventType;
+	public static final field BANNER Lcom/exponea/sdk/models/EventType;
+	public static final field CAMPAIGN_CLICK Lcom/exponea/sdk/models/EventType;
+	public static final field Companion Lcom/exponea/sdk/models/EventType$Companion;
+	public static final field INSTALL Lcom/exponea/sdk/models/EventType;
+	public static final field PAYMENT Lcom/exponea/sdk/models/EventType;
+	public static final field PUSH_DELIVERED Lcom/exponea/sdk/models/EventType;
+	public static final field PUSH_OPENED Lcom/exponea/sdk/models/EventType;
+	public static final field PUSH_TOKEN Lcom/exponea/sdk/models/EventType;
+	public static final field SESSION_END Lcom/exponea/sdk/models/EventType;
+	public static final field SESSION_START Lcom/exponea/sdk/models/EventType;
+	public static final field TRACK_CUSTOMER Lcom/exponea/sdk/models/EventType;
+	public static final field TRACK_EVENT Lcom/exponea/sdk/models/EventType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/EventType;
+	public static fun values ()[Lcom/exponea/sdk/models/EventType;
+}
+
+public final class com/exponea/sdk/models/EventType$Companion {
+	public final fun valueOfOrNull (Ljava/lang/String;)Lcom/exponea/sdk/models/EventType;
+}
+
+public final class com/exponea/sdk/models/ExponeaConfiguration {
+	public static final field BASIC_AUTH_PREFIX Ljava/lang/String;
+	public static final field BEARER_AUTH_PREFIX Ljava/lang/String;
+	public static final field Companion Lcom/exponea/sdk/models/ExponeaConfiguration$Companion;
+	public static final field TOKEN_AUTH_PREFIX Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Lcom/exponea/sdk/models/IntegrationConfig;Ljava/util/Map;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;Z)V
+	public synthetic fun <init> (Lcom/exponea/sdk/models/IntegrationConfig;Ljava/util/Map;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/IntegrationConfig;
+	public final fun component10 ()Ljava/lang/Integer;
+	public final fun component11 ()Ljava/lang/Integer;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()I
+	public final fun component16 ()Ljava/util/HashMap;
+	public final fun component17 ()Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public final fun component18 ()Z
+	public final fun component19 ()Z
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component20 ()Ljava/util/List;
+	public final fun component21 ()Ljava/lang/Integer;
+	public final fun component22 ()Z
+	public final fun component23 ()Z
+	public final fun component24 ()Ljava/lang/String;
+	public final fun component25 ()Z
+	public final fun component3 ()Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public final fun component4 ()I
+	public final fun component5 ()D
+	public final fun component6 ()D
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun component9 ()Z
+	public final fun copy (Lcom/exponea/sdk/models/IntegrationConfig;Ljava/util/Map;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;Z)Lcom/exponea/sdk/models/ExponeaConfiguration;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/ExponeaConfiguration;Lcom/exponea/sdk/models/IntegrationConfig;Ljava/util/Map;Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;IDDZZZLjava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/util/HashMap;Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;ZZLjava/util/List;Ljava/lang/Integer;ZZLjava/lang/String;ZILjava/lang/Object;)Lcom/exponea/sdk/models/ExponeaConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdvancedAuthEnabled ()Z
+	public final fun getAllowDefaultCustomerProperties ()Z
+	public final fun getAllowWebViewCookies ()Z
+	public final fun getAppInboxDetailImageInset ()Ljava/lang/Integer;
+	public final fun getApplicationId ()Ljava/lang/String;
+	public final fun getAuthorization ()Ljava/lang/String;
+	public final fun getAutomaticPushNotification ()Z
+	public final fun getAutomaticSessionTracking ()Z
+	public final fun getBaseURL ()Ljava/lang/String;
+	public final fun getCampaignTTL ()D
+	public final fun getDefaultProperties ()Ljava/util/HashMap;
+	public final fun getHttpLoggingLevel ()Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public final fun getInAppContentBlockPlaceholdersAutoLoad ()Ljava/util/List;
+	public final fun getIntegrationConfig ()Lcom/exponea/sdk/models/IntegrationConfig;
+	public final fun getIntegrationRouteMap ()Ljava/util/Map;
+	public final fun getManualSessionAutoClose ()Z
+	public final fun getMaxTries ()I
+	public final fun getProjectRouteMap ()Ljava/util/Map;
+	public final fun getProjectToken ()Ljava/lang/String;
+	public final fun getPushAccentColor ()Ljava/lang/Integer;
+	public final fun getPushChannelDescription ()Ljava/lang/String;
+	public final fun getPushChannelId ()Ljava/lang/String;
+	public final fun getPushChannelName ()Ljava/lang/String;
+	public final fun getPushIcon ()Ljava/lang/Integer;
+	public final fun getPushNotificationImportance ()I
+	public final fun getRegenerateDeviceIdOnAnonymize ()Z
+	public final fun getRequirePushAuthorization ()Z
+	public final fun getSessionTimeout ()D
+	public final fun getTokenTrackFrequency ()Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public fun hashCode ()I
+	public final fun setAdvancedAuthEnabled (Z)V
+	public final fun setAllowDefaultCustomerProperties (Z)V
+	public final fun setAllowWebViewCookies (Z)V
+	public final fun setAppInboxDetailImageInset (Ljava/lang/Integer;)V
+	public final fun setApplicationId (Ljava/lang/String;)V
+	public final fun setAuthorization (Ljava/lang/String;)V
+	public final fun setAutomaticPushNotification (Z)V
+	public final fun setAutomaticSessionTracking (Z)V
+	public final fun setBaseURL (Ljava/lang/String;)V
+	public final fun setCampaignTTL (D)V
+	public final fun setDefaultProperties (Ljava/util/HashMap;)V
+	public final fun setHttpLoggingLevel (Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;)V
+	public final fun setInAppContentBlockPlaceholdersAutoLoad (Ljava/util/List;)V
+	public final fun setIntegrationConfig (Lcom/exponea/sdk/models/IntegrationConfig;)V
+	public final fun setIntegrationRouteMap (Ljava/util/Map;)V
+	public final fun setManualSessionAutoClose (Z)V
+	public final fun setMaxTries (I)V
+	public final fun setProjectRouteMap (Ljava/util/Map;)V
+	public final fun setProjectToken (Ljava/lang/String;)V
+	public final fun setPushAccentColor (Ljava/lang/Integer;)V
+	public final fun setPushChannelDescription (Ljava/lang/String;)V
+	public final fun setPushChannelId (Ljava/lang/String;)V
+	public final fun setPushChannelName (Ljava/lang/String;)V
+	public final fun setPushIcon (Ljava/lang/Integer;)V
+	public final fun setPushNotificationImportance (I)V
+	public final fun setRegenerateDeviceIdOnAnonymize (Z)V
+	public final fun setRequirePushAuthorization (Z)V
+	public final fun setSessionTimeout (D)V
+	public final fun setTokenTrackFrequency (Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;)V
+	public fun toString ()Ljava/lang/String;
+	public final fun validate ()V
+}
+
+public final class com/exponea/sdk/models/ExponeaConfiguration$Companion {
+}
+
+public final class com/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel : java/lang/Enum {
+	public static final field BASIC Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public static final field BODY Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public static final field HEADERS Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public static final field NONE Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+	public static fun values ()[Lcom/exponea/sdk/models/ExponeaConfiguration$HttpLoggingLevel;
+}
+
+public final class com/exponea/sdk/models/ExponeaConfiguration$TokenFrequency : java/lang/Enum {
+	public static final field DAILY Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public static final field EVERY_LAUNCH Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public static final field ON_TOKEN_CHANGE Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+	public static fun values ()[Lcom/exponea/sdk/models/ExponeaConfiguration$TokenFrequency;
+}
+
+public final class com/exponea/sdk/models/ExponeaConfigurationOverrides {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getInAppContentBlockPlaceholdersAutoLoad ()Ljava/util/List;
+	public final fun getIntegrationRouteMap ()Ljava/util/Map;
+}
+
+public final class com/exponea/sdk/models/ExponeaNotificationActionType : java/lang/Enum {
+	public static final field APP Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public static final field BROWSER Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public static final field Companion Lcom/exponea/sdk/models/ExponeaNotificationActionType$Companion;
+	public static final field DEEPLINK Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public static final field SELFCHECK Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public static fun values ()[Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+}
+
+public final class com/exponea/sdk/models/ExponeaNotificationActionType$Companion {
+	public final fun find (Ljava/lang/String;)Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+}
+
+public final class com/exponea/sdk/models/ExponeaProject {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/exponea/sdk/models/ExponeaProject;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/ExponeaProject;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/ExponeaProject;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthorization ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getInAppContentBlockPlaceholdersAutoLoad ()Ljava/util/List;
+	public final fun getProjectToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/FetchError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)Lcom/exponea/sdk/models/FetchError;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/FetchError;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/exponea/sdk/models/FetchError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHttpCode ()Ljava/lang/Integer;
+	public final fun getJsonBody ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/FlushMode : java/lang/Enum {
+	public static final field APP_CLOSE Lcom/exponea/sdk/models/FlushMode;
+	public static final field IMMEDIATE Lcom/exponea/sdk/models/FlushMode;
+	public static final field MANUAL Lcom/exponea/sdk/models/FlushMode;
+	public static final field PERIOD Lcom/exponea/sdk/models/FlushMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/FlushMode;
+	public static fun values ()[Lcom/exponea/sdk/models/FlushMode;
+}
+
+public final class com/exponea/sdk/models/FlushPeriod {
+	public fun <init> (JLjava/util/concurrent/TimeUnit;)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/util/concurrent/TimeUnit;
+	public final fun copy (JLjava/util/concurrent/TimeUnit;)Lcom/exponea/sdk/models/FlushPeriod;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/FlushPeriod;JLjava/util/concurrent/TimeUnit;ILjava/lang/Object;)Lcom/exponea/sdk/models/FlushPeriod;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()J
+	public final fun getTimeUnit ()Ljava/util/concurrent/TimeUnit;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/HtmlActionType : java/lang/Enum {
+	public static final field BROWSER Lcom/exponea/sdk/models/HtmlActionType;
+	public static final field CLOSE Lcom/exponea/sdk/models/HtmlActionType;
+	public static final field Companion Lcom/exponea/sdk/models/HtmlActionType$Companion;
+	public static final field DEEPLINK Lcom/exponea/sdk/models/HtmlActionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/HtmlActionType;
+	public static fun values ()[Lcom/exponea/sdk/models/HtmlActionType;
+}
+
+public final class com/exponea/sdk/models/HtmlActionType$Companion {
+	public final fun find (Ljava/lang/String;)Lcom/exponea/sdk/models/HtmlActionType;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlock {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;)V
+	public final fun applyDateFilter (J)Z
+	public final fun applyFrequencyFilter (Lcom/exponea/sdk/models/InAppContentBlockDisplayState;Ljava/util/Date;)Z
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/exponea/sdk/models/DateFilter;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/util/Map;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;)Lcom/exponea/sdk/models/InAppContentBlock;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppContentBlock;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConsentCategoryTracking ()Ljava/lang/String;
+	public final fun getContent ()Ljava/util/Map;
+	public final fun getContentType ()Lcom/exponea/sdk/models/InAppContentBlockType;
+	public final fun getDateFilter ()Lcom/exponea/sdk/models/DateFilter;
+	public final fun getFrequency ()Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public final fun getHasTrackingConsent ()Z
+	public final fun getHtmlContent ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPersonalizedData ()Lcom/exponea/sdk/models/InAppContentBlockPersonalizedData;
+	public final fun getPlaceholders ()Ljava/util/List;
+	public final fun getPriority ()Ljava/lang/Integer;
+	public final fun getRawContentType ()Ljava/lang/String;
+	public final fun getRawFrequency ()Ljava/lang/String;
+	public final fun getStatus ()Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public final fun hasFreshContent ()Z
+	public fun hashCode ()I
+	public final fun isContentPersonalized ()Z
+	public final fun isStatusValid ()Z
+	public final fun setPersonalizedData (Lcom/exponea/sdk/models/InAppContentBlockPersonalizedData;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockAction {
+	public fun <init> (Lcom/exponea/sdk/models/InAppContentBlockActionType;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lcom/exponea/sdk/models/InAppContentBlockActionType;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lcom/exponea/sdk/models/InAppContentBlockActionType;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockAction;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppContentBlockAction;Lcom/exponea/sdk/models/InAppContentBlockActionType;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppContentBlockAction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockActionType : java/lang/Enum {
+	public static final field BROWSER Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public static final field CLOSE Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public static final field DEEPLINK Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockActionType;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppContentBlockActionType;
+}
+
+public abstract interface class com/exponea/sdk/models/InAppContentBlockCallback {
+	public abstract fun onActionClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Lcom/exponea/sdk/models/InAppContentBlockAction;)V
+	public abstract fun onCloseClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public abstract fun onError (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public abstract fun onMessageShown (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public abstract fun onNoMessageFound (Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockDisplayState {
+	public fun <init> (Ljava/util/Date;ILjava/util/Date;I)V
+	public final fun component1 ()Ljava/util/Date;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/util/Date;
+	public final fun component4 ()I
+	public final fun copy (Ljava/util/Date;ILjava/util/Date;I)Lcom/exponea/sdk/models/InAppContentBlockDisplayState;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppContentBlockDisplayState;Ljava/util/Date;ILjava/util/Date;IILjava/lang/Object;)Lcom/exponea/sdk/models/InAppContentBlockDisplayState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisplayedCount ()I
+	public final fun getDisplayedLast ()Ljava/util/Date;
+	public final fun getInteractedCount ()I
+	public final fun getInteractedLast ()Ljava/util/Date;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockFrequency : java/lang/Enum {
+	public static final field ALWAYS Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static final field ONCE_PER_VISIT Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static final field ONLY_ONCE Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static final field UNKNOWN Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static final field UNTIL_VISITOR_INTERACTS Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppContentBlockFrequency;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockPersonalizedData {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/Boolean;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lcom/exponea/sdk/models/InAppContentBlockPersonalizedData;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppContentBlockPersonalizedData;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppContentBlockPersonalizedData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlockId ()Ljava/lang/String;
+	public final fun getContent ()Ljava/util/Map;
+	public final fun getHasTrackingConsent ()Z
+	public final fun getLoadedAt ()Ljava/util/Date;
+	public final fun getRawContentType ()Ljava/lang/String;
+	public final fun getRawHasTrackingConsent ()Ljava/lang/Boolean;
+	public final fun getRawStatus ()Ljava/lang/String;
+	public final fun getStatus ()Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public final fun getTimeToLive ()Ljava/lang/Integer;
+	public final fun getVariantId ()Ljava/lang/Integer;
+	public final fun getVariantName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun setLoadedAt (Ljava/util/Date;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;ZILjava/lang/Object;)Lcom/exponea/sdk/models/InAppContentBlockPlaceholderConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefferedLoad ()Z
+	public fun hashCode ()I
+	public final fun setDefferedLoad (Z)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockStatus : java/lang/Enum {
+	public static final field Companion Lcom/exponea/sdk/models/InAppContentBlockStatus$Companion;
+	public static final field NOT_EXIST Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public static final field NOT_MATCHED Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public static final field OK Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public static final field UNKNOWN Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockStatus;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppContentBlockStatus;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockStatus$Companion {
+	public final fun parseValue (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockStatus;
+}
+
+public final class com/exponea/sdk/models/InAppContentBlockType : java/lang/Enum {
+	public static final field HTML Lcom/exponea/sdk/models/InAppContentBlockType;
+	public static final field NATIVE Lcom/exponea/sdk/models/InAppContentBlockType;
+	public static final field NOT_DEFINED Lcom/exponea/sdk/models/InAppContentBlockType;
+	public static final field UNKNOWN Lcom/exponea/sdk/models/InAppContentBlockType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlockType;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppContentBlockType;
+}
+
+public final class com/exponea/sdk/models/InAppMessage {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/InAppMessagePayload;ILjava/lang/String;Lcom/exponea/sdk/models/eventfilter/EventFilter;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/Integer;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;)V
+	public final fun applyDateFilter (J)Z
+	public final fun applyEventFilter (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)Z
+	public final fun applyFrequencyFilter (Lcom/exponea/sdk/models/InAppMessageDisplayState;Ljava/util/Date;)Z
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/Integer;
+	public final fun component11 ()Ljava/lang/Long;
+	public final fun component12 ()Ljava/lang/Long;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/lang/Boolean;
+	public final fun component15 ()Ljava/lang/Boolean;
+	public final fun component16 ()Ljava/lang/Boolean;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lcom/exponea/sdk/models/InAppMessagePayload;
+	public final fun component6 ()I
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Lcom/exponea/sdk/models/eventfilter/EventFilter;
+	public final fun component9 ()Lcom/exponea/sdk/models/DateFilter;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/InAppMessagePayload;ILjava/lang/String;Lcom/exponea/sdk/models/eventfilter/EventFilter;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/Integer;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;)Lcom/exponea/sdk/models/InAppMessage;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/InAppMessagePayload;ILjava/lang/String;Lcom/exponea/sdk/models/eventfilter/EventFilter;Lcom/exponea/sdk/models/DateFilter;Ljava/lang/Integer;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConsentCategoryTracking ()Ljava/lang/String;
+	public final fun getDateFilter ()Lcom/exponea/sdk/models/DateFilter;
+	public final fun getDelay ()Ljava/lang/Long;
+	public final fun getFrequency ()Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public final fun getHasTrackingConsent ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMessageType ()Lcom/exponea/sdk/models/InAppMessageType;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPayload ()Lcom/exponea/sdk/models/InAppMessagePayload;
+	public final fun getPayloadHtml ()Ljava/lang/String;
+	public final fun getPriority ()Ljava/lang/Integer;
+	public final fun getRawFrequency ()Ljava/lang/String;
+	public final fun getRawHasTrackingConsent ()Ljava/lang/Boolean;
+	public final fun getRawMessageType ()Ljava/lang/String;
+	public final fun getTimeout ()Ljava/lang/Long;
+	public final fun getTrigger ()Lcom/exponea/sdk/models/eventfilter/EventFilter;
+	public final fun getVariantId ()I
+	public final fun getVariantName ()Ljava/lang/String;
+	public final fun hasPayload ()Z
+	public fun hashCode ()I
+	public final fun isHtml ()Ljava/lang/Boolean;
+	public final fun isRichStyled ()Z
+	public final fun isRichText ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppMessageButton {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getText ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun setText (Ljava/lang/String;)V
+	public final fun setUrl (Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/models/InAppMessageButtonType : java/lang/Enum {
+	public static final field BROWSER Lcom/exponea/sdk/models/InAppMessageButtonType;
+	public static final field CANCEL Lcom/exponea/sdk/models/InAppMessageButtonType;
+	public static final field DEEPLINK Lcom/exponea/sdk/models/InAppMessageButtonType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppMessageButtonType;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppMessageButtonType;
+}
+
+public abstract interface class com/exponea/sdk/models/InAppMessageCallback {
+	public abstract fun getOverrideDefaultBehavior ()Z
+	public abstract fun getTrackActions ()Z
+	public abstract fun inAppMessageClickAction (Lcom/exponea/sdk/models/InAppMessage;Lcom/exponea/sdk/models/InAppMessageButton;Landroid/content/Context;)V
+	public abstract fun inAppMessageCloseAction (Lcom/exponea/sdk/models/InAppMessage;Lcom/exponea/sdk/models/InAppMessageButton;ZLandroid/content/Context;)V
+	public abstract fun inAppMessageError (Lcom/exponea/sdk/models/InAppMessage;Ljava/lang/String;Landroid/content/Context;)V
+	public abstract fun inAppMessageShown (Lcom/exponea/sdk/models/InAppMessage;Landroid/content/Context;)V
+	public abstract fun setTrackActions (Z)V
+}
+
+public final class com/exponea/sdk/models/InAppMessageDisplayState {
+	public fun <init> (Ljava/util/Date;Ljava/util/Date;)V
+	public final fun component1 ()Ljava/util/Date;
+	public final fun component2 ()Ljava/util/Date;
+	public final fun copy (Ljava/util/Date;Ljava/util/Date;)Lcom/exponea/sdk/models/InAppMessageDisplayState;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppMessageDisplayState;Ljava/util/Date;Ljava/util/Date;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppMessageDisplayState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisplayed ()Ljava/util/Date;
+	public final fun getInteracted ()Ljava/util/Date;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppMessageFrequency : java/lang/Enum {
+	public static final field ALWAYS Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public static final field ONCE_PER_VISIT Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public static final field ONLY_ONCE Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public static final field UNTIL_VISITOR_INTERACTS Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppMessageFrequency;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppMessageFrequency;
+}
+
+public final class com/exponea/sdk/models/InAppMessagePayload {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/lang/Boolean;
+	public final fun component16 ()Ljava/lang/String;
+	public final fun component17 ()Ljava/lang/String;
+	public final fun component18 ()Ljava/lang/String;
+	public final fun component19 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component20 ()Ljava/lang/String;
+	public final fun component21 ()Ljava/lang/String;
+	public final fun component22 ()Ljava/lang/Boolean;
+	public final fun component23 ()Ljava/lang/Boolean;
+	public final fun component24 ()Ljava/lang/Boolean;
+	public final fun component25 ()Ljava/util/List;
+	public final fun component26 ()Ljava/lang/String;
+	public final fun component27 ()Ljava/lang/String;
+	public final fun component28 ()Ljava/lang/String;
+	public final fun component29 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component30 ()Ljava/lang/Boolean;
+	public final fun component31 ()Ljava/util/List;
+	public final fun component32 ()Ljava/lang/String;
+	public final fun component33 ()Ljava/lang/String;
+	public final fun component34 ()Ljava/lang/String;
+	public final fun component35 ()Ljava/lang/String;
+	public final fun component36 ()Ljava/lang/Boolean;
+	public final fun component37 ()Ljava/lang/String;
+	public final fun component38 ()Ljava/lang/String;
+	public final fun component39 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component40 ()Ljava/lang/String;
+	public final fun component41 ()Ljava/lang/String;
+	public final fun component42 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/exponea/sdk/models/InAppMessagePayload;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppMessagePayload;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;IILjava/lang/Object;)Lcom/exponea/sdk/models/InAppMessagePayload;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getBackgroundOverlayColor ()Ljava/lang/String;
+	public final fun getBodyFontUrl ()Ljava/lang/String;
+	public final fun getBodyLineHeight ()Ljava/lang/String;
+	public final fun getBodyPadding ()Ljava/lang/String;
+	public final fun getBodyText ()Ljava/lang/String;
+	public final fun getBodyTextAlignment ()Ljava/lang/String;
+	public final fun getBodyTextColor ()Ljava/lang/String;
+	public final fun getBodyTextSize ()Ljava/lang/String;
+	public final fun getBodyTextStyle ()Ljava/util/List;
+	public final fun getButtons ()Ljava/util/List;
+	public final fun getButtonsAlignment ()Ljava/lang/String;
+	public final fun getCloseButtonBackgroundColor ()Ljava/lang/String;
+	public final fun getCloseButtonIconColor ()Ljava/lang/String;
+	public final fun getCloseButtonIconUrl ()Ljava/lang/String;
+	public final fun getCloseButtonMargin ()Ljava/lang/String;
+	public final fun getContainerMargin ()Ljava/lang/String;
+	public final fun getContainerPadding ()Ljava/lang/String;
+	public final fun getContainerRadius ()Ljava/lang/String;
+	public final fun getImageMargin ()Ljava/lang/String;
+	public final fun getImageRadius ()Ljava/lang/String;
+	public final fun getImageRatioHeight ()Ljava/lang/String;
+	public final fun getImageRatioWidth ()Ljava/lang/String;
+	public final fun getImageScale ()Ljava/lang/String;
+	public final fun getImageSizing ()Ljava/lang/String;
+	public final fun getImageUrl ()Ljava/lang/String;
+	public final fun getMessagePosition ()Ljava/lang/String;
+	public final fun getTextPosition ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getTitleFontUrl ()Ljava/lang/String;
+	public final fun getTitleLineHeight ()Ljava/lang/String;
+	public final fun getTitlePadding ()Ljava/lang/String;
+	public final fun getTitleTextAlignment ()Ljava/lang/String;
+	public final fun getTitleTextColor ()Ljava/lang/String;
+	public final fun getTitleTextSize ()Ljava/lang/String;
+	public final fun getTitleTextStyle ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isBodyEnabled ()Ljava/lang/Boolean;
+	public final fun isCloseButtonEnabled ()Ljava/lang/Boolean;
+	public final fun isImageEnabled ()Ljava/lang/Boolean;
+	public final fun isImageOverlayEnabled ()Ljava/lang/Boolean;
+	public final fun isTextOverImage ()Ljava/lang/Boolean;
+	public final fun isTitleEnabled ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppMessagePayloadButton {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/lang/String;
+	public final fun component16 ()Ljava/lang/String;
+	public final fun component17 ()Ljava/util/List;
+	public final fun component18 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;)Lcom/exponea/sdk/models/InAppMessagePayloadButton;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/InAppMessagePayloadButton;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/exponea/sdk/models/InAppMessagePayloadButton;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getBorderColor ()Ljava/lang/String;
+	public final fun getBorderWeight ()Ljava/lang/String;
+	public final fun getButtonType ()Lcom/exponea/sdk/models/InAppMessageButtonType;
+	public final fun getFontUrl ()Ljava/lang/String;
+	public final fun getLineHeight ()Ljava/lang/String;
+	public final fun getLink ()Ljava/lang/String;
+	public final fun getMargin ()Ljava/lang/String;
+	public final fun getPadding ()Ljava/lang/String;
+	public final fun getRadius ()Ljava/lang/String;
+	public final fun getRawType ()Ljava/lang/String;
+	public final fun getSizing ()Ljava/lang/String;
+	public final fun getText ()Ljava/lang/String;
+	public final fun getTextAlignment ()Ljava/lang/String;
+	public final fun getTextColor ()Ljava/lang/String;
+	public final fun getTextSize ()Ljava/lang/String;
+	public final fun getTextStyle ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun isBorderEnabled ()Ljava/lang/Boolean;
+	public final fun isEnabled ()Ljava/lang/Boolean;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/InAppMessageType : java/lang/Enum {
+	public static final field ALERT Lcom/exponea/sdk/models/InAppMessageType;
+	public static final field FREEFORM Lcom/exponea/sdk/models/InAppMessageType;
+	public static final field FULLSCREEN Lcom/exponea/sdk/models/InAppMessageType;
+	public static final field MODAL Lcom/exponea/sdk/models/InAppMessageType;
+	public static final field SLIDE_IN Lcom/exponea/sdk/models/InAppMessageType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppMessageType;
+	public static fun values ()[Lcom/exponea/sdk/models/InAppMessageType;
+}
+
+public abstract interface class com/exponea/sdk/models/IntegrationConfig {
+	public abstract fun getBaseUrl ()Ljava/lang/String;
+}
+
+public abstract interface class com/exponea/sdk/models/LoggerCallback {
+	public abstract fun onLog (Lcom/exponea/sdk/util/Logger$Level;Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/exponea/sdk/models/MessageItem {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Double;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Double;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Double;Ljava/util/Map;)Lcom/exponea/sdk/models/MessageItem;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/MessageItem;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Double;Ljava/util/Map;ILjava/lang/Object;)Lcom/exponea/sdk/models/MessageItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lcom/exponea/sdk/models/MessageItemContent;
+	public final fun getHasTrackingConsent ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getRawContent ()Ljava/util/Map;
+	public final fun getRawType ()Ljava/lang/String;
+	public final fun getRead ()Ljava/lang/Boolean;
+	public final fun getReceivedTime ()Ljava/lang/Double;
+	public final fun getType ()Lcom/exponea/sdk/models/AppInboxMessateType;
+	public fun hashCode ()I
+	public final fun setRead (Ljava/lang/Boolean;)V
+	public final fun setReceivedTime (Ljava/lang/Double;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/MessageItemAction {
+	public fun <init> ()V
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getType ()Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun setTitle (Ljava/lang/String;)V
+	public final fun setType (Lcom/exponea/sdk/models/MessageItemAction$Type;)V
+	public final fun setUrl (Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/models/MessageItemAction$Type : java/lang/Enum {
+	public static final field APP Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public static final field BROWSER Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public static final field Companion Lcom/exponea/sdk/models/MessageItemAction$Type$Companion;
+	public static final field DEEPLINK Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public static final field NO_ACTION Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/MessageItemAction$Type;
+	public static fun values ()[Lcom/exponea/sdk/models/MessageItemAction$Type;
+}
+
+public final class com/exponea/sdk/models/MessageItemAction$Type$Companion {
+	public final fun find (Ljava/lang/String;)Lcom/exponea/sdk/models/MessageItemAction$Type;
+}
+
+public final class com/exponea/sdk/models/MessageItemContent {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/Map;Ljava/util/List;Lcom/exponea/sdk/models/MessageItemAction;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/util/Map;Ljava/util/List;Lcom/exponea/sdk/models/MessageItemAction;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAction ()Lcom/exponea/sdk/models/MessageItemAction;
+	public final fun getActions ()Ljava/util/List;
+	public final fun getConsentCategoryTracking ()Ljava/lang/String;
+	public final fun getHasTrackingConsent ()Z
+	public final fun getHtml ()Ljava/lang/String;
+	public final fun getImageUrl ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getTrackingData ()Ljava/util/Map;
+	public final fun setAction (Lcom/exponea/sdk/models/MessageItemAction;)V
+	public final fun setActions (Ljava/util/List;)V
+	public final fun setConsentCategoryTracking (Ljava/lang/String;)V
+	public final fun setHasTrackingConsent (Z)V
+	public final fun setHtml (Ljava/lang/String;)V
+	public final fun setImageUrl (Ljava/lang/String;)V
+	public final fun setMessage (Ljava/lang/String;)V
+	public final fun setTitle (Ljava/lang/String;)V
+	public final fun setTrackingData (Ljava/util/Map;)V
+}
+
+public final class com/exponea/sdk/models/NotificationAction : java/io/Serializable {
+	public static final field ACTION_TYPE_BUTTON Ljava/lang/String;
+	public static final field ACTION_TYPE_NOTIFICATION Ljava/lang/String;
+	public static final field Companion Lcom/exponea/sdk/models/NotificationAction$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/sdk/models/NotificationAction;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/NotificationAction;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/NotificationAction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActionName ()Ljava/lang/String;
+	public final fun getActionType ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isTrackingForced ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/NotificationAction$Companion {
+}
+
+public final class com/exponea/sdk/models/NotificationData : android/os/Parcelable {
+	public static final field CREATOR Lcom/exponea/sdk/models/NotificationData$CREATOR;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/HashMap;Lcom/exponea/sdk/models/CampaignData;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/util/HashMap;Lcom/exponea/sdk/models/CampaignData;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/HashMap;
+	public final fun component2 ()Lcom/exponea/sdk/models/CampaignData;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/util/HashMap;Lcom/exponea/sdk/models/CampaignData;Ljava/lang/String;Z)Lcom/exponea/sdk/models/NotificationData;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/NotificationData;Ljava/util/HashMap;Lcom/exponea/sdk/models/CampaignData;Ljava/lang/String;ZILjava/lang/Object;)Lcom/exponea/sdk/models/NotificationData;
+	public fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttributes ()Ljava/util/HashMap;
+	public final fun getCampaignData ()Lcom/exponea/sdk/models/CampaignData;
+	public final fun getConsentCategoryTracking ()Ljava/lang/String;
+	public final fun getEventType ()Ljava/lang/String;
+	public final fun getHasCustomEventType ()Z
+	public final fun getHasTrackingConsent ()Z
+	public final fun getSentTimestamp ()Ljava/lang/Double;
+	public final fun getTrackingData ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/exponea/sdk/models/NotificationData$CREATOR : android/os/Parcelable$Creator {
+	public fun createFromParcel (Landroid/os/Parcel;)Lcom/exponea/sdk/models/NotificationData;
+	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
+	public fun newArray (I)[Lcom/exponea/sdk/models/NotificationData;
+	public synthetic fun newArray (I)[Ljava/lang/Object;
+}
+
+public final class com/exponea/sdk/models/ProjectConfig : com/exponea/sdk/models/IntegrationConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAuthorization ()Ljava/lang/String;
+	public fun getBaseUrl ()Ljava/lang/String;
+	public final fun getProjectToken ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/PropertiesList {
+	public fun <init> (Ljava/util/HashMap;)V
+	public final fun component1 ()Ljava/util/HashMap;
+	public final fun copy (Ljava/util/HashMap;)Lcom/exponea/sdk/models/PropertiesList;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/PropertiesList;Ljava/util/HashMap;ILjava/lang/Object;)Lcom/exponea/sdk/models/PropertiesList;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProperties ()Ljava/util/HashMap;
+	public fun hashCode ()I
+	public final fun set (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun setProperties (Ljava/util/HashMap;)V
+	public final fun toHashMap ()Ljava/util/HashMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/PurchasedItem {
+	public fun <init> (DLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (DLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (DLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/sdk/models/PurchasedItem;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/PurchasedItem;DLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/PurchasedItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrency ()Ljava/lang/String;
+	public final fun getPaymentSystem ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getProductTitle ()Ljava/lang/String;
+	public final fun getReceipt ()Ljava/lang/String;
+	public final fun getValue ()D
+	public fun hashCode ()I
+	public final fun setCurrency (Ljava/lang/String;)V
+	public final fun setPaymentSystem (Ljava/lang/String;)V
+	public final fun setProductId (Ljava/lang/String;)V
+	public final fun setProductTitle (Ljava/lang/String;)V
+	public final fun setReceipt (Ljava/lang/String;)V
+	public final fun setValue (D)V
+	public final fun toHashMap ()Ljava/util/HashMap;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/exponea/sdk/models/PushNotificationDelegate {
+	public abstract fun onPushNotificationOpened (Lcom/exponea/sdk/models/ExponeaNotificationActionType;Ljava/lang/String;Ljava/util/Map;)V
+	public abstract fun onPushNotificationReceived (Ljava/util/Map;)V
+	public abstract fun onSilentPushNotificationReceived (Ljava/util/Map;)V
+}
+
+public final class com/exponea/sdk/models/PushOpenedData {
+	public fun <init> (Lcom/exponea/sdk/models/ExponeaNotificationActionType;Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lcom/exponea/sdk/models/ExponeaNotificationActionType;Ljava/lang/String;Ljava/util/Map;)Lcom/exponea/sdk/models/PushOpenedData;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/PushOpenedData;Lcom/exponea/sdk/models/ExponeaNotificationActionType;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lcom/exponea/sdk/models/PushOpenedData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActionType ()Lcom/exponea/sdk/models/ExponeaNotificationActionType;
+	public final fun getActionUrl ()Ljava/lang/String;
+	public final fun getExtraData ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/Result {
+	public fun <init> (Ljava/lang/Boolean;Ljava/lang/Object;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/lang/Object;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Boolean;Ljava/lang/Object;Ljava/lang/String;)Lcom/exponea/sdk/models/Result;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/Result;Ljava/lang/Boolean;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResults ()Ljava/lang/Object;
+	public final fun getSuccess ()Ljava/lang/Boolean;
+	public final fun getSyncToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/Route : java/lang/Enum {
+	public static final field TRACK_CAMPAIGN Lcom/exponea/sdk/models/Route;
+	public static final field TRACK_CUSTOMERS Lcom/exponea/sdk/models/Route;
+	public static final field TRACK_EVENTS Lcom/exponea/sdk/models/Route;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/Route;
+	public static fun values ()[Lcom/exponea/sdk/models/Route;
+}
+
+public abstract interface class com/exponea/sdk/models/SdkAuthCallback {
+	public abstract fun onAuthFailure (Lcom/exponea/sdk/models/SdkAuthError;)V
+}
+
+public final class com/exponea/sdk/models/SdkAuthError {
+	public fun <init> (Lcom/exponea/sdk/models/SdkAuthErrorCode;Ljava/util/Map;)V
+	public final fun getCustomerIds ()Ljava/util/Map;
+	public final fun getErrorCode ()Lcom/exponea/sdk/models/SdkAuthErrorCode;
+}
+
+public final class com/exponea/sdk/models/SdkAuthErrorCode : java/lang/Enum {
+	public static final field TOKEN_ABOUT_TO_EXPIRE Lcom/exponea/sdk/models/SdkAuthErrorCode;
+	public static final field TOKEN_EXPIRED Lcom/exponea/sdk/models/SdkAuthErrorCode;
+	public static final field TOKEN_NOT_PROVIDED Lcom/exponea/sdk/models/SdkAuthErrorCode;
+	public static final field TOKEN_REJECTED Lcom/exponea/sdk/models/SdkAuthErrorCode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/models/SdkAuthErrorCode;
+	public static fun values ()[Lcom/exponea/sdk/models/SdkAuthErrorCode;
+}
+
+public final class com/exponea/sdk/models/Segment : java/util/HashMap {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public final fun containsKey (Ljava/lang/Object;)Z
+	public fun containsKey (Ljava/lang/String;)Z
+	public final fun containsValue (Ljava/lang/Object;)Z
+	public fun containsValue (Ljava/lang/String;)Z
+	public final fun entrySet ()Ljava/util/Set;
+	public final synthetic fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun get (Ljava/lang/Object;)Ljava/lang/String;
+	public fun get (Ljava/lang/String;)Ljava/lang/String;
+	public fun getEntries ()Ljava/util/Set;
+	public fun getKeys ()Ljava/util/Set;
+	public final synthetic fun getOrDefault (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun getOrDefault (Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;
+	public fun getOrDefault (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getSize ()I
+	public fun getValues ()Ljava/util/Collection;
+	public final fun keySet ()Ljava/util/Set;
+	public final synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun remove (Ljava/lang/Object;)Ljava/lang/String;
+	public final fun remove (Ljava/lang/Object;Ljava/lang/Object;)Z
+	public fun remove (Ljava/lang/String;)Ljava/lang/String;
+	public fun remove (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun size ()I
+	public final fun values ()Ljava/util/Collection;
+}
+
+public abstract class com/exponea/sdk/models/SegmentationDataCallback {
+	public fun <init> ()V
+	public abstract fun getExposingCategory ()Ljava/lang/String;
+	public abstract fun getIncludeFirstLoad ()Z
+	public abstract fun onNewData (Ljava/util/List;)V
+	public final fun unregister ()V
+}
+
+public final class com/exponea/sdk/models/StreamConfig : com/exponea/sdk/models/IntegrationConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBaseUrl ()Ljava/lang/String;
+	public final fun getStreamId ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/BooleanConstraint : com/exponea/sdk/models/eventfilter/EventFilterConstraint {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/BooleanConstraint$Companion;
+	public fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/lang/String;)V
+	public synthetic fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getOperator ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public fun getType ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/BooleanConstraint$Companion {
+	public final fun getHasNoValue ()Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public final fun getHasValue ()Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public final fun isNotSet ()Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public final fun isSet ()Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+	public final fun itIs (Z)Lcom/exponea/sdk/models/eventfilter/BooleanConstraint;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilter {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/EventFilter$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lcom/exponea/sdk/models/eventfilter/EventFilter;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/EventFilter;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/EventFilter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEventType ()Ljava/lang/String;
+	public final fun getFilter ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Z
+	public final fun serialize ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilter$Companion {
+}
+
+public abstract interface class com/exponea/sdk/models/eventfilter/EventFilterAttribute {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute$Companion;
+	public abstract fun getType ()Ljava/lang/String;
+	public abstract fun getValue (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Ljava/lang/String;
+	public abstract fun isSet (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Z
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterAttribute$Companion {
+	public final fun getTypeAdapterFactory ()Lcom/google/gson/typeadapters/RuntimeTypeAdapterFactory;
+}
+
+public abstract interface class com/exponea/sdk/models/eventfilter/EventFilterConstraint {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint$Companion;
+	public abstract fun getOperator ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public abstract fun getType ()Ljava/lang/String;
+	public abstract fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;)Z
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterConstraint$Companion {
+	public final fun getTypeAdapterFactory ()Lcom/google/gson/typeadapters/RuntimeTypeAdapterFactory;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterEvent {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/lang/Double;
+	public final fun copy (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;)Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEventType ()Ljava/lang/String;
+	public final fun getProperties ()Ljava/util/Map;
+	public final fun getTimestamp ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterOperand {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/EventFilterOperand;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/EventFilterOperand;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/EventFilterOperand;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getType ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/exponea/sdk/models/eventfilter/EventFilterOperator {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/EventFilterOperator$Companion;
+	public fun <init> ()V
+	public fun equals (Ljava/lang/Object;)Z
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getOperandCount ()I
+	public fun hashCode ()I
+	public abstract fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;Ljava/util/List;)Z
+	public final fun validate (Ljava/util/List;)Z
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterOperator$Companion {
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterOperatorDeserializer : com/google/gson/JsonDeserializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterOperatorException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventFilterOperatorSerializer : com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun serialize (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventPropertyFilter {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter$Companion;
+	public fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;
+	public final fun component2 ()Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;
+	public final fun copy (Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;)Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttribute ()Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;
+	public final fun getConstraint ()Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;
+	public fun hashCode ()I
+	public final fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/EventPropertyFilter$Companion {
+	public final fun property (Ljava/lang/String;Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;)Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter;
+	public final fun timestamp (Lcom/exponea/sdk/models/eventfilter/EventFilterConstraint;)Lcom/exponea/sdk/models/eventfilter/EventPropertyFilter;
+}
+
+public final class com/exponea/sdk/models/eventfilter/NumberConstraint : com/exponea/sdk/models/eventfilter/EventFilterConstraint {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/NumberConstraint$Companion;
+	public fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;)V
+	public synthetic fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/NumberConstraint;Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOperands ()Ljava/util/List;
+	public fun getOperator ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/NumberConstraint$Companion {
+	public final fun equalTo (Ljava/lang/Number;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun getHasNoValue ()Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun getHasValue ()Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun greaterThan (Ljava/lang/Number;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun inBetween (Ljava/lang/Number;Ljava/lang/Number;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun isNotSet ()Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun isSet ()Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun lessThan (Ljava/lang/Number;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+	public final fun notBetween (Ljava/lang/Number;Ljava/lang/Number;)Lcom/exponea/sdk/models/eventfilter/NumberConstraint;
+}
+
+public final class com/exponea/sdk/models/eventfilter/PropertyAttribute : com/exponea/sdk/models/eventfilter/EventFilterAttribute {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/PropertyAttribute;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/PropertyAttribute;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/PropertyAttribute;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProperty ()Ljava/lang/String;
+	public fun getType ()Ljava/lang/String;
+	public fun getValue (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isSet (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/StringConstraint : com/exponea/sdk/models/eventfilter/EventFilterConstraint {
+	public static final field Companion Lcom/exponea/sdk/models/eventfilter/StringConstraint$Companion;
+	public fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;)V
+	public synthetic fun <init> (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public static synthetic fun copy$default (Lcom/exponea/sdk/models/eventfilter/StringConstraint;Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;Ljava/util/List;ILjava/lang/Object;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOperands ()Ljava/util/List;
+	public fun getOperator ()Lcom/exponea/sdk/models/eventfilter/EventFilterOperator;
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun passes (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;Lcom/exponea/sdk/models/eventfilter/EventFilterAttribute;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/models/eventfilter/StringConstraint$Companion {
+	public final fun contains (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun doesNotContain (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun doesNotEqual (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun endsWith (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun equals (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun getHasNoValue ()Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun getHasValue ()Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun isIn (Ljava/util/List;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun isNotSet ()Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun isSet ()Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun notIn (Ljava/util/List;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun regex (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+	public final fun startsWith (Ljava/lang/String;)Lcom/exponea/sdk/models/eventfilter/StringConstraint;
+}
+
+public final class com/exponea/sdk/models/eventfilter/TimestampAttribute : com/exponea/sdk/models/eventfilter/EventFilterAttribute {
+	public fun <init> ()V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getType ()Ljava/lang/String;
+	public fun getValue (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isSet (Lcom/exponea/sdk/models/eventfilter/EventFilterEvent;)Z
+}
+
+public final class com/exponea/sdk/receiver/AppUpdateReceiver : android/content/BroadcastReceiver {
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+
+public abstract interface class com/exponea/sdk/repository/FontCache {
+	public abstract fun clear ()V
+	public abstract fun getFontFile (Ljava/lang/String;)Ljava/io/File;
+	public abstract fun getTypeface (Ljava/lang/String;)Landroid/graphics/Typeface;
+	public abstract fun has (Ljava/lang/String;)Z
+	public abstract fun preload (Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract class com/exponea/sdk/repository/SimpleDataCache {
+	public fun <init> (Landroid/content/Context;Lcom/google/gson/Gson;Ljava/lang/String;)V
+	public final fun clearData ()Z
+	public final fun getData ()Ljava/lang/Object;
+	public final fun getDataLastModifiedMillis ()J
+	public final fun setData (Ljava/lang/Object;)V
+}
+
+public abstract interface class com/exponea/sdk/services/AppInboxProvider {
+	public abstract fun getAppInboxButton (Landroid/content/Context;)Landroid/widget/Button;
+	public abstract fun getAppInboxDetailFragment (Landroid/content/Context;Ljava/lang/String;)Landroidx/fragment/app/Fragment;
+	public abstract fun getAppInboxDetailView (Landroid/content/Context;Ljava/lang/String;)Landroid/view/View;
+	public abstract fun getAppInboxListFragment (Landroid/content/Context;)Landroidx/fragment/app/Fragment;
+	public abstract fun getAppInboxListView (Landroid/content/Context;Lkotlin/jvm/functions/Function2;)Landroid/view/View;
+}
+
+public abstract interface class com/exponea/sdk/services/AuthorizationProvider {
+	public abstract fun getAuthorizationToken ()Ljava/lang/String;
+}
+
+public class com/exponea/sdk/services/DefaultAppInboxProvider : com/exponea/sdk/services/AppInboxProvider {
+	public fun <init> ()V
+	public fun getAppInboxButton (Landroid/content/Context;)Landroid/widget/Button;
+	public fun getAppInboxDetailFragment (Landroid/content/Context;Ljava/lang/String;)Landroidx/fragment/app/Fragment;
+	public fun getAppInboxDetailView (Landroid/content/Context;Ljava/lang/String;)Landroid/view/View;
+	public fun getAppInboxListFragment (Landroid/content/Context;)Landroidx/fragment/app/Fragment;
+	public fun getAppInboxListView (Landroid/content/Context;Lkotlin/jvm/functions/Function2;)Landroid/view/View;
+}
+
+public final class com/exponea/sdk/services/ExponeaDeintegrateManager {
+	public fun <init> ()V
+	public final fun getOnIntegrationStoppedCallbacks ()Ljava/util/concurrent/ConcurrentLinkedQueue;
+	public final fun notifyDeintegration ()V
+	public final fun registerForIntegrationStopped (Lcom/exponea/sdk/services/OnIntegrationStoppedCallback;)V
+	public final fun unregisterForIntegrationStopped (Lcom/exponea/sdk/services/OnIntegrationStoppedCallback;)V
+}
+
+public abstract interface class com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public abstract fun onIntegrationStopped ()V
+}
+
+public class com/exponea/sdk/services/inappcontentblock/DefaultInAppContentCallback : com/exponea/sdk/models/InAppContentBlockCallback {
+	public fun <init> (Landroid/content/Context;)V
+	public fun onActionClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Lcom/exponea/sdk/models/InAppContentBlockAction;)V
+	public fun onCloseClicked (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public fun onError (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public fun onMessageShown (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public fun onNoMessageFound (Ljava/lang/String;)V
+}
+
+public abstract interface class com/exponea/sdk/services/inappcontentblock/InAppContentBlockActionDispatcher {
+	public abstract fun onAction (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Lcom/exponea/sdk/models/InAppContentBlockAction;)V
+	public abstract fun onClose (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public abstract fun onError (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;Ljava/lang/String;)V
+	public abstract fun onNoContent (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+	public abstract fun onShown (Ljava/lang/String;Lcom/exponea/sdk/models/InAppContentBlock;)V
+}
+
+public abstract interface class com/exponea/sdk/services/inappcontentblock/InAppContentBlockDataLoader {
+	public abstract fun loadContent (Ljava/lang/String;)Lcom/exponea/sdk/models/InAppContentBlock;
+}
+
+public final class com/exponea/sdk/style/appinbox/StyledAppInboxProvider : com/exponea/sdk/services/DefaultAppInboxProvider {
+	public fun <init> (Lcom/exponea/style/AppInboxStyle;)V
+	public fun getAppInboxButton (Landroid/content/Context;)Landroid/widget/Button;
+	public fun getAppInboxDetailView (Landroid/content/Context;Ljava/lang/String;)Landroid/view/View;
+	public fun getAppInboxListView (Landroid/content/Context;Lkotlin/jvm/functions/Function2;)Landroid/view/View;
+}
+
+public final class com/exponea/sdk/telemetry/TelemetryUtility {
+	public static final field INSTANCE Lcom/exponea/sdk/telemetry/TelemetryUtility;
+}
+
+public final class com/exponea/sdk/telemetry/model/TelemetryEvent : java/lang/Enum {
+	public static final field ANONYMIZE Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field APP_INBOX_INIT_FETCH Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field APP_INBOX_MESSAGE_SHOWN Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field APP_INBOX_SYNC_FETCH Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field CONSENTS_FETCHED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field CONTENT_BLOCK_INIT_FETCH Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field CONTENT_BLOCK_PERSONALISED_FETCH Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field CONTENT_BLOCK_RENDERED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field CONTENT_BLOCK_SHOWN Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field EVENT_COUNT Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field IDENTIFY_CUSTOMER Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field INTEGRATION_STOPPED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field IN_APP_MESSAGE_FETCH Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field IN_APP_MESSAGE_SHOWN Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field LOCAL_CUSTOMER_DATA_CLEARED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field PUSH_NOTIFICATION_DELIVERED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field PUSH_NOTIFICATION_SHOWN Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field RECOMMENDATIONS_FETCHED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field RTS_CALLBACK_REGISTERED Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field RTS_GET_SEGMENTS Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field SDK_CONFIGURE Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static final field SELF_CHECK Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+	public static fun values ()[Lcom/exponea/sdk/telemetry/model/TelemetryEvent;
+}
+
+public final class com/exponea/sdk/util/ExponeaGson {
+	public static final field Companion Lcom/exponea/sdk/util/ExponeaGson$Companion;
+	public fun <init> ()V
+}
+
+public final class com/exponea/sdk/util/ExponeaGson$Companion {
+	public final fun getBuilder ()Lcom/google/gson/GsonBuilder;
+	public final fun getInstance ()Lcom/google/gson/Gson;
+}
+
+public final class com/exponea/sdk/util/ExtensionsKt {
+	public static final fun getAsOptionalString (Lcom/google/gson/JsonElement;)Ljava/lang/String;
+	public static final fun getFlutterSDKVersion (Landroid/content/Context;)Ljava/lang/String;
+	public static final fun getMauiSDKVersion (Landroid/content/Context;)Ljava/lang/String;
+	public static final fun getReactNativeSDKVersion (Landroid/content/Context;)Ljava/lang/String;
+	public static final fun getXamarinSDKVersion (Landroid/content/Context;)Ljava/lang/String;
+	public static final fun isCalledFromExampleApp (Landroid/content/Context;)Z
+	public static final fun isFlutterSDK (Landroid/content/Context;)Z
+	public static final fun isMauiSDK (Landroid/content/Context;)Z
+	public static final fun isReactNativeSDK (Landroid/content/Context;)Z
+	public static final fun isResumedActivity (Landroid/content/Context;)Z
+	public static final fun isViewUrlIntent (Landroid/content/Intent;Ljava/lang/String;)Z
+	public static final fun isXamarinSDK (Landroid/content/Context;)Z
+	public static final fun logOnException (Ljava/lang/Object;)V
+	public static final fun logOnExceptionWithResult (Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun returnOnException (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public static final fun setBackgroundColor (Landroid/view/View;II)V
+}
+
+public final class com/exponea/sdk/util/GdprTracking {
+	public static final field INSTANCE Lcom/exponea/sdk/util/GdprTracking;
+	public final fun hasTrackingConsent (Ljava/lang/Object;)Z
+	public final fun isTrackForced (Ljava/lang/String;)Z
+}
+
+public final class com/exponea/sdk/util/HtmlNormalizer {
+	public static final field Companion Lcom/exponea/sdk/util/HtmlNormalizer$Companion;
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun collectFonts ()Ljava/util/Collection;
+	public final fun collectImages ()Ljava/util/Collection;
+	public final fun normalize (Lcom/exponea/sdk/util/HtmlNormalizer$HtmlNormalizerConfig;)Lcom/exponea/sdk/util/HtmlNormalizer$NormalizedResult;
+	public static synthetic fun normalize$default (Lcom/exponea/sdk/util/HtmlNormalizer;Lcom/exponea/sdk/util/HtmlNormalizer$HtmlNormalizerConfig;ILjava/lang/Object;)Lcom/exponea/sdk/util/HtmlNormalizer$NormalizedResult;
+}
+
+public final class com/exponea/sdk/util/HtmlNormalizer$ActionInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/exponea/sdk/models/HtmlActionType;)V
+	public final fun getActionType ()Lcom/exponea/sdk/models/HtmlActionType;
+	public final fun getActionUrl ()Ljava/lang/String;
+	public final fun getButtonText ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/util/HtmlNormalizer$Companion {
+}
+
+public class com/exponea/sdk/util/HtmlNormalizer$HtmlNormalizerConfig {
+	public fun <init> (ZZ)V
+	public final fun getEnsureCloseButton ()Z
+	public final fun getMakeResourcesOffline ()Z
+}
+
+public final class com/exponea/sdk/util/HtmlNormalizer$NormalizedResult {
+	public fun <init> ()V
+	public final fun findActionInfoByUrl (Ljava/lang/String;)Lcom/exponea/sdk/util/HtmlNormalizer$ActionInfo;
+	public final fun getActions ()Ljava/util/List;
+	public final fun getHtml ()Ljava/lang/String;
+	public final fun getValid ()Z
+	public final fun isActionUrl (Ljava/lang/String;)Z
+	public final fun isCloseAction (Ljava/lang/String;)Z
+	public final fun setActions (Ljava/util/List;)V
+	public final fun setHtml (Ljava/lang/String;)V
+	public final fun setValid (Z)V
+}
+
+public abstract interface annotation class com/exponea/sdk/util/InternalLoggerApi : java/lang/annotation/Annotation {
+}
+
+public final class com/exponea/sdk/util/Logger {
+	public static final field INSTANCE Lcom/exponea/sdk/util/Logger;
+	public final fun d (Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun e (Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun e (Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun getLevel ()Lcom/exponea/sdk/util/Logger$Level;
+	public final fun i (Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun setLevel (Lcom/exponea/sdk/util/Logger$Level;)V
+	public final fun v (Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun w (Ljava/lang/Object;Ljava/lang/String;)V
+}
+
+public final class com/exponea/sdk/util/Logger$Level : java/lang/Enum {
+	public static final field DEBUG Lcom/exponea/sdk/util/Logger$Level;
+	public static final field ERROR Lcom/exponea/sdk/util/Logger$Level;
+	public static final field INFO Lcom/exponea/sdk/util/Logger$Level;
+	public static final field OFF Lcom/exponea/sdk/util/Logger$Level;
+	public static final field VERBOSE Lcom/exponea/sdk/util/Logger$Level;
+	public static final field WARN Lcom/exponea/sdk/util/Logger$Level;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public final fun setValue (I)V
+	public static fun valueOf (Ljava/lang/String;)Lcom/exponea/sdk/util/Logger$Level;
+	public static fun values ()[Lcom/exponea/sdk/util/Logger$Level;
+}
+
+public final class com/exponea/sdk/util/MessageItemViewHolder : androidx/recyclerview/widget/RecyclerView$ViewHolder {
+	public fun <init> (Lcom/exponea/sdk/databinding/MessageInboxListItemBinding;)V
+	public final fun getContent ()Landroid/widget/TextView;
+	public final fun getImage ()Landroidx/appcompat/widget/AppCompatImageView;
+	public final fun getItemContainer ()Landroid/widget/RelativeLayout;
+	public final fun getReadFlag ()Landroid/widget/ImageView;
+	public final fun getReceivedTime ()Landroid/widget/TextView;
+	public final fun getTitle ()Landroid/widget/TextView;
+}
+
+public abstract interface class com/exponea/sdk/util/OnForegroundStateListener {
+	public abstract fun onStateChanged (Z)V
+}
+
+public final class com/exponea/sdk/util/URLUtils {
+	public static final field Companion Lcom/exponea/sdk/util/URLUtils$Companion;
+	public fun <init> ()V
+}
+
+public final class com/exponea/sdk/util/URLUtils$Companion {
+	public final fun areEqualAsURLs (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class com/exponea/sdk/view/AppInboxDetailFragment : androidx/fragment/app/Fragment {
+	public static final field Companion Lcom/exponea/sdk/view/AppInboxDetailFragment$Companion;
+	public fun <init> ()V
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+}
+
+public final class com/exponea/sdk/view/AppInboxDetailFragment$Companion {
+	public final fun buildInstance (Ljava/lang/String;)Lcom/exponea/sdk/view/AppInboxDetailFragment;
+	public final fun getMESSAGE_ID ()Ljava/lang/String;
+}
+
+public final class com/exponea/sdk/view/AppInboxDetailView : android/widget/RelativeLayout {
+	public field actionsContainerView Landroid/widget/LinearLayout;
+	public field contentView Landroid/widget/TextView;
+	public field htmlContainer Landroid/widget/RelativeLayout;
+	public field imageView Landroid/widget/ImageView;
+	public field pushContainer Landroid/widget/RelativeLayout;
+	public field receivedTimeView Landroid/widget/TextView;
+	public field titleView Landroid/widget/TextView;
+	public field webView Lcom/exponea/sdk/view/ExponeaWebView;
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getActionsContainerView ()Landroid/widget/LinearLayout;
+	public final fun getContentView ()Landroid/widget/TextView;
+	public final fun getHtmlContainer ()Landroid/widget/RelativeLayout;
+	public final fun getImageView ()Landroid/widget/ImageView;
+	public final fun getPushContainer ()Landroid/widget/RelativeLayout;
+	public final fun getReceivedTimeView ()Landroid/widget/TextView;
+	public final fun getTitleView ()Landroid/widget/TextView;
+	public final fun getWebView ()Lcom/exponea/sdk/view/ExponeaWebView;
+	public final fun setActionsContainerView (Landroid/widget/LinearLayout;)V
+	public final fun setContentView (Landroid/widget/TextView;)V
+	public final fun setHtmlContainer (Landroid/widget/RelativeLayout;)V
+	public final fun setImageView (Landroid/widget/ImageView;)V
+	public final fun setPushContainer (Landroid/widget/RelativeLayout;)V
+	public final fun setReceivedTimeView (Landroid/widget/TextView;)V
+	public final fun setTitleView (Landroid/widget/TextView;)V
+	public final fun setWebView (Lcom/exponea/sdk/view/ExponeaWebView;)V
+}
+
+public final class com/exponea/sdk/view/AppInboxListActivity : androidx/appcompat/app/AppCompatActivity, com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public fun <init> ()V
+	public fun onIntegrationStopped ()V
+	public fun onOptionsItemSelected (Landroid/view/MenuItem;)Z
+}
+
+public final class com/exponea/sdk/view/AppInboxListFragment : androidx/fragment/app/Fragment {
+	public fun <init> ()V
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+}
+
+public final class com/exponea/sdk/view/AppInboxListView : androidx/constraintlayout/widget/ConstraintLayout {
+	public field listView Landroidx/recyclerview/widget/RecyclerView;
+	public field statusContainterView Landroid/widget/LinearLayout;
+	public field statusEmptyMessageView Landroid/widget/TextView;
+	public field statusEmptyTitleView Landroid/widget/TextView;
+	public field statusErrorMessageView Landroid/widget/TextView;
+	public field statusErrorTitleView Landroid/widget/TextView;
+	public field statusProgressView Landroid/widget/ProgressBar;
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getListView ()Landroidx/recyclerview/widget/RecyclerView;
+	public final fun getStatusContainterView ()Landroid/widget/LinearLayout;
+	public final fun getStatusEmptyMessageView ()Landroid/widget/TextView;
+	public final fun getStatusEmptyTitleView ()Landroid/widget/TextView;
+	public final fun getStatusErrorMessageView ()Landroid/widget/TextView;
+	public final fun getStatusErrorTitleView ()Landroid/widget/TextView;
+	public final fun getStatusProgressView ()Landroid/widget/ProgressBar;
+	public final fun setListView (Landroidx/recyclerview/widget/RecyclerView;)V
+	public final fun setStatusContainterView (Landroid/widget/LinearLayout;)V
+	public final fun setStatusEmptyMessageView (Landroid/widget/TextView;)V
+	public final fun setStatusEmptyTitleView (Landroid/widget/TextView;)V
+	public final fun setStatusErrorMessageView (Landroid/widget/TextView;)V
+	public final fun setStatusErrorTitleView (Landroid/widget/TextView;)V
+	public final fun setStatusProgressView (Landroid/widget/ProgressBar;)V
+}
+
+public final class com/exponea/sdk/view/ContentBlockCarouselView : android/widget/RelativeLayout, com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;II)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;II)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;IILandroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBehaviourCallback ()Lcom/exponea/sdk/models/ContentBlockCarouselCallback;
+	public final fun getContentBlockSelector ()Lcom/exponea/sdk/models/ContentBlockSelector;
+	public final fun getShownContentBlock ()Lcom/exponea/sdk/models/InAppContentBlock;
+	public final fun getShownCount ()I
+	public final fun getShownIndex ()I
+	public fun onIntegrationStopped ()V
+	public final fun reload ()V
+	public final fun setBehaviourCallback (Lcom/exponea/sdk/models/ContentBlockCarouselCallback;)V
+	public final fun setContentBlockSelector (Lcom/exponea/sdk/models/ContentBlockSelector;)V
+}
+
+public final class com/exponea/sdk/view/ExponeaWebView : android/webkit/WebView {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public final fun clearContent ()V
+	public final fun loadData (Ljava/lang/String;)V
+	public final fun setOnPageLoadedCallback (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnUrlCallback (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/exponea/sdk/view/InAppContentBlockPlaceholderView : android/widget/RelativeLayout, com/exponea/sdk/services/OnIntegrationStoppedCallback {
+	public final fun getBehaviourCallback ()Lcom/exponea/sdk/models/InAppContentBlockCallback;
+	public final fun invokeActionClick (Ljava/lang/String;)V
+	public final fun load ()V
+	public fun onIntegrationStopped ()V
+	public final fun refreshContent ()V
+	public final fun reload ()V
+	public final fun setBehaviourCallback (Lcom/exponea/sdk/models/InAppContentBlockCallback;)V
+	public final fun setOnContentReadyListener (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnHeightUpdateListener (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/exponea/sdk/view/NotificationsPermissionActivity : android/app/Activity {
+	public fun <init> ()V
+	public fun onRequestPermissionsResult (I[Ljava/lang/String;[I)V
+}
+
+public final class com/exponea/style/AppInboxListItemStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Lcom/exponea/sdk/util/MessageItemViewHolder;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/exponea/style/ImageViewStyle;
+	public final fun component3 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component4 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component5 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component6 ()Lcom/exponea/style/ImageViewStyle;
+	public final fun copy (Ljava/lang/String;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;)Lcom/exponea/style/AppInboxListItemStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/AppInboxListItemStyle;Ljava/lang/String;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;ILjava/lang/Object;)Lcom/exponea/style/AppInboxListItemStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getContent ()Lcom/exponea/style/TextViewStyle;
+	public final fun getImage ()Lcom/exponea/style/ImageViewStyle;
+	public final fun getReadFlag ()Lcom/exponea/style/ImageViewStyle;
+	public final fun getReceivedTime ()Lcom/exponea/style/TextViewStyle;
+	public final fun getTitle ()Lcom/exponea/style/TextViewStyle;
+	public fun hashCode ()I
+	public final fun setBackgroundColor (Ljava/lang/String;)V
+	public final fun setContent (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setImage (Lcom/exponea/style/ImageViewStyle;)V
+	public final fun setReadFlag (Lcom/exponea/style/ImageViewStyle;)V
+	public final fun setReceivedTime (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setTitle (Lcom/exponea/style/TextViewStyle;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/AppInboxListViewStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lcom/exponea/style/AppInboxListItemStyle;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/exponea/style/AppInboxListItemStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Landroidx/recyclerview/widget/RecyclerView;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/exponea/style/AppInboxListItemStyle;
+	public final fun copy (Ljava/lang/String;Lcom/exponea/style/AppInboxListItemStyle;)Lcom/exponea/style/AppInboxListViewStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/AppInboxListViewStyle;Ljava/lang/String;Lcom/exponea/style/AppInboxListItemStyle;ILjava/lang/Object;)Lcom/exponea/style/AppInboxListViewStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getItem ()Lcom/exponea/style/AppInboxListItemStyle;
+	public fun hashCode ()I
+	public final fun setBackgroundColor (Ljava/lang/String;)V
+	public final fun setItem (Lcom/exponea/style/AppInboxListItemStyle;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/AppInboxStyle {
+	public fun <init> ()V
+	public fun <init> (Lcom/exponea/style/ButtonStyle;Lcom/exponea/style/DetailViewStyle;Lcom/exponea/style/ListScreenStyle;)V
+	public synthetic fun <init> (Lcom/exponea/style/ButtonStyle;Lcom/exponea/style/DetailViewStyle;Lcom/exponea/style/ListScreenStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/exponea/style/ButtonStyle;
+	public final fun component2 ()Lcom/exponea/style/DetailViewStyle;
+	public final fun component3 ()Lcom/exponea/style/ListScreenStyle;
+	public final fun copy (Lcom/exponea/style/ButtonStyle;Lcom/exponea/style/DetailViewStyle;Lcom/exponea/style/ListScreenStyle;)Lcom/exponea/style/AppInboxStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/AppInboxStyle;Lcom/exponea/style/ButtonStyle;Lcom/exponea/style/DetailViewStyle;Lcom/exponea/style/ListScreenStyle;ILjava/lang/Object;)Lcom/exponea/style/AppInboxStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppInboxButton ()Lcom/exponea/style/ButtonStyle;
+	public final fun getDetailView ()Lcom/exponea/style/DetailViewStyle;
+	public final fun getListView ()Lcom/exponea/style/ListScreenStyle;
+	public fun hashCode ()I
+	public final fun setAppInboxButton (Lcom/exponea/style/ButtonStyle;)V
+	public final fun setDetailView (Lcom/exponea/style/DetailViewStyle;)V
+	public final fun setListView (Lcom/exponea/style/ListScreenStyle;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/AppInboxStyleParser {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun parse ()Lcom/exponea/style/AppInboxStyle;
+}
+
+public final class com/exponea/style/ButtonStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Landroid/widget/Button;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Boolean;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Boolean;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/style/ButtonStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/ButtonStyle;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/style/ButtonStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getBorderRadius ()Ljava/lang/String;
+	public final fun getEnabled ()Ljava/lang/Boolean;
+	public final fun getShowIcon ()Ljava/lang/Boolean;
+	public final fun getTextColor ()Ljava/lang/String;
+	public final fun getTextOverride ()Ljava/lang/String;
+	public final fun getTextSize ()Ljava/lang/String;
+	public final fun getTextWeight ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun merge (Lcom/exponea/style/ButtonStyle;)Lcom/exponea/style/ButtonStyle;
+	public final fun setBackgroundColor (Ljava/lang/String;)V
+	public final fun setBorderRadius (Ljava/lang/String;)V
+	public final fun setEnabled (Ljava/lang/Boolean;)V
+	public final fun setShowIcon (Ljava/lang/Boolean;)V
+	public final fun setTextColor (Ljava/lang/String;)V
+	public final fun setTextOverride (Ljava/lang/String;)V
+	public final fun setTextSize (Ljava/lang/String;)V
+	public final fun setTextWeight (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/DetailViewStyle {
+	public fun <init> ()V
+	public fun <init> (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/ButtonStyle;)V
+	public synthetic fun <init> (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/ButtonStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Lcom/exponea/sdk/view/AppInboxDetailView;)V
+	public final fun component1 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component2 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component3 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component4 ()Lcom/exponea/style/ImageViewStyle;
+	public final fun component5 ()Lcom/exponea/style/ButtonStyle;
+	public final fun copy (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/ButtonStyle;)Lcom/exponea/style/DetailViewStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/DetailViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ImageViewStyle;Lcom/exponea/style/ButtonStyle;ILjava/lang/Object;)Lcom/exponea/style/DetailViewStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getButton ()Lcom/exponea/style/ButtonStyle;
+	public final fun getContent ()Lcom/exponea/style/TextViewStyle;
+	public final fun getImage ()Lcom/exponea/style/ImageViewStyle;
+	public final fun getReceivedTime ()Lcom/exponea/style/TextViewStyle;
+	public final fun getTitle ()Lcom/exponea/style/TextViewStyle;
+	public fun hashCode ()I
+	public final fun setButton (Lcom/exponea/style/ButtonStyle;)V
+	public final fun setContent (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setImage (Lcom/exponea/style/ImageViewStyle;)V
+	public final fun setReceivedTime (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setTitle (Lcom/exponea/style/TextViewStyle;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/ImageViewStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Boolean;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Landroid/widget/ImageView;)V
+	public final fun component1 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Boolean;Ljava/lang/String;)Lcom/exponea/style/ImageViewStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/ImageViewStyle;Ljava/lang/Boolean;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/style/ImageViewStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getVisible ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public final fun setBackgroundColor (Ljava/lang/String;)V
+	public final fun setVisible (Ljava/lang/Boolean;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/ListScreenStyle {
+	public fun <init> ()V
+	public fun <init> (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ProgressBarStyle;Lcom/exponea/style/AppInboxListViewStyle;)V
+	public synthetic fun <init> (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ProgressBarStyle;Lcom/exponea/style/AppInboxListViewStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Lcom/exponea/sdk/view/AppInboxListView;)V
+	public final fun component1 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component2 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component3 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component4 ()Lcom/exponea/style/TextViewStyle;
+	public final fun component5 ()Lcom/exponea/style/ProgressBarStyle;
+	public final fun component6 ()Lcom/exponea/style/AppInboxListViewStyle;
+	public final fun copy (Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ProgressBarStyle;Lcom/exponea/style/AppInboxListViewStyle;)Lcom/exponea/style/ListScreenStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/ListScreenStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/TextViewStyle;Lcom/exponea/style/ProgressBarStyle;Lcom/exponea/style/AppInboxListViewStyle;ILjava/lang/Object;)Lcom/exponea/style/ListScreenStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmptyMessage ()Lcom/exponea/style/TextViewStyle;
+	public final fun getEmptyTitle ()Lcom/exponea/style/TextViewStyle;
+	public final fun getErrorMessage ()Lcom/exponea/style/TextViewStyle;
+	public final fun getErrorTitle ()Lcom/exponea/style/TextViewStyle;
+	public final fun getList ()Lcom/exponea/style/AppInboxListViewStyle;
+	public final fun getProgress ()Lcom/exponea/style/ProgressBarStyle;
+	public fun hashCode ()I
+	public final fun setEmptyMessage (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setEmptyTitle (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setErrorMessage (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setErrorTitle (Lcom/exponea/style/TextViewStyle;)V
+	public final fun setList (Lcom/exponea/style/AppInboxListViewStyle;)V
+	public final fun setProgress (Lcom/exponea/style/ProgressBarStyle;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/ProgressBarStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Landroid/widget/ProgressBar;)V
+	public final fun component1 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/style/ProgressBarStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/ProgressBarStyle;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/style/ProgressBarStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/lang/String;
+	public final fun getProgressColor ()Ljava/lang/String;
+	public final fun getVisible ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public final fun setBackgroundColor (Ljava/lang/String;)V
+	public final fun setProgressColor (Ljava/lang/String;)V
+	public final fun setVisible (Ljava/lang/Boolean;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/exponea/style/TextViewStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun applyTo (Landroid/widget/TextView;)V
+	public final fun component1 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/exponea/style/TextViewStyle;
+	public static synthetic fun copy$default (Lcom/exponea/style/TextViewStyle;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/exponea/style/TextViewStyle;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTextColor ()Ljava/lang/String;
+	public final fun getTextOverride ()Ljava/lang/String;
+	public final fun getTextSize ()Ljava/lang/String;
+	public final fun getTextWeight ()Ljava/lang/String;
+	public final fun getVisible ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public final fun setTextColor (Ljava/lang/String;)V
+	public final fun setTextOverride (Ljava/lang/String;)V
+	public final fun setTextSize (Ljava/lang/String;)V
+	public final fun setTextWeight (Ljava/lang/String;)V
+	public final fun setVisible (Ljava/lang/Boolean;)V
+	public fun toString ()Ljava/lang/String;
+}
+

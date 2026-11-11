@@ -69,14 +69,8 @@ internal class NetworkHandlerImpl(
         }
     }
 
-    private fun getHttpLoggingInterceptor() = HttpLoggingInterceptor().apply {
-        level = when (exponeaConfiguration.httpLoggingLevel) {
-            ExponeaConfiguration.HttpLoggingLevel.NONE -> HttpLoggingInterceptor.Level.NONE
-            ExponeaConfiguration.HttpLoggingLevel.BASIC -> HttpLoggingInterceptor.Level.BASIC
-            ExponeaConfiguration.HttpLoggingLevel.HEADERS -> HttpLoggingInterceptor.Level.HEADERS
-            ExponeaConfiguration.HttpLoggingLevel.BODY -> HttpLoggingInterceptor.Level.BODY
-        }
-    }
+    private fun getHttpLoggingInterceptor() =
+        createHttpLoggingInterceptor(exponeaConfiguration.httpLoggingLevel)
 
     private fun requestBuilder(
         url: String,
@@ -108,4 +102,24 @@ internal class NetworkHandlerImpl(
             .get()
             .build()
     )
+
+    companion object {
+        /**
+         * The auth interceptor runs before this one, so every logged request carries the
+         * Authorization header: the project token, or the customer's JWT with stream
+         * authentication. It is redacted, as the iOS SDK does in its request logging.
+         */
+        internal fun createHttpLoggingInterceptor(
+            level: ExponeaConfiguration.HttpLoggingLevel,
+            logger: HttpLoggingInterceptor.Logger = HttpLoggingInterceptor.Logger.DEFAULT
+        ) = HttpLoggingInterceptor(logger).apply {
+            this.level = when (level) {
+                ExponeaConfiguration.HttpLoggingLevel.NONE -> HttpLoggingInterceptor.Level.NONE
+                ExponeaConfiguration.HttpLoggingLevel.BASIC -> HttpLoggingInterceptor.Level.BASIC
+                ExponeaConfiguration.HttpLoggingLevel.HEADERS -> HttpLoggingInterceptor.Level.HEADERS
+                ExponeaConfiguration.HttpLoggingLevel.BODY -> HttpLoggingInterceptor.Level.BODY
+            }
+            redactHeader("Authorization")
+        }
+    }
 }

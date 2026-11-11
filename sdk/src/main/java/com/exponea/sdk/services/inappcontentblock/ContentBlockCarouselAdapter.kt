@@ -20,7 +20,7 @@ internal class ContentBlockCarouselAdapter(
 ) : RecyclerView.Adapter<ContentBlockCarouselViewHolder>() {
 
     /**
-     * Contains IDs of content blocks in same order as they are loaded by `updateData` method.
+     * Contains IDs (with rendered content) of content blocks in same order as they are loaded by `updateData` method.
      * Order of these IDs are kept also after `removeItem` method.
      * !!! According to Infinite-loop behaviour and as these IDs are representing "visible" items,
      * this List of IDs is 'prefixed' with last ID and 'suffixed' with first ID:
@@ -28,31 +28,38 @@ internal class ContentBlockCarouselAdapter(
      * Then IDs are = <C, A, B, C, A>
      * For Infinite-loop behaviour see ContentBlockCarouselViewController::onPageScrollStateChanged
      */
-    private val shownContentBlockIds = mutableListOf<String>()
+    private val shownContentBlockIds = mutableListOf<ContentBlockItemKey>()
 
     /**
      * Contains pure content blocks list as they are loaded by `updateData` method.
      */
     private val contentBlocksData = mutableListOf<InAppContentBlock>()
     private val contentBlocksById = mutableMapOf<String, InAppContentBlock>()
-    fun updateData(newData: List<InAppContentBlock>) {
-        val newDataIds = newData.map { it.id }
-        val enhancedNewDataIds = multiplyFirstAndLastItems(newDataIds)
-        val contentBlockDiffCallback = ContentBlockDiffCallback(shownContentBlockIds, enhancedNewDataIds)
+    /**
+     * Data and RecyclerView notification has to be updated together on main thread,
+     * otherwise RecyclerView may detect inconsistency between item count and its state.
+     */
+    fun updateData(
+        newData: List<InAppContentBlock>,
+        newDataKeys: List<ContentBlockItemKey> = newData.map { ContentBlockItemKey.of(it) }
+    ) = ensureOnMainThread {
+        val enhancedNewDataKeys = multiplyFirstAndLastItems(newDataKeys)
+        val contentBlockDiffCallback = ContentBlockDiffCallback(shownContentBlockIds, enhancedNewDataKeys)
         val diffResult = DiffUtil.calculateDiff(contentBlockDiffCallback, false)
         shownContentBlockIds.clear()
-        shownContentBlockIds.addAll(enhancedNewDataIds)
+        shownContentBlockIds.addAll(enhancedNewDataKeys)
         contentBlocksData.clear()
         contentBlocksData.addAll(newData)
         contentBlocksById.clear()
         contentBlocksData.forEach { contentBlocksById[it.id] = it }
-        ensureOnMainThread {
-            diffResult.dispatchUpdatesTo(this)
-        }
+        diffResult.dispatchUpdatesTo(this)
     }
 
-    fun removeItem(contentBlock: InAppContentBlock) {
-        updateData(contentBlocksData.filter { it.id != contentBlock.id })
+    fun removeItem(contentBlock: InAppContentBlock) = ensureOnMainThread {
+        val keysById = shownContentBlockIds.associateBy { it.id }
+        val remainingData = contentBlocksData.filter { it.id != contentBlock.id }
+        // reuse already computed keys, content of remaining items has not changed
+        updateData(remainingData, remainingData.map { keysById[it.id] ?: ContentBlockItemKey.of(it) })
     }
 
     fun getLoadedData(): List<InAppContentBlock> {
@@ -63,7 +70,7 @@ internal class ContentBlockCarouselAdapter(
      * Due to Infinity-loop behaviour, we need to 'prefix' list with last ID and 'suffix' with first ID.
      * When list is empty or has only single item -> Infinity-loop behaviour is turned off by unmodified result.
      */
-    private fun multiplyFirstAndLastItems(newData: List<String>): List<String> {
+    private fun multiplyFirstAndLastItems(newData: List<ContentBlockItemKey>): List<ContentBlockItemKey> {
         return if (newData.size <= 1) {
             newData
         } else {
@@ -80,7 +87,7 @@ internal class ContentBlockCarouselAdapter(
     }
 
     override fun onBindViewHolder(holder: ContentBlockCarouselViewHolder, position: Int) {
-        val contentBlockId = shownContentBlockIds[position]
+        val contentBlockId = shownContentBlockIds[position].id
         val contentBlock = contentBlocksById[contentBlockId]
         holder.updateContent(contentBlock)
     }
@@ -98,6 +105,12 @@ internal class ContentBlockCarouselAdapter(
         // Clear rendered state before holder reuse to avoid stale content flashes after rebind.
         view?.resetContent()
         super.onViewDetachedFromWindow(holder)
+    }
+
+    override fun onViewRecycled(holder: ContentBlockCarouselViewHolder) {
+        // Recycled holder must not keep previous assignment, it could be rendered for another position.
+        holder.clearContent()
+        super.onViewRecycled(holder)
     }
 
     override fun getItemCount(): Int = shownContentBlockIds.size
@@ -157,8 +170,10 @@ internal class ContentBlockCarouselViewHolder(
     }
 
     fun updateContent(contentBlock: InAppContentBlock?) {
-        if (contentBlockLoader.assignedContentBlock?.id == contentBlock?.id) {
-            // View holder shows same InAppContentBlock, do nothing
+        val currentContentBlock = contentBlockLoader.assignedContentBlock
+        if (currentContentBlock?.id == contentBlock?.id &&
+            currentContentBlock?.htmlContent == contentBlock?.htmlContent) {
+            // View holder shows same InAppContentBlock with same content, do nothing
             return
         }
         contentBlockLoader.assignedContentBlock = contentBlock
@@ -179,20 +194,58 @@ internal class ContentBlockCarouselViewHolder(
         }
     }
 
+    fun clearContent() {
+        contentBlockLoader.assignedContentBlock = null
+        getContentBlockPlaceholderView()?.let {
+            // invalidates render of previous block that may be still posted to main thread
+            it.controller.cleanUp()
+            it.resetContent()
+        }
+    }
+
     fun getContentBlockPlaceholderView(): InAppContentBlockPlaceholderView? {
         return (itemView as LinearLayout).getChildAt(0) as? InAppContentBlockPlaceholderView
     }
 }
 
+/**
+ * Identifies rendered carousel item. Personalized content of same content block may change by reload,
+ * so fingerprint of `htmlContent` is part of the key to rebind such item.
+ * Fingerprint (length + hash) is used instead of HTML itself to keep DiffUtil comparison cheap on main thread;
+ * prefer to create keys on background thread as hash computation is linear to HTML size.
+ */
+internal data class ContentBlockItemKey(
+    val id: String,
+    val htmlLength: Int,
+    val htmlHash: Int
+) {
+    companion object {
+        fun of(contentBlock: InAppContentBlock): ContentBlockItemKey {
+            val html = contentBlock.htmlContent
+            return ContentBlockItemKey(contentBlock.id, html?.length ?: -1, html?.hashCode() ?: 0)
+        }
+    }
+}
+
 internal class ContentBlockDiffCallback(
-    private val oldData: List<String>,
-    private val newData: List<String>
+    private val oldData: List<ContentBlockItemKey>,
+    private val newData: List<ContentBlockItemKey>
 ) :
     DiffUtil.Callback() {
     override fun getOldListSize() = oldData.size
     override fun getNewListSize() = newData.size
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-        oldData[oldItemPosition] == newData[newItemPosition]
+        oldData[oldItemPosition].id == newData[newItemPosition].id
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =
         oldData[oldItemPosition] == newData[newItemPosition]
+
+    /**
+     * Non-null payload lets item animator rebind the same view holder for content change,
+     * instead of creating another holder (with new WebView) for cross-fade animation.
+     */
+    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any = CONTENT_CHANGED_PAYLOAD
+
+    companion object {
+        const val CONTENT_CHANGED_PAYLOAD = "content_changed"
+    }
 }

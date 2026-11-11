@@ -402,8 +402,8 @@ internal fun InAppContentBlock.deepCopy(): InAppContentBlock {
     val sourceJson = ExponeaGson.instance.toJson(this)
     val target: InAppContentBlock = ExponeaGson.instance.fromJson(sourceJson)
     this.personalizedData?.let { sourcePersonData ->
-        // if source has data, target must too
-        target.personalizedData!!.loadedAt = Date(sourcePersonData.loadedAt!!.time)
+        // Date is mutable, copy it to not share instance; loadedAt may be missing
+        target.personalizedData?.loadedAt = sourcePersonData.loadedAt?.let { Date(it.time) }
     }
     return target
 }

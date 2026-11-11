@@ -55,6 +55,11 @@ internal open class InAppContentBlockViewController(
     private var activeRenderInstanceId: String? = null
     internal var assignedHtmlContent: NormalizedResult? = null
     internal var assignedMessage: InAppContentBlock? = null
+    /**
+     * Standalone placeholder picks next content block after action. Carousel decides what to show by itself,
+     * reloading here would race with carousel rebinding this view to another content block.
+     */
+    internal var reloadAfterAction: Boolean = true
 
     internal fun onUrlClick(url: String) {
         Logger.i(this, "InAppCB: Placeholder $placeholderId is clicked for action $url")
@@ -88,7 +93,9 @@ internal open class InAppContentBlockViewController(
                 behaviourCallback.onActionClicked(placeholderId, message, action)
             }.logOnException()
         }
-        reloadContent()
+        if (reloadAfterAction) {
+            reloadContent()
+        }
     }
 
     private fun reloadContent() {
@@ -125,7 +132,8 @@ internal open class InAppContentBlockViewController(
             Logger.e(this, "In-app content blocks UI is unavailable, SDK is stopping")
             return
         }
-        val renderInstanceId = "$controllerInstanceId-${renderInstanceSequence.incrementAndGet()}"
+        val renderSequence = renderInstanceSequence.incrementAndGet()
+        val renderInstanceId = "$controllerInstanceId-$renderSequence"
         runOnBackgroundThread {
             Logger.i(this, "Loading InApp Content Block for placeholder $placeholderId")
             val loadedMessage = dataLoader.loadContent(placeholderId)
@@ -146,10 +154,23 @@ internal open class InAppContentBlockViewController(
                 )
                 return@runOnBackgroundThread
             }
-            synchronized(stateLock) {
-                assignedMessage = loadedMessage
-                assignedHtmlContent = normalizedHtml
-                activeRenderInstanceId = renderInstanceId
+            val isLatestLoad = synchronized(stateLock) {
+                // Loads run concurrently; a slower, older load must not overwrite a newer assignment.
+                if (renderSequence != renderInstanceSequence.get()) {
+                    false
+                } else {
+                    assignedMessage = loadedMessage
+                    assignedHtmlContent = normalizedHtml
+                    activeRenderInstanceId = renderInstanceId
+                    true
+                }
+            }
+            if (!isLatestLoad) {
+                Logger.d(
+                    this,
+                    "InAppCB: Placeholder $placeholderId load $renderInstanceId is outdated, skipping"
+                )
+                return@runOnBackgroundThread
             }
             renderTrackingPending.set(true)
             contentLoaded.set(true)
@@ -266,12 +287,14 @@ internal open class InAppContentBlockViewController(
         }
         if (message == null) {
             Logger.i(this, "InAppCB: No message found for placeholder $placeholderId")
-            runOnMainThread {
-                view.showNoContent(renderInstanceId)
+            finishRenderIfActive(
+                renderInstanceId,
+                viewUpdate = { view.showNoContent(renderInstanceId) }
+            ) {
+                runCatching {
+                    behaviourCallback.onNoMessageFound(placeholderId)
+                }.logOnException()
             }
-            kotlin.runCatching {
-                behaviourCallback.onNoMessageFound(placeholderId)
-            }.logOnException()
             return
         }
         Logger.i(this, "InAppCB: Message ${message.id} going to be shown for placeholder $placeholderId")
@@ -296,22 +319,23 @@ internal open class InAppContentBlockViewController(
 
     private fun showNoContent(renderInstanceId: String?) {
         Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
-        runOnMainThread {
-            view.showNoContent(renderInstanceId)
-        }
-        val message = synchronized(stateLock) { assignedMessage }
-        actionDispatcher.onNoContent(placeholderId, message)
-        if (message == null) {
-            Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
-            runCatching {
-                behaviourCallback.onNoMessageFound(placeholderId)
-            }.logOnException()
-        } else {
-            // possibility of AB testing
-            Logger.i(this, "InAppCB: Message with empty content found for placeholder $placeholderId")
-            runCatching {
-                behaviourCallback.onMessageShown(placeholderId, message)
-            }.logOnException()
+        finishRenderIfActive(
+            renderInstanceId,
+            viewUpdate = { view.showNoContent(renderInstanceId) }
+        ) { message ->
+            actionDispatcher.onNoContent(placeholderId, message)
+            if (message == null) {
+                Logger.i(this, "InAppCB: No message content for placeholder $placeholderId")
+                runCatching {
+                    behaviourCallback.onNoMessageFound(placeholderId)
+                }.logOnException()
+            } else {
+                // possibility of AB testing
+                Logger.i(this, "InAppCB: Message with empty content found for placeholder $placeholderId")
+                runCatching {
+                    behaviourCallback.onMessageShown(placeholderId, message)
+                }.logOnException()
+            }
         }
     }
 
@@ -354,6 +378,10 @@ internal open class InAppContentBlockViewController(
                     messageShown.set(false)
                     return@runOnMainThread
                 }
+                if (!isRenderActive(renderInstanceId)) {
+                    Logger.d(this, "InAppCB: Placeholder $placeholderId render $renderInstanceId is outdated, skipping")
+                    return@runOnMainThread
+                }
                 val shouldShowExisting = synchronized(stateLock) {
                     if (lastRenderedNormalizedHtml == normalizedHtml) {
                         true
@@ -367,13 +395,21 @@ internal open class InAppContentBlockViewController(
                 } else {
                     view.showHtmlContent(normalizedHtml, renderInstanceId)
                 }
+                // Track only what has really been rendered; skipped (outdated/detached) render must not
+                // mark message as displayed, otherwise frequency (ONLY_ONCE, ONCE_PER_VISIT) would hide it
+                runOnBackgroundThread {
+                    trackMessageShown(message)
+                }
             }
-            if (lastTrackedMessageId.getAndSet(message.id) != message.id) {
-                actionDispatcher.onShown(placeholderId, message)
-                runCatching {
-                    behaviourCallback.onMessageShown(placeholderId, message)
-                }.logOnException()
-            }
+        }
+    }
+
+    private fun trackMessageShown(message: InAppContentBlock) {
+        if (lastTrackedMessageId.getAndSet(message.id) != message.id) {
+            actionDispatcher.onShown(placeholderId, message)
+            runCatching {
+                behaviourCallback.onMessageShown(placeholderId, message)
+            }.logOnException()
         }
     }
 
@@ -386,17 +422,55 @@ internal open class InAppContentBlockViewController(
             this,
             "InAppCB: Content for placeholder $placeholderId cannot be shown because of: $errorMessage"
         )
-        runOnMainThread {
-            view.showNoContent(renderInstanceId)
+        finishRenderIfActive(
+            renderInstanceId,
+            viewUpdate = { view.showNoContent(renderInstanceId) }
+        ) {
+            actionDispatcher.onError(placeholderId, message, errorMessage)
+            runCatching {
+                behaviourCallback.onError(placeholderId, message, errorMessage)
+            }.logOnException()
         }
-        actionDispatcher.onError(placeholderId, message, errorMessage)
-        runCatching {
-            behaviourCallback.onError(placeholderId, message, errorMessage)
-        }.logOnException()
     }
 
-    private fun cleanUp() {
+    /**
+     * Applies view update and then side effects (tracking, callbacks) only if render is still active.
+     * Outdated render (newer load or clean up meanwhile) must not track nor notify anything.
+     * Side effects receive message assigned to that render.
+     */
+    private inline fun finishRenderIfActive(
+        renderInstanceId: String?,
+        crossinline viewUpdate: () -> Unit,
+        crossinline sideEffects: (assignedMessage: InAppContentBlock?) -> Unit
+    ) {
+        runOnMainThread {
+            val (active, message) = synchronized(stateLock) {
+                (activeRenderInstanceId == renderInstanceId) to assignedMessage
+            }
+            if (!active) {
+                Logger.d(this, "InAppCB: Placeholder $placeholderId render $renderInstanceId is outdated, skipping")
+                return@runOnMainThread
+            }
+            viewUpdate()
+            // Callbacks are invoked on background thread, as integrators may expect
+            runOnBackgroundThread {
+                sideEffects(message)
+            }
+        }
+    }
+
+    private fun isRenderActive(renderInstanceId: String?): Boolean = synchronized(stateLock) {
+        activeRenderInstanceId == renderInstanceId
+    }
+
+    /**
+     * Drops assigned content and invalidates any load or render still in progress.
+     * Used also by carousel when its view holder is recycled for another content block.
+     */
+    internal fun cleanUp() {
         Logger.d(this, "InAppCB: Clean up for placeholder $placeholderId")
+        // invalidates any load still in progress
+        renderInstanceSequence.incrementAndGet()
         contentLoaded.set(false)
         messageShown.set(false)
         lastTrackedMessageId.set(null)

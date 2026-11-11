@@ -1,6 +1,7 @@
 package com.exponea.sdk.view
 
 import android.content.Context
+import android.os.Looper
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.exponea.sdk.Exponea
@@ -72,6 +73,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
 
 @RunWith(RobolectricTestRunner::class)
@@ -662,7 +664,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             contentReadyInvoked.countDown()
         }
         placeholder.refreshContent()
-        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         placeholder.layout(0, 0, 10, 10)
@@ -692,7 +694,7 @@ internal class InAppContentBlockPlaceholderViewTest {
             contentReadyInvoked.countDown()
         }
         placeholder.refreshContent()
-        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
@@ -754,7 +756,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
             placeholder.refreshContent()
             idleThreads()
-            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
             idleThreads()
             placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
             placeholder.layout(0, 0, 10, 10)
@@ -802,7 +804,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
             placeholder.refreshContent()
             idleThreads()
-            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
             placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
             placeholder.layout(0, 0, 10, 10)
             idleThreads()
@@ -1021,7 +1023,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
             placeholder.refreshContent()
             idleThreads()
-            assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+            assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
             idleThreads()
             placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_timeout")
             assertTrue(contentReadyInvoked.await(2, TimeUnit.SECONDS))
@@ -1066,17 +1068,31 @@ internal class InAppContentBlockPlaceholderViewTest {
         }
         // first load, onPageLoadedCallback called, layoutChange called
         placeholder.refreshContent()
-        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         placeholder.layout(0, 0, 10, 10)
         assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
         // second load, onPageLoadedCallback called, layoutChange not called
         placeholder.refreshContent()
-        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
         // Simulate WebView on page loaded event, then layout change
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         assertTrue(contentReadyInvoked.tryAcquire(2, TimeUnit.SECONDS))
+    }
+
+    /**
+     * Shown tracking is done after render on main thread, so main looper has to be processed while waiting.
+     */
+    private fun awaitWithMainLooper(semaphore: java.util.concurrent.Semaphore): Boolean {
+        val deadline = System.currentTimeMillis() + 2000
+        while (System.currentTimeMillis() < deadline) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (semaphore.tryAcquire(10, TimeUnit.MILLISECONDS)) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun replaceManager(etagStore: VolatileInAppContentBlocksETagStore): InAppContentBlockManagerImpl {
@@ -1121,7 +1137,7 @@ internal class InAppContentBlockPlaceholderViewTest {
 
         placeholder.refreshContent()
         idleThreads()
-        assertTrue(messageShownInvoked.tryAcquire(2, TimeUnit.SECONDS), "Message was not loaded yet")
+        assertTrue(awaitWithMainLooper(messageShownInvoked), "Message was not loaded yet")
         placeholder.htmlContainer.onPageLoadedCallback?.invoke("webview_visual_state")
         idleThreads()
 

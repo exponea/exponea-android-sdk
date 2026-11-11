@@ -18,11 +18,16 @@ import com.exponea.sdk.models.FlushMode
 import com.exponea.sdk.models.HtmlActionType
 import com.exponea.sdk.models.InAppContentBlock
 import com.exponea.sdk.models.InAppContentBlockAction
+import com.exponea.sdk.models.InAppContentBlockFrequency
+import com.exponea.sdk.models.InAppContentBlockPersonalizedData
 import com.exponea.sdk.models.ProjectConfig
 import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselAdapter
+import com.exponea.sdk.services.inappcontentblock.ContentBlockDiffCallback
+import com.exponea.sdk.services.inappcontentblock.ContentBlockItemKey
+import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
 import com.exponea.sdk.telemetry.TelemetryManager
 import com.exponea.sdk.telemetry.model.TelemetryEvent
 import com.exponea.sdk.testutil.ExponeaSDKTest
@@ -38,6 +43,7 @@ import com.exponea.sdk.testutil.shutdown
 import com.exponea.sdk.testutil.testFontFile
 import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.UrlOpener
+import com.exponea.sdk.util.deepCopy
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -48,15 +54,19 @@ import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.LooperMode
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(RobolectricTestRunner::class)
 internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
@@ -887,6 +897,207 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         unmockkObject(UrlOpener)
     }
 
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should rebind holder when content of same block changes`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(arrayListOf())
+        initSdk()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        val adapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = { createdCbView = it }
+        )
+        val cbViewHolder = adapter.createViewHolder(carousel, 0)
+        val oldHtml = buildHtmlMessageContent().replace("</body>", "<p>PROMO-OLD</p></body>")
+        val newHtml = buildHtmlMessageContent().replace("</body>", "<p>PROMO-NEW</p></body>")
+        cbViewHolder.updateContent(buildMessage("id1", type = "html", data = mapOf("html" to oldHtml)))
+        cbViewHolder.updateContent(buildMessage("id1", type = "html", data = mapOf("html" to newHtml)))
+        createdCbView?.controller?.loadContent(false)
+        idleThreads()
+        assertEquals(newHtml, createdCbView?.controller?.assignedMessage?.htmlContent)
+    }
+
+    @Test
+    fun `diff should detect changed content of same block`() {
+        val oldItems = listOf(
+            ContentBlockItemKey.of(buildMessage("id1", type = "html", data = mapOf("html" to "<html>OLD</html>")))
+        )
+        val newItems = listOf(
+            ContentBlockItemKey.of(buildMessage("id1", type = "html", data = mapOf("html" to "<html>NEW</html>")))
+        )
+        val callback = ContentBlockDiffCallback(oldItems, newItems)
+        assertTrue(callback.areItemsTheSame(0, 0))
+        assertFalse(callback.areContentsTheSame(0, 0))
+        assertTrue(ContentBlockDiffCallback(oldItems, oldItems).areContentsTheSame(0, 0))
+        // payload allows reuse of same view holder for content change, avoiding cross-fade with new WebView
+        assertNotNull(callback.getChangePayload(0, 0))
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should keep content block snapshot after reload`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        carousel.reload()
+        idleThreads()
+        val shown = carousel.getShownContentBlock()
+        assertNotNull(shown)
+        val managerInstance = Exponea.componentForTesting.inAppContentBlockManager
+            .getAllInAppContentBlocksForPlaceholder("placeholder_1")
+            .first { it.id == shown.id }
+        assertTrue(shown !== managerInstance)
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should close all messages safely`() = runInSingleThread { idleThreads ->
+        val htmlMessageContent = mapOf("html" to buildHtmlMessageContent())
+        val untilInteraction = InAppContentBlockFrequency.UNTIL_VISITOR_INTERACTS.name.lowercase()
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage(
+                    "id1",
+                    priority = 30,
+                    data = htmlMessageContent,
+                    type = "html",
+                    rawFrequency = untilInteraction
+                ),
+                buildMessage(
+                    "id2",
+                    priority = 20,
+                    data = htmlMessageContent,
+                    type = "html",
+                    rawFrequency = untilInteraction
+                ),
+                buildMessage(
+                    "id3",
+                    priority = 10,
+                    data = htmlMessageContent,
+                    type = "html",
+                    rawFrequency = untilInteraction
+                )
+            )
+        )
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        val changeCounts = mutableListOf<Int>()
+        var noMessageFoundCount = 0
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+                changeCounts.add(count)
+            }
+            override fun onNoMessageFound(placeholderId: String) {
+                noMessageFoundCount++
+            }
+        }
+        var createdCbView: InAppContentBlockPlaceholderView? = null
+        carousel.viewController.contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
+            placeholderId = "placeholder_1",
+            onPlaceholderCreated = {
+                carousel.viewController.modifyPlaceholderBehaviour(it)
+                createdCbView = it
+            }
+        )
+        carousel.reload()
+        idleThreads()
+        assertEquals(3, carousel.getShownCount())
+        carousel.viewController.contentBlockCarouselAdapter.createViewHolder(carousel, 0)
+        assertNotNull(createdCbView)
+        assertFalse(createdCbView!!.controller.reloadAfterAction)
+        repeat(3) {
+            val shown = carousel.getShownContentBlock()
+            assertNotNull(shown)
+            // same order as InAppContentBlockViewController.onUrlClick does
+            (Exponea.componentForTesting.inAppContentBlockManager as InAppContentBlockActionDispatcher)
+                .onClose("placeholder_1", shown)
+            createdCbView!!.behaviourCallback.onCloseClicked("placeholder_1", shown)
+            idleThreads()
+        }
+        assertEquals(0, carousel.getShownCount())
+        assertEquals(-1, carousel.getShownIndex())
+        assertNull(carousel.getShownContentBlock())
+        assertEquals(listOf(3, 2, 1, 0), changeCounts)
+        // closing of last message notifies only onMessagesChanged, onNoMessageFound is reserved for reload
+        assertEquals(0, noMessageFoundCount)
+    }
+
+    @Test
+    fun `deepCopy should not fail for personalized data without loadedAt`() {
+        val source = buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+        source.personalizedData = InAppContentBlockPersonalizedData(
+            blockId = "id1",
+            rawStatus = "ok",
+            timeToLive = null,
+            rawHasTrackingConsent = null,
+            variantId = null,
+            variantName = null,
+            rawContentType = "html",
+            content = mapOf("html" to buildHtmlMessageContent())
+        )
+        val copy = source.deepCopy()
+        assertTrue(copy !== source)
+        assertNull(copy.personalizedData?.loadedAt)
+        assertEquals(source.htmlContent, copy.htmlContent)
+    }
+
+    @Test
+    // PAUSED looper queues posted tasks, so both reloads are in progress at once
+    @LooperMode(LooperMode.Mode.PAUSED)
+    fun `should not notify callbacks of outdated reload`() = runInSingleThread { idleThreads ->
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        idleThreads()
+        val changeCounts = mutableListOf<Int>()
+        carousel.behaviourCallback = object : EmptyCarouselBehaviourCallback() {
+            override fun onMessagesChanged(count: Int, messages: List<InAppContentBlock>) {
+                changeCounts.add(count)
+            }
+        }
+        // second reload supersedes first one before any of them is processed
+        carousel.reload()
+        carousel.reload()
+        idleThreads()
+        assertEquals(listOf(1), changeCounts)
+        assertEquals(1, carousel.getShownCount())
+    }
+
     private fun prepareLoadedCarouselPlaceholderView(
         idleThreads: () -> Unit,
         htmlContent: String = buildHtmlMessageContent(),
@@ -947,6 +1158,88 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
             </body>
             </html>
         """.trimIndent()
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should keep force refresh when forced reload is superseded by non-forced reload`() =
+        runInSingleThread { idleThreads ->
+            val reloads = recordCarouselReloads(idleThreads) { carousel ->
+                // forced reload (integrator) superseded by non-forced reload (view attach) before it runs
+                ShadowLooper.pauseMainLooper()
+                carousel.viewController.reload(forceRefresh = true)
+                carousel.viewController.reload(forceRefresh = false)
+                ShadowLooper.unPauseMainLooper()
+                idleThreads()
+            }
+            assertThat(reloads, equalTo(listOf<String?>("true")))
+        }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not force refresh after forced reload has been applied`() = runInSingleThread { idleThreads ->
+        val reloads = recordCarouselReloads(idleThreads) { carousel ->
+            carousel.viewController.reload(forceRefresh = true)
+            idleThreads()
+            carousel.viewController.reload(forceRefresh = false)
+            idleThreads()
+        }
+        assertThat(reloads, equalTo(listOf<String?>("true", "false")))
+    }
+
+    @Test
+    @LooperMode(LooperMode.Mode.LEGACY)
+    fun `should not force refresh again when forced fetch finished before newer reload`() =
+        runInSingleThread { idleThreads ->
+            val reloads = recordCarouselReloads(idleThreads) { carousel ->
+                ShadowLooper.pauseMainLooper()
+                carousel.viewController.reload(forceRefresh = true)
+                // runs only background step of forced reload (fetch), its result is not applied yet
+                ShadowLooper.runMainLooperOneTask()
+                carousel.viewController.reload(forceRefresh = false)
+                ShadowLooper.unPauseMainLooper()
+                idleThreads()
+            }
+            assertThat(reloads, equalTo(listOf<String?>("true", "false")))
+        }
+
+    /**
+     * Returns `forceRefresh` values of carousel reloads that went through content loading
+     */
+    private fun recordCarouselReloads(
+        idleThreads: () -> Unit,
+        action: (ContentBlockCarouselView) -> Unit
+    ): List<String?> {
+        prepareContentBlockMessages(
+            arrayListOf(
+                buildMessage("id1", type = "html", data = mapOf("html" to buildHtmlMessageContent()))
+            )
+        )
+        initSdk()
+        idleThreads()
+        Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+        idleThreads()
+        val carousel = Exponea.getInAppContentBlocksCarousel(
+            ApplicationProvider.getApplicationContext(),
+            "placeholder_1"
+        )
+        assertNotNull(carousel)
+        val loggerCallback = RecordingLoggerCallback()
+        val previousLoggerLevel = Logger.level
+        Logger.level = Logger.Level.DEBUG
+        Exponea.registerLoggerCallback(loggerCallback)
+        try {
+            action(carousel)
+        } finally {
+            Exponea.unregisterLoggerCallback(loggerCallback)
+            Logger.level = previousLoggerLevel
+        }
+        return loggerCallback.logs.toList()
+            .map { it.second }
+            .filter { it.startsWith("InAppCB timing: ") }
+            .map { parseInAppContentBlockTimingLog(it) }
+            .filter { it["source"] == "carousel_reloaded" }
+            .map { it["forceRefresh"] }
     }
 
     private fun prepareContentBlockMessages(messages: ArrayList<InAppContentBlock>) {

@@ -18,18 +18,22 @@ import com.exponea.sdk.util.Logger
 import com.exponea.sdk.util.OnForegroundStateListener
 import com.exponea.sdk.util.RepeatableJob
 import com.exponea.sdk.util.UrlOpener
+import com.exponea.sdk.util.deepCopy
 import com.exponea.sdk.util.ensureOnBackgroundThread
 import com.exponea.sdk.util.ensureOnMainThread
 import com.exponea.sdk.util.logOnException
 import com.exponea.sdk.util.logOnExceptionWithResult
 import com.exponea.sdk.util.returnOnException
 import com.exponea.sdk.util.runForInitializedSDK
+import com.exponea.sdk.util.runOnBackgroundThread
 import com.exponea.sdk.util.runOnMainThread
 import com.exponea.sdk.view.ContentBlockCarouselView
 import com.exponea.sdk.view.InAppContentBlockPlaceholderView
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class ContentBlockCarouselViewController(
     private val carouselView: ContentBlockCarouselView,
@@ -55,6 +59,10 @@ internal class ContentBlockCarouselViewController(
     private var autoHeightUpdatePending = false
     private var autoHeightUpdateOnlyCurrentView = true
     @Volatile private var selectedBlockIndex: Int = -1
+    // Reloads run concurrently; only the latest one is allowed to update shown data
+    private val reloadGeneration = AtomicInteger(0)
+    // Forced reload superseded by a newer one must not lose its forceRefresh
+    private val pendingForceRefresh = AtomicBoolean(false)
     internal var contentBlockCarouselAdapter = ContentBlockCarouselAdapter(
         placeholderId = placeholderId,
         onPlaceholderCreated = {
@@ -141,6 +149,11 @@ internal class ContentBlockCarouselViewController(
             return
         }
         stopAutoScroll()
+        if (forceRefresh) {
+            // set before increment, so any newer reload (possibly from another thread) sees it
+            pendingForceRefresh.set(true)
+        }
+        val generation = reloadGeneration.incrementAndGet()
         runForInitializedSDK(RELOAD_PROCESS_ID) {
             ensureOnBackgroundThread {
                 val manager = Exponea.getComponent()?.inAppContentBlockManager
@@ -148,9 +161,19 @@ internal class ContentBlockCarouselViewController(
                     Logger.e(this, "InAppCbCarousel: Exponea SDK is not initialized properly")
                     return@ensureOnBackgroundThread
                 }
-                showTrackedContentBlockIds.clear()
+                if (generation != reloadGeneration.get()) {
+                    // newer reload has been requested meanwhile, skip fetching of content
+                    Logger.d(this, "InAppCbCarousel: Reload is outdated, skipping")
+                    return@ensureOnBackgroundThread
+                }
+                // forced reload superseded by this one has to be fulfilled here
+                val effectiveForceRefresh = forceRefresh || pendingForceRefresh.get()
                 val allContentBlocks = manager.getAllInAppContentBlocksForPlaceholder(placeholderId)
-                manager.loadContentIfNeededSync(allContentBlocks, forceRefresh = forceRefresh)
+                manager.loadContentIfNeededSync(allContentBlocks, forceRefresh = effectiveForceRefresh)
+                if (effectiveForceRefresh && generation == reloadGeneration.get()) {
+                    // forced fetch is done; newer reload keeps the flag for itself
+                    pendingForceRefresh.set(false)
+                }
                 val validContentBlocks = filterContentBlocks(allContentBlocks, manager)
                 val filteredContentBlocks = runCatching {
                     contentBlockSelector.filterContentBlocks(validContentBlocks)
@@ -158,17 +181,30 @@ internal class ContentBlockCarouselViewController(
                 val sortedContentBlocks = runCatching {
                     contentBlockSelector.sortContentBlocks(filteredContentBlocks)
                 }.logOnExceptionWithResult().returnOnException { filteredContentBlocks }
-                val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks)
+                // Snapshot of content blocks; manager updates its instances by any later fetch
+                val limitedContentBlocks = limitByMaxMessagesCount(sortedContentBlocks).map { contentBlock ->
+                    runCatching {
+                        contentBlock.deepCopy()
+                    }.logOnExceptionWithResult().returnOnException { contentBlock }
+                }
+                // Keys are computed here to keep hashing of (possibly large) HTML off the main thread
+                val limitedContentBlockKeys = limitedContentBlocks.map { ContentBlockItemKey.of(it) }
                 limitedContentBlocks.forEach {
                     InAppContentBlockTiming.log(
                         contentBlockId = it.id,
                         source = InAppContentBlockTiming.RequestSource.CAROUSEL_RELOADED,
                         contentBlockName = it.name,
-                        properties = mapOf("forceRefresh" to forceRefresh)
+                        properties = mapOf("forceRefresh" to effectiveForceRefresh)
                     )
                 }
                 runOnMainThread {
-                    contentBlockCarouselAdapter.updateData(limitedContentBlocks)
+                    if (generation != reloadGeneration.get()) {
+                        Logger.d(this, "InAppCbCarousel: Reload result is outdated, skipping")
+                        return@runOnMainThread
+                    }
+                    // cleared only for applied reload; outdated one must not reset tracking of shown data
+                    showTrackedContentBlockIds.clear()
+                    contentBlockCarouselAdapter.updateData(limitedContentBlocks, limitedContentBlockKeys)
                     carouselView.prepareOffscreenPages(
                         if (limitedContentBlocks.size > 2) {
                             BOUNDARY_FLICKER_PRELOAD_PAGES
@@ -178,20 +214,16 @@ internal class ContentBlockCarouselViewController(
                     )
                     moveToIndex(0, false)
                     updateAutoHeight(true)
-                }
-                behaviourCallback?.let {
-                    runCatching {
-                        it.onMessagesChanged(limitedContentBlocks.size, limitedContentBlocks)
-                    }.logOnException()
-                }
-                if (limitedContentBlocks.isEmpty()) {
-                    behaviourCallback?.let {
-                        runCatching {
-                            it.onNoMessageFound(placeholderId)
-                        }.logOnException()
+                    restartAutoScroll()
+                    // Callbacks are invoked on background thread, as integrators may expect
+                    runOnBackgroundThread {
+                        if (generation != reloadGeneration.get()) {
+                            Logger.d(this, "InAppCbCarousel: Reload result is outdated, skipping callbacks")
+                            return@runOnBackgroundThread
+                        }
+                        notifyMessagesChanged(limitedContentBlocks, notifyNoMessage = true)
                     }
                 }
-                restartAutoScroll()
             }
         }
     }
@@ -256,6 +288,7 @@ internal class ContentBlockCarouselViewController(
     }
 
     internal fun modifyPlaceholderBehaviour(placeholder: InAppContentBlockPlaceholderView) {
+        placeholder.controller.reloadAfterAction = false
         placeholder.setOnContentReadyListener {
             updateAutoHeight(true)
         }
@@ -361,24 +394,36 @@ internal class ContentBlockCarouselViewController(
         return !manager.passesFrequencyFilter(contentBlock)
     }
 
-    private fun removeFromData(contentBlock: InAppContentBlock) {
+    private fun removeFromData(contentBlock: InAppContentBlock) = ensureOnMainThread {
         contentBlockCarouselAdapter.removeItem(contentBlock)
         val currentData = contentBlockCarouselAdapter.getLoadedData()
-        var nextSelectedBlockIndex = selectedBlockIndex - 1
-        if (nextSelectedBlockIndex < 0 && currentData.isNotEmpty()) {
-            nextSelectedBlockIndex = 0
+        val nextSelectedBlockIndex = if (currentData.isEmpty()) {
+            -1
+        } else {
+            (selectedBlockIndex - 1).coerceIn(0, currentData.size - 1)
         }
         moveToIndex(nextSelectedBlockIndex, false)
+        notifyMessagesChanged(currentData, notifyNoMessage = false)
+    }
+
+    private fun notifyMessagesChanged(contentBlocks: List<InAppContentBlock>, notifyNoMessage: Boolean) {
         behaviourCallback?.let {
-            kotlin.runCatching {
-                it.onMessagesChanged(currentData.size, currentData)
+            runCatching {
+                it.onMessagesChanged(contentBlocks.size, contentBlocks)
             }.logOnException()
+        }
+        if (notifyNoMessage && contentBlocks.isEmpty()) {
+            behaviourCallback?.let {
+                runCatching {
+                    it.onNoMessageFound(placeholderId)
+                }.logOnException()
+            }
         }
     }
 
     private fun restartAutoScroll() {
         ensureOnMainThread {
-            if (scrollDelay < 0) {
+            if (!canAutoScroll()) {
                 stopAutoScroll()
                 return@ensureOnMainThread
             }
@@ -388,9 +433,15 @@ internal class ContentBlockCarouselViewController(
 
     private fun resumeAutoScroll() {
         ensureOnMainThread {
+            if (!canAutoScroll()) {
+                stopAutoScroll()
+                return@ensureOnMainThread
+            }
             autoscrollJob.resume()
         }
     }
+
+    private fun canAutoScroll() = scrollDelay >= 0 && getShownCount() > 1
 
     private fun stopAutoScroll() {
         ensureOnMainThread {
@@ -439,6 +490,10 @@ internal class ContentBlockCarouselViewController(
     }
 
     private fun scrollToNext() {
+        if (getShownCount() <= 1) {
+            Logger.v(this, "InAppCbCarousel: Nothing to scroll to, skipping")
+            return
+        }
         val nextIndex = selectedBlockIndex + 1
         Logger.d(this, "InAppCbCarousel: Scroll to next requested ($nextIndex)")
         moveToIndex(nextIndex, true)
@@ -482,6 +537,8 @@ internal class ContentBlockCarouselViewController(
     }
 
     override fun onIntegrationStopped() {
+        reloadGeneration.incrementAndGet()
+        pendingForceRefresh.set(false)
         stopAutoScroll()
         showTrackedContentBlockIds.clear()
         ensureOnMainThread {

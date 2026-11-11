@@ -28,3 +28,11 @@
 -keepattributes AnnotationDefault,RuntimeVisibleAnnotations
 -keep class com.google.gson.reflect.TypeToken { <fields>; }
 -keepclassmembers class **$TypeAdapterFactory { <fields>; }
+
+# Room < 2.7 ships "-keep class * extends androidx.room.RoomDatabase" without members, so R8 in AGP 9
+# strips the no-arg constructor that Room calls reflectively (e.g. androidx.work.impl.WorkDatabase_Impl).
+-keep class * extends androidx.room.RoomDatabase { void <init>(); }
+
+# WorkManager < 2.10 ships "-keep class * extends androidx.work.InputMerger" without members, so R8 in AGP 9
+# strips the no-arg constructor that WorkManager calls reflectively (e.g. androidx.work.OverwritingInputMerger).
+-keep class * extends androidx.work.InputMerger { void <init>(); }

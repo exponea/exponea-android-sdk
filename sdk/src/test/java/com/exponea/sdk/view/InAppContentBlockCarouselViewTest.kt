@@ -3,7 +3,9 @@ package com.exponea.sdk.view
 import android.content.Context
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.test.core.app.ApplicationProvider
+import androidx.viewpager2.widget.ViewPager2
 import com.exponea.sdk.Exponea
+import com.exponea.sdk.R
 import com.exponea.sdk.manager.EventManagerImpl
 import com.exponea.sdk.manager.FetchManagerImpl
 import com.exponea.sdk.manager.InAppContentBlockManagerImpl
@@ -25,6 +27,7 @@ import com.exponea.sdk.models.Result
 import com.exponea.sdk.repository.DrawableCacheImpl
 import com.exponea.sdk.repository.FontCacheImpl
 import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselAdapter
+import com.exponea.sdk.services.inappcontentblock.ContentBlockCarouselViewController
 import com.exponea.sdk.services.inappcontentblock.ContentBlockDiffCallback
 import com.exponea.sdk.services.inappcontentblock.ContentBlockItemKey
 import com.exponea.sdk.services.inappcontentblock.InAppContentBlockActionDispatcher
@@ -449,6 +452,42 @@ internal class InAppContentBlockCarouselViewTest : ExponeaSDKTest() {
         assertEquals(0, carousel.getShownIndex())
         assertEquals(4, carousel.getShownCount())
     }
+
+    @Test
+    fun `should keep looped pages attached when carousel has at least two messages`() =
+        runInSingleThread { idleThreads ->
+            val htmlMessageContent = mapOf("html" to buildHtmlMessageContent())
+            val allMessages = (1..3).map {
+                buildMessage("id$it", priority = 10 * it, data = htmlMessageContent, type = "html")
+            }
+            prepareContentBlockMessages(arrayListOf())
+            initSdk()
+            idleThreads()
+            val carousel = Exponea.getInAppContentBlocksCarousel(
+                ApplicationProvider.getApplicationContext(),
+                "placeholder_1"
+            )
+            assertNotNull(carousel)
+            val viewPager = carousel.findViewById<ViewPager2>(R.id.content_block_carousel_pager)
+            val expectedLimits = mapOf(
+                1 to ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
+                2 to ContentBlockCarouselViewController.BOUNDARY_FLICKER_PRELOAD_PAGES,
+                3 to ContentBlockCarouselViewController.BOUNDARY_FLICKER_PRELOAD_PAGES
+            )
+            expectedLimits.forEach { (messagesCount, expectedLimit) ->
+                prepareContentBlockMessages(ArrayList(allMessages.take(messagesCount)))
+                Exponea.componentForTesting.inAppContentBlockManager.loadInAppContentBlockPlaceholders()
+                idleThreads()
+                carousel.reload()
+                idleThreads()
+                assertThat(carousel.getShownCount(), equalTo(messagesCount))
+                assertThat(
+                    "offscreenPageLimit for $messagesCount messages",
+                    viewPager.offscreenPageLimit,
+                    equalTo(expectedLimit)
+                )
+            }
+        }
 
     @Test
     fun `should track show only once per message`() = runInSingleThread { idleThreads ->

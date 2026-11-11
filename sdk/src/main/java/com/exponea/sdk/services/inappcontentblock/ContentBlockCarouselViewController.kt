@@ -206,7 +206,7 @@ internal class ContentBlockCarouselViewController(
                     showTrackedContentBlockIds.clear()
                     contentBlockCarouselAdapter.updateData(limitedContentBlocks, limitedContentBlockKeys)
                     carouselView.prepareOffscreenPages(
-                        if (limitedContentBlocks.size > 2) {
+                        if (limitedContentBlocks.size > 1) {
                             BOUNDARY_FLICKER_PRELOAD_PAGES
                         } else {
                             ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT

@@ -136,8 +136,14 @@ This page provides an overview of all configuration parameters for the SDK. You 
   * Default value: `ON_TOKEN_CHANGE`
   * Possible values:
     * `ON_TOKEN_CHANGE` - tracks the push token if it differs from a previously tracked one. The SDK also automatically refreshes the `notification_state` event every 30 days, even when the token hasn't changed.
-    * `EVERY_LAUNCH` - tracks the push token once per app launch (process start)
-    * `DAILY` - tracks push token once per day
+    * `EVERY_LAUNCH` - tracks the push token once per app launch (process start). Returning to the foreground doesn't track it again, unless the push permission changed.
+    * `DAILY` - tracks the push token at most once per local calendar day.
+  * Whatever the frequency, the SDK tracks a fresh `notification_state` event in these cases:
+    * The push permission changes (granted ↔ denied), so the `valid` flag stays in sync. The SDK checks at initialization, when the app returns to the foreground, and after `requestPushAuthorization()`.
+    * You call `trackPushToken()` or `trackHmsPushToken()`.
+    * You pass an FCM token to `handleNewToken()` or an HMS token to `handleNewHmsToken()`, even if the token string didn't change. If it did change, the SDK first tracks the old token as invalid.
+    * You call `anonymize()`. The SDK tracks the token as invalid for the previous customer, then immediately tracks it for the new customer.
+    * You call `stopIntegration()`. The SDK tracks the token as invalid and then clears it. After the SDK is initialized again, it doesn't track a token until your app provides one.
 
 * `requirePushAuthorization`
   * **Deprecated** - This property is no longer used and will be removed in a future SDK release.

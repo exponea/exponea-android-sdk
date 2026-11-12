@@ -26,6 +26,7 @@ internal class NetworkHandlerImpl(
     authTokenRepository: AuthTokenRepository,
     customerIdsRepository: CustomerIdsRepository,
     legacyAuthorizationProvider: AuthorizationProvider?,
+    private val httpLogger: HttpLoggingInterceptor.Logger = HttpLoggingInterceptor.Logger.DEFAULT,
     authCallbackProvider: () -> SdkAuthCallback?
 ) : NetworkHandler {
 
@@ -69,13 +70,15 @@ internal class NetworkHandlerImpl(
         }
     }
 
-    private fun getHttpLoggingInterceptor() = HttpLoggingInterceptor().apply {
+    private fun getHttpLoggingInterceptor() = HttpLoggingInterceptor(httpLogger).apply {
         level = when (exponeaConfiguration.httpLoggingLevel) {
             ExponeaConfiguration.HttpLoggingLevel.NONE -> HttpLoggingInterceptor.Level.NONE
             ExponeaConfiguration.HttpLoggingLevel.BASIC -> HttpLoggingInterceptor.Level.BASIC
             ExponeaConfiguration.HttpLoggingLevel.HEADERS -> HttpLoggingInterceptor.Level.HEADERS
             ExponeaConfiguration.HttpLoggingLevel.BODY -> HttpLoggingInterceptor.Level.BODY
         }
+        // the Authorization header must never reach the logs
+        redactHeader("Authorization")
     }
 
     private fun requestBuilder(

@@ -14,6 +14,24 @@ content:
 > Refer to the [Android SDK version update guide](https://documentation.bloomreach.com/engagement/docs/android-sdk-version-update) for details on updating to the next major version.
 
 ## Release Notes
+## Release Notes for 5.5.0
+#### November 13, 2026
+* Added:
+  * Adds a new example app.
+  * Adds `AGENTS.md` for coding agents.
+* Changed:
+  * Optimizes event flushing.
+  * Redacts the `Authorization` header in HTTP logging.
+* Fixed:
+  * Fixes carousel in-app content blocks showing mixed-up or outdated content after `reload()`.
+  * Fixes a possible crash when closing all carousel blocks or when a block is replaced after an action click.
+  * Fixes carousel auto-scroll running when one or no blocks are shown.
+  * Fixes in-app content blocks being tracked as shown when they weren't displayed, which could hide blocks with the "only once" or "once per visit" setting.
+  * Fixes an incorrect condition causing flickering in carousels with two blocks.
+  * Fixes browser warm-up so it no longer dispatches on the main thread.
+  * Fixes missing ProGuard rules for R8 in AGP 9.
+
+
 ## Release Notes for 5.4.0
 #### September 17, 2026
 * Added:
